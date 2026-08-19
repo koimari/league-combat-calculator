@@ -17,15 +17,17 @@ from dataclasses import replace
 
 from src.calculator.interpreters.defense_state import (
     DefenseInterpretationError,
+    DefenseSlot,
     declared_defenses,
 )
 from src.calculator.interpreters import INTERPRETERS, resolve_defense
 from src.calculator.interpreters.threshold_defense import (
     RESOLVER_INTERPRETER,
     THRESHOLD_HEALTH_MECHANIC,
-    ThresholdExpiryWithheld,
+    TICK_INTERVAL_KEY,
     threshold_health_coverage_source,
     threshold_health_owner,
+    threshold_health_tick_interval,
 )
 from src.calculator.item_behavior import (
     BehaviorRule,
@@ -226,14 +228,67 @@ def test_the_temporary_health_lifelines_owner_comes_from_the_declaration() -> No
     assert threshold_health_coverage_source() == f"target_{threshold_health_owner()}"
 
 
-def test_the_expiry_refusal_carries_the_owner_and_the_coverage_source() -> None:
-    """The refusal is a type; its consumer no longer greps a sentence."""
-    withheld = ThresholdExpiryWithheld()
+def test_the_heal_cadence_is_read_off_the_declaration_not_the_config() -> None:
+    """The tick cadence reaches the walk the way the owner does.
 
-    assert isinstance(withheld, ValueError)
-    assert withheld.owner == threshold_health_owner()
-    assert withheld.coverage_source == threshold_health_coverage_source()
-    assert "temporary-health expiry" in str(withheld)
+    The walk that authors the heal holds resolved pools, which carry no
+    build, so it asks the declaration.  Pinned against the catalog rather
+    than a literal: the number is the item's, and moving it in the registry
+    has to move this.
+    """
+    rule = next(
+        rule
+        for owner in catalog.declared_owners()
+        for rule in catalog.behavior_rules(owner)
+        if getattr(rule.payload, "mechanic", None) is THRESHOLD_HEALTH_MECHANIC
+    )
+    declared = DefenseSlot(rule).value(TICK_INTERVAL_KEY)
+
+    assert threshold_health_tick_interval() == declared
+    assert declared > 0.0
+
+
+def test_a_declaration_without_the_cadence_key_stops_rather_than_guesses(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The banned shape: a silent default cadence standing in for a number.
+
+    Stripping the declared key must raise and name it, because a cadence
+    quietly defaulting to some engine constant is exactly the stale-literal
+    failure the registry rule exists to prevent.
+    """
+    from src.calculator.interpreters import threshold_defense
+
+    real = threshold_defense.behavior_rules
+
+    def stripped(owner: str):
+        rules = real(owner)
+        return tuple(
+            (
+                replace(
+                    rule,
+                    payload=replace(
+                        rule.payload,
+                        values=tuple(
+                            reference
+                            for reference in rule.payload.values
+                            if getattr(reference, "key", "") != TICK_INTERVAL_KEY
+                        ),
+                    ),
+                )
+                if getattr(rule.payload, "mechanic", None) is THRESHOLD_HEALTH_MECHANIC
+                else rule
+            )
+            for rule in rules
+        )
+
+    monkeypatch.setattr(threshold_defense, "behavior_rules", stripped)
+    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()  # noqa: SLF001
+    with pytest.raises(DefenseInterpretationError) as excinfo:
+        threshold_defense.threshold_health_tick_interval()
+    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()  # noqa: SLF001
+
+    assert TICK_INTERVAL_KEY in str(excinfo.value)
 
 
 def test_two_declared_temporary_health_lifelines_stop_rather_than_guess(

@@ -10,6 +10,7 @@ primitives in test_champion_primitives.py.
 import pytest
 from types import SimpleNamespace
 
+from src.calculator import damage
 from src.calculator.ability_spec import DamagePart
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.resistance import apply_resistance
@@ -876,6 +877,7 @@ class TestTargetIncomingDamageModifiers:
                     "parts": (DamagePart("magic", 800.0),),
                 }
             },
+            fight_duration_seconds=4.0,
             target_health=1000.0,
             target_magic_resistance=0.0,
             target_threshold_health_bonus=200.0,
@@ -887,8 +889,49 @@ class TestTargetIncomingDamageModifiers:
         assert result["total_damage"] == pytest.approx(800.0)
         assert result["threshold_health_triggered"] is True
         assert result["threshold_health_bonus_gained"] == 200.0
+        # Inside the window: the raised maximum still stands.
         assert result["target_effective_max_health"] == 1200.0
-        assert result["target_ending_health"] == pytest.approx(400.0)
+        # 1000 - 800 damage, plus the 16 of 20 authored 0.25s heal ticks
+        # (15 each) that fall inside a four-second fight.
+        assert result["threshold_health_heal_ticks"] == 16
+        assert result["target_ending_health"] == pytest.approx(640.0)
+
+    def test_protoplasm_temporary_maximum_lapses_on_the_wiki_health_rule(
+        self, fight, attacker_stats
+    ):
+        """The Wiki's Health page worked example, driven through the engine.
+
+        "When the passive runs out, maximum health decreases by 200 from 1200
+        to 1000.  Current health remains at 700."  A defender that spent more
+        than the grant keeps every point it healed to; only an overhang above
+        the restored maximum would be clamped away.
+        """
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            fight_duration_seconds=5.0,
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_expired"] is True
+        assert result["threshold_health_heal_ticks"] == 20
+        assert result["target_effective_max_health"] == pytest.approx(1000.0)
+        assert result["target_ending_health"] == pytest.approx(700.0)
 
     def test_protoplasm_updates_later_liandry_max_health_ticks(
         self, fight, attacker_stats
@@ -919,10 +962,14 @@ class TestTargetIncomingDamageModifiers:
         assert [event["damage"] for event in burn["damage_events"]] == pytest.approx(
             [12.0] * 6
         )
-        assert result["target_healing_received"] == pytest.approx(180.0)
-        assert result["timeline_coverage"]["complete"] is False
+        # The whole sourced heal, delivered on its authored 0.25s ticks
+        # rather than interpolated across whatever damage events existed.
+        assert result["target_healing_received"] == pytest.approx(300.0)
+        assert result["threshold_health_cadence_certified"] is True
+        assert result["timeline_coverage"]["complete"] is True
         assert (
-            "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+            "target_Protoplasm Harness"
+            not in result["timeline_coverage"]["coarse_sources"]
         )
 
     def test_protoplasm_health_can_delay_shadowflame_threshold(
@@ -970,31 +1017,83 @@ class TestTargetIncomingDamageModifiers:
         ] == pytest.approx(20.0)
         assert "shadowflame_Shadowflame" not in protoplasm["breakdown"]
 
-    def test_protoplasm_fails_closed_at_unsourced_expiry_boundary(
+    def test_protoplasm_still_downgrades_coverage_without_an_authored_cadence(
+        self, fight, attacker_stats, monkeypatch
+    ):
+        """The emptied downgrade, fired on a declaration that authors no ticks.
+
+        Banned shortcut check: the coverage refusal was not deleted, it was
+        *measured*.  A declaration subdividing the sourced window into no
+        ticks leaves the heal a total rather than a schedule, and the coarse
+        source comes back exactly as it used to.
+        """
+        monkeypatch.setattr(
+            damage.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
+        )
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_cadence_certified"] is False
+        assert result["threshold_health_heal_ticks"] == 0
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is False
+        assert coverage["certification"] == "partial_event_order"
+        assert "target_Protoplasm Harness" in coverage["coarse_sources"]
+        assert "no heal tick cadence" in coverage["note"]
+
+    def test_protoplasm_prices_a_fight_that_outlives_its_window(
         self, fight, attacker_stats
     ):
-        with pytest.raises(ValueError, match="temporary-health expiry"):
-            fight(
-                attacker_stats(),
-                {
-                    "Q": {
-                        "name": "Trigger and repeat",
-                        "rank": 1,
-                        "cooldown": 5.0,
-                        "damage_type": "magic",
-                        "total_raw": 800.0,
-                        "parts": (DamagePart("magic", 800.0),),
-                    }
-                },
-                one_rotation=False,
-                fight_duration_seconds=6.0,
-                target_health=1000.0,
-                target_magic_resistance=0.0,
-                target_threshold_health_bonus=200.0,
-                target_threshold_health_heal=300.0,
-                target_threshold_health_ratio=0.30,
-                target_threshold_health_duration=5.0,
-            )
+        """The fight the refusal used to withhold now computes.
+
+        Six seconds outlives the five-second window, and the second cast
+        lands after it: the temporary maximum is gone by then, so the
+        defender meets that packet on its base maximum.
+        """
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger and repeat",
+                    "rank": 1,
+                    "cooldown": 5.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            one_rotation=False,
+            fight_duration_seconds=6.0,
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_expired"] is True
+        assert result["target_effective_max_health"] == pytest.approx(1000.0)
+        assert result["timeline_coverage"]["complete"] is True
 
 
 class TestShieldReaver:
@@ -1100,6 +1199,9 @@ class TestShieldReaver:
         result = self._fang_fight(
             fight,
             attacker_stats,
+            # Inside the temporary maximum's own window, so what is measured
+            # is the venom sparing the grant rather than its expiry.
+            fight_duration_seconds=4.0,
             target_threshold_health_bonus=200.0,
             target_threshold_health_heal=300.0,
             target_threshold_health_ratio=0.30,

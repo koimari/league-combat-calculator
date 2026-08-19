@@ -849,6 +849,7 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
                 "heal_bonus_mr_ratio",
                 "health_threshold",
                 "duration",
+                "heal_tick_interval",
             )
         ),
         writes=(
@@ -860,7 +861,7 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
         exclusivity=DefenseExclusivity.NONE,
         threshold_key="health_threshold",
         duration_key="duration",
-        reads=("heal_bonus_armor_ratio", "heal_bonus_mr_ratio"),
+        reads=("heal_bonus_armor_ratio", "heal_bonus_mr_ratio", "heal_tick_interval"),
         ramps=(("bonus_health_min", "bonus_health_max"), ("heal_min", "heal_max")),
         zero_policy=_LIFELINE_ZERO,
     ),

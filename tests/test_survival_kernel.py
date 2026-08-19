@@ -96,6 +96,7 @@ from src.calculator.survival.pricing import (
     route_declared_packet,
 )
 from src.calculator import damage as pair_engine
+from src.calculator import shield_ledger
 from src.calculator.item_support_effects import (
     _declared_authorities,
     producer_item,
@@ -4379,3 +4380,76 @@ class TestTheRoutingReachesTheReceipt:
             (routed.rule_id, 1, 7),
         }
         assert len(keys) == 2
+
+
+class TestTemporaryMaximumIsOneRule:
+    """The Wiki's maximum-health-decrease rule, once, for both walks.
+
+    This walk carries two temporary maxima — an overheal-converted grant and
+    an armed temporary-health Lifeline — and the ordered damage walk carries
+    the Lifeline.  All of them route through
+    ``shield_ledger.expire_temporary_max_health``, so the arithmetic that
+    distinguishes the sourced rule from a naive clamp (health the defender
+    *spent into* survives; only an overhang is lost) cannot come out
+    differently depending on which engine ran.
+
+    https://wiki.leagueoflegends.com/en-us/Health, cached by
+    ``python scripts/decompose_wiki.py --fetch "Health"``.
+    """
+
+    @staticmethod
+    def _state(pools):
+        return {
+            "pools": pools,
+            "temporary_health_amount": 0.0,
+            "temporary_health_until": 0.0,
+            "temporary_health_expired_at": None,
+        }
+
+    def test_an_overheal_grant_keeps_the_health_it_was_spent_into(self):
+        pools = shield_ledger.ShieldPools(health=700.0, max_health=1200.0)
+        state = self._state(pools)
+        state["temporary_health_amount"] = 200.0
+        state["temporary_health_until"] = 5.0
+
+        assert transitions.expire_temporary_health(state, 5.0) is True
+        assert (pools.health, pools.max_health) == (700.0, 1000.0)
+        assert state["temporary_health_expired_at"] == 5.0
+
+    def test_the_lifeline_now_expires_in_this_walk_too(self):
+        """The same 700-of-1000 the ordered damage walk reaches.
+
+        ``test_protoplasm_temporary_maximum_lapses_on_the_wiki_health_rule``
+        drives these exact numbers through the pair engine; this drives them
+        through the survival walk's own window edge.  One mechanic, one
+        answer.
+        """
+        pools = shield_ledger.build_pools(
+            1000.0,
+            threshold_health_bonus=200.0,
+            threshold_health_heal=300.0,
+            threshold_health_ratio=0.30,
+            threshold_health_duration=5.0,
+        )
+        outcome = shield_ledger.absorb(pools, 800.0, "magic", 0.0)
+        assert outcome.threshold_health_triggered is True
+        assert (pools.health, pools.max_health) == (400.0, 1200.0)
+        pools.health += 300.0  # the walk's heal author delivers the sourced heal
+
+        transitions.finalize_states([self._state(pools)], 5.0)
+
+        assert (pools.health, pools.max_health) == (700.0, 1000.0)
+
+    def test_a_lifeline_inside_its_window_is_left_alone(self):
+        pools = shield_ledger.build_pools(
+            1000.0,
+            threshold_health_bonus=200.0,
+            threshold_health_heal=300.0,
+            threshold_health_ratio=0.30,
+            threshold_health_duration=5.0,
+        )
+        shield_ledger.absorb(pools, 800.0, "magic", 0.0)
+
+        transitions.finalize_states([self._state(pools)], 4.0)
+
+        assert pools.max_health == 1200.0

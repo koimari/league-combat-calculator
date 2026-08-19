@@ -456,13 +456,37 @@ def test_calculate_prices_steraks_lifeline_in_certified_timed_fight():
     assert target["result"]["threshold_shield_absorbed"] > 0
 
 
-def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
+def _uncertify(monkeypatch, source="proc_Synthetic"):
+    """Make every fight report one uncertified damage source.
+
+    The coverage campaign certified every source a real build can reach, so
+    the Lifeline guard has nothing left to fire on — and a guard proven only
+    by whichever mechanic happens to be uncertified this week is a guard that
+    retires itself silently. The fight is made to report a coarse source
+    instead, which is the one input the guard reads.
+    """
+    real = calculate_module.run_fight
+
+    def coarse(*args, **kwargs):
+        result = real(*args, **kwargs)
+        coverage = dict(result.get("timeline_coverage") or {})
+        coverage["complete"] = False
+        coverage["coarse_sources"] = [source]
+        result["timeline_coverage"] = coverage
+        return result
+
+    monkeypatch.setattr(calculate_module, "run_fight", coarse)
+    return source
+
+
+def test_calculate_withholds_uncertified_timed_fight_against_lifeline(monkeypatch):
+    source = _uncertify(monkeypatch)
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Ziggs",
             "level": 18,
-            "items": ["Eclipse"],
+            "items": [],
             "fight_mode": "timed",
             "fight_duration": 10,
             "enemies": [
@@ -478,7 +502,7 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     assert response.status_code == 400
     error = response.get_json()["error"]
     assert "Sterak's Gage" in error
-    assert "proc_Eclipse" in error
+    assert source in error
     assert "not event-certified" in error
 
 
@@ -553,19 +577,20 @@ def test_one_rotation_fight_still_accepts_one_rotation_only_enemy_module():
     assert response.get_json()["scenario"]["primary_target"] == "Kai'Sa"
 
 
-def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy():
+def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy(monkeypatch):
     """The curve's timed windows need the same certified-timeline gate.
 
     A one-rotation request keeps its primary result, but the crossover
     curve silently re-runs the fight in timed mode; against a Lifeline
     enemy that pricing needs a certified event order.
     """
+    _uncertify(monkeypatch)
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Ziggs",
             "level": 18,
-            "items": ["Eclipse"],
+            "items": [],
             "include_crossover": True,
             "enemies": [
                 {

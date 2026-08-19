@@ -1956,21 +1956,25 @@ def _control_armed_event_coverage(
 
 @dataclass
 class _ThresholdHealDrip:
-    """Protoplasm Harness's sourced heal, delivered over its duration.
+    """Protoplasm Harness's sourced heal, delivered on its authored ticks.
 
-    ``shield_ledger`` owns the Lifeline itself — the threshold crossing and
-    the temporary bonus health. The Wiki sources the accompanying heal "over
-    the same duration", so this author delivers it between damage events
-    rather than in one lump. A fight reaching the temporary-health expiry is
-    withheld: the Wiki does not document what happens to current health when
-    that temporary maximum lapses.
+    ``shield_ledger`` owns the Lifeline itself — the threshold crossing, the
+    temporary bonus health, and the expiry that removes it again.  The Wiki
+    sources the accompanying heal "over the same duration"; the cadence it is
+    subdivided on is the mechanic's own declared ``heal_tick_interval``, so
+    this author lands whole ticks at authored times rather than interpolating
+    a continuous drip between whatever damage events happen to exist.  That
+    is what makes the target-side heal an event timeline instead of a coarse
+    total, and ``ticks`` is the count a coverage reader certifies against.
     """
 
     duration: float = 0.0
-    heal_total: float = 0.0
+    tick_interval: float = 0.0
+    tick_amount: float = 0.0
+    ticks: int = 0
+    ticks_delivered: int = 0
     triggered: bool = False
     trigger_time: float = -1.0
-    last_time: float = 0.0
     healing_received: float = 0.0
 
     def start(
@@ -1979,42 +1983,60 @@ class _ThresholdHealDrip:
         event_time: float,
         armed: shield_ledger.Absorption,
     ) -> None:
-        """Begin the drip on the instance whose damage armed the Lifeline.
+        """Begin the heal on the instance whose damage armed the Lifeline.
 
         The window and the sourced total are read back off the armed Lifeline
         rather than staged a second time here.  The arming instant already
         delivered whatever the defender's missing health could take; only the
-        remainder drips, so the two authors never exceed the sourced amount.
+        remainder is scheduled, so the two authors never exceed the sourced
+        amount.
         """
         self.triggered = True
         self.trigger_time = event_time
-        self.last_time = event_time
         self.duration = pools.threshold_health.duration
-        self.heal_total = max(
+        self.tick_interval = threshold_defense.threshold_health_tick_interval()
+        remainder = max(
             0.0, armed.threshold_health_heal - armed.threshold_health_healed
         )
+        self.ticks = (
+            int(round(self.duration / self.tick_interval))
+            if self.tick_interval > 0.0 and self.duration > 0.0
+            else 0
+        )
+        self.tick_amount = remainder / self.ticks if self.ticks else 0.0
         self.healing_received += armed.threshold_health_healed
 
     def advance_to(self, pools: shield_ledger.ShieldPools, event_time: float) -> None:
-        """Apply sourced over-time healing up to one incoming event."""
+        """Land every authored tick due by ``event_time``, then the expiry.
+
+        The final tick falls on the window's last instant, which is also the
+        instant the temporary maximum lapses; the heal lands first because
+        the source has it running for the whole duration, and the expiry then
+        clamps against the maximum it leaves behind.
+        """
         if not self.triggered:
-            self.last_time = max(self.last_time, event_time)
             return
-        expiry = self.trigger_time + self.duration
-        if event_time >= expiry - 1e-9:
-            raise threshold_defense.ThresholdExpiryWithheld()
-        elapsed = max(0.0, event_time - self.last_time)
-        if (
-            pools.health > 0
-            and self.duration > 0
-            and elapsed > 0
-            and self.heal_total > 0
-        ):
-            offered = self.heal_total * elapsed / self.duration
-            received = min(offered, max(0.0, pools.max_health - pools.health))
-            pools.health += received
-            self.healing_received += received
-        self.last_time = max(self.last_time, event_time)
+        while self.ticks_delivered < self.ticks:
+            due = self.ticks_delivered + 1
+            tick_time = self.trigger_time + due * self.tick_interval
+            if tick_time > event_time + 1e-9:
+                break
+            self.ticks_delivered += 1
+            received = min(self.tick_amount, max(0.0, pools.max_health - pools.health))
+            if received > 0.0 and pools.health > 0.0:
+                pools.health += received
+                self.healing_received += received
+        shield_ledger.expire_threshold_health(pools, event_time)
+
+    def cadence_certified(self) -> bool:
+        """Whether the heal was delivered on an authored tick schedule.
+
+        A declaration that subdivides the window into no ticks at all leaves
+        the heal's timing unsourced, which is exactly the coverage downgrade
+        the target-side Lifeline still owes; asking the drip is what keeps
+        that answer measured rather than assumed by the reader.
+        """
+        return not self.triggered or self.ticks > 0
 
 
 _LIANDRY_BURN_KEY = "burn_Liandry's Torment"
@@ -11713,7 +11735,12 @@ def calculate_fight_damage(
     if (
         config.target_threshold_health_heal > 0
         and shield_outcome["threshold_health_triggered"]
+        and not shield_outcome["threshold_health_cadence_certified"]
     ):
+        # The downgrade the target-side Lifeline used to take unconditionally,
+        # now measured: it fires when the declaration subdivides the sourced
+        # window into no ticks at all, so the heal's timing is a total rather
+        # than a schedule.  A declared cadence certifies the timeline instead.
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"
         timeline_coverage["coarse_sources"] = sorted(
@@ -11722,8 +11749,8 @@ def calculate_fight_damage(
         )
         timeline_coverage["note"] = (
             f"{threshold_defense.threshold_health_owner()}'s sourced total "
-            "healing is spread over five seconds; its internal heal tick "
-            "cadence is not source-certified."
+            "healing is spread over its window; its declaration authors no "
+            "heal tick cadence to certify that timing against."
         )
     return {
         "breakdown": state.breakdown,
@@ -11764,6 +11791,20 @@ def calculate_fight_damage(
             lethality=float(champion_stats.get("lethality", 0.0) or 0.0),
         ),
     }
+
+
+def _walk_end_time(config: FightConfig, damage_events: list[dict[str, Any]]) -> float:
+    """When a shield walk's window closes, for the timed state it expires.
+
+    The authored fight duration, unless the ledger itself runs past it — a
+    burst request carries no duration to speak of and its packets are the
+    only clock there is.
+    """
+    latest = max(
+        (float(event.get("time", 0.0) or 0.0) for event in damage_events),
+        default=0.0,
+    )
+    return max(float(config.fight_duration_seconds or 0.0), latest)
 
 
 def _resolve_starting_shield_outcome(
@@ -11843,6 +11884,10 @@ def _resolve_starting_shield_outcome(
             )
             if outcome.threshold_health_triggered:
                 heal_drip.start(pools, event_time, outcome)
+        # The window edge, the way the survival walk's ``finalize_states``
+        # closes one: a Lifeline armed by the last packet still owes its
+        # remaining ticks and its expiry inside the authored fight.
+        heal_drip.advance_to(pools, _walk_end_time(config, damage_events))
 
     if repriced:
         # Each source's repriced packets, and the declaration each of them
@@ -11881,6 +11926,11 @@ def _resolve_starting_shield_outcome(
         "threshold_shield_absorbed": pools.threshold_absorbed,
         "health_damage": max(0.0, state.total_damage - absorbed),
         "threshold_health_triggered": heal_drip.triggered,
+        "threshold_health_cadence_certified": heal_drip.cadence_certified(),
+        "threshold_health_heal_ticks": heal_drip.ticks_delivered,
+        "threshold_health_expired": (
+            threshold_health is not None and threshold_health.expired
+        ),
         "threshold_health_bonus_gained": (
             threshold_health.bonus
             if threshold_health is not None and threshold_health.triggered

@@ -2732,6 +2732,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "heal_bonus_armor_ratio": 1.75,
         "heal_bonus_mr_ratio": 1.75,
         "duration": 5.0,
+        # ASSUMED, not sourced: the entry says the heal lands "over the same
+        # duration" and neither it nor Community Dragon's 2525 subdivides the
+        # five seconds.  0.25s is the cadence this calculator already authors
+        # every other heal-over-time on (Lissandra's Frozen Tomb, ten 0.25s
+        # ticks reconciling a 2.5s total).  Re-verify with this item's other
+        # code-owned keys on patch day.
+        "heal_tick_interval": 0.25,
         "cooldown": 90.0,
     },
     # ── Shield reduction (attacker passives that cut the target's shields) ──
@@ -3106,6 +3113,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "heal_bonus_armor_ratio",
             "heal_bonus_mr_ratio",
             "duration",
+            "heal_tick_interval",
             "cooldown",
         }
     ),

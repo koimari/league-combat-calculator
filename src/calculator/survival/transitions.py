@@ -336,16 +336,22 @@ class TransitionContext:
 
 def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
     """Expire a temporary-health window at ``event_time``; return whether any
-    bonus was removed (the authoritative walk's exact clamp semantics)."""
+    bonus was removed.
+
+    The clamp itself is ``shield_ledger.expire_temporary_max_health`` — the
+    one implementation of the Wiki's maximum-health-decrease rule, shared
+    with the ordered damage walk's Lifeline expiry.  What stays here is this
+    walk's own bookkeeping: which window closed, and when.
+    """
     if (
         state["temporary_health_amount"] <= 0.0
         or state["temporary_health_until"] <= 0.0
         or event_time < state["temporary_health_until"]
     ):
         return False
-    expired = state["temporary_health_amount"]
-    state["pools"].max_health = max(0.0, state["pools"].max_health - expired)
-    state["pools"].health = min(state["pools"].health, state["pools"].max_health)
+    shield_ledger.expire_temporary_max_health(
+        state["pools"], state["temporary_health_amount"]
+    )
     state["temporary_health_amount"] = 0.0
     state["temporary_health_expired_at"] = round(state["temporary_health_until"], 3)
     state["temporary_health_until"] = 0.0
@@ -1955,6 +1961,8 @@ def run_survival_walk(
             pools.venom_factor = 1.0
         if state["temporary_health_amount"] > 0.0:
             expire_temporary_health(state, event_time)
+        if pools.threshold_health is not None:
+            shield_ledger.expire_threshold_health(pools, event_time)
 
         kind = action.kind
         # Revive is a state transition rather than healing: it is allowed to
@@ -2162,11 +2170,13 @@ def run_survival_walk(
 
 
 def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
-    """Post-walk expiry: timed shields and temporary health at the window
-    edge (the authoritative walk's final pass)."""
+    """Post-walk expiry: timed shields, temporary health and an armed
+    temporary-health Lifeline at the window edge (the authoritative walk's
+    final pass)."""
     for state in states:
         shield_ledger.expire_timed(state["pools"], float(duration))
         expire_temporary_health(state, float(duration))
+        shield_ledger.expire_threshold_health(state["pools"], float(duration))
 
 
 __all__ = [

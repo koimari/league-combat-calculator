@@ -24,6 +24,9 @@ from src.calculator.item_coverage import (
     target_build_coverage,
     target_item_model_coverage,
 )
+from src.calculator.interpreters.threshold_defense import (
+    threshold_health_coverage_source,
+)
 from src.calculator.item_behavior import UtilityDimension
 from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_effects import ITEM_EFFECTS
@@ -379,6 +382,27 @@ def test_certified_timeline_guard_withholds_uncertified_lifeline_fights():
         require_certified_target_timeline(
             [get_item_by_name("Sterak's Gage")],
             {"complete": False, "coarse_sources": ["muramana_ability"]},
+        )
+
+
+def test_certified_timeline_guard_still_withholds_an_uncertified_protoplasm():
+    """The emptied check, still armed on a synthetic uncertified coverage.
+
+    Nothing in the pipeline produces this dict any more — the target-side
+    heal authors its cadence, so the fight certifies — but the guard is what
+    would catch the next coarse target-side source, and a check nobody can
+    fire is a check nobody can trust.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Protoplasm Harness.*target_Protoplasm Harness is not event-certified",
+    ):
+        require_certified_target_timeline(
+            [get_item_by_name("Protoplasm Harness")],
+            {
+                "complete": False,
+                "coarse_sources": [threshold_health_coverage_source()],
+            },
         )
 
 

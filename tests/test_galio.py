@@ -213,7 +213,12 @@ def test_target_max_health_change_is_repriced(galio_data):
     assert result["threshold_health_triggered"] is True
     assert result["target_effective_max_health"] == pytest.approx(700.0)
     assert result["target_healing_received"] > 0.0
-    assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+    # The target-side heal authors its cadence now, so the fight stays
+    # certified; the reprice above is what the lifeline is measured by.
+    assert result["timeline_coverage"]["complete"] is True
+    assert (
+        "target_Protoplasm Harness" not in result["timeline_coverage"]["coarse_sources"]
+    )
 
 
 # ---------------------------------------------------------------------------

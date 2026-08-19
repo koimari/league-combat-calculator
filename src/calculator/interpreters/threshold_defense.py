@@ -67,17 +67,48 @@ NOTES: Mapping[DefenseMechanic, str] = {
 # names the mechanic in parentheses rather than after a dash.
 REBIRTH_SOURCE = "{owner} (Rebirth)"
 
-# The one threshold defence that answers with health rather than a shield,
-# and therefore the one whose *expiry* the sources do not document.  The
-# fight engine reaches for this mechanic by name below; the item behind it
-# is whatever declares it.
+# The one threshold defence that answers with health rather than a shield.
+# The fight engine reaches for this mechanic by name below; the item behind
+# it is whatever declares it.
 THRESHOLD_HEALTH_MECHANIC = DefenseMechanic.LIFELINE_PROTOPLASM
 
 # What the engines publish as the coarse coverage source when a fight's
 # certification turns on that mechanic.
 COVERAGE_SOURCE = "target_{owner}"
 
+# The declared key whose value is the cadence the accompanying heal lands on.
+TICK_INTERVAL_KEY = "heal_tick_interval"
+
 _THRESHOLD_HEALTH_OWNER_MEMO: dict[tuple[int, str], str] = {}
+_THRESHOLD_HEALTH_TICK_MEMO: dict[tuple[int, str], float] = {}
+
+
+def _threshold_health_rule() -> BehaviorRule:
+    """The sole declaration of the temporary-health Lifeline, or a stop.
+
+    Exactly one holder, because the drip that raises is armed from resolved
+    pools that carry no owner: with two declarations nothing on that path
+    could say which one armed it, and a receipt naming the wrong item is
+    worse than a stop.
+    """
+    rules = sorted(
+        (
+            rule
+            for owner in declared_owners()
+            for rule in behavior_rules(owner)
+            if rule.family is RuleFamily.THRESHOLD_DEFENSE
+            and defense_state.payload(rule).mechanic is THRESHOLD_HEALTH_MECHANIC
+        ),
+        key=lambda rule: rule.owner,
+    )
+    if len(rules) != 1:
+        raise DefenseInterpretationError(
+            f"{[rule.owner for rule in rules]} declare "
+            f"{THRESHOLD_HEALTH_MECHANIC.value} and the resolved pools the "
+            "fight arms it from carry no owner, so nothing on that path can "
+            "say which one a receipt should name"
+        )
+    return rules[0]
 
 
 def threshold_health_owner() -> str:
@@ -90,59 +121,40 @@ def threshold_health_owner() -> str:
     and asking it is what makes the name follow the item that grows the
     mechanic rather than the commit somebody remembers the receipt.
 
-    Exactly one holder, because the drip that raises is armed from resolved
-    pools that carry no owner: with two declarations nothing on that path
-    could say which one armed it, and a receipt naming the wrong item is
-    worse than a stop.  Memoized per cache generation (D-49), because both
-    readers are inside fight loops.
+    Memoized per cache generation (D-49), because its readers are inside
+    fight loops.
     """
     key = (data_version(), THRESHOLD_HEALTH_MECHANIC.value)
     memoized = _THRESHOLD_HEALTH_OWNER_MEMO.get(key)
     if memoized is not None:
         return memoized
-    owners = tuple(
-        sorted(
-            rule.owner
-            for owner in declared_owners()
-            for rule in behavior_rules(owner)
-            if rule.family is RuleFamily.THRESHOLD_DEFENSE
-            and defense_state.payload(rule).mechanic is THRESHOLD_HEALTH_MECHANIC
-        )
-    )
-    if len(owners) != 1:
-        raise DefenseInterpretationError(
-            f"{list(owners)} declare {THRESHOLD_HEALTH_MECHANIC.value} and the "
-            "resolved pools the fight arms it from carry no owner, so nothing "
-            "on that path can say which one a receipt should name"
-        )
-    store_for_generation(_THRESHOLD_HEALTH_OWNER_MEMO, key, owners[0])
-    return owners[0]
+    owner = _threshold_health_rule().owner
+    store_for_generation(_THRESHOLD_HEALTH_OWNER_MEMO, key, owner)
+    return owner
+
+
+def threshold_health_tick_interval() -> float:
+    """The cadence the temporary-health Lifeline's heal is delivered on.
+
+    Reached the same way the owner is — off the declaration rather than
+    through the fight config — because the walk that authors the ticks holds
+    resolved pools, not a build.  The number itself is the item's, read live
+    from the registry, and its ``heal_tick_interval`` key is an explicitly
+    assumed subdivision of the sourced duration rather than a sourced value;
+    ``item_effects`` says so beside it.
+    """
+    key = (data_version(), THRESHOLD_HEALTH_MECHANIC.value)
+    memoized = _THRESHOLD_HEALTH_TICK_MEMO.get(key)
+    if memoized is not None:
+        return memoized
+    interval = DefenseSlot(_threshold_health_rule()).value(TICK_INTERVAL_KEY)
+    store_for_generation(_THRESHOLD_HEALTH_TICK_MEMO, key, interval)
+    return interval
 
 
 def threshold_health_coverage_source() -> str:
     """The coarse coverage source naming the temporary-health Lifeline."""
     return COVERAGE_SOURCE.format(owner=threshold_health_owner())
-
-
-class ThresholdExpiryWithheld(ValueError):
-    """A fight ran past the temporary-health Lifeline's expiry.
-
-    Coverage refuses this fight rather than pricing it: the sources do not
-    document what happens to current health when the temporary maximum
-    lapses.  A type rather than a sentence, because its one consumer used to
-    identify it by searching the message for an item name — which swallowed
-    every unrelated failure that happened to mention the item, and would
-    have started aborting whole searches the day somebody reworded it.
-    """
-
-    def __init__(self) -> None:
-        self.owner = threshold_health_owner()
-        self.coverage_source = threshold_health_coverage_source()
-        super().__init__(
-            f"{self.owner} cannot be certified for damage at or after "
-            "its temporary-health expiry: the current-health removal rule "
-            "is not documented by the sourced Wiki data."
-        )
 
 
 class ThresholdDefenseResolverInterpreter:  # pylint: disable=too-few-public-methods
@@ -274,8 +286,9 @@ __all__ = [
     "REBIRTH_SOURCE",
     "RESOLVER_INTERPRETER",
     "THRESHOLD_HEALTH_MECHANIC",
+    "TICK_INTERVAL_KEY",
     "ThresholdDefenseResolverInterpreter",
-    "ThresholdExpiryWithheld",
     "threshold_health_coverage_source",
     "threshold_health_owner",
+    "threshold_health_tick_interval",
 ]

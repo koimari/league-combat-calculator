@@ -11,6 +11,8 @@ from src.calculator.shield_ledger import (
     ThresholdShield,
     TimedShield,
     absorb,
+    expire_temporary_max_health,
+    expire_threshold_health,
     expire_timed,
     is_inert,
 )
@@ -286,6 +288,81 @@ class TestThresholdHealth:
         second = absorb(pools, 100.0, "magic", 1.0)
         assert second.threshold_health_triggered is False
         assert pools.max_health == 2300.0
+
+    def test_arming_stamps_the_window_the_grant_ends_at(self):
+        pools = _pools(threshold_health=self._protoplasm())
+        absorb(pools, 1500.0, "magic", 2.0)
+        assert pools.threshold_health.expires_at == 7.0
+
+
+def _protoplasm_health() -> ThresholdHealth:
+    """The Protoplasm-shaped threshold health the expiry tests arm."""
+    return ThresholdHealth(bonus=300.0, heal=400.0, health_ratio=0.3, duration=5.0)
+
+
+class TestTemporaryMaximumExpiry:
+    """The Wiki's maximum-health-decrease rule, and its one implementation.
+
+    https://wiki.leagueoflegends.com/en-us/Health — "A decrease in maximum
+    health does not change current health (unless it would exceed the new
+    maximum health)", whose worked example is Protoplasm Harness itself.
+    Cached by ``python scripts/decompose_wiki.py --fetch "Health"``.
+    """
+
+    def test_the_wiki_worked_example_verbatim(self):
+        """300/1000 -> +200 max -> heal 200 -> expiry: 700 out of 1000."""
+        pools = ShieldPools(health=300.0, max_health=1000.0)
+        pools.max_health += 200.0
+        pools.health += 200.0
+        assert (pools.health, pools.max_health) == (500.0, 1200.0)
+        pools.health += 200.0  # the passive's heal
+        assert pools.health == 700.0
+
+        removed = expire_temporary_max_health(pools, 200.0)
+
+        assert removed == 200.0
+        assert pools.max_health == 1000.0
+        assert pools.health == 700.0
+
+    def test_only_the_overhang_above_the_new_maximum_is_clamped(self):
+        """A defender that never spent the grant loses exactly the overhang."""
+        pools = ShieldPools(health=1200.0, max_health=1200.0)
+
+        expire_temporary_max_health(pools, 200.0)
+
+        assert (pools.health, pools.max_health) == (1000.0, 1000.0)
+
+    def test_a_grant_larger_than_the_maximum_floors_at_zero(self):
+        pools = ShieldPools(health=40.0, max_health=50.0)
+
+        assert expire_temporary_max_health(pools, 500.0) == 50.0
+        assert (pools.health, pools.max_health) == (0.0, 0.0)
+
+    def test_the_lifeline_expires_at_its_window_and_not_before(self):
+        pools = _pools(
+            threshold_health=ThresholdHealth(
+                bonus=300.0, heal=0.0, health_ratio=0.3, duration=5.0
+            )
+        )
+        absorb(pools, 1500.0, "magic", 0.0)
+        assert pools.max_health == 2300.0
+
+        assert expire_threshold_health(pools, 4.999) == 0.0
+        assert pools.max_health == 2300.0
+
+        assert expire_threshold_health(pools, 5.0) == 300.0
+        assert pools.max_health == 2000.0
+        # Health was 800 of the raised 2300 and stays exactly where it was.
+        assert pools.health == 800.0
+
+    def test_an_unarmed_or_already_expired_lifeline_removes_nothing_twice(self):
+        pools = _pools(threshold_health=_protoplasm_health())
+        assert expire_threshold_health(pools, 99.0) == 0.0
+
+        absorb(pools, 1500.0, "magic", 0.0)
+        assert expire_threshold_health(pools, 99.0) == 300.0
+        assert expire_threshold_health(pools, 99.0) == 0.0
+        assert pools.max_health == 2000.0
 
 
 class TestMixedMechanics:

@@ -68,6 +68,9 @@ class ThresholdHealth:
     the bonus health in full, and as much of the heal as the defender's
     missing health can take.  Protoplasm Harness sources the rest "over the
     same duration", which is a heal author's job, not absorption's.
+
+    ``expires_at`` is stamped when the Lifeline arms, so the temporary
+    maximum has a modeled end the way every timed shield does.
     """
 
     bonus: float
@@ -75,6 +78,8 @@ class ThresholdHealth:
     health_ratio: float
     duration: float
     triggered: bool = False
+    expires_at: float | None = None
+    expired: bool = False
 
 
 @dataclass(slots=True)
@@ -238,6 +243,47 @@ def expire_timed(pools: ShieldPools, event_time: float) -> float:
             expired_total += amount
     pools.timed = surviving
     return expired_total
+
+
+def expire_temporary_max_health(pools: ShieldPools, amount: float) -> float:
+    """Remove a temporary maximum-health grant; return what was removed.
+
+    The sourced rule, from the Wiki's Health page — whose worked example is
+    Protoplasm Harness itself: "A decrease in maximum health does not change
+    current health (unless it would exceed the new maximum health). ... When
+    the passive runs out, maximum health decreases by 200 from 1200 to 1000.
+    Current health remains at 700."  So a defender that spent more than the
+    grant keeps every point it has; only an overhang above the new maximum
+    is clamped away.
+
+    https://wiki.leagueoflegends.com/en-us/Health
+    Cached locally by ``python scripts/decompose_wiki.py --fetch "Health"``
+    (``data/wiki-raw/Health.wiki``; the sentence is the Overview section's).
+
+    This is the only implementation of that rule.  Both walks that carry a
+    temporary maximum call it: the survival walk's temporary-health ledger
+    (``survival.transitions.expire_temporary_health``) and the ordered damage
+    walk's Lifeline expiry (:func:`expire_threshold_health`).
+    """
+    removed = min(max(0.0, amount), pools.max_health)
+    pools.max_health -= removed
+    pools.health = min(pools.health, pools.max_health)
+    return removed
+
+
+def expire_threshold_health(pools: ShieldPools, event_time: float) -> float:
+    """Close an armed temporary-health Lifeline whose window has lapsed."""
+    health = pools.threshold_health
+    if (
+        health is None
+        or not health.triggered
+        or health.expired
+        or health.expires_at is None
+        or event_time < health.expires_at - 1e-9
+    ):
+        return 0.0
+    health.expired = True
+    return expire_temporary_max_health(pools, health.bonus)
 
 
 def absorb(
@@ -405,6 +451,7 @@ def _arm_thresholds(
         pools.max_health += health.bonus
         pools.health += health.bonus
         health.triggered = True
+        health.expires_at = event_time + health.duration
         heal = health.heal
         # The heal lands before the crossing damage, so it can only take the
         # health the defender was already missing.  Whatever the sourced heal

@@ -27,7 +27,6 @@ from .item_coverage import (
     optimizer_supported_items,
     require_optimizer_item_coverage,
 )
-from .interpreters.threshold_defense import ThresholdExpiryWithheld
 from .item_source import is_ordinary_sr_item
 from .loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
@@ -279,62 +278,34 @@ def _evaluate_build_uncached(
             items,
             item_options=base_params.item_options,
         )
-        try:
-            combat = build_participant_timeline(
-                champion_data,
-                level,
-                items,
-                base_params,
-                main_stats=stats,
-                main_defenses=defenses,
-                enemies=list(combat_context.get("enemies", [])),
-                allies=list(combat_context.get("allies", [])),
-                pair_result_cache=combat_context.get("pair_result_cache"),
-                search_context=combat_context.get("search_context"),
-                # Typed objectives score from the serialized events list
-                # below, so they need the full receipt; total damage scores
-                # from the breakdown row and can take the scoring subset.
-                include_receipt=objective in ("physical_damage", "magic_damage"),
-                # Nobody reads this payload.  A search evaluates thousands of
-                # candidates and shows none of them, so the parallel
-                # dispositions map would be a few hundred dict entries per
-                # evaluation describing a payload that is compared and thrown
-                # away -- which the phase's allocation gate measures and
-                # refuses.  Said here, at the one call site it is true of,
-                # rather than assumed inside a view on every caller's behalf.
-                published=False,
-                # ``stats`` above used this exact configuration; the claim
-                # only holds when no external ally bonuses were folded in,
-                # because pair fights strip those.
-                reuse_main_stats=not base_params.ally_stat_bonuses,
-            )
-        except ThresholdExpiryWithheld as exc:
-            # A candidate can introduce a target-state interaction the fight
-            # engine deliberately fails closed on: the temporary maximum-health
-            # expiry combined with an enemy max-health ability.  That makes
-            # this candidate ineligible for this exact search; it must not
-            # abort every other legal build.  Caught by *type* — the refusal
-            # used to be identified by searching the message for an item name,
-            # which swallowed unrelated failures mentioning that item and kept
-            # a reworded sentence one commit away from aborting the search.
-            # Every other validation error stays visible to the API caller.
-            if timeline_audit is not None:
-                coverage = {
-                    "complete": False,
-                    "certification": "partial_candidate_event_order",
-                    "exact_sources": [],
-                    "coarse_sources": [exc.coverage_source],
-                    "note": "Candidate rejected by a target-state interaction.",
-                }
-                timeline_audit["evaluations"] += 1
-                timeline_audit["partial_evaluations"] += 1
-                timeline_audit["coarse_sources"].add(exc.coverage_source)
-                timeline_audit.setdefault("withheld_builds", {})[
-                    _build_receipt_key(items)
-                ] = _public_build_receipt(
-                    items, coverage, "candidate_rejected_target_state"
-                )
-            return float("-inf")
+        combat = build_participant_timeline(
+            champion_data,
+            level,
+            items,
+            base_params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=list(combat_context.get("enemies", [])),
+            allies=list(combat_context.get("allies", [])),
+            pair_result_cache=combat_context.get("pair_result_cache"),
+            search_context=combat_context.get("search_context"),
+            # Typed objectives score from the serialized events list
+            # below, so they need the full receipt; total damage scores
+            # from the breakdown row and can take the scoring subset.
+            include_receipt=objective in ("physical_damage", "magic_damage"),
+            # Nobody reads this payload.  A search evaluates thousands of
+            # candidates and shows none of them, so the parallel
+            # dispositions map would be a few hundred dict entries per
+            # evaluation describing a payload that is compared and thrown
+            # away -- which the phase's allocation gate measures and
+            # refuses.  Said here, at the one call site it is true of,
+            # rather than assumed inside a view on every caller's behalf.
+            published=False,
+            # ``stats`` above used this exact configuration; the claim
+            # only holds when no external ally bonuses were folded in,
+            # because pair fights strip those.
+            reuse_main_stats=not base_params.ally_stat_bonuses,
+        )
         coverage = combat.get("timeline_coverage", {})
         excluded_sources = (
             applicability_exclusion_sources(coverage)
