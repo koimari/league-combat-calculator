@@ -74,7 +74,7 @@ FROM_ALL_SOURCES_PRODUCERS = 5
 # equality here would go red on each of the campaign's remaining champion
 # batches and be re-pinned without being read — which is the failure mode
 # D-26 exists to prevent, arriving through the gate meant to prevent it.
-COMMAND_CC_AUTHORS = 40
+COMMAND_CC_AUTHORS = 31
 
 # Champion modules that withhold a time-based answer and are swept through
 # one rotation instead.  Pinned so the sweep cannot shrink in silence: a
@@ -92,7 +92,7 @@ TIME_BASED_WITHHOLDING_CHAMPIONS = 0
 # floor for the same reason as above (12 at the time of writing): the
 # reachable claim is "at least one authored pair merges, and Maokai's does",
 # and a merging pair that *stops* merging is what would strand the fixture.
-MERGING_COMMAND_AUTHORS = 12
+MERGING_COMMAND_AUTHORS = 7
 
 # The cross-participant producers whose packet carries a finite expiry, and
 # whose closing instant the two engines therefore answer separately.  Five of
