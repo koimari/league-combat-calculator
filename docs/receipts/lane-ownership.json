@@ -147,6 +147,24 @@
    ],
    "what": "The R-15/R-18 clause 2 correction for the cast-timeline dissent: Syndra's second Dark Sphere charge stops being free and prices itself off Q's own cached cost row. It is a champions/syndra.py edit.",
    "why_it_is_not_a_criterion_12_violation": "X's row is the close and its remediation passes, and its range opens at 067c94c -- after every phase lane's range has closed -- so no second lane was live and no two lanes held the file. What it is instead is the same shape L4's row above records: the map lists L1 for the recast_of stamp and L6 for the rest, and the lane that re-opened that stamp under clause 2 is neither. Recorded here rather than left as the difference between what the map says and what the tree did."
+  },
+  {
+   "file": "src/calculator/pipeline.py",
+   "lane": "X",
+   "commits": [
+    "fc57cf5"
+   ],
+   "what": "The autos-only reserved option: the pipeline injects auto_attacks_only through the same contract that already carried the window's duration and uptime, so a timeline-walk module can tell that the engine cast nothing. It is a pipeline.py edit.",
+   "why_it_is_not_a_criterion_12_violation": "X's range opens at 067c94c, after every phase lane's range closed, so no second lane was live and no two lanes held the file. The full-coverage campaign runs inside X, and these are its writes to a file the map gives other lanes -- recorded here rather than left as the difference between what the map says and what the tree did."
+  },
+  {
+   "file": "src/calculator/ability_spec.py",
+   "lane": "X",
+   "commits": [
+    "96457fa"
+   ],
+   "what": "The crowd-control vocabulary gains cripple and silence, so Malphite's Ground Slam and Malzahar's Call of the Void can be recorded as what they are instead of as a slow, a nothing, or an unreviewed slot. It is an ability_spec.py edit.",
+   "why_it_is_not_a_criterion_12_violation": "X's range opens at 067c94c, after every phase lane's range closed, so no second lane was live and no two lanes held the file. The full-coverage campaign runs inside X, and these are its writes to a file the map gives other lanes -- recorded here rather than left as the difference between what the map says and what the tree did."
   }
  ],
  "a_declared_owner_need_not_write": "Ownership is permission, not obligation. L1 declares the 0B consumers in ability_spec.py and wrote none in the campaign range; that is a lane not needing what it was allowed, and the gate asserts a subset rather than an equality in that direction. The equality that matters runs the other way: every lane that DID write one of these three files is either a declared owner or a named divergence."
