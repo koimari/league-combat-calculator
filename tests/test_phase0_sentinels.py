@@ -64,9 +64,17 @@ FROM_ALL_SOURCES_PRODUCERS = 5
 # umbrella criterion 15 requires it to be non-empty.  It was three — Ahri,
 # Pantheon, Syndra — while those were the only reviewed ``cc_kind`` markers in
 # the registry; the full-coverage campaign's decision 6 made every champion
-# module author its own kit's crowd-control facts, and the population grew
-# with it.
-COMMAND_CC_AUTHORS = 31
+# module author its own kit's crowd-control facts, and the population grows
+# with every module that lands (40 at the time of writing).
+#
+# **A floor, not an equality**, and the difference is the sentinel's own
+# stated purpose: "pinned so the sweep cannot shrink in silence: a champion
+# that starts withholding is a champion whose later immobilizes stop being
+# swept."  Shrinking is the defect.  Growth is decision 6 working, and an
+# equality here would go red on each of the campaign's remaining champion
+# batches and be re-pinned without being read — which is the failure mode
+# D-26 exists to prevent, arriving through the gate meant to prevent it.
+COMMAND_CC_AUTHORS = 40
 
 # Champion modules that withhold a time-based answer and are swept through
 # one rotation instead.  Pinned so the sweep cannot shrink in silence: a
@@ -80,8 +88,11 @@ TIME_BASED_WITHHOLDING_CHAMPIONS = 0
 # windows merge instead of standing apart.  Zero when the Command sentinels
 # were written, which is what made ``merge`` a formality; it is now the
 # corpus fact ``merge=REFRESH`` rides on, and
-# ``tests/test_command_amp_roster.py`` is where one of them is priced.
-MERGING_COMMAND_AUTHORS = 7
+# ``tests/test_command_amp_roster.py`` is where one of them is priced.  A
+# floor for the same reason as above (12 at the time of writing): the
+# reachable claim is "at least one authored pair merges, and Maokai's does",
+# and a merging pair that *stops* merging is what would strand the fixture.
+MERGING_COMMAND_AUTHORS = 12
 
 # The cross-participant producers whose packet carries a finite expiry, and
 # whose closing instant the two engines therefore answer separately.  Five of
@@ -358,8 +369,8 @@ class TestCommandWindowsMergeByRefresh:
 
     This class used to assert that no authored pair could merge, and that the
     day one did, ``merge`` needed "a fixture and an oracle receipt before
-    landing it".  The corpus grew past it: seven authors now merge.  The
-    fixture and the receipt live in
+    landing it".  The corpus grew past it, and keeps growing.  The fixture and
+    the receipt live in
     ``tests/test_command_amp_roster.py::TestTwoImmobilizesMergeIntoOneRefreshedWindow``
     — the merge is asserted here only as the census fact that makes that
     fixture reachable, so one fact keeps one home.
@@ -374,10 +385,13 @@ class TestCommandWindowsMergeByRefresh:
             "nothing.  The emission gate in damage._evaluate_cast_parts or "
             "the cc_kind markers themselves have regressed."
         )
-        assert len(sweep.authors) == COMMAND_CC_AUTHORS, (
-            "D-12: the Command population moved; it is now "
-            f"{sorted(sweep.authors)}.  A new author is a new chance for two "
-            "windows to overlap — re-read this sentinel before pinning it."
+        assert len(sweep.authors) >= COMMAND_CC_AUTHORS, (
+            "D-12: the Command population *shrank* to "
+            f"{sorted(sweep.authors)}.  A champion that stops authoring an "
+            "immobilize a Mandate holder can read has lost a reviewed "
+            "cc_kind marker or stopped reaching the emission gate in "
+            "damage._evaluate_cast_parts; growth is decision 6 landing and "
+            "raises this floor, a shrink is the regression."
         )
 
     def test_the_sweep_covered_every_registered_champion(self):
@@ -432,11 +446,12 @@ class TestCommandWindowsMergeByRefresh:
             for name, (times, windows) in sweep.authors.items()
             if len(windows) != len(times)
         }
-        assert len(merging) == MERGING_COMMAND_AUTHORS, (
-            "D-12: the merging population moved to "
+        assert len(merging) >= MERGING_COMMAND_AUTHORS, (
+            "D-12: the merging population shrank to "
             f"{sorted(merging)}.  It is what makes the roster fixture's "
             "merge reachable rather than synthetic — re-read "
-            "TestTwoImmobilizesMergeIntoOneRefreshedWindow before pinning it."
+            "TestTwoImmobilizesMergeIntoOneRefreshedWindow before lowering "
+            "this floor."
         )
         assert "Maokai" in merging, (
             "the priced fixture is Maokai's; his two roots no longer merge, "

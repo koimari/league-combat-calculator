@@ -1148,7 +1148,7 @@ def _refresh_live_modifier(
     ``ArmingLedger`` is the one place it is answered.
 
     The surviving window is the later expiry, which is what the pair engine's
-    union does and what ``WindowMerge.EXTEND`` names: a refresh never
+    union does and what ``WindowMerge.REFRESH`` names: a refresh never
     truncates a window a longer earlier trigger opened.
 
     The replaced expiry is published unrounded.  Rounding is presentation and

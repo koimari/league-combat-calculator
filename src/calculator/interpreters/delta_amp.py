@@ -408,15 +408,25 @@ class AmpSlot:
     ) -> tuple[tuple[float, float], ...]:
         """The armed windows *trigger_times* open, merged as the rule declares.
 
-        ``EXTEND`` is the Wiki reading the engine already implements — "
-        subsequent immobilizes against a target extend the duration of the
-        effect" — and it is now the declaration's word rather than the shape
-        of a loop.  ``REFRESH`` and ``INDEPENDENT`` deliberately have no
-        arithmetic: no rule declares them, and writing a branch nothing
-        reaches is the orphan D-51 forbids.
+        ``REFRESH`` is what this loop computes and now what the declaration
+        calls it: a trigger landing inside a live window moves that window's
+        end to its own time plus the duration.  The ``max`` is the identity
+        under a constant duration — ``time`` is not before the trigger that
+        opened the window, so ``time + duration`` is never the earlier of the
+        two — and it is kept because it is the spelling
+        ``survival.transitions._refresh_live_modifier`` uses for the same
+        merge, so the two engines' refresh is one shape rather than two.
+
+        ``EXTEND`` is the additive reading — a second immobilize adding its
+        own duration to whatever is left — and ``INDEPENDENT`` a second
+        window beside the first.  Both deliberately have no arithmetic: no
+        rule declares them, and writing a branch nothing reaches is the
+        orphan D-51 forbids.  ``EXTEND`` is additionally the reading the
+        League Wiki's wording admits, kept unreached against the day a source
+        settles it (``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``).
         """
         activation = self._trigger_activation(index)
-        if activation.merge is not WindowMerge.EXTEND:
+        if activation.merge is not WindowMerge.REFRESH:
             raise DeltaAmpInterpretationError(
                 f"{self.rules[index].mechanic_id} declares the "
                 f"{activation.merge.value} window merge and no rule this "
@@ -446,7 +456,23 @@ class AmpSlot:
         engines had to agree on by inspection; it is now the one thing the
         declaration says and this method reads.  It is deliberately
         timestamp-only coarseness — a same-tick packet ordered after the
-        trigger in the ledger is still excluded.
+        trigger in the ledger is still excluded — and the coarseness is
+        *kept* rather than merely inherited, on measured grounds.  Consulting
+        the ledger's secondary key instead would read an ordering nothing
+        authored: champion ability packets never carry ``timeline_order`` (the
+        engine's own device for a same-instant claim, ``damage.py``'s ``+0.5``
+        and ``-1.0``), so their key falls back to a construction counter that
+        follows the rotation planner's slot list — reorder that list and the
+        same simultaneous packets change sides.  The coupled walk cannot make
+        the statement at all: its order is
+        ``(time, ordering_slot(rank), …)`` with ``TransitionRank.DAMAGE`` at 3
+        and ``DEBUFF_ARM`` at 6, so every packet at one timestamp resolves
+        before any debuff arms there.  Command is ``Subject.ANY_ATTACKER`` —
+        one rule, both engines — so amping the tie here alone would open a
+        divergence at the one instant the two currently agree on.  The defect
+        the measurement exposes is upstream, in a cast timeline that puts
+        three casts on one instant; it is not this window test's to absorb.
+        ``tests/test_phase0_sentinels.py`` prices what the tie is worth.
         """
         boundary = self._trigger_activation(index).boundary
         if boundary is not WindowBoundary.OPEN_CLOSED:

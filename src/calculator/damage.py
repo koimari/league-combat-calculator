@@ -10875,7 +10875,7 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
 
     The window's duration, how a second immobilize merges with it and which
     side of its expiry is inside are all the rule's declaration
-    (``TriggerWindow(IMMOBILIZE, merge=EXTEND, boundary=OPEN_CLOSED)``); the
+    (``TriggerWindow(IMMOBILIZE, merge=REFRESH, boundary=OPEN_CLOSED)``); the
     engine supplies only the immobilize timestamps and the ledger.
     """
     slot = _amp_slot(state, AmpChainSlot.POST_IMMOBILIZE)

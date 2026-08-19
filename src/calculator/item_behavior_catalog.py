@@ -1368,6 +1368,49 @@ DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
 }
 
 
+# Rules whose sources disagree about a *reading* rather than about a number,
+# where the declaration ships the conservative one.  Keyed by ``mechanic_id``
+# and co-located with the declarations it qualifies — the repo idiom
+# ``trigger_stream`` names (``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS``,
+# ``rune_effects._KEYSTONE_COMPILERS``): a frozen table beside its reader.
+#
+# The two existing divergence tables are the wrong shape for this and are
+# gated shut against it.  ``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS`` is
+# keyed by an effect Riot declares and the Wiki cache lacks, and its
+# staleness gate rejects an entry whose effect both sources carry.
+# ``trigger_stream.DIVERGENCES`` records a *pair-versus-walk* disagreement
+# and is asserted empty (D-92); the entry below is one both engines agree
+# on, so it has no second reading to put in ``walk_reading``.
+#
+# No measured figure is restated here.  Every exposure this campaign grades
+# itself by moves with the champion corpus, so the note names the gate that
+# prices it and the gate re-measures at run time — the discipline
+# ``docs/receipts/campaign-gap-ledger.json`` states as
+# ``why_snapshot_figures_are_not_restated_here``.
+ACKNOWLEDGED_READING_DIVERGENCES: Mapping[str, str] = {
+    "imperial_mandate.command": (
+        "Merge policy, ruled REFRESH against the Wiki's wording. The League "
+        "Wiki's Imperial Mandate page says 'Subsequent immobilizes against a "
+        "target extend the duration of the effect', which admits an additive "
+        "reading — a second immobilize adding its own 4 s to whatever is "
+        "left. Riot's own sources do not: the in-client tooltip "
+        "(CommunityDragon items.json id 4005) says only 'mark them as 7% "
+        "Vulnerable for 4 seconds', and items.cdtb.bin.json Items/4005 "
+        "carries DamageAmp 0.07 and DamageAmpDuration 4.0 with no merge "
+        "script at all. So the sources settle that the amp never stacks and "
+        "leave refresh-versus-additive open. Both engines have always "
+        "computed refresh — delta_amp.trigger_windows moves the window's end "
+        "to trigger + duration, and survival.transitions._refresh_live_modifier "
+        "keeps one modifier at the later expiry — so REFRESH is the shipped "
+        "reading and the conservative one. WindowMerge.EXTEND stays in the "
+        "enum, unreached, as the additive answer a source could still "
+        "settle. tests/test_command_amp_roster.py prices what the additive "
+        "reading would add, over the champions who author two immobilizes "
+        "inside one window."
+    ),
+}
+
+
 # Which value keys of an ``ALLY_ITEM_EFFECTS`` record declare an amp-chain
 # slot.  That registry carries no effect tag at all — every entry is an ally
 # packet by construction — so a cross-participant amplifier's *shape* has to
@@ -2193,9 +2236,13 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
 
     * ``TriggerWindow(IMMOBILIZE, …)`` — the trigger is an immobilize and
       nothing wider; the bus's ``CC`` stream is where that lands (D-08).
-    * ``merge=EXTEND`` — a second immobilize *extends* the window rather than
-      opening a second one or refreshing it (D-12).  Repeat-Command stacking
-      shipped as a Phase 0 sentinel and becomes this policy here.
+    * ``merge=REFRESH`` — a second immobilize moves the mark's expiry to its
+      own time plus the duration, rather than opening a second window or
+      adding a second amp (D-12).  This is what both engines compute, and the
+      name is now the one they compute: ``EXTEND``'s additive reading is a
+      third answer neither of them has ever given.  The Wiki's wording admits
+      that third answer and is filed as a divergence
+      (:data:`ACKNOWLEDGED_READING_DIVERGENCES`).
     * ``boundary=OPEN_CLOSED`` — the trigger itself is outside the window and
       an event exactly on the expiry is inside (D-13).
 
@@ -2211,7 +2258,7 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             activation=TriggerWindow(
                 trigger=TriggerEvent.IMMOBILIZE,
                 duration=ValueRef(registry, owner, "command_duration"),
-                merge=WindowMerge.EXTEND,
+                merge=WindowMerge.REFRESH,
                 boundary=WindowBoundary.OPEN_CLOSED,
             ),
             consumption=Persist(),
@@ -6480,6 +6527,7 @@ __all__ = [
     "EntryShape",
     "CACHED_ITEM_SOURCE",
     "CACHED_RUNE_SOURCE",
+    "ACKNOWLEDGED_READING_DIVERGENCES",
     "AMP_COMPILABILITY",
     "COMPILED_KERNEL_CANNOT_AMP",
     "COMPILED_KERNEL_CAN_AMP",
