@@ -5934,6 +5934,12 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     "time": attack_time,
                     "damage_type": "physical",
                     "damage": mitigated,
+                    # The roll this swing actually made, carried on the
+                    # swing itself: the row's crit split is a count of
+                    # these, and a later site that removes swings has to
+                    # recount rather than rescale (issue: the ledger and
+                    # the row must describe ONE realization).
+                    "critical_strike": natural_crit,
                 }
             )
         if raw_true > 0:
@@ -11234,6 +11240,31 @@ def _collect_fight_notes(
         )
 
 
+def _empowered_swing_consumers(
+    state: FightState, available: int
+) -> list[tuple[dict[str, Any], int]]:
+    """Each ``empowers_next_auto`` row and the swings it consumes.
+
+    Cast order decides who gets scarce swings, and the stream can never
+    give out more than it has.
+    """
+    consumers: list[tuple[dict[str, Any], int]] = []
+    for ability_key in state.cast_order:
+        info = state.ability_damages.get(ability_key)
+        row = state.breakdown.get(ability_key)
+        if info is None or row is None:
+            continue
+        empower = info.get("empowers_next_auto")
+        if not empower:
+            continue
+        swings = min(row.get("casts", 0) * _empower_hits(empower), available)
+        if swings <= 0:
+            continue
+        consumers.append((row, swings))
+        available -= swings
+    return consumers
+
+
 def _reattribute_empowered_swings(state: FightState) -> None:
     """Show an empowered auto's swing on the ability that forced it.
 
@@ -11248,9 +11279,17 @@ def _reattribute_empowered_swings(state: FightState) -> None:
 
     Damage only moves BETWEEN rows: the fight total is untouched, and so
     is every on-hit row, which the empowered attack genuinely still
-    triggers. The swing is priced at the auto row's blended per-hit
-    average, so the remaining autos keep their per-hit damage and the
-    crit split is rescaled to stay consistent with the new count.
+    triggers.
+
+    **The move is priced at the swings it removes.** Which swings a cast
+    consumed is not tracked, so the ledger names them: it keeps its
+    leading block and the consumed ones are its trailing swings, at the
+    damage those swings actually dealt.  Pricing the move at the row's
+    blended per-hit average instead made the row's total and its own
+    ledger describe different things whenever the stream's swings differ
+    from each other — which a rolled critical strike does at random, so
+    one request certified and the next went coarse.  The kept swings'
+    crit split is recounted from those swings for the same reason.
     """
     auto_row = state.breakdown.get("auto_attacks")
     if not auto_row:
@@ -11259,46 +11298,57 @@ def _reattribute_empowered_swings(state: FightState) -> None:
     per_hit = auto_row.get("damage_per_hit", 0.0)
     if original_count <= 0 or per_hit <= 0:
         return
+    consumers = _empowered_swing_consumers(state, original_count)
+    if not consumers:
+        return
+    remaining = original_count - sum(swings for _, swings in consumers)
+    # A row whose events were never authored one-per-swing has no ledger
+    # to price from; it keeps the blended average (and stays coarse, as
+    # it did before) rather than pricing off a list that is not the
+    # stream.
+    ledger = auto_row.get("damage_events")
+    if not isinstance(ledger, list) or len(ledger) != original_count:
+        ledger = None
 
-    remaining = original_count
-    for ability_key in state.cast_order:
-        info = state.ability_damages.get(ability_key)
-        row = state.breakdown.get(ability_key)
-        if info is None or row is None:
-            continue
-        empower = info.get("empowers_next_auto")
-        if not empower:
-            continue
-        swings = min(row.get("casts", 0) * _empower_hits(empower), remaining)
-        if swings <= 0:
-            continue
-
-        row["total_damage"] += swings * per_hit
-        auto_row["total_damage"] -= swings * per_hit
-        remaining -= swings
+    cursor = remaining
+    for row, swings in consumers:
+        moved = (
+            sum(
+                float(event.get("damage", 0.0))
+                for event in ledger[cursor : cursor + swings]
+            )
+            if ledger is not None
+            else swings * per_hit
+        )
+        cursor += swings
+        row["total_damage"] += moved
+        auto_row["total_damage"] -= moved
         # ``detail`` always wins over the UI's derived "N casts" text, so
         # spell out that the row now includes the attack it consumed.
         casts = row.get("casts", 0)
         base = row.get("detail") or f"{casts} cast{'' if casts == 1 else 's'}"
         row["detail"] = f"{base}, incl. basic attack"
 
-    if remaining == original_count:
-        return
-
     auto_row["count"] = remaining
-    # Empowered attacks are consumed from the front of the shared auto
-    # stream (the same ordering used by the cast ledger).  Remove those
-    # swings from the ordinary-auto receipt as well as its aggregate; leaving
-    # them in the event list makes a certified row's events sum above its
-    # displayed damage and downgrades otherwise exact champion timelines.
-    auto_events = auto_row.get("damage_events")
-    if isinstance(auto_events, list):
-        auto_row["damage_events"] = auto_events[:remaining]
+    if ledger is not None:
+        auto_row["damage_events"] = ledger[:remaining]
+        auto_row["damage_per_hit"] = (
+            auto_row["total_damage"] / remaining if remaining else 0.0
+        )
+    elif isinstance(auto_row.get("damage_events"), list):
+        auto_row["damage_events"] = auto_row["damage_events"][:remaining]
     if auto_row.get("num_crits") is not None:
-        # Rescale the crit split so num_crits + num_non_crits == count.
-        crits = round(auto_row["num_crits"] * remaining / original_count)
+        crits = (
+            sum(1 for event in ledger[:remaining] if event.get("critical_strike"))
+            if ledger is not None
+            else round(auto_row["num_crits"] * remaining / original_count)
+        )
         auto_row["num_crits"] = crits
         auto_row["num_non_crits"] = remaining - crits
+        if crits == 0:
+            auto_row["crit_damage_per_hit"] = None
+        if crits == remaining:
+            auto_row["non_crit_damage_per_hit"] = None
 
 
 def _apply_shield_reaver_venom(
@@ -11391,7 +11441,13 @@ def calculate_fight_damage(
     and ``basic_ability_haste``), like every other champion stat.
 
     Args:
-        champion_stats: Calculated champion stats dictionary.
+        champion_stats: Calculated champion stats dictionary.  **The fight
+            buffs it in place** (``_apply_stat_buff_ultimates``), which is
+            what makes ``run_fight`` able to report fight-effective stats;
+            ``run_fight`` therefore hands over a copy it owns. A direct
+            caller that reuses one stats dict across fights instead sees
+            the buffs compound — attack speed, and so the swing count and
+            every row riding it, growing on every call.
         ability_damages: Parsed ability damage dictionary.
         items: List of item data for checking passives.
         config: The fight's :class:`FightConfig` (target, duration, mode).

@@ -10,6 +10,8 @@ authored events sum-reconcile with the row's priced total.
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.pipeline import run_fight
+from src.calculator.scenario import parse_scenario_request, resolve_scenario
 
 
 def _coverage(champion: str, items: list[str], **extra):
@@ -24,6 +26,33 @@ def _coverage(champion: str, items: list[str], **extra):
             **extra,
         }
     )["timeline_coverage"]
+
+
+def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
+    """The engine's own ``auto_attacks`` row for that same timed fight.
+
+    ``calculate_payload`` rounds its published ledger for display, and the
+    invariant below is about the numbers the engine authored, so this runs
+    the identically resolved scenario and reads the row itself.
+    """
+    request = parse_scenario_request(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": items,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        },
+        deterministic=deterministic,
+    )
+    resolved = resolve_scenario(request)
+    result = run_fight(
+        resolved.champion_data,
+        request.level,
+        list(resolved.items),
+        resolved.fight_params,
+    )
+    return result["breakdown"]["auto_attacks"]
 
 
 class TestSwingScheduleUnderAttackSpeedKits:
@@ -42,23 +71,85 @@ class TestSwingScheduleUnderAttackSpeedKits:
         assert "on_hit_Guinsoo's Rageblade" in coverage["exact_sources"]
 
 
-class TestEmpoweredSwingReattributionStaysCoarse:
-    """Mechanism 1, stopped half: the reattributed auto row keeps its gap.
+# The census's crit/attack-speed family: every item here rolls critical
+# strikes, and every champion here forces a swing with an
+# ``empowers_next_auto`` ability, so each pair reaches
+# ``_reattribute_empowered_swings`` with a stream whose swings differ from
+# each other at random.
+ROLLED_CRIT_PAIRS = [
+    ("Jax", "Zeal"),
+    ("Draven", "The Collector"),
+    ("Camille", "Phantom Dancer"),
+    ("Darius", "Rapid Firecannon"),
+    ("Garen", "Navori Flickerblade"),
+    ("Nasus", "Essence Reaver"),
+    ("Shyvana", "Stormrazor"),
+    ("Cho'Gath", "Immortal Shieldbow"),
+    ("Dr. Mundo", "Runaan's Hurricane"),
+    ("Kayle", "Mortal Reminder"),
+]
 
-    ``_reattribute_empowered_swings`` moves consumed swings to the forcing
+# The same mechanism without any roll: Sundered Sky's forced first-auto
+# crit and Fiendhunter's empowered opening swings make the stream unequal
+# in deterministic pricing too.
+UNEQUAL_SWING_PAIRS = [
+    ("Fiora", "Sundered Sky"),
+    ("Jayce", "Fiendhunter Bolts"),
+]
+
+# Enough fights that a stream with no critical strike at all is not a
+# credible explanation for a green run.
+CRIT_ROLL_RUNS = 12
+
+
+class TestEmpoweredSwingReattributionPricesItsOwnLedger:
+    """Mechanism 1, closed half: the moved swings are priced at themselves.
+
+    ``_reattribute_empowered_swings`` moved consumed swings to the forcing
     ability at the row's *blended* per-hit average while trimming the
-    ledger's tail, so whenever the stream's swings differ from each other
-    the surviving events no longer sum to the row and ``auto_attacks``
-    goes coarse. Both closures were measured and both move numbers this
-    wave may not move: pricing the move from the ledger's own front slice
-    shifts an exact-capture total, and rescaling the surviving events
-    re-prices packets with no restatement (``scripts/term_census.py``).
-    The row therefore stays coarse until a wave allowed to re-price it.
+    ledger's tail, so the row's total and the row's own events described
+    different things whenever the stream's swings differed from each
+    other. A rolled critical strike does that at random: the identical
+    request certified on one run and went coarse on the next. The move now
+    debits exactly the swings it removes, so the row is the sum of its own
+    ledger — one realization — in both modes.
     """
 
-    def test_draven_collector_auto_row_is_still_coarse(self):
-        coverage = _coverage("Draven", ["The Collector"])
-        assert "auto_attacks" in coverage["coarse_sources"]
+    @pytest.mark.parametrize(
+        ("champion", "item"), ROLLED_CRIT_PAIRS + UNEQUAL_SWING_PAIRS
+    )
+    def test_pair_certifies_on_every_run(self, champion, item):
+        for _ in range(CRIT_ROLL_RUNS):
+            coverage = _coverage(champion, [item])
+            assert coverage["coarse_sources"] == []
+            assert coverage["complete"] is True
+
+    @pytest.mark.parametrize(("champion", "item"), ROLLED_CRIT_PAIRS)
+    def test_authored_swings_sum_to_the_row_on_every_run(self, champion, item):
+        rolled_a_crit = False
+        for _ in range(CRIT_ROLL_RUNS):
+            row = _auto_row(champion, [item])
+            events = row["damage_events"]
+            crits = [event for event in events if event["critical_strike"]]
+            rolled_a_crit = rolled_a_crit or bool(crits)
+            assert len(events) == row["count"]
+            assert sum(event["damage"] for event in events) == pytest.approx(
+                row["total_damage"], rel=1e-9, abs=1e-6
+            )
+            # The published crit split counts the swings the row kept, not
+            # a proportion of the swings it started with.
+            assert len(crits) == row["num_crits"]
+            assert row["num_non_crits"] == len(events) - len(crits)
+        assert rolled_a_crit, "no critical strike rolled: the invariant went untested"
+
+    @pytest.mark.parametrize(("champion", "item"), UNEQUAL_SWING_PAIRS)
+    def test_unequal_swings_reconcile_without_a_roll(self, champion, item):
+        row = _auto_row(champion, [item], deterministic=True)
+        events = row["damage_events"]
+        assert len({round(event["damage"], 6) for event in events}) > 1
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"], rel=1e-9, abs=1e-6
+        )
 
 
 class TestAbilityAttackOnHitRows:
