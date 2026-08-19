@@ -44,7 +44,15 @@ def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.35),)
+    # Terrify's control is a property of the branch, not of the slot, so it
+    # is authored here rather than in MODULE_CC: the doubled branch is
+    # reached only against a target that "cannot be affected by it again",
+    # i.e. one this cast does not fear.
+    entry["parts"] = (
+        DamagePart(
+            "magic", value, time_offset=0.35, cc_kind="none" if feared else "fear"
+        ),
+    )
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
         "Already-feared target uses the sourced doubled current-health branch."
@@ -135,7 +143,13 @@ SLOTS = {
     "E": _reap,
     "R": _crowstorm,
 }
-parse_abilities = build_parser(SLOTS, "Fiddlesticks")
+# W tethers and reveals, R's crows only tick damage; E "slow[s] them for
+# 1.25 seconds" (its centre silence is not an immobilize and is not in the
+# vocabulary).  Q is absent because its fear is branch-conditional and is
+# authored on the part in _terrify; P carries no damage part at all.
+MODULE_CC = {"W": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Fiddlesticks", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

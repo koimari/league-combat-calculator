@@ -89,9 +89,13 @@ def _soul_shackles(ctx: SlotCtx) -> dict[str, Any] | None:
         initial * 2,
         "magic",
     )
+    # The two hits apply two different controls — the shackling slows by
+    # 20% for the tether, and only the unbroken tether "become[s] stunned
+    # for a duration" — so R's kinds are per part rather than per slot
+    # and are authored here instead of in MODULE_CC.
     entry["parts"] = (
-        DamagePart("magic", initial, time_offset=0.0),
-        DamagePart("magic", initial, time_offset=_R_TETHER_SECONDS),
+        DamagePart("magic", initial, time_offset=0.0, cc_kind="slow"),
+        DamagePart("magic", initial, time_offset=_R_TETHER_SECONDS, cc_kind="stun"),
     )
     entry["dot_duration"] = _R_TETHER_SECONDS
     entry["detail"] = (
@@ -126,13 +130,25 @@ def _soul_siphon(ctx: SlotCtx) -> dict[str, Any] | None:
 PACKET_SHA256 = "5cc8fcb312de2d1d31c8b63157dac32a85424fa0decca7a8f1ac4ac94d689a9d"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Morgana", PACKET_SHA256
+    "Morgana",
+    PACKET_SHA256,
+    # Dark Binding's sphere deals its packet once, to the first enemy it
+    # hits, at the cast — the boundary claim that carries MODULE_CC's
+    # reviewed answer for Q into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["W"] = _tormented_shadow
 SLOTS["R"] = _soul_shackles
 SLOTS["P"] = _soul_siphon
-parse_abilities = build_parser(SLOTS, "Morgana")
+
+# Cached kit review: Q's sphere damages the first enemy hit "and root[s]
+# them for a duration"; W's desecrated soil only damages.  R applies two
+# controls, one per part, and declares them on its parts
+# (``_soul_shackles``).  E shields an ally and P heals Morgana.
+MODULE_CC = {"Q": "root", "W": "none"}
+
+parse_abilities = build_parser(SLOTS, "Morgana", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Tormented Shadow) prices all 10 storm ticks (Maximum Damage Per "

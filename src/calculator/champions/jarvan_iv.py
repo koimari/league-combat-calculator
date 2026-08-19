@@ -92,6 +92,7 @@ def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         damage,
         "physical",
+        event_order_certified="single_hit",
     )
 
     # Armor REDUCTION (not penetration): damage.py shreds target armor
@@ -124,6 +125,7 @@ def _demacian_standard(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         damage,
         "magic",
+        event_order_certified="single_hit",
     )
 
     # Bonus attack speed: the fight engine recalculates the auto count
@@ -171,10 +173,21 @@ SLOTS = {
     "P": _martial_cadence,
     "Q": _dragon_strike,
     "E": _demacian_standard,
-    "R": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "R": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Jarvan IV")
+# Q's lance damages and shreds armor; its knock-up needs the lance to
+# connect with a deployed Demacian Standard, a flag-plus-lance combo this
+# module does not model, so the reviewed kind is the unconditional none.
+# E's flag only damages on landing.  R's impact "knocks aside enemies
+# within the perimeter".  P is the on-hit row and W is skipped (no damage).
+MODULE_CC = {"Q": "none", "E": "none", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Jarvan IV", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

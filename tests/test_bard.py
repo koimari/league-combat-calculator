@@ -19,6 +19,8 @@ from src.calculator.champions import (
 )
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import bard
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -292,3 +294,30 @@ class TestFightEngineIntegration:
         meeps = result["breakdown"]["on_hit_ability_passive"]
         assert meeps["count"] == 2
         assert meeps["total_damage"] == pytest.approx(2 * 42.0, abs=0.1)
+
+
+class TestReviewedCrowdControl:
+    """Bard's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Bard")
+        assert bard.MODULE_CC == {"Q": "slow"}
+        assert "slows them by 60%" in " ".join(cc_review.slot_text(data, "Q").split())
+        # Q's stun needs the bolt to carry on into "terrain or a second
+        # enemy", which a single-target fight never supplies.
+        assert "stun" in cc_review.slot_text(data, "Q")
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Bard") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Bard")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

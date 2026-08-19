@@ -18,6 +18,8 @@ from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.resistance import apply_resistance
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.champions import blitzcrank
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -409,3 +411,40 @@ class TestSpellbladeIntegration:
         # auto stream (including the Power Fist auto) consumes procs.
         assert sb["count"] >= 1
         assert sb["total_damage"] > 0
+
+
+class TestReviewedCrowdControl:
+    """Blitzcrank's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Blitzcrank")
+        assert blitzcrank.MODULE_CC == {
+            "Q": "immobilize",
+            "E": "knockup",
+            "R": "silence",
+        }
+        assert "stunning them for 0.65 seconds, and pulling them" in " ".join(
+            cc_review.slot_text(data, "Q").split()
+        )
+        assert "knock up the target for 1 second" in " ".join(
+            cc_review.slot_text(data, "E").split()
+        )
+        # A silence is real control, and neither an immobilizing effect
+        # nor a slow — so it is its own reviewed kind, not an absence.
+        assert "silences them" in cc_review.slot_text(data, "R")
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Blitzcrank") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Blitzcrank")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

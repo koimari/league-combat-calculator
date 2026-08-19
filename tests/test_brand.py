@@ -11,6 +11,8 @@ Sanity anchors (magic damage, pre-mitigation, 100 AP):
 """
 
 import pytest
+from src.calculator.champions import brand
+from tests import cc_review
 
 TARGET = {"target_max_health": 3000.0}
 
@@ -197,3 +199,23 @@ class TestBrandFightIntegration:
         ) == pytest.approx(blaze["total_damage"])
         assert "passive" in result["timeline_coverage"]["exact_sources"]
         assert result["total_damage"] > 0
+
+
+class TestReviewedCrowdControl:
+    """Brand's crowd-control review, and the slot that still withholds.
+
+    W erupts 'after a 0.627 seconds delay' the row does not author, and
+    Q's stun and R's slow are both 'Ablaze Bonus' branches — they follow
+    the target's stack state, not the slot.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Brand")
+        assert brand.MODULE_CC == {"E": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Brand") == ["Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Brand")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

@@ -146,8 +146,18 @@ def _certified(parser):
     return parse
 
 
+# Every kind below rides its own construction rather than MODULE_CC: each
+# Jayce slot is a stance dispatcher, and the two stances' abilities are
+# different spells with different control.
 _q_hammer = _certified(
-    simple_damage(attr="Physical Damage", dmg_type="physical", source=("Q", _HAMMER))
+    simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        source=("Q", _HAMMER),
+        # "smashes his hammer to the ground to deal physical damage ...
+        # and slow them for 2 seconds"
+        cc_kind="slow",
+    )
 )
 
 # Cannon's two cases DO share one entry shape, so the gate is a plain
@@ -157,11 +167,18 @@ _q_cannon = _certified(
     by_option(
         "accelerated_q",
         {
+            # Shock Blast only detonates and grants sight — no control.
             True: simple_damage(
-                attr="Increased Damage", dmg_type="physical", source=("Q", _CANNON)
+                attr="Increased Damage",
+                dmg_type="physical",
+                source=("Q", _CANNON),
+                cc_kind="none",
             ),
             False: simple_damage(
-                attr="Physical Damage", dmg_type="physical", source=("Q", _CANNON)
+                attr="Physical Damage",
+                dmg_type="physical",
+                source=("Q", _CANNON),
+                cc_kind="none",
             ),
         },
         default=True,
@@ -208,6 +225,8 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
             count=ticks,
             time_offset=1.0,
             hit_interval=1.0,
+            # The field only "deals magic damage every second".
+            cc_kind="none",
         ),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
@@ -298,7 +317,14 @@ def _w(ctx: SlotCtx) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 _e_hammer = _certified(
-    simple_damage(attr="Magic Damage", dmg_type="magic", source=("E", _HAMMER))
+    simple_damage(
+        attr="Magic Damage",
+        dmg_type="magic",
+        source=("E", _HAMMER),
+        # The root lands over the cast time; what arrives with the damage
+        # is the "knock them back 600 units".
+        cc_kind="knockback",
+    )
 )
 
 
@@ -342,6 +368,10 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
         "magic",
+        # The transform empowers one attack with bonus magic damage and
+        # buffs Jayce; nothing lands on the target but damage.
+        cc_kind="none",
+        event_order_certified="single_hit",
     )
     # Self-defensive only — shown in the stats panel, no effect on
     # outgoing damage.

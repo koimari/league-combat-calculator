@@ -15,7 +15,20 @@ from .slotlib import damage_entry, extract_cooldown, extract_value
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
-    build_packet_module("Jinx", PACKET_SHA256, single_hit_slots=frozenset({"R"}))
+    build_packet_module(
+        "Jinx",
+        PACKET_SHA256,
+        # Neither W nor E is certified here, so neither can carry a reviewed
+        # cc marker and Jinx stays coarse to the control scan.  E cannot:
+        # the Chompers land after 0.4s and are "arming after 0.5 seconds",
+        # so a cast-boundary certification would be false, and authoring the
+        # 0.5s delay instead moves Shadowflame's threshold amp onto the row
+        # (+79.1 magic at level 18) — a re-pricing, not a review.  W's one
+        # shock blast could be certified, but with E coarse that buys no
+        # coverage and costs one Muramana proc (-31.7 physical at level 18)
+        # through the walker cursor matching wave 1C owns.
+        single_hit_slots=frozenset({"R"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -87,7 +100,16 @@ def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
 _get_excited.phase = BUFF
 
 SLOTS = {**_packet_slots, "P": _get_excited, "Q": _switcheroo}
-parse_abilities = build_parser(SLOTS, "Jinx")
+
+# R's rocket only explodes for damage and sight.  W's blast "reveals and
+# slows them for 2 seconds" and E's Chomper roots ("knocking them down and
+# rooting them for 1.5 seconds"), but neither row reaches an event the
+# ledger can carry a marker on (see the packet build above), and a
+# declaration the ledger never reads reviews nothing.  P and Q are
+# zero-damage stat rows (Get Excited! stacks, the weapon toggle).
+MODULE_CC = {"R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Jinx", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

@@ -161,6 +161,10 @@ def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
     }
+    # One bolt, one enemy, no sourced travel phase in the cached packet —
+    # the claim that puts Q's hit in the event ledger, where MODULE_CC's
+    # reviewed "no control" can be read.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -193,12 +197,36 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _rising_spell_force,
     "Q": _mystic_shot,
-    "W": _with_q_refund(simple_damage(attr="Bonus Magic Damage", dmg_type="magic")),
-    "E": _with_q_refund(simple_damage(attr="Magic Damage", dmg_type="magic")),
-    "R": _with_q_refund(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    # Each of W/E/R is one damage instance with no sourced travel or tick
+    # phase, so the single-hit certification is what carries them into the
+    # event ledger MODULE_CC is read from.
+    "W": _with_q_refund(
+        simple_damage(
+            attr="Bonus Magic Damage",
+            dmg_type="magic",
+            event_order_certified="single_hit",
+        )
+    ),
+    "E": _with_q_refund(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        )
+    ),
+    "R": _with_q_refund(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        )
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Ezreal")
+# Ezreal's cached kit applies no crowd control at all: Q is a bolt that
+# only refunds cooldowns, W marks and detonates, E blinks and reveals, R
+# grants sight.  P is the module's zero-damage attack-speed buff slot — it
+# authors no damage part the ledger can carry a review on, so it is left
+# undeclared rather than stamped.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ezreal", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

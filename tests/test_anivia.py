@@ -3,6 +3,8 @@
 import pytest
 
 from src.calculator.ability_spec import parts_raw_total
+from src.calculator.champions import anivia
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Q — Flash Frost
@@ -232,3 +234,23 @@ class TestFullCombo:
             + abilities["R"]["total_raw"]
         )
         assert total == pytest.approx(1690.0)
+
+
+class TestReviewedCrowdControl:
+    """Anivia's crowd-control review, and the slot that still withholds.
+
+    Q's row is the cached 'Total Magic Damage' of the slowing pass-
+    through and the stunning shatter, and R's is every 0.5s blizzard
+    tick summed into one cast-boundary part.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Anivia")
+        assert anivia.MODULE_CC == {"E": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Anivia") == ["Q", "R"]
+        coverage = cc_review.fimbulwinter_coverage("Anivia")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

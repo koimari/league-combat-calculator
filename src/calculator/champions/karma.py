@@ -46,9 +46,11 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = max(1, min(rank, 4 if renewal else 5))
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     holds = bool(ctx.options.get("w_tether_holds", True))
-    parts = [DamagePart("magic", value, time_offset=0.1)]
+    # The opening hit only tethers and reveals; the root arrives with the
+    # second hit, "if the tether is not broken by the end of its duration".
+    parts = [DamagePart("magic", value, time_offset=0.1, cc_kind="none")]
     if holds:
-        parts.append(DamagePart("magic", value, time_offset=2.0))
+        parts.append(DamagePart("magic", value, time_offset=2.0, cc_kind="root"))
     entry = damage_entry(
         ability.get("name", "Focused Resolve"),
         rank,
@@ -82,7 +84,12 @@ SLOTS = {
         reason="Mantra empowers the next Q/W/E variant; the toggle itself has no outgoing damage.",
     ),
 }
-parse_abilities = build_parser(SLOTS, "Karma")
+# Inner Flame's explosion "slow[s] them by 40% for 1.5 seconds" and its
+# Mantra field slows by 50%, so Q has one answer either way.  W's two hits
+# do not (see _focused_resolve).  P, E and R author no damage part.
+MODULE_CC = {"Q": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Karma", cc_kinds=MODULE_CC)
 OPTIONS = [
     {"key": "q_mantra", "type": "bool", "default": False, "label": "Mantra Soulflare"},
     {"key": "w_renewal", "type": "bool", "default": False, "label": "Mantra Renewal"},

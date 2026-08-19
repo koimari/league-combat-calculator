@@ -364,7 +364,15 @@ SLOTS = {
     "P": _dirty_fighting,
 }
 
-parse_abilities = build_parser(SLOTS, "Akshan")
+# Cached kit review.  R's bullets and P's 3-stack detonation only damage —
+# nothing in the cached text controls the target they hit (Q's and W's
+# reveals and camouflage are vision, not control).  Q and E are left
+# unreviewed because each row is an aggregate the ledger cannot split: Q is
+# the cached "Total Physical Damage" of both boomerang passes, E is
+# ``e_shots`` swing shots summed into one part.
+MODULE_CC = {"R": "none", "P": "none"}
+
+parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

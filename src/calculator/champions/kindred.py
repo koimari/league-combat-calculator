@@ -42,6 +42,9 @@ from .source_receipts import load_champion_sources
 def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
     result = typed_damage(ctx, "Physical Damage", "physical")
     if result:
+        # One arrow per nearby enemy, fired at the cast: the boundary claim
+        # that carries MODULE_CC's answer for Q into the event ledger.
+        result["event_order_certified"] = "single_hit"
         result["detail"] = (
             f"Dance of Arrows; {int(ctx.option('marks'))} Mark of "
             "the Kindred stacks grant the sourced attack-speed state."
@@ -143,6 +146,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         ),
     )
     entry["target_max_health_sensitive"] = True
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"Third-stack Wolf pounce at {stacks}/3 stacks: {damage:.2f} "
         "physical (80 : 200 by rank + 100% bonus AD + 5% (+0.5% per "
@@ -253,7 +257,14 @@ SLOTS = {
     "E": _mounting_dread,
     "R": _BASE_SLOTS["R"],
 }
-parse_abilities = build_parser(SLOTS, "Kindred")
+
+# Cached kit review: E's active "slows them by 30% (+ 5% per 100 AP) for 1
+# second" on the target its pounce then damages; Q's arrows apply no
+# control, and Wolf's frenzy attacks slow only "against monsters", never
+# the champion this pair fight damages.  P, W_vigor and R deal no damage.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Kindred", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

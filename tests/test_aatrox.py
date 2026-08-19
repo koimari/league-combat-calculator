@@ -3,6 +3,8 @@
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import aatrox
+from tests import cc_review
 
 
 class TestQThreeCasts:
@@ -251,3 +253,23 @@ class TestEUmbralDash:
     def test_e_not_in_results(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(aatrox_data, 9)
         assert "E" not in abilities
+
+
+class TestReviewedCrowdControl:
+    """Aatrox's crowd-control review, and the slot that still withholds.
+
+    Q sums all three sweetspot strikes into one part and W sums the
+    chain hit with the tether hit that pulls, so neither cast has a hit
+    the ledger can attach one answer to — and Q's answer is the
+    sweetspot branch's, not the slot's.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Aatrox")
+        assert not hasattr(aatrox, "MODULE_CC")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Aatrox") == ["Q", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Aatrox")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

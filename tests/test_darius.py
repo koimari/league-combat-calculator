@@ -25,6 +25,8 @@ from src.calculator.champions.darius import P_BLEED_MAX_STACKS
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions import darius
+from tests import cc_review
 
 LEVEL = 20
 BONUS_AD = 100.0
@@ -621,3 +623,24 @@ class TestDerivedStackMonotonicity:
             for duration in (1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 15.0)
         ]
         assert totals == sorted(totals)
+
+
+class TestReviewedCrowdControl:
+    """Darius's crowd-control review, and the slot that still withholds.
+
+    Q's swing lands after the sourced 0.75-second heft the row does not
+    author and R's entry is the execute plus its five Hemorrhage
+    applications in one cast; W could carry its slow, but declaring it
+    makes rotation_resolver order W first as cc setup, which moves the
+    fight's numbers (see the batch report).
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Darius")
+        assert not hasattr(darius, "MODULE_CC")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Darius") == ["Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Darius")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

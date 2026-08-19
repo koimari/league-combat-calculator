@@ -110,6 +110,7 @@ def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", bonus),)
     entry["empowers_next_auto"] = True
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "One empowered attack carries 15 + 20% AP bonus magic damage; attack speed/range are state."
     )
@@ -156,7 +157,18 @@ SLOTS = {
     "E": _skip_n_slash,
     "R": _needlework,
 }
-parse_abilities = build_parser(SLOTS, "Gwen")
+# E only empowers attacks.  Q is undeclared on purpose: Snip Snip! is an
+# aggregate of "at least twice" snips over the cast time with no sourced
+# per-snip cadence, so its row cannot carry a marker the event ledger would
+# see, and a declaration the ledger never reads reviews nothing.  R's
+# needles do "slow them for 1.5 seconds", but declaring that kind makes
+# rotation_resolver infer a cc_setup edge and cast R first, which costs Gwen
+# a Q cast in a timed fight for no coverage — Q blocks the scan either way —
+# so it is left to the wave that fixes the aggregate-row family.  P and W
+# author no damage part.
+MODULE_CC = {"E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Gwen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

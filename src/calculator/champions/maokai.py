@@ -28,7 +28,17 @@ from .slotlib import damage_entry, extract_cooldown, extract_named
 PACKET_SHA256 = "f3732d39aae761199c06bfc606515aee50fa1cc74ea65f28a15b0ef78d02f366"
 
 _BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Maokai", PACKET_SHA256)
+    build_packet_module(
+        "Maokai",
+        PACKET_SHA256,
+        # The shockwave, the dash's arrival hit and each bramble deal
+        # their packet once, at the cast (none of the three carries a
+        # sourced travel time) — the boundary claim that carries
+        # MODULE_CC's reviewed kinds into the event ledger.  Q is a
+        # wiki_attribute slot, which this compiler does not certify, so
+        # it says the same thing through ``_bramble_smash`` below.
+        single_hit_slots=frozenset({"W", "R"}),
+    )
 )
 PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
@@ -58,6 +68,10 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
             explosion,
             "magic",
         )
+        # One explosion, at the cast: the boundary claim that carries
+        # MODULE_CC's reviewed slow for E into the event ledger on this
+        # branch (the empowered branch's parts author their own timing).
+        entry["event_order_certified"] = "single_hit"
         entry["detail"] = (
             "Un-empowered Sapling: single explosion of the sourced Magic Damage "
             "row; set sapling_empowered to price the brush-empowered burn."
@@ -95,6 +109,14 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _bramble_smash(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: the packet's shockwave, certified as the one hit it is."""
+    entry = _BATCH_SLOTS["Q"](ctx)
+    if entry is not None:
+        entry["event_order_certified"] = "single_hit"
+    return entry
+
+
 OPTIONS = [
     {
         "key": "sapling_empowered",
@@ -126,13 +148,22 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _BATCH_SLOTS["P"],
-    "Q": _BATCH_SLOTS["Q"],
+    "Q": _bramble_smash,
     "W": _BATCH_SLOTS["W"],
     "E": _sapling_toss,
     "R": _BATCH_SLOTS["R"],
 }
 
-parse_abilities = build_parser(SLOTS, "Maokai")
+
+# Cached kit review: Q's shockwave "slows them by 99% for 0.25 seconds"
+# (the additional stun and knock-back land only on enemies "near
+# Maokai", a position this pair fight does not model), W's arrival
+# "roots them for a duration", E's sapling explosion slows "by 45% for 2
+# seconds", and each R bramble "roots them for 0.75 : 2.25 (based on
+# distance travelled) seconds".  P is a self-heal on-hit.
+MODULE_CC = {"Q": "slow", "W": "root", "E": "slow", "R": "root"}
+
+parse_abilities = build_parser(SLOTS, "Maokai", cc_kinds=MODULE_CC)
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
 REVIEW_STATUS = "reviewed_module"

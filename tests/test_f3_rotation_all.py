@@ -46,6 +46,7 @@ from src.calculator.rotation_resolver import (
     CAST_ORDER_OVERRIDES,
     _DERIVED_RULE_CACHE,
     _MATRIX_DPS_CACHE,
+    _PRE_CAMPAIGN_CC_ORDERING,
     DependencyReceipt,
     _Edge,
     derive_champion_rule,
@@ -418,6 +419,64 @@ class TestEdgeInvariants:
                     assert (
                         edge.consume in rule.consume
                     ), f"{name}: {edge.consume} missing from consume"
+
+    def test_no_module_authored_kit_fact_orders_a_rotation(
+        self, champion_by_name, items_by_name
+    ) -> None:
+        """Roster-wide: a module's crowd control constrains no cast order.
+
+        A champion module recording its reviewed crowd control states what
+        a cast APPLIES, whether it says so per slot in ``MODULE_CC`` or on
+        the part at its construction site.  Ordering stays with the
+        declared ``CAST_DEPENDENCIES`` vocabulary, so the only ``cc_setup``
+        edges left on the roster are the closed pre-rule table's — checked
+        here, over every champion, so the next kit to record a slow cannot
+        quietly reorder its rotation.
+        """
+        unearned = []
+        for name in sorted(champion_by_name):
+            data = champion_by_name[name]
+            parsed = _parse(data, 11, (), items_by_name)
+            pinned = _PRE_CAMPAIGN_CC_ORDERING.get(name, frozenset())
+            for edge in _detect_edges(name, data, parsed):
+                if edge.kind != "cc_setup" or edge.origin == "declared":
+                    continue
+                if edge.setup not in pinned:
+                    unearned.append((name, edge.setup, edge.consume))
+        assert unearned == [], "module crowd control fanned ordering edges: " + repr(
+            unearned[:10]
+        )
+
+    def test_the_pinned_pre_rule_slots_are_the_only_cc_orderers(
+        self, champion_by_name, items_by_name
+    ) -> None:
+        """The other half: every pinned entry still earns its place.
+
+        A pin that stopped producing its edge would be a permanent
+        exemption for an inference nobody can see — the shape the
+        suppression ledger's ``latent_reason`` exists to refuse.
+        """
+        earning = set()
+        for name, slots in _PRE_CAMPAIGN_CC_ORDERING.items():
+            data = champion_by_name[name]
+            parsed = _parse(data, 11, (), items_by_name)
+            edges = _detect_edges(name, data, parsed)
+            for slot in slots:
+                marks = {
+                    part.cc_kind
+                    for part in parsed[slot].get("parts", ())
+                    if part.cc_kind
+                }
+                assert marks - {
+                    "none"
+                }, f"{name} {slot} no longer records a crowd-control kind"
+                if any(e.kind == "cc_setup" and e.setup == slot for e in edges):
+                    earning.add((name, slot))
+        assert earning == {
+            (name, slot)
+            for name, slots in _PRE_CAMPAIGN_CC_ORDERING.items()
+            for slot in slots
+        }
 
 
 # ---------------------------------------------------------------------------

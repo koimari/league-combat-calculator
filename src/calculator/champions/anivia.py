@@ -100,11 +100,23 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),
+    # One targeted blast, no travel or tick phase in the cached packet.
+    "E": simple_damage(
+        attr="Enhanced Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _glacial_storm,
 }
 
-parse_abilities = build_parser(SLOTS, "Anivia")
+# Cached kit review.  E "blasts a freezing wind at the target enemy that
+# deals magic damage" and applies nothing else (Chilled comes from Q and
+# R, and only doubles E's damage).  Q and R are left unreviewed: Q's row is
+# the cached "Total Magic Damage" of the pass-through (which slows) and the
+# recast shatter (which stuns), and R's is every 0.5s blizzard tick (each
+# slowing) summed into one cast-boundary part — neither has a hit the
+# ledger can attach one answer to.
+MODULE_CC = {"E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Anivia", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

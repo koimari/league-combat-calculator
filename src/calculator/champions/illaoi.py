@@ -121,7 +121,15 @@ SLOTS = {
     ),
     "R": _leap_of_faith,
 }
-parse_abilities = build_parser(SLOTS, "Illaoi")
+# W's empowered attack and R's idol slam only damage — Illaoi's control is
+# E's tether severance (a slow that lands with no damage packet of its own)
+# and it is not on either damaging cast.  Q and E author no damage part;
+# P's Tentacle strikes are an effect-phase proc row whose event list the
+# module builds itself, so a slot marker there would never reach the
+# ledger.
+MODULE_CC = {"W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Illaoi", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_tentacles",

@@ -59,7 +59,13 @@ def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     name = "Neurotoxin" if form == 0 else "Venomous Bite"
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        name, rank, extract_cooldown(ctx.ability("Q"), rank), value, "magic"
+        name,
+        rank,
+        extract_cooldown(ctx.ability("Q"), rank),
+        value,
+        "magic",
+        # Both forms fire one hit at the target they are aimed at.
+        event_order_certified="single_hit",
     )
     entry["parts"] = (entry["parts"][0],)
     entry["detail"] = (
@@ -90,6 +96,11 @@ def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         value,
         "magic",
+        # One explosion.  Its arrival has no sourced duration — the spider
+        # crawls "after a delay of 0.75 seconds" only when it detects a
+        # target first, and its travel is proximity-driven — so the cast
+        # boundary is the only placement the source gives it.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "One untargetable spider explosion; target selection is a sourced proximity branch."
@@ -121,7 +132,15 @@ SLOTS = {
     "E": _cocoon,
     "R": _form_toggle,
 }
-parse_abilities = build_parser(SLOTS, "Elise")
+# Cached kit review.  Neither Q form controls what it damages (Neurotoxin
+# fires a toxin, Venomous Bite pounces and reveals) and the Volatile
+# Spiderling only "explodes to deal magic damage to nearby enemies".  E is
+# absent rather than "none": Cocoon does stun, but it deals no damage, so
+# there is no event of its own to carry the answer.  W's Skittering Frenzy
+# form, R and P grant stats.
+MODULE_CC = {"Q": "none", "W": "none"}
+
+parse_abilities = build_parser(SLOTS, "Elise", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {"key": "spider_form", "type": "bool", "default": False, "label": "Spider Form"},

@@ -85,7 +85,12 @@ def _kayle_r(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _kayle_passive,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The sword's expansion damages every target it strikes once, at the
+    # cast: the boundary claim that carries Q's reviewed slow into the
+    # event ledger.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": lambda ctx: no_damage(
         ctx,
         name="Celestial Blessing",
@@ -110,7 +115,13 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kayle")
-parse_abilities = build_parser(SLOTS, "Kayle")
+
+# Cached kit review: Q's struck targets are "slowed for 2 seconds"; R
+# rains swords with no control, and the Aflame wave, W's heal and E's
+# empowered attack apply none either.
+MODULE_CC = {"Q": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kayle", cc_kinds=MODULE_CC)
 
 _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
@@ -127,6 +138,12 @@ def parse_abilities(*args, **kwargs):
         if entry is not None:
             entry["applies_item_on_hits"] = dict(spec)
     return result
+
+
+# The wrapper is the module's published parser, so it republishes the
+# wiring the inner parser holds — the contract proves declaration and
+# wiring are one dict off whichever function the module exports.
+parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
 
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}

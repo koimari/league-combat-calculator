@@ -268,11 +268,26 @@ SLOTS = {
     "P": _whisper,
     "final_round": _final_round,
     "Q": _dancing_grenade,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "W": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "E": _captive_audience,
     "R": _curtain_call,
 }
-parse_abilities = build_parser(SLOTS, "Jhin")
+
+# Q's grenade only damages and bounces.  W "roots them" on a marked
+# champion, and Whisper marks every champion "damaged by Jhin" for 4
+# seconds — the module's rotation always lands Q's grenade (+0.2s) before
+# W's shot, in every fight mode, so the mark is up when W arrives.  E's
+# trap "slow[s] enemies within the area by 35% for 2 seconds before
+# exploding" and each R bullet stops on a champion, "slowing them by 80%".
+# P and its final-round proc row author no cast the ledger reads as an
+# ability event.
+MODULE_CC = {"Q": "none", "W": "root", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Jhin", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_final_shot",

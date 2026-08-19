@@ -79,6 +79,7 @@ def _zephyr(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Passive movement speed and active slow are sourced utility; the active is one magic hit."
     )
@@ -100,7 +101,13 @@ SLOTS = {
         reason="Knockback and channelled healing are utility; the parent entry has no outgoing champion damage formula.",
     ),
 }
-parse_abilities = build_parser(SLOTS, "Janna")
+# Q's whirlwind deals magic damage "and knock[s] them up"; W's air
+# elemental "deals magic damage and slows them for 2 seconds".  P is the
+# on-hit bonus row and E/R author no damage part at all (Monsoon's
+# knockback has no damage formula in the cached entry).
+MODULE_CC = {"Q": "knockup", "W": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Janna", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "bonus_movement_speed",

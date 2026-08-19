@@ -133,6 +133,8 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "true",
+        # One bite on the target it eats, no travel or tick phase.
+        event_order_certified="single_hit",
     )
     entry["stat_buff"] = {"bonus_health": stack_health}
     return entry
@@ -171,11 +173,22 @@ ASSUMPTIONS = [
 SLOTS = {
     "R": _feast,
     "Q": simple_damage(attr="Magic damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic damage", dmg_type="magic"),
+    # One roar in a cone, landing at the cast.
+    "W": simple_damage(
+        attr="Magic damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _vorpal_spikes,
 }
 
-parse_abilities = build_parser(SLOTS, "Cho'Gath")
+# Cached kit review.  W's only debuff is a silence — real control, but
+# neither an immobilizing effect nor a slow — and R "deal[s] them true
+# damage" and nothing else.  Q is left
+# unreviewed because its knock-up lands with the rupture after a sourced
+# 0.627-second delay the row does not author, and E because its row is the
+# three empowered attacks in one part with no per-swing cadence.
+MODULE_CC = {"W": "silence", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

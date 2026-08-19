@@ -19,6 +19,8 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
+from src.calculator.champions import cassiopeia
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -328,3 +330,37 @@ class TestPassiveAndMeta:
         assert opt["type"] == "bool"
         assert opt["default"] is True
         assert meta["assumptions"]
+
+
+class TestReviewedCrowdControl:
+    """Cassiopeia's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Cassiopeia")
+        assert cassiopeia.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "none",
+            "R": "stun",
+        }
+        assert "grounded and slowed" in " ".join(cc_review.slot_text(data, "W").split())
+        assert "instead stunned for the same duration" in " ".join(
+            cc_review.slot_text(data, "R").split()
+        )
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Cassiopeia") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Cassiopeia")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

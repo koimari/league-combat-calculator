@@ -147,10 +147,18 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         extract_named(ability, "Magic damage", rank, ctx.stats, ctx.target),
         "magic",
+        event_order_certified="single_hit",
     )
 
 
-parse_abilities = build_parser(SLOTS, "Hecarim")
+# Q's cleave and W's aura only damage.  E's charge "knocks them back ...
+# stuns them for 0.25 seconds" — the first-listed immobilize is the
+# knockback.  R's riders damage on the way through and Hecarim then "fears
+# nearby enemies" on arrival.  P is the bonus-AD conversion row and applies
+# nothing.
+MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear"}
+
+parse_abilities = build_parser(SLOTS, "Hecarim", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "bonus_movement_speed",

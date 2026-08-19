@@ -27,6 +27,8 @@ def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", bonus, crit_effectiveness=1.0),)
     entry["empowers_next_auto"] = True
+    # One empowered swing, landing with that swing.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "One empowered basic attack; the caught axe readies the next cast."
     )
@@ -131,7 +133,14 @@ SLOTS = {
     "E": _stand_aside,
     "R": _whirling_death,
 }
-parse_abilities = build_parser(SLOTS, "Draven")
+# Cached kit review.  Q's empowered attack and R's two axe passes only add
+# damage (R's threshold clause executes, it does not control), while E
+# "knock[s] them aside ... and slow[s] them for 2 seconds" — a forced
+# displacement, which is the Wiki's airborne class.  W grants Draven attack
+# and movement speed and P is a gold counter, neither with a damage part.
+MODULE_CC = {"Q": "none", "E": "airborne", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Draven", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

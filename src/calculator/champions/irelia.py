@@ -138,9 +138,16 @@ def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
         value * passes,
         "magic",
     )
-    entry["parts"] = (
-        DamagePart("magic", value, count=passes, time_offset=0.25, hit_interval=2.5),
-    )
+    # One part per pass, at the times the single counted part already put
+    # them (0.25 then 2.75), because the two passes control differently:
+    # the barrage only damages and reveals — its blades "knock all enemy
+    # units away ... though not rendering them airborne", which is not an
+    # immobilize — while enemies crossing the perimeter "are slowed by 90%
+    # for 1.5 seconds".
+    parts = [DamagePart("magic", value, time_offset=0.25, cc_kind="none")]
+    if passes > 1:
+        parts.append(DamagePart("magic", value, time_offset=2.75, cc_kind="slow"))
+    entry["parts"] = tuple(parts)
     entry["event_order_certified"] = "initial barrage and one perimeter pass"
     return entry
 
@@ -152,7 +159,13 @@ SLOTS = {
     "E": _flawless_duet,
     "R": _vanguard,
 }
-parse_abilities = build_parser(SLOTS, "Irelia")
+# Q dashes, heals and applies on-hit; W's recast swipe only damages; E's
+# converging blades deal magic damage "and stun[] them for 0.75 seconds".
+# R differs per pass, so its kinds ride its parts above.  P is the
+# attack-speed/on-hit passive and authors no damage part.
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Irelia", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_stacks",

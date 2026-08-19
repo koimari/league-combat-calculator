@@ -133,10 +133,21 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _travelers_call,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The bolt "deals magic damage to the first enemy hit" once, at the
+    # cast — the 300-unit continuation only reaches a second target.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Bard")
+# Cached kit review.  Q "slows [the first enemy hit] by 60% for a
+# duration"; the stun it can add needs the bolt to go on and hit "terrain
+# or a second enemy", which the single-target model never supplies, so the
+# slow is the answer for the target Q damages here.  W, E and R deal no
+# damage, and P's Meep slow rides basic attacks rather than an ability.
+MODULE_CC = {"Q": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

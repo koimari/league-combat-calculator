@@ -74,6 +74,8 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One targeted launch, no travel or tick phase in the packet.
+        event_order_certified="single_hit",
     )
 
 
@@ -182,7 +184,10 @@ ASSUMPTIONS = [
     "5-second duration",
     "E's healing against poisoned targets is not modeled (damage calculator)",
     "Passive (Serpentine Grace) is movement-speed only and not modeled",
-    "R's stun/slow facing condition is not modeled (damage is identical either way)",
+    "R's facing condition does not change damage either way; for crowd "
+    "control the duel's target is engaged with Cassiopeia and therefore "
+    "facing her, so R's reviewed control is the stun branch ('Enemies "
+    "with their facing direction towards her are instead stunned')",
 ]
 
 SLOTS = {
@@ -192,10 +197,22 @@ SLOTS = {
     "Q": _noxious_blast,
     "W": _miasma,
     "E": _twin_fang,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One cone blast, no travel or tick phase in the packet.
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Cassiopeia")
+# Cached kit review.  Q's blast only poisons ("taking magic damage every
+# 0.429 seconds"), W's clouds leave enemies "grounded and slowed" — a
+# ground is not an immobilizing effect, the slow is the control — and E's
+# fangs apply nothing at all.  R is left unreviewed: it slows enemies
+# struck, and stuns "instead" those "with their facing direction towards
+# her" — which the duel's target, engaged with Cassiopeia, is (see
+# ASSUMPTIONS).
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

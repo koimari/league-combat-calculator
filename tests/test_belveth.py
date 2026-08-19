@@ -15,6 +15,8 @@ from src.calculator.interpreters import charged_strike, on_hit_strike
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.champions import belveth
+from tests import cc_review
 
 
 def _parse(
@@ -797,3 +799,24 @@ class TestStatsBonusAttackSpeed:
         stats, with_item = parse_at(belveth_data, 18, items=[nashors])
         assert stats["bonus_attack_speed"] > 0.0
         assert with_item["E"]["parts"][0].count > bare["E"]["parts"][0].count
+
+
+class TestReviewedCrowdControl:
+    """Bel'Veth's crowd-control review, and the slot that still withholds.
+
+    Q and E each hold many hits in one part (four cardinal dashes, six
+    slashes) with no per-hit cadence; W and R could each carry their
+    answer, but declaring one makes rotation_resolver order the cast
+    first as cc setup, which moves the fight's numbers (see the batch
+    report).
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Bel'Veth")
+        assert not hasattr(belveth, "MODULE_CC")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["E", "Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Bel'Veth")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

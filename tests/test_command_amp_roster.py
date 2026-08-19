@@ -18,6 +18,11 @@ before any structural one elsewhere is.
 Every pinned total is also re-derived from the control run and Command's own
 sourced amp fraction, so a reader can see *why* the number is what it is
 rather than trusting a captured constant.
+
+A second roster covers the merge.  Syndra, Pantheon and Aatrox each author at
+most one immobilize, so nothing above ever asks what a *second* one does to a
+live window; :class:`TestTwoImmobilizesMergeIntoOneRefreshedWindow` is the
+Maokai roster that does, on both engines at once.
 """
 
 from functools import lru_cache
@@ -26,11 +31,18 @@ from typing import NamedTuple
 import pytest
 
 from src import app as app_module
+from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import AmpChainSlot
+from src.calculator.item_behavior_catalog import ACKNOWLEDGED_READING_DIVERGENCES
 from src.calculator.stats import calculate_total_stats
+from src.calculator.survival.actions import SurvivalAction
+from src.calculator.survival.transitions import (
+    _apply_cross_participant_modifiers,
+    _apply_damage_modifier,
+)
 
 # The roster.  Syndra's E is the authored stun (the incident's own marker);
 # Pantheon holds nothing, so nothing but Command can move his total between
@@ -59,12 +71,12 @@ COMMAND_ROW = f"damage_amp_{COMMAND_ITEM}"
 ROUNDING = 0.1
 
 
-@lru_cache(maxsize=2)
-def _roster(items):
+@lru_cache(maxsize=4)
+def _roster(items, holder=HOLDER, ally=ALLY):
     """One roster response through the public request path."""
     app_module.app.config["TESTING"] = True
     payload = {
-        "champion": HOLDER,
+        "champion": holder,
         "level": 18,
         "items": list(items),
         "fight_mode": "time_based",
@@ -73,7 +85,7 @@ def _roster(items):
         "enemies": [{"champion": ENEMY, "level": 18, "items": []}],
         "allies": [
             {
-                "champion": ALLY,
+                "champion": ally,
                 "level": 18,
                 "items": [],
                 "ally_effects_enabled": True,
@@ -273,3 +285,284 @@ class TestDroppingTheCoupledPricerFailsOnANumber:
             entry["total_damage"] for entry in response["breakdown"].values()
         )
         assert _outgoing(response, "main") == pytest.approx(pair_total, abs=ROUNDING)
+
+
+# ---------------------------------------------------------------------------
+# The merge — two immobilizes inside one window
+# ---------------------------------------------------------------------------
+
+# Maokai authors two immobilizes a quarter-second apart: W (Twisted Advance)
+# roots at 0.3 and R (Nature's Grasp) roots at 0.55, so the second lands with
+# 3.75 s left on the first one's mark.  Everything else about the roster is the
+# fixture above's: level 18, eight seconds, no ambient autos, one enemy.
+MERGE_HOLDER = "Maokai"
+# The ally is chosen for having no immobilize of his own and real damage inside
+# the merged window — his delta is the walk half's clean instrument, and a
+# second CC author would make it ambiguous whose mark priced it.
+MERGE_ALLY = "Ezreal"
+
+# Measured on this roster.  The holder's figure carries Mandate's stats as well
+# as its amp; the ally's carries the amp alone.
+MERGE_HOLDER_TOTAL = 1008.0
+MERGE_ALLY_TOTAL = 1411.6
+NO_MERGE_HOLDER_TOTAL = 884.5
+NO_MERGE_ALLY_TOTAL = 1359.5
+
+# The two triggers, and the one window they leave behind.  ``REFRESH`` moves
+# the mark's expiry to the *last* immobilize plus one duration; the additive
+# reading would leave it at the first expiry plus another duration.
+FIRST_TRIGGER = 0.3
+SECOND_TRIGGER = 0.55
+REFRESHED_EXPIRY = 4.55
+FIRST_EXPIRY = 4.3
+ADDITIVE_EXPIRY = FIRST_EXPIRY + 4.0
+
+
+def merged():
+    """The merge roster holding Imperial Mandate."""
+    return _roster((COMMAND_ITEM,), MERGE_HOLDER, MERGE_ALLY)
+
+
+def no_merge():
+    """The same roster with nothing held — the control."""
+    return _roster((), MERGE_HOLDER, MERGE_ALLY)
+
+
+def _command_packets(response):
+    """The walk's Command packets, in emission order."""
+    return [
+        event
+        for event in response["combat"]["support_events"]
+        if str(event["source"]).startswith(f"{COMMAND_ITEM} — Command")
+    ]
+
+
+class _RecordingLedger:
+    """A walk context whose ledger keeps what was written to it."""
+
+    def __init__(self):
+        self.written = []
+        self.ledger = self
+        self.combatants = ()
+        self.states = []
+
+    def write(self, action, **fields):  # pylint: disable=unused-argument
+        """Keep the receipt fields."""
+        self.written.append(fields)
+
+    def skip(self, action, reason):  # pylint: disable=unused-argument
+        """Keep the refusal."""
+        self.written.append({"skip": reason})
+
+
+class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
+    """One mark, refreshed — the merge, priced on both engines.
+
+    **The oracle.**  The League Wiki's Imperial Mandate page says
+    "Subsequent immobilizes against a target extend the duration of the
+    effect".  Riot's own sources say no such thing: the in-client tooltip
+    (CommunityDragon ``items.json`` id 4005) reads only "mark them as 7%
+    Vulnerable for 4 seconds", and ``items.cdtb.bin.json`` ``Items/4005``
+    carries ``DamageAmp 0.07`` and ``DamageAmpDuration 4.0`` with no merge
+    script at all.  So the sources rule out a second stacking 7% and leave
+    refresh-versus-additive open, and the declaration ships the conservative
+    reading — ``merge=REFRESH``, filed with its open alternative in
+    ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
+
+    This class is what that ruling has to satisfy, and what the additive
+    reading would have to break to land.  It replaces the Phase 0 sentinel
+    that asserted no authored pair could merge: that fact stopped being true
+    when the champion corpus grew, and the sentinel's own message asked for
+    exactly this — "give it a fixture and an oracle receipt before landing
+    it".
+    """
+
+    def test_the_holder_authors_two_immobilizes_inside_one_duration(self):
+        """The precondition: without it every assertion below is vacuous."""
+        packets = _command_packets(merged())
+        assert [packet["time"] for packet in packets] == [
+            FIRST_TRIGGER,
+            SECOND_TRIGGER,
+        ], (
+            "the merge fixture needs two immobilizes closer together than "
+            "Command's window; this roster no longer authors them"
+        )
+        duration = _command_effect().duration
+        assert SECOND_TRIGGER - FIRST_TRIGGER < duration
+        assert [packet["expires_at"] for packet in packets] == [
+            FIRST_EXPIRY,
+            REFRESHED_EXPIRY,
+        ]
+        assert REFRESHED_EXPIRY == pytest.approx(SECOND_TRIGGER + duration), (
+            "REFRESH: the surviving expiry is the *last* trigger plus one "
+            "duration, not the first expiry plus another"
+        )
+
+    def test_the_enemy_survives_both_runs_so_the_comparison_is_linear(self):
+        assert _outgoing(merged(), f"enemy:{ENEMY}") == _outgoing(
+            no_merge(), f"enemy:{ENEMY}"
+        )
+
+    def test_the_pair_row_is_the_fraction_of_one_merged_window(self):
+        """One row over one window — not two rows, and not a doubled one."""
+        response = merged()
+        effect = _command_effect()
+        windowed = _windowed_damage(
+            response, "main", start=FIRST_TRIGGER, end=REFRESHED_EXPIRY
+        )
+        assert windowed > 0.0
+        row = response["breakdown"][COMMAND_ROW]
+        assert row["total_damage"] == pytest.approx(
+            windowed * effect.amp_fraction, abs=ROUNDING
+        )
+        assert _outgoing(response, "main") == pytest.approx(
+            MERGE_HOLDER_TOTAL, abs=ROUNDING
+        )
+        assert _outgoing(no_merge(), "main") == pytest.approx(
+            NO_MERGE_HOLDER_TOTAL, abs=ROUNDING
+        )
+
+    def test_the_second_trigger_neither_stacks_the_amp_nor_opens_a_row(self):
+        """Two triggers, one row, one fraction — the two rejected readings."""
+        response = merged()
+        effect = _command_effect()
+        rows = [key for key in response["breakdown"] if key.startswith("damage_amp_")]
+        assert rows == [COMMAND_ROW]
+        windowed = _windowed_damage(
+            response, "main", start=FIRST_TRIGGER, end=REFRESHED_EXPIRY
+        )
+        stacked = windowed * ((1.0 + effect.amp_fraction) ** 2 - 1.0)
+        assert response["breakdown"][COMMAND_ROW]["total_damage"] != pytest.approx(
+            stacked, abs=ROUNDING
+        ), "a second immobilize must not compound the amp (1.07 squared)"
+
+    def test_the_walk_keeps_one_modifier_and_receipts_the_refresh(self):
+        """The walk half: the second packet refreshes rather than arming.
+
+        Driven with the two packets the roster above actually emitted, so the
+        walk's arming is tested against the fixture's own numbers and not
+        against a hand-written pair.
+        """
+        packets = _command_packets(merged())
+        context = _RecordingLedger()
+        armed: list[dict] = []
+        state = {"active_damage_modifiers": armed}
+        for packet in packets:
+            _apply_damage_modifier(
+                context,
+                SurvivalAction(
+                    source=packet["source"],
+                    holder=0,
+                    attacker=-1,
+                    time=packet["time"],
+                    duration=packet["duration"],
+                    multiplier=packet["multiplier"],
+                    amount=packet["amount"],
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
+                ),
+                state,
+            )
+
+        assert len(armed) == 1, (
+            "two immobilizes armed two modifiers; every packet inside the "
+            "overlap would then be multiplied twice"
+        )
+        assert armed[0]["until"] == pytest.approx(REFRESHED_EXPIRY)
+        assert armed[0]["multiplier"] == pytest.approx(
+            1.0 + _command_effect().amp_fraction
+        )
+        assert [
+            fields["refresh"] for fields in context.written if "refresh" in fields
+        ] == [
+            {
+                "reason": "refresh",
+                "source": f"{COMMAND_ITEM} — Command",
+                "previous_expires_at": FIRST_EXPIRY,
+            }
+        ]
+
+    def test_a_packet_inside_the_overlap_is_amped_once(self):
+        """1.07, never 1.1449 — the double count the refresh exists to stop."""
+        packets = _command_packets(merged())
+        context = _RecordingLedger()
+        state = {"active_damage_modifiers": []}
+        for packet in packets:
+            _apply_damage_modifier(
+                context,
+                SurvivalAction(
+                    source=packet["source"],
+                    holder=0,
+                    attacker=-1,
+                    time=packet["time"],
+                    duration=packet["duration"],
+                    multiplier=packet["multiplier"],
+                    amount=packet["amount"],
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
+                ),
+                state,
+            )
+        fraction = _command_effect().amp_fraction
+        priced = _apply_cross_participant_modifiers(
+            _RecordingLedger(),
+            SurvivalAction(
+                damage_type="magic",
+                is_ability=True,
+                time=(FIRST_TRIGGER + REFRESHED_EXPIRY) / 2.0,
+                attacker=-1,
+            ),
+            state,
+            100.0,
+        )
+        assert priced == pytest.approx(100.0 * (1.0 + fraction))
+        assert priced != pytest.approx(100.0 * (1.0 + fraction) ** 2)
+
+    def test_the_ally_delta_is_the_merged_window_and_prices_the_other_reading(self):
+        """The costed half of the divergence, re-measured rather than quoted.
+
+        The ally holds nothing, so his whole delta is the walk's amp.  Priced
+        over the shipped ``REFRESH`` window it matches to the payload's own
+        rounding; priced over the window the Wiki's "extend the duration"
+        wording would open it does not, and the gap between the two is what
+        the additive reading would cost on this roster.
+        """
+        effect = _command_effect()
+        control = no_merge()
+        participant = f"ally:{MERGE_ALLY}"
+        assert _outgoing(control, participant) == pytest.approx(
+            NO_MERGE_ALLY_TOTAL, abs=ROUNDING
+        )
+
+        refreshed = _windowed_damage(
+            control, participant, start=FIRST_TRIGGER, end=REFRESHED_EXPIRY
+        )
+        additive = _windowed_damage(
+            control, participant, start=FIRST_TRIGGER, end=ADDITIVE_EXPIRY
+        )
+        assert refreshed > 0.0
+        assert additive > refreshed, (
+            "the two readings are indistinguishable on this roster, so it "
+            "cannot price the divergence it is cited for"
+        )
+
+        measured = _outgoing(merged(), participant)
+        assert measured == pytest.approx(MERGE_ALLY_TOTAL, abs=ROUNDING)
+        assert measured == pytest.approx(
+            NO_MERGE_ALLY_TOTAL + refreshed * effect.amp_fraction, abs=ROUNDING
+        )
+        assert measured != pytest.approx(
+            NO_MERGE_ALLY_TOTAL + additive * effect.amp_fraction, abs=ROUNDING
+        )
+        exposure = (additive - refreshed) * effect.amp_fraction
+        assert exposure > ROUNDING, (
+            "the priced exposure of the additive reading collapsed to nothing; "
+            "if that is real the divergence is settled and its entry in "
+            "ACKNOWLEDGED_READING_DIVERGENCES should say so"
+        )
+
+    def test_the_divergence_is_declared_and_names_this_gate(self):
+        """The note and the fixture point at each other, or neither is a home."""
+        note = ACKNOWLEDGED_READING_DIVERGENCES["imperial_mandate.command"]
+        assert "test_command_amp_roster" in note
+        assert "extend the duration of the effect" in note

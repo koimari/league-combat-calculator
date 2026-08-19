@@ -258,7 +258,11 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _moonsilver_blade,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The bolt's arc has no sourced duration in the cached packet, so the
+    # cast boundary is the only placement its one explosion has.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "E": _lunar_rush,
     "R": _moonfall,
@@ -267,7 +271,15 @@ SLOTS = {
     "auto_attacks_moonsilver_cleave": _moonsilver_cleave,
 }
 
-parse_abilities = build_parser(SLOTS, "Diana")
+# Cached kit review.  Q only "afflict[s] them with Moonlight", a mark that
+# reveals and that Lunar Rush consumes — no control.  W is left unreviewed
+# because its row is the cached "Total Magic Damage" of all three spheres,
+# E because its row is the dash count in one part, and R because its beam
+# "strike[s] ... after 1 second" — a sourced delay the row does not author,
+# which is where R's pull and slow actually land.
+MODULE_CC = {"Q": "none"}
+
+parse_abilities = build_parser(SLOTS, "Diana", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

@@ -128,11 +128,28 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": _rangers_focus,
     "P": _frost_shot,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One arrow's worth of damage lands on the target ("Enemies can
+    # intercept multiple arrows but do not take damage from any beyond the
+    # first"), and the crystal arrow shatters on the champion it hits:
+    # both are a single hit at the cast boundary.
+    "W": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Ashe")
+# Cached kit review.  W applies "Critical Slow to enemy champions hit" and
+# R "stun[s] them for 1 : 3.5 (based on distance travelled) seconds".  Q
+# and P are auto-attack riders that emit no ability damage of their own —
+# their Frost Shot slow rides the basic attacks, which this scan does not
+# read as ability control.
+MODULE_CC = {"W": "slow", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Ashe", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

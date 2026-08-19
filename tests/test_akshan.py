@@ -10,6 +10,8 @@ from src.calculator.champions.akshan import (
     _extract_double_shot_ratio,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import akshan
+from tests import cc_review
 
 
 class TestQAvengerang:
@@ -426,3 +428,23 @@ class TestFightEngineIntegration:
         assert "R" in abilities
         assert "passive_double_shot" in abilities
         assert "passive" in abilities
+
+
+class TestReviewedCrowdControl:
+    """Akshan's crowd-control review, and the slot that still withholds.
+
+    Q's row is the cached 'Total Physical Damage' of both boomerang
+    passes and E's is every Heroic Swing shot summed into one part.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Akshan")
+        assert akshan.MODULE_CC == {"R": "none", "P": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "P")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Akshan") == ["E", "Q"]
+        coverage = cc_review.fimbulwinter_coverage("Akshan")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

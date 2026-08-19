@@ -34,7 +34,12 @@ from .slotlib import (
 PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc332407130"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Lux", PACKET_SHA256
+    "Lux",
+    PACKET_SHA256,
+    # Light Binding's sphere, Lucent Singularity's detonation and Final
+    # Spark's beam each deal their packet once, at the cast — the boundary
+    # claim that carries MODULE_CC's reviewed answers into the ledger.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -102,7 +107,14 @@ def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = dict(SLOTS)
 SLOTS["P"] = _illumination
-parse_abilities = build_parser(SLOTS, "Lux")
+
+# Cached kit review: Q's sphere "root[s] them for 2 seconds", E's
+# singularity slows the enemies inside it and its detonation slows the
+# ones it hits, and R's beam only damages and reveals.  W shields allies
+# and P's proc is a bonus-damage mark, neither applying control.
+MODULE_CC = {"Q": "root", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Lux", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

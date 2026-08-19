@@ -63,6 +63,7 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
     }
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Ranged attack: applies on-hit/on-attack effects and may critically strike for the sourced 230% modifier."
     )
@@ -93,6 +94,7 @@ def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", bonus),)
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Champion keg branch: triggering attack plus the sourced bonus; 40% armor-ignore is retained in provenance."
     )
@@ -142,7 +144,12 @@ SLOTS = {
     "E": _powder_keg,
     "R": _cannon_barrage,
 }
-parse_abilities = build_parser(SLOTS, "Gangplank")
+# P burns and Q is a ranged shot — neither controls.  E's explosion leaves
+# enemies "slowed for 2 seconds" and each R wave "slows them by 30% for 0.5
+# seconds".  W is the self-cleanse and authors no damage part.
+MODULE_CC = {"P": "none", "Q": "none", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Gangplank", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

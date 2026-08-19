@@ -24,6 +24,8 @@ from src.calculator.champions import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.resistance import apply_resistance
+from src.calculator.champions import camille
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -452,3 +454,29 @@ class TestPassiveAndMeta:
         keys = {opt["key"] for opt in meta["options"]}
         assert keys == {"w_outer_cone"}
         assert meta["assumptions"]
+
+
+class TestReviewedCrowdControl:
+    """Camille's crowd-control review, and the slot that still withholds.
+
+    Q2 is reviewed control-free too but cannot say so: below level 16
+    its one empowered swing is split into a true and a physical part,
+    and the certified single-hit export carries only a one-part cast.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Camille")
+        assert camille.MODULE_CC == {"Q": "none", "W": "slow", "E": "immobilize"}
+        assert "slowed by 80% decaying over 2 seconds" in " ".join(
+            cc_review.slot_text(data, "W").split()
+        )
+        assert "knocking back all nearby enemy champions" in " ".join(
+            cc_review.slot_text(data, "E").split()
+        )
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Camille") == ["Q2"]
+        coverage = cc_review.fimbulwinter_coverage("Camille")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

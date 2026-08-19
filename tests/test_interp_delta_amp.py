@@ -41,6 +41,7 @@ from src.calculator.item_behavior import (
     chain_rank,
 )
 from src.calculator.item_behavior_catalog import (
+    ACKNOWLEDGED_READING_DIVERGENCES,
     AMP_COMPILABILITY,
     BehaviorCatalogError,
     COMPILED_KERNEL_CANNOT_AMP,
@@ -342,8 +343,16 @@ def test_a_missing_command_key_names_the_item_and_the_key(
         _command_slot("Imperial Mandate")
 
 
-def test_a_second_immobilize_extends_the_window_rather_than_stacking() -> None:
-    """D-12's policy, as the declaration now states it."""
+def test_a_second_immobilize_refreshes_the_window_rather_than_stacking() -> None:
+    """D-12's policy, as the declaration now states it.
+
+    The merged window's expiry is the *last* trigger plus one duration, and
+    nothing about the first trigger survives in it except its start.  That is
+    the whole content of ``REFRESH``, and it is what distinguishes the shipped
+    reading from the additive one the Wiki's wording admits: additive would
+    end at ``duration / 2 + duration + duration``, not at
+    ``duration / 2 + duration``.
+    """
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
     duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
@@ -354,6 +363,58 @@ def test_a_second_immobilize_extends_the_window_rather_than_stacking() -> None:
         (0.0, duration),
         (duration * 3.0, duration * 4.0),
     )
+
+
+def test_every_acknowledged_reading_divergence_names_a_live_declaration() -> None:
+    """A divergence must qualify a rule that exists, and say what it ships.
+
+    The failure mode this closes is the one
+    ``item_source.test_acknowledgements_do_not_outlive_their_conflict``
+    closes for its own table: an explanation that outlives the thing it
+    explains hides the next real disagreement.  Here the referent is a
+    ``mechanic_id``, so the check is that every key resolves to a declared
+    rule — and, for Command, that the note's claim about what ships is the
+    declaration's own word rather than a sentence beside it.
+    """
+    declared = {
+        rule.mechanic_id for owner in rule_owners() for rule in behavior_rules(owner)
+    }
+    assert set(ACKNOWLEDGED_READING_DIVERGENCES) <= declared, (
+        "a reading divergence names a mechanic_id no rule declares: "
+        f"{sorted(set(ACKNOWLEDGED_READING_DIVERGENCES) - declared)}"
+    )
+    assert (
+        ACKNOWLEDGED_READING_DIVERGENCES
+    ), "the table is empty, so the gate above is green over nothing (D-26)"
+
+    slot = _command_slot("Imperial Mandate")
+    assert slot is not None
+    rule = slot.rules[0]
+    assert rule.mechanic_id in ACKNOWLEDGED_READING_DIVERGENCES
+    note = ACKNOWLEDGED_READING_DIVERGENCES[rule.mechanic_id]
+    assert rule.payload.activation.merge is WindowMerge.REFRESH, (
+        "the note says REFRESH is the shipped reading; the declaration no "
+        "longer agrees, so one of the two has moved without the other"
+    )
+    assert "REFRESH" in note and "EXTEND" in note, (
+        "the note has to name both the reading that ships and the reading "
+        "that stays open, or it records a decision without its alternative"
+    )
+
+
+def test_refresh_takes_the_last_trigger_and_not_the_running_total() -> None:
+    """Three triggers inside one window still end one duration after the last.
+
+    The arithmetic that separates a refresh from an extension is only visible
+    once a third trigger lands: refresh ends at ``last + duration`` however
+    many triggers preceded it, while the additive reading would have added a
+    duration per trigger.
+    """
+    slot = _command_slot("Imperial Mandate")
+    assert slot is not None
+    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    triggers = [0.0, duration / 4.0, duration / 2.0]
+    assert slot.trigger_windows(triggers) == ((0.0, triggers[-1] + duration),)
 
 
 def test_the_expiry_boundary_is_open_closed() -> None:
@@ -380,15 +441,18 @@ def test_a_rule_with_no_trigger_window_refuses_the_question() -> None:
 def test_an_undeclared_merge_or_boundary_has_no_arithmetic() -> None:
     """R-05/D-51: the two unreached members raise rather than guessing.
 
-    ``REFRESH``/``INDEPENDENT`` and ``CLOSED_CLOSED`` are legal spellings no
+    ``EXTEND``/``INDEPENDENT`` and ``CLOSED_CLOSED`` are legal spellings no
     rule declares; writing arithmetic for a shape nothing reaches is the
-    orphan branch D-51 forbids, so the interpreter stops instead.
+    orphan branch D-51 forbids, so the interpreter stops instead.  ``EXTEND``
+    is unreached *and* live as a question — it is the additive reading the
+    Wiki's wording admits — so its refusal here is what keeps the additive
+    answer from arriving as a silent default.
     """
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
     declared = slot.rules[0].payload.activation
     for replacement in (
-        dataclasses.replace(declared, merge=WindowMerge.REFRESH),
+        dataclasses.replace(declared, merge=WindowMerge.EXTEND),
         dataclasses.replace(declared, merge=WindowMerge.INDEPENDENT),
     ):
         mutated = _with_activation(slot, replacement)

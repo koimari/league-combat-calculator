@@ -21,6 +21,8 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import briar
+from tests import cc_review
 
 # Rank pins for hand-math tests (independent of level/skill order).
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 2}
@@ -385,3 +387,32 @@ class TestFightIntegration:
         expected_casts = 2 + 1 + 1
         row = result["breakdown"]["stacking_dot_passive"]
         assert row["count"] == total_attacks + expected_casts
+
+
+class TestReviewedCrowdControl:
+    """Briar's crowd-control review, and the slot that still withholds.
+
+    E's scream lands on the recast after the sourced charge (up to one
+    second), which the row does not author.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Briar")
+        assert briar.MODULE_CC == {"Q": "stun", "W": "none", "R": "none"}
+        assert "stuns them for 0.85 seconds" in " ".join(
+            cc_review.slot_text(data, "Q").split()
+        )
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == [
+            "fear",
+            "slow",
+        ]
+        # R fears "all non-marked targets"; the marked one is the target
+        # its explosion damages, and it is not feared.
+        assert "fears all non-marked targets" in cc_review.slot_text(data, "R")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Briar") == ["E"]
+        coverage = cc_review.fimbulwinter_coverage("Briar")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

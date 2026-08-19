@@ -264,7 +264,18 @@ SLOTS = {
     ),
 }
 
-parse_abilities = build_parser(SLOTS, "Aurelion Sol")
+# Cached kit review.  Q's beam only burns and reveals.  E's black hole
+# "drag[s] [enemies] inward", which the Wiki's crowd-control taxonomy does
+# not list among its four displacements (knock aside/back/up, pull) nor
+# among the immobilizing effects, and its movement-speed floor applies to
+# "minions and monsters" only — so neither slot controls the champion it
+# damages.  R is left unreviewed: both of its branches land on a sourced
+# delay (Falling Star's 1.25s stun, The Skies Descend's 2s knock-up) that
+# the row does not author, so the ledger has no hit to attach either
+# answer to.
+MODULE_CC = {"Q": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

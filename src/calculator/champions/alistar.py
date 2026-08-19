@@ -119,6 +119,11 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
         per_tick * _E_TICKS + empowered,
         "magic",
     )
+    # E's control belongs to the empowered auto, not to the trample: the
+    # ticks only "deal magic damage to nearby enemies", while the 5-stack
+    # basic attack that ends Trample "stun[s] the target for 1 second".
+    # One cast, two answers, so they are authored per part instead of in
+    # MODULE_CC.
     entry["parts"] = (
         DamagePart(
             "magic",
@@ -126,8 +131,9 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
             count=_E_TICKS,
             time_offset=_E_TICK_INTERVAL,
             hit_interval=_E_TICK_INTERVAL,
+            cc_kind="none",
         ),
-        DamagePart("magic", empowered, time_offset=_E_DURATION),
+        DamagePart("magic", empowered, time_offset=_E_DURATION, cc_kind="stun"),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
     # whole 5-second trample (the Cassiopeia rule).
@@ -148,12 +154,22 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(),
-    "W": simple_damage(),
+    # Both are one instantaneous hit with no sourced sub-cast phase — the
+    # smash lands beneath Alistar and the headbutt on arrival — so each
+    # certifies the cast boundary its reviewed control rides on.
+    "Q": simple_damage(event_order_certified="single_hit"),
+    "W": simple_damage(event_order_certified="single_hit"),
     "E": _trample,
 }
 
-parse_abilities = build_parser(SLOTS, "Alistar")
+# Cached kit review.  Q stuns "and knock[s] them up simultaneously for 1
+# second" and W "knocks them back 700 units ... while also stunning them
+# for 0.75 seconds": each cast applies two immobilize kinds at once, which
+# is what the un-narrowed "immobilize" kind states.  E is absent because
+# its two parts disagree (see _trample); R and P deal no damage.
+MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
+
+parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

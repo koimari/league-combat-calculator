@@ -1,6 +1,8 @@
 """Tests for Annie champion module."""
 
 import pytest
+from src.calculator.champions import annie
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # P: Pyromania (stun only, no damage)
@@ -268,3 +270,23 @@ class TestPreLevel6:
     def test_q_works_without_r(self, annie_data, parse_at) -> None:
         _, abilities = parse_at(annie_data, 5, ap=100.0)
         assert abilities["Q"]["total_raw"] > 0
+
+
+class TestReviewedCrowdControl:
+    """Annie's crowd-control review, and the slot that still withholds.
+
+    Pyromania's stun is stack state, not slot state: it empowers 'her
+    next cast of Disintegrate, Incinerate, or Summon: Tibbers' at four
+    stacks, so neither a slot-wide stun nor a slot-wide 'none' is true
+    of Q, W or R.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Annie")
+        assert not hasattr(annie, "MODULE_CC")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Annie") == ["Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Annie")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

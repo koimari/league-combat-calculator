@@ -14,8 +14,20 @@ from .packet_module import build_packet_module
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
 
+# Cached kit review: Q "knocks back and stuns the first enemy it hits over
+# 1 second" — the enemy the bounced explosion this packet prices then
+# damages (and slows).  W, E and R are ally heals/shields and P is an
+# enchantment on allies, so no other slot emits an enemy damage event.
+MODULE_CC = {"Q": "stun"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Milio", PACKET_SHA256
+    "Milio",
+    PACKET_SHA256,
+    # The explosion deals its packet once, at the cast (the fireball's
+    # own 0.25-second delay is Milio's cast lockout, not a hit offset) —
+    # the boundary claim that carries MODULE_CC into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
+    cc_kinds=MODULE_CC,
 )
 PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {

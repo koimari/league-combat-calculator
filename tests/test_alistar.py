@@ -7,6 +7,8 @@ from src.calculator.champions.alistar import (
     _extract_e_on_hit_damage,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import alistar
+from tests import cc_review
 
 
 class TestQPulverize:
@@ -221,3 +223,32 @@ class TestEPastLevel18:
         assert _extract_e_on_hit_damage(ability, 20) == pytest.approx(
             _extract_e_on_hit_damage(ability, 18)
         )
+
+
+class TestReviewedCrowdControl:
+    """Alistar's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Alistar")
+        assert alistar.MODULE_CC == {"Q": "immobilize", "W": "immobilize"}
+        assert "stunning and knocking them up simultaneously" in " ".join(
+            cc_review.slot_text(data, "Q").split()
+        )
+        assert "knocks them back 700 units" in " ".join(
+            cc_review.slot_text(data, "W").split()
+        )
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Alistar") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Alistar")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

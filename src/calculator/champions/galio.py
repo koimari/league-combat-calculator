@@ -276,7 +276,13 @@ SLOTS = {
     "P": _colossal_smash,
 }
 
-parse_abilities = build_parser(SLOTS, "Galio")
+# Q's windblasts and tornado only damage; W's recast "taunts them", E
+# "knocks them up for 0.75 seconds", R lands "knocking them back 100
+# units".  P is the auto-attack conversion row — it authors no damage part
+# of its own, so it carries no reviewable marker.
+MODULE_CC = {"Q": "none", "W": "taunt", "E": "knockup", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Galio", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

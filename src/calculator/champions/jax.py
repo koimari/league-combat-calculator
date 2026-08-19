@@ -135,12 +135,27 @@ def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _assault,
-    "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "Q": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "W": _empower,
     "E": _counter_strike,
     "R": _grandmaster,
 }
-parse_abilities = build_parser(SLOTS, "Jax")
+
+# Q's leap only damages the target it lands on and R's lantern swing only
+# damages.  W is the on-hit empower: its row's damage is the engine's
+# reattributed empowered swing with no damage part of its own, so the scan
+# stays coarse whatever else is declared.  E's recast does "stun[] them for
+# 1 second", but declaring that kind makes rotation_resolver infer a
+# cc_setup edge and cast E first, which moves the fight's numbers for no
+# coverage, so it is left to the wave that fixes the empowered-swing row.
+# P is the attack-speed stack row and authors no damage part.
+MODULE_CC = {"Q": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Jax", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_stacks",

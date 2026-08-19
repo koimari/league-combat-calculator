@@ -144,13 +144,29 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Each of the three lands its damage once on a given target — Q states
+    # it outright ("Enemies hit by subsequent soldiers take no additional
+    # damage or slow"), E damages "enemies within his path" as it passes,
+    # and R's phalanx impacts once — so all three certify the cast boundary.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _arise,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Azir")
+# Cached kit review.  Q slows enemies the soldiers pass through "by 25% for
+# 1 second"; E only deals damage along the dash (its shield is Azir's own);
+# R's phalanx knocks enemies "away over 1 second to a line 650 units in
+# front of Azir".  W summons a soldier and emits no damage row of its own.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Azir", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

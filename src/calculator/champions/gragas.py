@@ -60,6 +60,7 @@ def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", value),)
     entry["empowers_next_auto"] = True
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "One brew-empowered basic attack; max-health term is evaluated against the live target."
     )
@@ -83,6 +84,7 @@ def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Collision damage plus sourced knockback/stun; cooldown refund is not assumed without a hit state."
     )
@@ -115,7 +117,13 @@ SLOTS = {
     "E": _body_slam,
     "R": _explosive_cask,
 }
-parse_abilities = build_parser(SLOTS, "Gragas")
+# Q's cask detonation "slow[s] them for 2 seconds"; W only empowers an
+# attack; E and R each lead with a displacement ("knocking them back") on
+# the enemies they damage, so each declares its first-listed immobilize.
+# P is the self-heal and authors no damage part.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockback", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Gragas", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

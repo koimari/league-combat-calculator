@@ -686,7 +686,14 @@ SLOTS = {
     "R": _killer_instinct,
 }
 
-parse_abilities = build_parser(SLOTS, "Kai'Sa")
+# Kai'Sa's damaging casts apply no control: Q's missiles only damage, and
+# W's bolt deals magic damage, "applies 2 Plasma, and reveals them".  (Her
+# passive reads *other* people's immobilizes to stack Plasma; it applies
+# none of its own.)  E and R author no damage part — Supercharge is the
+# attack-speed window and Killer Instinct is a shield plus a dash.
+MODULE_CC = {"Q": "none", "W": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kai'Sa", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

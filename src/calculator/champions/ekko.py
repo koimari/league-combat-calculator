@@ -113,6 +113,8 @@ def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", bonus),)
     entry["empowers_next_auto"] = True
+    # One empowered swing, landing with that swing.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Empowers one basic attack; the blink and attack reset are state-only."
     )
@@ -149,7 +151,14 @@ SLOTS = {
     "E": _phase_dive,
     "R": _chronobreak,
 }
-parse_abilities = build_parser(SLOTS, "Ekko")
+# Cached kit review.  Q's grenade "expand[s] into a Temporal Sickness field
+# that slows nearby enemies" around the champion it hits; E's empowered
+# attack and R's arrival explosion add damage and nothing else.  W is
+# absent because it emits no damage row — its chronosphere slow and its
+# entry-triggered stun ride a zone the damage model does not price.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ekko", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

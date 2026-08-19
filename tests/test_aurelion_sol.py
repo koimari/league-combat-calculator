@@ -25,6 +25,8 @@ from src.calculator.champions import get_champion_options_meta
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions import aurelion_sol
+from tests import cc_review
 
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 TARGET_1000 = {"target_max_health": 1000.0}
@@ -484,3 +486,23 @@ class TestFightIntegration:
         )
         result = run_fight(aurelion_sol_data, 18, [], params)
         assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(2360.0)
+
+
+class TestReviewedCrowdControl:
+    """Aurelion Sol's crowd-control review, and the slot that still withholds.
+
+    R lands on a sourced delay in both branches (Falling Star's 1.25s
+    stun, The Skies Descend's 2s knock-up) that the row does not author.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Aurelion Sol")
+        assert aurelion_sol.MODULE_CC == {"Q": "none", "E": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Aurelion Sol") == ["R"]
+        coverage = cc_review.fimbulwinter_coverage("Aurelion Sol")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

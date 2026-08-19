@@ -101,3 +101,43 @@ def test_pantheon_w_stun_reaches_the_event_ledger():
     entry = _parse("Pantheon")["W"]
     assert entry["parts"][0].cc_kind == "stun"
     assert entry["event_order_certified"] == "single_hit"
+
+
+def test_pantheon_declares_his_crowd_control_in_one_place():
+    """The kind is MODULE_CC's to state; the entry states only the
+    separate claim that W's one hit lands at the cast boundary."""
+    from src.calculator.champions import pantheon
+
+    assert pantheon.MODULE_CC == {"W": "stun"}
+
+
+def test_pantheon_leaves_the_unauthored_slots_unreviewed():
+    """Q's charge slows Pantheon himself and R's spear slows on impact,
+    but neither row authors an event a kind could ride (R's magic row is
+    the shockwave, a different hit from the slowing spear), so neither
+    may claim a review."""
+    parsed = _parse("Pantheon")
+    unreviewed = {
+        slot
+        for slot, entry in parsed.items()
+        if any(part.cc_kind is None for part in entry.get("parts", ()))
+    }
+    assert unreviewed == {"Q", "E", "R"}
+
+
+def test_pantheon_timed_fimbulwinter_fight_is_still_coarse():
+    """The honest consequence: the control token stays until those rows
+    author events of their own."""
+    from src.calculator.calculate import calculate_payload
+
+    coverage = calculate_payload(
+        {
+            "champion": "Pantheon",
+            "level": 18,
+            "items": ["Fimbulwinter"],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+    )["timeline_coverage"]
+
+    assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]

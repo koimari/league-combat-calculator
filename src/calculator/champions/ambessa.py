@@ -212,12 +212,14 @@ def _q_cast(index: int) -> SlotParser:
                 dmg_type="physical",
                 source=("Q", index),
                 cooldown_from=("Q", 0),
+                event_order_certified="single_hit",
             ),
             False: simple_damage(
                 attr="Physical Damage",
                 dmg_type="physical",
                 source=("Q", index),
                 cooldown_from=("Q", 0),
+                event_order_certified="single_hit",
             ),
         },
         default=True,
@@ -275,7 +277,16 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _repudiation
-parse_abilities = build_parser(SLOTS, "Ambessa")
+# Cached kit review.  Q ("slashes ... in a cone"), Q2 ("slams ... in a
+# line") and W ("smashes the ground beneath her") each deal damage and
+# apply nothing else — the outer-edge and first-enemy clauses only double
+# the damage.  E is absent because its row is the cached "Total Physical
+# Damage" of both spins, each of which "slow[s] them by 99% decaying over 1
+# second"; R's suppress-then-stun rides a stat-buff row with no certified
+# boundary; P is an empowered-auto rider with no boundary of its own.
+MODULE_CC = {"Q": "none", "Q2": "none", "W": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ambessa", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Repudiation) also shields Ambessa at the cast for the level-indexed "

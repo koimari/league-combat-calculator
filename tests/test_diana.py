@@ -24,6 +24,7 @@ from src.calculator.damage import (
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests import cc_review
 
 # Round stats so wiki arithmetic is checkable by eye. attack_speed_ratio
 # is 0 by default so the passive's AS buff doesn't move the auto-count
@@ -411,3 +412,23 @@ class TestJsonCrossChecks:
                 ability, "Total Damage Vs. 5 Champions", rank, stats
             )
             assert derived == pytest.approx(display)
+
+
+class TestReviewedCrowdControl:
+    """Diana's crowd-control review, and the slot that still withholds.
+
+    W's row is the cached 'Total Magic Damage' of all three spheres, E's
+    is the dash count in one part, and R's beam strikes 'after 1 second'
+    — the sourced delay where R's pull and slow actually land.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Diana")
+        assert diana.MODULE_CC == {"Q": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Diana") == ["E", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Diana")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

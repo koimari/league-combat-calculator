@@ -3,6 +3,7 @@
 Option keys consumed by the shared parser: "p_ticks", "q_outer_edge", "w_epicenter", "r_wake".
 """
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -49,7 +50,7 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     true_damage = magic if bool(ctx.options.get("q_outer_edge", True)) else 0.0
-    return mixed_damage(
+    entry = mixed_damage(
         ctx,
         ability.get("name", "Blooming Blows"),
         rank,
@@ -58,6 +59,12 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
         true_damage,
         detail="Outer-edge option adds the sourced true-damage ring.",
     )
+    # One censer swing lands both halves at the cast.  A two-part entry
+    # cannot use the single-hit certification, so the boundary is authored
+    # as the parts' own offset — which is what carries MODULE_CC's
+    # reviewed answer for Q into the event ledger.
+    entry["parts"] = tuple(replace(part, time_offset=0.0) for part in entry["parts"])
+    return entry
 
 
 def _watch_out_eep(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -95,7 +102,11 @@ SLOTS = {
     "P": _dream_laden_bough,
     "Q": _blooming_blows,
     "W": _watch_out_eep,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The seed detonates in one cone on the enemy it rolls into; the roll
+    # itself has no sourced duration, so the cast boundary is the hit.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _lilting_lullaby,
 }
 OPTIONS = [
@@ -128,7 +139,16 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Lillia")
-parse_abilities = build_parser(SLOTS, "Lillia")
+
+# Cached kit review: E's seed detonates "slowing them by 40% for 3
+# seconds" and R renders its targets "drowsy for 1.5 seconds ... After
+# the duration, they fall asleep for 2 seconds" — the sleep is the state
+# the wake damage this slot prices consumes.  Q's censer swing and W's
+# dash-and-slam apply no control, and P's Dream Dust is a damage-over-
+# time with none either.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "sleep"}
+
+parse_abilities = build_parser(SLOTS, "Lillia", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
 REVIEW_STATUS = "reviewed_module"

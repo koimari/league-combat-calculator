@@ -78,10 +78,21 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 3.0,
         }
     },
+    # Piercing Light's laser and Ardent Blaze's explosion each deal their
+    # packet once, at the cast — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "W"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["P"] = _lightslinger
-parse_abilities = build_parser(SLOTS, "Lucian")
+
+# Cached kit review: nothing Lucian casts applies crowd control.  Q is a
+# laser, W marks its targets and grants HIM movement speed, E is a dash,
+# and R is 22 shots.  (Vigilance reads an ally's immobilize; it applies
+# none of its own.)
+MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Lucian", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (The Culling) prices all 22 sourced shots of the 3-second "

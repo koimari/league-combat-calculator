@@ -17,6 +17,8 @@ from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions.slotlib import extract_value
+from src.calculator.champions import chogath
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -357,3 +359,25 @@ class TestPassiveCarnivore:
         _, abilities = parse_at(chogath_data, 9)
         assert "passive" not in abilities
         assert "P" not in abilities
+
+
+class TestReviewedCrowdControl:
+    """Cho'Gath's crowd-control review, and the slot that still withholds.
+
+    Q's knock-up lands with the rupture after a sourced 0.627-second
+    delay the row does not author, and E's row is its three empowered
+    attacks in one part.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Cho'Gath")
+        assert chogath.MODULE_CC == {"W": "silence", "R": "none"}
+        assert "silenced for a duration" in cc_review.slot_text(data, "W")
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Cho'Gath") == ["E", "Q"]
+        coverage = cc_review.fimbulwinter_coverage("Cho'Gath")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

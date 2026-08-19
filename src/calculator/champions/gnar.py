@@ -144,8 +144,18 @@ _rage_gene.phase = BUFF
 # ---------------------------------------------------------------------------
 
 _q_forms = (
-    simple_damage(attr="Physical Damage", dmg_type="physical", source=("Q", 0)),
-    simple_damage(attr="Physical Damage", dmg_type="physical", source=("Q", 1)),
+    simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        source=("Q", 0),
+        event_order_certified="single_hit",
+    ),
+    simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        source=("Q", 1),
+        event_order_certified="single_hit",
+    ),
 )
 
 
@@ -162,7 +172,16 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
 # W: Hyper (Mini every-3rd-hit on-hit) / Wallop (Mega cast)
 # ---------------------------------------------------------------------------
 
-_wallop = simple_damage(attr="Physical Damage", dmg_type="physical", source=("W", 1))
+# Wallop "stun[s] them for 1.25 seconds"; the kind rides this construction
+# rather than MODULE_CC because slot W is Mega-only as a cast — Mini's
+# Hyper is an on-hit shell with no damage part of its own.
+_wallop = simple_damage(
+    attr="Physical Damage",
+    dmg_type="physical",
+    source=("W", 1),
+    cc_kind="stun",
+    event_order_certified="single_hit",
+)
 
 
 def _hyper(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -222,6 +241,7 @@ def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["stat_buff"] = {
         "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank)
     }
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -251,6 +271,7 @@ def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "physical",
+        event_order_certified="single_hit",
     )
 
 
@@ -266,8 +287,16 @@ def _e(ctx: SlotCtx) -> dict[str, Any] | None:
 _r_cast = by_option(
     "r_wall",
     {
-        True: simple_damage(attr="Increased Damage", dmg_type="physical"),
-        False: simple_damage(attr="Physical Damage", dmg_type="physical"),
+        True: simple_damage(
+            attr="Increased Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
+        False: simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
     },
     default=True,
 )
@@ -324,7 +353,16 @@ SLOTS = {
     "R": _r,
 }
 
-parse_abilities = build_parser(SLOTS, "Gnar")
+# Both Q forms slow "for 2 seconds" and both E forms slow "by 80% for 0.5
+# seconds", so each slot has one answer across the form swap.  R is
+# Mega-only and "knock[s] away nearby enemies" before its damage — the
+# knockback is the immobilize under either r_wall branch (the wall branch
+# adds a stun, the open branch a delayed slow).  W's kind rides Wallop
+# itself (above) because Mini's W is an on-hit shell; P is the Mega
+# stat-buff row and applies nothing.
+MODULE_CC = {"Q": "slow", "E": "slow", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Gnar", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

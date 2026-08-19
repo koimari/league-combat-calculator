@@ -6,6 +6,8 @@ from src.calculator.ability_spec import parts_raw_total
 
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import amumu
+from tests import cc_review
 
 # Default target stats used when W's %maxHP damage needs resolving.
 _TARGET = {"target_max_health": 2000.0}
@@ -321,3 +323,22 @@ class TestFightEngineIntegration:
         )
         p_entry = result["breakdown"].get("P", {})
         assert p_entry.get("total_damage", 0.0) == 0.0
+
+
+class TestReviewedCrowdControl:
+    """Amumu's crowd-control review, and the slot that still withholds.
+
+    Cursed Touch adds a true-damage rider part to every damaging cast,
+    so no slot is the one-part cast the certified single-hit export
+    carries — and W's row is the toggle's ticks summed.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Amumu")
+        assert not hasattr(amumu, "MODULE_CC")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Amumu") == ["E", "Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Amumu")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

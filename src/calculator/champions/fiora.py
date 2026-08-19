@@ -45,6 +45,9 @@ def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
         "hits": 1,
         "triggers": ("on_hit",),
     }
+    # One stab on one target, no sourced travel phase — the certification
+    # that carries Lunge's hit into the event ledger MODULE_CC is read from.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = "Lunge's stab applies one full-effectiveness on-hit package."
     return entry
 
@@ -108,7 +111,20 @@ SLOTS = {
     "E": _bladework,
     "R": _grand_challenge,
 }
-parse_abilities = build_parser(SLOTS, "Fiora")
+# Q only dashes and stabs.  E is undeclared because Bladework's damage is
+# the engine's reattributed empowered swings with no damage part of its own,
+# which is why Fiora's kit reads coarse to the control scan whatever else it
+# declares.  W's shock does "slow[] and cripple[]" the champion struck (its
+# stun branch needs Riposte to negate an immobilizing effect, which this
+# module does not model), but declaring that kind makes rotation_resolver
+# infer a cc_setup edge and cast W first, which moves the fight's numbers
+# for no coverage — E blocks the scan either way — so it is left to the wave
+# that fixes the empowered-swing row.  R authors no damage part, and P's
+# vitals are an effect-phase proc row whose event list the module builds
+# itself, so a marker there would never reach the ledger.
+MODULE_CC = {"Q": "none"}
+
+parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

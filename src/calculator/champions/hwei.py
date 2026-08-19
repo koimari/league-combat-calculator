@@ -50,7 +50,7 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     if variant == 0:
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-        parts = (DamagePart("magic", value, time_offset=0.25),)
+        parts = (DamagePart("magic", value, time_offset=0.25, cc_kind="none"),)
         detail = "Devastating Fire; target-max-health scaling and its monster cap remain source-backed."
     elif variant == 1:
         base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -63,6 +63,7 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
                 base,
                 hp_scaled_damage=lambda ratio: base + (maximum - base) * ratio,
                 time_offset=1.0,
+                cc_kind="none",
             ),
         )
         detail = f"Severing Bolt missing-health fraction {missing:.2f}; isolated/immobilized target gate is explicit."
@@ -73,12 +74,24 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
             ability, "Total Fissure Magic Damage", rank, ctx.stats, ctx.target
         )
         value = shock * explosions + fissure * explosions
+        # The shockwave only damages; the lava fissure it leaves behind is
+        # the packet that "slow[s] them by 35%".
         parts = (
             DamagePart(
-                "magic", shock, count=explosions, time_offset=0.6, hit_interval=0.2
+                "magic",
+                shock,
+                count=explosions,
+                time_offset=0.6,
+                hit_interval=0.2,
+                cc_kind="none",
             ),
             DamagePart(
-                "magic", fissure, count=explosions, time_offset=0.8, hit_interval=0.2
+                "magic",
+                fissure,
+                count=explosions,
+                time_offset=0.8,
+                hit_interval=0.2,
+                cc_kind="slow",
             ),
         )
         detail = f"Molten Fissure: {explosions} shockwaves plus one sourced fissure packet per eruption."
@@ -155,8 +168,16 @@ def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "magic",
     )
+    # One kind per subject, read off each one's own text: Grim Visage
+    # "fears them", Gaze of the Abyss "root[s] them", Crushing Maw slows
+    # everything it damages (its pull only catches enemies off-centre).
     entry["parts"] = (
-        DamagePart("magic", value, time_offset=0.6 if variant == 2 else 0.3),
+        DamagePart(
+            "magic",
+            value,
+            time_offset=0.6 if variant == 2 else 0.3,
+            cc_kind=("fear", "root", "slow")[variant],
+        ),
     )
     entry["detail"] = ("Grim Visage", "Gaze of the Abyss", "Crushing Maw")[
         variant
@@ -173,9 +194,14 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     tick = extract_named(ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target)
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    # Each tick applies a Despair stack, and "for each stack, the target is
+    # slowed by 10%"; the terminal explosion removes the stacks instead of
+    # applying anything.
     parts = (
-        DamagePart("magic", tick, count=12, time_offset=0.0, hit_interval=0.25),
-        DamagePart("magic", explosion, time_offset=3.0),
+        DamagePart(
+            "magic", tick, count=12, time_offset=0.0, hit_interval=0.25, cc_kind="slow"
+        ),
+        DamagePart("magic", explosion, time_offset=3.0, cc_kind="none"),
     )
     entry = damage_entry(
         ability.get("name", "Spiraling Despair"),
@@ -199,7 +225,14 @@ SLOTS = {
     "E": _torment,
     "R": _despair,
 }
-parse_abilities = build_parser(SLOTS, "Hwei")
+# Only P has one answer for the whole slot — the Signature explosion just
+# damages.  Every other damaging slot is a mood subject whose control
+# differs per variant (and, in QE and R, per part), so those kinds are
+# authored on the parts above rather than here.  W's three subjects author
+# no damage part at all.
+MODULE_CC = {"P": "none"}
+
+parse_abilities = build_parser(SLOTS, "Hwei", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "q_variant",

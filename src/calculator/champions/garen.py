@@ -35,6 +35,7 @@ def _decisive_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", value, basic_damage=True),)
+    entry["event_order_certified"] = "single_hit"
     entry["empowers_next_auto"] = True
     entry["detail"] = (
         "One uncancellable, silencing empowered basic attack; slow cleanse/movement speed are state-only."
@@ -119,7 +120,14 @@ SLOTS = {
     "E": _judgment,
     "R": _demacian_justice,
 }
-parse_abilities = build_parser(SLOTS, "Garen")
+# Garen's damaging casts apply no immobilize and no slow: Q's empowered
+# attack silences (a silence is neither, and the vocabulary has no kind for
+# it), E only spins and shreds armor, R deals true damage and reveals.  Q's
+# own text cleanses slows *from Garen* rather than applying one.  P and W
+# author no damage part.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Garen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

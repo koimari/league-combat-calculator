@@ -118,6 +118,8 @@ def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         damage,
         "physical",
+        # The leap lands one hit on the target it leaps to.
+        event_order_certified="single_hit",
     )
     # Q is a real attack (wiki data template): per-hit on-hit items at
     # 100%, shared Kraken/Hullbreaker counter, on-attack cadences
@@ -208,6 +210,8 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(frenzy, rank),  # W[1] has no cooldown of its own
         bonus,
         "physical",
+        # One empowered bite, riding the attack it empowers.
+        event_order_certified="single_hit",
     )
     entry["empowers_next_auto"] = True
     entry["applies_dot_stack"] = True
@@ -265,6 +269,9 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One explosion on arrival; the cached text gives the dash no
+        # duration of its own to author as an offset.
+        event_order_certified="single_hit",
     )
     entry["applies_dot_stack"] = True
     resist_bonus = R_RESIST_PER_TOTAL_AD * ctx.stat("attack_damage")
@@ -359,7 +366,15 @@ SLOTS = {
     "P": _crimson_curse,
 }
 
-parse_abilities = build_parser(SLOTS, "Briar")
+# Cached kit review.  Q "stuns them for 0.85 seconds"; W's Snack Attack
+# bite and R's explosion apply nothing to the target they damage (R "fears
+# all non-marked targets", and the marked one is the target it damages).
+# E is left unreviewed: its scream lands on the recast after the sourced
+# charge (up to 1 second), which the row does not author, so its knock-back
+# has no hit in the ledger to ride.  W_frenzy and P emit no ability damage.
+MODULE_CC = {"Q": "stun", "W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

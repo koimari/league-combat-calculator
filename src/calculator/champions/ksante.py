@@ -76,7 +76,15 @@ _dauntless.phase = ONHIT
 
 
 def _ntofo(ctx: SlotCtx) -> dict[str, Any] | None:
-    return simple_damage(attr="Physical Damage", dmg_type="physical")(ctx)
+    return simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        # "deals physical damage to enemies hit and slows them by 80% for
+        # 0.5 seconds" — the empowered two-stack recast's pull and stun are
+        # a branch this module does not price.
+        cc_kind="slow",
+        event_order_certified="single_hit",
+    )(ctx)
 
 
 def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -96,13 +104,16 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
             ability, "Maximum Bonus True Damage", rank, ctx.stats, ctx.target
         )
         true_value = low + (high - low) * charge
+        # Both packets are the one dash, so the physical half lands at the
+        # same authored instant as the true half.  In All Out "Path Maker
+        # no longer applies its knock back and stun".
         parts = (
-            DamagePart("physical", physical),
-            DamagePart("true", true_value, time_offset=charge),
+            DamagePart("physical", physical, time_offset=charge, cc_kind="none"),
+            DamagePart("true", true_value, time_offset=charge, cc_kind="none"),
         )
         total = physical + true_value
     else:
-        parts = (DamagePart("physical", physical, time_offset=charge),)
+        parts = (DamagePart("physical", physical, time_offset=charge, cc_kind="stun"),)
         total = physical
     entry = damage_entry(
         ability.get("name", "Path Maker"),
@@ -178,7 +189,15 @@ SLOTS = {
     ),
     "R": _all_out,
 }
-parse_abilities = build_parser(SLOTS, "K'Sante")
+# R's target "is stunned for 0.3 seconds once [the displacement] ends" —
+# and 0.5 seconds after the airborne on the terrain branch — so both of its
+# packets land with a stun.  W's kind depends on the All Out branch and
+# rides its parts.  E authors no damage part, and P's mark-consumption row
+# is an effect-phase proc with a module-built event list the marker would
+# not reach.
+MODULE_CC = {"R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "K'Sante", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_marks",

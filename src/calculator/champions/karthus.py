@@ -146,6 +146,11 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
         "magic",
     )
     drain = _defile_mana_per_second(ability, rank)
+    # No cc marker rides this part: the pulse's four ticks are authored by
+    # the engine from ``dot_duration``/``dot_tick_interval`` below, not by
+    # the part, so a kind here would never reach the event ledger.  (Giving
+    # the part its own timing to carry one moves Shadowflame's proc, which
+    # is a re-pricing, not a review.)
     entry["parts"] = (DamagePart("magic", per_tick, count=ticks_per_pulse),)
     entry["resource_type"] = "MANA"
     entry["resource_cost"] = drain * _E_PULSE_SECONDS
@@ -173,11 +178,16 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
+    # The selected-tick branch authors its own hit times, so its reviewed
+    # "the aura only damages" rides the parts here; the timed toggle branch
+    # cannot carry it (see _defile_timed), which is why E is not in
+    # MODULE_CC.
     parts = tuple(
         DamagePart(
             "magic",
             per_tick,
             time_offset=_E_FIRST_TICK_TIME + index * _E_TICK_INTERVAL,
+            cc_kind="none",
         )
         for index in range(ticks)
     )
@@ -350,7 +360,14 @@ SLOTS = {
     "P": _death_defied,
 }
 
-parse_abilities = build_parser(SLOTS, "Karthus")
+# Lay Waste detonates and Requiem lands after its channel; neither applies
+# control.  Karthus' only crowd control is W's wall, which damages nothing
+# and authors no part, and P is the zombie state.  E's aura is equally
+# control-free but its two branches carry that review differently (see
+# _defile), so it is authored on the parts.
+MODULE_CC = {"Q": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Karthus", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

@@ -149,7 +149,14 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Locke")
-parse_abilities = build_parser(SLOTS, "Locke")
+
+# Cached kit review: Q's nails "slow[] them by 25% for 1 second" (60% at
+# two Soul Nails stacks) and R's latching nails slow "by 99% decaying over
+# 2 seconds"; E blinks and dashes without applying control.  W is a
+# self-buff and P an on-hit rider, neither emitting an ability event.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Locke", cc_kinds=MODULE_CC)
 
 _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
@@ -166,6 +173,12 @@ def parse_abilities(*args, **kwargs):
         if entry is not None:
             entry["applies_item_on_hits"] = dict(spec)
     return result
+
+
+# The wrapper is the module's published parser, so it republishes the
+# wiring the inner parser holds — the contract proves declaration and
+# wiring are one dict off whichever function the module exports.
+parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
 
 MODULE_COVERAGE = {

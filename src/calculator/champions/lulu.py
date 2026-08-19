@@ -28,7 +28,12 @@ _PIX_BOLT_AP_RATIO = 0.05
 PACKET_SHA256 = "2dcdd74eafe747d8fbd7233f3202b76fca9be9d6250a336ce0fe7f8ef2f2f1e1"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Lulu", PACKET_SHA256
+    "Lulu",
+    PACKET_SHA256,
+    # Glitterlance prices one bolt and Help, Pix! one landing: each deals
+    # its packet once, at the cast — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -57,7 +62,14 @@ _pix_bolts.phase = ONHIT
 
 SLOTS = dict(SLOTS)
 SLOTS["P"] = _pix_bolts
-parse_abilities = build_parser(SLOTS, "Lulu")
+
+# Cached kit review: Q's bolts deal damage "and slow[] them by 80%
+# decaying over 2 seconds"; E's enemy cast only damages and reveals.  W's
+# polymorph and R's knock-up are real control but neither ability deals
+# damage, so no slot event carries them.
+MODULE_CC = {"Q": "slow", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Lulu", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Pix, Faerie Companion) fires lulu_pix_bolts (default 3) magic "

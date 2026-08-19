@@ -100,6 +100,8 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    # One whip (or one dash landing on the target), no sub-cast phase.
+    entry["event_order_certified"] = "single_hit"
     entry["target_max_health_sensitive"] = True
     # Wiki: Whiplash applies on-hit effects (empowered variant only to the
     # primary target — the module models the primary hit).
@@ -143,7 +145,13 @@ SLOTS = {
     "E": _whiplash,
     "R": _last_caress,
 }
-parse_abilities = build_parser(SLOTS, "Evelynn")
+# Cached kit review.  Q's dart and its recast spikes, E's whip, and R's
+# cone all deal damage and apply nothing else.  W is absent rather than
+# "none": Allure's expunge does slow and charm, but W emits no damage row,
+# so the answer would have no event to ride.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Evelynn", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

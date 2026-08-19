@@ -46,14 +46,32 @@ SOURCES = [
     },
 ]
 
+# Each slot deals its one sourced instance at the cast (the module
+# docstring's own claim), so each certifies that boundary — which is what
+# carries MODULE_CC's reviewed kinds into the event ledger.
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Lissandra")
+# Cached kit review: Q "slows enemies hit for 1.5 seconds", W deals damage
+# "and root[s] them for a duration", E's claw only decelerates itself, and
+# the R instance this module prices is the ice field, which deals damage
+# "and slow[s] them for 0.5 seconds" on either cast — the enemy cast's
+# 1.5-second stun is not the hit the module counts (ASSUMPTIONS above).
+MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

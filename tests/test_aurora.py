@@ -14,6 +14,8 @@ import pytest
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import aurora
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -329,3 +331,29 @@ class TestFightEngineIntegration:
         # Rank 5 CD 7s over 10s -> 2 casts; each cast >= 370 raw.
         assert q_row["casts"] == 2
         assert q_row["total_damage"] > 2 * 370.0
+
+
+class TestReviewedCrowdControl:
+    """Aurora's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Aurora")
+        assert aurora.MODULE_CC == {"Q": "none", "E": "slow", "R": "slow"}
+        assert "slows them by 80%" in " ".join(cc_review.slot_text(data, "E").split())
+        assert "slow them by 30%" in " ".join(cc_review.slot_text(data, "R").split())
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Aurora") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Aurora")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

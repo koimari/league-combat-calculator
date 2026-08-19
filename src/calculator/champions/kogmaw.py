@@ -60,6 +60,10 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "magic",
         "parts": (DamagePart("magic", damage),),
         "total_raw": damage,
+        # One wad, first enemy hit, no travel row in the cached packet:
+        # the cast boundary is the hit, which is what carries MODULE_CC's
+        # reviewed answer for Q into the event ledger.
+        "event_order_certified": "single_hit",
     }
 
     # Passive bonus attack speed: the fight engine recalculates auto
@@ -173,11 +177,19 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": _caustic_spittle,
     "W": _bio_arcane_barrage,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _living_artillery,
 }
 
-parse_abilities = build_parser(SLOTS, "Kog'Maw")
+# Cached kit review: E's ooze field "slow[s] enemies within the area every
+# 0.25 seconds"; Q reduces resistances (not control), W empowers basic
+# attacks and R reveals the targets it hits.  P is the unmodeled death
+# passive and emits nothing.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kog'Maw", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

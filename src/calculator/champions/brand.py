@@ -171,10 +171,21 @@ ASSUMPTIONS = [
     "excluded from damage",
 ]
 
+# Cached kit review.  E "creates a blast that deals magic damage" and its
+# Ablaze Bonus only doubles the spread range — no control either way.  The
+# rest stay unreviewed: W erupts "after a 0.627 seconds delay" the row does
+# not author, and Q's stun and R's slow are both "Ablaze Bonus" branches,
+# so they depend on the target's stack state at the cast rather than on the
+# slot.  P is the Ablaze burn row.
+MODULE_CC = {"E": "none"}
+
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": simple_damage(attr="Increased Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One blast on the target Brand sets aflame, landing at the cast.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _pyroclasm,
     "P": _blaze,  # after the damage slots: reads their emissions
 }
@@ -211,7 +222,7 @@ CAST_DEPENDENCIES = (
     ),
 )
 
-parse_abilities = build_parser(SLOTS, "Brand")
+parse_abilities = build_parser(SLOTS, "Brand", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

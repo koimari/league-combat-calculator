@@ -9,6 +9,8 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import load_public_champion
+from src.calculator.champions import ambessa
+from tests import cc_review
 
 
 class TestQ1CunningSweep:
@@ -390,3 +392,24 @@ class TestPassiveEventCertification:
             ),
         )
         assert "passive" not in result["breakdown"]
+
+
+class TestReviewedCrowdControl:
+    """Ambessa's crowd-control review, and the slot that still withholds.
+
+    E's row is the cached 'Total Physical Damage' of both spins, each of
+    which slows, and R's suppress-then-stun rides a stat-buff row with
+    no certified boundary.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Ambessa")
+        assert ambessa.MODULE_CC == {"Q": "none", "Q2": "none", "W": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Ambessa") == ["E", "R"]
+        coverage = cc_review.fimbulwinter_coverage("Ambessa")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

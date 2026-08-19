@@ -38,6 +38,8 @@ from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import dr_mundo
+from tests import cc_review
 
 LEVEL = 18
 BASE_HEALTH = 2391.0
@@ -620,3 +622,24 @@ class TestFightIntegration:
         assert result["damage_by_type"]["magic"] == pytest.approx(
             breakdown["Q"]["total_damage"] + breakdown["W"]["total_damage"]
         )
+
+
+class TestReviewedCrowdControl:
+    """Dr. Mundo's crowd-control review, and the slot that still withholds.
+
+    Q's bonesaw slow and W's control-free ticks are both readable and
+    both reach the ledger, but declaring Q's slow makes
+    rotation_resolver order Q first as cc setup, which re-prices its
+    current-health formula and moves the fight's numbers (see the batch
+    report).
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Dr. Mundo")
+        assert not hasattr(dr_mundo, "MODULE_CC")
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Dr. Mundo") == ["E", "Q", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Dr. Mundo")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

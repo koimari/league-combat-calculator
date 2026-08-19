@@ -9,6 +9,9 @@ Reference damage (level 9, rank 5 Q, rank 3 W, rank 3 E, rank 1 R, 80 AP):
 
 import pytest
 
+from src.calculator.calculate import calculate_payload
+from src.calculator.champions import kogmaw
+
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 
@@ -496,3 +499,89 @@ class TestFightEngineIntegration:
             ),
         )
         assert result_w_on["total_damage"] > result_w_off["total_damage"]
+
+
+# ---------------------------------------------------------------------------
+# Reviewed crowd control (MODULE_CC)
+# ---------------------------------------------------------------------------
+
+# Every control word the Wiki uses for the classes an item passive keys on.
+CONTROL_WORDS = (
+    "stun",
+    "root",
+    "snare",
+    "charm",
+    "fear",
+    "flee",
+    "taunt",
+    "sleep",
+    "suppress",
+    "knock",
+    "airborne",
+    "pull",
+    "slow",
+    "immobiliz",
+    "stasis",
+    "drowsy",
+    "cripple",
+    "polymorph",
+    "disarm",
+    "silence",
+)
+
+
+def _slot_text(cached, slot):
+    """Every cached description of one slot, lowercased."""
+    return " ".join(
+        effect.get("description") or ""
+        for ability in cached["abilities"][slot]
+        for effect in ability.get("effects", [])
+    ).lower()
+
+
+class TestReviewedCrowdControl:
+    """Kog'Maw's kit facts, held to the cached text and to the ledger.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) reads a
+    control marker off ability damage events; one unreviewed ability
+    packet makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_declared_kinds_quote_the_cached_text(self, kogmaw_data):
+        assert kogmaw.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
+        assert "slowing enemies within the area" in _slot_text(kogmaw_data, "E")
+
+    def test_reviewed_absences_read_the_whole_slot(self, kogmaw_data):
+        """A "none" is a slot that was read, not a slot that was skipped."""
+        for slot, kind in kogmaw.MODULE_CC.items():
+            if kind != "none":
+                continue
+            hits = [
+                word for word in CONTROL_WORDS if word in _slot_text(kogmaw_data, slot)
+            ]
+            assert hits == [], slot
+
+    def test_every_ability_event_carries_the_review(self, kogmaw_data):
+        """Reviewing a kit only counts where the ledger can see it."""
+        parsed = kogmaw.parse_abilities(kogmaw_data, 18, 100.0)
+        for slot, kind in kogmaw.MODULE_CC.items():
+            parts = parsed[slot]["parts"]
+            assert parts, slot
+            assert {part.cc_kind for part in parts} == {kind}, slot
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        """The campaign's control-token probe, through the public entry."""
+        coverage = calculate_payload(
+            {
+                "champion": "Kog'Maw",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )["timeline_coverage"]
+
+        assert coverage["complete"] is True
+        assert coverage["certification"] == "event_order_certified"
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+        assert coverage["coarse_sources"] == []

@@ -33,6 +33,10 @@ def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         value,
         "magic",
+        # One orb, one target, no travel row in the cached packet: the hit
+        # lands at the cast boundary, which is what puts MODULE_CC's
+        # reviewed answer for Q into the event ledger.
+        event_order_certified="single_hit",
     )
     entry["parts"] = (DamagePart("magic", value),)
     entry["detail"] = (
@@ -114,10 +118,18 @@ SLOTS = {
     ),
     "Q": _null_sphere,
     "W": _nether_blade,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _riftwalk,
 }
-parse_abilities = build_parser(SLOTS, "Kassadin")
+
+# Cached kit review: Q disrupts channels (an interrupt, not one of the
+# immobilize kinds), W and R apply no control, and E "slows them for 1
+# second".  P is defensive state and emits no damage event to carry a kind.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kassadin", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "w_empowered",

@@ -133,7 +133,16 @@ SLOTS = {
     ),
 }
 
-parse_abilities = build_parser(SLOTS, "Akali")
+# Cached kit review.  R "deal[s] magic damage to enemies she passes
+# through" and P's Swinging Kama is a bonus-damage basic attack: neither
+# controls the target it damages.  Q is left unreviewed on purpose — its
+# slow lands only on "targets beyond a certain range", and the single-target
+# model carries no range to place the cast in that branch.  W deals no
+# damage, and E's row is the cached "Total Magic Damage" of the throw and
+# the recast dash together, so neither hit can carry an answer of its own.
+MODULE_CC = {"R": "none", "P": "none"}
+
+parse_abilities = build_parser(SLOTS, "Akali", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

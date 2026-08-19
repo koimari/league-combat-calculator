@@ -151,11 +151,23 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _spirit_abjuration,
     "Q": _twofold_hex,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # E's blast and R's shockwave each land once on the target they damage,
+    # with no sourced sub-cast phase in the cached packet.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Aurora")
+# Cached kit review.  E "slows them by 80% for 1 second" and R's shockwave
+# "slow[s] them by 30% for 2 seconds".  Q only "marks them with a curse",
+# which is a mark the recast expunges, not crowd control.  W deals no
+# damage and P is an on-hit stack consume.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Aurora", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

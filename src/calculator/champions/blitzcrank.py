@@ -105,6 +105,9 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": bonus,
         # "This damage is affected by critical strike modifiers" (wiki).
         "parts": (DamagePart("physical", bonus, crit_effectiveness=1.0),),
+        # One empowered swing, landing when it lands: the certified
+        # boundary the knock-up in MODULE_CC rides into the ledger.
+        "event_order_certified": "single_hit",
         # Damage lands only through the empowered basic attack: casts
         # are capped by the auto count; the attack reset costs no attack
         # time, so the auto stream (which already applies item on-hits
@@ -152,6 +155,8 @@ def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One detonation around Blitzcrank, no travel or tick phase.
+        event_order_certified="single_hit",
     )
 
 
@@ -214,7 +219,15 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
 SLOTS["Q"] = _rocket_grab
-parse_abilities = build_parser(SLOTS, "Blitzcrank")
+
+# Cached kit review.  Q applies two immobilizes at once ("stunning them for
+# 0.65 seconds, and pulling them towards Blitzcrank"), which is what the
+# un-narrowed kind states; E "knock[s] up the target for 1 second"; R's
+# active "silences them for 0.5 seconds" — real control, but neither an
+# immobilizing effect nor a slow.  W deals no damage.
+MODULE_CC = {"Q": "immobilize", "E": "knockup", "R": "silence"}
+
+parse_abilities = build_parser(SLOTS, "Blitzcrank", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

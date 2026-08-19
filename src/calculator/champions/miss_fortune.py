@@ -75,10 +75,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 2.0,
         }
     },
+    # Double Up's shot deals its packet once, on the primary target, at
+    # the cast — the boundary claim that carries MODULE_CC's reviewed
+    # answer for Q into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["R"] = _bullet_time
-parse_abilities = build_parser(SLOTS, "Miss Fortune")
+
+# Cached kit review: E's bullet storm deals damage every 0.25 seconds
+# "and slow[s] them by 40% (+ 6% per 100 AP)"; Q's shot only bounces and
+# R's waves only damage.  P is an on-hit mark and W a self-buff.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Miss Fortune", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (Bullet Time) prices the full channel: per-wave damage x the "

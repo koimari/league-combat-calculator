@@ -54,14 +54,21 @@ def _taste_their_fear(ctx: SlotCtx) -> dict[str, Any] | None:
             "Isolated target branch is explicit; nearby-allies state disables "
             "the 210% branch."
         ),
+        "event_order_certified": "single_hit",
     }
 
 
 SLOTS = {
     "P": _unseen_threat,
     "Q": _taste_their_fear,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # Each of Q/W/E deals its packet once, at the cast: the boundary claim
+    # that carries MODULE_CC's reviewed answers into the event ledger.
+    "W": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
+    ),
+    "E": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
+    ),
     "R": lambda ctx: no_damage(
         ctx,
         name="Void Assault",
@@ -87,7 +94,15 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kha'Zix")
-parse_abilities = build_parser(SLOTS, "Kha'Zix")
+
+# Cached kit review: the damaging slots this module prices are the
+# UNevolved abilities — Taste Their Fear slashes, Void Spike explodes and
+# Leap lands, none of them applying control.  The kit's two slows are the
+# evolution bonus (Evolved Spike Racks) and the Unseen Threat empowered
+# attack, neither of which is a slot packet this module emits.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kha'Zix", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "R" else "no_damage") for slot in "PQWER"

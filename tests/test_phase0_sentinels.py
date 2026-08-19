@@ -8,9 +8,10 @@ re-reading this file.  Each sentinel also pins the size of its own
 population, because a sentinel that is green over an empty set proves
 nothing (D-26).
 
-Six sentinels, one class each:
+Seven sentinels, one class each:
 
-* :class:`TestNoTwoCommandWindowsOverlap` — D-12, repeat-Command stacking.
+* :class:`TestCommandWindowsMergeByRefresh` — D-12, the merge census.
+* :class:`TestCommandDoesNotAmpItsOwnTimestamp` — D-13, the same-tick tie.
 * :class:`TestCommandExpiryBoundaryDiverges` — D-13, ``start < t <= end``.
 * :class:`TestIsAttackOrSpellVersusFromAllSources` — D-04, the delivery gate.
 * :class:`TestCommandMarksOnlyTheFirstPairDefender` — H2, ``CcScope``.
@@ -59,16 +60,28 @@ from tests.test_item_support_effects import (
 FROM_ALL_SOURCES_PRODUCERS = 5
 
 # Registered champions that author an immobilizing ``cc_kind`` a Mandate
-# holder's own fight can read: Ahri (Charm), Pantheon (Aegis Assault) and
-# Syndra (Scatter the Weak).  This is the Command sentinels' population and
-# umbrella criterion 15 requires it to be non-empty.
-COMMAND_CC_AUTHORS = 3
+# holder's own fight can read.  This is the Command sentinels' population and
+# umbrella criterion 15 requires it to be non-empty.  It was three — Ahri,
+# Pantheon, Syndra — while those were the only reviewed ``cc_kind`` markers in
+# the registry; the full-coverage campaign's decision 6 made every champion
+# module author its own kit's crowd-control facts, and the population grew
+# with it.
+COMMAND_CC_AUTHORS = 31
 
 # Champion modules that withhold a time-based answer and are swept through
 # one rotation instead.  Pinned so the sweep cannot shrink in silence: a
 # champion that starts withholding is a champion whose later immobilizes
-# stop being swept.
-TIME_BASED_WITHHOLDING_CHAMPIONS = 4
+# stop being swept.  Zero is the campaign's own criterion 1 — the withhold
+# machinery is kept and its trigger population emptied — so this number
+# going *up* is a regression, not a new champion.
+TIME_BASED_WITHHOLDING_CHAMPIONS = 0
+
+# Authors whose two immobilizes land inside one Command duration, so their
+# windows merge instead of standing apart.  Zero when the Command sentinels
+# were written, which is what made ``merge`` a formality; it is now the
+# corpus fact ``merge=REFRESH`` rides on, and
+# ``tests/test_command_amp_roster.py`` is where one of them is priced.
+MERGING_COMMAND_AUTHORS = 7
 
 # The cross-participant producers whose packet carries a finite expiry, and
 # whose closing instant the two engines therefore answer separately.  Five of
@@ -122,10 +135,20 @@ _SWEEP_TARGET = {
 
 
 class _CommandSweep(NamedTuple):
-    """One pass of the registered-champion sweep, holding Imperial Mandate."""
+    """One pass of the registered-champion sweep, holding Imperial Mandate.
+
+    ``inside`` and ``tie`` are the two damage readings the sentinels below
+    compare against the engine's own answer: the authored damage strictly
+    inside a window, and the authored damage sharing a trigger's exact
+    timestamp.  Both are summed over the *authored* event lists rather than
+    over a reconstructed ledger, so the sentinel reads the champion modules'
+    own declarations and not a second copy of ``damage.py``'s reconstruction.
+    """
 
     authors: dict[str, tuple[tuple[float, ...], tuple[tuple[float, float], ...]]]
     amped: dict[str, tuple[str, ...]]
+    inside: dict[str, float]
+    tie: dict[str, float]
     swept: tuple[str, ...]
     withheld: tuple[str, ...]
     duration: float
@@ -137,7 +160,7 @@ def command_slot() -> delta_amp.AmpSlot:
 
     Phase 3 moved the window's duration, its merge policy and its expiry
     boundary out of two engine helpers and into the rule's
-    ``TriggerWindow(IMMOBILIZE, merge=EXTEND, boundary=OPEN_CLOSED)``, which
+    ``TriggerWindow(IMMOBILIZE, merge=REFRESH, boundary=OPEN_CLOSED)``, which
     is what these sentinels said the phase would do.  They read the same
     facts through the declaration, so the sentinel and the policy it pins
     have one referent instead of two.
@@ -170,6 +193,8 @@ def command_sweep() -> _CommandSweep:
     duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
     authors: dict[str, tuple] = {}
     amped: dict[str, tuple[str, ...]] = {}
+    inside: dict[str, float] = {}
+    tie: dict[str, float] = {}
     swept: list[str] = []
     withheld: list[str] = []
     for name in registered_champion_names():
@@ -194,22 +219,45 @@ def command_sweep() -> _CommandSweep:
                 ),
             )
         swept.append(name)
+        events = [
+            event
+            for entry in result["breakdown"].values()
+            if isinstance(entry, dict)
+            for event in entry.get("damage_events") or ()
+            if isinstance(event, dict) and float(event.get("damage", 0.0) or 0.0) > 0.0
+        ]
         times = tuple(
             sorted(
                 float(event.get("time", 0.0) or 0.0)
-                for entry in result["breakdown"].values()
-                if isinstance(entry, dict)
-                for event in entry.get("damage_events") or ()
-                if isinstance(event, dict) and is_immobilizing_event(event)
+                for event in events
+                if is_immobilizing_event(event)
             )
         )
         if not times:
             continue
-        authors[name] = (times, slot.trigger_windows(times))
+        windows = slot.trigger_windows(times)
+        authors[name] = (times, windows)
         amped[name] = tuple(
             key for key in result["breakdown"] if str(key).startswith("damage_amp_")
         )
-    return _CommandSweep(authors, amped, tuple(swept), tuple(withheld), duration)
+        inside[name] = sum(
+            float(event["damage"])
+            for event in events
+            if slot.window_holds(windows, float(event.get("time", 0.0) or 0.0))
+        )
+        # The trigger's own packet is excluded, so what is left is damage the
+        # ledger shares a timestamp with an immobilize and does not amp.
+        tie[name] = sum(
+            float(event["damage"])
+            for event in events
+            if not is_immobilizing_event(event)
+            and any(
+                start == float(event.get("time", 0.0) or 0.0) for start, _ in windows
+            )
+        )
+    return _CommandSweep(
+        authors, amped, inside, tie, tuple(swept), tuple(withheld), duration
+    )
 
 
 @lru_cache(maxsize=8)
@@ -298,24 +346,26 @@ class _LedgerCtx:
     states: list = []
 
 
-class TestNoTwoCommandWindowsOverlap:
-    """Repeat-Command stacking has no reachable fixture today (D-12).
+class TestCommandWindowsMergeByRefresh:
+    """Repeat-Command has a reachable fixture now, and this is its census (D-12).
 
-    Command's rule merges overlapping immobilizes by *extending* the window
-    rather than stacking a second 7%, which is the Wiki's reading and the
-    policy Phase 3 declared as ``merge=EXTEND``.  Whether that policy is
-    a behaviour change depends on a fact about the corpus, not about the
-    helper: does any registered champion author two immobilizes close enough
-    together to merge?  Today none does — every authored marker across the
-    whole registry opens its own window — so Phase 3's declaration is
-    provably zero-diff.
+    Command's rule merges overlapping immobilizes by moving the mark's expiry
+    to the last one plus its duration — ``merge=REFRESH``, which is what both
+    engines have always computed and, since the ruling, what the declaration
+    calls it.  The additive reading the League Wiki's "extend the duration"
+    wording admits is filed with its cost in
+    ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
 
-    This sentinel is what turns red on the commit that authors the first
-    overlapping pair, at which point ``merge=EXTEND`` stops being a
-    formality and needs its own fixture and its own oracle.
+    This class used to assert that no authored pair could merge, and that the
+    day one did, ``merge`` needed "a fixture and an oracle receipt before
+    landing it".  The corpus grew past it: seven authors now merge.  The
+    fixture and the receipt live in
+    ``tests/test_command_amp_roster.py::TestTwoImmobilizesMergeIntoOneRefreshedWindow``
+    — the merge is asserted here only as the census fact that makes that
+    fixture reachable, so one fact keeps one home.
     """
 
-    def test_the_population_is_three_authors_and_is_not_empty(self):
+    def test_the_population_is_pinned_and_is_not_empty(self):
         """D-26: the sentinel names how much it is green over."""
         sweep = command_sweep()
         assert sweep.authors, (
@@ -341,26 +391,62 @@ class TestNoTwoCommandWindowsOverlap:
             "here silently narrows this sentinel's population."
         )
 
-    def test_every_author_actually_prices_the_amp(self):
-        """Green over a population that reaches the code under discussion."""
+    def test_a_command_row_appears_exactly_when_something_lands_inside(self):
+        """The rule's own ZeroPolicy, as an iff over the whole corpus.
+
+        Authoring an immobilize does not entitle a fight to a Command row:
+        the rule is ``Disposition.MEASURED`` and a zero means "nothing landed
+        inside the window", which is a real answer for a champion whose next
+        damage falls past the four seconds.  Six authors are in exactly that
+        position, so the old "every author prices the amp" assertion was
+        false over the wider population *and* contradicted the declaration it
+        was supposed to guard.  The iff is what the ZeroPolicy actually says.
+        """
         sweep = command_sweep()
         for name, rows in sweep.amped.items():
-            assert "damage_amp_Imperial Mandate" in rows, (
-                f"D-12: {name} authors an immobilize but its Mandate fight "
-                "prices no Command row, so the sentinel's population is "
-                "reachable in the marker stream and not in the amp."
+            assert ("damage_amp_Imperial Mandate" in rows) == (
+                sweep.inside[name] > 0.0
+            ), (
+                f"D-12: {name}'s Command row and its windowed damage "
+                f"({sweep.inside[name]}) disagree.  A row with nothing inside "
+                "it is an amp priced over damage the window never saw; "
+                "damage inside with no row is the incident this campaign is "
+                "named after."
             )
+        priced = [
+            name
+            for name, rows in sweep.amped.items()
+            if "damage_amp_Imperial Mandate" in rows
+        ]
+        assert priced, (
+            "D-26: no author anywhere in the registry prices a Command row, "
+            "so the iff above is satisfied by an empty window every time and "
+            "proves nothing about the amp."
+        )
 
-    def test_no_authored_pair_merges_into_one_window(self):
-        """The corpus fact Phase 3's ``merge=EXTEND`` rides on."""
+    def test_authored_pairs_merge_and_the_fixture_that_prices_one_exists(self):
+        """The corpus fact ``merge=REFRESH`` rides on, and where it is priced."""
         sweep = command_sweep()
-        for name, (times, windows) in sweep.authors.items():
-            assert len(windows) == len(times), (
-                f"D-12: {name} now authors two immobilizes within Command's "
-                f"{sweep.duration}s window ({list(times)}), so repeat-Command "
-                "stacking is reachable for the first time.  Phase 3's "
-                "merge=EXTEND is no longer a zero-diff declaration: give it "
-                "a fixture and an oracle receipt before landing it."
+        merging = {
+            name: (times, windows)
+            for name, (times, windows) in sweep.authors.items()
+            if len(windows) != len(times)
+        }
+        assert len(merging) == MERGING_COMMAND_AUTHORS, (
+            "D-12: the merging population moved to "
+            f"{sorted(merging)}.  It is what makes the roster fixture's "
+            "merge reachable rather than synthetic — re-read "
+            "TestTwoImmobilizesMergeIntoOneRefreshedWindow before pinning it."
+        )
+        assert "Maokai" in merging, (
+            "the priced fixture is Maokai's; his two roots no longer merge, "
+            "so the oracle in test_command_amp_roster has lost its subject"
+        )
+        for name, (times, windows) in merging.items():
+            assert len(windows) < len(times)
+            assert windows[-1][1] == pytest.approx(times[-1] + sweep.duration), (
+                f"D-12: {name}'s merged window does not end one duration "
+                "after its last trigger, so the merge is no longer a refresh"
             )
 
     def test_the_check_is_live_and_not_vacuous(self):
@@ -370,6 +456,62 @@ class TestNoTwoCommandWindowsOverlap:
         overlapping = slot.trigger_windows([0.0, duration / 2.0])
         assert len(overlapping) == 1
         assert overlapping == ((0.0, duration / 2.0 + duration),)
+
+
+class TestCommandDoesNotAmpItsOwnTimestamp:
+    """A packet sharing a trigger's timestamp is unamped, on measured grounds.
+
+    ``window_holds`` is ``start < t <= end``, so damage authored at exactly an
+    immobilize's timestamp is outside the window it opened — including damage
+    the reconstructed ledger sorts *after* the trigger.  That coarseness is
+    priced here rather than argued about, and the ruling that keeps it is in
+    ``delta_amp.AmpSlot.window_holds``' docstring:
+
+    * the secondary sort key is not an authored ordering for these rows.
+      Champion modules never write ``timeline_order`` — the engine's own
+      device for a same-instant claim — so their key falls back to a
+      construction counter that follows the rotation planner's slot list;
+      reorder that list and the same simultaneous packets change sides.
+    * the coupled walk cannot make the statement at all.  Its order is
+      ``(time, ordering_slot(rank), …)`` with ``TransitionRank.DAMAGE`` at 3
+      and ``DEBUFF_ARM`` at 6, so every packet at one timestamp resolves
+      before any debuff arms there.  Command is ``Subject.ANY_ATTACKER`` —
+      one rule, both engines — so amping the tie on the pair side alone would
+      open a divergence at the one instant the two agree on.
+
+    The defect is upstream, in a cast timeline that puts several casts on one
+    instant.  This sentinel turns red when that is fixed, or when the rank
+    ladder moves, which are the two commits that should re-read the ruling.
+    """
+
+    def test_the_tie_population_is_not_empty_and_is_priced(self):
+        """D-26: the coarseness costs something, and the number is stated."""
+        sweep = command_sweep()
+        tied = {name: value for name, value in sweep.tie.items() if value > 0.0}
+        assert tied, (
+            "no authored packet anywhere shares an immobilize's timestamp, so "
+            "this sentinel is green over nothing.  If the cast timeline "
+            "stopped putting several casts on one instant, that is the "
+            "upstream fix this sentinel defers to — delete it in that commit."
+        )
+        fraction = command_slot().bonus_fraction
+        unpriced = sum(tied.values()) * fraction
+        assert unpriced > 0.0
+        assert max(tied.values()) > 0.0
+
+    def test_the_tie_is_outside_the_window_the_trigger_opened(self):
+        """The predicate itself, at the instant the population lives on."""
+        slot = command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        windows = slot.trigger_windows([0.3])
+        assert not slot.window_holds(windows, 0.3), (
+            "the pair engine now amps a packet at its own trigger's "
+            "timestamp.  That is one half of a two-engine ruling, not a local "
+            "fix: the walk orders every damage packet at a timestamp before "
+            "the debuff that arms there, so land both halves together and "
+            "delete this sentinel in that commit."
+        )
+        assert slot.window_holds(windows, 0.3 + duration / 2.0)
 
 
 class TestCommandExpiryBoundaryDiverges:

@@ -92,6 +92,9 @@ def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": bonus,
         "parts": (DamagePart("physical", bonus),),
+        # One empowered swing's worth of bonus damage, landing with that
+        # swing: the certified boundary MODULE_CC's answer rides.
+        "event_order_certified": "single_hit",
         # Rides the auto stream when one exists; with no autos the fight
         # engine appends these module-authored swing parts instead of
         # its default expected-crit swing (Q attacks cannot crit).
@@ -180,6 +183,9 @@ def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(hookshot, rank),
         damage,
         "physical",
+        # Wall Dive damages "enemies near the landing location" once, on
+        # arrival; the cached text gives the dash no duration to author.
+        event_order_certified="single_hit",
     )
     bonus_as = extract_value(wall_dive, "Bonus Attack Speed", rank)
     if bonus_as > 0:
@@ -307,7 +313,19 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _tactical_sweep_with_shield
-parse_abilities = build_parser(SLOTS, "Camille")
+# Cached kit review.  Q and Q2 are empowered basic attacks that only add
+# damage and self movement speed.  W's modeled hit is the outer-cone half,
+# whose enemies "are slowed by 80% decaying over 2 seconds".  E's Wall Dive
+# stops on the champion it hits, "knocking back all nearby enemy champions
+# ... as well as stunning them for 0.75 seconds" — two immobilizes at once,
+# which is what the un-narrowed kind states.  R deals its damage through
+# basic attacks inside the zone and has no ability damage row of its own.
+# Q2 is reviewed control-free too, but cannot say so: below level 16 its one
+# empowered swing is split into a true and a physical part, and the engine's
+# certified single-hit export carries only a one-part cast.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "immobilize"}
+
+parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

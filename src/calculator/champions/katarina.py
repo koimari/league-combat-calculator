@@ -78,13 +78,19 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 _packet_slots = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Q and E each deal their packet once, at the cast: the reviewed
+    # cast-boundary claim that carries MODULE_CC into the event ledger.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": lambda ctx: no_damage(
         ctx,
         name="Preparation",
         reason="Dagger toss, movement speed and landing location are utility state.",
     ),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _death_lotus,
 }
 _packet_assumptions = list(REVIEWED_MODULE_ASSUMPTIONS)
@@ -158,7 +164,13 @@ SLOTS["P"] = with_item_on_hits(
 SLOTS["E"] = with_item_on_hits(
     SLOTS["E"], effectiveness=1.0, hits=1, triggers=("on_hit",)
 )
-parse_abilities = build_parser(SLOTS, "Katarina")
+
+# Cached kit review: nothing in Katarina's kit applies crowd control.  Q
+# bounces, W tosses a dagger and grants movement speed, E blinks, and R's
+# only debuff is Grievous Wounds (healing reduction, not control).
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Katarina", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options)
 ASSUMPTIONS = list(_packet_assumptions) + [

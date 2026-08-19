@@ -82,7 +82,11 @@ SLOTS = {
     "E": _rend,
 }
 
-parse_abilities = build_parser(SLOTS, "Kalista")
+# Pierce's spear and the Soul-Mark consumption only damage; Rend rips the
+# spears out "to deal physical damage and slow them for 2 seconds".
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

@@ -36,9 +36,14 @@ def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         magic + attack_damage,
         "mixed",
     )
+    # Both packets are the one strike at the end of the fixed-distance dash
+    # — the cached packet has no separate travel or tick phase — so they
+    # share the cast instant.  Authoring it is what carries the cast into
+    # the event ledger; a mixed row cannot use the single-part
+    # ``event_order_certified="single_hit"`` certification.
     entry["parts"] = (
-        DamagePart("magic", magic),
-        DamagePart("physical", attack_damage, basic_damage=True),
+        DamagePart("magic", magic, time_offset=0.0),
+        DamagePart("physical", attack_damage, basic_damage=True, time_offset=0.0),
     )
     entry["applies_item_on_hits"] = {
         "effectiveness": 1.0,
@@ -137,7 +142,14 @@ def _playful(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", value),)
+    # The control is a property of the variant, not of the slot, so it is
+    # authored here rather than in MODULE_CC: Playful's splash "slows them
+    # for 2 seconds", Trickster deals "the same magic damage in a smaller
+    # radius but not applying the slow".
+    entry["parts"] = (
+        DamagePart("magic", value, cc_kind="slow" if variant == 0 else "none"),
+    )
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Playful applies the sourced slow; Trickster is the early, smaller-radius recast."
     )
@@ -175,7 +187,14 @@ SLOTS = {
     "E": _playful,
     "R": _chum_the_waters,
 }
-parse_abilities = build_parser(SLOTS, "Fizz")
+# Q dashes and strikes, W rends on-hit — neither applies control.  R's
+# shark "knock[s] them back" as well as slowing, and a knockback is the
+# immobilize the pair reads.  E is absent because Playful slows and
+# Trickster does not, so its kind is authored per variant in _playful; P
+# carries no damage part at all.
+MODULE_CC = {"Q": "none", "W": "none", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Fizz", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {

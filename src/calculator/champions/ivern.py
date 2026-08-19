@@ -117,6 +117,9 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
         per_attack * normals + per_smash * smashes,
         "physical",
     )
+    # Daisy's ordinary swings apply nothing; the smash this module already
+    # reviews as a knockup carries that kind, which is why R's kinds ride
+    # its parts instead of MODULE_CC.
     entry["parts"] = (
         DamagePart(
             "physical",
@@ -124,6 +127,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
             count=normals,
             time_offset=0.0,
             hit_interval=interval,
+            cc_kind="none",
         ),
         DamagePart(
             "magic",
@@ -131,6 +135,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
             count=smashes,
             time_offset=2.0 * interval,
             hit_interval=3.0 * interval,
+            cc_kind="knockup",
         ),
     )
     entry["detail"] = (
@@ -148,12 +153,21 @@ SLOTS = {
         name="Friend of the Forest",
         reason="Grove channel, health/mana cost, camp release and full bounty are jungle utility state.",
     ),
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _brushmaker,
     "E": _triggerseed,
     "R": _daisy,
 }
-parse_abilities = build_parser(SLOTS, "Ivern")
+
+# Q's vine damages "the first enemy hit and root[s] them"; E's seed
+# "explode[s] to deal magic damage to nearby enemies and slow them for 2
+# seconds".  R is absent because Daisy's two packets differ (see _daisy).
+# P and W author no damage part (W is the on-hit bolt).
+MODULE_CC = {"Q": "root", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Ivern", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "w_in_brush",
