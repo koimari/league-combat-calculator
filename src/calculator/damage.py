@@ -563,6 +563,9 @@ class FightState:
     # When stacking-DoT stacks land and which mid-fight buff windows they
     # open — the ONE home every stack-aware step reads (Case 4 and 5).
     stack_timeline: "StackTimeline | None" = None
+    # Where a self-rated empowered burst (Jayce's Hyper Charge) puts its
+    # swings, resolved with the cast plan and read by the swing schedule.
+    burst_swings: "BurstSwingSchedule | None" = None
     # ── Accumulators ──────────────────────────────────────────────────────
     breakdown: dict[str, Any] = field(default_factory=dict)
     total_damage: float = 0.0
@@ -3564,6 +3567,48 @@ def _schedule_shared_casts(
     return times
 
 
+@dataclass(frozen=True)
+class BurstSwingSchedule:
+    """Where a self-rated empowered burst lands its swings, and for how long.
+
+    ``by_ability`` holds each empowering entry's own impacts — the swings
+    it actually landed, which is not ``casts x hits`` once a cast starts
+    too late for all of them. ``blocks`` are the merged ``[start, end)``
+    spans those impacts occupy: the seconds the ordinary auto stream is
+    not running, which is exactly what the auto count was charged for.
+    """
+
+    by_ability: dict[str, tuple[float, ...]]
+    blocks: tuple[tuple[float, float], ...]
+
+    @property
+    def times(self) -> tuple[float, ...]:
+        """Every burst impact in the fight, in clock order."""
+        return tuple(sorted(t for hits in self.by_ability.values() for t in hits))
+
+    @property
+    def seconds(self) -> float:
+        """Fight time the bursts occupy, overlaps counted once."""
+        return sum(end - start for start, end in self.blocks)
+
+    def landed(self, ability_key: str) -> int:
+        """Swings this entry put on the stream (0 when it declares no burst)."""
+        return len(self.by_ability.get(ability_key, ()))
+
+
+def _merged_spans(
+    spans: list[tuple[float, float]],
+) -> tuple[tuple[float, float], ...]:
+    """Sort ``[start, end)`` spans and fuse any that touch or overlap."""
+    merged: list[list[float]] = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return tuple((start, end) for start, end in merged)
+
+
 def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
     """Re-time the auto stream around empowered bursts that set their rate.
 
@@ -3576,6 +3621,12 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
     the burst swings themselves (which the breakdown later moves onto the
     ability's own row).
 
+    The burst fires WHERE ITS CAST IS: each cast lands its hits from its
+    own cast time at the burst rate, and only the hits that land before
+    the fight ends are bought. Deriving the count from a time budget while
+    the schedule laid every swing at the ordinary rate is what put swings
+    past the end of the fight (Jayce, 20 s: 24 swings, the last at 28.9 s).
+
     A fight with no auto stream is left alone: those casts force their
     own swings onto their ability row instead (see the empowered-auto
     branch in the rotation).
@@ -3583,8 +3634,9 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
     if state.num_auto_attacks <= 0 or state.auto_attack_uptime <= 0:
         return
 
-    burst_swings = 0
-    burst_seconds = 0.0
+    duration = state.fight_duration_seconds
+    by_ability: dict[str, tuple[float, ...]] = {}
+    spans: list[tuple[float, float]] = []
     for ability_key in state.cast_order:
         ability_info = state.ability_damages.get(ability_key)
         if not ability_info:
@@ -3593,18 +3645,30 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
         burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
         if burst_as <= 0:
             continue
-        swings = plan.counts.get(ability_key, 0) * _empower_hits(empower)
-        if swings <= 0:
-            continue
-        burst_swings += swings
-        burst_seconds += swings / burst_as
+        interval = 1.0 / burst_as
+        impacts: list[float] = []
+        for cast_time in plan.times.get(ability_key, ()):
+            landed = [
+                cast_time + hit * interval
+                for hit in range(_empower_hits(empower))
+                if cast_time + hit * interval < duration
+            ]
+            if not landed:
+                continue
+            impacts.extend(landed)
+            spans.append((landed[0], min(duration, landed[-1] + interval)))
+        if impacts:
+            by_ability[ability_key] = tuple(impacts)
 
-    if burst_swings <= 0:
+    if not by_ability:
         return
 
-    leftover = max(0.0, state.fight_duration_seconds - burst_seconds)
-    normal_autos = math.floor(state.attack_speed * leftover * state.auto_attack_uptime)
-    state.num_auto_attacks = normal_autos + burst_swings
+    schedule = BurstSwingSchedule(by_ability=by_ability, blocks=_merged_spans(spans))
+    leftover = max(0.0, duration - schedule.seconds)
+    state.num_auto_attacks = math.floor(
+        state.attack_speed * leftover * state.auto_attack_uptime
+    ) + len(schedule.times)
+    state.burst_swings = schedule
 
 
 @dataclass(frozen=True)
@@ -5494,6 +5558,28 @@ class AutoAttackResult:
     double_shot_info: dict[str, Any] | None = None
 
 
+def _weave_around_bursts(
+    offsets: list[float],
+    blocks: tuple[tuple[float, float], ...],
+) -> list[float]:
+    """Put ordinary swings on the clock a burst's blocks displace.
+
+    ``offsets`` are elapsed ORDINARY-attack seconds; every block a swing
+    has reached pushes it back by that block's own length. The blocks are
+    disjoint and sorted, so one forward pass is exact — and since the auto
+    count was bought out of ``duration - blocks``, the last woven swing
+    always lands inside the fight.
+    """
+    times: list[float] = []
+    for offset in offsets:
+        time = offset
+        for start, end in blocks:
+            if time >= start:
+                time += end - start
+        times.append(time)
+    return times
+
+
 def _auto_attack_timestamps(state: FightState) -> list[float]:
     """Return the same per-swing schedule used to derive the auto count.
 
@@ -5502,12 +5588,30 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
     hand the remaining swings to the ordinary rate. Keeping this schedule next
     to the count calculation prevents threshold defenses from treating a
     multi-second auto stream as one post-rotation burst.
+
+    A kit burst that sets its own rate (Jayce's Hyper Charge) already
+    resolved its swing times against the cast plan, so the ordinary stream
+    is woven around those blocks — the same two-rate accounting the count
+    was derived from, which is what keeps every swing inside the fight.
     """
     if state.num_auto_attacks <= 0 or state.auto_attack_uptime <= 0:
         return []
     normal_rate = state.attack_speed * state.auto_attack_uptime
     if normal_rate <= 0:
         return []
+    burst = state.burst_swings
+    if burst is not None:
+        ordinary = state.num_auto_attacks - len(burst.times)
+        times = sorted(
+            burst.times
+            + tuple(
+                _weave_around_bursts(
+                    [index / normal_rate for index in range(ordinary)],
+                    burst.blocks,
+                )
+            )
+        )
+        return _apply_spellblade_attack_speed(state, times)
     buff = state.item_charged_strikes.empowered_auto_buff
     empowered = state.empowered_autos if buff is not None else 0
     if empowered <= 0:
@@ -11245,7 +11349,9 @@ def _empowered_swing_consumers(
     """Each ``empowers_next_auto`` row and the swings it consumes.
 
     Cast order decides who gets scarce swings, and the stream can never
-    give out more than it has.
+    give out more than it has. A self-rated burst claims what it actually
+    landed rather than ``casts x hits``: its last cast may have started
+    with room for only some of its attacks.
     """
     consumers: list[tuple[dict[str, Any], int]] = []
     for ability_key in state.cast_order:
@@ -11256,7 +11362,9 @@ def _empowered_swing_consumers(
         empower = info.get("empowers_next_auto")
         if not empower:
             continue
-        swings = min(row.get("casts", 0) * _empower_hits(empower), available)
+        burst = state.burst_swings
+        landed = burst.landed(ability_key) if burst is not None else 0
+        swings = min(landed or row.get("casts", 0) * _empower_hits(empower), available)
         if swings <= 0:
             continue
         consumers.append((row, swings))

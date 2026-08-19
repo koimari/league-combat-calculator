@@ -9,6 +9,7 @@ authored events sum-reconcile with the row's priced total.
 
 import pytest
 
+from src.calculator import damage
 from src.calculator.calculate import calculate_payload
 from src.calculator.pipeline import run_fight
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
@@ -490,3 +491,114 @@ class TestEclipseTimedCoverage:
         coverage = _coverage(champion, ["Eclipse"], fight_duration=duration)
         assert coverage["coarse_sources"] == []
         assert coverage["complete"] is True
+
+
+#: Every fight length the burst schedule is measured over.  Jayce is the one
+#: kit declaring an ``empowers_next_auto`` burst rate (Hyper Charge's three
+#: attacks at the attack-speed cap), so he is the whole affected population.
+BURST_DURATIONS = [5.0, 8.0, 10.0, 20.0, 30.0]
+
+
+def _swing_schedule(
+    monkeypatch, champion: str, items: list[str], duration: float
+) -> list[float]:
+    """The whole authored swing schedule the fight priced against.
+
+    The published ``auto_attacks`` row is only the swings the stream KEPT —
+    ``_reattribute_empowered_swings`` hands the consumed ones to the
+    ability that forced them — so the invariant about where swings land is
+    read off the schedule itself, which every proc walker also reads.
+    """
+    captured: list[list[float]] = []
+    original = damage._auto_attack_timestamps
+
+    def spy(state):
+        times = original(state)
+        captured.append(list(times))
+        return times
+
+    monkeypatch.setattr(damage, "_auto_attack_timestamps", spy)
+    request = parse_scenario_request(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": items,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": duration,
+        },
+        deterministic=True,
+    )
+    resolved = resolve_scenario(request)
+    run_fight(
+        resolved.champion_data,
+        request.level,
+        list(resolved.items),
+        resolved.fight_params,
+    )
+    assert captured, "the fight priced no auto stream"
+    longest = max(captured, key=len)
+    assert all(times == longest for times in captured if times), "schedule disagreed"
+    return longest
+
+
+class TestEmpoweredBurstSwingSchedule:
+    """A kit burst fires where its cast is, and the fight cannot outrun itself.
+
+    Jayce's Hyper Charge fires three attacks at the attack-speed cap, which
+    costs the fight less time than three ordinary swings and so buys extra
+    ordinary autos.  The count knew that; the schedule did not, and laid
+    every swing at the ordinary rate — a 20 s fight authored 24 swings ending
+    at 28.9 s, and Ever Rising Moon paired two of its five procs after the
+    fight was over.
+    """
+
+    @pytest.mark.parametrize("duration", BURST_DURATIONS)
+    @pytest.mark.parametrize("items", [[], ["Eclipse"], ["Fiendhunter Bolts"]])
+    def test_no_swing_is_authored_past_the_end_of_the_fight(
+        self, monkeypatch, items, duration
+    ):
+        times = _swing_schedule(monkeypatch, "Jayce", items, duration)
+        assert times
+        assert max(times) <= duration + 1e-9
+
+    @pytest.mark.parametrize("duration", BURST_DURATIONS)
+    def test_the_burst_hits_land_on_their_own_cast(self, monkeypatch, duration):
+        """Each Hyper Charge's attacks start at the cast that forced them."""
+        payload = calculate_payload(
+            {
+                "champion": "Jayce",
+                "level": 18,
+                "items": ["Eclipse"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+                "fight_duration": duration,
+            }
+        )
+        casts = [
+            float(event["time"])
+            for event in payload["cast_timeline"]
+            if event["slot"] == "W"
+        ]
+        times = _swing_schedule(monkeypatch, "Jayce", ["Eclipse"], duration)
+        assert casts
+        for cast in casts:
+            assert any(abs(time - cast) <= 1e-3 for time in times)
+
+    @pytest.mark.parametrize("duration", BURST_DURATIONS)
+    def test_every_eclipse_proc_lands_inside_the_fight(self, duration):
+        row = _eclipse_row("Jayce", duration)
+        assert row["damage_events"]
+        assert max(float(e["time"]) for e in row["damage_events"]) <= duration + 1e-9
+
+    def test_a_burst_cast_only_buys_the_attacks_the_window_holds(self, monkeypatch):
+        """A Hyper Charge starting at 29.995 s lands one attack, not three.
+
+        The count is a time budget, so charging the fight for three attacks
+        it has no room for is the same overcount spent on swings instead of
+        clock: the sixth cast lands 1 of its 3, and the stream holds 35
+        swings rather than the 37 the old arithmetic bought.
+        """
+        thirty = _swing_schedule(monkeypatch, "Jayce", [], 30.0)
+        assert len(thirty) == 35
+        assert max(thirty) <= 30.0 + 1e-9

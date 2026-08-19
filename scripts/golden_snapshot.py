@@ -123,6 +123,22 @@ MAGIC_BUILD = ["Luden's Echo", "Shadowflame", "Rabadon's Deathcap"]
 # Munitions true damage). Without it those live on unit tests alone —
 # the blind spot that hid the timed-burn bug.
 SPELLBLADE_BUILD = ["Trinity Force", "Infinity Edge", "Berserker's Greaves"]
+# The item sweep's timed arm. Windowed and stacking item mechanics — Eclipse's
+# two-stacks-in-two-seconds pairing, the Muramana/Bastionbreaker proc walkers,
+# burn and periodic cadence, threshold-shield expiry, stack counters that ramp
+# — only differ across fight LENGTH and cast DENSITY, and the one-rotation arm
+# holds both fixed (one 5s rotation, two dense-cast champions). That is why
+# wave 1F re-priced 237 Eclipse fights and landed a byte-identical baseline.
+# Ziggs casts sparsely enough that a second stack is not always waiting when a
+# cooldown expires. Both lengths were chosen against that re-price, not by
+# taste: on the grid 5/8/10/12/15/20/25/30 at this sweep's own level, 1F moved
+# Eclipse at 12, 20, 25 and 30 and at no shorter length. 12s is the shortest
+# that sees it (and the shortest that authors Hullbreaker's on-hit at all);
+# 30s outlives every cooldown and window in the catalogue, is the only length
+# that authors Voltaic Cyclosword's once-per-fight row, and is where 1F's
+# Eclipse delta is largest.
+SWEEP_TIMED_CHAMPION = "Ziggs"
+SWEEP_TIMED_DURATIONS = (12.0, 30.0)
 # Deliberately non-default regression scenario; product defaults live in pipeline.py.
 SNAPSHOT_TARGET_HEALTH = 2000.0
 SNAPSHOT_TARGET_ARMOR = 50.0
@@ -176,12 +192,21 @@ def _parse_abilities_fresh(champion_data, level, items):
     return stats, abilities
 
 
-def _run_fight(champion_data, level, items, auto_attack_uptime=0.0, one_rotation=True):
+def _run_fight(
+    champion_data,
+    level,
+    items,
+    auto_attack_uptime=0.0,
+    one_rotation=True,
+    duration=ONE_ROTATION_DURATION,
+):
     """Fight at fixed regression target stats, mirroring _evaluate_build.
 
     Default is a one-rotation burst with no autos. Pass
     auto_attack_uptime=1.0 (and one_rotation=False for the sustained
-    scenario) to exercise auto-attack and on-hit item paths.
+    scenario) to exercise auto-attack and on-hit item paths, and
+    ``duration`` for the timed arm that lets a fight outlive an item's
+    cooldown, window or stack cadence.
     """
     items = copy.deepcopy(items)
     params = FightParams(
@@ -189,7 +214,7 @@ def _run_fight(champion_data, level, items, auto_attack_uptime=0.0, one_rotation
         target_bonus_health=0.0,
         target_armor=SNAPSHOT_TARGET_ARMOR,
         target_magic_resistance=SNAPSHOT_TARGET_MR,
-        fight_duration_seconds=ONE_ROTATION_DURATION,
+        fight_duration_seconds=duration,
         auto_attack_uptime=auto_attack_uptime,
         one_rotation=one_rotation,
         include_actives=True,
@@ -295,32 +320,52 @@ def snapshot_registered_fights(champions, items_by_name, substitutions):
     return out
 
 
-def snapshot_item_sweep(champions, items):
-    """Section 3: every item, alone, at level 11, on Vayne and Ahri.
+def _sweep_entry(champion_data, item, **fight_kwargs):
+    """One item's sweep reading: its total and the rows it authored."""
+    try:
+        result = _run_fight(
+            champion_data, ABILITY_LEVEL, [item], auto_attack_uptime=1.0, **fight_kwargs
+        )
+    except Exception as exc:
+        return _error_entry(exc)
+    return {
+        "total_damage": round(float(result.get("total_damage", 0.0)), 2),
+        "breakdown_keys": sorted(result.get("breakdown", {})),
+    }
 
-    Runs one-rotation with auto_attack_uptime=1.0 — most item effects
-    (on-hit, energized, spellblade) only fire with autos, and this sweep
-    exists to lock per-item behavior.
+
+def snapshot_item_sweep(champions, items):
+    """Section 3: every item, alone, at level 11, in two arms.
+
+    The one-rotation arm runs Vayne and Ahri with auto_attack_uptime=1.0 —
+    most item effects (on-hit, energized, spellblade) only fire with autos,
+    and it locks per-item behavior at a fixed 5s rotation.
+
+    The timed arm runs ``SWEEP_TIMED_CHAMPION`` at each of
+    ``SWEEP_TIMED_DURATIONS``, because a single rotation length on two
+    dense-cast champions cannot see any mechanic whose answer depends on
+    how long the fight ran or how sparsely it was cast — the blind spot
+    that made wave 1F's Eclipse re-price invisible here. Both arms sweep
+    EVERY item rather than a named windowed subset: a hand-kept list of
+    "items with a cadence" drifts away from the catalogue exactly like a
+    hand-kept availability list would.
     """
     by_display_name = {data.get("name"): data for data in champions.values()}
     sweep_champions = [
         ("ahri", by_display_name["Ahri"]),
         ("vayne", by_display_name["Vayne"]),
     ]
+    timed_champion = by_display_name[SWEEP_TIMED_CHAMPION]
+    timed_label = SWEEP_TIMED_CHAMPION.lower().replace("'", "").replace(" ", "_")
     out = {}
     for item in sorted(items.values(), key=lambda i: i.get("name", "")):
         entry = {}
         for label, champion_data in sweep_champions:
-            try:
-                result = _run_fight(
-                    champion_data, ABILITY_LEVEL, [item], auto_attack_uptime=1.0
-                )
-                entry[label] = {
-                    "total_damage": round(float(result.get("total_damage", 0.0)), 2),
-                    "breakdown_keys": sorted(result.get("breakdown", {})),
-                }
-            except Exception as exc:
-                entry[label] = _error_entry(exc)
+            entry[label] = _sweep_entry(champion_data, item)
+        for duration in SWEEP_TIMED_DURATIONS:
+            entry[f"{timed_label}_{duration:g}s"] = _sweep_entry(
+                timed_champion, item, one_rotation=False, duration=duration
+            )
         out[item.get("name", "")] = entry
     return out
 
