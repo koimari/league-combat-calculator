@@ -21,9 +21,6 @@ import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator import pipeline  # noqa: E402
 from src.calculator.interpreters.delta_amp import resolve_part_amp  # noqa: E402
-from src.calculator.interpreters.threshold_defense import (  # noqa: E402
-    ThresholdExpiryWithheld,
-)
 from src.calculator.item_behavior import (  # noqa: E402
     Basis,
     DefenseField,
@@ -1038,15 +1035,20 @@ class TestRepricingWindowCoverage:
         expected = raised / (raised - gained)
         assert max(ticks) / min(ticks) == pytest.approx(expected, rel=1e-2)
 
-    def test_the_mage_roster_departs_from_the_shared_duration(self):
-        """The departure is the mechanic, not a tuned number.
+    def test_the_longer_fight_prices_the_lifeline_expiry(self, coupled):
+        """The refusal this scenario's short window used to dodge is retired.
 
-        A fight that reaches the lifeline's own expiry is withheld rather
-        than priced, so the roster set's shared eight seconds captures
-        nothing at all on this pair.  The scenario states the shorter fight;
-        this pins that the longer one really is unpriceable, so nobody
-        "simplifies" it back to the shared duration.
+        A fight outliving the temporary maximum used to be withheld.  The
+        expiry is modelled now, so the same roster at the shared eight
+        seconds prices — and it prices by *doing the arithmetic*: the burn
+        ticks step up while the maximum is raised and fall back to their
+        opening size once it lapses, which a deleted refusal could not
+        produce.
         """
+        short = coupled["coupled_scenarios"]["liandry_reprice_mage_roster"]
+        raised = float(short["fights"]["0:Malphite"]["target_effective_max_health"])
+        gained = float(short["fights"]["0:Malphite"]["threshold_health_bonus_gained"])
+
         armed = next(
             scenario
             for scenario in gs.COUPLED_SCENARIOS
@@ -1055,8 +1057,22 @@ class TestRepricingWindowCoverage:
         assert armed.request["fight_duration"] < 8
         shared = json.loads(json.dumps(dict(armed.request)))
         shared["fight_duration"] = 8
-        with pytest.raises(ThresholdExpiryWithheld):
-            gs.coupled_entry(gs.CoupledScenario("shared_duration", shared))
+        fight = gs.coupled_entry(gs.CoupledScenario("shared_duration", shared))[
+            "fights"
+        ]["0:Malphite"]
+
+        assert fight["threshold_health_triggered"] is True
+        # The temporary maximum came back off, per the Wiki's Health rule.
+        assert float(fight["target_effective_max_health"]) == pytest.approx(
+            raised - gained
+        )
+        ticks = [
+            event["damage"]
+            for event in fight["damage_events"]
+            if event["source"] == "burn_Liandry's Torment"
+        ]
+        assert ticks[-1] == pytest.approx(ticks[0])
+        assert max(ticks) > ticks[0]
 
 
 SWING_TERM_ROSTER = "swing_term_armed_carry_roster"

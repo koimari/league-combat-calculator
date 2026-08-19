@@ -3,7 +3,6 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.interpreters.threshold_defense import ThresholdExpiryWithheld
 from src.calculator.loadout_rules import exclusivity_groups
 from src.calculator.optimizer import (
     _evaluate_build,
@@ -280,62 +279,6 @@ def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
 
     assert result["total_damage"] == 500.0
     assert "Warmog's Armor" in result["items"]
-
-
-def test_coupled_candidate_with_fail_closed_protoplasm_is_skipped(monkeypatch):
-    """One unsupported target-state candidate must not abort the search.
-
-    The fake raises the engine's own refusal type.  It used to raise a
-    hand-written sentence that no longer appeared anywhere in ``src/`` — the
-    search was caught by a substring of a message the engine had stopped
-    producing, which is the shape where a rewording quietly turns candidate
-    rejection into an aborted request.
-    """
-
-    def fake_timeline(*_args, **kwargs):
-        items = kwargs.get("items") or _args[2]
-        if any(item["name"] == ThresholdExpiryWithheld().owner for item in items):
-            raise ThresholdExpiryWithheld()
-        return {
-            "breakdown": [{"participant_id": "main", "total_damage": 10.0}],
-            "participants": [
-                {"participant_id": "main", "survival": {"effective_health": 1.0}}
-            ],
-            "events": [],
-            "timeline_coverage": {
-                "complete": True,
-                "exact_sources": [],
-                "coarse_sources": [],
-            },
-        }
-
-    monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline", fake_timeline
-    )
-    params = FightParams.from_request({"role": "top"}, deterministic=True)
-    result = _optimize_build(
-        get_champion("Aatrox"),
-        6,
-        fight_params=params,
-        max_legendary_slots=1,
-        include_boots=False,
-        enemy_loadouts=[object()],
-        require_complete_timeline=True,
-    )
-
-    assert result["items"]
-    assert "Protoplasm Harness" not in result["items"]
-    assert result["timeline_withheld_evaluations"] > 0
-    assert result["timeline_withheld_candidate_count"] > 0
-    assert any(
-        "Protoplasm Harness" in row["items"]
-        for row in result["timeline_withheld_candidates"]
-    )
-    assert all(
-        row["reason"] == "candidate_rejected_target_state"
-        for row in result["timeline_withheld_candidates"]
-        if "Protoplasm Harness" in row["items"]
-    )
 
 
 def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch):

@@ -240,6 +240,11 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
         "catalog the cache generation counts; read inside two fight loops, so "
         "the derivation is memoized rather than re-scanned per candidate"
     ),
+    "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_TICK_MEMO": _version_keyed(
+        "the cadence that Lifeline's heal is delivered on, read off the same "
+        "declaration and through the same registry the cache generation "
+        "counts; asked once per armed Lifeline inside the ordered damage walk"
+    ),
     "calculator.pipeline._CAST_ORDER_PARAMS_MEMO": _keyed_on_an_address_too(
         "derived cast-order params; the order was resolved from cached ability "
         "data — and the key is (data_version(), id(params), order) with a "

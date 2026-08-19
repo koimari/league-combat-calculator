@@ -485,8 +485,10 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
         "calculator.pipeline._CAST_ORDER_PARAMS_MEMO",
         "calculator.survival.receipt_state._STATE_PROTO_MEMO",
         # One entry per mechanic per generation, and one mechanic declared,
-        # so the generation prefix costs it nothing either.
+        # so the generation prefix costs it nothing either.  Same key, same
+        # bound, for the cadence its heal is delivered on.
         "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_OWNER_MEMO",
+        "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_TICK_MEMO",
     }
 
 
