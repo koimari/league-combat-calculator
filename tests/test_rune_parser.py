@@ -170,11 +170,15 @@ class TestParseCooldown:
 class TestRunePayload:
     def test_electrocute_payload_complete(self):
         payload = rune_payload(
-            "Electrocute", ELECTROCUTE_WIKITEXT, icon="http://x/e.png"
+            "Electrocute",
+            ELECTROCUTE_WIKITEXT,
+            icon="http://x/e.png",
+            path="Domination",
+            row=0,
         )
         assert payload["name"] == "Electrocute"
         assert payload["path"] == "Domination"
-        assert payload["slot"] == "Keystone"
+        assert payload["row"] == 0
         assert payload["cooldown"] == 20.0
         assert payload["icon"] == "http://x/e.png"
         effects = payload["effects"]
@@ -186,7 +190,9 @@ class TestRunePayload:
         assert effects["proc_delay_seconds"] == 0.25
 
     def test_press_the_attack_effects_complete(self):
-        payload = rune_payload("Press the Attack", PRESS_THE_ATTACK_WIKITEXT)
+        payload = rune_payload(
+            "Press the Attack", PRESS_THE_ATTACK_WIKITEXT, path="Precision", row=0
+        )
         assert payload["path"] == "Precision"
         assert payload["cooldown"] == 6.0
         effects = payload["effects"]
@@ -200,21 +206,25 @@ class TestRunePayload:
         assert "proc_delay_seconds" not in effects
 
     def test_electrocute_gains_no_press_the_attack_keys(self):
-        effects = rune_payload("Electrocute", ELECTROCUTE_WIKITEXT)["effects"]
+        effects = rune_payload(
+            "Electrocute", ELECTROCUTE_WIKITEXT, path="Domination", row=0
+        )["effects"]
         assert "max_stacks" not in effects
         assert "stack_duration_seconds" not in effects
         assert "damage_amp_ratio" not in effects
 
     def test_plain_ad_ratio_not_misread_as_bonus(self):
         text = ELECTROCUTE_WIKITEXT.replace("10% '''bonus''' AD", "30% AD")
-        effects = rune_payload("Electrocute", text)["effects"]
+        effects = rune_payload("Electrocute", text, path="Domination", row=0)["effects"]
         assert "bonus_ad_ratio" not in effects
         assert effects["ad_ratio"] == pytest.approx(0.30)
 
 
 class TestFirstStrikePayload:
     def test_first_strike_effects_complete(self):
-        payload = rune_payload("First Strike", FIRST_STRIKE_WIKITEXT)
+        payload = rune_payload(
+            "First Strike", FIRST_STRIKE_WIKITEXT, path="Inspiration", row=0
+        )
         assert payload["path"] == "Inspiration"
         # "25 to 15" is level-scaling text the cooldown parser does not
         # claim to read; absence (null) is the honest value.
@@ -231,7 +241,9 @@ class TestFirstStrikePayload:
         assert "proc_delay_seconds" not in effects
 
     def test_electrocute_gains_no_first_strike_keys(self):
-        effects = rune_payload("Electrocute", ELECTROCUTE_WIKITEXT)["effects"]
+        effects = rune_payload(
+            "Electrocute", ELECTROCUTE_WIKITEXT, path="Domination", row=0
+        )["effects"]
         assert "bonus_true_damage_ratio" not in effects
         assert "flat_gold" not in effects
         assert "gold_conversion_ratios" not in effects
@@ -240,7 +252,9 @@ class TestFirstStrikePayload:
 
 class TestArcaneCometPayload:
     def test_arcane_comet_payload_complete(self):
-        payload = rune_payload("Arcane Comet", ARCANE_COMET_WIKITEXT)
+        payload = rune_payload(
+            "Arcane Comet", ARCANE_COMET_WIKITEXT, path="Sorcery", row=0
+        )
         assert payload["path"] == "Sorcery"
         # The cooldown param is itself a pp leveling formula: 20s at
         # level 1 down to 8s at 18 (6.59s at the level-20 cap).
@@ -267,7 +281,9 @@ class TestArcaneCometPayload:
         assert "parse_warnings" not in payload
 
     def test_electrocute_gains_no_comet_keys(self):
-        effects = rune_payload("Electrocute", ELECTROCUTE_WIKITEXT)["effects"]
+        effects = rune_payload(
+            "Electrocute", ELECTROCUTE_WIKITEXT, path="Domination", row=0
+        )["effects"]
         assert "distance_scaling" not in effects
 
     def test_second_distance_table_is_recorded_as_a_warning(self):
@@ -278,7 +294,7 @@ class TestArcaneCometPayload:
             "at maximum range, plus {{pp|0 to 50 by 5|0 to 750|"
             "type=distance the comet travelled}} extra.",
         )
-        payload = rune_payload("Arcane Comet", text)
+        payload = rune_payload("Arcane Comet", text, path="Sorcery", row=0)
         assert any(
             "distance_scaling" in warning for warning in payload["parse_warnings"]
         )
@@ -291,7 +307,7 @@ class TestConflictingDuplicatesFailClosed:
         text = ELECTROCUTE_WIKITEXT.replace(
             "{{as|(+ 5% AP)}}", "{{as|(+ 5% AP)}} and a shield of {{as|(+ 40% AP)}}"
         )
-        payload = rune_payload("Electrocute", text)
+        payload = rune_payload("Electrocute", text, path="Domination", row=0)
         assert "ap_ratio" not in payload["effects"]
         assert any("ap_ratio" in warning for warning in payload["parse_warnings"])
 

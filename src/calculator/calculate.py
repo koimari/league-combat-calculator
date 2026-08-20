@@ -182,6 +182,7 @@ def _combat_receipt(
         role=params.role,
         role_quest_complete=params.role_quest_complete,
         external_stat_bonuses=params.ally_stat_bonuses,
+        rune_page=params.rune_page,
     )
     combat = build_participant_timeline(
         champion_data,

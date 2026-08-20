@@ -48,9 +48,14 @@ from .survival.actions import TransitionRank, public_phase
 # remains, carrying the receipts.  S6's rank split was asserted payload-
 # neutral, so it took no value and S9 takes 4 rather than 5 (D-63).
 #
+# 5 is the rune page: the request gained ``minor_runes``, ``stat_shards``
+# and ``rune_options``, and ``/api/config`` gained the whole rune catalog
+# (with each rune's path, row and model coverage) and the stat-shard table
+# beside the keystone list it already published.
+#
 # The version moves for a change to the *published payload* and for nothing
 # else, so a derivation edit that comes out byte-identical leaves it alone.
-CAPABILITY_SCHEMA_VERSION = 4
+CAPABILITY_SCHEMA_VERSION = 5
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in
@@ -303,6 +308,21 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
                     state_path="attacker.keystone{side}",
                     frontend_token='data-picker="keystone"',
                 ),
+                "minor_runes": _field(
+                    payload_field="minor_runes",
+                    state_path="attacker.minorRunes{side}",
+                    frontend_token='data-picker="minor-rune"',
+                ),
+                "stat_shards": _field(
+                    payload_field="stat_shards",
+                    state_path="attacker.statShards{side}",
+                    frontend_token='data-picker="stat-shard"',
+                ),
+                "rune_options": _field(
+                    payload_field="rune_options",
+                    state_path="attacker.runeOptions{side}",
+                    frontend_token="data-rune-option",
+                ),
                 "ally_effects_enabled": _field(
                     payload_field="ally_effects_enabled",
                     state_path="attacker.allyEffectsEnabled",
@@ -501,6 +521,16 @@ def public_capability_contract(
             },
             "keystones": {
                 "supported": True,
+                "reason": None,
+            },
+            "runes": {
+                "supported": True,
+                "keys": ["name", "path", "row", "icon", "implemented", "options"],
+                "reason": None,
+            },
+            "rune_shards": {
+                "supported": True,
+                "keys": ["row", "name", "options"],
                 "reason": None,
             },
             "abilities": {

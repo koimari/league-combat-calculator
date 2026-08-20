@@ -30,6 +30,12 @@ numbers appear in a small set of template forms:
 - prose refreshing stacks — "apply a stack for 4 seconds ... stacking up to 3 times"
 - prose damage amps — "grant you 8% increased damage against champions"
 - ``every {{fd|0.5}} seconds`` — a damage-over-time tick interval
+- ``8% increased damage to champions below {{as|40% '''maximum''' health}}`` —
+  a conditional damage amplifier and the health gate it reads
+- ``while above {{as|70% of your '''maximum''' health}}`` — a self-health gate
+- flat stat grants: ``{{as|10% '''bonus''' attack speed}}``,
+  ``{{as|65 '''bonus''' health}}``, ``8 ability haste``,
+  ``{{as|2.5% '''bonus''' movement speed}}``
 
 "up to ... at maximum stacks/range" clauses restate per-stack (or minimum)
 values times a maximum — derived numbers, masked before scalar parsing so
@@ -40,6 +46,10 @@ fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
 ``rune_effects`` consumes them with fail-closed typed accessors. A value this
 parser cannot read is simply absent from the payload — never defaulted, and a
 key matched with two different values is dropped, not guessed at.
+
+``data/runes.json`` is keyed by rune name, plus the reserved keys in
+:data:`RESERVED_CACHE_KEYS` for the page-level facts no single rune owns:
+the stat-shard table and the adaptive-force conversion.
 """
 
 import ast
@@ -62,15 +72,45 @@ _MAX_STACKS = re.compile(r"stacking up to (\d+) times")
 _DAMAGE_AMP = re.compile(r"([\d.]+)% increased damage against champions")
 _BONUS_TRUE_DAMAGE = re.compile(r"\{\{as\|([\d.]+)%\s*'''bonus'''\s*true damage\}\}")
 _FLAT_GOLD = re.compile(r"\{\{g\|([\d.]+)\}\}")
+#: Flat stat grants, one key per stat.  Every rune and stat shard that grants
+#: a stat outright states it in one of these forms; a grant stated any other
+#: way is absent from the payload rather than guessed at.  Ability haste is
+#: matched only in its bare and plainly-linked forms, so Cosmic Insight's
+#: ``[[ability haste#…|summoner spell haste]]`` — a different stat that links
+#: to the same page — reads as the absence it is.
+_FLAT_STAT_RULES: tuple[tuple[str, re.Pattern], ...] = (
+    (
+        "attack_speed_percent",
+        re.compile(r"\{\{as\|([\d.]+)% '''bonus''' attack speed\}\}"),
+    ),
+    (
+        "move_speed_percent",
+        re.compile(r"\{\{as\|([\d.]+)% '''bonus''' movement speed\}\}"),
+    ),
+    ("bonus_health", re.compile(r"\{\{as\|([\d.]+) '''bonus''' health\}\}")),
+    ("ability_haste", re.compile(r"([\d.]+) (?:\[\[ability haste\]\]|ability haste)")),
+)
 _BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _POUNCE_DELAY = re.compile(r"over \{\{fd\|([\d.]+)\}\} seconds, dealing")
 _LANDING_DELAY = re.compile(r"lands after \{\{rutngt\|([\d.]+)\}\}")
 _TICK_INTERVAL = re.compile(r"every \{\{fd\|([\d.]+)\}\} seconds")
+_AFTER_DELAY = re.compile(r"damage(?:\}\})? after ([\d.]+) seconds?")
+# "Deal 8% increased damage to champions below 40% maximum health" — the amp
+# and its gate in one sentence.  ``while`` marks the holder's own health as
+# the subject (Last Stand); without it the gate reads the target's.
+_CONDITIONAL_DAMAGE_AMP = re.compile(
+    r"([\d.]+)% increased damage to champions (?P<subject>while )?"
+    r"(?P<side>above|below) \{\{as\|([\d.]+)% '''maximum''' health\}\}"
+)
+_SELF_HEALTH_GATE = re.compile(
+    r"while (above|below) \{\{as\|([\d.]+)% of your '''maximum''' health\}\}"
+)
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
 _FOR_SUFFIX = re.compile(r"^(.+?)\s+for\s+(\d+)$")
 _ADAPTIVE_FORCE = re.compile(r"\{\{adaptive\|([^{}|]+)\|(\d+)\}\}")
+_ADAPTIVE_FLAT = re.compile(r"\{\{adaptive\|([\d.]+)\}\}")
 _SOUL_DAMAGE = re.compile(r"deals ([\d.]+) \{\{as\|\(\+ ([\d.]+) per Soul\)\}\}")
 
 # Display wrappers the value patterns must see through.  {{ap}} resolves
@@ -399,7 +439,7 @@ def parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
     recorder = _EffectRecorder()
     _parse_leveling(description, recorder)
     _parse_scalar_templates(description, recorder)
-    _parse_prose_rules(description, recorder.effects)
+    _parse_prose_rules(description, recorder)
     return recorder.effects, recorder.warnings
 
 
@@ -574,6 +614,10 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     for amount in _FLAT_GOLD.findall(text):
         recorder.record("flat_gold", float(amount))
 
+    for key, pattern in _FLAT_STAT_RULES:
+        for amount in pattern.findall(text):
+            recorder.record(key, float(amount))
+
     for formula, levels in _ADAPTIVE_FORCE.findall(text):
         try:
             values = evaluate_pp(formula, f"1 to {levels} by 1")
@@ -581,6 +625,9 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
             recorder.warn(str(exc))
             continue
         recorder.record("adaptive_force_leveling", values)
+
+    for amount in _ADAPTIVE_FLAT.findall(text):
+        recorder.record("adaptive_force", float(amount))
 
     for base, per_soul in _SOUL_DAMAGE.findall(text):
         recorder.record("base_damage", float(base))
@@ -593,53 +640,90 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
         recorder.warn(f"unclassified melee/ranged split: {leftover}")
 
 
-def _parse_prose_rules(description: str, effects: dict[str, Any]) -> None:
+def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     """Read the prose-form rules: buff windows, stack rules, proc delays."""
     window_match = _BUFF_WINDOW.search(description)
     if window_match:
-        effects["buff_duration_seconds"] = float(window_match.group(1))
+        recorder.record("buff_duration_seconds", float(window_match.group(1)))
 
     stack_match = _STACK_RULE.search(description)
     if stack_match:
-        effects["stacks_required"] = int(stack_match.group(1))
-        effects["stack_window_seconds"] = float(stack_match.group(2))
+        recorder.record("stacks_required", int(stack_match.group(1)))
+        recorder.record("stack_window_seconds", float(stack_match.group(2)))
 
     duration_match = _STACK_DURATION.search(description)
     if duration_match:
-        effects["stack_duration_seconds"] = float(duration_match.group(1))
+        recorder.record("stack_duration_seconds", float(duration_match.group(1)))
 
     max_stacks_match = _MAX_STACKS.search(description)
     if max_stacks_match:
-        effects["max_stacks"] = int(max_stacks_match.group(1))
+        recorder.record("max_stacks", int(max_stacks_match.group(1)))
 
-    amp_match = _DAMAGE_AMP.search(description)
-    if amp_match:
-        effects["damage_amp_ratio"] = float(amp_match.group(1)) / 100.0
+    _parse_conditional_amp(description, recorder)
 
     delay_match = (
         _PROC_DELAY.search(description)
         or _POUNCE_DELAY.search(description)
         or _LANDING_DELAY.search(description)
+        or _AFTER_DELAY.search(description)
     )
     if delay_match:
-        effects["proc_delay_seconds"] = float(delay_match.group(1))
+        recorder.record("proc_delay_seconds", float(delay_match.group(1)))
 
     tick_match = _TICK_INTERVAL.search(description)
     if tick_match:
-        effects["tick_interval_seconds"] = float(tick_match.group(1))
+        recorder.record("tick_interval_seconds", float(tick_match.group(1)))
 
 
-def rune_payload(name: str, wikitext: str, icon: str = "") -> dict[str, Any]:
-    """Build one ``data/runes.json`` entry from a rune's template wikitext."""
+def _parse_conditional_amp(description: str, recorder: _EffectRecorder) -> None:
+    """Read a damage amplifier and, when it has one, the health gate it reads.
+
+    Three keys rather than one because the amp is one fact and the condition
+    is another: a compiler that reads ``damage_amp_ratio`` without
+    ``damage_amp_health_ratio`` is amplifying unconditionally, and the
+    subject says whose health the gate measures — the target's (Coup de
+    Grace, Cut Down) or the holder's own (Last Stand).
+    """
+    amp_match = _DAMAGE_AMP.search(description)
+    if amp_match:
+        recorder.record("damage_amp_ratio", float(amp_match.group(1)) / 100.0)
+
+    gate_match = _CONDITIONAL_DAMAGE_AMP.search(description)
+    if gate_match:
+        recorder.record("damage_amp_ratio", float(gate_match.group(1)) / 100.0)
+        recorder.record("damage_amp_health_ratio", float(gate_match.group(4)) / 100.0)
+        subject = "self" if gate_match.group("subject") else "target"
+        recorder.record(
+            "damage_amp_health_gate", f"{subject}_{gate_match.group('side')}"
+        )
+
+    self_gate = _SELF_HEALTH_GATE.search(description)
+    if self_gate:
+        recorder.record("self_health_gate", f"self_{self_gate.group(1)}")
+        recorder.record("self_health_gate_ratio", float(self_gate.group(2)) / 100.0)
+
+
+def rune_payload(
+    name: str, wikitext: str, icon: str = "", *, path: str, row: int
+) -> dict[str, Any]:
+    """Build one ``data/runes.json`` entry from a rune's template wikitext.
+
+    ``path`` and ``row`` are the roster's facts (Data Dragon's
+    ``runesReforged.json``, where row 0 is the keystone row); the wikitext
+    supplies the text.  The template states its own path and slot, and they
+    are read here only to certify the two sources agree — a disagreement is
+    a parse warning, never a second copy of the fact.
+    """
     params = parse_rune_template(wikitext)
     description = "\n".join(
         params.get(key, "") for key in ("description", "description2")
     ).strip()
     effects, warnings = parse_effects(description)
+    warnings = _certify_roster_agreement(params, path, row) + warnings
     payload: dict[str, Any] = {
         "name": name,
-        "path": params.get("path", ""),
-        "slot": params.get("slot", ""),
+        "path": path,
+        "row": row,
         "cooldown": parse_cooldown(params.get("cooldown")),
         "icon": icon,
         "description": description,
@@ -648,3 +732,128 @@ def rune_payload(name: str, wikitext: str, icon: str = "") -> dict[str, Any]:
     if warnings:
         payload["parse_warnings"] = warnings
     return payload
+
+
+def _certify_roster_agreement(params: dict[str, str], path: str, row: int) -> list[str]:
+    """Warn when the wiki template disagrees with the Data Dragon roster.
+
+    The template spells its slot ``Keystone`` on row 0 and the row number
+    on rows 1-3, so both facts are checkable without keeping a second copy
+    of either.
+    """
+    warnings: list[str] = []
+    template_path = params.get("path", "").strip()
+    if template_path and template_path.casefold() != path.casefold():
+        warnings.append(
+            f"roster path {path!r} disagrees with the template's {template_path!r}"
+        )
+    template_slot = params.get("slot", "").strip()
+    expected_slot = "Keystone" if row == 0 else str(row)
+    if template_slot and template_slot.casefold() != expected_slot.casefold():
+        warnings.append(
+            f"roster row {row} expects slot {expected_slot!r} and the template "
+            f"says {template_slot!r}"
+        )
+    return warnings
+
+
+# The Rune page's Trees table names the five paths in the order the game
+# shows them, which is the order the roster is cached in.  Data Dragon
+# carries no such order, and a hand list of five path names is exactly the
+# kind of second copy this campaign removes.
+_RUNE_TABLE_ROW = re.compile(r"\{\{Rune table row\|(\w+)\}\}")
+
+
+def path_order(wikitext: str) -> list[str]:
+    """The five rune paths, in the order the Rune page lists them."""
+    order = _RUNE_TABLE_ROW.findall(wikitext)
+    if not order:
+        raise ValueError("Rune page lists no rune paths")
+    return order
+
+
+# The Rune page's shard table, the one source for the three stat-shard rows.
+# The wiki keeps no ``Template:Rune data`` page for a shard, so the table is
+# read where it is written and cached with the revision it was read at.
+_SHARD_SECTION = re.compile(r"===\s*Shards\s*===(.*?)(?=\n==)", re.DOTALL)
+_SHARD_ROW = re.compile(r"^!.*?\|\s*Slot (\d+)<br />\{\{sbc\|(\w+)\}\}\s*$")
+_SHARD_OPTION = re.compile(
+    r"^\|\s*\[\[File:Rune shard (.+?)\.png\|[^\]]*\]\]<br />(.*)$"
+)
+
+
+def shard_payload(wikitext: str, *, source: str, revision: int) -> dict[str, Any]:
+    """Build the cached stat-shard table from the Rune page's wikitext.
+
+    Each row is one of the page's three shard slots (Offense, Flex,
+    Defense) and each option keeps its verbatim cell text beside the values
+    :func:`parse_effects` could read from it — the same split every rune
+    entry carries, so a shard compiler reads a shard exactly the way a rune
+    compiler reads a rune.
+    """
+    section = _SHARD_SECTION.search(wikitext)
+    if section is None:
+        raise ValueError("Rune page has no Shards section")
+    rows: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for line in section.group(1).splitlines():
+        row_match = _SHARD_ROW.match(line.strip())
+        if row_match:
+            current = {
+                "row": int(row_match.group(1)),
+                "name": row_match.group(2),
+                "options": [],
+            }
+            rows.append(current)
+            continue
+        option_match = _SHARD_OPTION.match(line.strip())
+        if option_match is None or current is None:
+            continue
+        description = option_match.group(2).strip()
+        effects, warnings = parse_effects(description)
+        option: dict[str, Any] = {
+            "name": option_match.group(1),
+            "description": description,
+            "effects": effects,
+        }
+        if warnings:
+            option["parse_warnings"] = warnings
+        current["options"].append(option)
+    if not rows:
+        raise ValueError("Rune page's Shards section holds no shard rows")
+    return {"source": source, "revision": revision, "slots": rows}
+
+
+# ``Template:Adaptive``'s own conversion variable: adaptive force is worth
+# ``af`` bonus attack damage or its full value in ability power, and the
+# template branches on Wild Rift.  Summoner's Rift is the second value.
+_ADAPTIVE_CONVERSION = re.compile(
+    r"\{\{#vardefine:af\|\{\{#ifeq:\{\{\{wr\|\}\}\}\|true\|[\d.]+\|([\d.]+)\}\}\}\}"
+)
+
+
+def adaptive_force_payload(
+    wikitext: str, *, source: str, revision: int
+) -> dict[str, Any]:
+    """Read the adaptive-force conversion from ``Template:Adaptive``.
+
+    Every rune and shard that grants adaptive force states the force, not
+    what it converts to; the template that renders them owns the ratio, so
+    that is where it is read from rather than spelled in a compiler.
+    """
+    match = _ADAPTIVE_CONVERSION.search(wikitext)
+    if match is None:
+        raise ValueError("Template:Adaptive states no Summoner's Rift af conversion")
+    return {
+        "attack_damage_ratio": float(match.group(1)),
+        "source": source,
+        "revision": revision,
+    }
+
+
+#: Top-level keys of ``data/runes.json`` that are not runes: the page-level
+#: facts no single rune owns.  One tuple so every reader agrees on which keys
+#: to skip when walking the rune roster.
+SHARDS_KEY = "shards"
+ADAPTIVE_FORCE_KEY = "adaptive_force"
+RESERVED_CACHE_KEYS: tuple[str, ...] = (SHARDS_KEY, ADAPTIVE_FORCE_KEY)

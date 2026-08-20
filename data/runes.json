@@ -1,8 +1,139 @@
 {
+  "shards": {
+    "source": "https://wiki.leagueoflegends.com/en-us/Rune",
+    "revision": 4046438,
+    "slots": [
+      {
+        "row": 1,
+        "name": "Offense",
+        "options": [
+          {
+            "name": "Adaptive Force",
+            "description": "{{adaptive|9}}",
+            "effects": {
+              "adaptive_force": 9.0
+            }
+          },
+          {
+            "name": "Attack Speed",
+            "description": "{{as|10% '''bonus''' attack speed}}",
+            "effects": {
+              "attack_speed_percent": 10.0
+            }
+          },
+          {
+            "name": "Cooldown Reduction",
+            "description": "8 ability haste",
+            "effects": {
+              "ability_haste": 8.0
+            }
+          }
+        ]
+      },
+      {
+        "row": 2,
+        "name": "Flex",
+        "options": [
+          {
+            "name": "Adaptive Force",
+            "description": "{{adaptive|9}}",
+            "effects": {
+              "adaptive_force": 9.0
+            }
+          },
+          {
+            "name": "Movement Speed",
+            "description": "{{as|{{fd|2.5}}% '''bonus''' movement speed}}",
+            "effects": {
+              "move_speed_percent": 2.5
+            }
+          },
+          {
+            "name": "Health Scaling",
+            "description": "{{pp|10 * x for 20|color=health}} {{as|'''bonus''' health}}",
+            "effects": {
+              "leveling": [
+                [
+                  10.0,
+                  20.0,
+                  30.0,
+                  40.0,
+                  50.0,
+                  60.0,
+                  70.0,
+                  80.0,
+                  90.0,
+                  100.0,
+                  110.0,
+                  120.0,
+                  130.0,
+                  140.0,
+                  150.0,
+                  160.0,
+                  170.0,
+                  180.0,
+                  190.0,
+                  200.0
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "row": 3,
+        "name": "Defense",
+        "options": [
+          {
+            "name": "Health",
+            "description": "{{as|65 '''bonus''' health}}",
+            "effects": {
+              "bonus_health": 65.0
+            }
+          },
+          {
+            "name": "Tenacity and Slow Resist",
+            "description": "15% {{tip|tenacity}} and {{tip|slow resist}}",
+            "effects": {}
+          },
+          {
+            "name": "Health Scaling",
+            "description": "{{pp|10 * x for 20|color=health}} {{as|'''bonus''' health}}",
+            "effects": {
+              "leveling": [
+                [
+                  10.0,
+                  20.0,
+                  30.0,
+                  40.0,
+                  50.0,
+                  60.0,
+                  70.0,
+                  80.0,
+                  90.0,
+                  100.0,
+                  110.0,
+                  120.0,
+                  130.0,
+                  140.0,
+                  150.0,
+                  160.0,
+                  170.0,
+                  180.0,
+                  190.0,
+                  200.0
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
   "Press the Attack": {
     "name": "Press the Attack",
     "path": "Precision",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": 6.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
     "description": "{{sbc|Passive:}} {{tip|Basic attacks}} {{tip|on-hit}} against enemy {{tip|champion|champions}} apply a {{tip|stack}} for 4 seconds, refreshing on subsequent applications, expiring upon attacking a new champion, and stacking up to 3 times. The third stack consumes all stacks to deal {{pp|40 + (160-40)/17*(x-1)|1 to 20 by 1}} '''bonus''' {{tip|adaptive damage}} and grant you 8% increased damage against champions until 5 seconds after exiting [[combat status|combat]] with them.\n{{Tip data/Adaptive damage|pst2|description}}",
@@ -39,7 +170,7 @@
   "Lethal Tempo": {
     "name": "Lethal Tempo",
     "path": "Precision",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
     "description": "{{sbc|Passive:}} Basic attacks {{tip|on-attack}} against enemy {{tip|champion|champions}} grant a {{tip|stack}} for 6 seconds, refreshing on subsequent attacks and stacking up to 6 times. Gain {{as|{{rd|6%|{{ap|6*0.8}}%}} '''bonus''' attack speed|as}} for each stack, up to {{as|{{rd|36%|{{ap|36*0.8}}%}}|as}} at maximum stacks.\nAt maximum stacks, basic attacks are empowered to fire a bolt at the target {{tip|on-attack}} that deals them {{rd|9 + (30-9)/17*(x-1) for 20|6 + (24-6)/17*(x-1) for 20|pp=true}} '''bonus''' {{tip|adaptive damage}} upon arrival, increased by {{rd|1%|{{fd|0.6{{recurring|6}}%}}}} per {{as|1% '''bonus''' attack speed}}.",
@@ -104,55 +235,55 @@
   "Fleet Footwork": {
     "name": "Fleet Footwork",
     "path": "Precision",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
-    "description": "{{Unique|Energized|Moving and basic attacking generates ''Charges'', up to 100.}}\nAt 100 ''Charges'', become {{tip|Energized}}, empowering your next {{tip|basic attack}} to {{tip|heal}} you for {{rd|10+(120/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|10*0.6+((120*0.6)/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|color=heal|pp=true}} {{as|(+ {{rd|10%|6%}} '''bonus''' AD)}} {{as|(+ {{rd|5%|3%}} AP)}} and grant {{as|{{rd|20%|15%}}|ms}} {{sti|{{as|'''bonus''' movement speed}}}} for 1 second. Against {{tip|minion|minions}}, the healing is 15% effective.",
+    "description": "{{Unique|Energized|Moving and basic attacking generates ''Charges'', up to 100.}}\nAt 100 ''Charges'', become {{tip|Energized}}, empowering your next {{tip|basic attack}} to {{tip|heal}} you for {{rd|15+(145/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|15*0.6+((145*0.6)/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|color=heal|pp=true}} {{as|(+ {{rd|10%|6%}} '''bonus''' AD)}} {{as|(+ {{rd|5%|3%}} AP)}} and grant {{as|{{rd|20%|15%}}|ms}} {{sti|{{as|'''bonus''' movement speed}}}} for 1 second. Against {{tip|minion|minions}}, the healing is 15% effective.",
     "effects": {
       "heal_melee_ranged_leveling": [
         [
-          10.0,
-          15.08235294117647,
-          20.411764705882355,
-          25.988235294117647,
-          31.81176470588235,
-          37.88235294117648,
-          44.199999999999996,
-          50.76470588235294,
-          57.576470588235296,
-          64.63529411764706,
-          71.94117647058825,
-          79.49411764705881,
-          87.29411764705883,
-          95.34117647058824,
-          103.63529411764705,
-          112.17647058823529,
-          120.96470588235294,
-          130.0,
-          139.28235294117647,
-          148.81176470588238
+          15.0,
+          21.141176470588235,
+          27.580882352941178,
+          34.31911764705882,
+          41.35588235294118,
+          48.69117647058824,
+          56.324999999999996,
+          64.25735294117646,
+          72.48823529411766,
+          81.01764705882354,
+          89.84558823529413,
+          98.97205882352942,
+          108.39705882352942,
+          118.12058823529412,
+          128.1426470588235,
+          138.46323529411765,
+          149.08235294117648,
+          160.0,
+          171.21617647058824,
+          182.7308823529412
         ],
         [
-          6.0,
-          9.049411764705882,
-          12.24705882352941,
-          15.592941176470589,
-          19.08705882352941,
-          22.729411764705883,
-          26.520000000000003,
-          30.458823529411767,
-          34.54588235294118,
-          38.781176470588235,
-          43.16470588235294,
-          47.69647058823529,
-          52.3764705882353,
-          57.20470588235295,
-          62.18117647058824,
-          67.30588235294118,
-          72.57882352941176,
-          78.0,
-          83.56941176470589,
-          89.28705882352942
+          9.0,
+          12.68470588235294,
+          16.548529411764704,
+          20.591470588235293,
+          24.813529411764705,
+          29.21470588235294,
+          33.795,
+          38.55441176470588,
+          43.49294117647059,
+          48.61058823529412,
+          53.90735294117647,
+          59.38323529411765,
+          65.03823529411764,
+          70.87235294117647,
+          76.88558823529411,
+          83.07794117647059,
+          89.44941176470589,
+          96.0,
+          102.72970588235295,
+          109.63852941176471
         ]
       ],
       "move_speed_ratios": [
@@ -172,7 +303,7 @@
   "Conqueror": {
     "name": "Conqueror",
     "path": "Precision",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Conqueror/Conqueror.png",
     "description": "{{sbc|Passive:}} Dealing damage to enemy {{tip|champions}} generates {{tip|stacks}} of ''Conqueror'', lasting for 5 seconds, refreshing on subsequent damage against champions, and stacking up to 12 times. Gain {{rd|2|1}} stacks for {{tip|basic damage}} {{tip|on-hit}}. Otherwise, gain 2 stacks for any damage that is neither {{tip|basic damage|basic}} nor non-{{tip|pet damage|pet}} {{tip|proc damage}}, up to once every 4 seconds per {{tip|cast instance}}.\nEach stack of ''Conqueror'' grants {{adaptive|1.8 + (4-1.8)/17*(x-1)|20}}, up to {{adaptive|1.8*12 + (4*12-1.8*12)/17*(x-1)|20}} at maximum stacks, at which you also {{tip|heal}} for {{rd|8%|5%}} of the {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against enemy champions.",
@@ -210,10 +341,111 @@
       "max_stacks": 12
     }
   },
+  "Absorb Life": {
+    "name": "Absorb Life",
+    "path": "Precision",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png",
+    "description": "{{sbc|Passive:}} Killing an enemy {{tip|heals}} you for {{pp|1; then +0.25*x for 4;then +1*x for 5; then +2*x|1 to 20 by 1|formula=1, +0.25 per level until level 5, then +1 per level until level 10, then +2 per level|color=heal}}.",
+    "effects": {},
+    "parse_warnings": [
+      "Unparseable pp formula '1; then +0.25*x for 4;then +1*x for 5; then +2*x'"
+    ]
+  },
+  "Triumph": {
+    "name": "Triumph",
+    "path": "Precision",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Triumph.png",
+    "description": "{{sbc|Passive:}} Scoring a {{tip|takedown}} against an enemy champion {{tip|heals}} you for {{as|{{fd|2.5}}% of your '''maximum''' health}} {{as|(+ 5% of your '''missing''' health)}} and grants you an additional {{g|20}}, both after a 1-second delay.",
+    "effects": {
+      "flat_gold": 20.0
+    }
+  },
+  "Presence of Mind": {
+    "name": "Presence of Mind",
+    "path": "Precision",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png",
+    "description": "{{sbc|Passive:}} Scoring a {{tip|takedown}} against an enemy champion restores {{as|15% of your '''maximum''' mana}} or {{as|15% of your '''maximum''' energy}} after a 1-second delay.\nDamaging an enemy champion restores {{as|{{rd|6; then +0.8*x for 5; then +2*x for 5; then +3.2*x for 5; then +4*x for 2; then +8; then +4|6*0.8; then +0.8*0.8*x for 5; then +2*0.8*x for 5; then +3.2*0.8*x for 5; then +4*0.8*x for 2; then +8*0.8; then +4*0.8|pp=true}} mana}} or {{as|6 energy}} (8 second cooldown).",
+    "effects": {},
+    "parse_warnings": [
+      "pp formula '6; then +0.8*x for 5; then +2*x for 5; then +3.2*x for 5; then +4*x for 2; then +8; then +4' has no level range"
+    ]
+  },
+  "Legend: Alacrity": {
+    "name": "Legend: Alacrity",
+    "path": "Precision",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendAlacrity/LegendAlacrity.png",
+    "description": "{{sbc|Passive:}} Gain {{sti|{{as|{{#vardefineecho:basealacrity|3}}%|attack speed}} (+ {{as|{{fd|{{#vardefineecho:scalingalacrity|1.5}}}}%|attack speed}} per ''Legend'' {{tip|stack}}) {{as|'''bonus''' attack speed}}}}, up to {{as|{{#expr:{{#var:basealacrity}}+{{#var:scalingalacrity}}*10}}%|attack speed}} at maximum stacks.\n{{sbc|Legend:}} Gain ''Legend'' stacks for every 100 points earned, up to 10:\n* 100 points for champion {{tip|takedown|takedowns}}\n* 100 points for epic monster {{tip|takedown|takedowns}}\n* 25 points for large monster kills\n* 4 points for minion kills",
+    "effects": {}
+  },
+  "Legend: Haste": {
+    "name": "Legend: Haste",
+    "path": "Precision",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendHaste/LegendHaste.png",
+    "description": "{{sbc|Passive:}} Gain {{sti|ability haste|icononly=true}} {{as|{{fd|1.5}} basic ability haste}} per ''Legend'' {{tip|stack}}, up to {{as|15|ability haste}} at maximum stacks.\n{{sbc|Legend:}} Gain ''Legend'' stacks for every 100 points earned, up to 10:\n* 100 points for champion {{tip|takedown|takedowns}}\n* 100 points for epic monster {{tip|takedown|takedowns}}\n* 25 points for large monster kills\n* 4 points for minion kills",
+    "effects": {}
+  },
+  "Legend: Bloodline": {
+    "name": "Legend: Bloodline",
+    "path": "Precision",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendBloodline/LegendBloodline.png",
+    "description": "{{sbc|Passive:}} Gain {{as|{{sti|life steal|{{fd|{{#vardefineecho:scalingbloodline|0.45}}% life steal}}}}}} per ''Legend'' {{tip|stack}}, up to {{as|{{fd|{{#expr:{{#var:scalingbloodline}}*15}}}}%|life steal}} at maximum stacks, at which you also gain {{as|{{#vardefineecho:hpbloodline|85}} '''bonus''' health}}.\n{{sbc|Legend:}} Gain ''Legend'' stacks for every 100 points earned, up to 15:\n* 100 points for champion {{tip|takedown|takedowns}}\n* 100 points for epic monster {{tip|takedown|takedowns}}\n* 25 points for large monster kills\n* 4 points for minion kills",
+    "effects": {}
+  },
+  "Coup de Grace": {
+    "name": "Coup de Grace",
+    "path": "Precision",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/CoupDeGrace/CoupDeGrace.png",
+    "description": "{{sbc|Passive:}} Deal 8% increased damage to champions below {{as|40% '''maximum''' health}}.",
+    "effects": {
+      "damage_amp_ratio": 0.08,
+      "damage_amp_health_ratio": 0.4,
+      "damage_amp_health_gate": "target_below"
+    }
+  },
+  "Cut Down": {
+    "name": "Cut Down",
+    "path": "Precision",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/CutDown/CutDown.png",
+    "description": "{{sbc|Passive:}} Deal 8% increased damage to champions above {{as|60% '''maximum''' health}}.",
+    "effects": {
+      "damage_amp_ratio": 0.08,
+      "damage_amp_health_ratio": 0.6,
+      "damage_amp_health_gate": "target_above"
+    }
+  },
+  "Last Stand": {
+    "name": "Last Stand",
+    "path": "Precision",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/LastStand/LastStand.png",
+    "description": "{{sbc|Passive:}} Deal 5% increased damage to champions while below {{as|60% '''maximum''' health}}. This increases further based on your {{as|'''missing''' health}}, up to 11% increased damage while below {{as|30% '''maximum''' health}}.",
+    "effects": {
+      "damage_amp_ratio": 0.05,
+      "damage_amp_health_ratio": 0.6,
+      "damage_amp_health_gate": "self_below"
+    }
+  },
   "Electrocute": {
     "name": "Electrocute",
     "path": "Domination",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": 20.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Electrocute/Electrocute.png",
     "description": "{{sbc|Passive:}} Damaging {{tip|basic attacks}}, {{tip|abilities}}, [[Named item effect|item effects]], and [[summoner spell]]s, as well as the application of {{tip|crowd control}} and {{tip|damage over time}} effects, apply {{tip|stacks}} against enemy {{tip|champion|champions}}, up to one per {{tip|cast instance}} per champion. Applying 3 stacks to a target within a 3 second period causes them to be struck by lightning after a {{fd|0.25}}-second delay, dealing them {{pp|60 + 10 * x|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} of either {{as|physical|physical damage}} or {{as|magic damage}}.\n{{sbc|Variable Damage:}} This effect deals either {{as|physical|physical damage}} or {{as|magic damage}} depending on the damage contribution from your {{as|{{sti|attack damage}}}} and {{as|{{sti|ability power}}}} to the effect's damage formula.<ul><li>Greater '''bonus damage''' from the {{as|{{sti|AD ratio}}}} \u2192 {{as|Physical damage}}</li><li>Greater '''bonus damage''' from the {{as|{{sti|AP ratio}}}} \u2192 {{as|Magic damage}}</li></ul>If the damage contribution of {{as|{{sti|AD}}}} and {{as|{{sti|AP}}}} are zero or otherwise equal, the damage type defaults to {{as|magic damage}}.",
@@ -252,7 +484,7 @@
   "Dark Harvest": {
     "name": "Dark Harvest",
     "path": "Domination",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": 35.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
     "description": "{{sbc|Passive:}} Dealing {{tip|pet damage|pet}} or non-{{tip|proc damage|proc}} damage against enemy {{tip|champions}} below {{as|50% of their '''maximum''' health}} deals 30 {{as|(+ 11 per Soul)}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} '''bonus''' {{tip|adaptive damage}} and, after a {{fd|1.75}}-second delay, reap {{as|1 Soul}}. This cannot occur again for 35 seconds, resetting to 1 second upon scoring a {{tip|takedown}} against an enemy champion.\nWhile not on cooldown, also reap {{as|1 Soul}} from receiving the kill credit of a champion killed by a {{tip|minion}}, {{tip|monster}}, or {{tip|turret}}.",
@@ -267,47 +499,256 @@
   "Hail of Blades": {
     "name": "Hail of Blades",
     "path": "Domination",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": 10.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
-    "description": "{{sbc|Passive:}} Starting an {{tip|attack windup}} against an enemy {{tip|champion}} triggers ''Hail of Blades'', and if the windup completes, you gain 2 stacks of the effect for 3 seconds, with the duration refreshing on basic attacks {{tip|on-attack}} against enemy champions until all stacks are consumed. Stacks are consumed per basic attack on-attack and you generate an additional stack of the effect each time you activate an effect that has a {{tip|basic attack reset}}, up to 2 times.\nWhile ''Hail of Blades'' is active, you gain {{as|{{rd|120%|60%}} {{sti|'''bonus''' attack speed}}|as}}, are allowed to exceed the {{tt|attack speed cap|normally 3.003 attacks per second}}, and basic attacks deal {{pp|4 + (20-4)/17*(x-1) for 20|color=true damage}} {{as|(+ 8% '''bonus''' AD)}} {{as|(+ 6% AP)}} {{as|{{sti|'''bonus''' true damage}}}}.<br><br>''The triggering attack benefits from Hail of Blades.''",
+    "description": "{{sbc|Passive:}} Starting an {{tip|attack windup}} against an enemy {{tip|champion}} triggers ''Hail of Blades'', and if the windup completes, you gain 2 stacks of the effect for 3 seconds, with the duration refreshing on basic attacks {{tip|on-attack}} against enemy champions until all stacks are consumed. Stacks are consumed per basic attack on-attack and you generate an additional stack of the effect each time you activate an effect that has a {{tip|basic attack reset}}, up to 2 times.\nWhile ''Hail of Blades'' is active, you gain {{as|{{rd|90%|60%}} {{sti|'''bonus''' attack speed}}|as}}, are allowed to exceed the {{tt|attack speed cap|normally 3.003 attacks per second}}, and basic attacks deal {{pp|2 + (20-2)/17*(x-1) for 20|color=true damage}} {{as|(+ 12% '''bonus''' AD)}} {{as|(+ 10% AP)}} {{as|{{sti|'''bonus''' true damage}}}}.<br><br>''The triggering attack benefits from Hail of Blades.''",
     "effects": {
       "leveling": [
         [
-          4.0,
-          4.9411764705882355,
-          5.882352941176471,
-          6.823529411764706,
-          7.764705882352941,
-          8.705882352941178,
-          9.647058823529411,
-          10.588235294117647,
+          2.0,
+          3.0588235294117645,
+          4.117647058823529,
+          5.176470588235294,
+          6.235294117647059,
+          7.294117647058823,
+          8.352941176470589,
+          9.411764705882353,
+          10.470588235294118,
           11.529411764705882,
-          12.470588235294118,
-          13.411764705882353,
-          14.352941176470589,
-          15.294117647058822,
-          16.235294117647058,
-          17.176470588235293,
-          18.11764705882353,
-          19.058823529411764,
+          12.588235294117647,
+          13.647058823529411,
+          14.705882352941178,
+          15.764705882352942,
+          16.823529411764707,
+          17.88235294117647,
+          18.941176470588236,
           20.0,
-          20.941176470588236,
-          21.88235294117647
+          21.058823529411764,
+          22.11764705882353
         ]
       ],
       "attack_speed_ratios": [
-        1.2,
+        0.9,
         0.6
       ],
-      "bonus_ad_ratio": 0.08,
-      "ap_ratio": 0.06
+      "bonus_ad_ratio": 0.12,
+      "ap_ratio": 0.1
     }
+  },
+  "Cheap Shot": {
+    "name": "Cheap Shot",
+    "path": "Domination",
+    "row": 1,
+    "cooldown": 4.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/CheapShot/CheapShot.png",
+    "description": "{{sbc|Passive:}} Non-{{tip|proc damage|proc}} damage sources deal {{as|{{pp|10 + (45-10)/17*(x-1)|1 to 20 by 1}}|true damage}} {{as|'''bonus''' true damage}} to enemy {{tip|champion|champions}} affected by certain {{tip|crowd control}} effects.\n{{sbc|Valid Crowd Control:}}\n* {{tip|Immobilize|Immobilizes}}\n* {{tip|Blind}}\n* {{tip|Disarm}}\n* {{tip|Ground}}\n* {{tip|Nearsight}}\n* {{tip|Polymorph}}\n* {{tip|Silence}}\n* {{tip|Slow}}",
+    "effects": {
+      "leveling": [
+        [
+          10.0,
+          12.058823529411764,
+          14.117647058823529,
+          16.176470588235293,
+          18.235294117647058,
+          20.294117647058822,
+          22.352941176470587,
+          24.41176470588235,
+          26.470588235294116,
+          28.52941176470588,
+          30.588235294117645,
+          32.647058823529406,
+          34.705882352941174,
+          36.76470588235294,
+          38.8235294117647,
+          40.882352941176464,
+          42.94117647058823,
+          45.0,
+          47.05882352941176,
+          49.11764705882352
+        ]
+      ]
+    }
+  },
+  "Taste of Blood": {
+    "name": "Taste of Blood",
+    "path": "Domination",
+    "row": 1,
+    "cooldown": 20.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/TasteOfBlood/GreenTerror_TasteOfBlood.png",
+    "description": "{{sbc|Passive:}} Damaging an enemy {{tip|champion}} {{tip|heal|heals}} you for {{pp|16 + (40-16)/17*(x-1)|1 to 20 by 1|color=heal}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}}.\nDoes not trigger at full health.",
+    "effects": {
+      "leveling": [
+        [
+          16.0,
+          17.41176470588235,
+          18.823529411764707,
+          20.235294117647058,
+          21.647058823529413,
+          23.058823529411764,
+          24.470588235294116,
+          25.88235294117647,
+          27.294117647058826,
+          28.705882352941178,
+          30.11764705882353,
+          31.529411764705884,
+          32.94117647058823,
+          34.352941176470594,
+          35.76470588235294,
+          37.1764705882353,
+          38.58823529411765,
+          40.0,
+          41.411764705882355,
+          42.82352941176471
+        ]
+      ],
+      "bonus_ad_ratio": 0.1,
+      "ap_ratio": 0.05
+    }
+  },
+  "Sudden Impact": {
+    "name": "Sudden Impact",
+    "path": "Domination",
+    "row": 1,
+    "cooldown": 10.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/SuddenImpact/SuddenImpact.png",
+    "description": "{{sbc|Passive:}} Dealing damage to an enemy {{tip|champion}} within 4 seconds of using a {{tip|dash}} or {{tip|blink}}, or exiting from {{tip|stealth}}, deals {{as|{{pp|20 to 80}} '''bonus''' true damage}} to them.",
+    "effects": {
+      "leveling": [
+        [
+          20.0,
+          23.529411764705884,
+          27.058823529411764,
+          30.588235294117645,
+          34.11764705882353,
+          37.64705882352941,
+          41.17647058823529,
+          44.705882352941174,
+          48.23529411764706,
+          51.76470588235294,
+          55.294117647058826,
+          58.8235294117647,
+          62.35294117647059,
+          65.88235294117646,
+          69.41176470588235,
+          72.94117647058823,
+          76.47058823529412,
+          80.0
+        ]
+      ]
+    }
+  },
+  "Sixth Sense": {
+    "name": "Sixth Sense",
+    "path": "Domination",
+    "row": 2,
+    "cooldown": 250.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/SixthSense/SixthSense.png",
+    "description": "{{sbc|Passive:}} Upon moving near an un-tracked enemy {{tip|ward}}, it is automatically tracked with a [[File:Enemy Ward time indicator.png|30px|link=]] [[Ward#Ward_Timers|ward timer]].\nAt level 11, also {{tip|true sight|reveals}} the ward for 10 seconds upon being triggered.",
+    "effects": {}
+  },
+  "Grisly Mementos": {
+    "name": "Grisly Mementos",
+    "path": "Domination",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/GrislyMementos/GrislyMementos.png",
+    "description": "{{sbc|Passive:}} Gain 6 [[trinket haste]] per ''Memento'' stack, up to 108 haste at maximum stacks.\nEarn a ''Memento'' stack whenever scoring a champion {{tip|takedown}}, up to 18 stacks.",
+    "effects": {}
+  },
+  "Deep Ward": {
+    "name": "Deep Ward",
+    "path": "Domination",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DeepWard/DeepWard.png",
+    "description": "{{sbc|Passive:}} {{tip|Stealth Ward|Stealth Wards}} and {{tip|Totem Ward|Totem Wards}} placed in the enemy jungle are considered ''Deep''. All ''Deep'' wards are granted {{as|1 '''bonus''' health}}, ''Deep'' {{tip|Stealth Ward|Stealth Wards}} last {{pp|30 to 45|type=average champion level}} seconds longer, and ''Deep'' {{tip|Totem Ward|Totem Wards}} last {{pp|45 to 150|type=average champion level}} seconds longer.\nAt level 9, wards placed in the river will also be considered ''Deep''.",
+    "effects": {
+      "leveling": [
+        [
+          30.0,
+          30.88235294117647,
+          31.764705882352942,
+          32.64705882352941,
+          33.529411764705884,
+          34.411764705882355,
+          35.294117647058826,
+          36.17647058823529,
+          37.05882352941177,
+          37.94117647058823,
+          38.82352941176471,
+          39.705882352941174,
+          40.588235294117645,
+          41.470588235294116,
+          42.35294117647059,
+          43.23529411764706,
+          44.11764705882353,
+          45.0
+        ],
+        [
+          45.0,
+          51.1764705882353,
+          57.35294117647059,
+          63.529411764705884,
+          69.70588235294117,
+          75.88235294117646,
+          82.05882352941177,
+          88.23529411764706,
+          94.41176470588235,
+          100.58823529411765,
+          106.76470588235294,
+          112.94117647058823,
+          119.11764705882354,
+          125.29411764705883,
+          131.47058823529412,
+          137.64705882352942,
+          143.8235294117647,
+          150.0
+        ]
+      ],
+      "bonus_health": 1.0
+    }
+  },
+  "Treasure Hunter": {
+    "name": "Treasure Hunter",
+    "path": "Domination",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/TreasureHunter/TreasureHunter.png",
+    "description": "Gain {{g|50}} (+ {{g|20}} per ''Bounty Hunter'' stack) per unique takedown, up to {{g|{{ap|(50*5)+(20*10)}}}} at 5 unique takedowns.\n1st unique takedown: {{g|50}}, 2nd: {{g|{{ap|50+20}}}}, 3rd: {{g|{{ap|50+(20*2)}}}}, 4th: {{g|{{ap|50+(20*3)}}}}, 5th: {{g|{{ap|50+(20*4)}}}}.",
+    "effects": {},
+    "parse_warnings": [
+      "flat_gold matched conflicting values, dropped: 50.0, 20.0",
+      "flat_gold matched again after a conflict: 450.0",
+      "flat_gold matched again after a conflict: 50.0",
+      "flat_gold matched again after a conflict: 70.0",
+      "flat_gold matched again after a conflict: 90.0",
+      "flat_gold matched again after a conflict: 110.0",
+      "flat_gold matched again after a conflict: 130.0"
+    ]
+  },
+  "Relentless Hunter": {
+    "name": "Relentless Hunter",
+    "path": "Domination",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png",
+    "description": "{{sbc|Passive:}} Gain {{sti|{{as|8 '''bonus''' movement speed}}}} while [[combat status|out of combat]] per ''Bounty Hunter'' stack, up to {{as|40|ms}} at 5 stacks.\nEarn a ''Bounty Hunter'' [[stack]] whenever scoring a {{tip|takedown}} against an enemy champion, up to one per unique champion.",
+    "effects": {}
+  },
+  "Ultimate Hunter": {
+    "name": "Ultimate Hunter",
+    "path": "Domination",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png",
+    "description": "Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31 at 5 stacks.\nEarn a ''Bounty Hunter'' stack whenever scoring a {{tip|takedown}} against an enemy {{tip|champion}}, up to one per unique champion.",
+    "effects": {}
   },
   "Summon Aery": {
     "name": "Summon Aery",
     "path": "Sorcery",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
     "description": "{{sbc|Passive:}} Damaging {{tip|basic attacks}}, {{tip|abilities}}, and [[Named item effect|item effects]] against an enemy {{tip|champion}} signal ''Aery'' to pounce at them over {{fd|0.45}} seconds, dealing {{pp|10 + (40/17)*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} {{tip|adaptive damage}}. {{tip|Healing}}, {{tip|shield|shielding}}, or {{tip|buff|buffing}} an allied champion signals ''Aery'' to leap to their side over {{fd|0.35}} seconds, {{tip|shield|shielding}} them for {{pp|20 + (100-20)/17*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} for 2 seconds.\n''Aery'' applies her effects to the affected champion upon arrival. She then lingers on the target for {{tt|2 seconds|Slightly less than this duration}} before flying back to the user, and cannot be sent out again until she returns. While on her way back, she is {{tt|initially very slow|return speed's initial value is 200 at levels 1-5, 300 at levels 6-10 and 600 at level 11+}}, but {{tt|gradually accelerates|+10 speed per 51 units she travels}}, and {{tt|can be picked up by moving near her|+2000 speed per 51 units traveled after coming within 200 units of the user}}.",
@@ -366,7 +807,7 @@
   "Arcane Comet": {
     "name": "Arcane Comet",
     "path": "Sorcery",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": [
       20.0,
       19.294117647058822,
@@ -475,7 +916,7 @@
   "Stormraider's Surge": {
     "name": "Stormraider's Surge",
     "path": "Sorcery",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": [
       20.0,
       19.41176470588235,
@@ -510,7 +951,7 @@
   "Deathfire Touch": {
     "name": "Deathfire Touch",
     "path": "Sorcery",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
     "description": "Dealing {{tip|ability damage}} or {{tip|pet damage}} to enemy {{tip|champions}} inflicts a burn that deals {{pp|(3/2) + ((12/2)-(3/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7/2}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5/2}}% AP)}} {{as|magic damage}} every {{fd|0.5}} seconds over the duration. After the burn has lingered on a target for 3 seconds, its damage to them is increased{{ft|by 75%|to {{pp|(3*1.75/2) + ((12*1.75/2)-(3*1.75/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7*1.75/2|round=3}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5*1.75/2|round=3}}% AP)}} per tick}}while it lasts.\nThe burn's duration is based on the form of ability damage dealt to the target and is refreshed on subsequent applications:\n* {{tip|Spell damage}}: 4 seconds.\n* {{tip|Area damage}}: 2 seconds.\n* {{tip|Persistent damage}}: 1 second.\n* {{tip|Persistent area damage}}: 1 second.\n* {{tip|Pet damage}}: 1 second.",
@@ -566,10 +1007,181 @@
       "tick_interval_seconds": 0.5
     }
   },
+  "Axiom Arcanist": {
+    "name": "Axiom Arcanist",
+    "path": "Sorcery",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png",
+    "description": "{{sbc|Passive:}} Your ultimate has 12% increased damage (reduced to 8% for [[area of effect]] abilities), {{tip|heal|healing}} and {{tip|shield|shielding}}.\nScoring an enemy champion {{tip|takedown}} reduces your ultimate ability's '''current''' cooldown by 7%.",
+    "effects": {}
+  },
+  "Manaflow Band": {
+    "name": "Manaflow Band",
+    "path": "Sorcery",
+    "row": 1,
+    "cooldown": 15.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png",
+    "description": "{{sbc|Passive:}} {{tt|Affecting|See notes}} an enemy {{tip|champion}} with an [[champion ability|ability]] permanently increases your {{sti|mana|{{as|'''maximum''' mana by 25}}}}, up to {{as|250\u00a0mana}}. {{as|Mana}} gained from this effect preserves your {{as|'''current''' mana}}.\nAfter reaching {{as|250 '''bonus''' mana}}, permanently restore {{as|1% of your '''missing''' mana}} every 5\u00a0seconds.",
+    "effects": {}
+  },
+  "Nimbus Cloak": {
+    "name": "Nimbus Cloak",
+    "path": "Sorcery",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/NimbusCloak/6361.png",
+    "description": "{{sbc|Passive:}} Using a [[summoner spell]] grants {{tip|ghosted|ghosting}} and {{sti|ms|{{pp|type=summoner spell cooldown|key=%|15;35;45|0;100;250|color=ms|showtype=false|changedisplay=true}}}} {{as|(based on summoner spell cooldown)|ms}} {{as|'''bonus''' movement speed}} decaying over 2 seconds.",
+    "effects": {
+      "leveling": [
+        [
+          15.0,
+          35.0,
+          45.0
+        ]
+      ]
+    }
+  },
+  "Transcendence": {
+    "name": "Transcendence",
+    "path": "Sorcery",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Transcendence/Transcendence.png",
+    "description": "{{sbc|Passive:}} Gain '''bonuses''' upon reaching the following levels:\n* Level 5: + 5 [[ability haste]].\n* Level 8: + 5 [[ability haste]].\n* Level 11: Scoring a {{tip|takedown}} against an enemy {{tip|champion}} reduces the '''current''' cooldowns of your basic [[champion ability|abilities]] by 20%.",
+    "effects": {
+      "ability_haste": 5.0
+    }
+  },
+  "Celerity": {
+    "name": "Celerity",
+    "path": "Sorcery",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Celerity/CelerityTemp.png",
+    "description": "{{sbc|Passive:}} All [[movement speed]] '''bonuses''' increase in effectiveness by 7%.\nAdditionally, you gain {{sti|{{as|1% '''bonus''' movement speed}}}}.",
+    "effects": {
+      "move_speed_percent": 1.0
+    }
+  },
+  "Absolute Focus": {
+    "name": "Absolute Focus",
+    "path": "Sorcery",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/AbsoluteFocus/AbsoluteFocus.png",
+    "description": "{{sbc|Passive:}} Gain {{adaptive|3 + (30-3)/17*(x-1)|20}} while above {{as|70% of your '''maximum''' health}}.\n{{sbc|Adaptive:}} Grants bonuses based on which stat you already have the most bonuses for. ''Defaults to the first listed.''",
+    "effects": {
+      "adaptive_force_leveling": [
+        3.0,
+        4.588235294117647,
+        6.1764705882352935,
+        7.764705882352941,
+        9.352941176470587,
+        10.941176470588236,
+        12.529411764705882,
+        14.117647058823529,
+        15.705882352941176,
+        17.294117647058822,
+        18.88235294117647,
+        20.470588235294116,
+        22.058823529411764,
+        23.64705882352941,
+        25.235294117647058,
+        26.823529411764703,
+        28.41176470588235,
+        30.0,
+        31.588235294117645,
+        33.17647058823529
+      ],
+      "self_health_gate": "self_above",
+      "self_health_gate_ratio": 0.7
+    }
+  },
+  "Scorch": {
+    "name": "Scorch",
+    "path": "Sorcery",
+    "row": 3,
+    "cooldown": 10.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Scorch/Scorch.png",
+    "description": "{{sbc|Passive:}} Dealing {{tip|ability damage}} to an enemy {{tip|champion|champion}} sets them on fire, dealing them {{as|{{pp|20 + (40-20)/17*(x-1)|1 to 20 by 1}}|magic damage}} {{as|'''bonus''' magic damage}} after 1 second.",
+    "effects": {
+      "leveling": [
+        [
+          20.0,
+          21.176470588235293,
+          22.352941176470587,
+          23.529411764705884,
+          24.705882352941178,
+          25.88235294117647,
+          27.058823529411764,
+          28.235294117647058,
+          29.411764705882355,
+          30.588235294117645,
+          31.764705882352942,
+          32.94117647058823,
+          34.11764705882353,
+          35.294117647058826,
+          36.470588235294116,
+          37.64705882352941,
+          38.82352941176471,
+          40.0,
+          41.17647058823529,
+          42.352941176470594
+        ]
+      ],
+      "proc_delay_seconds": 1.0
+    }
+  },
+  "Waterwalking": {
+    "name": "Waterwalking",
+    "path": "Sorcery",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Waterwalking/Waterwalking.png",
+    "description": "{{sbc|Passive:}} While in the [[Summoner's Rift|river]], you gain {{sti|{{as|10|ms}} {{as|'''bonus''' movement speed}}}} and {{adaptive|13 + (30-13)/17*(x-1)|20}}.\n{{sbc|Adaptive:}} Grants bonuses based on which stat you already have the most bonuses for. ''Defaults to the first listed.''",
+    "effects": {
+      "adaptive_force_leveling": [
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0,
+        19.0,
+        20.0,
+        21.0,
+        22.0,
+        23.0,
+        24.0,
+        25.0,
+        26.0,
+        27.0,
+        28.0,
+        29.0,
+        30.0,
+        31.0,
+        32.0
+      ]
+    }
+  },
+  "Gathering Storm": {
+    "name": "Gathering Storm",
+    "path": "Sorcery",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/GatheringStorm/GatheringStorm.png",
+    "description": "{{sbc|Passive:}} Gain increasing {{tip|adaptive Force}} every 10 minutes that grants a total of {{as|{{pp|(4*0.6)*x*(x-1);\u221e|0 to 70 for 8;\u221e|type=minutes|formula=2.4 * m * (m-1), where m = 1 + (1 per 10 minutes of game time)|changedisplay=true}} '''bonus''' Attack Damage}} or {{as|{{pp|4*x*(x-1);\u221e|0 to 70 for 8;\u221e|type=minutes|formula=4 * m * (m-1), where m = 1 + (1 per 10 minutes of game time)|changedisplay=true}} Ability Power}}.\n{{sbc|Adaptive:}} Grants bonuses based on which stat you already have the most bonuses for. ''Defaults to the first listed.''",
+    "effects": {},
+    "parse_warnings": [
+      "Unsupported pp range spec '0 to 70 for 8;\u221e'",
+      "Unsupported pp range spec '0 to 70 for 8;\u221e'"
+    ]
+  },
   "Grasp of the Undying": {
     "name": "Grasp of the Undying",
     "path": "Resolve",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
     "description": "{{sbc|Passive:}} Entering [[Combat status|combat]] generates 1 [[stack]] every second for the next 3 seconds, refreshing the duration with each instance of combat and stacking the effect up to 4 times. At maximum stacks, your next [[basic attack]] {{tip|on-hit}} within 5 seconds against an enemy {{tip|champion}} consumes all stacks to deal {{as|'''bonus''' magic damage}} equal to {{as|{{rd|{{fd|3.5}}%|{{fd|1.4}}%}} of your '''maximum''' health}}, {{tip|heal}} you for {{as|(+ {{rd|{{fd|1.3}}%|{{fd|0.52}}%}} of your '''maximum''' health)}}, and permanently grant you {{as|{{rd|5|2}} '''bonus''' health}}.",
@@ -591,7 +1203,7 @@
   "Aftershock": {
     "name": "Aftershock",
     "path": "Resolve",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": 20.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
     "description": "{{sbc|Passive:}} {{tip|Immobilize|Immobilizing}} an enemy {{tip|champion}} grants you a static {{as|45|armor}} {{as|(+ 75% '''bonus''' armor)}} {{as|'''bonus''' armor}} and {{as|45|mr}} {{as|(+ 75% '''bonus''' magic resistance)}} {{as|'''bonus''' magic resistance}} for {{fd|2.5}} seconds. The '''bonus''' resistances are each capped at {{pp|80 to 150}}.\nAfter the duration, you release a shockwave that deals {{as|{{pp|25 to 120}}|magic damage}} {{as|(+ 8% of your '''bonus''' health)}} {{as|magic damage}} to enemy champions and {{tip|monster|monsters}} within a {{tip|cr|icononly=true}} 350 radius.",
@@ -643,8 +1255,29 @@
   "Guardian": {
     "name": "Guardian",
     "path": "Resolve",
-    "slot": "Keystone",
-    "cooldown": null,
+    "row": 0,
+    "cooldown": [
+      75.0,
+      72.94117647058823,
+      70.88235294117646,
+      68.82352941176471,
+      66.76470588235294,
+      64.70588235294117,
+      62.64705882352941,
+      60.58823529411765,
+      58.529411764705884,
+      56.470588235294116,
+      54.411764705882355,
+      52.352941176470594,
+      50.294117647058826,
+      48.23529411764706,
+      46.1764705882353,
+      44.117647058823536,
+      42.05882352941177,
+      40.0,
+      37.94117647058824,
+      35.88235294117648
+    ],
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Guardian/Guardian.png",
     "description": "{{sbc|Passive:}} While within 350 units of an allied {{tip|champion}}, you raise your ''Guard''. Allied champions you affect with [[unit-targeted]] [[champion ability|abilities]] are also ''Guarded'' for 3 seconds, regardless of distance.\nIf you or a ''Guarded'' ally would take {{pp|50 + (165-50)/17*(x-1) for 20}} damage within {{fd|2.5}} seconds or lethal damage from an enemy champion, {{tip|monster}} or {{tip|turret}}, you both gain a {{tip|shield}} for {{pp|40 + (150-40)/17*(x-1) for 20}} {{as|(+ 20% of your AP)}} {{as|(+ 6% of your '''bonus''' health)}} for 2 seconds.",
     "effects": {
@@ -696,10 +1329,196 @@
       ]
     }
   },
+  "Demolish": {
+    "name": "Demolish",
+    "path": "Resolve",
+    "row": 1,
+    "cooldown": 30.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Demolish/Demolish.png",
+    "description": "{{sbc|Passive:}} Basic attacks {{tip|on-hit}} against {{tip|turrets}} apply a stack of ''Demolish'', stacking up to 3 times. The third stack against a turret consumes them all to deal {{as|{{rd|85|50}}|physical damage}} {{as|(+ {{rd|28%|20%}} of your '''maximum''' health)}} {{as|'''bonus''' physical damage}}.\n''Demolish'' cannot be triggered on the same turret by any of its users more than once every 3 seconds.",
+    "effects": {
+      "max_stacks": 3
+    },
+    "parse_warnings": [
+      "unclassified melee/ranged split: {{rd|85|50}}",
+      "unclassified melee/ranged split: {{rd|28%|20%}}"
+    ]
+  },
+  "Font of Life": {
+    "name": "Font of Life",
+    "path": "Resolve",
+    "row": 1,
+    "cooldown": 20.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/FontOfLife/FontOfLife.png",
+    "description": "{{sbc|Passive:}} {{tip|slow|Slowing}} or {{tip|immobilize|immobilizing}} an enemy {{tip|champion}} {{tip|heals}} you and the nearest and most wounded allied champion within {{tip|cr|icononly=true}} 1000 units for {{rd|10 + (50-10)/17*(x-1) for 20|10*0.7 + (50*0.7-10*0.7)/17*(x-1) for 20|pp=true|type=your level|color=heal}}.",
+    "effects": {
+      "heal_melee_ranged_leveling": [
+        [
+          10.0,
+          12.352941176470589,
+          14.705882352941178,
+          17.058823529411764,
+          19.411764705882355,
+          21.764705882352942,
+          24.11764705882353,
+          26.47058823529412,
+          28.823529411764707,
+          31.176470588235293,
+          33.529411764705884,
+          35.88235294117647,
+          38.23529411764706,
+          40.58823529411765,
+          42.94117647058824,
+          45.294117647058826,
+          47.64705882352941,
+          50.0,
+          52.35294117647059,
+          54.70588235294118
+        ],
+        [
+          7.0,
+          8.647058823529411,
+          10.294117647058822,
+          11.941176470588236,
+          13.588235294117647,
+          15.235294117647058,
+          16.88235294117647,
+          18.529411764705884,
+          20.176470588235293,
+          21.823529411764703,
+          23.470588235294116,
+          25.11764705882353,
+          26.764705882352942,
+          28.41176470588235,
+          30.058823529411764,
+          31.705882352941174,
+          33.35294117647059,
+          35.0,
+          36.647058823529406,
+          38.294117647058826
+        ]
+      ]
+    }
+  },
+  "Shield Bash": {
+    "name": "Shield Bash",
+    "path": "Resolve",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/MirrorShell/MirrorShell.png",
+    "description": "{{sbc|Passive:}} Whenever you gain a {{tip|shield}}, your next attack against an enemy {{tip|champion}} is empowered to deal {{pp|5 + (30-5)/17*(x-1)|1 to 20 by 1}} {{as|(+ {{fd|2.5}}% '''bonus''' health)}} {{as|(+ 15% shield amount)}} '''bonus''' {{tip|adaptive damage}} [[on-hit]]. The empowered attack lasts for up to 2 seconds after the shield expires.\n{{Tip data/Adaptive damage|pst2|description}}",
+    "effects": {
+      "leveling": [
+        [
+          5.0,
+          6.470588235294118,
+          7.9411764705882355,
+          9.411764705882353,
+          10.882352941176471,
+          12.352941176470589,
+          13.823529411764707,
+          15.294117647058824,
+          16.764705882352942,
+          18.235294117647058,
+          19.705882352941178,
+          21.176470588235297,
+          22.647058823529413,
+          24.11764705882353,
+          25.58823529411765,
+          27.058823529411768,
+          28.529411764705884,
+          30.0,
+          31.47058823529412,
+          32.94117647058824
+        ]
+      ]
+    }
+  },
+  "Conditioning": {
+    "name": "Conditioning",
+    "path": "Resolve",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Conditioning/Conditioning.png",
+    "description": "{{sbc|Passive:}} After 12 minutes, gain {{sti|armor|{{as|8 '''bonus''' armor}}}} and {{sti|mr|{{as|8 '''bonus''' magic resistance}}}} and your {{as|'''total''' armor}} and {{as|'''total''' magic resistance}} are increased by 3%.",
+    "effects": {}
+  },
+  "Second Wind": {
+    "name": "Second Wind",
+    "path": "Resolve",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/SecondWind/SecondWind.png",
+    "description": "{{sbc|Passive:}} After taking damage from an enemy {{tip|champion}}, {{sti|health regeneration|link=true|regenerate}} {{as|4% of your '''missing''' health}} over 10 seconds, refreshing on subsequent damage.",
+    "effects": {}
+  },
+  "Bone Plating": {
+    "name": "Bone Plating",
+    "path": "Resolve",
+    "row": 2,
+    "cooldown": 55.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/BonePlating/BonePlating.png",
+    "description": "{{sbc|Passive:}} After taking damage from an enemy {{tip|champion}}, activate ''Bone Plating'' for {{fd|1.5}} seconds. While active, the next 3 spells or attacks you receive from the enemy champion that triggered this effect deal {{pp|30 + (60-30)/17*(x-1)|1 to 20 by 1}} less damage (including {{tip|true damage}}).",
+    "effects": {
+      "leveling": [
+        [
+          30.0,
+          31.764705882352942,
+          33.529411764705884,
+          35.294117647058826,
+          37.05882352941177,
+          38.82352941176471,
+          40.588235294117645,
+          42.35294117647059,
+          44.11764705882353,
+          45.88235294117647,
+          47.64705882352941,
+          49.41176470588235,
+          51.17647058823529,
+          52.94117647058823,
+          54.705882352941174,
+          56.470588235294116,
+          58.23529411764706,
+          60.0,
+          61.76470588235294,
+          63.529411764705884
+        ]
+      ]
+    }
+  },
+  "Overgrowth": {
+    "name": "Overgrowth",
+    "path": "Resolve",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Overgrowth/Overgrowth.png",
+    "description": "{{sbc|Passive:}} Every 8 {{tip|monster|monsters}} or enemy {{tip|minion|minions}} that die near you permanently generates a [[stack]]. Each stack grants {{as|3 '''bonus''' health}}. This effect can stack indefinitely.\nAfter reaching 15 stacks (120 monsters or minions), your {{as|'''base'''|health}} and {{as|'''bonus''' health}} are permanently increased by {{fd|3.5}}%.",
+    "effects": {
+      "bonus_health": 3.0
+    }
+  },
+  "Revitalize": {
+    "name": "Revitalize",
+    "path": "Resolve",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Revitalize/Revitalize.png",
+    "description": "{{sbc|Passive:}} Grants {{sti|heal and shield power|5% [[Heal and shield power]]}}.\nOutgoing {{tip|heal|healing}} and outgoing {{tip|shield|shielding}} are increased by 10% on targets {{as|below 40% of their '''maximum''' health}}.",
+    "effects": {}
+  },
+  "Unflinching": {
+    "name": "Unflinching",
+    "path": "Resolve",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Unflinching/Unflinching.png",
+    "description": "{{sbc|Passive:}} While afflicted with {{tip|crowd control}} sourced from enemy {{tip|champion|champions}}, gain {{as|{{#vardefineecho:armorunflinching|10}} '''bonus''' armor}} and {{as|{{#vardefineecho:mrunflinching|10}} '''bonus''' magic resistance}}, lingering for 2 seconds after the impairment ends.",
+    "effects": {}
+  },
   "Glacial Augment": {
     "name": "Glacial Augment",
     "path": "Inspiration",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": 25.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
     "description": "{{sbc|Passive:}} {{tip|immobilize|Immobilizing}} an enemy {{tip|champion}} will cause 3 glacial rays to emanate from them towards you and other nearby enemy champions, creating icy zones with a 700 unit radius that last for 3 (+ 100% of the {{tt|immobilizing effect's duration|Duration after being modified by tenacity}}) seconds.\nEnemies within the icy zones, which have a width of 80 units, are {{tip|slow|slowed}} by 20% {{as|(+ 7% per 100 '''bonus''' AD)}} {{as|(+ 6% per 100 AP)}} {{as|(+ 9% per 10% heal and shield power)}} and have their damage reduced by 15% against your allies, excluding yourself.",
@@ -708,7 +1527,7 @@
   "Unsealed Spellbook": {
     "name": "Unsealed Spellbook",
     "path": "Inspiration",
-    "slot": "Keystone",
+    "row": 0,
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
     "description": "{{sbc|Passive:}} While not channeling {{si|Teleport}} and being [[combat status|out-of-combat]] for 5 seconds, you can swap one of your equipped [[summoner spell]]s to a new, single use summoner spell. You cannot select a summoner spell you have already equipped.\nYour first swap becomes available at {{sbc|{{MinuteDisplay|{{#var:initialcd}}}}}}. Swaps have an initial cooldown of {{#var:cdb}} seconds; selecting a unique summoner spell reduces the swap cooldown by {{#var:cdm}} seconds. You must swap to 3 different summoner spells before returning to one you have already used.",
@@ -717,8 +1536,27 @@
   "First Strike": {
     "name": "First Strike",
     "path": "Inspiration",
-    "slot": "Keystone",
-    "cooldown": null,
+    "row": 0,
+    "cooldown": [
+      25.0,
+      24.41176470588235,
+      23.823529411764707,
+      23.235294117647058,
+      22.647058823529413,
+      22.058823529411764,
+      21.470588235294116,
+      20.88235294117647,
+      20.294117647058822,
+      19.705882352941178,
+      19.11764705882353,
+      18.529411764705884,
+      17.941176470588236,
+      17.352941176470587,
+      16.764705882352942,
+      16.176470588235293,
+      15.588235294117647,
+      15.0
+    ],
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
     "description": "{{sbc|Passive:}} Initiating [[combat]] with an enemy {{tip|champion}} within the first {{fd|0.25}} seconds of champion combat grants {{g|10}} and ''First Strike'' for 3 seconds, causing all of your {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against champions to deal {{as|7% '''bonus''' true damage}}. Afterwards, you are granted {{g|gold}} equal to {{rd|50%|35%}} of all '''bonus''' damage dealt within the duration.\n''First Strike'' will be placed on full cooldown without activating its effects after being struck by an enemy champion before you strike them.",
     "effects": {
@@ -730,5 +1568,99 @@
       "flat_gold": 10.0,
       "buff_duration_seconds": 3.0
     }
+  },
+  "Hextech Flashtraption": {
+    "name": "Hextech Flashtraption",
+    "path": "Inspiration",
+    "row": 1,
+    "cooldown": 20.0,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/HextechFlashtraption/HextechFlashtraption.png",
+    "description": "{{sbc|Passive:}} While {{si|Flash}} has a remaining cooldown greater than 2 seconds, it is replaced by ''{{si|Hexflash}}''.\n{{sbc|Active:}} You begin {{tip|channel|charging}} for up to 2 seconds, setting your {{sti|ms|{{as|movement speed}}}} to a {{as|static 0|ms}}, and increasing ''Hexflash's'' range over the duration. After at least 1 second, you can reactivate the spell, which is automatically done so when the charge completes without reactivation. Releasing the charge earlier than 1 second or entering combat with an enemy {{tip|champion}} will put ''Hexflash'' on {{sti|cooldown}} for 10 seconds.",
+    "effects": {}
+  },
+  "Magical Footwear": {
+    "name": "Magical Footwear",
+    "path": "Inspiration",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png",
+    "description": "{{sbc|Passive:}} After 12 minutes (reduced by 45 seconds whenever scoring a {{tip|takedown}} against an enemy champion), you gain {{ii|Slightly Magical Boots}} for {{g|free}}. ''Slightly Magical Boots'' are identical to {{ii|Boots}} and can be upgraded as if it were the item. If the inventory is full while receiving the boots, they will appear as soon as a slot in the inventory is available.\nAdditionally, your boots grant an additional {{sti|{{as|10 '''bonus''' movement speed}}}}.",
+    "effects": {}
+  },
+  "Cash Back": {
+    "name": "Cash Back",
+    "path": "Inspiration",
+    "row": 1,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/CashBack/CashBack2.png",
+    "description": "{{sbc|Passive:}} Upon purchasing a [[Legendary item]], you are automatically refunded {{fd|7.5}}% of its total {{g|gold}} cost.\n''Selling or undoing the item's purchase will cancel the refund, reducing your current {{g|gold}} equal to the refunded amount.''",
+    "effects": {}
+  },
+  "Triple Tonic": {
+    "name": "Triple Tonic",
+    "path": "Inspiration",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/PerfectTiming/AlchemistCabinet.png",
+    "description": "{{sbc|Passive:}} Gain an ''Elixir'' upon reaching each of the following levels:\n* Level 3: {{ii|Elixir of Avarice}}\n* Level 6: {{ii|Elixir of Force}}\n* Level 9: {{ii|Elixir of Skill}}\nIf the inventory is full upon the user becoming eligible to receive {{ii|Elixir of Avarice}} or {{ii|Elixir of Force}}, each item will be granted as soon as an empty slot is available. If the inventory is full upon becoming eligible to receive {{ii|Elixir of Skill}}, the item is consumed automatically.",
+    "effects": {}
+  },
+  "Time Warp Tonic": {
+    "name": "Time Warp Tonic",
+    "path": "Inspiration",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/TimeWarpTonic/TimeWarpTonic.png",
+    "description": "{{sbc|Passive:}} Upon consuming a potion ({{ii|Health Potion|icononly=true}}{{ii|Refillable Potion|icononly=true}}), you additionally {{tip|heal}} equal to 40% of its '''total''' health restoration.\nIf a health potion is consumed while one is already active, this effect will trigger on the activation of the next potion once the restoration of the current one ends.",
+    "effects": {}
+  },
+  "Biscuit Delivery": {
+    "name": "Biscuit Delivery",
+    "path": "Inspiration",
+    "row": 2,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png",
+    "description": "{{sbc|Passive:}} Receive a {{ii|Total Biscuit of Everlasting Will}} at {{sbc|2:00}}, {{sbc|4:00}}, and {{sbc|6:00}}. If the inventory is full while receiving a biscuit, the biscuit(s) will appear as soon as a slot in the inventory is available.\nConsuming a ''Biscuit'' will permanently increase your {{as|{{sti|'''maximum''' health}}}} by {{as|30|health}}, in addition to its effects. You will also gain the increased health if you sell the biscuit for {{g|5}}.",
+    "effects": {
+      "flat_gold": 5.0
+    }
+  },
+  "Cosmic Insight": {
+    "name": "Cosmic Insight",
+    "path": "Inspiration",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png",
+    "description": "{{sbc|Passive:}} Gain 18 [[ability haste#Increasing summoner spell haste|summoner spell haste]] and 10 [[ability haste#Increasing item haste|item haste]].",
+    "effects": {}
+  },
+  "Approach Velocity": {
+    "name": "Approach Velocity",
+    "path": "Inspiration",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png",
+    "description": "{{sbc|Passive:}} Gain {{sti|{{as|{{fd|7.5}}% '''bonus total''' movement speed}}}} while facing {{tip|sight|visible}} enemy {{tip|champions}} that are {{tip|immobilize|immobilized}}, {{tip|ground|grounded}}, or {{tip|slow|slowed}} within {{tip|cr|icononly = true}} 1000 range.\nThis bonus is doubled to {{as|15%|ms}} and does not have a range cap nor require {{tip|sight|vision}} toward enemy champions whose movement you impaired when they were {{tip|sight|visible}}.{{bug|2}}",
+    "effects": {}
+  },
+  "Jack Of All Trades": {
+    "name": "Jack Of All Trades",
+    "path": "Inspiration",
+    "row": 3,
+    "cooldown": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png",
+    "description": "{{sbc|Passive:}} Earn 1 ''Jack'' stack for each unique [[champion statistic|stat type]] currently gained from [[item]]s.\n{{sbc|Jack:}} For each ''Jack'' stack, gain {{as|1 ability haste}}. At 5 ''Jack'' stacks, gain {{adaptive|8}}. At 10 ''Jack'' stacks, gain an additional {{adaptive|12}}, for a total of {{adaptive|20}} at 10 ''Jack'' stacks.",
+    "effects": {
+      "ability_haste": 1.0
+    },
+    "parse_warnings": [
+      "adaptive_force matched conflicting values, dropped: 8.0, 12.0",
+      "adaptive_force matched again after a conflict: 20.0"
+    ]
+  },
+  "adaptive_force": {
+    "attack_damage_ratio": 0.6,
+    "source": "https://wiki.leagueoflegends.com/en-us/Template:Adaptive",
+    "revision": 4009298
   }
 }

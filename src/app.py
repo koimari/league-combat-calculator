@@ -59,7 +59,11 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     stat_conversion_metadata,
 )
-from src.calculator.rune_effects import keystone_catalog, refresh_rune_effects
+from src.calculator.rune_effects import (
+    refresh_rune_effects,
+    rune_catalog,
+    shard_catalog,
+)
 from src.calculator.item_coverage import (
     ATTACKER_LANES,
     item_model_coverage,
@@ -1190,6 +1194,7 @@ def api_config():
         ).isoformat()
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         fetched_at = None
+    runes = rune_catalog()
     response = jsonify(
         {
             "exclusivity_groups": exclusivity_groups(),
@@ -1223,7 +1228,12 @@ def api_config():
                 "registered_count": len(registered_champion_names()),
                 "module_contract": "champion_module_v1",
             },
-            "keystones": keystone_catalog(),
+            # The rune page: the whole roster with its path, row and model
+            # coverage, and the stat-shard table.  "keystones" is the
+            # keystone row of that one catalog, not a second list.
+            "runes": runes,
+            "keystones": [entry for entry in runes if entry["row"] == 0],
+            "rune_shards": shard_catalog(),
             "dev_mode": local_dev,
             "data_snapshot": {
                 "source": "League of Legends Wiki cache",

@@ -44,6 +44,8 @@ const engine = {
   itemOptions: {},
   championOptions: {},
   keystones: [],
+  runes: [],
+  runeShards: [],
   defaultTarget: { health: 1000, bonus_health: 0, armor: 100, mr: 100 },
   fightDefaults: {},
   exclusivityGroups: {},
@@ -100,6 +102,12 @@ const state = {
     includeBootsB: true,
     keystoneA: "",
     keystoneB: "",
+    minorRunesA: ["", "", "", "", ""],
+    minorRunesB: ["", "", "", "", ""],
+    statShardsA: ["", "", ""],
+    statShardsB: ["", "", ""],
+    runeOptionsA: {},
+    runeOptionsB: {},
     comparisonEnabled: false,
     baseDamage: 0,
     apRatio: 0,
@@ -1606,7 +1614,32 @@ function engineBuild(side) {
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     item_options: engineItemOptions(itemIds, itemStacks, itemOptionValues),
     keystone: state.attacker[`keystone${side}`] || "",
+    minor_runes: (state.attacker[`minorRunes${side}`] || []).filter(Boolean),
+    stat_shards: statShardsPayload(side),
+    rune_options: runeOptionsPayload(side),
   };
+}
+
+/**
+ * The shard list is positional — entry i is the choice for shard row i+1 —
+ * so trailing empty rows are trimmed and interior ones stay as "".
+ */
+function statShardsPayload(side) {
+  const shards = [...(state.attacker[`statShards${side}`] || [])];
+  while (shards.length && !shards[shards.length - 1]) shards.pop();
+  return shards;
+}
+
+/** Only the options of runes this page actually selects reach the request. */
+function runeOptionsPayload(side) {
+  const selected = new Set([
+    state.attacker[`keystone${side}`] || "",
+    ...(state.attacker[`minorRunes${side}`] || []),
+  ].filter(Boolean));
+  const stored = state.attacker[`runeOptions${side}`] || {};
+  return Object.fromEntries(
+    Object.entries(stored).filter(([name, values]) => selected.has(name) && Object.keys(values || {}).length),
+  );
 }
 
 function engineChampionOptions() {
@@ -2855,7 +2888,88 @@ function renderDuelSide(side) {
   const foot = filled.length
     ? `<p class="duel-foot">${filled.length} ${plural(filled.length, "item")} · ${fmt(buildListPrice(side))}g list price</p>`
     : "";
-  host.innerHTML = `${head}${invite}${rows.join("")}${keystoneRow}${foot}`;
+  host.innerHTML = `${head}${invite}${rows.join("")}${keystoneRow}${runePageRows(side)}${foot}`;
+}
+
+/** Copy one side's whole rune page onto the other. */
+function copyRunePage(from, to) {
+  state.attacker[`keystone${to}`] = state.attacker[`keystone${from}`];
+  state.attacker[`minorRunes${to}`] = [...(state.attacker[`minorRunes${from}`] || [])];
+  state.attacker[`statShards${to}`] = [...(state.attacker[`statShards${from}`] || [])];
+  state.attacker[`runeOptions${to}`] = Object.fromEntries(
+    Object.entries(state.attacker[`runeOptions${from}`] || {}).map(([name, values]) => [name, { ...values }]),
+  );
+}
+
+/** One rune by name from the whole roster the config published. */
+function getRune(name) {
+  return name ? (engine.runes || []).find((entry) => entry.name === name) || null : null;
+}
+
+/**
+ * The minor runes a slot may legally hold, as an affordance only — the
+ * server owns the rules and refuses anything illegal that reaches it.
+ * Slots 0-2 are the primary path's three rows in order; slots 3-4 are the
+ * secondary path's two.
+ */
+function minorRuneChoices(side, index) {
+  const minors = (engine.runes || []).filter((entry) => entry.row > 0);
+  const primary = getKeystone(state.attacker[`keystone${side}`])?.path || "";
+  if (index < 3) {
+    return minors.filter((entry) => entry.row === index + 1 && (!primary || entry.path === primary));
+  }
+  const taken = (state.attacker[`minorRunes${side}`] || [])
+    .filter((name, slot) => slot >= 3 && slot !== index)
+    .map((name) => getRune(name))
+    .filter(Boolean);
+  const secondary = taken[0]?.path || "";
+  return minors.filter((entry) => (
+    entry.path !== primary
+    && (!secondary || entry.path === secondary)
+    && !taken.some((other) => other.row === entry.row)
+  ));
+}
+
+/** The options one shard row offers, from the published shard table. */
+function statShardChoices(index) {
+  const row = (engine.runeShards || [])[index];
+  return (row?.options || []).map((option) => ({ ...option, row: row.row, path: row.name }));
+}
+
+/** The five minor-rune rows, the three shard rows, and any rune options. */
+function runePageRows(side) {
+  const minors = state.attacker[`minorRunes${side}`] || [];
+  const shards = state.attacker[`statShards${side}`] || [];
+  const minorRows = minors.map((name, index) => {
+    const rune = getRune(name);
+    const label = index < 3 ? `Primary row ${index + 1}` : `Secondary row ${index - 2}`;
+    return `<button type="button" class="duel-row is-rune ${rune ? "" : "is-empty"}" ${capabilityAttributes("main", "minor_runes")} data-picker="minor-rune" data-path="attacker.minorRunes${side}.${index}" aria-label="${rune ? `Change ${escapeHtml(rune.name)}` : `Add a ${label.toLowerCase()} rune`}"><span class="item-icon">${rune ? `<img src="${escapeHtml(rune.icon)}" alt="${escapeHtml(rune.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${rune ? escapeHtml(rune.name) : "Add rune"}</strong><small>${rune ? `${escapeHtml(rune.path || "")} row ${rune.row}` : escapeHtml(label)}</small></span></button>`;
+  });
+  const shardRows = shards.map((name, index) => {
+    const row = (engine.runeShards || [])[index];
+    return `<button type="button" class="duel-row is-shard ${name ? "" : "is-empty"}" ${capabilityAttributes("main", "stat_shards")} data-picker="stat-shard" data-path="attacker.statShards${side}.${index}" aria-label="${name ? `Change ${escapeHtml(name)}` : "Add a stat shard"}"><span class="item-icon"></span><span class="duel-row-copy"><strong>${name ? escapeHtml(name) : "Add shard"}</strong><small>${escapeHtml(row?.name || `Shard row ${index + 1}`)}</small></span></button>`;
+  });
+  return `<div class="duel-runes">${minorRows.join("")}${shardRows.join("")}${runeOptionControls(side)}</div>`;
+}
+
+/**
+ * A control per declared option of every rune this page selects. The
+ * default is the rune's own disclosed default; nothing is inferred.
+ */
+function runeOptionControls(side) {
+  const selected = [state.attacker[`keystone${side}`] || "", ...(state.attacker[`minorRunes${side}`] || [])].filter(Boolean);
+  const stored = state.attacker[`runeOptions${side}`] || {};
+  const controls = selected.flatMap((name) => {
+    const rune = getRune(name);
+    return (rune?.options || []).map((option) => {
+      const value = stored[name]?.[option.key] ?? option.default;
+      const control = option.kind === "switch"
+        ? `<input type="checkbox" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" ${Number(value) ? "checked" : ""} />`
+        : `<input type="number" step="1" min="${Number(option.minimum)}" max="${Number(option.maximum)}" value="${Number(value)}" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" />`;
+      return `<label class="rune-option" title="${escapeHtml(option.disclosure || "")}">${control}<span>${escapeHtml(name)}: ${escapeHtml(option.label)}</span></label>`;
+    });
+  });
+  return controls.length ? `<div class="duel-rune-options">${controls.join("")}</div>` : "";
 }
 
 function prototypeParticipants(result) {
@@ -3415,10 +3529,28 @@ function render() {
   document.dispatchEvent(new Event("scryglass:engine-ready"));
 }
 
+/** What each picker calls its catalogue, and what it asks for. */
+const PICKER_KIND = {
+  champion: "Champion roster",
+  keystone: "Rune keystones",
+  "minor-rune": "Minor runes",
+  "stat-shard": "Stat shards",
+  item: "Item catalogue",
+};
+const PICKER_TITLE = {
+  champion: "Choose a champion",
+  keystone: "Choose a keystone",
+  "minor-rune": "Choose a rune",
+  "stat-shard": "Choose a shard",
+  item: "Choose an item",
+};
+/** The picker types whose entries are runes: named, iconed, path-scoped. */
+const RUNE_PICKERS = new Set(["keystone", "minor-rune", "stat-shard"]);
+
 function openPicker(type, path) {
-  pickerContext = { type, path };
-  $("pickerKind").textContent = type === "champion" ? "Champion roster" : type === "keystone" ? "Rune keystones" : "Item catalogue";
-  $("pickerTitle").textContent = type === "champion" ? "Choose a champion" : type === "keystone" ? "Choose a keystone" : "Choose an item";
+  pickerContext = { type, path, side: pickerSide(path) };
+  $("pickerKind").textContent = PICKER_KIND[type] || "Item catalogue";
+  $("pickerTitle").textContent = PICKER_TITLE[type] || "Choose an item";
   $("pickerSearch").value = "";
   renderPicker("");
   $("picker").showModal();
@@ -3438,22 +3570,22 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   };
 
   if (includeEmpty) {
-    const isKeystone = pickerContext.type === "keystone";
+    const isRune = RUNE_PICKERS.has(pickerContext.type);
     const button = document.createElement("button");
     const icon = document.createElement("span");
     button.type = "button";
-    button.className = `picker-option ${(isKeystone ? !selected : Number(selected) === 0) ? "selected" : ""}`;
-    button.dataset.pickerValue = isKeystone ? "" : "0";
+    button.className = `picker-option ${(isRune ? !selected : Number(selected) === 0) ? "selected" : ""}`;
+    button.dataset.pickerValue = isRune ? "" : "0";
     icon.className = "empty-icon";
     icon.textContent = "×";
-    button.append(icon, makeText(isKeystone ? "No keystone" : "Empty slot", isKeystone ? "Remove keystone" : "Remove item"));
+    button.append(icon, makeText(isRune ? "Empty rune slot" : "Empty slot", isRune ? "Remove this rune" : "Remove item"));
     fragment.append(button);
   }
 
   entries.forEach((entry) => {
-    const isKeystone = pickerContext.type === "keystone";
+    const isRune = RUNE_PICKERS.has(pickerContext.type);
     const value = pickerContext.type === "item" ? entry.id : entry.name;
-    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : isKeystone ? entry.icon : itemImage(entry.id);
+    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : isRune ? (entry.icon || "") : itemImage(entry.id);
     const targetItem = pickerContext.type === "item" && pickerContext.path.startsWith("targets.");
     const itemCoverage = pickerContext.type === "item"
       ? (targetItem ? entry.targetModelCoverage : entry.modelCoverage)
@@ -3468,20 +3600,20 @@ function createPickerContent(entries, selected, query, includeEmpty) {
     );
     const detail = pickerContext.type === "champion"
       ? `${entry.tags.join(" · ")} · ${entry.resource}`
-      : isKeystone
-        ? `${entry.path} keystone${entry.implemented ? "" : " · not modeled yet"}`
+      : isRune
+        ? `${runeSlotLabel(entry)}${entry.implemented ? "" : " · not modeled yet"}`
         : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
     const button = document.createElement("button");
     const image = document.createElement("img");
     button.type = "button";
-    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${(isKeystone && !entry.implemented) || itemBlocked ? "locked" : ""}`;
+    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${(isRune && !entry.implemented) || itemBlocked ? "locked" : ""}`;
     button.dataset.pickerValue = String(value);
     if (pickerContext.type === "item") button.dataset.itemTooltip = String(entry.id);
-    if ((isKeystone && !entry.implemented) || itemBlocked) {
+    if ((isRune && !entry.implemented) || itemBlocked) {
       button.disabled = true;
       button.title = itemBlocked
         ? (roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.")
-        : "This keystone is not modeled yet; its numbers would be estimates.";
+        : "This rune is not modeled yet; its numbers would be estimates.";
     }
     image.src = imageUrl;
     image.alt = "";
@@ -3499,11 +3631,37 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   return fragment;
 }
 
+/** How a rune picker's entry names its slot. */
+function runeSlotLabel(entry) {
+  if (pickerContext.type === "stat-shard") return `${entry.path} shard`;
+  return entry.row === 0 ? `${entry.path} keystone` : `${entry.path} row ${entry.row}`;
+}
+
+/**
+ * Which build a picker path belongs to. The rune paths spell the side in
+ * the state key itself (`attacker.minorRunesB.2`), so it is read once here
+ * rather than sniffed at each use.
+ */
+function pickerSide(path) {
+  return /^attacker\.[A-Za-z]+B(\.|$)/.test(path) ? "B" : "A";
+}
+
+/** The catalogue the open picker chooses from. */
+function pickerSource() {
+  const index = Number(pickerContext.path.split(".").pop());
+  const side = pickerContext.side;
+  if (pickerContext.type === "champion") return DATA.champions;
+  if (pickerContext.type === "keystone") return engine.keystones;
+  if (pickerContext.type === "minor-rune") return minorRuneChoices(side, index);
+  if (pickerContext.type === "stat-shard") return statShardChoices(index);
+  return DATA.items;
+}
+
 function renderPicker(query) {
   if (!pickerContext) return;
   const normalized = query.trim().toLowerCase();
   const selected = pathValue(pickerContext.path);
-  const source = pickerContext.type === "champion" ? DATA.champions : pickerContext.type === "keystone" ? engine.keystones : DATA.items;
+  const source = pickerSource();
   const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
@@ -4163,6 +4321,7 @@ document.addEventListener("click", (event) => {
     state.attacker[`build${to}Stacks`] = [...state.attacker[`build${from}Stacks`]];
     state.attacker[`build${to}ItemOptions`] = (state.attacker[`build${from}ItemOptions`] || []).map((entry) => ({ ...entry }));
     state.attacker[`questBoot${to}`] = state.attacker[`questBoot${from}`];
+    copyRunePage(from, to);
     state.attacker.comparisonEnabled = true;
     invalidateOptimization();
     return render();
@@ -4272,7 +4431,7 @@ document.addEventListener("click", (event) => {
       state.attacker.buildBStacks = [...state.attacker.buildAStacks];
       state.attacker.buildBItemOptions = (state.attacker.buildAItemOptions || []).map((entry) => ({ ...entry }));
       state.attacker.questBootB = state.attacker.questBootA;
-      state.attacker.keystoneB = state.attacker.keystoneA;
+      copyRunePage("A", "B");
     }
     return render();
   }
@@ -4342,6 +4501,20 @@ document.addEventListener("click", (event) => {
     const path = stackButton.dataset.stackPath;
     const spec = stackSpec(pathValue(path));
     setStackValue(path, Math.max(0, Math.min(spec.max, stackValue(path) + Number(stackButton.dataset.delta))));
+    return render();
+  }
+  const runeOptionBox = event.target.closest("[data-rune-option]");
+  if (runeOptionBox) {
+    const { runeOption, runeName, runeSide } = runeOptionBox.dataset;
+    const stored = state.attacker[`runeOptions${runeSide}`] || {};
+    const value = runeOptionBox.type === "checkbox"
+      ? (runeOptionBox.checked ? 1 : 0)
+      : Math.round(Number(runeOptionBox.value) || 0);
+    state.attacker[`runeOptions${runeSide}`] = {
+      ...stored,
+      [runeName]: { ...(stored[runeName] || {}), [runeOption]: value },
+    };
+    invalidateOptimization();
     return render();
   }
   const itemOptionButton = event.target.closest("[data-item-option-path]");
@@ -4657,7 +4830,7 @@ for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) {
 Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
-  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], input_limits: {} }),
+  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], runes: [], rune_shards: [], input_limits: {} }),
   fetch("/api/items").then((response) => response.ok ? response.json() : []),
   fetch("/api/boots").then((response) => response.ok ? response.json() : []),
   fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
@@ -4685,6 +4858,8 @@ Promise.all([
     applyControlCapabilities();
     maybeInitConsentAnalytics();
     engine.keystones = config.keystones || [];
+    engine.runes = config.runes || [];
+    engine.runeShards = config.rune_shards || [];
     engine.defaultTarget = config.default_target || engine.defaultTarget;
     engine.fightDefaults = config.fight_defaults || {};
     engine.exclusivityGroups = config.exclusivity_groups || {};
@@ -4957,6 +5132,9 @@ function loadSharedBuildIntoAnalyst(payload) {
   state.attacker.questBootA = bootId;
   state.attacker.includeBootsA = bootName ? Boolean(bootId) : true;
   state.attacker.keystoneA = "";
+  state.attacker.minorRunesA = ["", "", "", "", ""];
+  state.attacker.statShardsA = ["", "", ""];
+  state.attacker.runeOptionsA = {};
   state.attacker.abilityInputs = {};
   state.attacker.championOptions = {};
   // Restore the authored rank allocation so the analyst engine scores the

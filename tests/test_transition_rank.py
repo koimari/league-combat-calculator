@@ -781,7 +781,8 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
 
     All three split ranks keep the published name they had, so the derived
     phase list is byte-identical across the split and D-63's chain does not
-    advance: S6 takes no version and S9 still takes 4.
+    advance: S6 takes no version.  (S9 took 4 and the rune page took 5;
+    neither is S6's, which is the point.)
     """
     from src.calculator.capabilities import (
         CAPABILITY_SCHEMA_VERSION,
@@ -801,7 +802,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         "healing_and_regeneration",
         "death_or_terminal_cutoff",
     ]
-    assert CAPABILITY_SCHEMA_VERSION == 4
+    assert CAPABILITY_SCHEMA_VERSION == 5
 
 
 def test_s6_moved_the_ordering_and_not_the_classification() -> None:

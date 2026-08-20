@@ -10,6 +10,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .rune_parser import RESERVED_CACHE_KEYS
+
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 
@@ -136,7 +138,9 @@ def fetch_rune_data(
         data_directory: Directory where cached data is stored.
 
     Returns:
-        Dictionary of rune payloads keyed by rune name.
+        Dictionary of rune payloads keyed by rune name, plus the page-level
+        blocks named by ``rune_parser.RESERVED_CACHE_KEYS`` (the stat-shard
+        table and the adaptive-force conversion), which are not runes.
 
     Raises:
         FileNotFoundError: If no cached data exists.  Run the updater first.
@@ -152,8 +156,10 @@ def fetch_rune_data(
     data = _read_cache(data_directory, filename)
     if not isinstance(data, dict) or not data:
         raise ValueError("Rune data must be a non-empty dictionary")
-    sample = next(iter(data.values()))
-    if "name" not in sample:
+    runes = [entry for name, entry in data.items() if name not in RESERVED_CACHE_KEYS]
+    if not runes:
+        raise ValueError("Rune data holds no runes")
+    if "name" not in runes[0]:
         raise ValueError("Rune data missing required field: 'name'")
     return data
 

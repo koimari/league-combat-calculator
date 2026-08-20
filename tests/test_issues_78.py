@@ -37,11 +37,13 @@ FRONTEND = f"{APP_JS}\n{TEMPLATE}"
 
 # data-picker values and the participant fields they mount.  ``data-picker``
 # is the shared mount point for the champion, item (build slots and quest
-# boots), and keystone pickers.
+# boots), and rune-page pickers.
 DATA_PICKER_VALUES = {
     "champion": [("main", "champion"), ("enemy", "champion"), ("ally", "champion")],
     "item": [("main", "items"), ("enemy", "items"), ("ally", "items")],
     "keystone": [("main", "keystone")],
+    "minor-rune": [("main", "minor_runes")],
+    "stat-shard": [("main", "stat_shards")],
 }
 
 # Literal data-path templates the frontend renders.  Values resolve to the
@@ -50,6 +52,8 @@ DATA_PICKER_VALUES = {
 DATA_PATH_VALUES = {
     "attacker.champion": [("main", "champion")],
     "attacker.keystone${side}": [("main", "keystone")],
+    "attacker.minorRunes${side}.${index}": [("main", "minor_runes")],
+    "attacker.statShards${side}.${index}": [("main", "stat_shards")],
     "${root}.${index}.champion": [("enemy", "champion"), ("ally", "champion")],
     "${path}": [("main", "items"), ("enemy", "items"), ("ally", "items")],
 }
@@ -74,6 +78,7 @@ CONTROL_ATTRIBUTES = {
     "data-role-quest": [("main", "role_quest_complete")],
     "data-include-boots": [("main", "include_boots")],
     "data-champion-option": [("main", "champion_options")],
+    "data-rune-option": [("main", "rune_options")],
     "data-copy": [("main", "items")],
     # roster loadouts
     "data-roster-rank": [("enemy", "ability_ranks"), ("ally", "ability_ranks")],
@@ -145,6 +150,8 @@ EXCLUDED_ATTRIBUTES = {
     "data-option-type",
     "data-item-option-id",
     "data-item-option-key",
+    "data-rune-name",
+    "data-rune-side",
     "data-build",
     "data-theme",
     "data-review-action",

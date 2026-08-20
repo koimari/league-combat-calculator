@@ -15,6 +15,7 @@ from .item_effects import (
 from .data_registry import data_version, store_for_generation
 from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
+from .rune_effects import RunePage, RuneStatGrants, rune_page_stat_grants
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
@@ -356,6 +357,7 @@ def calculate_total_stats(
     role: str = "",
     role_quest_complete: bool = False,
     external_stat_bonuses: Mapping[str, float] | None = None,
+    rune_page: RunePage | None = None,
 ) -> dict[str, float]:
     """Calculate total champion stats with items applied.
 
@@ -363,6 +365,9 @@ def calculate_total_stats(
         champion_data: Champion data dictionary from the CDN.
         level: Champion level (1-20).
         items: List of item data dictionaries.
+        rune_page: The validated rune page whose stat runes grant into this
+            build. ``None`` grants nothing, which is the answer for every
+            participant but the attacker.
 
     Returns:
         Dictionary with final stat values.
@@ -476,15 +481,49 @@ def calculate_total_stats(
         adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
+    quest_ap_multiplier = (
+        MID_QUEST_AP_PERCENT / 100.0 if role == "mid" and role_quest_complete else 0.0
+    )
+    quest_bonus_ad_multiplier = (
+        1.0 + MID_QUEST_BONUS_AD_PERCENT / 100.0
+        if role == "mid" and role_quest_complete
+        else 1.0
+    )
+
+    # Rune stat grants resolve here, after the item passives, because every
+    # adaptive grant asks which of the build's bonus attack damage and
+    # ability power is larger — and neither is complete until the
+    # conversions (Muramana → AD, Awe → AP), the %AP multiplier and the role
+    # quest have been applied. The grants themselves are excluded from that
+    # comparison, as in game, and are kept out of ``total_item_stats``: each
+    # is added below where that stat belongs, because a rune's adaptive
+    # force is not an item stat (Kai'Sa's evolutions exclude it) even though
+    # it lands in the same total.
+    runes = (
+        rune_page_stat_grants(
+            rune_page,
+            level=level,
+            is_melee=is_melee,
+            bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
+            * quest_bonus_ad_multiplier,
+            ability_power=(
+                base_stats["ability_power"]
+                + total_item_stats["ability_power"]
+                + bonuses.bonus_ap
+            )
+            * (bonuses.ap_multiplier + quest_ap_multiplier),
+        )
+        if rune_page is not None
+        else RuneStatGrants()
+    )
+
     # Ability power: base + items + converted AP, then the additive %AP
     # multiplier (Rabadon's, Blackfire Torch).
     raw_ability_power = (
         base_stats["ability_power"]
         + total_item_stats["ability_power"]
         + bonuses.bonus_ap
-    )
-    quest_ap_multiplier = (
-        MID_QUEST_AP_PERCENT / 100.0 if role == "mid" and role_quest_complete else 0.0
+        + runes.ability_power
     )
     # Total AP modifiers stack additively with Rabadon's/Blackfire.
     final_ability_power = raw_ability_power * (
@@ -501,18 +540,16 @@ def calculate_total_stats(
         level_as_bonus
         + total_item_stats["attack_speed_percent"]
         + bonuses.attack_speed_percent
+        + runes.attack_speed_percent
     )
     final_attack_speed = calculate_attack_speed(base_as, as_ratio, total_as_bonus)
 
     # Lethality is 1:1 flat armor penetration (no level scaling since V14.1)
-    lethality = total_item_stats["lethality"]
+    lethality = total_item_stats["lethality"] + runes.lethality
     flat_armor_pen = lethality
 
-    raw_bonus_ad = total_item_stats["attack_damage"] + bonuses.bonus_ad
-    quest_bonus_ad_multiplier = (
-        1.0 + MID_QUEST_BONUS_AD_PERCENT / 100.0
-        if role == "mid" and role_quest_complete
-        else 1.0
+    raw_bonus_ad = (
+        total_item_stats["attack_damage"] + bonuses.bonus_ad + runes.bonus_attack_damage
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
@@ -545,7 +582,7 @@ def calculate_total_stats(
     )
     effective_bonus_health = (
         total_item_stats["health"] + bonuses.bonus_health
-    ) * bonuses.item_bonus_health_multiplier
+    ) * bonuses.item_bonus_health_multiplier + runes.bonus_health
     total_health = base_stats["health"] + effective_bonus_health
 
     # Terminus max-stack display assumption: bonus resists to both armor
@@ -569,7 +606,11 @@ def calculate_total_stats(
         base_stats["move_speed"] + total_item_stats["move_speed_flat"]
     ) * (
         1
-        + (total_item_stats["move_speed_percent"] + bonuses.bonus_move_speed_percent)
+        + (
+            total_item_stats["move_speed_percent"]
+            + bonuses.bonus_move_speed_percent
+            + runes.move_speed_percent
+        )
         / 100.0
     )
     final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
@@ -586,7 +627,9 @@ def calculate_total_stats(
         # champion mechanics that scale with bonus AS (Bel'Veth E's slash
         # count) read this; ability AS steroids add to it at fight time.
         "bonus_attack_speed": total_as_bonus,
-        "magic_penetration_flat": total_item_stats["magic_penetration_flat"],
+        "magic_penetration_flat": (
+            total_item_stats["magic_penetration_flat"] + runes.magic_penetration_flat
+        ),
         "magic_penetration_percent": final_magic_pen_percent,
         "base_attack_damage": round(base_stats["attack_damage"]),
         "bonus_attack_damage": round(final_bonus_ad),
@@ -632,7 +675,11 @@ def calculate_total_stats(
         "critical_strike_damage_percent": total_item_stats[
             "critical_strike_damage_percent"
         ],
-        "ability_haste": total_item_stats["ability_haste"] + bonuses.ability_haste,
+        "ability_haste": (
+            total_item_stats["ability_haste"]
+            + bonuses.ability_haste
+            + runes.ability_haste
+        ),
         "basic_ability_haste": bonuses.basic_ability_haste,
         "ultimate_haste": bonuses.ultimate_haste,
         "level": level,
