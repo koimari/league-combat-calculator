@@ -8,13 +8,14 @@ this document are: the beta operator (weekly checklist in
 
 ## The gate in one paragraph
 
-The beta runs for **2 weeks**.  A beta **PASSES** when all three criteria
+The beta runs for **2 weeks**.  A beta **PASSES** when all four criteria
 hold:
 
 | Criterion | Threshold |
 | --- | --- |
 | 7-day retention | ≥ 25% of sessions return within 7 days of their first activity |
-| Validation receipts | ≥ 20 receipts per week, with ≤ 2 champions flagged by the bias scan |
+| Validation receipts | ≥ 20 receipts per week |
+| Bias scan | ≤ 2 champions flagged (n ≥ 5 receipts, \|bias\| > 15%) |
 | Staleness SLA | no staleness flag older than 72 h (patch-regression report fresh) |
 
 A beta **FAILS** when **any criterion is missed 2 weeks running** (the

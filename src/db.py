@@ -717,7 +717,7 @@ def validation_summary(
             entry["flagged"] = entry["n"] >= 5 and abs(entry["bias"]) > 15.0
         summary.append(entry)
     summary.sort(key=lambda entry: (-entry["flagged"], entry["champion"]))
-    return summary[: max(1, min(int(limit), 500))]
+    return summary[:limit]
 
 
 # ---------------------------------------------------------------------------
@@ -924,7 +924,7 @@ def list_metric_events(
     """Return recent metrics events, newest first, optionally filtered.
 
     ``since`` is a naive-UTC lower bound on ``created_at``; ``limit`` is
-    capped at 1000 so a runaway event stream cannot be dumped in one call.
+    applied as given (no route exposes it, so there is no boundary to clamp).
     """
     statement = select(MetricsEvent).order_by(MetricsEvent.id.desc())
     if event:
@@ -933,7 +933,7 @@ def list_metric_events(
         statement = statement.where(MetricsEvent.event == event)
     if since is not None:
         statement = statement.where(MetricsEvent.created_at >= since)
-    statement = statement.limit(max(1, min(int(limit), 1000)))
+    statement = statement.limit(limit)
     with session() as db_session:
         rows = db_session.execute(statement).scalars().all()
         return [

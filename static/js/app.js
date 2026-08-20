@@ -2129,9 +2129,10 @@ const STEP_IDS = ["champion", "roster"];
 /**
  * List-price total of one side's build.
  *
- * Prices are ingested catalogue data from the patch snapshot — the same field
- * the item picker already shows — not a modeled number, so summing them here
- * does not break the receipts-only contract (no formula, no item-id literal).
+ * Prices are the cached item table's list price served by /api/items — the
+ * same field the item picker already shows — not a modeled number, so summing
+ * them here does not break the receipts-only contract (no formula, no item-id
+ * literal).
  */
 function buildListPrice(side) {
   return buildIdsForSide(side).reduce((total, id) => total + Number(getItem(id)?.price || 0), 0);

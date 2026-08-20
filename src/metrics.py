@@ -5,12 +5,13 @@ the ``scripts/beta_metrics.py`` CLI both import this module so the endpoint
 and the operator CLI share one definition of the gate (see
 docs/beta-metrics.md).
 
-The beta succeeds when the three PASS criteria hold across its 2-week run:
+The beta succeeds when the four PASS criteria hold across its 2-week run:
 
 - 7-day retention >= 25% (sessions that return within 7 days of their
   first observed activity).
-- Validation receipts >= 20 per week with the systematic-bias scan keeping
-  flagged champions (n >= 5 receipts, |bias| > 15%) at <= 2.
+- Validation receipts >= 20 per week.
+- The systematic-bias scan flags <= 2 champions (n >= 5 receipts,
+  |bias| > 15%).
 - No staleness flag older than 72 hours (patch-regression report fresh).
 
 Because auth has no user table, every per-user metric is measured through
@@ -49,9 +50,9 @@ BIAS_MIN_RECEIPTS = 5
 BIAS_MAX_PERCENT = 15.0
 
 _GATE_RULE = (
-    "PASS = 7-day retention >= 25%, receipts >= 20/week, "
-    "no stale > 72h across the 2-week beta; FAIL = any criterion missed "
-    "2 weeks running"
+    "PASS = 7-day retention >= 25%, receipts >= 20/week, <= 2 champions "
+    "flagged by the bias scan, no stale > 72h across the 2-week beta; "
+    "FAIL = any criterion missed 2 weeks running"
 )
 
 

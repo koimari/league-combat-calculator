@@ -349,8 +349,8 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
     plus ``min``/``max``/``step`` for numeric inputs) and
     ``ASSUMPTIONS`` (prose strings shown in the UI), and optionally
-    revision-pinned ``SOURCES`` beside their ``SLOTS``. Unknown synthetic
-    fixtures without a module have no metadata.
+    revision-pinned ``SOURCES`` beside their ``SLOTS``. An unregistered
+    name has no metadata.
 
     Returns:
         ``{"options": [...], "assumptions": [...], "sources": [...]}``
@@ -746,8 +746,7 @@ def get_champion_option_rotation(
 
     Returns:
         ``{option_key: rotation_decl_or_None}`` for the champion's declared
-        OPTIONS entries.  Unknown synthetic fixtures without a module
-        return ``{}``.
+        OPTIONS entries.  An unregistered name returns ``{}``.
     """
     try:
         contract = get_champion_module_contract(champion_name)

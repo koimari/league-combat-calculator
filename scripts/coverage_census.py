@@ -379,6 +379,9 @@ def reconcile_residue(receipt):
 
 def main(argv):
     """CLI: ``run [--output PATH]`` or ``check PATH``; exit 1 on any frontier."""
+    if argv and argv[0] in {"-h", "--help"}:
+        print(__doc__)
+        return 0
     if not argv or argv[0] not in {"run", "check"}:
         print(__doc__)
         return 2
