@@ -1500,6 +1500,12 @@ def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
     assert "main.survival?.healing_received" in source
     assert "const hasHealingReceipt" in source
     assert "main.survival?.support_shield_received" in source
+    # The utility objective reads the main's own survival ledger only: the
+    # backend never emits top-level healing/support fields, and top-level
+    # shield_absorbed is the *target's* absorption of the attacker's damage.
+    assert "result?.healing_received" not in source
+    assert "result?.support_shield_received" not in source
+    assert "result?.shield_absorbed" not in source
     assert "support shield received" in source
     assert "aResult?.damage_by_type" in source
     assert "aResult?.self_healing" in source
@@ -2083,6 +2089,9 @@ class TestIconUrlsAreHttps:
             if row["participant_id"] == "main"
         )
         assert main["survival"]["healing_received"] > 0
+        # Recovery lives only on the participant ledger (what app.js reads).
+        assert "healing_received" not in omnivamp_boots
+        assert "support_shield_received" not in omnivamp_boots
         assert gunmetal_response.status_code == 200
         assert (
             gunmetal_boots["champion_stats"]["attack_speed"]

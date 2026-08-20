@@ -2369,11 +2369,11 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
   // survival ledger, never in the main team's damage objective.
   const alliedRows = rows.filter((row) => row.team === "main" || row.participant_id === "main" || String(row.participant_id || "").startsWith("ally:"));
   const teamDamage = alliedRows.reduce((sum, row) => sum + Number(row.total_damage || 0), 0);
-  // Main-participant healing is serialized under the survival ledger.  Keep
-  // the legacy top-level field as a compatibility fallback for older payloads.
-  const healingReceived = result?.healing_received ?? main.survival?.healing_received;
+  // Recovery and support land on the main participant's own survival ledger;
+  // the utility objective mirrors bis.py (healing + support shield received).
+  const healingReceived = main.survival?.healing_received;
   const hasHealingReceipt = healingReceived !== null && healingReceived !== undefined;
-  const supportShield = result?.support_shield_received ?? main.survival?.support_shield_received;
+  const supportShield = main.survival?.support_shield_received;
   const hasSupportShieldReceipt = supportShield !== null && supportShield !== undefined;
   // `Number(null)` is 0, which used to turn an alive enemy into an instant
   // kill. Only explicit finite death timestamps qualify for this objective.
@@ -2388,9 +2388,9 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
     damage: alliedRows.length ? teamDamage : Number(main.total_damage ?? fallbackDamage),
     kill: firstDeath == null ? null : firstDeath,
     survival: Number(main.survival?.effective_health),
-    utility: result?.shield_absorbed == null && !hasHealingReceipt && !hasSupportShieldReceipt
+    utility: !hasHealingReceipt && !hasSupportShieldReceipt
       ? null
-      : Number(result?.shield_absorbed || 0) + Number(healingReceived || 0) + Number(supportShield || 0),
+      : Number(healingReceived || 0) + Number(supportShield || 0),
   };
 }
 
