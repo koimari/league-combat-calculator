@@ -585,18 +585,15 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
         }
 
 
-def test_every_amp_declares_the_compiled_kernel_refusal_in_both_h5_branches() -> None:
+def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
     """Phase 3 criterion 16, discharged by the declaration and never by absence.
 
-    The umbrella records H5 as SCOPED, and scoping it **adds** a stage after
-    Phase 4's S7 rather than relaxing this phase: until that stage's
-    one-symbol flip lands, every ``delta_amp`` rule — item and keystone alike
-    — is ``ReceiptOnly`` carrying the one compiled-kernel reason.  So the
-    assertion is identity against that single constant, not a substring
-    match: a per-rule copy of the sentence would read the same and would be
-    the sixteen-conservatism-notes failure again, and a rule that quietly
-    became ``Compilable`` while the kernel still raises would be a compiled
-    lane claimed by an absence.
+    Every ``delta_amp`` rule — item and keystone alike — carries
+    ``AMP_COMPILABILITY`` itself, so the assertion is identity against that
+    single constant rather than a substring match: a per-rule copy of the
+    answer would read the same and would be the sixteen-conservatism-notes
+    failure again, and a rule holding its own verdict would move without the
+    population the flip names.
     """
     amps = [
         rule
@@ -613,8 +610,6 @@ def test_every_amp_declares_the_compiled_kernel_refusal_in_both_h5_branches() ->
         assert (
             rule.compilability is AMP_COMPILABILITY
         ), f"{rule.mechanic_id} does not carry the one compiled-kernel answer"
-    assert "H5 is SCOPED" in COMPILED_KERNEL_CANNOT_AMP.reason
-    assert "descoped" not in COMPILED_KERNEL_CANNOT_AMP.reason
 
 
 # ── D-98: the derivation beside the legacy set, and the asserted delta ────

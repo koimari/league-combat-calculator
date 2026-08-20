@@ -106,6 +106,14 @@ MODULE_CC = {"Q": "slow", "W": "root", "E": "slow", "R": "root"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Maokai",
     PACKET_SHA256,
+    assumption_overrides=(
+        "Sapling Toss defaults to the brush-empowered branch: the explosion deals 66.7% damage to "
+        "non-minion targets and attaches two Saplings that burn every 0.75s over 1.5s (2 ticks) — "
+        "the sourced Total Magic Damage / Total Attached Sapling Damage rows (E2 DoT tick-count "
+        "convention)",
+        "The sapling's 30-second sit duration, 2.5-second chase, 45% slow, reveal, and the 300 cap "
+        "against non-champions are state, not modeled",
+    ),
     # The shockwave, the dash's arrival hit and each bramble deal
     # their packet once, at the cast (none of the three carries a
     # sourced travel time) — the boundary claim that carries
@@ -125,24 +133,4 @@ OPTIONS = [
         "default": True,
         "label": "Sapling thrown into brush (empowered burn)",
     },
-]
-
-ASSUMPTIONS = [
-    "Every slot is an explicit packet or sourced no-damage entry from the "
-    "pinned local Wiki cache; no runtime archetype inference is used.",
-    "Numeric packets preserve rank/level arrays, typed scaling, target-health "
-    "terms, and explicit variant selectors where the source lists them.",
-    "The complete parent Wiki entry was read before certifying this module.",
-    "Passive plus Q/W/E/R entries are represented by explicit packet or "
-    "no-damage slot declarations.",
-    "Rank arrays, cooldowns, typed target-health terms, and packet variants "
-    "remain sourced from the local reviewed-packet asset.",
-    "Non-damaging shields, buffs, movement, and utility branches remain "
-    "explicit state/out-of-scope rows rather than invented damage.",
-    "Sapling Toss defaults to the brush-empowered branch: the explosion deals "
-    "66.7% damage to non-minion targets and attaches two Saplings that burn "
-    "every 0.75s over 1.5s (2 ticks) — the sourced Total Magic Damage / Total "
-    "Attached Sapling Damage rows (E2 DoT tick-count convention)",
-    "The sapling's 30-second sit duration, 2.5-second chase, 45% slow, "
-    "reveal, and the 300 cap against non-champions are state, not modeled",
 ]

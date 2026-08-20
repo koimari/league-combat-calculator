@@ -16,6 +16,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator import ability_spec, trigger_stream
+from tests import ability_math
 from src.calculator.ability_spec import (
     AttackClass,
     Authority,
@@ -576,11 +577,11 @@ def test_folding_with_a_non_quantity_is_not_implemented() -> None:
 
 def test_quantity_sum_folds_a_whole_set_through_the_algebra() -> None:
     """The aggregate helper is the fold, not a second implementation of it."""
-    assert ability_spec.quantity_sum(()) == ability_spec.Measured(amount=0.0)
-    assert ability_spec.quantity_sum((MEASURED, MEASURED_OTHER, STRUCTURAL)) == (
+    assert ability_math.quantity_sum(()) == ability_spec.Measured(amount=0.0)
+    assert ability_math.quantity_sum((MEASURED, MEASURED_OTHER, STRUCTURAL)) == (
         ability_spec.Measured(amount=7.0)
     )
-    assert ability_spec.quantity_sum((MEASURED, WITHHELD, MEASURED_OTHER)) == WITHHELD
+    assert ability_math.quantity_sum((MEASURED, WITHHELD, MEASURED_OTHER)) == WITHHELD
 
 
 def test_five_measured_components_and_one_withheld_do_not_make_a_measured_total() -> (
@@ -590,7 +591,7 @@ def test_five_measured_components_and_one_withheld_do_not_make_a_measured_total(
     components = [
         ability_spec.Measured(amount=value) for value in (1.0, 2.0, 3.0, 4.0, 5.0)
     ]
-    total = ability_spec.quantity_sum([*components, WITHHELD])
+    total = ability_math.quantity_sum([*components, WITHHELD])
     assert total.disposition is Disposition.WITHHELD
     assert total.receipts == WITHHELD.receipts
 

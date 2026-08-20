@@ -20,6 +20,7 @@ from src.calculator.champions.module_contract import (
     default_coverage,
 )
 from src.calculator.champions.packet_module import (
+    _FULL_ENTRY_ASSUMPTIONS,
     build_packet_module,
     packet_spec_sha256,
 )
@@ -52,6 +53,24 @@ def test_every_registered_champion_satisfies_the_module_contract():
         assert contract.review_status == "reviewed_module"
         if contract.packet_spec is not None:
             assert contract.packet_sha256 == packet_spec_sha256(contract.packet_spec)
+
+
+def test_no_packet_module_replaces_the_compiled_assumptions():
+    """A packet module extends the compiler's assumptions; it never rebinds them.
+
+    A rebind drops the reviewed packet's own assumptions and the full-entry
+    review claims with them, and the replacement then carries a copy of the
+    compiler's boilerplate that nothing keeps current.
+    """
+    for name, module_name in _CHAMPION_MODULES.items():
+        contract = get_champion_module_contract(name)
+        if contract.packet_spec is None:
+            continue
+        published = set(contract.assumptions)
+        owed = set(contract.packet_spec.get("assumptions", ())) | set(
+            _FULL_ENTRY_ASSUMPTIONS
+        )
+        assert owed <= published, f"{module_name} drops {sorted(owed - published)}"
 
 
 def test_jayce_runtime_and_published_review_metadata_share_one_module():

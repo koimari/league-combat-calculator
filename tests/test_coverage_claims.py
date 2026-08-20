@@ -1334,9 +1334,7 @@ def test_every_reviewed_absence_is_the_reason_the_ladder_publishes() -> None:
 
 
 # The eight registries the collapse retired.  This is the one place in the tree
-# that spells them: every tombstone in ``item_coverage`` describes what stood
-# where in words, precisely so that the scan below reports nothing but a real
-# survivor.
+# that spells them, so the scan below reports nothing but a real survivor.
 RETIRED_REGISTRIES: frozenset[str] = frozenset(
     {
         "_BLOCKED_REASONS",
@@ -1415,7 +1413,7 @@ def test_the_retired_registry_matcher_reports_a_name_it_is_handed() -> None:
     assert RETIRED_REGISTRIES & whole_identifiers("x = _BLOCKED_REASONS[name]") == {
         "_BLOCKED_REASONS"
     }
-    # Prose is an occurrence too — this is what the tombstone rewrite answered.
+    # Prose is an occurrence too.
     assert RETIRED_REGISTRIES & whole_identifiers(
         "# _UTILITY_DIMENSIONS stood here"
     ) == {"_UTILITY_DIMENSIONS"}

@@ -100,6 +100,14 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Samira",
     PACKET_SHA256,
+    assumption_overrides=(
+        "Style caps at 6 stacks (6-second expiry and unique-hit generation not modeled); "
+        "p_style_stacks is the explicit pre-stack state",
+        "At 6 stacks (S rank) Inferno Trigger is available and consumes all stacks at the end of "
+        "the effect",
+        "Style's bonus movement speed (2.75/3/3.25/3.5% per stack by level) is state, not damage",
+        "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 sourced 0.2s shots)",
+    ),
     packet_tick_fixes={
         "Blade Whirl": {
             "count": 2,
@@ -139,16 +147,6 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "Style caps at 6 stacks (6-second expiry and unique-hit generation "
-    "not modeled); p_style_stacks is the explicit pre-stack state",
-    "At 6 stacks (S rank) Inferno Trigger is available and consumes all "
-    "stacks at the end of the effect",
-    "Style's bonus movement speed (2.75/3/3.25/3.5% per stack by level) "
-    "is state, not damage",
-    "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 "
-    "sourced 0.2s shots)",
-]
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"

@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from src.calculator import ability_spec, trigger_stream
+from tests import ability_math
 from src.calculator.ability_spec import Disposition
 from src.calculator.survival import outcome_state
 from src.calculator.survival.actions import NO_SLOT, ActionKind, SurvivalAction
@@ -45,7 +46,6 @@ def test_a_slot_no_transition_wrote_projects_zeros_with_no_refusal() -> None:
     outcome = outcome_state.OutcomeLedger().get(7)
     assert (outcome.applied, outcome.absorbed) == (0.0, 0.0)
     assert outcome.skipped_reason is None
-    assert outcome.adjustments == ()
 
 
 def test_a_second_write_of_one_field_raises_naming_both_values() -> None:
@@ -106,62 +106,6 @@ def test_a_second_refusal_raises_unless_the_first_is_preserved() -> None:
     assert ledger.get(6).skipped_reason == "holder_health_gate"
     with pytest.raises(outcome_state.OutcomeRewritten):
         ledger.skip(action(6), "redirect_gate")
-
-
-def test_the_only_adjustment_reason_is_the_holder_health_gate() -> None:
-    """D-64: exactly one named way a later transition revises an earlier one."""
-    assert [member.name for member in outcome_state.AdjustmentReason] == [
-        "HOLDER_HEALTH_GATE"
-    ]
-
-
-def test_an_adjustment_revises_the_value_and_survives_beside_it() -> None:
-    """A revision is a record, so the rule that changed its mind is readable."""
-    ledger = outcome_state.OutcomeLedger()
-    ledger.write(action(8), damage=0.0)
-    ledger.adjust(
-        outcome_state.Adjustment(
-            slot=8,
-            field="applied",
-            value=310.0,
-            reason=outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE,
-        )
-    )
-    outcome = ledger.get(8)
-    assert outcome.applied == 310.0
-    assert [adjustment.reason for adjustment in outcome.adjustments] == [
-        outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE
-    ]
-    assert ledger.adjustments() == outcome.adjustments
-
-
-def test_an_adjustment_cannot_invent_an_answer_nobody_computed() -> None:
-    """Revising an unwritten field would be a write wearing a reason."""
-    ledger = outcome_state.OutcomeLedger()
-    with pytest.raises(outcome_state.UnwrittenAdjustment):
-        ledger.adjust(
-            outcome_state.Adjustment(
-                slot=9,
-                field="applied",
-                value=1.0,
-                reason=outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE,
-            )
-        )
-
-
-def test_an_adjustment_names_a_real_field_and_a_declared_reason() -> None:
-    """Both invariants live on the record, so a bad one cannot be constructed."""
-    with pytest.raises(ValueError):
-        outcome_state.Adjustment(
-            slot=0,
-            field="not_an_outcome",
-            value=1.0,
-            reason=outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE,
-        )
-    with pytest.raises(ValueError):
-        outcome_state.Adjustment(
-            slot=0, field="applied", value=1.0, reason="holder_health_gate"
-        )
 
 
 def test_trigger_linkage_matches_the_two_ledgers_it_sits_beside() -> None:
@@ -282,7 +226,7 @@ def test_a_total_over_a_refused_and_a_measured_member_is_measured() -> None:
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(0), damage=40.0)
     ledger.skip(action(1), "spell_shield_blocked")
-    total = ability_spec.quantity_sum(
+    total = ability_math.quantity_sum(
         (ledger.quantity(0, "applied"), ledger.quantity(1, "applied"))
     )
     assert total == ability_spec.Measured(amount=40.0)
@@ -293,7 +237,7 @@ def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() 
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(0), damage=40.0)
     with pytest.raises(trigger_stream.ProjectionStarvation):
-        ability_spec.quantity_sum(
+        ability_math.quantity_sum(
             (ledger.quantity(0, "applied"), ledger.quantity(9, "applied"))
         )
 

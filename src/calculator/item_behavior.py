@@ -189,10 +189,10 @@ class ReceiptScope(Enum):
         heals and refuses every other kind and every duration.
 
     ``SCORE_KERNEL_DAMAGE_MODIFIER``
-        D-101 — a timed, typed damage modifier, which the kernel has no
-        representation for at all.  It is its own member because it is the
-        exact population H5's post-S7 stage flips to ``Compilable``, and a
-        flip needs a set it can name.
+        D-101 — a timed, typed damage modifier.  The kernel stages these
+        now, so no live refusal carries this scope; it survives as the
+        scope of ``item_behavior_catalog.COMPILED_KERNEL_CANNOT_AMP``, the
+        one-symbol revert target for the compiled amp lane.
     """
 
     SURVIVAL_LEDGER_TRANSITION = "survival_ledger_transition"
@@ -566,12 +566,6 @@ class Pool(Enum):
     ALL_EVENTS = "all_events"
     CERTIFIED_ONLY = "certified_only"
     COARSE_ROW = "coarse_row"
-
-
-class Attribution(Enum):
-    """Who the rule's contribution is credited to in the receipt."""
-
-    HOLDER = "holder"
 
 
 class BonusTyping(Enum):
@@ -1294,9 +1288,9 @@ class ResistanceShredRule:
 class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     """One amplification slot: which events, when, how much, and to whom.
 
-    Nine fields because the amp chain has nine independent questions and
-    collapsing any two of them is what let a pair-side preview and a coupled
-    number both call themselves the answer.  ``lane_chain_rank`` is an
+    One field per independent question the amp chain asks; collapsing any
+    two of them is what let a pair-side preview and a coupled number both
+    call themselves the answer.  ``lane_chain_rank`` is an
     explicit integer: the seven chain slots are ordered, nothing in the
     engine stops a refactor reordering them, and every mixed build's number
     moves when they do.  It is :func:`chain_rank` of the rule's
@@ -1309,7 +1303,6 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     activation: Activation
     consumption: Consumption
     magnitude: Magnitude
-    attribution: Attribution
     typing: Typing
     bonus_typing: BonusTyping
     subject: Subject
@@ -1326,7 +1319,7 @@ class PartAmpRule:  # pylint: disable=too-many-instance-attributes
     own damage where the rotation prices it, and Hexoptics C44 amplifies each
     basic-damage part where the auto-attack path prices it.  Giving them a
     chain rank would claim an ordering against the chain that they do not
-    have, so they carry the same eight policy axes with the rank deliberately
+    have, so they carry the same policy axes with the rank deliberately
     absent — the one field whose meaning is "which position of the chain".
 
     ``typing.attack_classes`` is what tells the two apart and is how the
@@ -1338,7 +1331,6 @@ class PartAmpRule:  # pylint: disable=too-many-instance-attributes
     activation: Activation
     consumption: Consumption
     magnitude: Magnitude
-    attribution: Attribution
     typing: Typing
     bonus_typing: BonusTyping
     subject: Subject
@@ -1682,14 +1674,10 @@ class ReceivedHealingRule:
 
 # ── stat derivation ───────────────────────────────────────────────────────
 #
-# Eight shapes that all answer one question — what does this item put in the
+# The shapes that all answer one question — what does this item put in the
 # build's stat block, and where does the number come from — and share no
-# arithmetic.  A stat derived from another stat by a sourced ratio, a
-# percentage multiplier on a total, the mana a charge ledger accrues, a stat
-# that grows per stack, a flat grant that is conditional on something the
-# resolver cannot see, an aura that reduces a stat on the enemy, a
-# regeneration a bonus-health threshold unlocks, and an ultimate cooldown
-# refund bought with lethality.
+# arithmetic.  ``STAT_DERIVATION_REQUIRED_REFERENCES`` is the roster and the
+# only count of it; each payload class below says what its own shape answers.
 #
 # They are one family because they are all resolved *before any damage
 # exists*: the stat resolver folds them into the block every engine then
@@ -3587,7 +3575,6 @@ __all__ = [
     "AmpChainSlot",
     "AtLeast",
     "AttackCooldownRefundRule",
-    "Attribution",
     "Basis",
     "BehaviorRule",
     "BehaviorRuleError",

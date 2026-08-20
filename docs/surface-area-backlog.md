@@ -50,18 +50,8 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| D1 | `packet_module.build_packet_module` ~640-700 | Still R0912 (19/12) and R0915 (72/50); the variants loop is the natural `_variant_parsers` extraction. | Extract. |
-| D2 | maokai, yorick, zyra, rengar, samira, sett, yasuo, yone, jinx, aphelios | Replace the compiled `ASSUMPTIONS` wholesale with stale copies of older compiler boilerplate. | Extend, don't replace. |
 | D3 | ~40 custom parsers (`akshan.py:257`, `darius.py:215`, …) | `entry["event_order_certified"] = "single_hit"` hand-assigned — the fact, not a wrapper; fine, but `single_hit_slots` now exists for packet rows. | Opportunistic. |
-| D4 | `swain.py` | `getattr(packet_r, "phase", "damage")` — compiled parsers always carry `.phase`. | Direct read. |
-| D5 | `cast_dependency` / `rotation_resolver.DependencyReceipt` | A 7-ledger taxonomy computed for 3 declaring champions (brand, syndra, zed) and rendered by no client (`grep dependenc static/js/app.js` → 0). | Render it or stop publishing it. |
-| D6 | `ability_spec.quantity_sum` (test-only), `parts_raw_total` (~100 test call sites) | Test helpers living in `src`. | Move to `tests/`. |
-| D7 | `item_behavior.Attribution` | One-member enum (`HOLDER`) since `DAMAGE_SOURCE` went. | Remove the axis or give it a second live value. |
-| D8 | `item_behavior.py` banner "Eight shapes", `stat_derivation.py` "nine shapes", tests "the tenth shape" | Ten payload types. | Count once, in one place. |
-| D9 | `item_coverage.py:226-265` | Tombstone comments describing what used to stand there. | Delete (rule: current state only). |
-| D10 | `survival/outcome_state.py` `adjust` / `Adjustment` / `HOLDER_HEALTH_GATE` | Zero production callers; the holder-health gate uses `ledger.skip` (`transitions.py:1243`), not `adjust`. Tests pin the revision contract. | Connect the gate to the API or delete the API. |
 | D11 | `survival/compile.py:69-70` `requires_holder_health_ratio` | Can no longer fire — Knight's Vow's packet also carries `redirect_fraction`, which refuses first. | Delete or reorder deliberately. |
-| D12 | `item_behavior_catalog.py` ~1302 `COMPILED_KERNEL_CANNOT_AMP` text; `ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER` | "Until that stage's flip lands" — the flip landed; the constant is a documented revert target, its prose is stale; the scope is unreached in production. | Rewrite the prose; keep the symbol. |
 
 ## E. Tests and gates
 

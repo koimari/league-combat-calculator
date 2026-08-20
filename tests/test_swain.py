@@ -40,6 +40,10 @@ class TestReviewedCrowdControl:
         assert _r_parts(0)[0].cc_kind == "none"
         assert _r_parts(1)[0].cc_kind == "slow"
 
+    def test_the_r_wrapper_keeps_the_compiled_parsers_phase(self):
+        """A compiled packet slot always carries ``.phase``; the wrapper reads it."""
+        assert swain.SLOTS["R"].phase == "damage"
+
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Swain") == []
 

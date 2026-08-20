@@ -19,7 +19,6 @@ import pytest
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass, Disposition
 from src.calculator.item_behavior import (
     Always,
-    Attribution,
     BonusTyping,
     BehaviorRule,
     BehaviorRuleError,
@@ -67,7 +66,6 @@ def _rule(**overrides: object) -> BehaviorRule:
         activation=Always(),
         consumption=Persist(),
         magnitude=Fixed(Const(1, "unit_scale")),
-        attribution=Attribution.HOLDER,
         typing=Typing(frozenset(DamageClass), frozenset(AttackClass)),
         bonus_typing=BonusTyping.SAME_AS_SOURCE,
         subject=Subject.HOLDER,
@@ -263,8 +261,8 @@ def test_a_rule_with_an_open_string_policy_field_does_not_compile() -> None:
     with pytest.raises(BehaviorRuleError, match="payload.pool holds a str"):
         validate_rule(open_string)
 
-    a_dict = replace(rule, payload=replace(rule.payload, attribution={"holder": 1.0}))
-    with pytest.raises(BehaviorRuleError, match="payload.attribution holds a dict"):
+    a_dict = replace(rule, payload=replace(rule.payload, bonus_typing={"true": 1.0}))
+    with pytest.raises(BehaviorRuleError, match="payload.bonus_typing holds a dict"):
         validate_rule(a_dict)
 
     a_callable = replace(rule, payload=replace(rule.payload, magnitude=lambda: 0.07))

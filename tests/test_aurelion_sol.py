@@ -20,7 +20,7 @@ import copy
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
+from tests.ability_math import parts_raw_total
 from src.calculator.champions import get_champion_options_meta
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
 from src.calculator.champions.slotlib import extract_value

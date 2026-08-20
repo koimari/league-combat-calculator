@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
+from tests.ability_math import parts_raw_total
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,

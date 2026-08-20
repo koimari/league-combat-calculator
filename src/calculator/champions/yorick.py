@@ -170,6 +170,18 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yorick",
     PACKET_SHA256,
+    assumption_overrides=(
+        "Mist Walker attack damage (15 : 100 by level x stat progression + 20% AD, physical) and "
+        "Maiden attack damage (50/100/150 by R rank + 30% AD, magic) are game-file constants — the "
+        "wiki pet infobox is stale; verify on patch updates against Community Dragon",
+        "Mist Walkers attack at 0.5 : 1.18 attack speed (based on level): the default 5 attacks "
+        "per walker fills the 5-second one-rotation window; pet pathing, HP and leash range are "
+        "not modeled",
+        "Maiden attacks at 1.0 attack speed (default 5 attacks per window); the Touch of the "
+        "Maiden % max-health mark and recast-lane-push are state, not modeled",
+        "The 30% bonus damage Mist Walkers deal against Mourning Mist-marked enemies for 8 attacks "
+        "is not modeled (mark state)",
+    ),
     # Q is one empowered swing and E is one globule's splash; neither
     # has a travel or tick phase to place.
     single_hit_slots=frozenset({"Q", "E"}),
@@ -208,31 +220,7 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "Every slot is an explicit packet or sourced no-damage entry from the "
-    "pinned local Wiki cache; no runtime archetype inference is used.",
-    "Numeric packets preserve rank/level arrays, typed scaling, target-health "
-    "terms, and explicit variant selectors where the source lists them.",
-    "The complete parent Wiki entry was read before certifying this module.",
-    "Passive plus Q/W/E/R entries are represented by explicit packet or "
-    "no-damage slot declarations.",
-    "Rank arrays, cooldowns, typed target-health terms, and packet variants "
-    "remain sourced from the local reviewed-packet asset.",
-    "Non-damaging shields, buffs, movement, and utility branches remain "
-    "explicit state/out-of-scope rows rather than invented damage.",
-    "Mist Walker attack damage (15 : 100 by level x stat progression + 20% AD, ",
-    "physical) and Maiden attack damage (50/100/150 by R rank + 30% AD, magic) ",
-    "are game-file constants — the wiki pet infobox is stale; verify on patch ",
-    "updates against Community Dragon",
-    "Mist Walkers attack at 0.5 : 1.18 attack speed (based on level): the ",
-    "default 5 attacks per walker fills the 5-second one-rotation window; pet ",
-    "pathing, HP and leash range are not modeled",
-    "Maiden attacks at 1.0 attack speed (default 5 attacks per window); the ",
-    "Touch of the Maiden % max-health mark and recast-lane-push are state, not ",
-    "modeled",
-    "The 30% bonus damage Mist Walkers deal against Mourning Mist-marked ",
-    "enemies for 8 attacks is not modeled (mark state)",
-]
+
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
