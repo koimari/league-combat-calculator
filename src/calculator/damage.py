@@ -2453,10 +2453,11 @@ def _resolve_combat_state(
 
     # Malignance MR reduction only activates on R cast, so abilities before
     # R in the cast_order use base MR.  Both effective values are resolved
-    # and the rotation tracks which one to use per-ability.
+    # and the rotation tracks which one to use per-ability.  A window that
+    # schedules no R at all activates it for nothing.
     malignance_mr_reduction = (
         sum(effect.mr_reduction for effect in item_cast_procs.ultimate_procs)
-        if "R" in ability_damages
+        if _ultimate_scheduled(config, ability_damages)
         else 0.0
     )
 
@@ -8297,9 +8298,18 @@ def _add_item_proc_damage(
 
     # ── Ultimate-triggered procs (Malignance) ──
     for effect in state.item_cast_procs.ultimate_procs:
-        # Only triggers if R was cast
+        # The zone opens at R1, so the accepted cast timeline decides: a
+        # window that holds no R cast (``auto_only``, a custom order without
+        # R, an R the resource budget refused) never opens it, and the row
+        # is absent rather than a coarse total — the same fail-closed shape
+        # as Command's amp.
         r_info = state.ability_damages.get("R")
-        if r_info is None:
+        r_cast_times = [
+            float(event["time"])
+            for event in rotation.cast_events
+            if event.get("slot") == "R"
+        ]
+        if r_info is None or not r_cast_times:
             continue
         source = effect.source
         raw = source.raw_damage(_damage_inputs(state))
@@ -8324,24 +8334,33 @@ def _add_item_proc_damage(
             # pre-mitigation magnitude and not the item's base figure.
             "declared": _proc_declaration(source, raw, False),
         }
-        # The zone opens at R1: stamp the proc at the cast timeline's
-        # first R cast.  Without a timestamped R cast the row stays
-        # coarse (a stat-only R never reaches here — r_info exists).
-        r_cast_times = [
-            float(event["time"])
-            for event in rotation.cast_events
-            if event.get("slot") == "R"
+        # Stamp the proc at the cast timeline's first R cast.
+        state.breakdown[source.breakdown_key]["damage_events"] = [
+            {
+                "time": min(r_cast_times),
+                "damage": ult_proc_mitigated,
+                "damage_type": source.damage_type,
+                "declared": _proc_declaration(source, raw, False),
+            }
         ]
-        if r_cast_times:
-            state.breakdown[source.breakdown_key]["damage_events"] = [
-                {
-                    "time": min(r_cast_times),
-                    "damage": ult_proc_mitigated,
-                    "damage_type": source.damage_type,
-                    "declared": _proc_declaration(source, raw, False),
-                }
-            ]
         state.total_damage += ult_proc_mitigated
+
+
+def _ultimate_scheduled(
+    config: FightConfig, ability_damages: Mapping[str, Any]
+) -> bool:
+    """Whether the window can cast R at all — the pre-rotation answer.
+
+    Once the accepted cast timeline exists it is the authority (the
+    ultimate-proc rows read it); resistance resolution runs before it and
+    asks the same question of the request: an R the kit prices, in a cast
+    order that holds it, in a window that casts.
+    """
+    return (
+        "R" in ability_damages
+        and not config.auto_attacks_only
+        and (config.cast_order is None or "R" in config.cast_order)
+    )
 
 
 def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[float]:
@@ -11052,9 +11071,16 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     # Hypershot: amp all damage except the first ability cast (the first
     # ability triggers the mark; its own damage is not amped).  The exclusion
     # is the rule's declared ExcludeTrigger activation and the multiplier is
-    # its declared magnitude; the engine supplies only the ledger.
+    # its declared magnitude; the engine supplies only the ledger.  Its
+    # trigger is an ability hit, so a window with no accepted damaging cast
+    # never arms it: the row is absent, not a coarse amp over the auto
+    # stream.
     hypershot = _amp_slot(state, AmpChainSlot.HYPERSHOT)
-    if hypershot is not None and hypershot.multiplier > 1.0:
+    if (
+        hypershot is not None
+        and hypershot.multiplier > 1.0
+        and _damaging_cast_times(state, rotation)
+    ):
         amped_damage = state.total_damage - rotation.first_ability_damage
         hypershot_bonus = amped_damage * (hypershot.multiplier - 1.0)
         row = {
