@@ -22896,7 +22896,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Style: 0/6 Style stacks; Inferno Trigger requires S rank (6 stacks).  Each stack grants 3.25% bonus movement speed (up to 19.5% at maximum stacks); the blade-zone bonus magic damage is not priced (out_of_scope \u2014 see the module docstring).",
+          "detail": "Style: 0/6 Style stacks; Inferno Trigger requires S rank (6 stacks).  Each stack grants 3.25% bonus movement speed (up to 19.5% at maximum stacks); the melee blade-zone bonus magic damage is state.",
           "name": "Daredevil Impulse",
           "parts": [],
           "rank": 11,
@@ -49296,14 +49296,14 @@
       "numeric_leaves": 44217,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "756e8abc27d548def66fd736d605d0864b7ce991",
+    "git_head": "508f384fc192274877d52ae4545a9f4c367f98b4",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
     "patch_last_changed_max": "26.15",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "ce71bc37e7e8ba973b243c06c95d031e7bb4924a"
+    "src_tree_sha": "d89ce56a11cdb1d7e243837afd2477fdc4819b20"
   },
   "registered_champion_fights": {
     "Aatrox": {

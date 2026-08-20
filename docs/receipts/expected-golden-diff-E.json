@@ -3,29 +3,29 @@
  "campaign": "coverage-frontier",
  "unit": "E — the ten frontier champion slots",
  "slice": "Samira P stops calling its unpriced damage 'state'",
- "rule": "decision 10 — a unit that moves a golden leaf ships this receipt and the explanation in its commit. No NUMBER moves: numeric_leaves stays 44217 and every one of them is byte-identical. One disclosure string moves.",
- "what_moved": "One leaf: /champion_baselines/Samira/abilities_level_11/passive/detail. The clause 'the melee blade-zone bonus magic damage is state' becomes 'the blade-zone bonus magic damage is not priced (out_of_scope — see the module docstring)'.",
- "why": "Daredevil Impulse's second innate deals 2 : 21 (based on level) (+ 3.5% : 11.32% (based on level) AD) bonus magic damage on blade attacks, Blade Whirl, Wild Rush and Flair's slash, doubled at full missing health (data/champions.json Samira P effect[2], leveling 'Bonus Magic Damage'). That is damage, not state, and the calculator does not price it. The row said the opposite to every reader of the app, and MODULE_COVERAGE said P was 'modeled'; this unit corrects both, so the string had to move with the label.",
- "how_to_reproduce": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json against 756e8abc's baseline, or read champion_baselines/Samira/abilities_level_11/passive/detail.",
+ "rule": "decision 10 — a unit that moves a golden leaf lands against the committed baselines plus this allowlist. This unit does not re-capture: scripts/golden_baseline.json and docs/receipts/campaign-fingerprints.json move in the integration agent's own commit (R-32/R-34), never inside a semantic slice.",
+ "what_moved": "One leaf, and no number. numeric_leaves stays 44217 and every one of them is byte-identical; the leaf below is a disclosure string.",
+ "why": "Daredevil Impulse's second innate deals 2 : 21 (based on level) (+ 3.5% : 11.32% (based on level) AD) bonus magic damage on blade attacks, Blade Whirl, Wild Rush and Flair's slash, doubled at the target's full missing health (data/champions.json Samira P effect[2], leveling 'Bonus Magic Damage'). That is damage, and the calculator does not price it. The row told every reader of the app it was 'state', and MODULE_COVERAGE called P 'modeled'; this unit corrects the label to out_of_scope, so the sentence had to move with it.",
+ "old_value": "Style: 0/6 Style stacks; Inferno Trigger requires S rank (6 stacks).  Each stack grants 3.25% bonus movement speed (up to 19.5% at maximum stacks); the melee blade-zone bonus magic damage is state.",
+ "new_value": "Style: 0/6 Style stacks; Inferno Trigger requires S rank (6 stacks).  Each stack grants 3.25% bonus movement speed (up to 19.5% at maximum stacks); the blade-zone bonus magic damage is not priced (out_of_scope — see the module docstring).",
+ "how_to_reproduce": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json — one difference, this leaf.",
  "expected_diff_paths": {
-  "golden": {
-   "champion_baselines/Samira/abilities_level_11/passive/detail": {
-    "old": "Style: 0/6 Style stacks; Inferno Trigger requires S rank (6 stacks).  Each stack grants 3.25% bonus movement speed (up to 19.5% at maximum stacks); the melee blade-zone bonus magic damage is state.",
-    "new": "Style: 0/6 Style stacks; Inferno Trigger requires S rank (6 stacks).  Each stack grants 3.25% bonus movement speed (up to 19.5% at maximum stacks); the blade-zone bonus magic damage is not priced (out_of_scope — see the module docstring)."
-   }
-  },
-  "coupled_golden": {},
-  "coupled_exact": {}
+  "golden": [
+   "/champion_baselines/Samira/abilities_level_11/passive/detail"
+  ],
+  "golden_shape_counters": [],
+  "coupled": []
  },
  "excluded_by_construction": {
   "every other Samira leaf": "the string is the whole edit to Samira's parser output — total_raw, parts, rank and cooldown are untouched, and the Q/W/E/R rows this unit relabelled were already priced and are unchanged.",
   "the other eight modules in unit E": "kaisa, aurelion_sol, wukong, kogmaw, yasuo and kindred change only MODULE_COVERAGE and docstrings, which no snapshot section reads; rumble and mel add options that default to off, so their default rows are the rows the baseline holds.",
-  "coupled_golden / coupled_exact": "no coupled scenario's participant is Samira, and no number moved anywhere, so the coupled captures are untouched and are not re-captured by this unit."
+  "coupled_golden / coupled_exact": "no coupled scenario's participant is Samira, and no number moved anywhere, so both coupled captures are identical and neither is re-captured."
  },
  "landed_against": {
   "base": "756e8abc",
-  "golden": "scripts/golden_baseline.json (re-captured in this commit)",
-  "coupled_golden": "scripts/golden_coupled_baseline.json (unchanged)",
-  "coupled_exact": "scripts/golden_coupled_exact.json (unchanged)"
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17 — the slice landed against the three committed baselines plus this allowlist; the campaign re-captures the pair baseline at integration close."
  }
 }
