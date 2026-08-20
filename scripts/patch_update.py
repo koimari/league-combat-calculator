@@ -572,8 +572,8 @@ def rebuild_static_artifacts():
     for builder in (
         "build_ability_catalog.py",
         "build_effect_catalog.py",
-        # Issue #163: entity receipts read the unified Atomizer item domain;
-        # a red builder would leave stale receipts in the release tree.
+        # Writes only gitignored trees; it runs here because it fails closed
+        # when the unified item-atom domain disagrees with the Atomizer manifest.
         "build_receipts.py",
     ):
         result = subprocess.run(
