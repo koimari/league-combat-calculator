@@ -20,6 +20,7 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
+| C1 | `static/js/app.js` `VARIANT_BOOLEAN_OPTIONS` / `wikiFallbackAbility` | Variant buttons flatten *forms* and *packets* onto one index, but a form toggle and a packet toggle are different axes, so one index per option cannot serve both. Live: Gnar's Q flattens to Boomerang / Boomerang-reduced / Boulder Toss, and `mega: 1` makes the reduced Mini packet read as Mega while Boulder Toss (the real Mega Q) sends `mega: false` — W/E meanwhile render Mega. | Stamp each flattened variant with its source form, and read form toggles from the form rather than the flat index. |
 
 ## D. Champion package
 
