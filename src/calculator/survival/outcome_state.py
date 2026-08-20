@@ -19,23 +19,12 @@ it is the shape this campaign exists to remove.  So here:
   two rules answering one question happen to agree today and are one edit
   away from not agreeing, and a ledger that tolerates the agreement cannot
   see the disagreement coming.
-* a later transition may still revise an earlier one, but only through
-  :meth:`adjust`, only with a member of :class:`AdjustmentReason`, and only
-  onto a field that was written.  The adjustment is kept in order beside the
-  value, so the revision is a *record* rather than an overwrite: the original
-  answer, the new one and the rule that changed its mind all survive.
-* :class:`AdjustmentReason` has exactly one member, and no default.
-  Knight's Vow's holder-health gate is the one live case in the tree -- a
-  redirect child cancelled and its parent's damage restored after both were
-  already priced -- so a second reason is a decision somebody argues for,
-  not a value somebody passes.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any
 
 from .actions import NO_SLOT, SurvivalAction
@@ -43,14 +32,11 @@ from ..ability_spec import Measured, Quantity, Starved, StructuralZero
 from ..trigger_stream import StarvedSignal
 
 __all__ = [
-    "Adjustment",
-    "AdjustmentReason",
     "DuplicateApplied",
     "OUTCOME_FIELDS",
     "Outcome",
     "OutcomeLedger",
     "OutcomeRewritten",
-    "UnwrittenAdjustment",
     "outcome_quantity",
 ]
 
@@ -89,20 +75,6 @@ def outcome_quantity(value: Any, skipped_reason: str | None) -> Quantity:
     return Measured(amount=float(value or 0.0))
 
 
-class AdjustmentReason(Enum):
-    """Why a later transition is allowed to revise an earlier outcome.
-
-    ``HOLDER_HEALTH_GATE`` is Knight's Vow: the direct share of a redirected
-    packet is expanded and priced so its recipient can be repriced, and if
-    the holder is already at or below the sacrifice threshold the walk
-    cancels that child and restores the unredirected packet on the original
-    target.  Both numbers were already written when the gate fires, which is
-    exactly why the revision needs a name.
-    """
-
-    HOLDER_HEALTH_GATE = "holder_health_gate"
-
-
 # The four numbers one transition produces about one subject, plus the
 # receipt that stands in for them when it produced none.  ``skipped_reason``
 # is in the record rather than beside it because a refused number and a
@@ -134,9 +106,7 @@ class OutcomeRewritten(StarvedSignal):
     def __init__(self, slot: int, field: str, old: Any, new: Any) -> None:
         super().__init__(
             f"action slot {slot} already recorded {field}={old!r}; a second "
-            f"write of {new!r} would replace an answer rather than revise it. "
-            f"A revision goes through OutcomeLedger.adjust with an "
-            f"AdjustmentReason.",
+            f"write of {new!r} would replace an answer rather than revise it.",
             field,
             f"action slot {slot}",
             (
@@ -185,51 +155,6 @@ class DuplicateApplied(StarvedSignal):
         self.second = second
 
 
-class UnwrittenAdjustment(StarvedSignal):
-    """An adjustment named a field no transition had produced a value for."""
-
-    def __init__(self, slot: int, field: str) -> None:
-        super().__init__(
-            f"action slot {slot} has no recorded {field} to adjust; an "
-            f"adjustment revises an answer and cannot invent one",
-            field,
-            f"action slot {slot}",
-            (
-                "the adjustment revises an answer this ledger never recorded, "
-                "so there is no value for the revision to replace"
-            ),
-        )
-        self.slot = slot
-
-
-@dataclass(frozen=True, slots=True)
-class Adjustment:
-    """One reasoned revision of one already-written field.
-
-    Attributes:
-        slot: the action slot whose outcome is revised.
-        field: which of :data:`OUTCOME_FIELDS` changes.
-        value: the value that replaces the written one.
-        reason: the named rule that changed its mind.  Required, and a
-            member: a free-string reason is a comment with a colon in it.
-    """
-
-    slot: int
-    field: str
-    value: Any
-    reason: AdjustmentReason
-
-    def __post_init__(self) -> None:
-        """A revision names a real field and a declared reason, or is not one."""
-        if self.field not in OUTCOME_FIELDS:
-            raise ValueError(
-                f"{self.field!r} is not an outcome field; "
-                f"one of {list(OUTCOME_FIELDS)} was expected"
-            )
-        if not isinstance(self.reason, AdjustmentReason):
-            raise ValueError("Adjustment.reason must be an AdjustmentReason")
-
-
 @dataclass(frozen=True, slots=True)
 class Outcome:
     """What one transition did to one subject, as the projection reads it.
@@ -239,10 +164,6 @@ class Outcome:
     the part past zero.  ``skipped_reason`` is set exactly when the walk
     refused the transition, and then the four numbers are the refusal's
     zeros rather than computed ones.
-
-    ``adjustments`` is the ordered revision log for this slot -- empty for
-    the overwhelming majority of transitions, and the whole story for the one
-    that was revised.
     """
 
     applied: float = 0.0
@@ -250,7 +171,6 @@ class Outcome:
     to_health: float = 0.0
     overkill: float = 0.0
     skipped_reason: str | None = None
-    adjustments: tuple[Adjustment, ...] = ()
 
     @property
     def was_skipped(self) -> bool:
@@ -278,7 +198,6 @@ class OutcomeLedger:
         "records_annotations",
         "_applied_by",
         "_fields",
-        "_adjustments",
         "_status",
     )
 
@@ -315,7 +234,6 @@ class OutcomeLedger:
         self.annotating = annotating
         self.records_annotations = annotating
         self._fields: dict[int, dict[str, Any]] = {}
-        self._adjustments: dict[int, list[Adjustment]] = {}
         self._status: dict[int, str] = {}
         self._applied_by: dict[tuple[Any, ...], int] = {}
 
@@ -399,20 +317,6 @@ class OutcomeLedger:
             )
         recorded["skipped_reason"] = reason
 
-    # -- reasoned revision --------------------------------------------------
-    def adjust(self, adjustment: Adjustment) -> None:
-        """Revise one written field, keeping the revision in order.
-
-        Raises:
-            UnwrittenAdjustment: the field was never written, so there is no
-                answer to revise.
-        """
-        recorded = self._fields.get(adjustment.slot)
-        if recorded is None or adjustment.field not in recorded:
-            raise UnwrittenAdjustment(adjustment.slot, adjustment.field)
-        recorded[adjustment.field] = adjustment.value
-        self._adjustments.setdefault(adjustment.slot, []).append(adjustment)
-
     # -- trigger linkage ----------------------------------------------------
     def trigger_applied(self, action: SurvivalAction) -> bool:
         """Whether this action's trigger applied; no trigger passes."""
@@ -456,7 +360,6 @@ class OutcomeLedger:
             to_health=float(recorded.get("to_health", 0.0) or 0.0),
             overkill=float(recorded.get("overkill", 0.0) or 0.0),
             skipped_reason=recorded.get("skipped_reason"),
-            adjustments=tuple(self._adjustments.get(action_slot, ())),
         )
 
     def quantity(self, action_slot: int, field: str) -> Quantity:
@@ -532,11 +435,3 @@ class OutcomeLedger:
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""
         return iter(self._fields)
-
-    def adjustments(self) -> tuple[Adjustment, ...]:
-        """Every revision this walk made, slot by slot in write order."""
-        return tuple(
-            adjustment
-            for slot in self._fields
-            for adjustment in self._adjustments.get(slot, ())
-        )

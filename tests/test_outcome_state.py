@@ -46,7 +46,6 @@ def test_a_slot_no_transition_wrote_projects_zeros_with_no_refusal() -> None:
     outcome = outcome_state.OutcomeLedger().get(7)
     assert (outcome.applied, outcome.absorbed) == (0.0, 0.0)
     assert outcome.skipped_reason is None
-    assert outcome.adjustments == ()
 
 
 def test_a_second_write_of_one_field_raises_naming_both_values() -> None:
@@ -107,62 +106,6 @@ def test_a_second_refusal_raises_unless_the_first_is_preserved() -> None:
     assert ledger.get(6).skipped_reason == "holder_health_gate"
     with pytest.raises(outcome_state.OutcomeRewritten):
         ledger.skip(action(6), "redirect_gate")
-
-
-def test_the_only_adjustment_reason_is_the_holder_health_gate() -> None:
-    """D-64: exactly one named way a later transition revises an earlier one."""
-    assert [member.name for member in outcome_state.AdjustmentReason] == [
-        "HOLDER_HEALTH_GATE"
-    ]
-
-
-def test_an_adjustment_revises_the_value_and_survives_beside_it() -> None:
-    """A revision is a record, so the rule that changed its mind is readable."""
-    ledger = outcome_state.OutcomeLedger()
-    ledger.write(action(8), damage=0.0)
-    ledger.adjust(
-        outcome_state.Adjustment(
-            slot=8,
-            field="applied",
-            value=310.0,
-            reason=outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE,
-        )
-    )
-    outcome = ledger.get(8)
-    assert outcome.applied == 310.0
-    assert [adjustment.reason for adjustment in outcome.adjustments] == [
-        outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE
-    ]
-    assert ledger.adjustments() == outcome.adjustments
-
-
-def test_an_adjustment_cannot_invent_an_answer_nobody_computed() -> None:
-    """Revising an unwritten field would be a write wearing a reason."""
-    ledger = outcome_state.OutcomeLedger()
-    with pytest.raises(outcome_state.UnwrittenAdjustment):
-        ledger.adjust(
-            outcome_state.Adjustment(
-                slot=9,
-                field="applied",
-                value=1.0,
-                reason=outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE,
-            )
-        )
-
-
-def test_an_adjustment_names_a_real_field_and_a_declared_reason() -> None:
-    """Both invariants live on the record, so a bad one cannot be constructed."""
-    with pytest.raises(ValueError):
-        outcome_state.Adjustment(
-            slot=0,
-            field="not_an_outcome",
-            value=1.0,
-            reason=outcome_state.AdjustmentReason.HOLDER_HEALTH_GATE,
-        )
-    with pytest.raises(ValueError):
-        outcome_state.Adjustment(
-            slot=0, field="applied", value=1.0, reason="holder_health_gate"
-        )
 
 
 def test_trigger_linkage_matches_the_two_ledgers_it_sits_beside() -> None:
