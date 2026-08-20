@@ -326,6 +326,49 @@ def test_calculate_exposes_immolate_cadence_in_the_shared_frontend_ledger():
     assert [event["time"] for event in events] == [1.0, 2.0, 3.0, 4.0, 5.0]
 
 
+def test_solo_combat_breakdown_publishes_no_unattributed_row():
+    """A manual-target fight has no coupled opponent, so it has no rows."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "items": ["Luden's Echo"],
+            "target_health": 2000,
+            "target_armor": 60,
+            "target_mr": 50,
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    assert combat["breakdown"] == []
+    assert not [key for key in combat["dispositions"] if key.startswith("breakdown")]
+    assert [row["participant_id"] for row in combat["participants"]] == ["main"]
+
+
+def test_roster_combat_breakdown_keeps_every_named_participant():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "items": ["Luden's Echo"],
+            "enemies": [{"champion": "Garen", "level": 11}],
+            "allies": [{"champion": "Lulu", "level": 11}],
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    assert [row["participant_id"] for row in combat["breakdown"]] == [
+        "main",
+        "ally:Lulu",
+        "enemy:Garen",
+    ]
+    assert all(row["participant_id"] for row in combat["breakdown"])
+
+
 def test_calculate_applies_self_granted_annie_molten_shield():
     response = app_module.app.test_client().post(
         "/api/calculate",
