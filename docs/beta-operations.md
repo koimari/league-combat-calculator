@@ -31,6 +31,6 @@ backup verification, validation-corpus bias scan, feedback triage.
   live game, a patch day has passed without a re-cert — start the patch-day
   runbook immediately (detection SLA: < 4h).
 - **Gate rule**: any finding that changes calculation code triggers the full
-  gate set per `Agents.md` (`pytest -q`, `pylint src/`, golden compare,
+  gate set per `CLAUDE.md` (`pytest -q`, `pylint src/`, golden compare,
   `black --check src/ tests/ scripts/`); docs-only findings commit without
   engine gates.

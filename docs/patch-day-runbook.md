@@ -136,7 +136,7 @@ Notes:
 
 - `FAILURE TO PARSE MODIFIER` spam during the pull is normal lolstaticdata
   noise; only `Skipped N` summary lines mean data was dropped. Compare new
-  spam against the known-degraded list in `Agents.md`.
+  spam against the known-degraded list in `CLAUDE.md`.
 - Re-print the audit later without re-pulling:
   ```bash
   python scripts/patch_update.py audit
@@ -197,7 +197,7 @@ For EVERY stale flag, pick exactly one of these outcomes:
   flag flips to false.
 - **Code-owned values** (`NOTE: code-owned values` in the audit): update
   `item_effects._REFERENCE_ITEM_EFFECTS` by hand from the new wiki text
-  (`Agents.md` rule 5 — no literal fallbacks at call sites; missing keys must
+  (`CLAUDE.md` rule 5 — no literal fallbacks at call sites; missing keys must
   raise).
 - **Champion modules with hand-validated expectations**: update
   `tests/test_<champion>.py` with cited old → new values, and update the
@@ -208,7 +208,7 @@ For EVERY stale flag, pick exactly one of these outcomes:
 ### B. Boundary-documented (marked, not modeled)
 
 - The flagged value is deliberately out of scope (e.g. a known-degraded wiki
-  parse listed in `Agents.md`, or a mechanic the module declares out of
+  parse listed in `CLAUDE.md`, or a mechanic the module declares out of
   scope). Record the boundary where it lives:
   - Champion module: the slot left out of `SLOTS` (the contract derives
     `out_of_scope`) or a declared `MODULE_COVERAGE` entry, + `ASSUMPTIONS` line.
@@ -240,7 +240,7 @@ net-new item.
 
 ## Step 4 — Golden re-capture, full gates, commit, push
 
-Golden semantics (`Agents.md`): after a real patch, golden diffs are
+Golden semantics (`CLAUDE.md`): after a real patch, golden diffs are
 EXPECTED; the gate is that every diff is explained in the commit.
 
 ```bash
@@ -324,7 +324,7 @@ A kit rework changes abilities, not just numbers. A number update is Step
    mechanic — see `/add-item-effect` and
    `docs/item-source-reconciliation.md`).
 2. Update the `item_effects` typed accessors and `_REFERENCE_ITEM_EFFECTS`; no
-   literal fallbacks at call sites (`Agents.md` rule 5).
+   literal fallbacks at call sites (`CLAUDE.md` rule 5).
 3. Update tests, re-run the regression, re-capture golden with explained
    diffs.
 
