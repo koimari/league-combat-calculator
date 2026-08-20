@@ -27,7 +27,6 @@ import argparse
 import json
 import os
 import sys
-import time
 from pathlib import Path
 
 import requests
@@ -251,7 +250,6 @@ def main() -> int:
     out["provenance"] = {
         "source_url": url,
         "patch": patch,
-        "fetched_at": time.time(),
     }
     tmp = out_path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
