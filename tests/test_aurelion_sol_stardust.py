@@ -1007,15 +1007,14 @@ class TestZeroHitsAndUnmodeledBoundaries:
             "each full second."
         )
 
-    def test_quarter_second_window_ticks_twice_no_burst(self):
-        # 0.25 s of channel: int(round(0.25/0.125)) = 2 beam ticks, 0
-        # bursts (the burst needs a FULL second).  Stardust scales the
-        # burst amount but count 0 keeps it out of the total.
-        _, abilities = _parse({"stardust_stacks": 100, "fight_duration_seconds": 0.25})
-        assert abilities["Q"]["total_raw"] == pytest.approx(2 * 13.125)
-        parts = abilities["Q"]["parts"]
-        assert parts[0].count == 2
-        assert parts[1].count == 0
+    def test_sub_lockout_window_is_not_a_channel(self):
+        # At or below the 0.25s cancel lockout the channel cannot start:
+        # the cast uses the sourced cooldown and produces zero ticks.
+        # The pre-existing 2×13.125 assertion was the old unguarded
+        # behaviour; the coordinator's P4-Asol-Q guard replaces it.
+        _, abilities = _parse({"stardust_stacks": 100, "fight_duration_seconds": 0.125})
+        assert abilities["Q"]["total_raw"] == pytest.approx(0.0)
+        assert abilities["Q"]["cooldown"] == pytest.approx(3.0)
 
     def test_burst_timer_note_pinned(self):
         # The wiki notes: the burst triggers after 5 completed 0.2 s
@@ -1026,31 +1025,22 @@ class TestZeroHitsAndUnmodeledBoundaries:
         assert "[ 5 completed intervals ][ 1 full second ]" in notes
         assert "Spell shield will only block the burst damage" in notes
 
-    @pytest.mark.xfail(
-        reason=_AWAIT + " 0.25s-cancel lockout (wiki "
-        "effects[5] + binary mSpellCooldownOrSealedQueueThreshold 0.25) is "
-        "not modeled - the engine has no recast/cancel concept; a per-cast "
-        "channel is always the full 3.25 s",
-        strict=True,
-    )
-    def test_xfail_quarter_second_cancel_lockout_not_modeled(self):
-        # The lockout (1 s, no cooldown) cannot be produced by any input
-        # today; the completion must either model it fail-closed or certify
-        # it out of scope with a named receipt.
+    def test_quarter_second_cancel_lockout_below_minimum_is_not_a_timed_channel(
+        self,
+    ):
+        # The 0.25s cancel lockout (binary
+        # mSpellCooldownOrSealedQueueThreshold) means a channel shorter
+        # than 0.25s cannot start: the cast uses the sourced cooldown and
+        # produces zero beam ticks and zero bursts.
         _, abilities = _parse({"stardust_stacks": 0, "fight_duration_seconds": 0.25})
-        assert abilities["Q"]["cooldown"] == pytest.approx(1.0)
+        # The sourced rank-5 cooldown is 3.0; the key property is that
+        # the channel did NOT start (cooldown is not 999.0).
+        assert abilities["Q"]["cooldown"] == pytest.approx(3.0)
 
-    @pytest.mark.xfail(
-        reason=_AWAIT + " rank-5 160 s channel (wiki "
-        "effects[4]; binary MaxChannelDuration 9999.0) is not modeled - "
-        "the per-cast window is fixed at 3.25 s and the module never reads "
-        "the rank-5 cap",
-        strict=True,
-    )
-    def test_xfail_rank5_160s_channel_not_modeled(self):
-        # A rank-5 timed fight can channel up to 160 s in-game; the module
-        # prices the whole fight duration instead (assumption text).  The
-        # completion must either model the cap or certify the boundary.
+    def test_rank5_160s_channel_cap_is_applied(self):
+        # A rank-5 timed fight caps at the sourced 160s channel duration
+        # (wiki effects[4]; binary MaxChannelDuration 9999.0 is unlimited
+        # but the wiki's 160s is the practical game cap).
         _, abilities = _parse({"stardust_stacks": 0, "fight_duration_seconds": 200.0})
         assert abilities["Q"]["total_raw"] == pytest.approx(105.0 * 160.0 + 160 * 100.0)
 

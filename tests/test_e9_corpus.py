@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
+
 from src import app as app_module
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -389,24 +391,7 @@ def test_all_scenarios_have_required_fields(corpus):
 
 _ACTIVE = [s for s in _load_corpus()["scenarios"] if s["id"] not in LEGACY_SCENARIOS]
 
-_FIMBULWINTER_AUTHORITY_BLOCKED = {
-    "e9-item-serpents-fang-venom",
-    "e9-item-fimbulwinter-everlasting",
-}
-_ACTIVE_CASES = [
-    (
-        pytest.param(
-            scenario,
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="Fimbulwinter mana-gate authority is source-unavailable",
-            ),
-        )
-        if scenario["id"] in _FIMBULWINTER_AUTHORITY_BLOCKED
-        else scenario
-    )
-    for scenario in _ACTIVE
-]
+_ACTIVE_CASES = list(_ACTIVE)
 
 
 @pytest.mark.parametrize("scenario", _ACTIVE_CASES, ids=[s["id"] for s in _ACTIVE])

@@ -41,6 +41,14 @@ from .slotlib import (
 _Q_CHANNEL_SECONDS = 3.25
 _Q_BURSTS_PER_CHANNEL = 3
 
+# Sourced channel bounds: the 0.25s recast lockout (binary
+# mSpellCooldownOrSealedQueueThreshold 0.25, wiki effects[5]) means a
+# channel shorter than 0.25s cannot start; rank 5 caps at 160s (wiki
+# effects[4]; binary MaxChannelDuration 9999.0 is effectively unlimited
+# but the wiki's 160s is the practical game cap).
+_Q_CANCEL_LOCKOUT = 0.25
+_RANK5_CHANNEL_CAP = 160.0
+
 # HARDCODED: verify on patch updates — wiki prose the modifier parser
 # degrades (Q burst: values [0,...], units "(3.1% Stardust)% of target's
 # maximum health"; E execute threshold has no JSON entry at all).
@@ -260,6 +268,14 @@ def _channel_window(
     fight_seconds = ctx.options.get("fight_duration_seconds")
     if fight_seconds is not None:
         seconds = float(fight_seconds)
+        # P4-Asol-Q: channel shorter than the 0.25s cancel lockout
+        # cannot start — treat as a normal cast (sourced cooldown,
+        # zero beam time).
+        if seconds <= _Q_CANCEL_LOCKOUT:
+            return 0.0, 0, extract_cooldown(ability, rank)
+        # P4-Asol-Q: at rank 5 the sourced channel cap is 160s.
+        if rank >= 5 and seconds > _RANK5_CHANNEL_CAP:
+            seconds = _RANK5_CHANNEL_CAP
         return seconds, int(seconds), 999.0
     return _Q_CHANNEL_SECONDS, _Q_BURSTS_PER_CHANNEL, extract_cooldown(ability, rank)
 
