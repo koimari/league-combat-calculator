@@ -33,12 +33,12 @@
   "crossover_unavailable": 0,
   "enemy_item_entries": 0,
   "expiry_refusals": 0,
-  "item_pair_coarse": 117,
+  "item_pair_coarse": 100,
   "item_pair_failures": 0,
   "keystone_failures": 0,
   "keystone_unmodeled": 0,
   "mode_refusals": 0,
-  "total": 117
+  "total": 100
  },
  "frontier": {
   "attacker_kit_coarse": {},
@@ -132,9 +132,6 @@
    "Annie|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Aphelios|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
    "Bel'Veth|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -147,9 +144,6 @@
    "Bel'Veth|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Blitzcrank|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
    "Brand|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -161,9 +155,6 @@
    ],
    "Brand|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Cho'Gath|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
    ],
    "Darius|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -188,21 +179,6 @@
    ],
    "Diana|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Draven|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
-   "Evelynn|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
-   "Ezreal|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
-   "Jayce|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
-   "Kassadin|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
    ],
    "Kennen|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -240,9 +216,6 @@
    "LeBlanc|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Locke|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
    "Master Yi|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -254,9 +227,6 @@
    ],
    "Master Yi|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Senna|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
    ],
    "Sett|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -282,9 +252,6 @@
    "Shaco|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Shyvana|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
    "Sivir|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -296,9 +263,6 @@
    ],
    "Sivir|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Smolder|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
    ],
    "Syndra|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -312,9 +276,6 @@
    "Syndra|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Vayne|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
    "Vex|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -326,9 +287,6 @@
    ],
    "Vex|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Warwick|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
    ],
    "Xayah|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -365,15 +323,6 @@
    ],
    "Yone|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Yunara|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
-   ],
-   "Yunara|Bloodsong|timed|autos=False": [
-    "expose_weakness_Bloodsong"
-   ],
-   "Zaahen|Bloodsong|one_rotation|autos=True": [
-    "expose_weakness_Bloodsong"
    ],
    "Zoe|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
