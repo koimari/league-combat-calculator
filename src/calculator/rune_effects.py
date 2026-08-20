@@ -116,7 +116,7 @@ def rune_effect_value(rune_name: str, key: str) -> float:
     """Return one required numeric rune value, failing loudly.
 
     The public read behind ``value_ref.ValueRef(registry="RUNE_EFFECTS", …)``:
-    keystones are runtime damage producers, so CLAUDE.md rule 5's no-literals
+    runes are runtime damage producers, so CLAUDE.md rule 5's no-literals
     discipline reaches them, and a declaration referencing a rune number needs
     the same fail-loud accessor items already have.  It reuses
     ``RuneValues`` rather than re-reading the registry, so "read a
@@ -146,11 +146,11 @@ def rune_effect_value(rune_name: str, key: str) -> float:
 
 
 class RuneTrigger(Enum):
-    """Which of the fight's event streams a proc-class keystone watches.
+    """Which of the fight's event streams a proc-class rune watches.
 
-    The engine owns the timeline; a keystone owns *which* of its events it
+    The engine owns the timeline; a rune owns *which* of its events it
     counts. Naming the stream here keeps that a declared fact instead of a
-    walker per keystone.
+    walker per rune.
     """
 
     #: Damaging ability casts and simulated auto swings, one counter.
@@ -163,19 +163,19 @@ class RuneTrigger(Enum):
 
 @dataclass(frozen=True, slots=True)
 class RuneProcEffect:
-    """A stack-triggered keystone proc with a cooldown (Electrocute-class).
+    """A stack-triggered rune proc with a cooldown (Electrocute-class).
 
     ``raw_damage`` prices one proc; ``damage_type`` resolves the adaptive
     physical/magic choice from the champion's stats. Stack accumulation and
     cooldown gating live in the fight engine, which owns the timeline.
 
     ``trigger`` names the event stream the stacks come from,
-    ``stack_window_seconds`` is ``None`` for a keystone whose stacks the
-    cache gives no expiry for, and ``consumes_stacks`` is false where the
-    rune keeps its stacks and empowers every later trigger (Lethal Tempo)
-    rather than spending them (Electrocute). ``disclosures`` are the
-    keystone's own receipts — assumed cadences and withheld halves — which
-    the engine publishes verbatim; the words belong with the keystone.
+    ``stack_window_seconds`` is ``None`` for a rune whose stacks the cache
+    gives no expiry for, and ``consumes_stacks`` is false where the rune
+    keeps its stacks and empowers every later trigger (Lethal Tempo) rather
+    than spending them (Electrocute). ``disclosures`` are the rune's own
+    receipts — assumed cadences and withheld halves — which the engine
+    publishes verbatim; the words belong with the rune.
     """
 
     rune_name: str
@@ -194,17 +194,17 @@ class RuneProcEffect:
 
 @dataclass(frozen=True, slots=True)
 class RuneNoDamageEffect:
-    """A compiled keystone that books no damage, and says why.
+    """A compiled rune that books no damage, and says why.
 
     Two dispositions reach here, and the difference is the receipt.
-    ``STRUCTURAL_ZERO`` is a keystone with no combat damage in any source —
+    ``STRUCTURAL_ZERO`` is a rune with no combat damage in any source —
     zero is the answer. ``WITHHELD`` is a real effect this engine has no
-    channel for (a keystone stat, a heal, a shield, a crowd-control
-    trigger): the number exists and is refused, never estimated.
+    channel for (a heal, a shield, a crowd-control trigger, a stat the
+    fight does not read): the number exists and is refused, never estimated.
 
     Modelled on ``item_behavior_catalog``'s ``ZeroPolicy`` declarations so a
-    keystone that contributes nothing is *selectable and receipted* rather
-    than a refusal at the API boundary.
+    rune that contributes nothing is *selectable and receipted* rather than
+    a refusal at the API boundary.
     """
 
     rune_name: str
@@ -213,7 +213,7 @@ class RuneNoDamageEffect:
 
     @property
     def receipts(self) -> tuple[str, ...]:
-        """The fight notes this keystone publishes, verdict first."""
+        """The fight notes this rune publishes, verdict first."""
         verdict = (
             "deals no damage in any fight"
             if self.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
@@ -226,7 +226,7 @@ class RuneNoDamageEffect:
 
 @dataclass(frozen=True, slots=True)
 class RuneWindowAmpEffect:
-    """A combat-opening damage-window keystone (First Strike-class).
+    """A combat-opening damage-window rune (First Strike-class).
 
     Post-mitigation damage dealt inside the opening window gains a sourced
     ratio as bonus true damage; activation grants flat gold plus a
@@ -887,8 +887,9 @@ def _compile_hail_of_blades(entry: Mapping[str, Any]) -> RuneProcEffect:
         disclosures=(
             f"{name}'s bonus attack speed "
             f"({melee_as * 100:g}% melee / {ranged_as * 100:g}% ranged, and the "
-            "attack-speed cap it lifts) is withheld: no keystone reaches the "
-            "stat block, so the fight's swing rate is the build's alone.",
+            "attack-speed cap it lifts) is withheld: the rune stat block is "
+            "resolved once before the fight and this bonus lasts only its "
+            "activation, so the fight's swing rate is the build's alone.",
             f"{name} prices one empowered swing per activation: the cache "
             "carries its cooldown but not how many stacks an activation "
             "grants, so the swing count is a floor.",
@@ -933,8 +934,9 @@ def _compile_grasp_of_the_undying(entry: Mapping[str, Any]) -> RuneProcEffect:
             "withheld and the count is a floor of one.",
             f"{name}'s heal ({melee_heal * 100:g}% / {ranged_heal * 100:g}% "
             f"maximum health) and permanent bonus health ({melee_health:g} / "
-            f"{ranged_health:g}) are withheld: the engine has no keystone "
-            "channel for either.",
+            f"{ranged_health:g}) are withheld: the engine has no rune healing "
+            "channel, and the health is earned proc by proc over a game this "
+            "one fight does not simulate.",
         ),
     )
 
@@ -942,8 +944,9 @@ def _compile_grasp_of_the_undying(entry: Mapping[str, Any]) -> RuneProcEffect:
 def _compile_lethal_tempo(entry: Mapping[str, Any]) -> RuneProcEffect:
     """Compile Lethal Tempo: swings past maximum stacks fire an adaptive bolt.
 
-    The attack-speed half — the rune's real contribution — is withheld: no
-    keystone reaches ``stats.py``. The bolt is priced from the cache, its
+    The attack-speed half — the rune's real contribution — is withheld: the
+    rune stat block ``stats.py`` resolves is the fight's opening state, and
+    these stacks build during it. The bolt is priced from the cache, its
     per-bonus-attack-speed increase reading the build's own bonus attack
     speed, which understates it by exactly the withheld half.
     """
@@ -981,10 +984,11 @@ def _compile_lethal_tempo(entry: Mapping[str, Any]) -> RuneProcEffect:
         disclosures=(
             f"{name}'s bonus attack speed (up to "
             f"{melee_as * max_stacks * 100:g}% melee / "
-            f"{ranged_as * max_stacks * 100:g}% ranged) is withheld: no "
-            "keystone reaches the stat block, so the fight's swing rate is "
-            "the build's alone and the bolt's per-attack-speed increase "
-            "reads the build's bonus attack speed only.",
+            f"{ranged_as * max_stacks * 100:g}% ranged) is withheld: it "
+            "builds stack by stack during the fight and the rune stat block "
+            "is the fight's opening state, so the swing rate is the build's "
+            "alone and the bolt's per-attack-speed increase reads the "
+            "build's bonus attack speed only.",
             f"{name} empowers swings from the {max_stacks + 1}th on and its "
             "stacks are assumed not to decay between them; the cache carries "
             "no stack duration, so the empowered count is a floor.",
@@ -1067,17 +1071,18 @@ _NO_DAMAGE_KEYSTONES: Mapping[str, tuple[Disposition, str, tuple[str, ...]]] = {
     ),
     "Conqueror": (
         Disposition.WITHHELD,
-        "its stacks grant adaptive force and no keystone reaches the stat "
-        "block, so the engine has no channel to price them through",
+        "its stacks grant adaptive force as the fight goes on, and the rune "
+        "stat block is resolved once from the fight's opening state, so the "
+        "engine has no channel to price a growing grant through",
         (
             "Conqueror's heal at maximum stacks is withheld too: the engine "
-            "has no keystone healing channel.",
+            "has no rune healing channel.",
         ),
     ),
     "Fleet Footwork": (
         Disposition.WITHHELD,
         "its empowered attack heals and grants movement speed, and the "
-        "engine has no keystone healing channel to price the heal through",
+        "engine has no rune healing channel to price the heal through",
         (
             "Fleet Footwork deals no damage of its own, so nothing is "
             "understated in the damage total by withholding it.",
