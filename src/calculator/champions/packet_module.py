@@ -11,6 +11,7 @@ import hashlib
 import json
 from functools import lru_cache
 from pathlib import Path
+from dataclasses import dataclass
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -614,6 +615,158 @@ def _apply_slot_overrides(
         slots.update(ordered)
 
 
+@dataclass(frozen=True, slots=True)
+class SlotOverrides:
+    """The module-supplied tables one slot's compilation reads.
+
+    One carrier rather than five parameters, because every step of the
+    compile — the slot, its variants, a variant's own packet — reads the
+    same five tables and threading them apart is how a step comes to read
+    four of them.
+    """
+
+    single_hit_slots: frozenset[str]
+    variant_parsers: dict[tuple[str, int], Any]
+    packet_tick_fixes: dict[str, dict[str, Any]]
+    wiki_attribute_tick_fixes: dict[str, dict[str, Any]]
+    packet_part_timings: dict[str, dict[str, Any]]
+
+
+def _variant_parsers(
+    variants: list[dict[str, Any]], slot: str, overrides: SlotOverrides
+) -> list[Any]:
+    """One parser per declared variant of *slot*, in declaration order.
+
+    A module-supplied override replaces the variant whatever kind it is;
+    the rest compile from the variant's own ``kind`` exactly as a
+    single-kind slot does.
+    """
+    parsers: list[Any] = []
+    for variant_index, variant in enumerate(variants):
+        custom = overrides.variant_parsers.get((slot, variant_index))
+        if custom is not None:
+            parsers.append(custom)
+        elif variant.get("kind") == "wiki_attribute":
+            parsers.append(
+                simple_damage(
+                    attr=str(variant["attribute"]),
+                    dmg_type=str(variant.get("damage_type", "auto")),
+                    ranks=str(variant.get("ranks", "rank")),
+                    source=(
+                        tuple(variant["source"]) if variant.get("source") else None
+                    ),
+                )
+            )
+        elif variant.get("kind") == "packet":
+            parsers.append(
+                _packet_parser(
+                    variant,
+                    slot,
+                    single_hit_certified=slot in overrides.single_hit_slots,
+                    tick_fix=overrides.packet_tick_fixes.get(
+                        str(variant.get("name", ""))
+                    ),
+                    part_timing=overrides.packet_part_timings.get(slot),
+                )
+            )
+        else:
+            parsers.append(
+                no_damage_parser(
+                    slot,
+                    reason=str(
+                        variant.get(
+                            "reason",
+                            "No enemy damage is listed for this variant.",
+                        )
+                    ),
+                )
+            )
+    return parsers
+
+
+def _variant_slot(
+    spec: dict[str, Any], slot: str, overrides: SlotOverrides
+) -> tuple[Any, dict[str, Any]]:
+    """A variants slot: the parser that reads its option, and that option."""
+    variants = spec["variants"]
+    parsers = _variant_parsers(variants, slot, overrides)
+    option_key = f"{slot.lower()}_variant"
+
+    def select_variant(
+        ctx: SlotCtx,
+        parsers=tuple(parsers),
+        key=option_key,
+        default=spec.get("default", 0),
+    ):
+        try:
+            index = int(ctx.options.get(key, default))
+        except (TypeError, ValueError):
+            index = int(default)
+        index = max(0, min(index, len(parsers) - 1))
+        return parsers[index](ctx)
+
+    select_variant.phase = getattr(parsers[0], "phase", "damage")
+    return select_variant, {
+        "key": option_key,
+        "type": "int",
+        "default": int(spec.get("default", 0)),
+        "label": f"{slot} packet variant",
+        "min": 0,
+        "max": len(variants) - 1,
+    }
+
+
+def _compiled_slot(
+    spec: dict[str, Any], slot: str, overrides: SlotOverrides
+) -> tuple[Any, dict[str, Any] | None]:
+    """One declared slot's parser, and the option it publishes if it has one.
+
+    Only a variants slot publishes an option; every other kind answers
+    ``None``, so the caller appends without asking what kind it compiled.
+    A spec whose ``kind`` this does not know compiles to a no-damage slot
+    with the generic reason rather than to nothing.
+    """
+    single_hit = slot in overrides.single_hit_slots
+    if spec.get("kind") == "variants" and spec.get("variants"):
+        return _variant_slot(spec, slot, overrides)
+    if spec.get("kind") == "wiki_attribute":
+        tick_fix = overrides.wiki_attribute_tick_fixes.get(slot)
+        if tick_fix is not None:
+            return _ticked_wiki_attribute_parser(spec, tick_fix), None
+        return (
+            simple_damage(
+                attr=str(spec["attribute"]),
+                dmg_type=str(spec.get("damage_type", "auto")),
+                ranks=str(spec.get("ranks", "rank")),
+                source=tuple(spec["source"]) if spec.get("source") else None,
+                event_order_certified="single_hit" if single_hit else None,
+            ),
+            None,
+        )
+    if spec.get("kind") == "packet":
+        return (
+            _packet_parser(
+                spec,
+                slot,
+                single_hit_certified=single_hit,
+                tick_fix=overrides.packet_tick_fixes.get(str(spec.get("name", ""))),
+                part_timing=overrides.packet_part_timings.get(slot),
+            ),
+            None,
+        )
+    if spec.get("kind") == "no_damage":
+        return (
+            no_damage_parser(
+                slot,
+                reason=str(
+                    spec.get("reason", "No enemy damage is listed for this ability.")
+                ),
+            ),
+            None,
+        )
+    return no_damage_parser(slot), None
+
+
 def build_packet_module(
     champion_name: str,
     packet_sha256: str,
@@ -686,16 +839,19 @@ def build_packet_module(
             f"{champion_name} packet evidence drifted: named module pins "
             f"{packet_sha256}, manifest provides {actual_sha256}"
         )
-    packet_tick_fixes = packet_tick_fixes or {}
-    wiki_attribute_tick_fixes = wiki_attribute_tick_fixes or {}
-    variant_parser_overrides = variant_parsers or {}
-    packet_part_timings = packet_part_timings or {}
+    overrides = SlotOverrides(
+        single_hit_slots=single_hit_slots,
+        variant_parsers=variant_parsers or {},
+        packet_tick_fixes=packet_tick_fixes or {},
+        wiki_attribute_tick_fixes=wiki_attribute_tick_fixes or {},
+        packet_part_timings=packet_part_timings or {},
+    )
     uncertifiable = sorted(
         slot
         for slot in single_hit_slots
         if not _single_hit_row(
             champion.get("slots", {}).get(slot),
-            ticked=slot in wiki_attribute_tick_fixes,
+            ticked=slot in overrides.wiki_attribute_tick_fixes,
         )
     )
     if uncertifiable:
@@ -710,108 +866,10 @@ def build_packet_module(
         spec = champion.get("slots", {}).get(slot)
         if not spec:
             continue
-        variants = spec.get("variants") if spec.get("kind") == "variants" else None
-        if variants:
-            parsers = []
-            for variant_index, variant in enumerate(variants):
-                custom = variant_parser_overrides.get((slot, variant_index))
-                if custom is not None:
-                    parsers.append(custom)
-                elif variant.get("kind") == "wiki_attribute":
-                    parsers.append(
-                        simple_damage(
-                            attr=str(variant["attribute"]),
-                            dmg_type=str(variant.get("damage_type", "auto")),
-                            ranks=str(variant.get("ranks", "rank")),
-                            source=(
-                                tuple(variant["source"])
-                                if variant.get("source")
-                                else None
-                            ),
-                        )
-                    )
-                elif variant.get("kind") == "packet":
-                    parsers.append(
-                        _packet_parser(
-                            variant,
-                            slot,
-                            single_hit_certified=slot in single_hit_slots,
-                            tick_fix=packet_tick_fixes.get(
-                                str(variant.get("name", ""))
-                            ),
-                            part_timing=packet_part_timings.get(slot),
-                        )
-                    )
-                else:
-                    parsers.append(
-                        no_damage_parser(
-                            slot,
-                            reason=str(
-                                variant.get(
-                                    "reason",
-                                    "No enemy damage is listed for this variant.",
-                                )
-                            ),
-                        )
-                    )
-            option_key = f"{slot.lower()}_variant"
-
-            def select_variant(
-                ctx: SlotCtx,
-                parsers=tuple(parsers),
-                key=option_key,
-                default=spec.get("default", 0),
-            ):
-                try:
-                    index = int(ctx.options.get(key, default))
-                except (TypeError, ValueError):
-                    index = int(default)
-                index = max(0, min(index, len(parsers) - 1))
-                return parsers[index](ctx)
-
-            select_variant.phase = getattr(parsers[0], "phase", "damage")
-            slots[slot] = select_variant
-            options.append(
-                {
-                    "key": option_key,
-                    "type": "int",
-                    "default": int(spec.get("default", 0)),
-                    "label": f"{slot} packet variant",
-                    "min": 0,
-                    "max": len(variants) - 1,
-                }
-            )
-        elif spec.get("kind") == "wiki_attribute":
-            tick_fix = wiki_attribute_tick_fixes.get(slot)
-            if tick_fix is not None:
-                slots[slot] = _ticked_wiki_attribute_parser(spec, tick_fix)
-            else:
-                slots[slot] = simple_damage(
-                    attr=str(spec["attribute"]),
-                    dmg_type=str(spec.get("damage_type", "auto")),
-                    ranks=str(spec.get("ranks", "rank")),
-                    source=tuple(spec["source"]) if spec.get("source") else None,
-                    event_order_certified=(
-                        "single_hit" if slot in single_hit_slots else None
-                    ),
-                )
-        elif spec.get("kind") == "packet":
-            slots[slot] = _packet_parser(
-                spec,
-                slot,
-                single_hit_certified=slot in single_hit_slots,
-                tick_fix=packet_tick_fixes.get(str(spec.get("name", ""))),
-                part_timing=packet_part_timings.get(slot),
-            )
-        elif spec.get("kind") == "no_damage":
-            slots[slot] = no_damage_parser(
-                slot,
-                reason=str(
-                    spec.get("reason", "No enemy damage is listed for this ability.")
-                ),
-            )
-        else:
-            slots[slot] = no_damage_parser(slot)
+        parser, option = _compiled_slot(spec, slot, overrides)
+        slots[slot] = parser
+        if option is not None:
+            options.append(option)
 
     _apply_slot_overrides(champion_name, slots, slot_parsers, slot_wrappers, slot_order)
 
