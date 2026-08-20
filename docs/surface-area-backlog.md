@@ -15,7 +15,6 @@ when its fix lands; this file is the one home for the list.
 | A4 | `damage.py` ~4830 | Post-rotation Vile Decay MR is overwritten by `use_auto_pen()` when Terminus is held — ordering quirk. | Resolve MR once, after both. |
 | A5 | `damage.py` `_simulate_ordered_damage` + `program/build.py:410-443` | In coupled fights with Shadowflame the second shield walk runs in full and its Cinderbloom row is dropped and re-priced (`pair_preview_of`); only the Liandry `adjustments` half survives. | Skip the Cinderbloom half when the caller is coupled. Golden-relevant. |
 | A6 | `damage.py:1403-1781` `_ordered_damage_events` (+ `_event_timeline_coverage` ~1782) | One row schema in six literal spellings (light tuple / lean dict / full dict × `add` / `add_declared_events`), kept in step by a comment. | One row factory the three shapes project; float-addition order is load-bearing (`survival/accumulate.py`), so golden must show zero diffs. |
-| A8 | `static/js/app.js:2378` `exactObjectiveMetric` | With allies, the "damage" objective shows team damage while the validation receipt predicts the attacker's row — a number no receipt should match. | Either the widget says so or `displayed_prediction` grows the rule. |
 
 ## B. Fallbacks and single-home violations still standing
 
@@ -36,7 +35,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| C2 | `app.js` (~1965, 2378, 3172, 3238) + `validation_receipts.displayed_prediction` | The "headline the main combat row" rule is spelled ≥3× in JS and once in Python; nothing ties them. | A `headline_total` leaf on the response, read by both. |
 | C3 | `static/js/feedback.js:200,302` | Hand-rolled `fetch("/api/receipts", {method:"POST"…})`; `postJson` exists. | Use it. |
 | C4 | `/api/items` `into`, `categories` | Always `[]` — reads `item.get("into")`/`("categories")` while the cache keys are `buildsInto` / `shop.tags`; no consumer beyond the merge (`app.js:313-314`). | Serve them or drop them. |
 | C5 | `app.py` `api_save_build`, `api_create_share` | DB writes with no `_spend_rate_limit` (the only sites are calculate/bis/optimize/receipts/metrics). | Spend a token. |

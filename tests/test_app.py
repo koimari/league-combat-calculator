@@ -2224,6 +2224,53 @@ def test_champion_cache_fields_are_required_reads(key):
         app_module._cached_champion_field({"name": "Ahri"}, key)
 
 
+def test_headline_total_is_the_attacker_row_in_a_roster_fight():
+    """One published answer to which number the result headlines."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+            "enemies": [{"champion": "Garen", "level": 18, "items": ["Sunfire Aegis"]}],
+            "enemies_attack": True,
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    main = next(
+        row for row in data["combat"]["breakdown"] if row["participant_id"] == "main"
+    )
+    assert data["headline_total"] == main["total_damage"]
+    assert data["headline_total"] != data["total_damage"]
+    assert data["dispositions"]["headline_total"]["disposition"] == "MEASURED"
+
+
+def test_headline_total_is_the_rotation_total_without_a_coupled_row():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Ahri", "level": 11, "target_health": 2000},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["headline_total"] == data["total_damage"]
+
+
+def test_frontend_reads_the_published_headline_and_team_receipt():
+    """A8/C2: neither the headline nor the team total is re-derived in JS."""
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "const total = Number(result.headline_total);" in source
+    assert 'participant_id === "main")?.total_damage' not in source
+    assert "combat?.objective?.main_team_damage_before_death" in source
+    assert "alliedRows" not in source
+
+
 def test_loadout_summary_carries_the_registry_once():
     """The summary emitted the same fact three times; one field now."""
     response = app_module.app.test_client().post(

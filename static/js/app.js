@@ -190,6 +190,14 @@ function postJson(url, body) {
     body: JSON.stringify(body),
   });
 }
+// The number a result headlines, from the response's own leaf: the engine
+// decides which row that is (validation_receipts.displayed_prediction), so
+// the rule is never re-derived here. null when nothing is displayed.
+function headlineTotal(result) {
+  if (!result) return null;
+  const total = Number(result.headline_total);
+  return Number.isFinite(total) ? total : null;
+}
 const fmt = (value) => Math.round(value).toLocaleString("en-US");
 const one = (value) => Number(value).toFixed(1).replace(/\.0$/, "");
 // An event's timestamp, or null when the receipt withheld one. Number(null)
@@ -1944,9 +1952,8 @@ function renderExactBreakdown(aResult, bResult) {
   ingestCombatSources(aResult, "a");
   if (bResult) ingestCombatSources(bResult, "b");
   const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong>${certaintyChipHtml(row.slot)}<small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
-  const mainTotal = (result) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? result?.total_damage ?? 0);
-  const aMainTotal = mainTotal(aResult);
-  const bMainTotal = bResult ? mainTotal(bResult) : 0;
+  const aMainTotal = headlineTotal(aResult) ?? 0;
+  const bMainTotal = bResult ? headlineTotal(bResult) ?? 0 : 0;
   const totalB = bResult ? `<td>${fmt(bMainTotal)}</td><td>${Math.abs(aMainTotal - bMainTotal) < .5 ? "—" : `${aMainTotal > bMainTotal ? "+" : ""}${fmt(aMainTotal - bMainTotal)}`}</td>` : "";
   const combatRows = (aResult?.combat?.participants || []).map((participant) => {
     const entry = (aResult?.combat?.breakdown || []).find((row) => row.participant_id === participant.participant_id) || {};
@@ -2342,10 +2349,11 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
   const rows = participantRows(result);
   const main = rows.find((row) => row.participant_id === "main") || {};
   const enemies = rows.filter((row) => String(row.participant_id || "").startsWith("enemy:"));
-  // Damage is the selected team's output.  Enemy retaliation belongs in the
+  // Damage is the selected team's output, and the engine already folded it:
+  // `combat.objective.main_team_damage_before_death` is the same number
+  // bis.py scores an ally candidate on.  Enemy retaliation belongs in the
   // survival ledger, never in the main team's damage objective.
-  const alliedRows = rows.filter((row) => row.team === "main" || row.participant_id === "main" || String(row.participant_id || "").startsWith("ally:"));
-  const teamDamage = alliedRows.reduce((sum, row) => sum + Number(row.total_damage || 0), 0);
+  const teamDamage = Number(result?.combat?.objective?.main_team_damage_before_death);
   // Recovery and support land on the main participant's own survival ledger;
   // the utility objective mirrors bis.py (healing + support shield received).
   const healingReceived = main.survival?.healing_received;
@@ -2362,7 +2370,7 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
     .sort((a, b) => a - b)[0];
   return {
     overall: Number(main.total_damage ?? fallbackDamage),
-    damage: alliedRows.length ? teamDamage : Number(main.total_damage ?? fallbackDamage),
+    damage: Number.isFinite(teamDamage) ? teamDamage : Number(main.total_damage ?? fallbackDamage),
     kill: firstDeath == null ? null : firstDeath,
     survival: Number(main.survival?.effective_health),
     utility: !hasHealingReceipt && !hasSupportShieldReceipt
@@ -3060,8 +3068,8 @@ function renderFightChart(aResult, bResult) {
     Number(bResult?.combat?.duration || 0),
   );
   const duration = Math.max(reported > 0 ? reported : configuredFightWindow(), ...times, 1);
-  const aTotal = mainTotalDamage(aResult);
-  const bTotal = bResult ? mainTotalDamage(bResult) : null;
+  const aTotal = headlineTotal(aResult);
+  const bTotal = bResult ? headlineTotal(bResult) : null;
   const top = niceCeiling(Math.max(seriesA?.total || 0, seriesB?.total || 0, aTotal || 0, bTotal || 0, 1));
   const low = chartAxisFloor([seriesA, seriesB].filter(Boolean), duration, top);
   if (title) title.textContent = `Fight timeline · 0 → ${one(duration)} s`;
@@ -3148,13 +3156,6 @@ function renderBuyBand() {
     </div>`;
 }
 
-function mainTotalDamage(result) {
-  if (!result) return null;
-  const row = (result.combat?.breakdown || []).find((entry) => entry.participant_id === "main");
-  const total = Number(row?.total_damage ?? result.total_damage ?? 0);
-  return Number.isFinite(total) ? total : null;
-}
-
 function heroValue(value, objectiveKey) {
   if (value == null) return "—";
   if (objectiveDefinition(objectiveKey)?.direction === "lower") return escapeHtml(killTimeLabel(value) || "—");
@@ -3217,8 +3218,8 @@ function renderStartBand(ready) {
 }
 
 function renderPrototypeResult(aResult = null, bResult = null) {
-  const aTotal = aResult ? Number(aResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? aResult.total_damage ?? 0) : null;
-  const bTotal = bResult ? Number(bResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? bResult.total_damage ?? 0) : null;
+  const aTotal = headlineTotal(aResult);
+  const bTotal = headlineTotal(bResult);
   const aValues = aResult ? exactObjectiveMetric(aResult, aTotal) : { overall: null, damage: null, kill: null, survival: null, utility: null };
   const bValues = bResult ? exactObjectiveMetric(bResult, bTotal) : { overall: null, damage: null, kill: null, survival: null, utility: null };
   const aValue = aValues[state.ui.objective];
