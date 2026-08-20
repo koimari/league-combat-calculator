@@ -1335,6 +1335,20 @@ def _simulate_current_health_on_hit(
     return total_damage, total_hits, hit_damages
 
 
+def _ledger_total(events: Sequence[Mapping[str, Any]]) -> float:
+    """What an authored event list is worth, summed one way everywhere.
+
+    A row that authors events is the sum of them, so its total and its
+    ledger have to be the same arithmetic — not a running ``+=`` beside a
+    ``sum()`` over the same numbers.  Those two disagree by an ulp (the
+    builtin compensates, the loop does not), and a row that gave every one
+    of its swings away then reads a crumb instead of exactly 0.0 — which
+    ``_event_timeline_coverage`` counts as an active source using coarse
+    ordering.
+    """
+    return sum(float(event.get("damage", 0.0)) for event in events)
+
+
 def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
     """Return one breakdown row's exact typed post-mitigation parts."""
     by_type = entry.get("damage_by_type")
@@ -5814,9 +5828,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         max(0, int(conversion_info.get("count", 0))) if conversion_info else 0,
     )
 
-    # Simulate each auto attack individually, rolling for crits
-    auto_physical_total = 0.0
-    converted_auto_total = 0.0
+    # Simulate each auto attack individually, rolling for crits.  The two
+    # swing totals are not accumulated here: they are read off the event
+    # lists below, because the row IS the sum of its own ledger.
     fiendhunter_true_total = 0.0
     passive_true_total = 0.0  # champion rider (Corki P), % of the raw swing
     num_crits = 0
@@ -5898,7 +5912,6 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             mitigated = _mitigate(
                 override_replace_raw, override_damage_type, resists, state.magic_amp
             )
-            auto_physical_total += mitigated
             non_crit_damage_per_hit = mitigated
             auto_events.append(
                 {
@@ -6045,7 +6058,6 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 )
             sundered_sky_damage_diff = mitigated - normal_mitigated
         if i < converted_auto_limit:
-            converted_auto_total += mitigated
             converted_natural_crits += int(natural_crit)
             converted_auto_events.append(
                 {
@@ -6055,7 +6067,6 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 }
             )
         else:
-            auto_physical_total += mitigated
             auto_events.append(
                 {
                     "time": attack_time,
@@ -6115,6 +6126,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # Corki's true instance is basic damage in-game, like the physical one.
     passive_true_total *= basic_amp
 
+    auto_physical_total = _ledger_total(auto_events)
+    converted_auto_total = _ledger_total(converted_auto_events)
     auto_total = auto_physical_total + converted_auto_total
     auto_damage_per_hit = auto_total / num_auto_attacks if num_auto_attacks > 0 else 0.0
     ordinary_auto_count = num_auto_attacks - converted_auto_limit
@@ -11438,17 +11451,33 @@ def _collect_fight_notes(
         )
 
 
+class _EmpoweredSwings(NamedTuple):
+    """One ``empowers_next_auto`` entry and the swings its casts consumed."""
+
+    info: dict[str, Any]
+    row: dict[str, Any]
+    count: int
+    # When those swings land. A kit that rates its own burst declares the
+    # impacts (``BurstSwingSchedule.by_ability``); every other empower is
+    # timed at the cast that forced it — where a timer-resetting one
+    # (Darius W, Jax W, Fiora E) genuinely swings, and the instant the
+    # reconstruction has always placed this damage at.  A multi-hit
+    # empower that resets nothing (Cho'Gath E's three spiked attacks)
+    # therefore stacks its hits on the cast until its kit declares a rate.
+    times: tuple[float, ...]
+
+
 def _empowered_swing_consumers(
-    state: FightState, available: int
-) -> list[tuple[dict[str, Any], int]]:
-    """Each ``empowers_next_auto`` row and the swings it consumes.
+    state: FightState, available: int, cast_events: list[dict[str, Any]]
+) -> list[_EmpoweredSwings]:
+    """Each ``empowers_next_auto`` entry, its row, and the swings it consumes.
 
     Cast order decides who gets scarce swings, and the stream can never
     give out more than it has. A self-rated burst claims what it actually
     landed rather than ``casts x hits``: its last cast may have started
     with room for only some of its attacks.
     """
-    consumers: list[tuple[dict[str, Any], int]] = []
+    consumers: list[_EmpoweredSwings] = []
     for ability_key in state.cast_order:
         info = state.ability_damages.get(ability_key)
         row = state.breakdown.get(ability_key)
@@ -11459,15 +11488,105 @@ def _empowered_swing_consumers(
             continue
         burst = state.burst_swings
         landed = burst.landed(ability_key) if burst is not None else 0
-        swings = min(landed or row.get("casts", 0) * _empower_hits(empower), available)
+        hits = _empower_hits(empower)
+        swings = min(landed or row.get("casts", 0) * hits, available)
         if swings <= 0:
             continue
-        consumers.append((row, swings))
+        declared = burst.by_ability.get(ability_key, ()) if burst is not None else ()
+        times = declared or tuple(
+            float(event.get("time", 0.0))
+            for event in cast_events
+            if str(event.get("slot", "")) == ability_key
+            for _ in range(hits)
+        )
+        consumers.append(_EmpoweredSwings(info, row, swings, times[:swings]))
         available -= swings
     return consumers
 
 
-def _reattribute_empowered_swings(state: FightState) -> None:
+def _declared_cc_marker(info: Mapping[str, Any]) -> dict[str, Any]:
+    """The reviewed control kind this entry's parts declare, if it has one.
+
+    ``MODULE_CC`` is stamped onto an entry's parts, and a part that emits
+    its own events carries the marker there.  An empowering entry's damage
+    is delivered by the attacks it forces, so the events authored for
+    those swings are where the same declaration has to land.
+    """
+    for part in info.get("parts") or ():
+        kind = getattr(part, "cc_kind", None)
+        if kind is not None:
+            return {"cc_kind": str(kind), "cc_reviewed": True}
+    return {}
+
+
+def _author_empowered_swing_events(
+    consumer: "_EmpoweredSwings", swing_events: Sequence[Mapping[str, Any]]
+) -> None:
+    """Land an empowering row's damage on the swings its casts consumed.
+
+    ``empowers_next_auto`` means the ability is delivered BY those
+    attacks, so each consumed swing is one event carrying its own attack
+    damage plus an equal share of the ability's own priced total — whose
+    parts are one per empowered hit, which is what those swings are.
+    Without this the row authors nothing at all, the reconstruction falls
+    back to one lump per cast, and a reviewed crowd-control marker has no
+    event to ride — which is what keeps Leona Q, Cho'Gath E, Fiora E and
+    Jax W coarse for a control-armed holder shield.
+
+    A swing is priced from the ledger slice the reattribution removes
+    (wave 1E) and timed from :attr:`_EmpoweredSwings.times`.  Those name
+    the same attack in a stream whose swings are alike; where they are
+    not, taking a different swing's damage would re-price the row and the
+    auto row's crit split with it, which this wave may not do.
+
+    A row that already authors its own ledger is left alone.  Its events
+    are its parts', and appending the swings to them adds damage the fight
+    ledger has never carried (Vayne Q's and Camille Q's moved swings are
+    missing from it today) — a re-pricing, not this plumbing.
+    """
+    row = consumer.row
+    if isinstance(row.get("damage_events"), list) or not swing_events:
+        return
+    if len(consumer.times) != len(swing_events):
+        # No time for every swing (a cast the timeline never published):
+        # authoring part of the row would leave its events short of it.
+        return
+    own = _row_damage_parts(row)
+    if not math.isclose(
+        sum(amount for _, amount in own),
+        float(row.get("total_damage", 0.0)),
+        rel_tol=1e-9,
+        abs_tol=1e-6,
+    ):
+        # The row's typed parts do not describe its own total, so an event
+        # list built from them would not sum to the row.  Fail closed.
+        return
+    marker = _declared_cc_marker(consumer.info)
+    events: list[dict[str, Any]] = []
+    for time, swing in zip(consumer.times, swing_events):
+        for damage_type, amount in own:
+            events.append(
+                {
+                    "time": time,
+                    "damage_type": damage_type,
+                    "damage": amount / len(swing_events),
+                    **marker,
+                }
+            )
+        events.append(
+            {
+                "time": time,
+                "damage_type": str(swing.get("damage_type", "physical")),
+                "damage": float(swing.get("damage", 0.0)),
+                **marker,
+            }
+        )
+    row["damage_events"] = events
+
+
+def _reattribute_empowered_swings(
+    state: FightState, cast_events: list[dict[str, Any]]
+) -> None:
     """Show an empowered auto's swing on the ability that forced it.
 
     An ``empowers_next_auto`` ability (Mundo E, Camille Q, Darius W,
@@ -11500,10 +11619,10 @@ def _reattribute_empowered_swings(state: FightState) -> None:
     per_hit = auto_row.get("damage_per_hit", 0.0)
     if original_count <= 0 or per_hit <= 0:
         return
-    consumers = _empowered_swing_consumers(state, original_count)
+    consumers = _empowered_swing_consumers(state, original_count, cast_events)
     if not consumers:
         return
-    remaining = original_count - sum(swings for _, swings in consumers)
+    remaining = original_count - sum(consumer.count for consumer in consumers)
     # A row whose events were never authored one-per-swing has no ledger
     # to price from; it keeps the blended average (and stays coarse, as
     # it did before) rather than pricing off a list that is not the
@@ -11513,16 +11632,13 @@ def _reattribute_empowered_swings(state: FightState) -> None:
         ledger = None
 
     cursor = remaining
-    for row, swings in consumers:
-        moved = (
-            sum(
-                float(event.get("damage", 0.0))
-                for event in ledger[cursor : cursor + swings]
-            )
-            if ledger is not None
-            else swings * per_hit
-        )
-        cursor += swings
+    for consumer in consumers:
+        count = consumer.count
+        swings = ledger[cursor : cursor + count] if ledger is not None else ()
+        moved = _ledger_total(swings) if ledger is not None else count * per_hit
+        cursor += count
+        _author_empowered_swing_events(consumer, swings)
+        row = consumer.row
         row["total_damage"] += moved
         auto_row["total_damage"] -= moved
         # ``detail`` always wins over the UI's derived "N casts" text, so
@@ -11539,18 +11655,35 @@ def _reattribute_empowered_swings(state: FightState) -> None:
         )
     elif isinstance(auto_row.get("damage_events"), list):
         auto_row["damage_events"] = auto_row["damage_events"][:remaining]
-    if auto_row.get("num_crits") is not None:
-        crits = (
-            sum(1 for event in ledger[:remaining] if event.get("critical_strike"))
-            if ledger is not None
-            else round(auto_row["num_crits"] * remaining / original_count)
-        )
-        auto_row["num_crits"] = crits
-        auto_row["num_non_crits"] = remaining - crits
-        if crits == 0:
-            auto_row["crit_damage_per_hit"] = None
-        if crits == remaining:
-            auto_row["non_crit_damage_per_hit"] = None
+    _recount_kept_crit_split(auto_row, ledger, remaining, original_count)
+
+
+def _recount_kept_crit_split(
+    auto_row: dict[str, Any],
+    ledger: list[dict[str, Any]] | None,
+    remaining: int,
+    original_count: int,
+) -> None:
+    """Publish the crit split of the swings the auto row kept.
+
+    Counted off those swings' own rolls, not rescaled by their share of
+    the stream: a row could otherwise publish one critical strike while
+    every crit sat in the moved tail.  Only a row with no per-swing ledger
+    falls back to the proportion.
+    """
+    if auto_row.get("num_crits") is None:
+        return
+    crits = (
+        sum(1 for event in ledger[:remaining] if event.get("critical_strike"))
+        if ledger is not None
+        else round(auto_row["num_crits"] * remaining / original_count)
+    )
+    auto_row["num_crits"] = crits
+    auto_row["num_non_crits"] = remaining - crits
+    if crits == 0:
+        auto_row["crit_damage_per_hit"] = None
+    if crits == remaining:
+        auto_row["non_crit_damage_per_hit"] = None
 
 
 def _apply_shield_reaver_venom(
@@ -11728,7 +11861,7 @@ def calculate_fight_damage(
     _apply_damage_amplifiers(state, rotation)
 
     # ── Empowered-auto swings shown on the ability that forced them ─────
-    _reattribute_empowered_swings(state)
+    _reattribute_empowered_swings(state, rotation.cast_events)
 
     # ── Temporary penetration windows (Voltaic Firmament) ──────────────
     # Resolve after every source and amplifier has authored its events, but
