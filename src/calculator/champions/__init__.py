@@ -504,6 +504,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "p_procs": {"role": "self_state", "slot": "P"},
     "p_ready": {"role": "self_state", "slot": "P"},
     "p_right_punches": {"role": "self_state", "slot": "P"},
+    "p_self_health_percent": {"role": "self_state", "slot": "P"},
     "p_shot_number": {"role": "self_state", "slot": "P"},
     "p_stacks": {"role": "self_state", "slot": "P"},
     "p_style_stacks": {"role": "self_state", "slot": "P"},
@@ -668,7 +669,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
         "condition": "execute",
         "kind": "execute",
         "role": "execute",
-        "slot": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q"},
+        "slot": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q", "Warwick": "W"},
     },
     "target_poisoned": {
         "condition": "poison",

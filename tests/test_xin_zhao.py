@@ -9,8 +9,8 @@ stays coarse.
 
 import pytest
 
-from src.calculator.champions import xin_zhao
-from tests import cc_review, row_review
+from src.calculator.champions import get_champion_module_contract, xin_zhao
+from tests import cc_review, rider_probe, row_review
 
 
 class TestReviewedCrowdControl:
@@ -92,3 +92,52 @@ class TestPricedRows:
         assert slashes == pytest.approx(4 * per_slash)
         assert row_review.priced("Xin Zhao", "W") == pytest.approx(total)
         assert row_review.packet_row("Xin Zhao", "W", xin_zhao)[4] == 17.5
+
+
+class TestDetermination:
+    """P: the third-stack bonus and the maximum-health heal it pays."""
+
+    def test_the_cached_entry_carries_no_number_at_all(self):
+        """Why every band is a module constant rather than a cached read."""
+        assert [
+            leveling
+            for effect in cc_review.kit("Xin Zhao")["abilities"]["P"][0]["effects"]
+            for leveling in effect.get("leveling") or []
+        ] == []
+        text = cc_review.slot_text(cc_review.kit("Xin Zhao"), "P")
+        assert "stacking up to 3 times" in text
+        assert "15% / 30% / 45% / 60% (based on level) ad" in text
+        assert "2% / 3.5% / 5% (based on level) of his maximum health" in text
+
+    def test_the_proc_is_shared_over_the_three_attacks_that_build_it(self):
+        """60% of 200 AD + 20% of 200 AP = 160 per proc, 53.33 per attack."""
+        on_hit = row_review.entry("Xin Zhao", "passive")["on_hit"]
+        assert on_hit["damage_type"] == "physical"
+        assert on_hit["stacks_required"] == xin_zhao.DETERMINATION_STACKS == 3
+        assert on_hit["damage_per_hit"] == pytest.approx(160.0 / 3)
+
+    def test_the_procs_reach_the_fight_total(self):
+        """6 autos are 2 complete procs — 68.4 post-mitigation physical."""
+        result = rider_probe.fight("Xin Zhao")
+        row = result["breakdown"][rider_probe.RIDER_ROW]
+        assert row["name"] == "Determination"
+        assert row["unit"] == "procs"
+        assert row["count"] == 2
+        assert result["breakdown"]["auto_attacks"]["count"] == 6
+        assert row["total_damage"] == pytest.approx(68.4, abs=0.05)
+        assert row["total_damage"] < result["total_damage"]
+
+    def test_the_heal_rides_the_same_events_as_the_damage(self):
+        """5% maximum health per proc at level 18, on the same cadence."""
+        result = rider_probe.fight("Xin Zhao")
+        health = result["champion_stats"]["health"]
+        autos = result["breakdown"]["auto_attacks"]["count"]
+        expected = autos * (0.05 * health) / xin_zhao.DETERMINATION_STACKS
+        assert rider_probe.healing_from(result, "Determination") == pytest.approx(
+            expected, abs=0.5
+        )
+
+    def test_every_slot_now_prices_something(self):
+        assert get_champion_module_contract("Xin Zhao").coverage == {
+            slot: "modeled" for slot in "PQWER"
+        }

@@ -5,8 +5,10 @@ whether an ability event was a control event; an ability packet that never
 says makes the whole timed fight fall back to coarse ordering.
 """
 
-from src.calculator.champions import sylas
-from tests import cc_review
+import pytest
+
+from src.calculator.champions import get_champion_module_contract, sylas
+from tests import cc_review, rider_probe, row_review
 
 
 class TestReviewedCrowdControl:
@@ -49,3 +51,52 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Sylas")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestPetriciteBurst:
+    """P: the Unshackled empowered attack, once per stocked stack."""
+
+    def test_the_cached_entry_carries_no_number_at_all(self):
+        """Why both ratios are module constants rather than cached reads."""
+        assert [
+            leveling
+            for effect in cc_review.kit("Sylas")["abilities"]["P"][0]["effects"]
+            for leveling in effect.get("leveling") or []
+        ] == []
+        text = cc_review.slot_text(cc_review.kit("Sylas"), "P")
+        assert "130% ad (+ 30% ap) magic damage to the primary target" in text
+        assert "stacking up to 3 times" in text
+
+    def test_the_per_hit_damage_is_that_sentence(self):
+        """130% of 200 AD + 30% of 200 AP = 320.0 magic."""
+        on_hit = row_review.entry("Sylas", "passive")["on_hit"]
+        assert on_hit["damage_type"] == "magic"
+        assert on_hit["damage_per_hit"] == pytest.approx(1.30 * 200 + 0.30 * 200)
+        assert on_hit["max_procs"] == 3
+
+    def test_three_stocked_attacks_reach_the_fight_total(self):
+        result = rider_probe.fight("Sylas")
+        row = result["breakdown"][rider_probe.RIDER_ROW]
+        assert row["name"] == "Petricite Burst (on-hit)"
+        assert row["count"] == 3
+        assert row["total_damage"] == pytest.approx(218.4, abs=0.05)
+        assert row["total_damage"] < result["total_damage"]
+
+    def test_spending_no_stack_prices_nothing(self):
+        result = rider_probe.fight("Sylas", champion_options={"p_procs": 0})
+        assert rider_probe.RIDER_ROW not in result["breakdown"]
+
+
+class TestTheSlotThatStaysOutOfScope:
+    """R (Hijack) casts a copy of another champion's ultimate."""
+
+    def test_the_module_names_the_missing_axis(self):
+        assert get_champion_module_contract("Sylas").coverage == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "out_of_scope",
+        }
+        assert "casts a copy of another champion's" in sylas.__doc__
+        assert "an axis the engine has no surface for" in sylas.__doc__
