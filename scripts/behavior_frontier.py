@@ -751,7 +751,8 @@ COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ()
 # may not live inside the tool that measures it, and "this stage shipped" is
 # the sole trigger of the rule), and shippedness is not declared even there:
 # each record names the slice tag the campaign's commit subjects carry, and
-# ``completed_stages`` reads the tree for it.  That is the difference between
+# ``completed_stages`` reads the committed derivation of those subjects
+# (``CAMPAIGN_SLICE_TAGS``) for it.  That is the difference between
 # a rule that comes due on its own and a rule that comes due when somebody
 # remembers to edit a dict -- the second is the failure shape this campaign is
 # named after, one level up.
