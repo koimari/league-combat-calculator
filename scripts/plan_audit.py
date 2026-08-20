@@ -21,7 +21,9 @@ Three checks run over ``docs/plans/*.md``:
    in ``docs/receipts/campaign-fingerprints.json``.  Two prongs, because the
    figure that was retired had been *wrong*: a value match against the retired
    literals and the live receipt counts catches a correct restatement, and a
-   proximity-marker prong catches a wrong one.
+   proximity-marker prong catches a wrong one.  The exemptions are audited
+   with the prose: a row whose value no receipt block holds any more, and
+   which suppresses nothing, is a hole the next capture would fall into.
 3. **Decision inventory.**  ``docs/receipts/decision-inventory.json`` is
    asserted equal to what the umbrella's manifest and decision tables actually
    declare, with the reserve gaps asserted absent.  Umbrella criterion 11 reads
@@ -60,6 +62,7 @@ block inside it, which is how the plans point at code they are about to move.
 Usage:
     python scripts/plan_audit.py                     # the gate
     python scripts/plan_audit.py --write-inventory   # re-derive the inventory
+    python scripts/plan_audit.py --refresh-drift     # re-point drifted locators
 """
 
 from __future__ import annotations
@@ -82,7 +85,7 @@ import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Collection, Iterable, Mapping, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLANS_DIR = REPO_ROOT / "docs" / "plans"
@@ -175,18 +178,6 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
 ) + (
     Allowance(
         doc="phase-0-gates-and-corrections.md",
-        value=13,
-        context="R-01 rows",
-        reason="R-01's eleven rows are numbered; 13 here is a row list, not an entry count",
-    ),
-    Allowance(
-        doc="phase-3-behavior-rules.md",
-        value=13,
-        context="modules",
-        reason="the 13 modules holding runtime item-name dispatch — a source count",
-    ),
-    Allowance(
-        doc="phase-0-gates-and-corrections.md",
         value=0,
         context="Expected qualifying occurrences",
         reason=(
@@ -226,172 +217,10 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
         for doc in FULL_COVERAGE_DOCS
     ),
     Allowance(
-        doc="2026-08-18-full-coverage-campaign.md",
-        value=20,
-        context="20 s window",
-        reason="a fight duration in seconds, the window Kai'Sa's ruptures recur across",
-    ),
-    *(
-        Allowance(
-            doc=doc,
-            value=value,
-            context=context,
-            reason=(
-                f"{what}, which happens to equal "
-                f"coupled_golden_exact.{field} since the four bench rosters "
-                "joined that capture on 2026-08-14 — and, since the amp-armed "
-                "capture of 2026-08-15 moved that counter on, equals whichever "
-                "census the integer collides with today; the row admits the "
-                "collision either way, because what it says is what the "
-                "integer IS"
-            ),
-        )
-        # The exact capture's counts became small, common integers the day it
-        # grew: these are collisions, which is what this allowlist is for.
-        for doc, value, field, context, what in (
-            (
-                "phase-5-cast-dependency.md",
-                119,
-                "leaves",
-                "splinters",
-                "a Syndra splinter count in a cast-order pin",
-            ),
-            (
-                "silent-failure-runbook.md",
-                17,
-                "entries",
-                "criterion 17",
-                "R-32's citation of Phase 4's criterion 17",
-            ),
-            (
-                "phase-1-coverage-evidence.md",
-                17,
-                "entries",
-                "survival/outcome_state",
-                "a per-module claim count in the coverage table",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                17,
-                "entries",
-                "RuleFamily",
-                "the closed size of the RuleFamily union",
-            ),
-            (
-                "phase-4-program-engine.md",
-                17,
-                "entries",
-                "new modules",
-                "the count of new program/ modules naming a test front door",
-            ),
-            (
-                "phase-4-program-engine.md",
-                17,
-                "entries",
-                "undeclared modules",
-                "the same module count, as what would break the frontier",
-            ),
-            (
-                "phase-4-program-engine.md",
-                17,
-                "entries",
-                "criterion 17",
-                "a citation of this phase's own criterion 17",
-            ),
-            (
-                "phase-4-program-engine.md",
-                17,
-                "entries",
-                "criteria 2 and 17",
-                "the same criterion citation, in the pair it is read with",
-            ),
-        )
-    ),
-    Allowance(
         doc=UMBRELLA_NAME,
         value=5,
         context="golden rows | **Recorded ruling: Phase 5",
         reason="H6's ruling names Phase 5; the integer is a phase number",
-    ),
-    *(
-        Allowance(
-            doc=doc,
-            value=value,
-            context=context,
-            reason=(
-                f"{what}, which happens to equal coupled_golden{block}.entries "
-                "since the two covering rosters joined the coupled scenario set "
-                "on 2026-08-15 (umbrella Amendment L, Ruling 2)"
-            ),
-        )
-        # The same shape as the block above, one capture later: a scenario
-        # count is a small integer, and small integers are everywhere in
-        # prose about margins, members and sites.
-        for doc, value, block, context, what in (
-            (
-                "phase-0-gates-and-corrections.md",
-                15,
-                "",
-                "IMMOBILIZING_CC_KINDS",
-                "the member count of an ability-spec constant",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                15,
-                "",
-                "sites are all",
-                "the count of `ast.Call` name sites in `damage.py`",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                15,
-                "",
-                "name sites",
-                "the same site count, in the migration's own inventory",
-            ),
-            (
-                "phase-4-program-engine.md",
-                15,
-                "",
-                "margin",
-                "an allocation-probe margin in percent",
-            ),
-            (
-                "silent-failure-runbook.md",
-                15,
-                "",
-                "peak, one isolated evaluation",
-                "the same margin, where R-28 declares it",
-            ),
-            (
-                "silent-failure-runbook.md",
-                15,
-                "",
-                "allocation_probe` peak stays within its",
-                "the same margin, in the criterion that reads it",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                19,
-                "_exact",
-                "ALLY_ITEM_EFFECTS",
-                "the entry count of a registry and the size of `ActionKind`",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                19,
-                "_exact",
-                "Undeclared `ITEM_EFFECTS`",
-                "the same registry count, in the frontier table",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                19,
-                "_exact",
-                "`ActionKind`s, every support producer",
-                "the size of `ActionKind`, in the closure criterion",
-            ),
-        )
     ),
     *(
         Allowance(
@@ -424,30 +253,6 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
                 "that bound, where the measured counter is read against it",
             ),
         )
-    ),
-    Allowance(
-        doc="phase-3-behavior-rules.md",
-        value=23,
-        context="stat_conversion",
-        reason=(
-            "a withheld-entry count in the compilability argument, which "
-            "happens to equal coupled_golden_exact.entries since the two "
-            "window-armed rosters joined the coupled scenario set on "
-            "2026-08-16 (umbrella Amendment N, Ruling 3); the word beside it "
-            "is 'entries' because it counts registry entries, not scenarios"
-        ),
-    ),
-    Allowance(
-        doc=UMBRELLA_NAME,
-        value=24,
-        context="counter reads",
-        reason=(
-            "H5's measured counter of name-keyed sites, read against its own "
-            "bound, which happens to equal coupled_golden_exact.entries since "
-            "the swing-term-armed roster joined the coupled scenario set on "
-            "2026-08-16 (umbrella Amendment R, Ruling 4); the sentence is "
-            "about sites and a bound and about no capture at all"
-        ),
     ),
     *(
         Allowance(
@@ -488,6 +293,14 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
 
 
 @dataclass(frozen=True, slots=True)
+class Repair:
+    """A drifted locator and the text that replaces it."""
+
+    old: str
+    new: str
+
+
+@dataclass(frozen=True, slots=True)
 class Finding:
     """One reason the plan documents fail their gate."""
 
@@ -495,6 +308,7 @@ class Finding:
     doc: str
     line: int
     message: str
+    repair: Repair | None = None
 
     def __str__(self) -> str:
         where = f"{self.doc}:{self.line}" if self.line else self.doc
@@ -805,6 +619,7 @@ def _check_fragment(
                 "plan/tree divergence to escalate, not a line number to refresh",
             ),
         )
+    span = citation.end - citation.start
     return (
         Finding(
             "citations",
@@ -813,9 +628,18 @@ def _check_fragment(
             f"`{citation.target}:{citation.start}` has drifted: fragment "
             f"`{citation.fragment}` is at {where}:{at[0]}"
             + (f" (also {', '.join(str(n) for n in at[1:4])})" if len(at) > 1 else "")
-            + " — refresh the locator in a doc-only commit",
+            + " — refresh the locator, by hand or with --refresh-drift",
+            Repair(
+                _locator(citation.target, citation.start, citation.end),
+                _locator(citation.target, at[0], at[0] + span),
+            ),
         ),
     )
+
+
+def _locator(target: str, start: int, end: int) -> str:
+    """A citation's own text: ``file.py:12`` or ``file.py:12-30``."""
+    return f"{target}:{start}" + (f"-{end}" if end != start else "")
 
 
 # ---------------------------------------------------------------------------
@@ -840,20 +664,33 @@ def live_golden_counts(fingerprints: Mapping[str, Any]) -> dict[int, tuple[str, 
     return counts
 
 
-def _allowed(doc: str, value: int, line: str) -> bool:
-    return any(row.admits(doc, value, line) for row in COLLISION_ALLOWLIST)
+def _allowed(doc: str, value: int, line: str, used: set[Allowance]) -> bool:
+    """Whether an allowance excuses this occurrence, recording the row that did.
+
+    Consulted only where a finding would otherwise fire, so ``used`` holds
+    exactly the rows still doing work and the rest are reported as stale.
+    """
+    matched = [row for row in COLLISION_ALLOWLIST if row.admits(doc, value, line)]
+    used.update(matched)
+    return bool(matched)
 
 
 def check_golden_figures(
-    doc: str, text: str, counts: Mapping[int, tuple[str, ...]]
+    doc: str,
+    text: str,
+    counts: Mapping[int, tuple[str, ...]],
+    used: set[Allowance] | None = None,
 ) -> tuple[Finding, ...]:
     """Both prongs over one document (R-37 check 2)."""
     findings: list[Finding] = []
+    used = set() if used is None else used
     retired = set(RETIRED_GOLDEN_FIGURES)
     for number, line in enumerate(text.splitlines(), 1):
         for match in _STANDALONE_INT.finditer(line):
             value = int(match.group(1))
-            if _allowed(doc, value, line):
+            if match.group(1) not in retired and value not in counts:
+                continue
+            if _allowed(doc, value, line, used):
                 continue
             if match.group(1) in retired:
                 findings.append(
@@ -877,7 +714,7 @@ def check_golden_figures(
                     )
                 )
     for block in _logical_lines(text):
-        findings.extend(_check_proximity(doc, block))
+        findings.extend(_check_proximity(doc, block, used))
     return tuple(findings)
 
 
@@ -892,7 +729,9 @@ def _keyword_token_indices(tokens: Sequence[str]) -> tuple[int, ...]:
     return tuple(hits)
 
 
-def _check_proximity(doc: str, block: LogicalLine) -> tuple[Finding, ...]:
+def _check_proximity(
+    doc: str, block: LogicalLine, used: set[Allowance]
+) -> tuple[Finding, ...]:
     """The second prong: an integer beside a shape keyword must cite the receipt.
 
     Measured over the paragraph for the same reason adjacency is: a keyword and
@@ -913,12 +752,12 @@ def _check_proximity(doc: str, block: LogicalLine) -> tuple[Finding, ...]:
             continue
         value = int(match.group(1))
         number = block.source_line(words[index].start())
-        if _allowed(doc, value, block.text):
-            continue
         neighbourhood = tokens[
             max(0, index - PROXIMITY_TOKENS) : index + PROXIMITY_TOKENS + 1
         ]
         if any(FINGERPRINT_MARKER in near for near in neighbourhood):
+            continue
+        if _allowed(doc, value, block.text, used):
             continue
         findings.append(
             Finding(
@@ -1161,18 +1000,84 @@ def audit(
     counts = live_golden_counts(fingerprints)
 
     findings: list[Finding] = []
+    used: set[Allowance] = set()
     umbrella = ""
     for path in paths:
         text = path.read_text(encoding="utf-8")
         if path.name == UMBRELLA_NAME:
             umbrella = text
         findings.extend(check_citations(parse_citations(text, path.name)))
-        findings.extend(check_golden_figures(path.name, text, counts))
+        findings.extend(check_golden_figures(path.name, text, counts, used))
+    findings.extend(check_allowances(used, {path.name for path in paths}, counts))
 
     if umbrella:
         committed = _load_json(INVENTORY_PATH) if inventory is None else dict(inventory)
         findings.extend(check_inventory(derive_inventory(umbrella), committed))
     return tuple(findings)
+
+
+def check_allowances(
+    used: Iterable[Allowance],
+    audited: Collection[str],
+    counts: Mapping[int, tuple[str, ...]],
+) -> tuple[Finding, ...]:
+    """Allowlist rows whose collision cannot happen and did not happen.
+
+    An exemption outlives the receipt figure it was written against, and a
+    standing exemption is a hole: the next capture to land on that value
+    passes unremarked.  Both halves are required.  A value the receipt no
+    longer holds cannot collide, but the proximity prong flags integers
+    whatever their value, so a row still suppressing a finding is live
+    regardless; and a row whose value is a live count is kept even where the
+    prose happens to hold no occurrence today.  Rows for documents outside
+    ``audited`` are not judged.
+    """
+    fired = set(used)
+    return tuple(
+        Finding(
+            "allowlist",
+            row.doc,
+            0,
+            f"the allowance for {row.value} at {row.context!r} is dead: no "
+            "campaign-fingerprints.json block holds that value and the row "
+            "suppresses nothing; delete it",
+        )
+        for row in COLLISION_ALLOWLIST
+        if row.doc in audited and row not in fired and row.value not in counts
+    )
+
+
+def refresh_drift(findings: Iterable[Finding], directory: Path = PLANS_DIR) -> int:
+    """Rewrite every drifted locator to where its fragment now is.
+
+    Only findings carrying a :class:`Repair` are applied: a fragment that is
+    nowhere in its file is a plan/tree divergence and is never re-pointed.
+    """
+    repairs: dict[str, list[Finding]] = {}
+    for finding in findings:
+        if finding.repair is not None:
+            repairs.setdefault(finding.doc, []).append(finding)
+    applied = 0
+    for doc, rows in sorted(repairs.items()):
+        path = Path(directory) / doc
+        lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+        for finding in rows:
+            repair = finding.repair
+            line = lines[finding.line - 1]
+            if line.count(repair.old) != 1:
+                print(
+                    f"plan audit: {doc}:{finding.line} holds "
+                    f"{line.count(repair.old)} copies of `{repair.old}` — "
+                    "refresh it by hand",
+                    file=sys.stderr,
+                )
+                continue
+            lines[finding.line - 1] = line.replace(repair.old, repair.new)
+            print(f"plan audit: {doc}:{finding.line} {repair.old} -> {repair.new}")
+            applied += 1
+        path.write_text("".join(lines), encoding="utf-8")
+    print(f"plan audit: refreshed {applied} drifted locators")
+    return 0
 
 
 def write_inventory(path: Path = INVENTORY_PATH) -> int:
@@ -1193,9 +1098,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="re-derive docs/receipts/decision-inventory.json from the umbrella",
     )
+    parser.add_argument(
+        "--refresh-drift",
+        action="store_true",
+        help="re-point every drifted locator at its fragment's current line",
+    )
     args = parser.parse_args(argv)
     if args.write_inventory:
         return write_inventory()
+    if args.refresh_drift:
+        return refresh_drift(audit())
 
     findings = audit()
     for finding in findings:
