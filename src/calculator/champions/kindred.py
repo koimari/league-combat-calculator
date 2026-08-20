@@ -20,6 +20,12 @@ per-Mark current-health term (+1% per Mark, resolved via the same
 modifier override Mounting Dread uses), over ``w_attacks`` attacks
 (Wolf attacks at 25% of Kindred's bonus attack speed; the count is the
 player-controlled option, default 3 attacks in the window).
+
+Coverage: P and R are ``no_damage``, not ``out_of_scope``.  Mark of the
+Kindred deals nothing — its marks are the range/attack-speed/scaling
+state the other slots already read — and Lamb's Respite deals nothing
+either: the zone is a minimum-health floor plus an end heal.  Q, W and E
+each price their own row.
 """
 
 from __future__ import annotations
@@ -325,7 +331,7 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Kindred")
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "W", "E"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot in {"P", "R"} else "modeled") for slot in "PQWER"
 }
 
 SELF_HEALING_RULE = declare_healing_rule("Kindred")

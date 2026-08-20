@@ -72,9 +72,11 @@ Measured at `5af69843`. Frontier page: `docs/coverage-frontier.md`; machine trut
 
 ## Waves
 
-- **0**: A1 · E · F · G · H0 (disjoint files).
-- **1**: B · C · D (on A1's shape) · wave-2 units cut from H0.
-- **2**: utility mechanisms with an existing engine home, sliced by mechanism.
+- **Wave zero**: A1 · E · F · G · H0 (disjoint files).
+- **Wave one**: B · C · D (on A1's shape).
+- **Wave two**: utility mechanisms with an existing engine home, cut from H0's census by
+  champion-module ownership (support scanner, stat buffs, damage riders, sustain, relabel);
+  runs alongside wave zero since no files overlap.
 - **Close**: census regenerated, frontier page rewritten from fresh probes, gate ladder once.
 
 ## Success criteria

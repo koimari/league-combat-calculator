@@ -23,6 +23,17 @@ REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 VALID_COVERAGE = frozenset({"modeled", "no_damage", "out_of_scope"})
 REVIEW_STATUS = "reviewed_module"
 
+#: Engine channels that price a slot whose own parsed row does not.  A
+#: passive with no cast still reaches the fight: a revive resolves through
+#: ``defensive_effects.resolve_starting_defenses``, a shield rides another
+#: slot's damage event as a ``self_shield_events`` payload, and lifesteal
+#: or a cast heal is authored by the champion's ``healing.py`` rule.  A
+#: module claiming ``modeled`` for such a slot names the channel here so
+#: the claim resolves to a receipt instead of to prose.
+COVERAGE_CHANNELS = frozenset(
+    {"starting_revive_defense", "self_shield_events", "self_healing_rule"}
+)
+
 # Facts with one home outside the module: the review status is this
 # contract's, and the packet spec rides the parser ``build_packet_module``
 # returns.  A module restating either is a second home that can disagree
@@ -35,7 +46,9 @@ def default_coverage(slots: dict[str, Any]) -> dict[str, str]:
 
     A slot the module emits is ``modeled``; one it does not is
     ``out_of_scope``.  A module whose emitted slots include a declared
-    zero-damage or partial slot states that itself with ``MODULE_COVERAGE``.
+    zero-damage or partial slot states that itself with ``MODULE_COVERAGE``,
+    as does one whose unemitted slot is priced through a
+    ``COVERAGE_CHANNELS`` channel.
     """
     return {
         slot: ("modeled" if slot in slots else "out_of_scope")
@@ -60,6 +73,7 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     assumptions: tuple[str, ...]
     sources: tuple[dict[str, Any], ...]
     coverage: dict[str, str]
+    coverage_channels: dict[str, tuple[str, ...]] = field(default_factory=dict)
     review_status: str = REVIEW_STATUS
     packet_spec: dict[str, Any] | None = None
     packet_sha256: str | None = None
@@ -330,6 +344,55 @@ def _refuse_restatements(module: ModuleType) -> None:
         )
 
 
+def _coverage_channels(
+    module: ModuleType, coverage: dict[str, str], slots: dict[str, Any]
+) -> dict[str, tuple[str, ...]]:
+    """The engine channels a module names for its unemitted ``modeled`` slots.
+
+    Raises:
+        ChampionModuleContractError: The declaration is malformed, names an
+            unknown channel, hangs on a slot that is not ``modeled``, or a
+            ``modeled`` slot the module neither emits nor gives a channel.
+    """
+    declared = getattr(module, "COVERAGE_CHANNELS", None) or {}
+    if not isinstance(declared, dict):
+        raise ChampionModuleContractError(
+            f"{module.__name__} COVERAGE_CHANNELS must map a slot to its channels"
+        )
+    channels: dict[str, tuple[str, ...]] = {}
+    for slot, named in declared.items():
+        if slot not in REQUIRED_CHAMPION_SLOTS:
+            raise ChampionModuleContractError(
+                f"{module.__name__} COVERAGE_CHANNELS names slot {slot!r}, "
+                "which is not one of P/Q/W/E/R"
+            )
+        row = (named,) if isinstance(named, str) else tuple(named)
+        unknown = sorted(set(row) - COVERAGE_CHANNELS)
+        if not row or unknown:
+            raise ChampionModuleContractError(
+                f"{module.__name__} COVERAGE_CHANNELS[{slot!r}] must name at "
+                f"least one known channel; unknown: {unknown}"
+            )
+        if coverage[slot] != "modeled":
+            raise ChampionModuleContractError(
+                f"{module.__name__} COVERAGE_CHANNELS[{slot!r}] prices a slot "
+                f"the coverage map calls {coverage[slot]!r}; a channel is how "
+                "a modeled slot reaches the fight"
+            )
+        channels[slot] = row
+    unpriced = sorted(
+        slot
+        for slot, status in coverage.items()
+        if status == "modeled" and slot not in slots and slot not in channels
+    )
+    if unpriced:
+        raise ChampionModuleContractError(
+            f"{module.__name__} calls {unpriced} modeled but neither emits "
+            "them nor names the COVERAGE_CHANNELS channel that prices them"
+        )
+    return channels
+
+
 def _require_list(module: ModuleType, field_name: str) -> list[Any]:
     value = getattr(module, field_name, None)
     if not isinstance(value, list):
@@ -394,9 +457,11 @@ def contract_from_module(
     if coverage is not derived_coverage and coverage == derived_coverage:
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_COVERAGE restates what its SLOTS derive; "
-            "declare it only when an emitted slot is no_damage or partial"
+            "declare it only when an emitted slot is no_damage or partial, or "
+            "an unemitted one is priced through a COVERAGE_CHANNELS channel"
         )
 
+    coverage_channels = _coverage_channels(module, coverage, slots)
     packet_spec, packet_sha256 = _packet_declaration(module, parser, slots)
     cast_dependencies = _cast_dependencies(module, parser, slots)
     cc_kinds = _module_cc(module, parser, slots)
@@ -411,6 +476,7 @@ def contract_from_module(
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage=dict(coverage),
+        coverage_channels=coverage_channels,
         packet_spec=packet_spec,
         packet_sha256=packet_sha256,
         cast_dependencies=cast_dependencies,

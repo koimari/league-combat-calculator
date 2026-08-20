@@ -294,6 +294,22 @@ class TestThresholdHealth:
         absorb(pools, 1500.0, "magic", 2.0)
         assert pools.threshold_health.expires_at == 7.0
 
+    def test_a_live_healing_factor_cuts_the_heal_and_not_the_bonus_health(self):
+        """The Lifeline's heal is healing, so a Grievous window cuts it; the
+        bonus health beside it is a grant and stays whole.  The kernel takes
+        whatever factor the walk hands it and owns none of its own."""
+        pools = _pools(threshold_health=self._protoplasm())
+        outcome = absorb(pools, 1500.0, "magic", 0.0, 0.5)
+        assert outcome.threshold_health_heal == 200.0
+        assert outcome.threshold_health_reduced == 200.0
+        assert pools.max_health == 2300.0
+
+    def test_an_unwounded_defender_keeps_the_whole_sourced_heal(self):
+        pools = _pools(threshold_health=self._protoplasm())
+        outcome = absorb(pools, 1500.0, "magic", 0.0)
+        assert outcome.threshold_health_heal == 400.0
+        assert outcome.threshold_health_reduced == 0.0
+
 
 def _protoplasm_health() -> ThresholdHealth:
     """The Protoplasm-shaped threshold health the expiry tests arm."""

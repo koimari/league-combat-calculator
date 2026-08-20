@@ -18,8 +18,11 @@ E9-1 closes the two remaining audit gaps over the CP10.4 packet:
   mechanic.  The second shot applies on-hit effects and can crit,
   exactly the engine's double_shot path.
 
-Q/W packets are correct single-instance reads; E (Relentless Pursuit)
-remains a documented no-damage dash.
+Q/W packets are correct single-instance reads.
+
+Coverage: E (Relentless Pursuit) emits a row that prices nothing and
+stays out of scope — the dash is mobility and the Lightslinger shots that
+shorten its cooldown are resource/cooldown, two axes the engine lacks.
 """
 
 from typing import Any

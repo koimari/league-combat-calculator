@@ -15,6 +15,12 @@ Stack mechanics modeled (E3):
 
 W (Wind Wall) and R (Last Breath) keep the reviewed CP10.10 packet
 pricing. All numeric values are read from the champion JSON data.
+
+Coverage: P and W are ``no_damage``, not ``out_of_scope``.  Way of the
+Wanderer deals nothing — it grants the Flow shield and the crit
+conversion the fight engine already applies through ``crit_modifier`` —
+and Wind Wall only destroys projectiles.  Q, E and R each price their
+own row.
 """
 
 from __future__ import annotations
@@ -244,5 +250,5 @@ OPTIONS = [
 
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot in {"P", "W"} else "modeled") for slot in "PQWER"
 }

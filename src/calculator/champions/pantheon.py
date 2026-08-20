@@ -15,8 +15,9 @@ The CP-era gap items are closed here:
 - R (Grand Starfall) prices the center Magic Damage row by default and
   exposes the Reduced edge row (150-350 + 50% AP) through the ``r_edge``
   option.
-- P (Mortal Will) remains a documented no-damage row; the empowered
-  rider on Q is priced in Q, not P.
+- P (Mortal Will) is a ``no_damage`` row, not a missing axis: the
+  empowered rider is priced in Q, and what remains is the resource
+  stack counter, which grants nothing the engine would price.
 """
 
 from typing import Any
@@ -221,8 +222,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "enemy damage.",
 ]
 
+# P emits a row and there is nothing left for it to price — Mortal Will's
+# only damage is the empowered rider, which Q prices — so it is no_damage,
+# not a missing axis.  The bare stack counter is resource state.
 MODULE_COVERAGE = {
-    "P": "out_of_scope",
+    "P": "no_damage",
     "Q": "modeled",
     "W": "modeled",
     "E": "modeled",

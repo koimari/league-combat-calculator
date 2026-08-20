@@ -49,3 +49,21 @@ def test_the_w_stun_rides_a_certified_single_hit_event():
     entry = row_review.entry("Pantheon", "W")
     assert entry["parts"][0].cc_kind == "stun"
     assert entry["event_order_certified"] == "single_hit"
+
+
+def test_mortal_will_is_a_no_damage_row_not_a_missing_axis() -> None:
+    """P emits a row that prices nothing, and nothing is left to price.
+
+    The empowered rider is priced in Q, so what remains of Mortal Will is
+    the stack counter — ``no_damage``, not an axis the engine lacks.
+    """
+    from src.calculator.champions import get_champion_module_contract
+    from tests import row_review
+
+    contract = get_champion_module_contract("Pantheon")
+    assert "P" in contract.slots
+    assert contract.coverage["P"] == "no_damage"
+
+    entry = row_review.entry("Pantheon", "passive")
+    assert entry["parts"] == ()
+    assert entry["total_raw"] == 0.0

@@ -26,6 +26,10 @@ wiki's Malzahar pets entry and the ability JSON:
 - Summoning: the first Voidling appears after a 0.5s delay, each extra
   Voidling 0.5s later (the ability description); voidlings attack the
   target from their summon time.
+
+Coverage: P (Void Shift) is a 90% damage reduction with crowd-control
+immunity until it breaks — damage taken is an axis the engine does not
+have, so the slot is out of scope.
 """
 
 from __future__ import annotations

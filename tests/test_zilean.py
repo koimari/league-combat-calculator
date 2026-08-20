@@ -4,11 +4,15 @@ A lone Time Bomb only explodes; the kit's stun needs a second bomb inside
 the first one's fuse.
 """
 
+import pytest
+
 from src.calculator.champions import (
     get_champion_module_contract,
     parse_champion_abilities,
     zilean,
 )
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 
 
@@ -46,7 +50,7 @@ class TestReviewedCrowdControl:
     def test_the_out_of_scope_slots_stay_absent(self):
         """E holds the enemy slow, but Time Warp deals no damage."""
         data = cc_review.kit("Zilean")
-        for slot in ("W", "E", "R"):
+        for slot in ("W", "E"):
             assert slot not in zilean.MODULE_CC, slot
             assert (
                 get_champion_module_contract("Zilean").coverage[slot] == "out_of_scope"
@@ -54,6 +58,23 @@ class TestReviewedCrowdControl:
         assert "if the target is an enemy, they are slowed" in (
             cc_review.slot_text(data, "E")
         )
+
+    def test_r_is_modeled_as_the_1100_chronoshift_revive(self):
+        """R prices no damage row, so its coverage rests on the revive.
+
+        Rank 3 with no ability power is the cached Heal row's 1100.0, which
+        ``resolve_starting_defenses`` hands the engine as Chronoshift — the
+        receipt behind R's ``modeled`` label.
+        """
+        contract = get_champion_module_contract("Zilean")
+        assert contract.coverage["R"] == "modeled"
+        assert contract.coverage_channels["R"] == ("starting_revive_defense",)
+        assert "R" not in zilean.MODULE_CC
+
+        stats = calculate_total_stats(cc_review.kit("Zilean"), 18, [])
+        defenses = resolve_starting_defenses("Zilean", 18, stats, [])
+        assert defenses.revive_source == "Chronoshift"
+        assert defenses.revive_health_amount == pytest.approx(1100.0)
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Zilean") == []

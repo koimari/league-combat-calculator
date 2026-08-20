@@ -16,6 +16,11 @@ P1-2 fixes:
   within the 4-second Discharge window), gated by the ``q_discharge``
   option (default True).  The "Total Magic Damage" row is the
   projectile + discharge sum and is not read separately.
+
+Coverage: P (Glorious Evolution) spends Hex Fragments on augments that
+change how the other abilities behave, and W (Gravity Field) slows and
+then stuns on the fifth stack. Transform and CC magnitude are axes the
+engine does not have, so both slots are out of scope.
 """
 
 from typing import Any

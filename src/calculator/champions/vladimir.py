@@ -11,6 +11,11 @@ precedent) adds a 10% bonus part to every damage entry while the mark is
 on the target, gated by the ``r_hemoplague_debuff`` option (default on,
 with the sourced R-first opening assumption).  In-game true damage is
 not amplified (wiki bug note); Vladimir's kit deals none.
+
+Coverage: P (Crimson Pact) converts ability power into bonus health and
+bonus health back into ability power. A two-way stat conversion is an
+axis the engine does not have — ``stat_buff`` grants a stat, it does not
+derive one from another — so the slot is out of scope.
 """
 
 from typing import Any
