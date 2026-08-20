@@ -61,8 +61,6 @@ from __future__ import annotations
 import re
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field
-from dataclasses import fields as dataclass_fields
-from dataclasses import replace
 from typing import Any, Literal, Mapping
 
 from .cast_dependency import (
@@ -114,10 +112,6 @@ class ComboRule:
             :data:`CAST_ORDER_OVERRIDES` and ``None`` on a derived rule.
             It is what makes the retirement frontier machine-countable
             instead of doc-claimed (P5-f).
-        dependencies: What the declared-vs-inferred merge did, for the
-            public receipt.  ``None`` on a hand seed, which never ran a
-            merge; an empty :class:`DependencyReceipt` on the 170
-            champions that declare nothing.
     """
 
     champion: str
@@ -128,7 +122,6 @@ class ComboRule:
     consume: tuple[str, ...] = ()
     aoe: dict[str, int] = field(default_factory=dict)
     derived: bool = False
-    dependencies: DependencyReceipt | None = None
     override_reason: str | None = None
 
 
@@ -1155,7 +1148,10 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
 
 @dataclass(frozen=True)
 class DependencyReceipt:
-    """What the merge did: six ledgers of display rows.
+    """What the merge did, for ``scripts/cast_dependency_audit.py``.
+
+    Six ledgers of display rows, each opening with the pair it is about;
+    the audit joins its declaration ledgers on that prefix.
 
     Attributes:
         active: Declarations both of whose endpoints are live in this
@@ -1173,11 +1169,6 @@ class DependencyReceipt:
         conflicts: Oppositions between a declaration and an inference,
             each naming the suppression that covered it.  An *uncovered*
             opposition never reaches a receipt: it raises (D-82).
-        unconsulted: Declarations no merge ever saw, because a hand seed
-            in :data:`CAST_ORDER_OVERRIDES` decided the order first.  Six
-            empty ledgers would say "this module declares nothing", which
-            is a different fact — and this is the ledger the frontier
-            counts a still-seeded declarer by.
 
     Every ledger is empty for a champion that declares nothing.
     """
@@ -1188,21 +1179,6 @@ class DependencyReceipt:
     latent: tuple[str, ...] = ()
     confirmed_by_inference: tuple[str, ...] = ()
     conflicts: tuple[str, ...] = ()
-    unconsulted: tuple[str, ...] = ()
-
-    def as_rows(self) -> dict[str, list[str]]:
-        """Every ledger as a JSON-safe list, for the public receipt.
-
-        Read off the dataclass fields rather than retyped: the hand copy
-        this replaces said "six" while returning seven, because
-        ``unconsulted`` was added to the class and to the literal and not
-        to the sentence above them.  A ledger the class declares is a
-        ledger the receipt publishes, by construction.
-        """
-        return {
-            ledger.name: list(getattr(self, ledger.name))
-            for ledger in dataclass_fields(self)
-        }
 
 
 def _declaration_sentence(dep: CastDependency) -> str:
@@ -1628,7 +1604,6 @@ def _fit_rule_to_fight(
         consume=cached.consume,
         aoe=dict(cached.aoe),
         derived=True,
-        dependencies=cached.dependencies,
     )
 
 
@@ -1767,7 +1742,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
 
     if declarations is None:
         declarations = get_champion_cast_dependencies(champion_name)
-    merged, dependencies = resolved_edges(
+    merged, _receipt = resolved_edges(
         champion_name, ability_damages, champion_data, slot_options, declarations
     )
     edges = list(merged)
@@ -1823,7 +1798,6 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             consume=(),
             aoe=aoe,
             derived=True,
-            dependencies=dependencies,
         )
         return remember(rule)
 
@@ -1866,7 +1840,6 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             consume=tuple(sorted({e.consume for e in edges})),
             aoe=aoe,
             derived=True,
-            dependencies=dependencies,
         )
         return remember(rule)
 
@@ -1931,7 +1904,6 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         consume=consume,
         aoe=aoe,
         derived=True,
-        dependencies=dependencies,
     )
     return remember(rule)
 
@@ -1974,9 +1946,7 @@ def resolve_cast_order(
     """
     rule = CAST_ORDER_OVERRIDES.get(champion_name)
     if rule is not None:
-        return list(rule.order), replace(
-            rule, dependencies=_unconsulted_receipt(champion_name, rule)
-        )
+        return list(rule.order), rule
     if champion_data is None and not ability_damages:
         return list(DEFAULT_CAST_ORDER), None
     if certified_order is None:
@@ -1994,32 +1964,6 @@ def resolve_cast_order(
         champion_options=champion_options,
     )
     return list(derived.order), derived
-
-
-def _unconsulted_receipt(  # pylint: disable=import-outside-toplevel
-    champion_name: str, rule: ComboRule
-) -> DependencyReceipt:
-    """The declarations a hand seed decided the order without consulting.
-
-    A seeded champion that also declares dependencies never reaches the
-    merge, and publishing six empty ledgers for her would say "this
-    module declares nothing" — a different fact, and the campaign's own
-    failure shape wearing a receipt.  Naming them is also how the
-    retirement frontier counts a declarer whose seed still wins.
-    """
-    from .champions import get_champion_cast_dependencies
-
-    declarations = get_champion_cast_dependencies(champion_name)
-    if not declarations:
-        return DependencyReceipt()
-    return DependencyReceipt(
-        unconsulted=tuple(
-            f"{dep.slot} requires {dep.requires} ({dep.kind}) was not "
-            f"consulted: {champion_name}'s order is the hand seed in "
-            f"CAST_ORDER_OVERRIDES (override_reason={rule.override_reason})"
-            for dep in declarations
-        )
-    )
 
 
 def rank_ability_dps(
@@ -2087,10 +2031,8 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
 
     Returns:
         ``{"order", "rationale", "cast_order", "sources", "setup",
-        "consume", "aoe", "dependencies"}`` (JSON-safe; ``aoe`` maps each
-        AoE slot to the maximum enemy champions it can hit, and
-        ``dependencies`` is the declared-vs-inferred merge's six ledgers
-        — all empty for a champion that declares nothing).
+        "consume", "aoe"}`` (JSON-safe; ``aoe`` maps each AoE slot to the
+        maximum enemy champions it can hit).
     """
     order: list[str] = []
     for event in cast_timeline:
@@ -2145,14 +2087,4 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
         "setup": setup,
         "consume": consume,
         "aoe": aoe,
-        # The merge's own account of itself: which declarations were
-        # active, which were inert in this parse, which inferences a
-        # suppression dropped and why.  Published for every champion,
-        # empty for the ones that declare nothing, because "no
-        # declarations" and "the field is missing" must not read alike.
-        "dependencies": (
-            rule.dependencies.as_rows()
-            if rule is not None and rule.dependencies is not None
-            else DependencyReceipt().as_rows()
-        ),
     }

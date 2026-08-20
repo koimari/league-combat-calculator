@@ -1,0 +1,75 @@
+{
+  "slice": "D5-rotation-dependencies-unpublished",
+  "dated": "2026-08-20",
+  "decisions": [
+    "surface-area backlog D5"
+  ],
+  "correction": {
+    "one_sentence": "The declared-vs-inferred merge's seven ledgers were published on every /api/calculate rotation receipt and rendered by no client; the public shape drops them and the merge keeps its receipt for scripts/cast_dependency_audit.py, its one reader.",
+    "sites": [
+      "src/calculator/rotation_resolver.py::build_rotation_receipt -- the 'dependencies' key removed",
+      "src/calculator/rotation_resolver.py::ComboRule -- the dependencies field, its only carrier to the receipt, removed",
+      "src/calculator/rotation_resolver.py::DependencyReceipt -- the unconsulted ledger and as_rows(), both publication-only, removed with it"
+    ],
+    "why_it_had_no_symptom": "No number moves: every diff is one whole receipt node ceasing to be published. The merge still runs, still raises on an uncovered opposition, and still hands the audit the same six ledgers."
+  },
+  "qualifying_population": {
+    "enumerated_before_the_src_edit": true,
+    "enumerated_from": "scripts/golden_coupled_baseline.json (committed), every /rotation/dependencies node.",
+    "rule": "Only a rotation receipt can carry the node, so the enumeration is total over the committed baseline. Any diff elsewhere is an unexpected occurrence and stops the slice.",
+    "predicted": {
+      "expected_qualifying_occurrences": 24,
+      "golden": 0,
+      "coupled_exact": 0,
+      "numeric_leaves": 0
+    },
+    "measured": {
+      "occurrences_inside_the_population": 24,
+      "occurrences_outside_the_population": 0,
+      "golden": 0,
+      "coupled_exact": 0,
+      "numeric_leaves": 0,
+      "command": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json"
+    }
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32 -- no baseline moves inside this commit"
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/amp_armed_mage_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/catalyst_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/catalyst_roster/fights/1:Malphite/rotation/dependencies",
+      "/coupled_scenarios/cleaver_bloodsong_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/crit_onhit_carry_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/crit_onhit_carry_roster/fights/1:Malphite/rotation/dependencies",
+      "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/everlasting_forced_swing_roster/fights/0:Darius/rotation/dependencies",
+      "/coupled_scenarios/hexoptics_basic_amp_carry/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/immolate_active_bruiser_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/lethality_window_assassin_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/liandry_reprice_mage_roster/fights/0:Malphite/rotation/dependencies",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/score_event_scan_holder/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/score_event_view_holder/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/swing_term_armed_carry_roster/fights/0:Aatrox/rotation/dependencies",
+      "/coupled_scenarios/swing_term_armed_carry_roster/fights/1:Malphite/rotation/dependencies",
+      "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_custom_order_39/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/dependencies",
+      "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/dependencies"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/leaves"
+    ],
+    "coupled_exact": {}
+  },
+  "note": "Supersedes expected-golden-diff-P5-dependencies.json's coupled_golden claims: that slice added these nodes, this one stops publishing them. Both claims stand until the next boundary re-capture empties the difference set."
+}

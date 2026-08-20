@@ -1115,27 +1115,15 @@ class TestTheDerivationReadsDeclarations:
             )
             assert list(rule.order) == ["Q", "E", "W", "R"]
 
-    def test_the_declaring_champions_carry_their_receipt_on_the_rule(
+    def test_the_declaring_champions_merge_reports_their_declarations(
         self, champion_by_name
     ) -> None:
+        """The merge receipt ``scripts/cast_dependency_audit.py`` joins on."""
         for name in ("Syndra", "Zed", "Brand"):
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), {})
-            rule = derive_champion_rule(
-                name, parsed, data, get_champion_cast_order(name)
-            )
-            assert rule.dependencies is not None
-            assert rule.dependencies.active, f"{name} derived with no active row"
-
-    def test_a_non_declaring_champion_carries_an_empty_receipt(
-        self, champion_by_name
-    ) -> None:
-        data = champion_by_name["Ahri"]
-        parsed = _parse(data, 11, (), {})
-        rule = derive_champion_rule(
-            "Ahri", parsed, data, get_champion_cast_order("Ahri")
-        )
-        assert rule.dependencies == DependencyReceipt()
+            _edges, receipt = _resolved(data, parsed)
+            assert receipt.active, f"{name} merged with no active row"
 
     def test_a_declared_cycle_in_a_live_parse_raises(
         self, champion_by_name, monkeypatch

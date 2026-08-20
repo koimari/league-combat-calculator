@@ -292,12 +292,23 @@ class TestTheCoupledCompareIsFullyAllowlisted:
         So the guard reads Phase 5's own paths: none of them moving is the
         re-capture having happened, and it is exactly then that this clause
         has nothing left to say.
+
+        A path a later allowlist claims is that slice's evidence and no
+        longer Phase 5's, so it is subtracted before the guard reads the
+        difference set — otherwise a later slice moving one of these leaves
+        again would wake Phase 5's clause on a claim it no longer owns.
         """
         differing = set(_live_coupled_diffs())
         declared: set[str] = set()
-        for path in sorted(RECEIPTS.glob("expected-golden-diff-P5-*.json")):
+        superseded: set[str] = set()
+        for path in sorted(RECEIPTS.glob("expected-golden-diff-*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
-            declared.update(data["expected_diff_paths"]["coupled_golden"])
+            claimed = (data.get("expected_diff_paths") or {}).get("coupled_golden", ())
+            if path.name.startswith("expected-golden-diff-P5-"):
+                declared.update(claimed)
+            else:
+                superseded.update(claimed)
+        declared -= superseded
         if not declared & differing:
             return
         assert sorted(declared - differing) == []
