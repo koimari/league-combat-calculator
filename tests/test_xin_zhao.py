@@ -30,7 +30,7 @@ class TestReviewedCrowdControl:
         # W's slow is the thrust's, and the module now prices the whole
         # cast — the four slashes plus that thrust.
         assert "slowing them by 50%" in cc_review.slot_text(data, "W")
-        assert xin_zhao.PACKET_SPEC["slots"]["W"]["base"] == [
+        assert xin_zhao.SLOTS.packet_spec["slots"]["W"]["base"] == [
             7.5,
             10.0,
             12.5,
@@ -51,7 +51,7 @@ class TestReviewedCrowdControl:
         assert "the third attack knocks up the target" in cc_review.slot_text(data, "Q")
         # The row covers all three empowered attacks, but only one of them
         # knocks up, so no slot-wide kind answers for it.
-        assert xin_zhao.PACKET_SPEC["slots"]["Q"]["base"] == [
+        assert xin_zhao.SLOTS.packet_spec["slots"]["Q"]["base"] == [
             15.0,
             30.0,
             45.0,

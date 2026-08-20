@@ -33,7 +33,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "E"}),
     cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Tough It Out's 2.5s shield
 # duration and 17.5% missing-health ratio are prose/cached leveling

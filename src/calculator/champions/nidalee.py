@@ -24,7 +24,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
@@ -32,29 +32,45 @@ from .packet_module import build_packet_module
 _W_TRAP_CAP = 10
 
 
-def _bushwhack_traps(ctx: SlotCtx) -> dict[str, Any] | None:
+def _bushwhack_traps(packet_w):
     """W: Bushwhack variant prices ``w_traps`` detonations; Pounce passthrough."""
-    if int(ctx.option("w_variant")) != 0:
-        return _W_SLOT(ctx)
-    entry = _W_SLOT(ctx)
-    if entry is None:
-        return None
-    traps = min(max(int(ctx.option("w_traps")), 1), _W_TRAP_CAP)
-    if traps > 1:
-        entry["parts"] = tuple(
-            dataclasses.replace(part, count=part.count * traps)
-            for part in entry["parts"]
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        if int(ctx.option("w_variant")) != 0:
+            return packet_w(ctx)
+        entry = packet_w(ctx)
+        if entry is None:
+            return None
+        traps = min(max(int(ctx.option("w_traps")), 1), _W_TRAP_CAP)
+        if traps > 1:
+            entry["parts"] = tuple(
+                dataclasses.replace(part, count=part.count * traps)
+                for part in entry["parts"]
+            )
+            entry["total_raw"] = entry.get("total_raw", 0.0) * traps
+        inherited = entry.get("detail", "")
+        entry["detail"] = (
+            f"{traps} sprung Bushwhack trap(s), each dealing its own full "
+            "4-tick DoT." + (f" {inherited}" if inherited else "")
         )
-        entry["total_raw"] = entry.get("total_raw", 0.0) * traps
-    inherited = entry.get("detail", "")
-    entry["detail"] = (
-        f"{traps} sprung Bushwhack trap(s), each dealing its own full "
-        "4-tick DoT." + (f" {inherited}" if inherited else "")
-    )
-    return entry
+        return entry
+
+    return parse
 
 
 PACKET_SHA256 = "96b6e873251ff23f700da4de3600cae2000d53929d77f7f315a48a227ac81d3d"
+
+# The packet builder consumes these two explicit form selectors at parse time.
+
+# Cached kit review: reviewed cc-free, whole kit.  No entry applies any
+# crowd control to an enemy — Javelin Toss and Takedown only deal magic
+# damage, Bushwhack's trap "deal[s] magic damage every second over 4
+# seconds" (the old slow is gone from the cached text), Pounce and Swipe
+# damage on arrival, Primal Surge heals, and Prowl / Aspect of the Cougar
+# are Nidalee's own movement and form swap.  Every damaging slot says so
+# explicitly, which is what lets control-armed item passives price a
+# Nidalee fight instead of withholding on an unreviewed kit.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nidalee",
@@ -72,23 +88,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # carries MODULE_CC's reviewed answers into the event ledger.  W's
     # Bushwhack variant authors its own four-tick timing above and keeps it.
     single_hit_slots=frozenset({"Q", "W", "E"}),
+    slot_wrappers={
+        "W": _bushwhack_traps,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-# The packet builder consumes these two explicit form selectors at parse time.
-_W_SLOT = SLOTS["W"]
-SLOTS["W"] = _bushwhack_traps
-
-# Cached kit review: reviewed cc-free, whole kit.  No entry applies any
-# crowd control to an enemy — Javelin Toss and Takedown only deal magic
-# damage, Bushwhack's trap "deal[s] magic damage every second over 4
-# seconds" (the old slow is gone from the cached text), Pounce and Swipe
-# damage on arrival, Primal Surge heals, and Prowl / Aspect of the Cougar
-# are Nidalee's own movement and form swap.  Every damaging slot says so
-# explicitly, which is what lets control-armed item passives price a
-# Nidalee fight instead of withholding on an unreviewed kit.
-MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
-
-parse_abilities = build_parser(SLOTS, "Nidalee", cc_kinds=MODULE_CC)
 ASSUMPTIONS.extend(
     [
         "W (Bushwhack) is a summoned trap: one sprung trap prices the "

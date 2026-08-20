@@ -26,7 +26,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     packet_part_timings={"Q": {"time_offset": _Q_FUSE_SECONDS}},
     cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
 
 # E8d: sourced Chronoshift revive values.  Cached R leveling (data/
 # champions.json, Zilean R Chronoshift) Heal row: 600 / 850 / 1100 (+ 200% AP)

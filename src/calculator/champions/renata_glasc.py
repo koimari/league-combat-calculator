@@ -20,24 +20,12 @@ E9-2 gap fixes:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, extract_named, extract_value, proc_damage
 
 PACKET_SHA256 = "384ce3a01847e53d1b8cdaaa0d444174ecfba6cfb31d913a020a45fab7d189fa"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Renata Glasc",
-        PACKET_SHA256,
-        # The hook deals its damage to the first enemy it hits, once — the
-        # boundary claim that carries MODULE_CC's reviewed answer for Q
-        # into the event ledger.  E authors its own cast-boundary offset
-        # below, beside the shield that rides its events.
-        single_hit_slots=frozenset({"Q"}),
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose on P: the on-hit bonus
 # is "+ 2% per 100 AP" of the target's maximum health; the per-level base
@@ -67,55 +55,55 @@ _leverage = proc_damage(
 )
 
 
-def _loyalty_program(ctx: SlotCtx) -> dict[str, Any] | None:
+def _loyalty_program(packet_e):
     """E: magic damage row plus Renata's own 3s shield from the rockets."""
-    entry = _packet_slots["E"](ctx)
-    if entry is None:
-        return None
-    # The self-shield payload rides the ability's damage-event rows, so the
-    # packet part gets an authored cast-boundary offset (the rockets strike
-    # targets around Renata on launch).
-    entry["parts"] = tuple(
-        DamagePart(
-            part.damage_type,
-            amount=part.amount,
-            count=part.count,
-            hp_scaled_damage=part.hp_scaled_damage,
-            crit_effectiveness=part.crit_effectiveness,
-            basic_damage=part.basic_damage,
-            bonus_ad_ratio=part.bonus_ad_ratio,
-            dot_stack_scaled=part.dot_stack_scaled,
-            time_offset=0.0,
-            hit_interval=part.hit_interval,
-            cc_kind=part.cc_kind,
-        )
-        for part in entry["parts"]
-    )
-    ability = ctx.ability("E", 0)
-    rank = ctx.rank_for("E")
-    shield = (
-        extract_named(ability, "Shield Strength", rank, ctx.stats, {})
-        if ability is not None
-        else 0.0
-    )
-    if shield > 0.0:
-        return attach_self_shield(
-            entry,
-            amount=shield,
-            duration=_E_SHIELD_DURATION,
-            source="Loyalty Program",
-            detail=(
-                "Magic damage row plus the sourced Shield Strength "
-                "(50-110 + 50% AP) granted to Renata herself for 3s — "
-                "'Renata and allies struck are granted a shield'."
-            ),
-        )
-    return entry
 
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_e(ctx)
+        if entry is None:
+            return None
+        # The self-shield payload rides the ability's damage-event rows, so the
+        # packet part gets an authored cast-boundary offset (the rockets strike
+        # targets around Renata on launch).
+        entry["parts"] = tuple(
+            DamagePart(
+                part.damage_type,
+                amount=part.amount,
+                count=part.count,
+                hp_scaled_damage=part.hp_scaled_damage,
+                crit_effectiveness=part.crit_effectiveness,
+                basic_damage=part.basic_damage,
+                bonus_ad_ratio=part.bonus_ad_ratio,
+                dot_stack_scaled=part.dot_stack_scaled,
+                time_offset=0.0,
+                hit_interval=part.hit_interval,
+                cc_kind=part.cc_kind,
+            )
+            for part in entry["parts"]
+        )
+        ability = ctx.ability("E", 0)
+        rank = ctx.rank_for("E")
+        shield = (
+            extract_named(ability, "Shield Strength", rank, ctx.stats, {})
+            if ability is not None
+            else 0.0
+        )
+        if shield > 0.0:
+            return attach_self_shield(
+                entry,
+                amount=shield,
+                duration=_E_SHIELD_DURATION,
+                source="Loyalty Program",
+                detail=(
+                    "Magic damage row plus the sourced Shield Strength "
+                    "(50-110 + 50% AP) granted to Renata herself for 3s — "
+                    "'Renata and allies struck are granted a shield'."
+                ),
+            )
+        return entry
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _leverage
-SLOTS["E"] = _loyalty_program
+    return parse
+
 
 # Cached kit review.  Q's hook "deals magic damage to the first enemy hit
 # and roots them for 1 second"; the recast's throw and its 0.5-second stun
@@ -127,9 +115,24 @@ SLOTS["E"] = _loyalty_program
 # the auto stream, so none of the three can carry an answer of its own.
 MODULE_CC = {"Q": "root", "E": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Renata Glasc", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Renata Glasc",
+    PACKET_SHA256,
+    # The hook deals its damage to the first enemy it hits, once — the
+    # boundary claim that carries MODULE_CC's reviewed answer for Q
+    # into the event ledger.  E authors its own cast-boundary offset
+    # below, beside the shield that rides its events.
+    single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "P": _leverage,
+    },
+    slot_wrappers={
+        "E": _loyalty_program,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "p_leverage_procs",
         "type": "int",
@@ -151,7 +154,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Leverage) is an on-hit mark: the first basic attack on an "
     "unmarked target deals bonus magic damage equal to 1% : 2% (based on "
     "level) (+ 2% per 100 AP) of the target's maximum health — the "
@@ -166,7 +169,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "documented out-of-scope rows (no enemy damage).",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",

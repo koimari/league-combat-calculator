@@ -24,37 +24,12 @@ E9-2 gap fixes:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Naafiri",
-        PACKET_SHA256,
-        # Hounds' Pursuit is one arrival on the singled-out champion —
-        # one part and one hit, which is what carries R's reviewed slow
-        # into the event ledger.  (Eviscerate's dash-and-explode row is
-        # two hits, so it is not certified here.)
-        single_hit_slots=frozenset({"R"}),
-        packet_tick_fixes={
-            "Darkin Daggers": {
-                "initial_tick": 0.0,
-                "extra_part": {
-                    "attribute": "Bleed Physical Damage per Tick",
-                    "count": 10,
-                    "damage_type": "physical",
-                    "first_tick": 0.5,
-                    "tick_interval": 0.5,
-                    "dot_duration": 5.0,
-                },
-            }
-        },
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — the sourced bleed tick count:
 # Total Bleed Physical Damage == Bleed Physical Damage per Tick x 10 at
@@ -169,9 +144,6 @@ def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["Q"] = _darkin_daggers
-SLOTS["E"] = _eviscerate
 # Reviewed crowd control, read from the cached kit.  Q (Darkin Daggers)
 # "deals physical damage to enemies hit and inflicts them with a bleed"
 # with no control clause, and E (Eviscerate) dashes and explodes with
@@ -180,9 +152,35 @@ SLOTS["E"] = _eviscerate
 # damage part.
 MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Naafiri", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Naafiri",
+    PACKET_SHA256,
+    # Hounds' Pursuit is one arrival on the singled-out champion —
+    # one part and one hit, which is what carries R's reviewed slow
+    # into the event ledger.  (Eviscerate's dash-and-explode row is
+    # two hits, so it is not certified here.)
+    single_hit_slots=frozenset({"R"}),
+    packet_tick_fixes={
+        "Darkin Daggers": {
+            "initial_tick": 0.0,
+            "extra_part": {
+                "attribute": "Bleed Physical Damage per Tick",
+                "count": 10,
+                "damage_type": "physical",
+                "first_tick": 0.5,
+                "tick_interval": 0.5,
+                "dot_duration": 5.0,
+            },
+        }
+    },
+    slot_parsers={
+        "Q": _darkin_daggers,
+        "E": _eviscerate,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "q_recast",
         "type": "bool",
@@ -191,7 +189,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Darkin Daggers) prices the initial hit, 10 sourced 0.5s bleed "
     "ticks (Total Bleed Physical Damage == per-tick x 10, E2 worklist), "
     "and the recast's bonus damage — interpolated between the "
@@ -209,7 +207,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "out-of-scope state.",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }

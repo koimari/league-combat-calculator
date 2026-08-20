@@ -22,24 +22,12 @@ The CP-era gap items are closed here:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Pantheon",
-        PACKET_SHA256,
-        # The row this packet prices for E is the recast slam ("Recast:
-        # Pantheon slams with his shield in a cone in front of him,
-        # dealing physical damage to enemies hit") — one part and one
-        # hit; the channel's 0.125-second strikes stay unpriced.
-        single_hit_slots=frozenset({"E"}),
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose on Q: the Mortal Will
 # empowered term is "20 : 265.88 (based on level) (+ 115% bonus AD)"; the
@@ -166,11 +154,6 @@ def _grand_starfall(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["Q"] = _comet_spear
-SLOTS["W"] = _shield_vault
-SLOTS["R"] = _grand_starfall
-
 # Reviewed crowd control, read from the cached kit.  Q (Comet Spear)
 # "deals physical damage to enemies hit": the only slow in its text is on
 # Pantheon himself while he "charges while being slowed by 10%".  W
@@ -182,9 +165,23 @@ SLOTS["R"] = _grand_starfall
 # no damage part.
 MODULE_CC = {"W": "stun", "Q": "none", "E": "none", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Pantheon", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Pantheon",
+    PACKET_SHA256,
+    # The row this packet prices for E is the recast slam ("Recast:
+    # Pantheon slams with his shield in a cone in front of him,
+    # dealing physical damage to enemies hit") — one part and one
+    # hit; the channel's 0.125-second strikes stay unpriced.
+    single_hit_slots=frozenset({"E"}),
+    slot_parsers={
+        "Q": _comet_spear,
+        "W": _shield_vault,
+        "R": _grand_starfall,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "q_execute",
         "type": "bool",
@@ -205,7 +202,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q prices the Hurl Physical Damage row plus the Mortal Will empowered "
     "term (20 : 265.88 by level + 115% bonus AD) — Pantheon starts fights "
     "with maximum Mortal Will stacks (cached P description), so the first "
@@ -224,7 +221,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "enemy damage.",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     "P": "out_of_scope",
     "Q": "modeled",

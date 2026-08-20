@@ -35,7 +35,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
 from .inputs import champion_stat
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import rank
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -256,16 +256,6 @@ PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8
 # written.
 _Q_PORTAL_SECONDS = 0.4
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Malzahar",
-    PACKET_SHA256,
-    packet_part_timings={"Q": {"time_offset": _Q_PORTAL_SECONDS}},
-)
-PACKET_SPEC = SLOTS.packet_spec
-# Override the packet DoT rows with the full-total tick pricing above and
-# the packet's single-attack W with the sourced voidling swarm, then
-# rebuild the parser so the module's parse_abilities sees them.
-SLOTS = {**SLOTS, "W": _void_swarm, "E": _malefic_visions, "R": _nether_grasp}
 
 # Reviewed crowd control, read from the cached kit.  Call of the Void's
 # delayed hit leaves the enemies it damages "silenced for a duration".
@@ -277,7 +267,24 @@ SLOTS = {**SLOTS, "W": _void_swarm, "E": _malefic_visions, "R": _nether_grasp}
 # is not an ability event) and P is a self-buff.
 MODULE_CC = {"Q": "silence", "E": "none", "R": "suppression"}
 
-parse_abilities = build_parser(SLOTS, "Malzahar", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Malzahar",
+    PACKET_SHA256,
+    packet_part_timings={"Q": {"time_offset": _Q_PORTAL_SECONDS}},
+    slot_parsers={
+        # Override the packet DoT rows with the full-total tick pricing above and
+        # the packet's single-attack W with the sourced voidling swarm, then
+        # rebuild the parser so the module's parse_abilities sees them.
+        "W": _void_swarm,  # Override the packet DoT rows with the full-total tick pricing above and
+        # the packet's single-attack W with the sourced voidling swarm, then
+        # rebuild the parser so the module's parse_abilities sees them.
+        "E": _malefic_visions,  # Override the packet DoT rows with the full-total tick pricing above and
+        # the packet's single-attack W with the sourced voidling swarm, then
+        # rebuild the parser so the module's parse_abilities sees them.
+        "R": _nether_grasp,
+    },
+    cc_kinds=MODULE_CC,
+)
 OPTIONS = [
     *OPTIONS,
     {

@@ -4,7 +4,10 @@ E2 DoT fix: E (Unspeakable Horror) prices 4 sourced 0.5s tether ticks
 (this module's packet timing declaration).
 """
 
+from functools import partial
+
 from .packet_module import build_packet_module
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b8"
 
@@ -35,31 +38,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # MODULE_CC's reviewed answers into the event ledger.  E already
     # authors its own four-tick tether timing above.
     single_hit_slots=frozenset({"Q", "R"}),
+    slot_wrappers={
+        "P": partial(
+            with_item_on_hits, effectiveness=1.0, hits=1, triggers=("on_hit",)
+        ),
+    },
     cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-_ON_HIT_SPECS: dict[str, dict] = {
-    "P": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
-}
-
-_parse_abilities = parse_abilities
-
-
-def parse_abilities(*args, **kwargs):
-    """Parse abilities, then declare wiki-sourced item on-hit application."""
-    result = _parse_abilities(*args, **kwargs)
-    for slot, spec in _ON_HIT_SPECS.items():
-        entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
-        if entry is not None:
-            entry["applies_item_on_hits"] = dict(spec)
-    return result
-
-
-# The on-hit declaration above wraps the compiled parser, so the reviewed
-# crowd control it carries has to travel with the wrapper: the contract
-# proves the module's declaration and its parser's wiring are one dict.
-parse_abilities.cc_kinds = _parse_abilities.cc_kinds
-
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")

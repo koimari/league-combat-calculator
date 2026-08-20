@@ -21,7 +21,7 @@ E3 additions over the CP10.9 packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
@@ -31,31 +31,6 @@ PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e
 # After 1 second, she shoots 5 Feathers" (cached R prose).
 _R_LEAP_SECONDS = 1.0
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Xayah",
-        PACKET_SHA256,
-        assumption_overrides=(
-            "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
-            "== Total Physical Damage).",
-        ),
-        # W's row is the one extra feather the frenzy fires per attack.
-        single_hit_slots=frozenset({"W"}),
-        # "After 1 second, she shoots 5 Feathers" — R's hit is not at the
-        # cast, so it authors the sourced delay instead of certifying.
-        packet_part_timings={"R": {"time_offset": _R_LEAP_SECONDS}},
-        slot_parsers={
-            "Q": repeat_damage_parser(
-                attr="Physical Damage Per Hit",
-                dmg_type="physical",
-                count=2,
-                time_offset=0.0,
-                hit_interval=0.1,
-            )
-        },
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Clean Cuts' stack bookkeeping
 # (3 stacks per cast, 5 cap, 8-second window) and the 35/45/55% AD
@@ -117,8 +92,6 @@ def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {**_packet_slots, "P": _clean_cuts, "E": _bladecaller}
-
 # Double Daggers' feathers "each deal physical damage to enemies hit",
 # Deadly Plumage's extra feather only damages, and Featherstorm's cone
 # "deal[s] physical damage to enemies hit".  P is the stack bookkeeping
@@ -134,9 +107,33 @@ SLOTS = {**_packet_slots, "P": _clean_cuts, "E": _bladecaller}
 # event ever reaches the ledger.
 MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Xayah", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Xayah",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
+        "== Total Physical Damage).",
+    ),
+    # W's row is the one extra feather the frenzy fires per attack.
+    single_hit_slots=frozenset({"W"}),
+    # "After 1 second, she shoots 5 Feathers" — R's hit is not at the
+    # cast, so it authors the sourced delay instead of certifying.
+    packet_part_timings={"R": {"time_offset": _R_LEAP_SECONDS}},
+    slot_parsers={
+        "Q": repeat_damage_parser(
+            attr="Physical Damage Per Hit",
+            dmg_type="physical",
+            count=2,
+            time_offset=0.0,
+            hit_interval=0.1,
+        ),
+        "P": _clean_cuts,
+        "E": _bladecaller,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS = list(_packet_options) + [
+OPTIONS = list(OPTIONS) + [
     {
         "key": "clean_cuts_stacks",
         "type": "int",
@@ -155,7 +152,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Clean Cuts stack count is user-set (default 5); the 8-second stack "
     "window and which casts generate stacks are not simulated",
     "Each empowered auto deals the triggering attack's damage to the "
@@ -171,7 +168,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "feather to the primary target is not double-counted with Clean Cuts",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

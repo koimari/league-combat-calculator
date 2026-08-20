@@ -22,10 +22,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -34,12 +33,6 @@ from .slotlib import (
 )
 
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
-
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    # R's slashes are one priced sweep over the knock-up's duration.
-    build_packet_module("Yasuo", PACKET_SHA256, single_hit_slots=frozenset({"R"}))
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 
 # P prose-sourced constants (data/champions.json, Yasuo P): "Yasuo's total
@@ -193,13 +186,6 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _way_of_the_wanderer,
-    "Q": _steel_tempest,
-    "W": _BATCH_SLOTS["W"],
-    "E": _sweeping_blade,
-    "R": _BATCH_SLOTS["R"],
-}
 # Sweeping Blade only "deals magic damage to the target"; Last Breath
 # "knocks up all nearby airborne enemy champions for 1 second ... slashing
 # them with his sword over the duration to deal physical damage".  Q is not
@@ -208,7 +194,19 @@ SLOTS = {
 # is the Flow/crit state row; neither authors a damage part.
 MODULE_CC = {"E": "none", "R": "knockup"}
 
-parse_abilities = build_parser(SLOTS, "Yasuo", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    # R's slashes are one priced sweep over the knock-up's duration.
+    "Yasuo",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"R"}),
+    slot_parsers={
+        "P": _way_of_the_wanderer,
+        "Q": _steel_tempest,
+        "E": _sweeping_blade,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -247,7 +245,6 @@ ASSUMPTIONS = [
     "CP10.10 packet pricing",
 ]
 
-SOURCES = load_champion_sources("Yasuo")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
 }

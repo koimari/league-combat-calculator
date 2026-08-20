@@ -22,7 +22,7 @@ stage.
 
 from typing import Any
 
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
 
@@ -39,14 +39,6 @@ PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb7678316
 # single-target packet does not price.
 _Q_REAPPEAR_SECONDS = 1.087
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Master Yi",
-        PACKET_SHA256,
-        packet_part_timings={"Q": {"time_offset": _Q_REAPPEAR_SECONDS}},
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Double Strike's 3-hit cadence and
 # the second strike's 50% AD are wiki prose; the JSON carries no
@@ -103,10 +95,6 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _double_strike
-SLOTS["W"] = _meditate
-
 # Reviewed crowd control, read from the cached kit.  Alpha Strike marks
 # and detonates for damage and on-hit effects only — nothing in the entry
 # controls the enemies it strikes (Master Yi is the one made unable to
@@ -121,10 +109,18 @@ SLOTS["W"] = _meditate
 # to move onto the on-hit stream before it can carry any marker.
 MODULE_CC = {"Q": "none"}
 
-parse_abilities = build_parser(SLOTS, "Master Yi", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Master Yi",
+    PACKET_SHA256,
+    packet_part_timings={"Q": {"time_offset": _Q_REAPPEAR_SECONDS}},
+    slot_parsers={
+        "P": _double_strike,
+        "W": _meditate,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS = list(_packet_options)
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Double Strike procs on every 3rd basic attack; the second strike "
     "deals 50% AD physical damage — wiki prose (module constants)",
     "Only basic attacks generate stacks (Alpha Strike explicitly does "
@@ -138,7 +134,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "(healing.py 'Master Yi' rule); the channel's damage reduction is "
     "a defensive state not staged by the damage model.",
 ]
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
     for slot in "PQWER"

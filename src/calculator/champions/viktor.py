@@ -20,7 +20,7 @@ P1-2 fixes:
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module, initial_plus_ticks_parser
 from .slotlib import (
     attach_self_shield,
@@ -37,31 +37,6 @@ _Q_SHIELD_DURATION_SECONDS = 2.5
 _Q_DISCHARGE_WINDOW_SECONDS = 4.0
 
 PACKET_SHA256 = "542116107f7a930a0dbae3ed0dfb602d84d0b90cb6bf86f2b4832bae1c8ad13f"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Viktor",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Arcane Storm prices the impact plus the full 6.5-second storm "
-        "(Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage).",
-    ),
-    # One beam, one hit: "fires an energy beam along the target path that
-    # deals magic damage to enemies hit" — the packet has no travel or tick
-    # phase to place, so the hit lands at the cast.
-    single_hit_slots=frozenset({"E"}),
-    slot_parsers={
-        "R": initial_plus_ticks_parser(
-            initial_attr="Magic Damage",
-            tick_attr="Magic Damage Per Tick",
-            dmg_type="magic",
-            tick_count=6,
-            time_offset=1.0,
-            hit_interval=1.0,
-            dot_duration=6.5,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _siphon_shield(ctx: SlotCtx) -> float:
@@ -99,52 +74,53 @@ def _siphon_shield(ctx: SlotCtx) -> float:
     return total
 
 
-def _siphon_power(ctx: SlotCtx) -> dict[str, Any] | None:
+def _siphon_power(packet_q):
     """Q: the projectile packet plus the shield and the Discharge on-hit."""
-    entry = _packet_q(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = _siphon_shield(ctx)
-    entry = attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_Q_SHIELD_DURATION_SECONDS,
-        source=entry.get("name", "Siphon Power"),
-        detail=(
-            f"Q also shields Viktor for {shield:g} for "
-            f"{_Q_SHIELD_DURATION_SECONDS:g}s (self); the Discharge "
-            "empowered next basic attack is priced as a one-application "
-            "on-hit"
-        ),
-    )
-    # One projectile hit at the cast boundary: certifying the packet lets
-    # the damage engine declare its event ledger, which is what carries
-    # the module-authored self-shield payload onto the event row (the
-    # Ambessa W convention).
-    entry["event_order_certified"] = "single_hit"
-    if bool(ctx.options.get("q_discharge", True)):
-        ability = ctx.ability()
-        discharge = extract_named(
-            ability, "Modified Magic Damage", rank, ctx.stats, ctx.target
-        )
-        entry["on_hit"] = {
-            "name": "Siphon Power (Discharge)",
-            "damage_per_hit": discharge,
-            "damage_type": "magic",
-            "max_procs": 1,
-            "detail": (
-                "Discharge empowered next basic attack within the 4-second "
-                "window (Modified Magic Damage 20 : 120 by rank + 100% AD "
-                "+ 50% AP)"
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        shield = _siphon_shield(ctx)
+        entry = attach_self_shield(
+            entry,
+            amount=shield,
+            duration=_Q_SHIELD_DURATION_SECONDS,
+            source=entry.get("name", "Siphon Power"),
+            detail=(
+                f"Q also shields Viktor for {shield:g} for "
+                f"{_Q_SHIELD_DURATION_SECONDS:g}s (self); the Discharge "
+                "empowered next basic attack is priced as a one-application "
+                "on-hit"
             ),
-        }
-    return entry
+        )
+        # One projectile hit at the cast boundary: certifying the packet lets
+        # the damage engine declare its event ledger, which is what carries
+        # the module-authored self-shield payload onto the event row (the
+        # Ambessa W convention).
+        entry["event_order_certified"] = "single_hit"
+        if bool(ctx.options.get("q_discharge", True)):
+            ability = ctx.ability()
+            discharge = extract_named(
+                ability, "Modified Magic Damage", rank, ctx.stats, ctx.target
+            )
+            entry["on_hit"] = {
+                "name": "Siphon Power (Discharge)",
+                "damage_per_hit": discharge,
+                "damage_type": "magic",
+                "max_procs": 1,
+                "detail": (
+                    "Discharge empowered next basic attack within the 4-second "
+                    "window (Modified Magic Damage 20 : 120 by rank + 100% AD "
+                    "+ 50% AP)"
+                ),
+            }
+        return entry
+
+    return parse
 
 
-SLOTS = dict(SLOTS)
-_packet_q = SLOTS["Q"]
-SLOTS["Q"] = _siphon_power
 # Siphon Power's device and its Discharge auto only "deal[] magic damage",
 # Hextech Ray's beam "deals magic damage to enemies hit and briefly grants
 # sight", and Arcane Storm's impact and bolts only damage.  W (Gravity
@@ -159,7 +135,33 @@ SLOTS["Q"] = _siphon_power
 # Hex Fragment augments (out of scope here) are the only way to buy.
 MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Viktor", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Viktor",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Arcane Storm prices the impact plus the full 6.5-second storm "
+        "(Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage).",
+    ),
+    # One beam, one hit: "fires an energy beam along the target path that
+    # deals magic damage to enemies hit" — the packet has no travel or tick
+    # phase to place, so the hit lands at the cast.
+    single_hit_slots=frozenset({"E"}),
+    slot_parsers={
+        "R": initial_plus_ticks_parser(
+            initial_attr="Magic Damage",
+            tick_attr="Magic Damage Per Tick",
+            dmg_type="magic",
+            tick_count=6,
+            time_offset=1.0,
+            hit_interval=1.0,
+            dot_duration=6.5,
+        )
+    },
+    slot_wrappers={
+        "Q": _siphon_power,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Siphon Power) shields Viktor for the per-level 40 : 140 (+ 25% AP) "

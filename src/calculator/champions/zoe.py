@@ -14,19 +14,11 @@ is a documented no-damage row instead of being collapsed into a bolt.
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zoe",
-    PACKET_SHA256,
-    # Q's star explodes on the first enemy it hits and E's bubble bursts on
-    # it; neither packet carries a travel phase to place.
-    single_hit_slots=frozenset({"Q", "E"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # Wheeeee fires three bolts; the "Total Magic Damage" row is exactly
 # 3 x "Magic Damage Per Bolt" at every rank (45/3 == 15, ..., 165/3 == 55).
@@ -87,19 +79,6 @@ def _spell_thief(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-# The reviewed packet folded Paddle Star's per-level term into its
-# per-rank base, so one index served both and the level term was read at
-# the rank — at level 18 rank 5 the star priced its level-5 scaling.  The
-# packet's own reading is kept (the Maximum row, the star at full travel);
-# reading the cached row through the shared slot repairs the axis.
-SLOTS["Q"] = simple_damage(
-    attr="Maximum Magic Damage",
-    dmg_type="magic",
-    event_order_certified="single_hit",
-)
-SLOTS["W"] = _spell_thief
-
 # Paddle Star! only explodes.  Sleepy Trouble Bubble's burst "deals magic
 # damage to the target and inflicts them with drowsy for 1.4 seconds, which
 # gradually slows them until they fall asleep for 2.25 seconds" — the
@@ -113,7 +92,27 @@ SLOTS["W"] = _spell_thief
 # ledger.
 MODULE_CC = {"Q": "none", "E": "sleep"}
 
-parse_abilities = build_parser(SLOTS, "Zoe", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zoe",
+    PACKET_SHA256,
+    # Q's star explodes on the first enemy it hits and E's bubble bursts on
+    # it; neither packet carries a travel phase to place.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        # The reviewed packet folded Paddle Star's per-level term into its
+        # per-rank base, so one index served both and the level term was read at
+        # the rank — at level 18 rank 5 the star priced its level-5 scaling.  The
+        # packet's own reading is kept (the Maximum row, the star at full travel);
+        # reading the cached row through the shared slot repairs the axis.
+        "Q": simple_damage(
+            attr="Maximum Magic Damage",
+            dmg_type="magic",
+            event_order_certified="single_hit",
+        ),
+        "W": _spell_thief,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

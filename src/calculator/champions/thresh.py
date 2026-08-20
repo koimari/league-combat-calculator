@@ -12,22 +12,11 @@ E3 addition over the CP10.8 packet module:
 
 from typing import Any
 
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Thresh",
-        PACKET_SHA256,
-        # Each packet is one blow: the scythe "catches the first enemy
-        # hit", Flay "sweeps his chain" once, and one Box wall breaks on
-        # contact — so each row is a hit the ledger can time.
-        single_hit_slots=frozenset({"Q", "E", "R"}),
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Damnation's per-soul values
 # (1 AP, 1 bonus armor) are wiki prose; the JSON carries no leveling
@@ -83,8 +72,6 @@ def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
 _damnation.phase = BUFF
 
 
-SLOTS = {**_packet_slots, "P": _damnation}
-
 # Reviewed crowd control, read from the cached kit.  Q (Death Sentence)'s
 # scythe catches to "deal magic damage, stun and reveal them for 1.5
 # seconds, and render them airborne for 0.4 seconds" — two immobilize
@@ -96,9 +83,20 @@ SLOTS = {**_packet_slots, "P": _damnation}
 # a lantern shield, neither of which damages.
 MODULE_CC = {"Q": "immobilize", "E": "knockback", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Thresh", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Thresh",
+    PACKET_SHA256,
+    # Each packet is one blow: the scythe "catches the first enemy
+    # hit", Flay "sweeps his chain" once, and one Box wall breaks on
+    # contact — so each row is a hit the ledger can time.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
+    slot_parsers={
+        "P": _damnation,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS = list(_packet_options) + [
+OPTIONS = list(OPTIONS) + [
     {
         "key": "souls",
         "type": "int",
@@ -109,7 +107,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Soul count is user-set (default 40 — the expected mid-game state); "
     "soul farming is not simulated",
     "Each Soul grants 1 ability power and 1 bonus armor — wiki prose "
@@ -123,7 +121,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "All other CC is utility only — no damage",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

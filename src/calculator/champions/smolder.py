@@ -42,17 +42,13 @@ timing wave, as is the stack-scaled sixth bolt onward.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Smolder", PACKET_SHA256, single_hit_slots=frozenset({"R"}))
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose on Q: "increased by
 # 0% : 75% (+ 0% : 22.5%) (based on critical strike chance)" -> the
@@ -91,63 +87,69 @@ def _dragon_practice(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _super_scorcher_breath(ctx: SlotCtx) -> dict[str, Any] | None:
+def _super_scorcher_breath(packet_q):
     """Q: reviewed packet base, scaled by crit chance, plus the tier-3 burn."""
-    entry = _packet_slots["Q"](ctx)
-    if entry is None:
-        return None
-    entry["event_order_certified"] = "single_hit"
 
-    crit_chance = min(
-        1.0,
-        max(0.0, float(ctx.stat("critical_strike_chance") or 0.0) / 100.0),
-    )
-    factor = 1.0 + _Q_CRIT_INCREASE_PER_CRIT * crit_chance
-    if abs(factor - 1.0) > 1e-12:
-        entry["parts"] = tuple(
-            DamagePart(
-                part.damage_type,
-                amount=part.amount * factor,
-                count=part.count,
-                hp_scaled_damage=part.hp_scaled_damage,
-                crit_effectiveness=part.crit_effectiveness,
-                basic_damage=part.basic_damage,
-                bonus_ad_ratio=part.bonus_ad_ratio,
-                dot_stack_scaled=part.dot_stack_scaled,
-                time_offset=part.time_offset,
-                hit_interval=part.hit_interval,
-                cc_kind=part.cc_kind,
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        if entry is None:
+            return None
+        entry["event_order_certified"] = "single_hit"
+
+        crit_chance = min(
+            1.0,
+            max(0.0, float(ctx.stat("critical_strike_chance") or 0.0) / 100.0),
+        )
+        factor = 1.0 + _Q_CRIT_INCREASE_PER_CRIT * crit_chance
+        if abs(factor - 1.0) > 1e-12:
+            entry["parts"] = tuple(
+                DamagePart(
+                    part.damage_type,
+                    amount=part.amount * factor,
+                    count=part.count,
+                    hp_scaled_damage=part.hp_scaled_damage,
+                    crit_effectiveness=part.crit_effectiveness,
+                    basic_damage=part.basic_damage,
+                    bonus_ad_ratio=part.bonus_ad_ratio,
+                    dot_stack_scaled=part.dot_stack_scaled,
+                    time_offset=part.time_offset,
+                    hit_interval=part.hit_interval,
+                    cc_kind=part.cc_kind,
+                )
+                for part in entry["parts"]
             )
-            for part in entry["parts"]
-        )
-        entry["total_raw"] = float(entry.get("total_raw", 0.0)) * factor
+            entry["total_raw"] = float(entry.get("total_raw", 0.0)) * factor
 
-    stacks = max(0, int(ctx.options.get("p_stacks", _TIER3_STACKS)))
-    if stacks >= _TIER3_STACKS:
-        target_max = float(ctx.target_stat("target_max_health") or 0.0)
-        bonus_ad = float(ctx.stat("bonus_attack_damage") or 0.0)
-        burn_total = target_max * (
-            _BURN_BONUS_AD_PER_100 * bonus_ad / 100.0 / 100.0
-            + _BURN_STACKS_PER_100 * stacks / 100.0 / 100.0
-        )
-        if burn_total > 0.0:
-            entry["post_hit_proc"] = {
-                "name": "Dragon Practice · Tier 3 Burn",
-                "breakdown_key": "dragon_practice_burn",
-                # The burn rides the Q hit that applied it: the proc lands
-                # at the cast boundary (Varus blight-detonation precedent),
-                # so damage.py marks the row's timing as authored.
-                "parts": (DamagePart("true", burn_total, time_offset=0.0),),
-                "detail": (
-                    f"{stacks} Dragon Practice stacks: 3s burn of "
-                    f"{burn_total:g} true damage (2.5% per 100 bonus AD "
-                    "+ 0.5% per 100 stacks of the target's maximum "
-                    "health)"
-                ),
-            }
-            entry["dot_duration"] = _BURN_DURATION
-            entry["total_raw"] = float(entry.get("total_raw", 0.0)) + burn_total
-    return entry
+        stacks = max(0, int(ctx.options.get("p_stacks", _TIER3_STACKS)))
+        if stacks >= _TIER3_STACKS:
+            target_max = float(ctx.target_stat("target_max_health") or 0.0)
+            bonus_ad = float(ctx.stat("bonus_attack_damage") or 0.0)
+            burn_total = target_max * (
+                _BURN_BONUS_AD_PER_100 * bonus_ad / 100.0 / 100.0
+                + _BURN_STACKS_PER_100 * stacks / 100.0 / 100.0
+            )
+            if burn_total > 0.0:
+                entry["post_hit_proc"] = {
+                    "name": "Dragon Practice · Tier 3 Burn",
+                    "breakdown_key": "dragon_practice_burn",
+                    # The burn rides the Q hit that applied it: the proc lands
+                    # at the cast boundary (Varus blight-detonation precedent),
+                    # so damage.py marks the row's timing as authored.
+                    "parts": (DamagePart("true", burn_total, time_offset=0.0),),
+                    "detail": (
+                        f"{stacks} Dragon Practice stacks: 3s burn of "
+                        f"{burn_total:g} true damage (2.5% per 100 bonus AD "
+                        "+ 0.5% per 100 stacks of the target's maximum "
+                        "health)"
+                    ),
+                }
+                entry["dot_duration"] = _BURN_DURATION
+                entry["total_raw"] = float(entry.get("total_raw", 0.0)) + burn_total
+        return entry
+
+    return with_item_on_hits(
+        parse, effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
+    )
 
 
 def _achooo(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -164,15 +166,6 @@ def _flap_flap_flap(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _dragon_practice
-SLOTS["Q"] = _super_scorcher_breath
-SLOTS["W"] = _achooo
-SLOTS["E"] = _flap_flap_flap
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
-)
-
 # Reviewed crowd control, read from the cached kit.  Q (Super Scorcher
 # Breath) "spits a fireball at the target enemy that deals physical
 # damage" and its tiers add explosions, bolts and a burn — no control.  W
@@ -187,9 +180,22 @@ SLOTS["Q"] = with_item_on_hits(
 # the centre, R's answer becomes "slow".
 MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Smolder", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Smolder",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"R"}),
+    slot_parsers={
+        "P": _dragon_practice,
+        "W": _achooo,
+        "E": _flap_flap_flap,
+    },
+    slot_wrappers={
+        "Q": _super_scorcher_breath,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "p_stacks",
         "type": "int",
@@ -200,7 +206,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Super Scorcher Breath) is increased by 0% : 75% (+ 0% : 22.5%) "
     "based on critical strike chance (cached Q description prose): the "
     "packet's flat + AD-ratio price is multiplied by 1 + 0.975 x crit "
@@ -227,7 +233,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "cadence across the 1.25-second flight are not priced.",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     "P": "no_damage",
     "Q": "modeled",

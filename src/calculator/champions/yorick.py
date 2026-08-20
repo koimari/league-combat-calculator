@@ -29,33 +29,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, simple_damage
+from .slotlib import damage_entry, extract_cooldown
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module(
-        "Yorick",
-        PACKET_SHA256,
-        # Q is one empowered swing and E is one globule's splash; neither
-        # has a travel or tick phase to place.  E states its certification
-        # through a slot parser because it is a ``wiki_attribute`` slot,
-        # which ``single_hit_slots`` does not reach.
-        single_hit_slots=frozenset({"Q"}),
-        slot_parsers={
-            "E": simple_damage(
-                attr="Magic Damage",
-                dmg_type="magic",
-                source=("E", 0),
-                event_order_certified="single_hit",
-            )
-        },
-    )
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — pet stats are not scraped into
 # data/champions.json (the ability text points to "See Pets for more
@@ -179,6 +159,28 @@ def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# Mourning Mist's globule lands and "enemy champions and monsters hit are
+# slowed by 30% for 1.5 seconds"; Last Rites' empowered swing only damages
+# and heals, and the R row prices the Maiden's basic attacks, which control
+# nothing.  W (Dark Procession) is where the knock-aside and the pull live,
+# but the ring deals no damage.  P is the Mist Walker pet row, not an
+# ability event.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Yorick",
+    PACKET_SHA256,
+    # Q is one empowered swing and E is one globule's splash; neither
+    # has a travel or tick phase to place.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "P": _mist_walkers,
+        "R": _maiden,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
+
 OPTIONS = [
     {
         "key": "mist_walkers",
@@ -231,26 +233,6 @@ ASSUMPTIONS = [
     "The 30% bonus damage Mist Walkers deal against Mourning Mist-marked ",
     "enemies for 8 attacks is not modeled (mark state)",
 ]
-
-
-SLOTS = {
-    "P": _mist_walkers,
-    "Q": _BATCH_SLOTS["Q"],
-    "W": _BATCH_SLOTS["W"],
-    "E": _BATCH_SLOTS["E"],
-    "R": _maiden,
-}
-
-# Mourning Mist's globule lands and "enemy champions and monsters hit are
-# slowed by 30% for 1.5 seconds"; Last Rites' empowered swing only damages
-# and heals, and the R row prices the Maiden's basic attacks, which control
-# nothing.  W (Dark Procession) is where the knock-aside and the pull live,
-# but the ring deals no damage.  P is the Mist Walker pet row, not an
-# ability event.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
-
-parse_abilities = build_parser(SLOTS, "Yorick", cc_kinds=MODULE_CC)
-SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

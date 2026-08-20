@@ -82,7 +82,7 @@ def cached_row(champion, slot, attribute, entry=0):
 
 def packet_row(champion, slot, module, variant=None):
     """The base array the generated packet still carries for one slot."""
-    spec = module.PACKET_SPEC["slots"][slot]
+    spec = module.SLOTS.packet_spec["slots"][slot]
     if variant is not None:
         spec = spec["variants"][variant]
     return spec["base"]

@@ -22,10 +22,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 # HARDCODED: verify on patch updates — the 5-second Spirit Form window
@@ -166,17 +165,6 @@ def _fate_sealed(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module(
-        "Yone",
-        PACKET_SHA256,
-        single_hit_slots=frozenset({"W"}),
-        slot_parsers={"W": _spirit_cleave, "R": _fate_sealed},
-    )
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
-
-
 def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: declare a post-mitigation damage store for the fight engine."""
     ability = ctx.ability("E")
@@ -208,14 +196,6 @@ def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _way_of_the_hunter,
-    "Q": _mortal_steel,
-    "W": _spirit_cleave,
-    "R": _fate_sealed,
-    # E declares metadata consumed after the fight event ledger is authored.
-    "E": _soul_unbound,
-}
 # Spirit Cleave only cleaves; Fate Sealed's gust "deals equal parts
 # physical and magic damage to marked enemies within and pulls them towards
 # the location Yone blinked to, then knocks them up for 0.75 seconds" — the
@@ -232,7 +212,20 @@ SLOTS = {
 # review the coverage scan cannot see.
 MODULE_CC = {"W": "none", "R": "pull"}
 
-parse_abilities = build_parser(SLOTS, "Yone", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Yone",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"W"}),
+    slot_parsers={
+        "W": _spirit_cleave,
+        "R": _fate_sealed,
+        "P": _way_of_the_hunter,
+        "Q": _mortal_steel,  # E declares metadata consumed after the fight event ledger is authored.
+        "E": _soul_unbound,
+    },
+    slot_order=("P", "Q", "W", "R", "E"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -259,5 +252,3 @@ ASSUMPTIONS = [
     "R (Fate Sealed) uses the sourced magic row followed by the sourced "
     "physical row.",
 ]
-
-SOURCES = load_champion_sources("Yone")

@@ -561,6 +561,8 @@ def build_packet_module(
     packet_tick_fixes: dict[str, dict[str, Any]] | None = None,
     wiki_attribute_tick_fixes: dict[str, dict[str, Any]] | None = None,
     slot_parsers: dict[str, Any] | None = None,
+    slot_wrappers: dict[str, Any] | None = None,
+    slot_order: tuple[str, ...] | None = None,
     variant_parsers: dict[tuple[str, int], Any] | None = None,
     packet_part_timings: dict[str, dict[str, Any]] | None = None,
     cast_dependencies: tuple[CastDependency, ...] = (),
@@ -569,7 +571,28 @@ def build_packet_module(
     """Compile one named module's reviewed packet declaration.
 
     Champion-specific timing, parser, and assumption choices are passed by
-    the named champion module.  This compiler contains no champion switchboard.
+    the named champion module.  This compiler contains no champion switchboard,
+    and it is the only place a packet module's ``parse_abilities`` is built:
+    the module never rebinds the parser, the slot map, or the packet pin it
+    gets back, because the contract reads the pin off what this returns.
+
+    Three keyword arguments let a module say everything it used to say by
+    editing the slot map afterwards, applied in this order once the packet
+    is compiled:
+
+    * ``slot_parsers`` — ``{slot: parser}`` replaces the compiled slot,
+      whatever kind the packet gave it; a slot the packet does not compile
+      (Riven's ``R_buff``, Vladimir's ``hemoplague`` amp) is appended.
+    * ``slot_wrappers`` — ``{slot: factory}`` where ``factory(compiled)``
+      returns the parser to use; for a module that prices the packet's own
+      row and then adds to it (a self-shield, a certification, item on-hit
+      application).  Naming a slot nothing compiled is an error.
+    * ``slot_order`` — the module's slot surface in the order it is
+      evaluated (within a phase, evaluation order is insertion order); a
+      compiled slot the tuple leaves out is withheld from the module.
+
+    ``single_hit_slots`` certifies a ``packet`` or ``wiki_attribute`` slot's
+    one hit at the cast boundary (variants certify per packet variant).
 
     ``cc_kinds`` is the module's ``MODULE_CC`` declaration, handed to the
     same ``build_parser`` application every hand-written module uses so a
@@ -601,7 +624,6 @@ def build_packet_module(
         )
     packet_tick_fixes = packet_tick_fixes or {}
     wiki_attribute_tick_fixes = wiki_attribute_tick_fixes or {}
-    slot_parsers = slot_parsers or {}
     variant_parser_overrides = variant_parsers or {}
     packet_part_timings = packet_part_timings or {}
     slots = PacketSlotMap(champion, packet_sha256, cast_dependencies=cast_dependencies)
@@ -683,30 +705,25 @@ def build_packet_module(
             )
         elif spec.get("kind") == "wiki_attribute":
             tick_fix = wiki_attribute_tick_fixes.get(slot)
-            custom = slot_parsers.get(slot)
             if tick_fix is not None:
                 slots[slot] = _ticked_wiki_attribute_parser(spec, tick_fix)
-            elif custom is not None:
-                slots[slot] = custom
             else:
                 slots[slot] = simple_damage(
                     attr=str(spec["attribute"]),
                     dmg_type=str(spec.get("damage_type", "auto")),
                     ranks=str(spec.get("ranks", "rank")),
                     source=tuple(spec["source"]) if spec.get("source") else None,
+                    event_order_certified=(
+                        "single_hit" if slot in single_hit_slots else None
+                    ),
                 )
         elif spec.get("kind") == "packet":
-            custom = slot_parsers.get(slot)
-            slots[slot] = (
-                custom
-                if custom is not None
-                else _packet_parser(
-                    spec,
-                    slot,
-                    single_hit_certified=slot in single_hit_slots,
-                    tick_fix=packet_tick_fixes.get(str(spec.get("name", ""))),
-                    part_timing=packet_part_timings.get(slot),
-                )
+            slots[slot] = _packet_parser(
+                spec,
+                slot,
+                single_hit_certified=slot in single_hit_slots,
+                tick_fix=packet_tick_fixes.get(str(spec.get("name", ""))),
+                part_timing=packet_part_timings.get(slot),
             )
         elif spec.get("kind") == "no_damage":
             slots[slot] = no_damage_parser(
@@ -717,6 +734,26 @@ def build_packet_module(
             )
         else:
             slots[slot] = no_damage_parser(slot)
+
+    for slot, custom in (slot_parsers or {}).items():
+        slots[slot] = custom
+    for slot, wrap in (slot_wrappers or {}).items():
+        if slot not in slots:
+            raise KeyError(
+                f"{champion_name} slot_wrappers names {slot!r}, which neither the "
+                f"packet nor slot_parsers compiled (slots are {sorted(slots)})"
+            )
+        slots[slot] = wrap(slots[slot])
+    if slot_order is not None:
+        unknown = [slot for slot in slot_order if slot not in slots]
+        if unknown:
+            raise KeyError(
+                f"{champion_name} slot_order names {unknown}, which neither the "
+                f"packet nor slot_parsers compiled (slots are {sorted(slots)})"
+            )
+        ordered = {slot: slots[slot] for slot in slot_order}
+        slots.clear()
+        slots.update(ordered)
 
     # The digest above proves the evidence is the reviewed one; this
     # proves the declarations are about slots that evidence compiled.  A

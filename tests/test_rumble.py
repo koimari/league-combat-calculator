@@ -64,7 +64,7 @@ class TestPricedRows:
         base = row_review.packet_row("Rumble", "Q", rumble)
         assert len(base) == 20
         assert (base[0], base[4], base[-1]) == (65.0, 107.71, 336.84)
-        assert rumble.PACKET_SPEC["slots"]["Q"]["ranks"] == "rank"
+        assert rumble.SLOTS.packet_spec["slots"]["Q"]["ranks"] == "rank"
         assert "against monsters" in cc_review.slot_text(cc_review.kit("Rumble"), "Q")
 
     def test_flamespitter_prices_the_full_channel(self):

@@ -13,10 +13,11 @@ Q damage + Q heal modeled (verified); W (Blood Hunt), E (Primal Howl)
 and P (Eternal Hunger) remain documented out_of_scope.
 """
 
+from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, damage_entry, extract_cooldown, extract_named
 
@@ -57,21 +58,6 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "2c91dcf27a641c6a177969744e204b672765d8fc7291214c069ecacc64511a19"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Warwick",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Warwick Q's sourced 0.264-second bite delay is applied to the hit "
-        "event without inventing a channel lockout.",
-    ),
-    single_hit_slots=frozenset({"Q"}),
-    packet_part_timings={"Q": {"time_offset": 0.264}},
-)
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["R"] = _infinite_duress
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
-)
 # Jaws of the Beast only bites ("dealing magic damage, healing himself...");
 # the displacement immunity is Warwick's own.  Infinite Duress "knocks them
 # down and channels for up to 1.5 seconds to suppress, reveal, and deal
@@ -81,7 +67,28 @@ SLOTS["Q"] = with_item_on_hits(
 # damage row, and P is an on-hit rider on basic attacks.
 MODULE_CC = {"Q": "none", "R": "suppression"}
 
-parse_abilities = build_parser(SLOTS, "Warwick", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Warwick",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Warwick Q's sourced 0.264-second bite delay is applied to the hit "
+        "event without inventing a channel lockout.",
+    ),
+    single_hit_slots=frozenset({"Q"}),
+    packet_part_timings={"Q": {"time_offset": 0.264}},
+    slot_parsers={
+        "R": _infinite_duress,
+    },
+    slot_wrappers={
+        "Q": partial(
+            with_item_on_hits,
+            effectiveness=1.0,
+            hits=1,
+            triggers=("on_hit", "on_attack"),
+        ),
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (Infinite Duress) prices the wiki Total Magic Damage "

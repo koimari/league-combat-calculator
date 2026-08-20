@@ -15,7 +15,7 @@ Stacks), 0 by default so the unoptioned price is the sourced Total row.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
@@ -27,17 +27,6 @@ PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764d
 # seconds" (cached Q and W prose).
 _BLAST_DELAY_SECONDS = 0.528
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Xerath",
-    PACKET_SHA256,
-    # E's orb has no sourced travel number to place — the packet is one hit.
-    single_hit_slots=frozenset({"E"}),
-    packet_part_timings={
-        "Q": {"time_offset": _BLAST_DELAY_SECONDS},
-        "W": {"time_offset": _BLAST_DELAY_SECONDS},
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the 0.627-second barrage cadence is
 # prose in the cached R description ("Each cast has a static cooldown of
@@ -114,9 +103,6 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["R"] = _rite_of_the_arcane
-
 # Eye of Destruction lands "dealing magic damage to enemies hit and slowing
 # them by 25% for 2.5 seconds"; Shocking Orb "deals magic damage to the
 # first enemy hit and stuns them for 0.75 : 2.25 ... seconds".  Arcanopulse
@@ -125,7 +111,20 @@ SLOTS["R"] = _rite_of_the_arcane
 # authors no ability part.
 MODULE_CC = {"Q": "none", "W": "slow", "E": "stun", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Xerath", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Xerath",
+    PACKET_SHA256,
+    # E's orb has no sourced travel number to place — the packet is one hit.
+    single_hit_slots=frozenset({"E"}),
+    packet_part_timings={
+        "Q": {"time_offset": _BLAST_DELAY_SECONDS},
+        "W": {"time_offset": _BLAST_DELAY_SECONDS},
+    },
+    slot_parsers={
+        "R": _rite_of_the_arcane,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

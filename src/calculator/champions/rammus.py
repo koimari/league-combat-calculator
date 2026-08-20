@@ -17,7 +17,7 @@ buff, not damage, and remain state.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 
@@ -30,16 +30,6 @@ _THORNS_ARMOR_RATIO = 0.10
 _THORNS_MAGIC_RESISTANCE_RATIO = 0.10
 
 PACKET_SHA256 = "e48aa5766d5565b485a6d7fa34421f25d11f56fdcfdec5bb0c0823acc991e0f0"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Rammus",
-    PACKET_SHA256,
-    # Powerball stops on the enemy it collides with and Soaring Slam lands
-    # one impact — the boundary claim that carries MODULE_CC's reviewed
-    # answers into the event ledger.
-    single_hit_slots=frozenset({"Q", "R"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -90,9 +80,6 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["W"] = _defensive_ball_curl
-
 # Cached kit review.  Q's collision deals magic damage while "knocking them
 # back 125 units" and the enemies hit "are then stunned ... as well as
 # slowed": two immobilize kinds from one cast, which is what the
@@ -104,7 +91,18 @@ SLOTS["W"] = _defensive_ball_curl
 # damage row, so against a champion it emits nothing; P is a stat innate.
 MODULE_CC = {"Q": "immobilize", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Rammus", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rammus",
+    PACKET_SHA256,
+    # Powerball stops on the enemy it collides with and Soaring Slam lands
+    # one impact — the boundary claim that carries MODULE_CC's reviewed
+    # answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "R"}),
+    slot_parsers={
+        "W": _defensive_ball_curl,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

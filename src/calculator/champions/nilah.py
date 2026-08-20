@@ -17,29 +17,11 @@ the minimum row.
 """
 
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Nilah",
-    PACKET_SHA256,
-    packet_tick_fixes={
-        "Apotheosis": {
-            "count": 4,
-            "first_tick": 0.25,
-            "tick_interval": 0.25,
-            "dot_duration": 1.0,
-        }
-    },
-    # Slipstream damages once, on the dash it passes through — the boundary
-    # claim that carries MODULE_CC's reviewed answer for E into the event
-    # ledger.  R already authors its own four-tick timing above, and Q
-    # certifies its own hit in ``_formless_blade``.
-    single_hit_slots=frozenset({"E"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # Q's damage "increased by 0% : 70% (+ 0% : 21%) (based on critical
 # strike chance)": the Maximum row is the Minimum row x 1.91
@@ -95,9 +77,6 @@ def _formless_blade(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _formless_blade
-
 # Cached kit review.  Q's whip-blade and E's dash only "deal physical
 # damage".  R is the kit's one control cast and the module prices its whirl
 # ticks (Physical Damage per Tick x4 == Total Physical Damage): "each hit
@@ -107,7 +86,27 @@ SLOTS["Q"] = _formless_blade
 # heal/shield innate and the mist damage nothing.
 MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Nilah", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Nilah",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Apotheosis": {
+            "count": 4,
+            "first_tick": 0.25,
+            "tick_interval": 0.25,
+            "dot_duration": 1.0,
+        }
+    },
+    # Slipstream damages once, on the dash it passes through — the boundary
+    # claim that carries MODULE_CC's reviewed answer for E into the event
+    # ledger.  R already authors its own four-tick timing above, and Q
+    # certifies its own hit in ``_formless_blade``.
+    single_hit_slots=frozenset({"E"}),
+    slot_parsers={
+        "Q": _formless_blade,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Joy Unending) converts self-heal excess beyond maximum health "

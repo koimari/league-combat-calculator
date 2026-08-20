@@ -22,7 +22,7 @@ possession/transform mechanic is inherently out of scope (E8d note).
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     with_item_on_hits,
@@ -41,11 +41,6 @@ _Q_SECOND_STRIKE_AP_RATIO = 0.15
 _R_BASE_AD_RATIO = 1.20
 
 PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756b"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Viego", PACKET_SHA256, single_hit_slots=frozenset({"W"})
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -152,15 +147,6 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _blade_of_the_ruined_king
-SLOTS["R"] = _heartbreaker
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit",)
-)
-SLOTS["R"] = with_item_on_hits(
-    SLOTS["R"], effectiveness=1.0, hits=1, triggers=("on_hit",)
-)
 # Q's thrust "deals physical damage to enemies hit" and its passive second
 # strike only damages; Spectral Maw's mist "deals magic damage to the first
 # enemy hit and stuns them for 0.25 : 1.25 (based on channel time) seconds";
@@ -171,7 +157,20 @@ SLOTS["R"] = with_item_on_hits(
 # both are out_of_scope and author no damage part.
 MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Viego", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Viego",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"W"}),
+    slot_parsers={
+        "Q": with_item_on_hits(
+            _blade_of_the_ruined_king, effectiveness=1.0, hits=1, triggers=("on_hit",)
+        ),
+        "R": with_item_on_hits(
+            _heartbreaker, effectiveness=1.0, hits=1, triggers=("on_hit",)
+        ),
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

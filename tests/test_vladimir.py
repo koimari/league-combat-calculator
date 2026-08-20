@@ -38,7 +38,7 @@ class TestReviewedCrowdControl:
         # cached text puts the slow on.
         e_text = cc_review.slot_text(data, "E")
         assert "charged for at least 1 second, enemies hit are also slowed" in e_text
-        assert vladimir.PACKET_SPEC["slots"]["E"]["base"] == [
+        assert vladimir.SLOTS.packet_spec["slots"]["E"]["base"] == [
             60.0,
             90.0,
             120.0,

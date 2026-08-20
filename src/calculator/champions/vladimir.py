@@ -16,7 +16,7 @@ not amplified (wiki bug note); Vladimir's kit deals none.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import AMP, SlotCtx, build_parser
+from .engine import AMP, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
@@ -27,29 +27,6 @@ PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532
 # Vladimir R).  The same 4 seconds is the mark's duration.
 _R_INFECTION_SECONDS = 4.0
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Vladimir",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
-        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
-    ),
-    # Q "drains blood from the target enemy, dealing magic damage" and E's
-    # nova damages an enemy "only once": one hit each, at the cast.
-    single_hit_slots=frozenset({"Q", "E"}),
-    packet_part_timings={"R": {"time_offset": _R_INFECTION_SECONDS}},
-    slot_parsers={
-        "W": repeat_damage_parser(
-            attr="Magic Damage Per Tick",
-            dmg_type="magic",
-            count=4,
-            time_offset=0.5,
-            hit_interval=0.5,
-            dot_duration=2.0,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON
 # leveling rows.  Hemoplague: "increasing the damage they take from all
@@ -111,9 +88,6 @@ def _hemoplague_amp(ctx: SlotCtx) -> None:
 _hemoplague_amp.phase = AMP
 
 
-SLOTS = dict(SLOTS)
-SLOTS["hemoplague"] = _hemoplague_amp
-
 # Sanguine Pool's ticks land on enemies who "are slowed by 40%"; Tides of
 # Blood prices the fully charged nova, and "if Tides of Blood was charged
 # for at least 1 second, enemies hit are also slowed for 0.5 seconds".
@@ -123,7 +97,30 @@ SLOTS["hemoplague"] = _hemoplague_amp
 # neither emits a cast.
 MODULE_CC = {"Q": "none", "W": "slow", "E": "slow", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Vladimir", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Vladimir",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
+        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
+    ),
+    # Q "drains blood from the target enemy, dealing magic damage" and E's
+    # nova damages an enemy "only once": one hit each, at the cast.
+    single_hit_slots=frozenset({"Q", "E"}),
+    packet_part_timings={"R": {"time_offset": _R_INFECTION_SECONDS}},
+    slot_parsers={
+        "W": repeat_damage_parser(
+            attr="Magic Damage Per Tick",
+            dmg_type="magic",
+            count=4,
+            time_offset=0.5,
+            hit_interval=0.5,
+            dot_duration=2.0,
+        ),
+        "hemoplague": _hemoplague_amp,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

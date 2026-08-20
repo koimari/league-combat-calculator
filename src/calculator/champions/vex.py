@@ -29,16 +29,12 @@ P1 addition over the reviewed packet:
 
 from typing import Any
 
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, extract_named, on_hit_entry
 
 PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd15"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Vex", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Personal Space's shield duration is
 # prose in the cached ability description ("granting herself a shield for
@@ -47,26 +43,30 @@ PACKET_SPEC = SLOTS.packet_spec
 _PERSONAL_SPACE_SHIELD_DURATION_SECONDS = 2.5
 
 
-def _personal_space(ctx: SlotCtx) -> dict[str, Any] | None:
+def _personal_space(packet_w):
     """W: the reviewed magic hit plus the sourced self-shield payload."""
-    entry = _packet_w(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = extract_named(
-        ctx.ability(), "Shield Strength", rank, ctx.stats, ctx.target
-    )
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_PERSONAL_SPACE_SHIELD_DURATION_SECONDS,
-        source=entry.get("name", "Personal Space"),
-        detail=(
-            f"W also shields Vex for {shield:g} for "
-            f"{_PERSONAL_SPACE_SHIELD_DURATION_SECONDS:g}s (self)"
-        ),
-    )
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_w(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        shield = extract_named(
+            ctx.ability(), "Shield Strength", rank, ctx.stats, ctx.target
+        )
+        entry["event_order_certified"] = "single_hit"
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=_PERSONAL_SPACE_SHIELD_DURATION_SECONDS,
+            source=entry.get("name", "Personal Space"),
+            detail=(
+                f"W also shields Vex for {shield:g} for "
+                f"{_PERSONAL_SPACE_SHIELD_DURATION_SECONDS:g}s (self)"
+            ),
+        )
+
+    return parse
 
 
 def _gloom_detonation(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -108,22 +108,16 @@ def _gloom_detonation(ctx: SlotCtx) -> dict[str, Any] | None:
 _gloom_detonation.phase = ONHIT
 
 
-SLOTS = dict(SLOTS)
-_packet_w = SLOTS["W"]
-SLOTS["W"] = _personal_space
-SLOTS["P"] = _gloom_detonation
-
-# No MODULE_CC: Doom makes every basic ability's control a state, not a slot
-# fact — "Periodically, Vex empowers her next basic ability to knock down
-# and fear enemies hit", and "If Looming Darkness triggers Doom, enemies hit
-# will flee from the epicenter instead" replaces even E's own slow.  Neither
-# a slot-wide fear nor a slot-wide "none" is true of Q, W or E (the Annie
-# Pyromania rule), so this kit keeps the coarse control-armed scan.
-# R (Shadow Surge) is outside Doom's reach — it empowers a *basic* ability —
-# and controls nothing, but its packet row is the cached Total Magic Damage:
-# the Shadow's hit plus the recast dash's arrival, two hits in one part, so
-# ``single_hit`` certification cannot state it either.
-parse_abilities = build_parser(SLOTS, "Vex")
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Vex",
+    PACKET_SHA256,
+    slot_parsers={
+        "P": _gloom_detonation,
+    },
+    slot_wrappers={
+        "W": _personal_space,
+    },
+)
 
 OPTIONS = list(OPTIONS) + [
     {

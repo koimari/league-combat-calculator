@@ -8,7 +8,7 @@ damage is sourced from the same Wiki snapshot as the generated roster.
 
 from typing import Any
 
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_value
 
@@ -23,21 +23,6 @@ PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55caf
 # can land is the arming time — the 5-second figure is the untouched
 # timeout, not the champion case.
 _E_ARMING_SECONDS = 0.5
-
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
-    build_packet_module(
-        "Jinx",
-        PACKET_SHA256,
-        # W's one shock blast lands at the cast: "Jinx fires a shock blast
-        # in the target direction that deals physical damage to the first
-        # enemy it hits", with no travel duration in the cached entry, and
-        # the cast is "from wherever the caster is at the start of the cast
-        # time".  R's rocket is likewise one explosion.
-        single_hit_slots=frozenset({"W", "R"}),
-        packet_part_timings={"E": {"time_offset": _E_ARMING_SECONDS}},
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 
 def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -106,7 +91,6 @@ def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _get_excited.phase = BUFF
 
-SLOTS = {**_packet_slots, "P": _get_excited, "Q": _switcheroo}
 
 # Reviewed crowd control, read from the cached kit.  R's rocket only
 # explodes for damage and sight.  W's blast "deals physical damage to the
@@ -118,7 +102,22 @@ SLOTS = {**_packet_slots, "P": _get_excited, "Q": _switcheroo}
 # toggle).
 MODULE_CC = {"W": "slow", "E": "root", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Jinx", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Jinx",
+    PACKET_SHA256,
+    # W's one shock blast lands at the cast: "Jinx fires a shock blast
+    # in the target direction that deals physical damage to the first
+    # enemy it hits", with no travel duration in the cached entry, and
+    # the cast is "from wherever the caster is at the start of the cast
+    # time".  R's rocket is likewise one explosion.
+    single_hit_slots=frozenset({"W", "R"}),
+    packet_part_timings={"E": {"time_offset": _E_ARMING_SECONDS}},
+    slot_parsers={
+        "P": _get_excited,
+        "Q": _switcheroo,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -154,7 +153,7 @@ ASSUMPTIONS = [
     "Get Excited! is opt-in because takedowns are not implied by a damage package.",
     "W, E, and R use the pinned Wiki rank packets; R's missing-health term is evaluated after prior damage events.",
 ]
-SOURCES = list(_packet_sources) + [
+SOURCES = list(SOURCES) + [
     {
         "label": "Jinx Switcheroo!",
         "url": "https://wiki.leagueoflegends.com/en-us/Jinx",

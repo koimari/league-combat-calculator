@@ -21,8 +21,8 @@ P1-2 fixes:
 from typing import Any
 
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import on_hit_entry, simple_damage
+from .engine import ONHIT, SlotCtx
+from .slotlib import on_hit_entry
 
 # HARDCODED: verify on patch updates — Break the Mold's on-hit formula
 # ("5% of her total armor and 5% of her total magic resistance") is wiki
@@ -32,25 +32,6 @@ _BREAK_THE_MOLD_ARMOR_RATIO = 0.05
 _BREAK_THE_MOLD_MR_RATIO = 0.05
 
 PACKET_SHA256 = "c88088e022b4afb695def1471bb4068ad40512c06c50d5a43cd479eebd11445a"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Rell",
-    PACKET_SHA256,
-    packet_tick_fixes={
-        "Magnet Storm": {
-            "count": 8,
-            "first_tick": 0.25,
-            "tick_interval": 0.25,
-            "dot_duration": 2.0,
-        }
-    },
-    # Shattering Strike thrusts once and both W forms land one hit — the
-    # crash-down impact and the mounted charge's empowered attack — which
-    # is the boundary claim that carries MODULE_CC's reviewed answers into
-    # the event ledger.  R already authors its own eight-tick timing above.
-    single_hit_slots=frozenset({"Q", "W"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -69,19 +50,6 @@ def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _break_the_mold.phase = ONHIT
 
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _break_the_mold
-# E's explosion lands once on the target, so it certifies the cast
-# boundary its reviewed answer rides on.  The parser is rebuilt from the
-# pinned packet's own evidence rather than restating the attribute here.
-_E_SPEC = PACKET_SPEC["slots"]["E"]
-SLOTS["E"] = simple_damage(
-    attr=str(_E_SPEC["attribute"]),
-    dmg_type=str(_E_SPEC.get("damage_type", "auto")),
-    ranks=str(_E_SPEC.get("ranks", "rank")),
-    source=tuple(_E_SPEC["source"]) if _E_SPEC.get("source") else None,
-    event_order_certified="single_hit",
-)
 
 # Cached kit review.  Q "deal[s] them magic damage and stun[s] them for
 # 0.65 seconds"; its "immobilized" wording is about Rell failing to lunge,
@@ -96,7 +64,28 @@ SLOTS["E"] = simple_damage(
 # the auto stream, so it carries no ability event of its own.
 MODULE_CC = {"Q": "stun", "W": "immobilize", "E": "none", "R": "pull"}
 
-parse_abilities = build_parser(SLOTS, "Rell", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rell",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Magnet Storm": {
+            "count": 8,
+            "first_tick": 0.25,
+            "tick_interval": 0.25,
+            "dot_duration": 2.0,
+        }
+    },
+    # Shattering Strike thrusts once and both W forms land one hit — the
+    # crash-down impact and the mounted charge's empowered attack — which
+    # is the boundary claim that carries MODULE_CC's reviewed answers into
+    # the event ledger; E's explosion lands once on the target.  R already
+    # authors its own eight-tick timing above.
+    single_hit_slots=frozenset({"Q", "W", "E"}),
+    slot_parsers={
+        "P": _break_the_mold,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Break the Mold) deals 5% of Rell's total armor + 5% of her total "

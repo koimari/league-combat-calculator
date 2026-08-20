@@ -22,17 +22,15 @@ from typing import Any
 import re
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import (
     attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    simple_damage,
 )
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
@@ -47,28 +45,6 @@ _Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 
 PACKET_SHA256 = "122d6d40606b4b120f4fd94cc1ba7fa968cbda67af830338296f41fe94ca3820"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module(
-        "Sett",
-        PACKET_SHA256,
-        # Facebreaker and The Show Stopper each land one blow on a target
-        # ("dealing physical damage and slowing them"; "Enemies within the
-        # epicenter take physical damage"), so their single authored part
-        # is a hit the ledger can time — which is what carries their
-        # MODULE_CC answer to the control-armed readers.
-        single_hit_slots=frozenset({"E"}),
-        slot_parsers={
-            "R": simple_damage(
-                attr="Physical Damage",
-                dmg_type="physical",
-                ranks="rank",
-                source=("R", 0),
-                event_order_certified="single_hit",
-            )
-        },
-    )
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Pit Grit's Right Punch: "deal 5 : 100 (based on level) (+ 55% bonus
@@ -250,14 +226,6 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _pit_grit,
-    "Q": _knuckle_down,
-    "W": _haymaker,
-    "E": _BATCH_SLOTS["E"],
-    "R": _BATCH_SLOTS["R"],
-}
-
 # Reviewed crowd control, read from the cached kit.  W (Haymaker) is a
 # blast with no control clause.  E (Facebreaker) "pulls in enemies at his
 # front and back ... dealing physical damage and slowing them by 70%" —
@@ -269,7 +237,23 @@ SLOTS = {
 # time, and an unreachable declaration reviews nothing.
 MODULE_CC = {"W": "none", "E": "pull", "R": "suppression"}
 
-parse_abilities = build_parser(SLOTS, "Sett", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sett",
+    PACKET_SHA256,
+    # Facebreaker and The Show Stopper each land one blow on a target
+    # ("dealing physical damage and slowing them"; "Enemies within the
+    # epicenter take physical damage"), so their single authored part
+    # is a hit the ledger can time — which is what carries their
+    # MODULE_CC answer to the control-armed readers.
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "P": _pit_grit,
+        "Q": _knuckle_down,
+        "W": _haymaker,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -310,7 +294,6 @@ ASSUMPTIONS = [
     "E/R damage keep the reviewed CP10.7 packet pricing",
 ]
 
-SOURCES = load_champion_sources("Sett")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

@@ -36,7 +36,7 @@ class TestReviewedCrowdControl:
         assert "with those in the center taking 50% increased damage" in (
             cc_review.slot_text(data, "R")
         )
-        assert smolder.PACKET_SPEC["slots"]["R"]["base"] == [150.0, 250.0, 350.0]
+        assert smolder.SLOTS.packet_spec["slots"]["R"]["base"] == [150.0, 250.0, 350.0]
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Smolder") == []

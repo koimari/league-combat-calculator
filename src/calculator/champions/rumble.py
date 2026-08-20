@@ -123,7 +123,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={"Q": _flamespitter_full_channel},
     cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Flamespitter) prices the cached Maximum Magic Damage row "
     "(62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5% : 10% of the "

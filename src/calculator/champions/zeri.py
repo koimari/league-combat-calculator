@@ -16,7 +16,7 @@ Damage" 80-100%) are outside this single-target model.
 
 from .packet_module import build_packet_module, repeat_damage_parser
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
@@ -32,27 +32,6 @@ _BURST_ROUNDS = 7
 _BURST_ROUND_TIME_OFFSET = 0.0
 _BURST_ROUND_INTERVAL = 0.0
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zeri",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
-        "Total Physical Damage).",
-    ),
-    # W's pulse and R's nova are one hit each at the cast; neither packet
-    # carries a travel or tick phase to place.
-    single_hit_slots=frozenset({"W", "R"}),
-    slot_parsers={
-        "Q": repeat_damage_parser(
-            attr="Physical Damage per Hit",
-            dmg_type="physical",
-            count=_BURST_ROUNDS,
-            time_offset=_BURST_ROUND_TIME_OFFSET,
-            hit_interval=_BURST_ROUND_INTERVAL,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # Lightning Rounds empowers each round's first-enemy hit.
 _E_LIGHTNING_ROUNDS_ROUNDS = _BURST_ROUNDS
@@ -99,9 +78,6 @@ def _spark_surge(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["E"] = _spark_surge
-
 # Ultrashock Laser's pulse "deals physical damage to the first enemy hit
 # and slows them for 2 seconds".  Burst Fire's rounds and Lightning Crash's
 # nova only damage — the nova empowers Zeri (Overcharged), not the enemies
@@ -111,7 +87,28 @@ SLOTS["E"] = _spark_surge
 # charged basic attack, not an ability event.
 MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Zeri", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zeri",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
+        "Total Physical Damage).",
+    ),
+    # W's pulse and R's nova are one hit each at the cast; neither packet
+    # carries a travel or tick phase to place.
+    single_hit_slots=frozenset({"W", "R"}),
+    slot_parsers={
+        "Q": repeat_damage_parser(
+            attr="Physical Damage per Hit",
+            dmg_type="physical",
+            count=_BURST_ROUNDS,
+            time_offset=_BURST_ROUND_TIME_OFFSET,
+            hit_interval=_BURST_ROUND_INTERVAL,
+        ),
+        "E": _spark_surge,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst "

@@ -11,20 +11,10 @@ per-level flat plus 40% bonus AD per marked-target auto.
 """
 
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .slotlib import extract_named, on_hit_entry
 
 PACKET_SHA256 = "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Quinn",
-    PACKET_SHA256,
-    # Valor's dive, the Vault dash and Skystrike's volley each deal their
-    # packet once, at the cast — the boundary claim that carries MODULE_CC's
-    # reviewed answers into the event ledger.
-    single_hit_slots=frozenset({"Q", "E", "R"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _harrier(ctx: SlotCtx):
@@ -40,8 +30,6 @@ def _harrier(ctx: SlotCtx):
 
 _harrier.phase = ONHIT
 
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _harrier
 
 # Cached kit review.  Q damages and then "the primary target is
 # nearsighted for 1.75 seconds if they are a champion ... otherwise, they
@@ -57,7 +45,18 @@ SLOTS["P"] = _harrier
 # rider on the auto stream.
 MODULE_CC = {"Q": "none", "E": "knockback", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Quinn", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Quinn",
+    PACKET_SHA256,
+    # Valor's dive, the Vault dash and Skystrike's volley each deal their
+    # packet once, at the cast — the boundary claim that carries MODULE_CC's
+    # reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
+    slot_parsers={
+        "P": _harrier,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Harrier) prices the wiki's on-hit row: 15 : 132.35 (based on "

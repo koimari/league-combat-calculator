@@ -22,7 +22,7 @@ Prey Seeker (variant 1) keeps its own certification.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
@@ -33,19 +33,6 @@ PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0
 def _queens_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q variant 0: all three empowered attacks, declared at the cast."""
     return typed_damage(ctx, "Total Bonus Physical Damage", "physical", time_offset=0.0)
-
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Rek'Sai",
-    PACKET_SHA256,
-    # Prey Seeker's bolt and Unburrow's emergence each land one hit, like
-    # Void Rush already did — the boundary claim that carries MODULE_CC's
-    # reviewed answers into the event ledger.  Queen's Wrath prices three
-    # empowered attacks and declares their aggregate at the cast instead.
-    single_hit_slots=frozenset({"Q", "W", "R"}),
-    variant_parsers={("Q", 0): _queens_wrath},
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -87,9 +74,6 @@ def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["E"] = _furious_bite
-
 # Cached kit review.  Both Q variants only damage — Queen's Wrath's
 # empowered attack "deal[s] bonus physical damage to the target and
 # surrounding enemies" and Prey Seeker's bolt deals "magic damage to all
@@ -102,7 +86,20 @@ SLOTS["E"] = _furious_bite
 # damage".  P is Fury generation and healing, with no damage row.
 MODULE_CC = {"Q": "none", "W": "knockup", "E": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Rek'Sai", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rek'Sai",
+    PACKET_SHA256,
+    # Prey Seeker's bolt and Unburrow's emergence each land one hit, like
+    # Void Rush already did — the boundary claim that carries MODULE_CC's
+    # reviewed answers into the event ledger.  Queen's Wrath prices three
+    # empowered attacks and declares their aggregate at the cast instead.
+    single_hit_slots=frozenset({"Q", "W", "R"}),
+    variant_parsers={("Q", 0): _queens_wrath},
+    slot_parsers={
+        "E": _furious_bite,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

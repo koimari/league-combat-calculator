@@ -23,22 +23,12 @@ precedent) so every later physical slot (Q/W/R) scales off the buffed
 AD; the amount is factored at cast and does not change (wiki note).
 """
 
-from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .engine import BUFF, ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b8"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Riven",
-    PACKET_SHA256,
-    # Each priced row is one blow: the packet's Q is a single Broken Wings
-    # slash ("Physical Damage" 45 : 165, not the three-cast total), Ki
-    # Burst is one flash and Wind Slash one wave — the boundary claim that
-    # carries MODULE_CC's reviewed answers into the event ledger.
-    single_hit_slots=frozenset({"Q", "W", "R"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the current R1 AD buff is a flat
 # 20% of bonus AD at every rank (riven.bin.json RivenFengShuiEngine
@@ -99,9 +89,6 @@ def _runic_blade(ctx: SlotCtx):
 
 _runic_blade.phase = ONHIT
 
-SLOTS = dict(SLOTS)
-SLOTS["R_buff"] = _blade_of_the_exile
-SLOTS["P"] = _runic_blade
 
 # Cached kit review.  W "deal[s] physical damage to nearby enemies and
 # stun[s] them for 0.75 seconds", and R's Wind Slash only damages.  Q is
@@ -113,7 +100,20 @@ SLOTS["P"] = _runic_blade
 # steroid with a zero-damage row, so none of the three carries an event.
 MODULE_CC = {"Q": "none", "W": "stun", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Riven", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Riven",
+    PACKET_SHA256,
+    # Each priced row is one blow: the packet's Q is a single Broken Wings
+    # slash ("Physical Damage" 45 : 165, not the three-cast total), Ki
+    # Burst is one flash and Wind Slash one wave — the boundary claim that
+    # carries MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "W", "R"}),
+    slot_parsers={
+        "R_buff": _blade_of_the_exile,
+        "P": _runic_blade,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Runic Blade) prices the wiki's per-level AD ratio: empowered "

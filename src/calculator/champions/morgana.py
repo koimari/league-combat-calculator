@@ -20,7 +20,7 @@ Shield) is a documented no-damage shield.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
@@ -129,18 +129,6 @@ def _soul_siphon(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "5cc8fcb312de2d1d31c8b63157dac32a85424fa0decca7a8f1ac4ac94d689a9d"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Morgana",
-    PACKET_SHA256,
-    # Dark Binding's sphere deals its packet once, to the first enemy it
-    # hits, at the cast — the boundary claim that carries MODULE_CC's
-    # reviewed answer for Q into the event ledger.
-    single_hit_slots=frozenset({"Q"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["W"] = _tormented_shadow
-SLOTS["R"] = _soul_shackles
-SLOTS["P"] = _soul_siphon
 
 # Cached kit review: Q's sphere damages the first enemy hit "and root[s]
 # them for a duration"; W's desecrated soil only damages.  R applies two
@@ -148,7 +136,20 @@ SLOTS["P"] = _soul_siphon
 # (``_soul_shackles``).  E shields an ally and P heals Morgana.
 MODULE_CC = {"Q": "root", "W": "none"}
 
-parse_abilities = build_parser(SLOTS, "Morgana", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Morgana",
+    PACKET_SHA256,
+    # Dark Binding's sphere deals its packet once, to the first enemy it
+    # hits, at the cast — the boundary claim that carries MODULE_CC's
+    # reviewed answer for Q into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "W": _tormented_shadow,
+        "R": _soul_shackles,
+        "P": _soul_siphon,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Tormented Shadow) prices all 10 storm ticks (Maximum Damage Per "

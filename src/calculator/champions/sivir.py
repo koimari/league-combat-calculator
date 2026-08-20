@@ -12,16 +12,11 @@ in-game 2x damage (320 at rank 5 vs the old 160).
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Sivir", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -51,9 +46,13 @@ def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _boomerang_blade
-parse_abilities = build_parser(SLOTS, "Sivir")
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sivir",
+    PACKET_SHA256,
+    slot_parsers={
+        "Q": _boomerang_blade,
+    },
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Boomerang Blade) prices the full two-way pass from the cached "

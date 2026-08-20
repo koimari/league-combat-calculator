@@ -20,20 +20,11 @@ priced as damage — an execution is a kill boundary, not a number.
 """
 
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_modifiers
 
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Pyke",
-    PACKET_SHA256,
-    # The harpoon damages the first enemy it hits once and the phantom
-    # damages once on its return — the boundary claim that carries
-    # MODULE_CC's reviewed answers into the event ledger.
-    single_hit_slots=frozenset({"Q", "E"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # The non-execute damage row's scaling, from the wiki prose on R:
 # 50% of the threshold amount -> 40% bonus AD and 0.75 per 1 Lethality.
@@ -78,9 +69,6 @@ def _death_from_below(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["R"] = _death_from_below
-
 # Cached kit review.  Q's harpoon deals "physical damage to the first enemy
 # hit and pull[s] them ... then slow[s] them by 90% for 1 second": the pull
 # is the immobilize the slow rides with.  (Releasing within 0.4 seconds
@@ -92,7 +80,18 @@ SLOTS["R"] = _death_from_below
 # control at all.  W (camouflage) and P (grey health) damage nothing.
 MODULE_CC = {"Q": "pull", "E": "stun", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Pyke", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Pyke",
+    PACKET_SHA256,
+    # The harpoon damages the first enemy it hits once and the phantom
+    # damages once on its return — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "R": _death_from_below,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Gift of the Drowned Ones) stores 9% (+ 0.2% per 1 Lethality) of "

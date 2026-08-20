@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 
@@ -37,20 +37,6 @@ PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5
 # cast start as written.
 _Q_SPROUT_SECONDS = 0.625
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module(
-        "Zyra",
-        PACKET_SHA256,
-        # E's vines burst on the enemies they reach and R damages "as it
-        # expands"; neither packet carries a travel or tick phase to place.
-        single_hit_slots=frozenset({"E", "R"}),
-        # Q's spines are not a cast-boundary hit: Zyra "sprouts thorny
-        # spines at the target location that appear after a 0.625-seconds
-        # delay, dealing magic damage to enemies hit".
-        packet_part_timings={"Q": {"time_offset": _Q_SPROUT_SECONDS}},
-    )
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — plant attack damage is not scraped
 # into data/champions.json (the Q/E text says only "lasts for 8 seconds";
@@ -128,6 +114,40 @@ def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# Grasping Roots' vines "deal[] magic damage to enemies hit and root[] them
+# for a duration"; Stranglethorns damages "as it expands" and then "snaps
+# upward to knock up enemies within for 1 second".  P is the seed-spawn
+# state row and authors no damage part.
+#
+# Deadly Spines only damages ("dealing magic damage to enemies hit"); its
+# sprout delay is authored above, so the row carries that answer.
+#
+# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# The W row is not a cast at all but ``plant_count`` plants' basic
+# attacks, and the two plant kinds do not answer alike: a Thorn Spitter
+# (sprouted by Q) controls nothing while a Vine Lasher (sprouted by E)
+# slows — a pets-page fact this module already records as unmodelled
+# state and one the cached champion entry does not carry at all.  The
+# option cannot tell them apart, so no one kind is true of the row.
+MODULE_CC = {"Q": "none", "E": "root", "R": "knockup"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zyra",
+    PACKET_SHA256,
+    # E's vines burst on the enemies they reach and R damages "as it
+    # expands"; neither packet carries a travel or tick phase to place.
+    single_hit_slots=frozenset({"E", "R"}),
+    # Q's spines are not a cast-boundary hit: Zyra "sprouts thorny
+    # spines at the target location that appear after a 0.625-seconds
+    # delay, dealing magic damage to enemies hit".
+    packet_part_timings={"Q": {"time_offset": _Q_SPROUT_SECONDS}},
+    slot_parsers={
+        "W": _plants,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
+
 OPTIONS = [
     {
         "key": "plant_count",
@@ -168,33 +188,6 @@ ASSUMPTIONS = [
     "The 50% damage falloff for plants that are not the first to attack their ",
     "target and the Monster Hunter bonus vs non-epic monsters are not modeled",
 ]
-SLOTS = {
-    "P": _BATCH_SLOTS["P"],
-    "Q": _BATCH_SLOTS["Q"],
-    "W": _plants,
-    "E": _BATCH_SLOTS["E"],
-    "R": _BATCH_SLOTS["R"],
-}
-
-# Grasping Roots' vines "deal[] magic damage to enemies hit and root[] them
-# for a duration"; Stranglethorns damages "as it expands" and then "snaps
-# upward to knock up enemies within for 1 second".  P is the seed-spawn
-# state row and authors no damage part.
-#
-# Deadly Spines only damages ("dealing magic damage to enemies hit"); its
-# sprout delay is authored above, so the row carries that answer.
-#
-# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# The W row is not a cast at all but ``plant_count`` plants' basic
-# attacks, and the two plant kinds do not answer alike: a Thorn Spitter
-# (sprouted by Q) controls nothing while a Vine Lasher (sprouted by E)
-# slows — a pets-page fact this module already records as unmodelled
-# state and one the cached champion entry does not carry at all.  The
-# option cannot tell them apart, so no one kind is true of the row.
-MODULE_CC = {"Q": "none", "E": "root", "R": "knockup"}
-
-parse_abilities = build_parser(SLOTS, "Zyra", cc_kinds=MODULE_CC)
-SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

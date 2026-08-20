@@ -17,27 +17,13 @@ missing-health-scaled heal (Minimum/Maximum Heal rows) is authored by
 from dataclasses import replace
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Sylas",
-    PACKET_SHA256,
-    # Kingslayer is one strike ("dashes to the front of the target enemy's
-    # location then strikes them") and Abduct is one chain hit ("deal magic
-    # damage to the first enemy hit"), so each packet is one part and one
-    # hit the ledger can time — which is what carries their MODULE_CC
-    # answer to the control-armed readers.
-    single_hit_slots=frozenset({"W", "E"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
-_packet_chain_lash = SLOTS["Q"]
-
-
-def _chain_lash(ctx: SlotCtx) -> dict[str, Any] | None:
+def _chain_lash(packet_q):
     """Q: the packet's Total Magic Damage row, declared at the cast.
 
     The row is the lash and the explosion "after a 0.6-second delay"
@@ -47,16 +33,18 @@ def _chain_lash(ctx: SlotCtx) -> dict[str, Any] | None:
     and its aggregation alone and only says when the ledger sees it, which
     is what carries Q's reviewed slow to the control-armed readers.
     """
-    entry = _packet_chain_lash(ctx)
-    if entry is None:
-        return None
-    entry["parts"] = tuple(
-        replace(part, time_offset=0.0) for part in entry.get("parts") or ()
-    )
-    return entry
 
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, time_offset=0.0) for part in entry.get("parts") or ()
+        )
+        return entry
 
-SLOTS["Q"] = _chain_lash
+    return parse
+
 
 # Reviewed crowd control, read from the cached kit.  W (Kingslayer)
 # applies no control.  E (Abduct) deals its damage and "reveal[s] and
@@ -70,7 +58,20 @@ SLOTS["Q"] = _chain_lash
 # measured to move the row's ledger position.
 MODULE_CC = {"W": "none", "E": "immobilize", "Q": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Sylas", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sylas",
+    PACKET_SHA256,
+    # Kingslayer is one strike ("dashes to the front of the target enemy's
+    # location then strikes them") and Abduct is one chain hit ("deal magic
+    # damage to the first enemy hit"), so each packet is one part and one
+    # hit the ledger can time — which is what carries their MODULE_CC
+    # answer to the control-armed readers.
+    single_hit_slots=frozenset({"W", "E"}),
+    slot_wrappers={
+        "Q": _chain_lash,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"

@@ -21,26 +21,15 @@ E3 additions over the CP10.7 packet module:
   the Mist-buffed AD because P runs first in the BUFF phase.
 """
 
+from functools import partial
 from typing import Any
 
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, attach_self_shield, extract_named, extract_value
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Senna",
-        PACKET_SHA256,
-        # Piercing Darkness' shadow ray and Last Embrace's globule each
-        # deal their packet once, like Dawning Shadow already did — the
-        # boundary claim that carries MODULE_CC's reviewed answers into
-        # the event ledger.
-        single_hit_slots=frozenset({"Q", "W"}),
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Mist's per-stack values (0.75 AD,
 # 20 range and 10% crit per 20 stacks) are wiki prose; the JSON only
@@ -118,7 +107,7 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
 _absolution.phase = BUFF
 
 
-def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
+def _dawning_shadow(packet_r):
     """R: the reviewed physical hit plus Senna's own shield payload.
 
     The light wave shields Senna herself as well as allies; the self
@@ -128,35 +117,31 @@ def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
     selected teammates (it cannot price the Mist term), so the two
     halves do not overlap on Senna herself.
     """
-    entry = _packet_r(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    ability = ctx.ability()
-    shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
-    stacks = int(ctx.option("senna_mist_stacks"))
-    shield += _DAWNING_SHADOW_MIST_RATIO * stacks
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_DAWNING_SHADOW_SHIELD_DURATION_SECONDS,
-        source=entry.get("name", "Dawning Shadow"),
-        detail=(
-            f"R also shields Senna for {shield:g} for "
-            f"{_DAWNING_SHADOW_SHIELD_DURATION_SECONDS:g}s "
-            f"(flat + 50% AP + 150% of {stacks} Mist stacks)"
-        ),
-    )
 
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_r(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        ability = ctx.ability()
+        shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
+        stacks = int(ctx.option("senna_mist_stacks"))
+        shield += _DAWNING_SHADOW_MIST_RATIO * stacks
+        entry["event_order_certified"] = "single_hit"
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=_DAWNING_SHADOW_SHIELD_DURATION_SECONDS,
+            source=entry.get("name", "Dawning Shadow"),
+            detail=(
+                f"R also shields Senna for {shield:g} for "
+                f"{_DAWNING_SHADOW_SHIELD_DURATION_SECONDS:g}s "
+                f"(flat + 50% AP + 150% of {stacks} Mist stacks)"
+            ),
+        )
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _absolution
-_packet_r = SLOTS["R"]
-SLOTS["R"] = _dawning_shadow
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
-)
+    return parse
+
 
 # Cached kit review.  Q's shadow ray "deals physical damage to enemies hit
 # and slows them by 15% (+ 15% per 100 bonus AD) (+ 7% per 100 AP)".  W's
@@ -168,9 +153,30 @@ SLOTS["Q"] = with_item_on_hits(
 # consume rides the auto stream, so neither carries an ability event.
 MODULE_CC = {"Q": "slow", "W": "root", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Senna", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Senna",
+    PACKET_SHA256,
+    # Piercing Darkness' shadow ray and Last Embrace's globule each
+    # deal their packet once, like Dawning Shadow already did — the
+    # boundary claim that carries MODULE_CC's reviewed answers into
+    # the event ledger.
+    single_hit_slots=frozenset({"Q", "W"}),
+    slot_parsers={
+        "P": _absolution,
+    },
+    slot_wrappers={
+        "R": _dawning_shadow,
+        "Q": partial(
+            with_item_on_hits,
+            effectiveness=1.0,
+            hits=1,
+            triggers=("on_hit", "on_attack"),
+        ),
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS = list(_packet_options) + [
+OPTIONS = list(OPTIONS) + [
     {
         "key": "senna_mist_stacks",
         "type": "int",
@@ -181,7 +187,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Mist stack count is user-set (default 40 — the expected mid-game "
     "state); Wraith-farming and mark-consume Mist generation are not "
     "simulated",
@@ -203,7 +209,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "without the Mist term (documented boundary)",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
     for slot in "PQWER"

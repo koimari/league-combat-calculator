@@ -19,38 +19,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 
 PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module(
-        "Samira",
-        PACKET_SHA256,
-        packet_tick_fixes={
-            "Blade Whirl": {
-                "count": 2,
-                "first_tick": 0.0,
-                "tick_interval": 0.75,
-            },
-            "Inferno Trigger": {
-                "count": 10,
-                "first_tick": 0.0,
-                "tick_interval": 0.2,
-                "dot_duration": 2.013,
-            },
-        },
-        # Flair's shot lands on "the first enemy hit" and Wild Rush damages
-        # what its dash passes through once — the boundary claim that
-        # carries MODULE_CC's reviewed answers into the event ledger.  W
-        # and R already author their own slash and shot timings above.
-        single_hit_slots=frozenset({"Q", "E"}),
-    )
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 _STYLE_MAX = 6
 # Style bonus movement speed per stack by level bracket (wiki prose:
 # 2.75% / 3% / 3.25% / 3.5% at levels 1 / 6 / 11 / 16).
@@ -97,25 +71,21 @@ def _daredevil_impulse(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _inferno_trigger(ctx: SlotCtx) -> dict[str, Any] | None:
+def _inferno_trigger(packet_r):
     """R: reviewed packet pricing + the S-rank requirement note."""
-    entry = _BATCH_SLOTS["R"](ctx)
-    if entry is not None and _style_stacks(ctx) >= _STYLE_MAX:
-        entry["detail"] = (
-            f"{entry.get('detail', '')} Requires S rank ({_STYLE_MAX} "
-            "Style stacks); Style stacks are consumed at the end of the "
-            "effect."
-        )
-    return entry
 
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_r(ctx)
+        if entry is not None and _style_stacks(ctx) >= _STYLE_MAX:
+            entry["detail"] = (
+                f"{entry.get('detail', '')} Requires S rank ({_STYLE_MAX} "
+                "Style stacks); Style stacks are consumed at the end of the "
+                "effect."
+            )
+        return entry
 
-SLOTS = {
-    "P": _daredevil_impulse,
-    "Q": _BATCH_SLOTS["Q"],
-    "W": _BATCH_SLOTS["W"],
-    "E": _BATCH_SLOTS["E"],
-    "R": _inferno_trigger,
-}
+    return parse
+
 
 # Cached kit review: reviewed cc-free on every damaging cast.  Flair's shot
 # and slash, Blade Whirl's two slashes, Wild Rush's dash and Inferno
@@ -127,7 +97,36 @@ SLOTS = {
 # an ability event.
 MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Samira", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Samira",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Blade Whirl": {
+            "count": 2,
+            "first_tick": 0.0,
+            "tick_interval": 0.75,
+        },
+        "Inferno Trigger": {
+            "count": 10,
+            "first_tick": 0.0,
+            "tick_interval": 0.2,
+            "dot_duration": 2.013,
+        },
+    },
+    # Flair's shot lands on "the first enemy hit" and Wild Rush damages
+    # what its dash passes through once — the boundary claim that
+    # carries MODULE_CC's reviewed answers into the event ledger.  W
+    # and R already author their own slash and shot timings above.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "P": _daredevil_impulse,
+    },
+    slot_wrappers={
+        "R": _inferno_trigger,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -151,7 +150,6 @@ ASSUMPTIONS = [
     "sourced 0.2s shots)",
 ]
 
-SOURCES = load_champion_sources("Samira")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"
 }

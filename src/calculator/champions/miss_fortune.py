@@ -16,7 +16,7 @@ is modeled; P (Love Tap) and W (Strut) remain documented out_of_scope.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
@@ -64,6 +64,12 @@ def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "3c5d28681b774a275e1c2b8bfd6150c08bad192051ac56c0a49c6a96462ad2f7"
 
+
+# Cached kit review: E's bullet storm deals damage every 0.25 seconds
+# "and slow[s] them by 40% (+ 6% per 100 AP)"; Q's shot only bounces and
+# R's waves only damage.  P is an on-hit mark and W a self-buff.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Miss Fortune",
     PACKET_SHA256,
@@ -79,16 +85,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # the cast — the boundary claim that carries MODULE_CC's reviewed
     # answer for Q into the event ledger.
     single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "R": _bullet_time,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["R"] = _bullet_time
-
-# Cached kit review: E's bullet storm deals damage every 0.25 seconds
-# "and slow[s] them by 40% (+ 6% per 100 AP)"; Q's shot only bounces and
-# R's waves only damage.  P is an on-hit mark and W a self-buff.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
-
-parse_abilities = build_parser(SLOTS, "Miss Fortune", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (Bullet Time) prices the full channel: per-wave damage x the "

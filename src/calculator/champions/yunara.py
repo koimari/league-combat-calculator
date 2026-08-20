@@ -14,10 +14,11 @@ P1-2 fixes:
   and the ratios from the cached W[1] Arc of Ruin description prose).
 """
 
+from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, damage_entry, extract_cooldown, extract_named
 
@@ -32,15 +33,6 @@ _R_ARC_OF_RUIN_BONUS_AD_RATIO = 1.20
 _R_ARC_OF_RUIN_AP_RATIO = 0.75
 
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Yunara",
-    PACKET_SHA256,
-    # Q's row is one empowered swing's bonus magic damage — no travel or
-    # tick phase to place.
-    single_hit_slots=frozenset({"Q"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -135,13 +127,6 @@ def _transcend_one_self(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["W"] = _arc_of_judgment
-SLOTS["R"] = _transcend_one_self
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=0.3, hits=1, triggers=("on_hit",)
-)
-
 # Arc of Judgment's initial hit "deals magic damage and slows them by 99%
 # decaying over 1.5 seconds", and the Transcendent upgrade Arc of Ruin
 # likewise "slows them by 99% decaying over 1 second" — one answer for both
@@ -150,7 +135,23 @@ SLOTS["Q"] = with_item_on_hits(
 # and P is the crit bonus; none of the three authors a damage part.
 MODULE_CC = {"Q": "none", "W": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Yunara", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Yunara",
+    PACKET_SHA256,
+    # Q's row is one empowered swing's bonus magic damage — no travel or
+    # tick phase to place.
+    single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "W": _arc_of_judgment,
+        "R": _transcend_one_self,
+    },
+    slot_wrappers={
+        "Q": partial(
+            with_item_on_hits, effectiveness=0.3, hits=1, triggers=("on_hit",)
+        ),
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Arc of Judgment) prices the initial impact plus 4 lingering-bead "

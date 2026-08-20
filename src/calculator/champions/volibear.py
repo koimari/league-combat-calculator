@@ -21,7 +21,7 @@ E3 additions over the CP10.9 packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
 
@@ -44,16 +44,6 @@ _R_IMPACT_SECONDS = 1.0
 # land on that instant.
 _W_BITE_SECONDS = 0.25
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Volibear",
-        PACKET_SHA256,
-        # Q's empowered attack is one pounce on one target; E is one bolt.
-        single_hit_slots=frozenset({"Q", "E"}),
-        packet_part_timings={"R": {"time_offset": _R_IMPACT_SECONDS}},
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — The Relentless Storm's per-stack
 # attack speed (5% + 3% per 100 AP) and the Wounded bite's increase
@@ -159,38 +149,37 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _sky_splitter(ctx: SlotCtx) -> dict[str, Any] | None:
+def _sky_splitter(packet_e):
     """E: the reviewed magic hit plus the sourced self-shield payload.
 
     The 14% max HP + 75% AP shield (cached description prose) rides the
     E damage event; the shared ledger grants it as a timed 3-second
     self-shield at the cast.
     """
-    entry = _packet_e(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stat(
-        "health"
-    ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stat("ability_power")
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_SKY_SPLITTER_SHIELD_DURATION_SECONDS,
-        source=entry.get("name", "Sky Splitter"),
-        detail=(
-            f"E also shields Volibear for {shield:g} for "
-            f"{_SKY_SPLITTER_SHIELD_DURATION_SECONDS:g}s "
-            f"(14% max HP + 75% AP)"
-        ),
-    )
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_e(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stat(
+            "health"
+        ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stat("ability_power")
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=_SKY_SPLITTER_SHIELD_DURATION_SECONDS,
+            source=entry.get("name", "Sky Splitter"),
+            detail=(
+                f"E also shields Volibear for {shield:g} for "
+                f"{_SKY_SPLITTER_SHIELD_DURATION_SECONDS:g}s "
+                f"(14% max HP + 75% AP)"
+            ),
+        )
+
+    return parse
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _relentless_storm
-SLOTS["W"] = _frenzied_maul
-_packet_e = SLOTS["E"]
-SLOTS["E"] = _sky_splitter
 # Thundering Smash's empowered attack pounces "dealing bonus physical
 # damage and stunning them for 1 second"; Sky Splitter's bolt "deals magic
 # damage to enemies hit ... and slows them by 40% for 2 seconds".  P is the
@@ -210,9 +199,23 @@ SLOTS["E"] = _sky_splitter
 # (``HealAnchor.CAST``), so the second half is not a second heal.
 MODULE_CC = {"Q": "stun", "W": "none", "E": "slow", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Volibear", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Volibear",
+    PACKET_SHA256,
+    # Q's empowered attack is one pounce on one target; E is one bolt.
+    single_hit_slots=frozenset({"Q", "E"}),
+    packet_part_timings={"R": {"time_offset": _R_IMPACT_SECONDS}},
+    slot_parsers={
+        "P": _relentless_storm,
+        "W": _frenzied_maul,
+    },
+    slot_wrappers={
+        "E": _sky_splitter,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS = list(_packet_options) + [
+OPTIONS = list(OPTIONS) + [
     {
         "key": "relentless_storm_stacks",
         "type": "int",
@@ -229,7 +232,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The Relentless Storm stack count is user-set (default 5 = fully "
     "stacked); the 6-second stack window and which damage events refresh "
     "it are not simulated",
@@ -247,7 +250,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "Q's stun/MS, W's heal and R's bonus health remain utility/state " "only",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

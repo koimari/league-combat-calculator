@@ -13,10 +13,78 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 PACKET_SHA256 = "1a31e4f033cd7f636b093e6398b78eaa559462a22552cb2fe1cc48b46f618be5"
+
+
+def _iron_ambassador(ctx: SlotCtx):
+    """P: the empowered buckler toss deals 20 : 198.82 (based on level)
+    bonus magic damage on-hit — the "Bonus Magic Damage" leveling row."""
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+    per_hit = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
+    )
+    return on_hit_entry(ability.get("name", "Iron Ambassador"), per_hit, "magic")
+
+
+_iron_ambassador.phase = ONHIT
+
+
+def _keepers_verdict(packet_r):
+    """R: Keeper's Verdict, priced at the charged or uncharged branch.
+
+    The reviewed packet prices the UNCHARGED row ("Physical Damage"
+    100-200 + 45% bonus AD).  Keeper's Verdict can be charged for up to
+    1 second to deal double damage (the E3 worklist charge-state
+    variant); the cached "Increased Damage" row (200-400 + 90% bonus AD)
+    is that fully-charged branch, selected by the ``r_charged`` option.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        if not bool(ctx.options.get("r_charged", False)):
+            return packet_r(ctx)
+        ability = ctx.ability("R")
+        if ability is None:
+            return None
+        rank = ctx.rank_for("R")
+        if rank < 1:
+            return None
+        total = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
+        entry = damage_entry(
+            ability.get("name", "Keeper's Verdict"),
+            rank,
+            extract_cooldown(ability, rank),
+            total,
+            "physical",
+            # One hammer blow, like the uncharged packet branch beside it.
+            event_order_certified="single_hit",
+        )
+        entry["parts"] = (DamagePart("physical", total),)
+        entry["detail"] = (
+            "fully-charged Keeper's Verdict ('Increased Damage' row 200-400 "
+            "+ 90% bonus AD == 2x the uncharged row)"
+        )
+        return entry
+
+    return parse
+
+
+# Cached kit review.  Q's impact "creates a field for 1 second that slows
+# enemies within, which then ruptures to deal the same physical damage".  W
+# damages a dashing enemy and "knocked up for 0.5 seconds" (its grounding
+# and 25% slow follow only a successful interrupt, and neither is what the
+# damaging hit applies first).  E is the kit's un-narrowed cast: it "deals
+# physical damage and carries them along with her" — a forced displacement
+# — and on terrain "deal[s] the same physical damage again and stuns
+# them", two immobilize kinds from one cast.  R "knock[s] them up for 1
+# second" in both priced branches; the fully-charged branch adds a knock
+# back on top, which is a second immobilize and not a different answer.
+# P is absent — Iron Ambassador is an on-hit rider on the auto stream.
+MODULE_CC = {"Q": "slow", "W": "knockup", "E": "immobilize", "R": "knockup"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Poppy",
@@ -38,79 +106,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # blow — the boundary claim that carries MODULE_CC's reviewed answers
     # into the event ledger.  Q already authors its impact/rupture timing.
     single_hit_slots=frozenset({"W", "E", "R"}),
+    slot_parsers={
+        "P": _iron_ambassador,
+    },
+    slot_wrappers={
+        "R": _keepers_verdict,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-
-
-def _iron_ambassador(ctx: SlotCtx):
-    """P: the empowered buckler toss deals 20 : 198.82 (based on level)
-    bonus magic damage on-hit — the "Bonus Magic Damage" leveling row."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
-    per_hit = extract_named(
-        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-    )
-    return on_hit_entry(ability.get("name", "Iron Ambassador"), per_hit, "magic")
-
-
-_iron_ambassador.phase = ONHIT
-
-
-def _keepers_verdict(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: Keeper's Verdict, priced at the charged or uncharged branch.
-
-    The reviewed packet prices the UNCHARGED row ("Physical Damage"
-    100-200 + 45% bonus AD).  Keeper's Verdict can be charged for up to
-    1 second to deal double damage (the E3 worklist charge-state
-    variant); the cached "Increased Damage" row (200-400 + 90% bonus AD)
-    is that fully-charged branch, selected by the ``r_charged`` option.
-    """
-    if not bool(ctx.options.get("r_charged", False)):
-        return _packet_r(ctx)
-    ability = ctx.ability("R")
-    if ability is None:
-        return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
-    total = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability.get("name", "Keeper's Verdict"),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
-        # One hammer blow, like the uncharged packet branch beside it.
-        event_order_certified="single_hit",
-    )
-    entry["parts"] = (DamagePart("physical", total),)
-    entry["detail"] = (
-        "fully-charged Keeper's Verdict ('Increased Damage' row 200-400 "
-        "+ 90% bonus AD == 2x the uncharged row)"
-    )
-    return entry
-
-
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _iron_ambassador
-_packet_r = SLOTS["R"]
-SLOTS["R"] = _keepers_verdict
-
-# Cached kit review.  Q's impact "creates a field for 1 second that slows
-# enemies within, which then ruptures to deal the same physical damage".  W
-# damages a dashing enemy and "knocked up for 0.5 seconds" (its grounding
-# and 25% slow follow only a successful interrupt, and neither is what the
-# damaging hit applies first).  E is the kit's un-narrowed cast: it "deals
-# physical damage and carries them along with her" — a forced displacement
-# — and on terrain "deal[s] the same physical damage again and stuns
-# them", two immobilize kinds from one cast.  R "knock[s] them up for 1
-# second" in both priced branches; the fully-charged branch adds a knock
-# back on top, which is a second immobilize and not a different answer.
-# P is absent — Iron Ambassador is an on-hit rider on the auto stream.
-MODULE_CC = {"Q": "slow", "W": "knockup", "E": "immobilize", "R": "knockup"}
-
-parse_abilities = build_parser(SLOTS, "Poppy", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

@@ -19,7 +19,7 @@ E9-2 gap fixes over the packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -31,16 +31,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d6"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Urgot",
-        PACKET_SHA256,
-        # One canister explosion and one dash blow per target, so each row
-        # is a hit the ledger can time.
-        single_hit_slots=frozenset({"Q", "E"}),
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Purge "autonomously fir[es] at the
 # nearest enemy at a fixed 3.0 attack speed" for 4 seconds (cached W
@@ -135,11 +125,6 @@ _echoing_flames_proc = proc_damage(
 )
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _echoing_flames_proc
-SLOTS["W"] = _purge
-SLOTS["R"] = _fear_beyond_death
-
 # Reviewed crowd control, read from the cached kit.  Q (Corrosive Charge)
 # explodes "to deal physical damage to enemies hit and slow them for 1.25
 # seconds".  W (Purge) is a machine-gun attack stream with no control.  E
@@ -151,9 +136,21 @@ SLOTS["R"] = _fear_beyond_death
 # branch this row does not price.  P is an attack-stream shotgun rider.
 MODULE_CC = {"Q": "slow", "W": "none", "E": "immobilize", "R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Urgot", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Urgot",
+    PACKET_SHA256,
+    # One canister explosion and one dash blow per target, so each row
+    # is a hit the ledger can time.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "P": _echoing_flames_proc,
+        "W": _purge,
+        "R": _fear_beyond_death,
+    },
+    cc_kinds=MODULE_CC,
+)
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "p_legs",
         "type": "int",
@@ -167,7 +164,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Purge) prices all 12 sourced shots of the 4-second channel at the "
     "fixed 3.0 attack speed (3.0 AS x 4s; Modified Physical Damage row "
     "per shot, 1/3s cadence); on-hit effects at 50% effectiveness and "
@@ -183,7 +180,6 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "E (Disdain) shield is authored by the E8c support scanner.",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",

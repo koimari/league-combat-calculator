@@ -15,7 +15,7 @@ health total at every rank.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -25,17 +25,6 @@ from .slotlib import (
 )
 
 PACKET_SHA256 = "ea21bda8a36a602ed96aad725ac6f585d0e3db982035f7c61a78ebc50db90152"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Sejuani",
-    PACKET_SHA256,
-    # Bristle's dash damages what it passes through once, Permafrost's
-    # trap hits its one marked target and the ice bola stops on the first
-    # champion — the boundary claim that carries MODULE_CC's reviewed
-    # answers into the event ledger.
-    single_hit_slots=frozenset({"Q", "E", "R"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -95,9 +84,6 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["W"] = _winters_wrath
-
 # Cached kit review.  Q's dash deals magic damage while "knocking them up
 # for 0.5 seconds".  E's trap "deals magic damage, displaces slightly, and
 # stuns them for 1 second" — two immobilize kinds from one cast, which is
@@ -110,7 +96,19 @@ SLOTS["W"] = _winters_wrath
 # next attack or ability rather than emitting an ability event of its own.
 MODULE_CC = {"Q": "knockup", "E": "immobilize", "R": "stun"}
 
-parse_abilities = build_parser(SLOTS, "Sejuani", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sejuani",
+    PACKET_SHA256,
+    # Bristle's dash damages what it passes through once, Permafrost's
+    # trap hits its one marked target and the ice bola stops on the first
+    # champion — the boundary claim that carries MODULE_CC's reviewed
+    # answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
+    slot_parsers={
+        "W": _winters_wrath,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Winter's Wrath) prices both flail swings: the first and second "

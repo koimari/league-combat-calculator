@@ -11,7 +11,6 @@ schedules the W cast that arms the recast.
 """
 
 from .packet_module import build_packet_module
-from .engine import build_parser
 from .slotlib import simple_damage
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
@@ -24,12 +23,34 @@ PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d22
 # written.
 _E_CLAW_SECONDS = 0.5
 
+
+# Reviewed crowd control, read from the cached kit.  Obliterate "deal[s]
+# magic damage to enemies within, increased if only one enemy is hit" and
+# applies nothing else.  Death's Grasp "deals magic damage to enemies
+# within and pulls them over 250 units" — the pull lands with the damage
+# on the same 0.5-second claw, which the slot now authors.  P (Darkness
+# Rise) is a basic-attack/aura row, and W and R author no damage part.
+MODULE_CC = {"Q": "none", "E": "pull"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Mordekaiser",
     PACKET_SHA256,
     packet_part_timings={"E": {"time_offset": _E_CLAW_SECONDS}},
+    slot_parsers={
+        # The reviewed packet folded Obliterate's per-level term into its per-rank
+        # base, so one index served both and the level term was read at the rank —
+        # at level 18 rank 5 the swing priced its level-5 scaling.  Reading the
+        # cached row through the shared slot repairs the axis without changing
+        # which row is read.
+        "Q": simple_damage(
+            attr="Magic Damage",
+            dmg_type="magic",
+            event_order_certified="single_hit",
+        ),
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
+
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Indestructible) stores 45% of post-mitigation damage dealt and "
     "7.5% of pre-mitigation damage taken as Potential Shield (capped at "
@@ -39,28 +60,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "grey-health primitive authors it from the incoming/outgoing "
     "ledgers. Shield conversion and both decay curves are state.",
 ]
-
-
-SLOTS = dict(SLOTS)
-# The reviewed packet folded Obliterate's per-level term into its per-rank
-# base, so one index served both and the level term was read at the rank —
-# at level 18 rank 5 the swing priced its level-5 scaling.  Reading the
-# cached row through the shared slot repairs the axis without changing
-# which row is read.
-SLOTS["Q"] = simple_damage(
-    attr="Magic Damage",
-    dmg_type="magic",
-    event_order_certified="single_hit",
-)
-# Reviewed crowd control, read from the cached kit.  Obliterate "deal[s]
-# magic damage to enemies within, increased if only one enemy is hit" and
-# applies nothing else.  Death's Grasp "deals magic damage to enemies
-# within and pulls them over 250 units" — the pull lands with the damage
-# on the same 0.5-second claw, which the slot now authors.  P (Darkness
-# Rise) is a basic-attack/aura row, and W and R author no damage part.
-MODULE_CC = {"Q": "none", "E": "pull"}
-
-parse_abilities = build_parser(SLOTS, "Mordekaiser", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"

@@ -35,7 +35,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
@@ -165,13 +165,6 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "3a7a57f56c3c5d06404558fb69b2bdac0244775181a3b338c6cf369b8f328ffa"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Shaco", PACKET_SHA256, single_hit_slots=frozenset({"Q"})
-)
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["W"] = _jack_in_the_box
-SLOTS["E"] = _two_shiv_poison
-SLOTS["R"] = _hallucinate
 
 # Reviewed crowd control, read from the cached kit.  Q (Deceive) is a
 # stealth blink and one empowered attack with no control clause.  W (Jack
@@ -184,7 +177,17 @@ SLOTS["R"] = _hallucinate
 # time in every configuration.
 MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Shaco", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Shaco",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "W": _jack_in_the_box,
+        "E": _two_shiv_poison,
+        "R": _hallucinate,
+    },
+    cc_kinds=MODULE_CC,
+)
 ASSUMPTIONS.extend(
     [
         "W (Jack in the Box) is a summoned trap: the sprung box fires "

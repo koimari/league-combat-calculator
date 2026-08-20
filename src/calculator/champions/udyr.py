@@ -28,7 +28,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .inputs import target_stat
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_on_hit_entry,
@@ -45,26 +45,6 @@ _Q_LIGHTNING_STRIKES_PER_ATTACK = 6
 _Q_LIGHTNING_HIT_INTERVAL = 0.2
 
 PACKET_SHA256 = "468fd3bf2d2dd7e836b89c0ae6eff50d844990c0c03442f7f864a2032525dd9c"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Udyr",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
-        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
-    ),
-    slot_parsers={
-        "R": repeat_damage_parser(
-            attr="Magic Damage per Tick",
-            dmg_type="magic",
-            count=8,
-            time_offset=0.5,
-            hit_interval=0.5,
-            dot_duration=4.0,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _target_max_health_percent(
@@ -189,8 +169,6 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _wilding_claw.phase = ONHIT
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _wilding_claw
 
 # Reviewed crowd control, read from the cached kit: R (Wingborne Storm)
 # "summons a blizzard around himself for 4 seconds that deals magic damage
@@ -200,7 +178,26 @@ SLOTS["Q"] = _wilding_claw
 # Stampede), where the stun lives, deals no damage of its own.
 MODULE_CC = {"R": "slow"}
 
-parse_abilities = build_parser(SLOTS, "Udyr", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Udyr",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
+        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
+    ),
+    slot_parsers={
+        "R": repeat_damage_parser(
+            attr="Magic Damage per Tick",
+            dmg_type="magic",
+            count=8,
+            time_offset=0.5,
+            hit_interval=0.5,
+            dot_duration=4.0,
+        ),
+        "Q": _wilding_claw,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic "

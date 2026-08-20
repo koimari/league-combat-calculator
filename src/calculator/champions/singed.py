@@ -21,7 +21,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "E"}),
     cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E"} else "out_of_scope") for slot in "PQWER"
 }

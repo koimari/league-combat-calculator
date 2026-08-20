@@ -22,7 +22,7 @@ class TestReviewedCrowdControl:
         q_text = cc_review.slot_text(data, "Q")
         assert "dealing physical damage to enemies struck within an area" in q_text
         assert "knocking back enemies hit 75 units" in q_text
-        assert riven.PACKET_SPEC["slots"]["Q"]["base"] == [
+        assert riven.SLOTS.packet_spec["slots"]["Q"]["base"] == [
             45.0,
             75.0,
             105.0,

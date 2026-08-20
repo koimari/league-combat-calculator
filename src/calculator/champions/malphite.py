@@ -34,7 +34,7 @@ P1 addition over the reviewed packet:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -45,15 +45,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Malphite",
-    PACKET_SHA256,
-    # Ground Slam is one slam on the enemies around Malphite and
-    # Unstoppable Force is one arrival — one part and one hit each, which
-    # is what carries their reviewed control into the event ledger.
-    single_hit_slots=frozenset({"E", "R"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Granite Shield's 10% ratio and
 # until-broken lifetime are prose-only in the cached passive description
@@ -65,31 +56,35 @@ GRANITE_SHIELD_MAX_HP_RATIO = 0.10  # 10% of maximum health
 _DEFAULT_FIGHT_WINDOW_SECONDS = 5.0  # one-rotation fallback
 
 
-def _seismic_shard(ctx: SlotCtx) -> dict[str, Any] | None:
+def _seismic_shard(packet_q):
     """Q: the reviewed magic hit carrying Granite Shield's pre-fight shield."""
-    entry = _packet_q(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = GRANITE_SHIELD_MAX_HP_RATIO * ctx.stat("health")
-    try:
-        window = float(ctx.options.get("fight_duration_seconds"))
-    except (TypeError, ValueError):
-        window = _DEFAULT_FIGHT_WINDOW_SECONDS
-    if not window or window <= 0.0:
-        window = _DEFAULT_FIGHT_WINDOW_SECONDS
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=float(window),
-        source="Granite Shield",
-        detail=(
-            f"Q carries Granite Shield's pre-fight barrier: {shield:g} "
-            f"({GRANITE_SHIELD_MAX_HP_RATIO * 100:g}% of max HP), until "
-            f"broken (modeled as the {window:g}s fight window)"
-        ),
-    )
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        shield = GRANITE_SHIELD_MAX_HP_RATIO * ctx.stat("health")
+        try:
+            window = float(ctx.options.get("fight_duration_seconds"))
+        except (TypeError, ValueError):
+            window = _DEFAULT_FIGHT_WINDOW_SECONDS
+        if not window or window <= 0.0:
+            window = _DEFAULT_FIGHT_WINDOW_SECONDS
+        entry["event_order_certified"] = "single_hit"
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=float(window),
+            source="Granite Shield",
+            detail=(
+                f"Q carries Granite Shield's pre-fight barrier: {shield:g} "
+                f"({GRANITE_SHIELD_MAX_HP_RATIO * 100:g}% of max HP), until "
+                f"broken (modeled as the {window:g}s fight window)"
+            ),
+        )
+
+    return parse
 
 
 def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -143,11 +138,6 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
 _thunderclap.phase = BUFF
 
 
-SLOTS = dict(SLOTS)
-_packet_q = SLOTS["Q"]
-SLOTS["Q"] = _seismic_shard
-SLOTS["W"] = _thunderclap
-
 # Reviewed crowd control, read from the cached kit.  Q (Seismic Shard)
 # "deals magic damage and slows them for 3 seconds upon impact".  E
 # (Ground Slam) deals "magic damage to nearby enemies and crippl[es] them
@@ -164,7 +154,21 @@ SLOTS["W"] = _thunderclap
 # certifies as one shared landing.
 MODULE_CC = {"Q": "slow", "W": "none", "E": "cripple", "R": "knockup"}
 
-parse_abilities = build_parser(SLOTS, "Malphite", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Malphite",
+    PACKET_SHA256,
+    # Ground Slam is one slam on the enemies around Malphite and
+    # Unstoppable Force is one arrival — one part and one hit each, which
+    # is what carries their reviewed control into the event ledger.
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "W": _thunderclap,
+    },
+    slot_wrappers={
+        "Q": _seismic_shard,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Granite Shield) is modeled as a pre-fight granted shield: 10% of "

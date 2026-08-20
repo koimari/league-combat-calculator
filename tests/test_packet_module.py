@@ -17,7 +17,11 @@ from pathlib import Path
 import pytest
 
 from src.calculator.champions.engine import SlotCtx
-from src.calculator.champions.packet_module import _packet_parser
+from src.calculator.champions.packet_module import (
+    _packet_parser,
+    build_packet_module,
+    packet_spec_sha256,
+)
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.scenario import load_public_champion
@@ -205,3 +209,92 @@ class TestPacketCooldownProvenance:
             entry = _compiled(champion, slot, spec)
             if entry is not None:
                 assert entry["cooldown"] == 0.0
+
+
+class TestModuleOverrides:
+    """Everything a module says about its packet goes INTO the compiler.
+
+    ``slot_parsers`` replaces any compiled slot or appends a new one,
+    ``slot_wrappers`` hands a module the compiled parser to build on,
+    ``slot_order`` states the module's slot surface, and the pin rides the
+    parser the compiler returns — so a module never rebinds
+    ``parse_abilities`` and the contract can read the pin off what runs.
+    """
+
+    @staticmethod
+    def _build(champion: str, **overrides):
+        spec = json.loads(_ASSET.read_text(encoding="utf-8"))["champions"][champion]
+        return build_packet_module(champion, packet_spec_sha256(spec), **overrides)
+
+    @staticmethod
+    def _parse(parser, champion: str):
+        return parser(
+            load_public_champion(champion),
+            LEVEL,
+            STATS["ability_power"],
+            ability_ranks=dict(RANKS),
+            champion_stats=dict(STATS),
+            target_stats=dict(TARGET),
+        )
+
+    def test_the_compiled_parser_and_slot_map_carry_the_pin(self) -> None:
+        spec = json.loads(_ASSET.read_text(encoding="utf-8"))["champions"]["Singed"]
+        parser, slots, *_ = self._build("Singed")
+        assert parser.packet_sha256 == slots.packet_sha256 == packet_spec_sha256(spec)
+        assert parser.packet_spec == slots.packet_spec == spec
+
+    def test_slot_parsers_replace_a_slot_of_any_kind_in_place(self) -> None:
+        """Singed's W is a no_damage packet slot; the override still lands."""
+
+        def custom(ctx):
+            return None
+
+        _, slots, *_ = self._build("Singed", slot_parsers={"W": custom})
+        assert slots["W"] is custom
+        assert list(slots) == ["Q", "W", "E", "R", "P"]
+
+    def test_slot_parsers_append_a_slot_the_packet_lacks(self) -> None:
+        def custom(ctx):
+            return None
+
+        _, slots, *_ = self._build("Singed", slot_parsers={"R_buff": custom})
+        assert list(slots) == ["Q", "W", "E", "R", "P", "R_buff"]
+
+    def test_slot_wrappers_receive_the_compiled_parser(self) -> None:
+        seen = []
+
+        def certify(compiled):
+            seen.append(compiled)
+
+            def parse(ctx):
+                entry = compiled(ctx)
+                if entry is not None:
+                    entry["detail"] = "wrapped"
+                return entry
+
+            return parse
+
+        parser, slots, *_ = self._build("Singed", slot_wrappers={"Q": certify})
+        assert seen and slots["Q"] is not seen[0]
+        assert self._parse(parser, "Singed")["Q"]["detail"] == "wrapped"
+
+    def test_a_wrapper_for_a_slot_nothing_compiled_is_refused(self) -> None:
+        with pytest.raises(KeyError, match="slot_wrappers names 'Z'"):
+            self._build("Singed", slot_wrappers={"Z": lambda compiled: compiled})
+
+    def test_slot_order_states_the_surface_in_order(self) -> None:
+        _, slots, *_ = self._build("Singed", slot_order=("P", "Q", "E"))
+        assert list(slots) == ["P", "Q", "E"]
+
+    def test_slot_order_naming_an_unknown_slot_is_refused(self) -> None:
+        with pytest.raises(KeyError, match=r"slot_order names \['Z'\]"):
+            self._build("Singed", slot_order=("P", "Q", "Z"))
+
+    def test_single_hit_slots_certify_a_wiki_attribute_row(self) -> None:
+        """Zac's Q is a wiki_attribute slot; the certification reaches it."""
+        plain, *_ = self._build("Zac")
+        certified, *_ = self._build("Zac", single_hit_slots=frozenset({"Q"}))
+        assert "event_order_certified" not in self._parse(plain, "Zac")["Q"]
+        assert (
+            self._parse(certified, "Zac")["Q"]["event_order_certified"] == "single_hit"
+        )

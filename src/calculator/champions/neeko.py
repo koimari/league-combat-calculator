@@ -20,7 +20,7 @@ P1-3 closures:
 """
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -31,15 +31,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Neeko",
-    PACKET_SHA256,
-    # Shapesplitter's empowered attack and Tangle-Barbs' spiral each deal
-    # their packet once, at the cast — the boundary claim that carries
-    # MODULE_CC's reviewed answers into the event ledger.
-    single_hit_slots=frozenset({"W", "E"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — game-file-sourced R shield rows
 # (the cached wiki page omits the shield; neeko.bin.json NeekoR mSpell
@@ -130,10 +121,6 @@ def _pop_blossom(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _blooming_burst
-SLOTS["R"] = _pop_blossom
-
 # Cached kit review.  Q's seed and re-blooms only "deal magic damage"; W's
 # consumed stacks "deal bonus magic damage and grant her bonus movement
 # speed".  E's spiral "deals magic damage to enemies hit and roots them for
@@ -146,7 +133,19 @@ SLOTS["R"] = _pop_blossom
 # control she applies).
 MODULE_CC = {"Q": "none", "W": "none", "E": "root", "R": "stun"}
 
-parse_abilities = build_parser(SLOTS, "Neeko", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Neeko",
+    PACKET_SHA256,
+    # Shapesplitter's empowered attack and Tangle-Barbs' spiral each deal
+    # their packet once, at the cast — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"W", "E"}),
+    slot_parsers={
+        "Q": _blooming_burst,
+        "R": _pop_blossom,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Blooming Burst) prices the full three-burst chain: Initial Magic "

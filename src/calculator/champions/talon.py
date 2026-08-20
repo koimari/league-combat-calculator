@@ -20,7 +20,7 @@ out_of_scope.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import find_named_leveling, sum_modifiers
 
@@ -103,11 +103,6 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "7a3d30a61866ada61c6491cf4aecec11630184dd05c83eba0b177309e54647fb"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Talon", PACKET_SHA256, single_hit_slots=frozenset({"Q", "W", "R"})
-)
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["P"] = _blades_end
 
 # Reviewed crowd control, read from the cached kit.  Q (Noxian Diplomacy)
 # "dashes toward the target enemy, stabbing the target upon arrival to
@@ -119,7 +114,15 @@ SLOTS["P"] = _blades_end
 # events, and E (Assassin's Path) is terrain parkour with no damage.
 MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Talon", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Talon",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"Q", "W", "R"}),
+    slot_parsers={
+        "P": _blades_end,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {

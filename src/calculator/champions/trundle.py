@@ -35,7 +35,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         )
     },
 )
-PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R"} else "out_of_scope") for slot in "PQWER"
 }

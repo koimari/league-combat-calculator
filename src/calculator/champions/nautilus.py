@@ -24,7 +24,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 # HARDCODED: verify on patch updates — Pain of Wrath's second instance
@@ -33,17 +33,6 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 _W_SECOND_INSTANCE_DELAY = 1.25
 
 PACKET_SHA256 = "66ae84d11488386be94ff6ac41a99478d1d5d6394c98003813b547dbda249172"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Nautilus",
-    PACKET_SHA256,
-    # Dredge Line's anchor hits the first enemy once, and the packet for
-    # Riptide is the first wave's Magic Damage (55 : 195 + 50% AP) — one
-    # hit each, at the cast boundary, which is the claim that carries
-    # MODULE_CC's reviewed answers into the event ledger.
-    single_hit_slots=frozenset({"Q", "E"}),
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _staggering_blow(ctx: SlotCtx):
@@ -119,11 +108,6 @@ def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _staggering_blow
-SLOTS["W"] = _titans_wrath
-SLOTS["R"] = _depth_charge
-
 # Cached kit review.  Q's anchor "deals magic damage, reveals them ...,
 # stuns them for 1 second, and drags them toward Nautilus": one cast, two
 # immobilize kinds at once, which is what the un-narrowed "immobilize"
@@ -135,7 +119,21 @@ SLOTS["R"] = _depth_charge
 # an ability event of its own — its root is real but rides no ability row.
 MODULE_CC = {"Q": "immobilize", "W": "none", "E": "slow", "R": "immobilize"}
 
-parse_abilities = build_parser(SLOTS, "Nautilus", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Nautilus",
+    PACKET_SHA256,
+    # Dredge Line's anchor hits the first enemy once, and the packet for
+    # Riptide is the first wave's Magic Damage (55 : 195 + 50% AP) — one
+    # hit each, at the cast boundary, which is the claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "P": _staggering_blow,
+        "W": _titans_wrath,
+        "R": _depth_charge,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Staggering Blow) deals 14 : 128 (based on level) bonus physical "

@@ -27,10 +27,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -41,10 +40,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Rengar", PACKET_SHA256)
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 _FEROCITY_MAX = 4
 
 
@@ -223,14 +218,6 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _unseen_predator,
-    "Q": _savagery,
-    "W": _battle_roar,
-    "E": _bola_strike,
-    "R": _BATCH_SLOTS["R"],
-}
-
 # Cached kit review.  Q's empowered stab only "deal[s] additional physical
 # damage" and W's roar "deal[s] magic damage to nearby enemies" while
 # healing Rengar — neither applies control in either Ferocity branch.  E
@@ -241,7 +228,18 @@ SLOTS = {
 # row.
 MODULE_CC = {"Q": "none", "W": "none"}
 
-parse_abilities = build_parser(SLOTS, "Rengar", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rengar",
+    PACKET_SHA256,
+    slot_parsers={
+        "P": _unseen_predator,
+        "Q": _savagery,
+        "W": _battle_roar,
+        "E": _bola_strike,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -271,7 +269,6 @@ ASSUMPTIONS = [
     "reduction and leap bonus are target/state effects",
 ]
 
-SOURCES = load_champion_sources("Rengar")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
     for slot in "PQWER"

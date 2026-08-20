@@ -34,7 +34,7 @@ class TestReviewedCrowdControl:
             data, 18, 100.0, champion_stats=calculate_total_stats(data, 18, [])
         )
         assert [part.time_offset for part in parsed["Q"]["parts"]] == [0.0]
-        assert sylas.PACKET_SPEC["slots"]["Q"]["base"] == [
+        assert sylas.SLOTS.packet_spec["slots"]["Q"]["base"] == [
             100.0,
             175.0,
             250.0,

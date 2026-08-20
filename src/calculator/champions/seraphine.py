@@ -23,16 +23,12 @@ P1 addition over the reviewed packet:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Seraphine", PACKET_SHA256, single_hit_slots=frozenset({"E", "R"})
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the 0%:75% missing-health amplifier
 # is prose in the cached Q second effect ("Against champions and monsters,
@@ -85,9 +81,6 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _high_note
-
 # Reviewed crowd control, read from the cached kit: Q (High Note) "deals
 # magic damage to enemies within the area" and applies nothing else; E
 # (Beat Drop) "slows them by 99%" (its root and stun are conditional on
@@ -98,7 +91,15 @@ SLOTS["Q"] = _high_note
 # reviewable control.
 MODULE_CC = {"Q": "none", "E": "slow", "R": "charm"}
 
-parse_abilities = build_parser(SLOTS, "Seraphine", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Seraphine",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "Q": _high_note,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (High Note) prices the missing-health amplifier: base (60-160 + "

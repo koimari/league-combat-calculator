@@ -18,43 +18,12 @@ from dataclasses import replace
 
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zac",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
-        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
-        "Damage).",
-    ),
-    # E's landing and W's explosion are one hit each at the cast.  W states
-    # its certification through a slot parser because it is a
-    # ``wiki_attribute`` slot, which ``single_hit_slots`` does not reach.
-    single_hit_slots=frozenset({"E"}),
-    slot_parsers={
-        "W": simple_damage(
-            attr="Magic Damage",
-            dmg_type="magic",
-            source=("W", 0),
-            event_order_certified="single_hit",
-        ),
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage Per Hit",
-            reduced_attr="Reduced Damage Per Hit",
-            dmg_type="magic",
-            reduced_count=3,
-            time_offset=1.0,
-            hit_interval=1.0,
-            dot_duration=3.0,
-        ),
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # E8d: sourced Cell Division revive values.  Cached passive prose (data/
 # champions.json, Zac P Cell Division): "enters resurrection for 8 / 7 / 6 /
@@ -120,7 +89,7 @@ def _stretching_strikes(ctx: SlotCtx):
     return entry
 
 
-def _lets_bounce(ctx: SlotCtx):
+def _lets_bounce(packet_r):
     """R: the opening bounce displaces; the later bounces only slow.
 
     "Each bounce deals magic damage to enemies hit, knocks them back over 1
@@ -130,20 +99,19 @@ def _lets_bounce(ctx: SlotCtx):
     already the same split: the full-damage opening bounce, then the three
     reduced ones.
     """
-    entry = _packet_r(ctx)
-    if entry is None:
-        return None
-    entry["parts"] = tuple(
-        replace(part, cc_kind="knockback" if index == 0 else "slow")
-        for index, part in enumerate(entry.get("parts") or ())
-    )
-    return entry
 
+    def parse(ctx: SlotCtx):
+        entry = packet_r(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, cc_kind="knockback" if index == 0 else "slow")
+            for index, part in enumerate(entry.get("parts") or ())
+        )
+        return entry
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _stretching_strikes
-_packet_r = SLOTS["R"]
-SLOTS["R"] = _lets_bounce
+    return parse
+
 
 # Stretching Strikes catches the first enemy hit, "dealing magic damage,
 # slowing them by 40% for 0.5 seconds" (its root and knock-up need a
@@ -155,7 +123,41 @@ SLOTS["R"] = _lets_bounce
 # authored per part in ``_lets_bounce``.  P is the Goo/revive state row.
 MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup"}
 
-parse_abilities = build_parser(SLOTS, "Zac", cc_kinds=MODULE_CC)
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zac",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
+        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
+        "Damage).",
+    ),
+    # E's landing and W's explosion are one hit each at the cast.  W states
+    # its certification through a slot parser because it is a
+    # ``wiki_attribute`` slot, which ``single_hit_slots`` does not reach.
+    single_hit_slots=frozenset({"E"}),
+    slot_parsers={
+        "W": simple_damage(
+            attr="Magic Damage",
+            dmg_type="magic",
+            source=("W", 0),
+            event_order_certified="single_hit",
+        ),
+        "R": full_plus_reduced_parser(
+            full_attr="Magic Damage Per Hit",
+            reduced_attr="Reduced Damage Per Hit",
+            dmg_type="magic",
+            reduced_count=3,
+            time_offset=1.0,
+            hit_interval=1.0,
+            dot_duration=3.0,
+        ),
+        "Q": _stretching_strikes,
+    },
+    slot_wrappers={
+        "R": _lets_bounce,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")

@@ -17,13 +17,14 @@ glaive's travel time to maximum range is not in the entry, so the second
 leg's offset is left for the timing wave.
 """
 
+from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, with_item_on_hits
 
 PACKET_SHA256 = "5f5796aa0364becd253cbb3b7b05939147841a3f76e41cfa061242d344ec9f63"
 
@@ -100,7 +101,7 @@ def _dreaded_return(ctx: SlotCtx) -> dict[str, Any] | None:
 # damage part.
 MODULE_CC = {"W": "stun", "E": "none", "R": "none"}
 
-_base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zaahen",
     PACKET_SHA256,
     assumption_overrides=(
@@ -124,9 +125,13 @@ _base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": _darkin_glaive,
         "W": _dreaded_return,
     },
+    slot_wrappers={
+        "Q": partial(
+            with_item_on_hits, effectiveness=1.0, hits=1, triggers=("on_hit",)
+        ),
+    },
     cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -138,28 +143,6 @@ OPTIONS = list(OPTIONS) + [
         "label": "Q damage variant",
     }
 ]
-
-_ON_HIT_SPECS: dict[str, dict] = {
-    "Q": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
-}
-
-_parse_abilities = _base_parse
-
-
-def parse_abilities(*args, **kwargs):
-    """Parse abilities, then declare wiki-sourced item on-hit application."""
-    result = _parse_abilities(*args, **kwargs)
-    for slot, spec in _ON_HIT_SPECS.items():
-        entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
-        if entry is not None:
-            entry["applies_item_on_hits"] = dict(spec)
-    return result
-
-
-# The contract surveys the declaration against what the parser carries, and
-# the module's public parser is this wrapper — so it carries the same dict
-# the compiled parser was built with.
-parse_abilities.cc_kinds = _base_parse.cc_kinds
 
 
 MODULE_COVERAGE = {

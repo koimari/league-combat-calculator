@@ -15,16 +15,12 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _ = (
-    build_packet_module("Aphelios", PACKET_SHA256)
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 _WEAPON_INDEX = {
     "calibrum": 0,
@@ -129,74 +125,78 @@ def _phase(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _q(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q", 0)
-    if not ability:
-        return None
-    weapon = _main_weapon(ctx)
-    rank = ctx.level
-    if weapon != "severum":
-        # The generated source has one packet for each Wiki weapon form. Its
-        # variants are explicitly selected here rather than by role.
-        original = ctx.options.get("q_variant")
-        ctx.options["q_variant"] = _WEAPON_INDEX[weapon]
-        try:
-            result = _packet_slots["Q"](ctx)
-            if result is not None and weapon == "calibrum":
-                # Wiki: Duskwave volleys apply on-hit effects at 100%.
-                result["applies_item_on_hits"] = {
-                    "effectiveness": 1.0,
-                    "hits": 1,
-                    "triggers": ("on_hit",),
-                }
-            if result is not None:
-                # Each of these four weapon forms prices one hit, so the
-                # cast boundary IS the hit and the reviewed kind rides it.
-                result["parts"] = tuple(
-                    replace(part, cc_kind=_Q_CC_BY_WEAPON[weapon])
-                    for part in result.get("parts", ())
-                )
-                result["event_order_certified"] = "single_hit"
-            return result
-        finally:
-            if original is None:
-                ctx.options.pop("q_variant", None)
-            else:
-                ctx.options["q_variant"] = original
+def _q(packet_q):
 
-    # Onslaught: six attacks, plus two per 100% bonus attack speed. The
-    # attack event carries 20%-41% AD per hit and therefore scales with both
-    # AD and attack-speed-derived count, not raw AD alone.
-    values = (0.20, 0.235, 0.27, 0.305, 0.34, 0.375, 0.41)
-    ratio = values[min(max(rank, 1), len(values)) - 1]
-    bonus_as = max(0.0, float(ctx.stat("bonus_attack_speed")))
-    count = max(1, int(6 + 2 * bonus_as / 100.0))
-    per_hit = ratio * float(ctx.stat("attack_damage"))
-    entry = damage_entry(
-        ability.get("name", "Onslaught"),
-        rank,
-        10.0,
-        per_hit * count,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart(
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability("Q", 0)
+        if not ability:
+            return None
+        weapon = _main_weapon(ctx)
+        rank = ctx.level
+        if weapon != "severum":
+            # The generated source has one packet for each Wiki weapon form. Its
+            # variants are explicitly selected here rather than by role.
+            original = ctx.options.get("q_variant")
+            ctx.options["q_variant"] = _WEAPON_INDEX[weapon]
+            try:
+                result = packet_q(ctx)
+                if result is not None and weapon == "calibrum":
+                    # Wiki: Duskwave volleys apply on-hit effects at 100%.
+                    result["applies_item_on_hits"] = {
+                        "effectiveness": 1.0,
+                        "hits": 1,
+                        "triggers": ("on_hit",),
+                    }
+                if result is not None:
+                    # Each of these four weapon forms prices one hit, so the
+                    # cast boundary IS the hit and the reviewed kind rides it.
+                    result["parts"] = tuple(
+                        replace(part, cc_kind=_Q_CC_BY_WEAPON[weapon])
+                        for part in result.get("parts", ())
+                    )
+                    result["event_order_certified"] = "single_hit"
+                return result
+            finally:
+                if original is None:
+                    ctx.options.pop("q_variant", None)
+                else:
+                    ctx.options["q_variant"] = original
+
+        # Onslaught: six attacks, plus two per 100% bonus attack speed. The
+        # attack event carries 20%-41% AD per hit and therefore scales with both
+        # AD and attack-speed-derived count, not raw AD alone.
+        values = (0.20, 0.235, 0.27, 0.305, 0.34, 0.375, 0.41)
+        ratio = values[min(max(rank, 1), len(values)) - 1]
+        bonus_as = max(0.0, float(ctx.stat("bonus_attack_speed")))
+        count = max(1, int(6 + 2 * bonus_as / 100.0))
+        per_hit = ratio * float(ctx.stat("attack_damage"))
+        entry = damage_entry(
+            ability.get("name", "Onslaught"),
+            rank,
+            10.0,
+            per_hit * count,
             "physical",
-            amount=per_hit,
-            count=count,
-            time_offset=0.0,
-            hit_interval=_Q_ONSLAUGHT_SECONDS / count,
-            cc_kind=_Q_CC_BY_WEAPON["severum"],
-        ),
-    )
-    entry["detail"] = f"Onslaught: {count} weapon attacks at {ratio:.1%} AD each"
-    # Wiki: every Onslaught attack applies on-hit effects at 25% effectiveness.
-    entry["applies_item_on_hits"] = {
-        "effectiveness": 0.25,
-        "hits": count,
-        "triggers": ("on_hit",),
-    }
-    return entry
+        )
+        entry["parts"] = (
+            DamagePart(
+                "physical",
+                amount=per_hit,
+                count=count,
+                time_offset=0.0,
+                hit_interval=_Q_ONSLAUGHT_SECONDS / count,
+                cc_kind=_Q_CC_BY_WEAPON["severum"],
+            ),
+        )
+        entry["detail"] = f"Onslaught: {count} weapon attacks at {ratio:.1%} AD each"
+        # Wiki: every Onslaught attack applies on-hit effects at 25% effectiveness.
+        entry["applies_item_on_hits"] = {
+            "effectiveness": 0.25,
+            "hits": count,
+            "triggers": ("on_hit",),
+        }
+        return entry
+
+    return parse
 
 
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -236,8 +236,19 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {"P": _weapon_master, "W": _phase, "Q": _q, "R": _r}
-parse_abilities = build_parser(SLOTS, "Aphelios")
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Aphelios",
+    PACKET_SHA256,
+    slot_parsers={
+        "P": _weapon_master,
+        "W": _phase,
+        "R": _r,
+    },
+    slot_wrappers={
+        "Q": _q,
+    },
+    slot_order=("P", "W", "Q", "R"),
+)
 
 OPTIONS = [
     {
@@ -293,7 +304,7 @@ ASSUMPTIONS = [
     "timeline converts heal-in-excess-of-maximum-health into a timed "
     "shield at the heal's timestamp.",
 ]
-SOURCES = list(_packet_sources) + [
+SOURCES = list(SOURCES) + [
     {
         "label": "Aphelios weapon system",
         "url": "https://wiki.leagueoflegends.com/en-us/Aphelios",
