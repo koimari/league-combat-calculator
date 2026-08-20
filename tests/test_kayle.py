@@ -60,7 +60,7 @@ def slot_text(cached, slot):
 
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
-        assert kayle.MODULE_CC == {"Q": "slow", "R": "none"}
+        assert kayle.MODULE_CC == {"Q": "slow", "E": "none", "R": "none"}
         for slot, phrase in QUOTED.items():
             assert phrase in slot_text(cached, slot), slot
 

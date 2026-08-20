@@ -119,7 +119,7 @@ SOURCES = load_champion_sources("Kayle")
 # Cached kit review: Q's struck targets are "slowed for 2 seconds"; R
 # rains swords with no control, and the Aflame wave, W's heal and E's
 # empowered attack apply none either.
-MODULE_CC = {"Q": "slow", "R": "none"}
+MODULE_CC = {"Q": "slow", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kayle", cc_kinds=MODULE_CC)
 

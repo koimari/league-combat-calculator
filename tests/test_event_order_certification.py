@@ -297,13 +297,17 @@ def test_optimize_api_certifies_shyvana_form_packets():
 
 
 def test_optimize_api_labels_partial_candidate_search_without_claiming_certified_best():
-    """A complete winner cannot certify an exhaustive search with coarse candidates."""
+    """A complete winner cannot certify an exhaustive search with coarse candidates.
+
+    Ahri's W and R carry no reviewed control kind (docs/coverage-residue.json),
+    so her Fimbulwinter candidates are honestly coarse in every window.
+    """
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
             json={
-                "champion": "Shen",
+                "champion": "Ahri",
                 "level": 18,
                 "fight_mode": "time_based",
                 "max_legendary_slots": 1,

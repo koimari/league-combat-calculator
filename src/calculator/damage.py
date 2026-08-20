@@ -122,7 +122,7 @@ Might): the same entry may declare::
 import heapq
 import math
 import random
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from operator import itemgetter
@@ -1459,6 +1459,7 @@ def _ordered_damage_events(
         event_precision: str | None = None,
         basic_attack: bool = False,
         declared: tuple[Any, ...] | None = None,
+        cc_marker: Mapping[str, Any] | None = None,
     ) -> None:
         # Row schema (including ``_lk``) must mirror add_declared_events'
         # inlined fast path below exactly; change them together.
@@ -1524,6 +1525,8 @@ def _ordered_damage_events(
                 # the primary attack/on-hit packet. Area, pet, and copied
                 # target rows deliberately carry no eligibility marker.
                 event["omnivamp_effectiveness"] = 1.0
+        if cc_marker:
+            event.update(cc_marker)
         if source_key in cast_order:
             event["is_ability"] = True
         if raw_damage is not None:
@@ -1675,7 +1678,15 @@ def _ordered_damage_events(
                     cast_event
                 )
         slot_timeline = timeline_by_slot.get(key, [])
-        instances = max(1, int(ability_damages.get(key, {}).get("cast_instances", 1)))
+        info = ability_damages.get(key, {})
+        instances = max(1, int(info.get("cast_instances", 1)))
+        # An empowering row's lump IS the attack its cast forced (the row
+        # already says ``basic_attack``), so it carries the slot's declared
+        # control marker — the one ``_author_empowered_swing_events`` lands
+        # on the consumed swing when an auto stream exists.  Without it the
+        # same reviewed slot certified with the stream on and went coarse
+        # with it off.
+        marker = _declared_cc_marker(info) if info.get("empowers_next_auto") else None
         for cast_index in range(casts):
             cast_time = (
                 float(slot_timeline[cast_index].get("time", 0.0))
@@ -1699,6 +1710,7 @@ def _ordered_damage_events(
                         phase="ability",
                         basic_attack=bool(entry.get("basic_attack")),
                         raw_damage=raw_per_instance,
+                        cc_marker=marker,
                     )
 
     auto = breakdown.get("auto_attacks")
@@ -4466,8 +4478,20 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     )
                     for part in parts
                 )
+            # The forced attack is this cast's own hit, so its part carries
+            # the slot's declared control kind — what ``_apply_module_cc``
+            # stamped on the parts the module emitted and what the swing
+            # author lands on a consumed swing when a stream exists.
+            declared_cc = _declared_cc_kind(parts)
             if isinstance(empower, dict) and "swing_parts" in empower:
-                swing_parts = tuple(empower["swing_parts"])
+                swing_parts = tuple(
+                    (
+                        replace(part, cc_kind=declared_cc)
+                        if declared_cc is not None and part.cc_kind is None
+                        else part
+                    )
+                    for part in empower["swing_parts"]
+                )
                 if authored_timing is not None:
                     first_delay, attack_interval = authored_timing
                     swing_parts = tuple(
@@ -4501,6 +4525,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     bonus_ad_ratio=1.0,
                     time_offset=first_delay,
                     hit_interval=(attack_interval if hits > 1 else None),
+                    cc_kind=declared_cc,
                 )
                 parts = parts + (swing,)
         # A ramped shred (Corki E) stacks up across this ability's own
@@ -11527,19 +11552,27 @@ def _empowered_swing_consumers(
     return consumers
 
 
+def _declared_cc_kind(parts: Iterable[Any]) -> str | None:
+    """The reviewed control kind these parts declare, if any does."""
+    for part in parts:
+        kind = getattr(part, "cc_kind", None)
+        if kind is not None:
+            return str(kind)
+    return None
+
+
 def _declared_cc_marker(info: Mapping[str, Any]) -> dict[str, Any]:
-    """The reviewed control kind this entry's parts declare, if it has one.
+    """The reviewed control kind this entry's parts declare, as an event marker.
 
     ``MODULE_CC`` is stamped onto an entry's parts, and a part that emits
     its own events carries the marker there.  An empowering entry's damage
     is delivered by the attacks it forces, so the events authored for
-    those swings are where the same declaration has to land.
+    those swings — consumed from a stream, forced without one, or
+    reconstructed as the row's lump — are where the same declaration has
+    to land.
     """
-    for part in info.get("parts") or ():
-        kind = getattr(part, "cc_kind", None)
-        if kind is not None:
-            return {"cc_kind": str(kind), "cc_reviewed": True}
-    return {}
+    kind = _declared_cc_kind(info.get("parts") or ())
+    return {"cc_kind": kind, "cc_reviewed": True} if kind is not None else {}
 
 
 def _author_empowered_swing_events(

@@ -74,29 +74,39 @@ def control_words(text):
     return sorted(word for word in CONTROL_WORDS if word in text)
 
 
-def fimbulwinter_coverage(champion):
-    """The campaign's control-token probe, through the public entry."""
-    return calculate_payload({"champion": champion, **_PROBE})["timeline_coverage"]
+def fimbulwinter_coverage(champion, **window):
+    """The campaign's control-token probe, through the public entry.
+
+    ``window`` overrides the probe's timed, autos-on fight (``fight_mode``,
+    ``include_auto_attacks``) for the windows without an auto stream.
+    """
+    return calculate_payload({"champion": champion, **_PROBE, **window})[
+        "timeline_coverage"
+    ]
 
 
-def unreviewed_ability_slots(champion):
+def damage_events(champion, **window):
+    """The probe fight's authored event ledger, through the engine entry."""
+    request = {"champion": champion, **_PROBE, **window}
+    resolved = resolve_scenario(parse_scenario_request(request))
+    return run_fight(
+        resolved.champion_data,
+        _PROBE["level"],
+        resolved.items,
+        FightParams.from_request(request),
+    )["damage_events"]
+
+
+def unreviewed_ability_slots(champion, **window):
     """Ability event sources the ledger shows with no reviewed cc kind.
 
     This is the coverage refusal's own reason, named: the control-armed
     scan goes coarse exactly when this list is non-empty.
     """
-    request = {"champion": champion, **_PROBE}
-    resolved = resolve_scenario(parse_scenario_request(request))
-    result = run_fight(
-        resolved.champion_data,
-        _PROBE["level"],
-        resolved.items,
-        FightParams.from_request(request),
-    )
     return sorted(
         {
             event["source_key"]
-            for event in result["damage_events"]
+            for event in damage_events(champion, **window)
             if event.get("is_ability") and not event.get("cc_reviewed")
         }
     )

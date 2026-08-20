@@ -455,8 +455,11 @@ def test_public_bis_returns_two_distinct_event_ordered_builds():
         ranked[1]["boots"],
     )
     assert all(build["timeline_coverage"]["complete"] for build in ranked)
-    assert payload["timeline_withheld_evaluations"] > 0
-    assert payload["is_certified_best"] is False
+    # Vi's kit is reviewed slot by slot, and E's forced attack carries its
+    # declared marker without an auto stream, so no one-rotation candidate
+    # is withheld and the exhaustive opening is certified best in slot.
+    assert payload["timeline_withheld_evaluations"] == 0
+    assert payload["is_certified_best"] is True
 
 
 def test_sources_and_options_are_public_revision_receipts():

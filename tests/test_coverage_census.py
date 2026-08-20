@@ -58,10 +58,12 @@ def test_an_acknowledgement_that_no_longer_reproduces_is_reported(
     assert residue["stale_acknowledgements"] == ["Vi|y"]
 
 
-def test_the_committed_receipt_has_no_withhold_and_the_residue_is_the_timed_frontier():
+def test_the_committed_receipt_has_no_withhold_and_every_coarse_pair_is_acknowledged():
     """Every frontier class but the coarse pairs is empty, and the residue
-    acknowledges exactly the timed, autos-on frontier the campaign closed.
-    The four windows ``ITEM_WINDOWS`` added are the census job's verdict."""
+    acknowledges exactly the pairs the committed receipt still reports
+    across every window ``ITEM_WINDOWS`` sweeps - no entry silent, no row
+    outliving its cause.  This is the census job's verdict on the pinned
+    receipt, without the nine-minute run."""
     receipt = json.loads(
         (ROOT / "docs" / "coverage-census.json").read_text(encoding="utf-8")
     )
@@ -71,11 +73,8 @@ def test_the_committed_receipt_has_no_withhold_and_the_residue_is_the_timed_fron
         if key not in ("item_pair_coarse", "total")
     }
     assert set(other.values()) == {0}, other
-    timed = {
-        (key.split("|", 1)[0], source)
-        for key, sources in receipt["frontier"]["item_pair_coarse"].items()
-        if key.endswith("|timed|autos=True")
-        for source in sources
+    assert census.reconcile_residue(receipt) == {
+        "acknowledged_rows": len(census._residue_rows()),
+        "unacknowledged": [],
+        "stale_acknowledgements": [],
     }
-    acknowledged = {(row["champion"], row["source"]) for row in census._residue_rows()}
-    assert timed == acknowledged

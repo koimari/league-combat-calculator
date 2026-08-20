@@ -33,12 +33,12 @@
   "crossover_unavailable": 0,
   "enemy_item_entries": 0,
   "expiry_refusals": 0,
-  "item_pair_coarse": 672,
+  "item_pair_coarse": 117,
   "item_pair_failures": 0,
   "keystone_failures": 0,
   "keystone_unmodeled": 0,
   "mode_refusals": 0,
-  "total": 672
+  "total": 117
  },
  "frontier": {
   "attacker_kit_coarse": {},
@@ -60,15 +60,6 @@
    "Aatrox|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Aatrox|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Aatrox|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Aatrox|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Ahri|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -80,15 +71,6 @@
    ],
    "Ahri|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Ahri|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ahri|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ahri|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Akali|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -102,15 +84,6 @@
    "Akali|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Akali|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Akali|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Akali|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Akshan|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -122,18 +95,6 @@
    ],
    "Akshan|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Akshan|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Akshan|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Akshan|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Alistar|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
    ],
    "Ambessa|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -147,24 +108,6 @@
    "Ambessa|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Ambessa|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ambessa|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ambessa|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Amumu|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Amumu|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Amumu|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Anivia|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -176,15 +119,6 @@
    ],
    "Anivia|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Anivia|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Anivia|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Anivia|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Annie|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -198,65 +132,8 @@
    "Annie|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Annie|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Annie|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Annie|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Aphelios|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Aphelios|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Aphelios|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Aphelios|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Ashe|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ashe|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ashe|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Aurelion Sol|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Aurelion Sol|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Aurelion Sol|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Aurora|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Aurora|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Aurora|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Azir|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Azir|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Azir|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Bard|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
    ],
    "Bel'Veth|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -270,32 +147,8 @@
    "Bel'Veth|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Bel'Veth|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Bel'Veth|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Bel'Veth|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Blitzcrank|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Blitzcrank|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Blitzcrank|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Blitzcrank|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Blitzcrank|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Blitzcrank|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Brand|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -309,98 +162,8 @@
    "Brand|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Brand|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Brand|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Brand|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Braum|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Braum|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Braum|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Briar|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Briar|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Briar|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Briar|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Briar|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Caitlyn|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Caitlyn|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Caitlyn|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Camille|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Camille|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Camille|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Camille|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Camille|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Cassiopeia|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Cassiopeia|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Cassiopeia|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Cho'Gath|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Cho'Gath|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Cho'Gath|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Cho'Gath|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Cho'Gath|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Cho'Gath|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Corki|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Corki|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Corki|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Darius|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -414,15 +177,6 @@
    "Darius|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Darius|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Darius|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Darius|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Diana|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -435,434 +189,20 @@
    "Diana|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Diana|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Diana|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Diana|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Dr. Mundo|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Dr. Mundo|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Dr. Mundo|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Dr. Mundo|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Dr. Mundo|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Draven|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Draven|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Draven|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Draven|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Draven|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Draven|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Ekko|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ekko|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ekko|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ekko|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ekko|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Elise|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Elise|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Elise|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Evelynn|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
    ],
-   "Evelynn|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Evelynn|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Evelynn|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Ezreal|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Ezreal|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ezreal|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ezreal|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Fiddlesticks|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Fiddlesticks|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Fiddlesticks|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Fiora|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Fiora|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Fiora|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Fiora|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Fiora|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Fizz|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Fizz|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Fizz|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Fizz|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Fizz|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Galio|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Galio|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Galio|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Gangplank|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Gangplank|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Gangplank|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Garen|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Garen|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Garen|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Garen|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Garen|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Gnar|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Gragas|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Gragas|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Gragas|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Gragas|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Gragas|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Graves|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Graves|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Graves|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Gwen|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Gwen|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Gwen|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Gwen|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Gwen|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Hecarim|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Hecarim|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Hecarim|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Hecarim|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Hecarim|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Heimerdinger|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Heimerdinger|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Heimerdinger|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Hwei|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Hwei|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Hwei|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Illaoi|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Illaoi|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Illaoi|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Illaoi|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Illaoi|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Irelia|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Irelia|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Irelia|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Ivern|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ivern|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ivern|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Janna|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Janna|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Janna|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Jarvan IV|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Jarvan IV|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Jarvan IV|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Jax|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Jax|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Jax|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Jax|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Jax|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Jayce|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
    ],
-   "Jayce|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Jayce|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Jayce|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Jayce|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Jayce|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Jhin|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Jhin|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Jhin|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Jinx|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Jinx|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Jinx|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "K'Sante|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "K'Sante|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "K'Sante|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kai'Sa|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kai'Sa|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kai'Sa|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kalista|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Karma|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Karma|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Karma|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Karthus|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Karthus|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Karthus|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Kassadin|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Kassadin|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kassadin|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kassadin|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kassadin|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kassadin|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Katarina|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Katarina|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Katarina|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kayle|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kayle|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kayle|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kayle|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kayle|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kayn|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kayn|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kayn|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Kennen|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -876,33 +216,6 @@
    "Kennen|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Kennen|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kennen|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kennen|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kha'Zix|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kha'Zix|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kha'Zix|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kindred|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kindred|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kindred|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Kled|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -914,24 +227,6 @@
    ],
    "Kled|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Kled|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kled|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kled|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Kog'Maw|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Kog'Maw|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Kog'Maw|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "LeBlanc|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -945,122 +240,8 @@
    "LeBlanc|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "LeBlanc|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "LeBlanc|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "LeBlanc|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Lee Sin|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Lee Sin|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Lee Sin|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Leona|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Leona|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Leona|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Leona|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Leona|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Lillia|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Lillia|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Lillia|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Lissandra|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Lissandra|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Lissandra|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Locke|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Locke|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Locke|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Locke|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Lucian|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Lucian|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Lucian|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Lulu|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Lulu|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Lulu|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Lux|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Lux|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Lux|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Malphite|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Malphite|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Malphite|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Malzahar|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Malzahar|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Malzahar|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Maokai|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Maokai|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Maokai|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Master Yi|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1074,347 +255,8 @@
    "Master Yi|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Master Yi|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Master Yi|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Master Yi|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Mel|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Mel|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Mel|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Milio|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Milio|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Milio|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Miss Fortune|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Miss Fortune|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Miss Fortune|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Mordekaiser|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Mordekaiser|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Mordekaiser|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Morgana|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Morgana|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Morgana|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Naafiri|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Naafiri|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Naafiri|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nami|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nami|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nami|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nasus|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Nasus|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Nasus|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nasus|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nasus|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nautilus|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nautilus|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nautilus|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Neeko|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Neeko|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Neeko|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nidalee|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nidalee|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nidalee|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nilah|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nilah|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nilah|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nocturne|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nocturne|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nocturne|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Nunu & Willump|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Nunu & Willump|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Nunu & Willump|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Olaf|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Olaf|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Olaf|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Orianna|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Orianna|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Orianna|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Ornn|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ornn|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ornn|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Pantheon|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Pantheon|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Pantheon|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Poppy|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Poppy|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Poppy|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Pyke|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Pyke|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Pyke|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Qiyana|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Qiyana|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Qiyana|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Quinn|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Quinn|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Quinn|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Rakan|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Rakan|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Rakan|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Rammus|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Rammus|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Rammus|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Rek'Sai|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Rek'Sai|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Rek'Sai|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Rell|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Rell|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Rell|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Renata Glasc|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Renata Glasc|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Renata Glasc|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Renekton|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Renekton|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Renekton|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Rengar|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Rengar|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Rengar|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Riven|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Riven|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Riven|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Rumble|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Rumble|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Rumble|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Ryze|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ryze|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ryze|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Samira|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Samira|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Samira|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Sejuani|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Sejuani|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Sejuani|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Senna|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Senna|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Senna|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Senna|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Seraphine|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Seraphine|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Seraphine|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Sett|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1428,15 +270,6 @@
    "Sett|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Sett|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Sett|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Sett|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Shaco|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -1449,59 +282,8 @@
    "Shaco|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Shaco|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Shaco|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Shaco|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Shen|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Shen|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Shen|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
    "Shyvana|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Shyvana|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Shyvana|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Shyvana|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Shyvana|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Shyvana|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Singed|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Singed|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Singed|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Sion|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Sion|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Sion|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Sivir|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1515,65 +297,8 @@
    "Sivir|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Sivir|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Sivir|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Sivir|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Skarner|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Skarner|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Skarner|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Smolder|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Smolder|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Smolder|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Smolder|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Sona|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Sona|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Sona|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Soraka|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Swain|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Swain|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Swain|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Sylas|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Sylas|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Sylas|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Syndra|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1587,170 +312,8 @@
    "Syndra|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Syndra|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Syndra|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Syndra|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Tahm Kench|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Tahm Kench|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Tahm Kench|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Taliyah|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Talon|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Talon|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Talon|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Taric|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Taric|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Taric|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Teemo|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Teemo|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Teemo|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Thresh|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Thresh|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Thresh|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Tristana|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Tristana|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Tristana|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Trundle|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Trundle|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Trundle|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Tryndamere|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Tryndamere|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Tryndamere|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Twisted Fate|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Twisted Fate|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Twisted Fate|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Twitch|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Twitch|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Twitch|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Udyr|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Udyr|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Udyr|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Urgot|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Urgot|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Urgot|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Varus|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Varus|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Varus|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Vayne|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Vayne|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vayne|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vayne|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Vayne|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Vayne|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Veigar|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Veigar|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Veigar|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Vel'Koz|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Vel'Koz|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Vel'Koz|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Vex|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1764,92 +327,8 @@
    "Vex|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Vex|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Vex|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Vex|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Viego|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Viego|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Viego|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Viktor|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Viktor|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Viktor|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Vi|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vi|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vi|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Vi|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Vi|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Vladimir|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Vladimir|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Vladimir|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Volibear|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Volibear|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Volibear|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Warwick|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Warwick|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Warwick|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Warwick|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Wukong|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Wukong|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Wukong|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Wukong|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Wukong|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Xayah|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1863,24 +342,6 @@
    "Xayah|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Xayah|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Xayah|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Xayah|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Xerath|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Xerath|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Xerath|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Xin Zhao|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -1892,24 +353,6 @@
    ],
    "Xin Zhao|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Xin Zhao|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Xin Zhao|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Xin Zhao|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Yasuo|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Yasuo|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Yasuo|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Yone|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -1923,104 +366,14 @@
    "Yone|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Yone|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Yone|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Yone|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Yorick|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Yorick|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Yorick|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Yunara|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
    ],
    "Yunara|Bloodsong|timed|autos=False": [
     "expose_weakness_Bloodsong"
    ],
-   "Yunara|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Yunara|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Yunara|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Yuumi|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Yuumi|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Yuumi|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Zaahen|Bloodsong|one_rotation|autos=True": [
     "expose_weakness_Bloodsong"
-   ],
-   "Zaahen|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zaahen|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zaahen|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Zac|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zac|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zac|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Zed|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zed|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zed|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Zeri|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zeri|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zeri|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Ziggs|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Ziggs|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Ziggs|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
-   "Zilean|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zilean|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zilean|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ],
    "Zoe|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
@@ -2034,15 +387,6 @@
    "Zoe|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Zoe|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zoe|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zoe|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
-   ],
    "Zyra|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -2054,15 +398,6 @@
    ],
    "Zyra|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
-   ],
-   "Zyra|Horizon Focus|auto_only|autos=True": [
-    "damage_amp_Horizon Focus"
-   ],
-   "Zyra|Malignance|auto_only|autos=True": [
-    "ult_proc_Malignance"
-   ],
-   "Zyra|Zeke's Convergence|auto_only|autos=True": [
-    "ult_proc_Zeke's Convergence"
    ]
   },
   "item_pair_failures": {},
