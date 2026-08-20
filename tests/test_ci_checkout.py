@@ -3,10 +3,10 @@
 Every gate the workflow runs answers from the files in the checkout.  Four
 places used to answer from commits instead — the corpus anchor's merge base,
 the campaign's slice tags, the migration counters' receipt-to-receipt diff and
-the P2a breach's ``git archive`` — and each of them held ``fetch-depth: 0`` on
-every job for a record that was already closed.  The records are pinned now,
-so the two halves of that are asserted together: the workflow pins no depth,
-and no gate walks history to find out what it is gating.
+the P2a breach's tree extraction — and between them they held ``fetch-depth: 0``
+on the test job for records that were already closed.  The records are pinned
+now, so the two halves of that are asserted together: the workflow pins no
+depth, and no gate reads a commit the depth-1 checkout does not have.
 """
 
 from __future__ import annotations
@@ -17,12 +17,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "tests.yml"
 
-#: Git subcommands that read commits the checkout may not have.  ``rev-parse``
-#: and ``show`` are absent deliberately: both are used against ``HEAD``, which
-#: a depth-1 checkout has.
+#: Git subcommands that read commits a depth-1 checkout may not have.
+#: ``rev-parse`` and ``show`` are absent deliberately: both are used against
+#: ``HEAD``, which every checkout has.
 HISTORY_WALKING = ("log", "archive", "merge-base", "rev-list", "for-each-ref")
 
-_WALK = re.compile(r"\bgit[ _-]?(?:%s)\b" % "|".join(HISTORY_WALKING))
+#: ``git`` and the subcommand, however the call spells the gap between them:
+#: ``git log`` in prose, ``["git", "log", ...]``, ``_git("merge-base", ...)``,
+#: and the same wrapped across lines.
+_WALK = re.compile(r"""git['"]?[\s,(_-]+['"]?(?:%s)\b""" % "|".join(HISTORY_WALKING))
 
 
 def test_the_workflow_pins_no_fetch_depth():
@@ -32,13 +35,13 @@ def test_the_workflow_pins_no_fetch_depth():
 
 def test_no_gate_walks_history():
     """Named, so a re-introduced walk is a finding rather than a slow CI job."""
-    offenders = [
-        f"{path.relative_to(ROOT).as_posix()}:{number}"
-        for folder in ("tests", "scripts")
-        for path in sorted((ROOT / folder).rglob("*.py"))
-        for number, line in enumerate(
-            path.read_text(encoding="utf-8").splitlines(), start=1
-        )
-        if _WALK.search(line) and path.name != Path(__file__).name
-    ]
+    offenders = []
+    for folder in ("tests", "scripts"):
+        for path in sorted((ROOT / folder).rglob("*.py")):
+            if path == Path(__file__):
+                continue
+            source = path.read_text(encoding="utf-8")
+            for match in _WALK.finditer(source):
+                line = source.count("\n", 0, match.start()) + 1
+                offenders.append(f"{path.relative_to(ROOT).as_posix()}:{line}")
     assert offenders == [], offenders
