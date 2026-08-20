@@ -629,8 +629,19 @@ def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
 
 
 def item_gold(item: dict[str, Any]) -> int:
-    """Return the sourced total shop price for one item."""
-    return int(item.get("shop", {}).get("prices", {}).get("total", 0))
+    """Return the sourced total shop price, failing closed on a broken record.
+
+    ``shop.prices.total`` is cache-owned; a literal default here would make
+    an item free the moment the parser stopped writing its price.
+    """
+    name = str(item.get("name") or "Unknown item")
+    prices = item.get("shop", {}).get("prices", {})
+    if "total" not in prices:
+        raise KeyError(f"{name}: shop.prices.total")
+    price = int(prices["total"])
+    if price <= 0:
+        raise ValueError(f"{name}: shop.prices.total must be positive")
+    return price
 
 
 def _build_gold(items: list[dict[str, Any]]) -> int:
@@ -844,18 +855,6 @@ def _legal_locked_shop_item(item: dict[str, Any]) -> bool:
         return False
     ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
     return bool(ranks & _LEGAL_LOCKED_RANKS)
-
-
-def _required_item_gold(item: dict[str, Any]) -> int:
-    """Return sourced total price, failing closed instead of making an item free."""
-    name = str(item.get("name") or "Unknown item")
-    prices = item.get("shop", {}).get("prices", {})
-    if "total" not in prices:
-        raise KeyError(f"{name}: shop.prices.total")
-    price = int(prices["total"])
-    if price <= 0:
-        raise ValueError(f"{name}: shop.prices.total must be positive")
-    return price
 
 
 def get_purchase_items(role: str = "") -> list[dict[str, Any]]:
@@ -1411,7 +1410,7 @@ def optimize_purchase(
         if "LEGENDARY" in item.get("rank", []) and name not in allowed_legendary_names:
             raise ValueError(f"{name} is not available in the selected role shop")
         require_optimizer_item_coverage(item)
-        _required_item_gold(item)
+        item_gold(item)
         owned.append(item)
     owned_boots = None
     if locked_boots:
@@ -1421,7 +1420,7 @@ def optimize_purchase(
         if not is_ordinary_sr_item(owned_boots):
             raise ValueError(f"{locked_boots} is not an ordinary shop item")
         require_optimizer_item_coverage(owned_boots)
-        _required_item_gold(owned_boots)
+        item_gold(owned_boots)
     validate_resolved_loadout(
         owned,
         boots=owned_boots,
@@ -1919,7 +1918,7 @@ def optimize_build(
                 if not _legal_locked_shop_item(item):
                     raise ValueError(f"{name} is not an ordinary non-boots shop item")
                 require_optimizer_item_coverage(item)
-                _required_item_gold(item)
+                item_gold(item)
                 resolved_locked.append(item)
                 locked_names.add(name)
 

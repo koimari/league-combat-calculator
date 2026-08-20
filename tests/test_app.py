@@ -2165,6 +2165,13 @@ class TestIconUrlsAreHttps:
         assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
 
+@pytest.mark.parametrize("key", ["icon", "patchLastChanged"])
+def test_champion_cache_fields_are_required_reads(key):
+    """A cache-owned champion field is never defaulted into the response."""
+    with pytest.raises(KeyError, match=f"Ahri: cached champion record has no {key}"):
+        app_module._cached_champion_field({"name": "Ahri"}, key)
+
+
 class TestChampionVerifiedFlags:
     """/api/champions exposes the complete dedicated-module registry."""
 

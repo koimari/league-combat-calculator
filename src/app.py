@@ -970,6 +970,19 @@ def api_health_deep():
     )
 
 
+def _cached_champion_field(champ_data: Mapping[str, Any], key: str) -> Any:
+    """Read one cache-owned champion field, failing closed on the key.
+
+    ``data/champions.json`` owns every value this endpoint republishes; a
+    literal default here would serve a plausible blank for a parser that
+    stopped writing the field.
+    """
+    if key not in champ_data:
+        name = champ_data.get("name", "unknown champion")
+        raise KeyError(f"{name}: cached champion record has no {key}")
+    return champ_data[key]
+
+
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
     """Slot identity for /api/champions: name, icon, and whether it was ingested.
 
@@ -1017,7 +1030,7 @@ def api_champions():
         result.append(
             {
                 "name": champ_data["name"],
-                "icon": _https_icon(champ_data.get("icon", "")),
+                "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
                 "verified": availability["ready"],
                 "engine_registered": availability["ready"],
                 "engine_registration": registration,
@@ -1029,7 +1042,9 @@ def api_champions():
                     champ_data["name"]
                 ),
                 "availability": availability,
-                "patch_last_changed": champ_data.get("patchLastChanged"),
+                "patch_last_changed": _cached_champion_field(
+                    champ_data, "patchLastChanged"
+                ),
                 "abilities": ability_slots,
                 "ability_ingestion": {
                     "complete": all(

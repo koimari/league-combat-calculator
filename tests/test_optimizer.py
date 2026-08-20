@@ -13,7 +13,7 @@ from src.calculator.optimizer import (
     get_selectable_items,
     get_purchase_items,
     optimize_purchase,
-    _required_item_gold,
+    item_gold,
     _SPELLBLADE_ITEMS,
     _hill_climb,
 )
@@ -1733,7 +1733,7 @@ def test_purchase_reserves_the_boots_slot_when_boots_are_enabled(monkeypatch):
 
 def test_purchase_price_fails_closed_with_item_and_key():
     with pytest.raises(KeyError, match=r"Broken Item: shop\.prices\.total"):
-        _required_item_gold({"name": "Broken Item", "shop": {"prices": {}}})
+        item_gold({"name": "Broken Item", "shop": {"prices": {}}})
 
 
 def test_purchase_pool_includes_components_but_not_starters(monkeypatch):
