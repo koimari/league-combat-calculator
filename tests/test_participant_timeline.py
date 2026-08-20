@@ -21,6 +21,7 @@ from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
+    ActorRequest,
     Combatant,
     CoupledSearchContext,
     _actor_params,
@@ -78,17 +79,11 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
         items=(),
         stats={},
         defenses=StartingDefenses(),
-        request=type(
-            "RosterRequest",
-            (),
-            {
-                "role": "",
-                "role_quest_complete": False,
-                "ability_ranks": {},
-                "champion_options": {},
-                "item_options": {"Heartsteel": {"bonus_health": 700}},
-            },
-        )(),
+        request=ActorRequest(
+            ability_ranks={},
+            champion_options={},
+            item_options={"Heartsteel": {"bonus_health": 700}},
+        ),
     )
 
     assert _actor_params(base, actor).cast_order is None
@@ -103,11 +98,7 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
         items=(),
         stats={},
         defenses=StartingDefenses(),
-        request=type(
-            "RosterRequestWithoutOptions",
-            (),
-            {"role": "", "role_quest_complete": False},
-        )(),
+        request=ActorRequest(),
     )
     assert _actor_params(base, actor_without_options).item_options is None
 
@@ -5129,6 +5120,27 @@ def test_a_short_window_sequence_stops_rather_than_misaligning():
             index_of={"target": 0},
             ledger=ScoreLedger(0),
             regeneration_windows=(None,),
+        )
+
+
+def test_a_ledger_without_the_capability_flags_is_refused():
+    """The kernel reads ``SurvivalLedger``'s flags directly, never by default.
+
+    A silent ``True`` default let a stand-in ledger buy full observation it
+    never declared; the read now names the missing attribute.
+    """
+
+    class Bare:  # pylint: disable=too-few-public-methods
+        """A ledger-shaped object that declares no capability flags."""
+
+    with pytest.raises(AttributeError, match="records_annotations"):
+        TransitionContext(
+            duration=5.0,
+            states=[],
+            combatants=[],
+            index_of={},
+            ledger=Bare(),
+            regeneration_windows=(),
         )
 
 

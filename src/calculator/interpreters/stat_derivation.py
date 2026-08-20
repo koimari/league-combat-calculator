@@ -38,6 +38,7 @@ from ..item_behavior import (
     STAT_DERIVATION_OPTIONAL_REFERENCES,
     STAT_DERIVATION_PAYLOADS,
     STAT_DERIVATION_REQUIRED_REFERENCES,
+    STAT_DERIVATION_UNGRANTED_PAYLOADS,
     StatAvailability,
 )
 from ..item_behavior_catalog import behavior_rules
@@ -116,6 +117,22 @@ RESOLVER_INTERPRETER = StatDerivationResolverInterpreter()
 PAIR_INTERPRETER = StatDerivationPairInterpreter()
 
 
+def granted_stat(payload: object) -> DerivedStat | None:
+    """The stat a stat-derivation payload feeds, or ``None`` for none.
+
+    Two payloads grant no stat at all -- an ultimate cooldown refund and an
+    active window's cast economy -- and ``item_behavior`` names them, so the
+    absence is read off that declaration rather than off a missing attribute.
+    """
+    if isinstance(payload, STAT_DERIVATION_UNGRANTED_PAYLOADS):
+        return None
+    if not isinstance(payload, STAT_DERIVATION_PAYLOADS):
+        raise StatDerivationInterpretationError(
+            f"{type(payload).__name__} is not a stat-derivation payload"
+        )
+    return payload.granted
+
+
 @dataclass(frozen=True, slots=True)
 class StatSlot:
     """One holder's stat derivation, resolved for one build.
@@ -136,8 +153,8 @@ class StatSlot:
 
     @property
     def granted(self) -> DerivedStat | None:
-        """The stat this derivation feeds, or ``None`` for the refund shape."""
-        return getattr(self.rule.payload, "granted", None)
+        """The stat this derivation feeds, or ``None`` when it feeds none."""
+        return granted_stat(self.rule.payload)
 
     @property
     def availability(self) -> StatAvailability:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, MutableMapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 import math
 from typing import TYPE_CHECKING, Any
 
@@ -18,6 +18,40 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
+class ActorRequest:
+    """What a participant's request contributes to the fight it runs.
+
+    One shape for both producers -- a roster card's ``ChampionLoadout``
+    and the main champion's ``FightParams`` -- so every consumer reads
+    the fields directly.  ``None`` and ``{}`` are different answers and
+    are carried as the producer gave them: an absent rank map skips rank
+    validation, and an absent item-option map is the direct-caller
+    default an empty one overrides
+    (``item_effects.actualizer_active_seconds``).
+    """
+
+    role: str = ""
+    role_quest_complete: bool = False
+    ability_ranks: dict[str, int] | None = None
+    champion_options: dict[str, Any] | None = None
+    cast_order: list[str] | None = None
+    item_options: dict[str, dict[str, int]] | None = None
+    ally_effects_enabled: bool = False
+
+    @classmethod
+    def of_params(cls, params: FightParams) -> "ActorRequest":
+        """The main champion's request, off the selected fight params."""
+        return cls(
+            role=params.role,
+            role_quest_complete=params.role_quest_complete,
+            ability_ranks=params.ability_ranks,
+            champion_options=params.champion_options,
+            cast_order=params.cast_order,
+            item_options=params.item_options,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class Combatant:  # pylint: disable=too-many-instance-attributes
     """One participant with its resolved stats and build."""
 
@@ -28,16 +62,22 @@ class Combatant:  # pylint: disable=too-many-instance-attributes
     items: tuple[dict[str, Any], ...]
     stats: dict[str, float]
     defenses: StartingDefenses
-    request: Any = None
+    request: ActorRequest = field(default_factory=ActorRequest)
     is_practice_dummy: bool = False
 
     def __post_init__(self) -> None:
-        # Every walk-side consumer reads ``defenses`` by direct attribute, so
-        # a stand-in object is refused here, by name, not on its first read.
+        # Every walk-side consumer reads ``defenses`` and ``request`` by
+        # direct attribute, so a stand-in object is refused here, by
+        # name, not on its first read.
         if not isinstance(self.defenses, StartingDefenses):
             raise TypeError(
                 f"{self.participant_id}: defenses must be a StartingDefenses, "
                 f"not {type(self.defenses).__name__}"
+            )
+        if not isinstance(self.request, ActorRequest):
+            raise TypeError(
+                f"{self.participant_id}: request must be an ActorRequest, "
+                f"not {type(self.request).__name__}"
             )
 
 
@@ -99,16 +139,25 @@ def from_loadout(
     loadout: ResolvedLoadout,
 ) -> Combatant:
     """Create a typed roster participant from one resolved loadout."""
+    card = loadout.request
     return Combatant(
         participant_id=participant_id,
         team=team,
         champion_data=loadout.champion_data,
-        level=loadout.request.level,
+        level=card.level,
         items=loadout.item_data,
         stats=loadout.stats,
         defenses=loadout.defenses,
-        request=loadout.request,
-        is_practice_dummy=bool(getattr(loadout.request, "is_practice_dummy", False)),
+        request=ActorRequest(
+            role=card.role,
+            role_quest_complete=card.role_quest_complete,
+            ability_ranks=card.ability_ranks,
+            champion_options=card.champion_options,
+            cast_order=card.cast_order,
+            item_options=card.item_options,
+            ally_effects_enabled=card.ally_effects_enabled,
+        ),
+        is_practice_dummy=card.is_practice_dummy,
     )
 
 
@@ -130,18 +179,7 @@ def main_combatant(  # pylint: disable=too-many-arguments,too-many-positional-ar
         items=tuple(items),
         stats=stats,
         defenses=defenses,
-        request=type(
-            "MainRequest",
-            (),
-            {
-                "role": params.role,
-                "role_quest_complete": params.role_quest_complete,
-                "ability_ranks": params.ability_ranks,
-                "champion_options": params.champion_options,
-                "cast_order": params.cast_order,
-                "item_options": params.item_options,
-            },
-        )(),
+        request=ActorRequest.of_params(params),
     )
 
 
@@ -150,12 +188,14 @@ def actor_params(base: FightParams, actor: Combatant) -> FightParams:
     request = actor.request
     return replace(
         base,
-        role=getattr(request, "role", "") or "",
-        role_quest_complete=bool(getattr(request, "role_quest_complete", False)),
-        ability_ranks=getattr(request, "ability_ranks", None) or None,
-        champion_options=getattr(request, "champion_options", None),
-        cast_order=getattr(request, "cast_order", None),
-        item_options=getattr(request, "item_options", None),
+        role=request.role,
+        role_quest_complete=request.role_quest_complete,
+        # An empty rank map is "no manual allocation", which is what
+        # the engine reads ``None`` as; the two are one answer here.
+        ability_ranks=request.ability_ranks or None,
+        champion_options=request.champion_options,
+        cast_order=request.cast_order,
+        item_options=request.item_options,
         ally_stat_bonuses=None,
     )
 

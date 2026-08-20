@@ -152,19 +152,54 @@ class TestAnUnstageableFamilyFailsClosed:
         assert type(payload).__name__ in caught.value.receipt
 
     @pytest.mark.parametrize(
-        "payload",
+        ("payload", "staged"),
         [
-            events.Damage(50.0, "magic"),
-            events.Recovery(30.0),
-            events.Barrier(40.0),
-            events.TemporaryHealth(25.0),
+            (
+                events.Damage(50.0, "magic", None, 61.0),
+                {
+                    "kind": ActionKind.DAMAGE,
+                    "amount": 50.0,
+                    "damage_type": "magic",
+                    "raw_damage": 61.0,
+                },
+            ),
+            (
+                events.Recovery(30.0, "lifesteal"),
+                {
+                    "kind": ActionKind.HEAL,
+                    "amount": 30.0,
+                    "healing_category": "lifesteal",
+                },
+            ),
+            (
+                events.Barrier(40.0, 2.5),
+                {"kind": ActionKind.SHIELD, "amount": 40.0, "duration": 2.5},
+            ),
+            (
+                events.TemporaryHealth(25.0, 4.0),
+                {
+                    "kind": ActionKind.TEMP_HEALTH,
+                    "amount": 25.0,
+                    "duration": 4.0,
+                },
+            ),
         ],
     )
-    def test_a_stageable_family_compiles(self, payload) -> None:
-        actions = program_compile.compile_program(
+    def test_a_stageable_family_stages_its_own_fields(self, payload, staged) -> None:
+        """Each family fills its half of the union and no other."""
+        (action,) = program_compile.compile_program(
             program_of(payload), projection=Projection.SCORE
         )
-        assert len(actions) == 1
+        neutral = {
+            "damage_type": "",
+            "raw_formula": None,
+            "raw_damage": 0.0,
+            "healing_category": "",
+            "amount_formula": None,
+            "duration": 0.0,
+        }
+        for name, value in {**neutral, **staged}.items():
+            assert getattr(action, name) == value, name
 
 
 class TestAnUnstageableRiderFailsClosed:

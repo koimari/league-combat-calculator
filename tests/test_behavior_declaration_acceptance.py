@@ -49,6 +49,7 @@ from src.calculator.item_behavior import (
     Subject,
 )
 from src.calculator.program.views import ViewTag
+from src.calculator.roster_composition import ActorRequest
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_support_effects import (
     EventViewStarvationError,
@@ -141,7 +142,7 @@ def _actor(participant_id: str, team: str, item_names: tuple[str, ...]):
         level=18,
         items=tuple({"name": name} for name in item_names),
         stats={"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
-        request=SimpleNamespace(item_options={}, ally_effects_enabled=True),
+        request=ActorRequest(item_options={}, ally_effects_enabled=True),
     )
 
 

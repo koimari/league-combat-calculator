@@ -19,6 +19,7 @@ from typing import Any
 from .defensive_effects import StartingDefenses
 from .pipeline import FightParams, run_fight
 from .roster_composition import (
+    ActorRequest,
     Combatant,
     actor_params as _actor_params,
     actor_params_with_resource_restores as _actor_params_with_resource_restores,
@@ -963,9 +964,7 @@ def _support_effect_templates(
     is the honest answer for an actor with no opponents and is why the
     annotation is optional while the argument is not.
     """
-    if attacker.team == "ally" and not getattr(
-        attacker.request, "ally_effects_enabled", False
-    ):
+    if attacker.team == "ally" and not attacker.request.ally_effects_enabled:
         return []
     request = attacker.request
     effects = derive_ally_effects(
@@ -973,7 +972,7 @@ def _support_effect_templates(
         attacker.level,
         result.get("champion_stats", attacker.stats),
         list(result.get("cast_timeline", [])),
-        ability_ranks=getattr(request, "ability_ranks", None),
+        ability_ranks=request.ability_ranks,
     )
     templates = []
     for effect_index, effect in enumerate(effects):
@@ -2636,7 +2635,7 @@ class CoupledSearchContext:
         self.compiled_walk_enabled = compiled_walk_enabled
         self.roster_actors: list[Combatant] | None = None
         self.actor_params: dict[str, FightParams] = {}
-        self.main_request: Any = None
+        self.main_request: ActorRequest = ActorRequest()
         self.index_of: dict[str, int] = {}
         self.grievous_packs: dict[int, dict[str, Any]] = {}
         self.thorns_profiles: dict[int, tuple[ThornsEffect, ...]] = {}
@@ -2743,18 +2742,7 @@ def _context_setup(
         if actor.is_practice_dummy:
             continue
         context.actor_params[actor.participant_id] = _actor_params(params, actor)
-    context.main_request = type(
-        "MainRequest",
-        (),
-        {
-            "role": params.role,
-            "role_quest_complete": params.role_quest_complete,
-            "ability_ranks": params.ability_ranks,
-            "champion_options": params.champion_options,
-            "cast_order": params.cast_order,
-            "item_options": params.item_options,
-        },
-    )()
+    context.main_request = ActorRequest.of_params(params)
     main_params = _actor_params(
         params,
         Combatant(
@@ -3050,7 +3038,7 @@ def _score_with_search_context(
     # Issue #137: a search-invariant compilation failure (roster pair or
     # signature panel) poisons the context; every later evaluation raises
     # immediately instead of re-attempting the compiled path.
-    if getattr(context, "uncompilable", False):
+    if context.uncompilable:
         raise UncompilableActionError(
             receipt=_CONTEXT_POISONED_RECEIPT,
             source=str(champion_data.get("name", "")),
@@ -3081,7 +3069,6 @@ def _score_with_search_context(
             items=tuple(items),
             stats=main_stats,
             defenses=main_defenses,
-            request=None,
         )
         try:
             _context_setup(
