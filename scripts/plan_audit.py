@@ -177,6 +177,16 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
     )
 ) + (
     Allowance(
+        doc="2026-08-20-surface-area-campaign.md",
+        value=25,
+        context="acknowledged",
+        reason=(
+            "the census gate's acknowledged-residue row count, which happens to "
+            "equal coupled_golden_exact.entries; docs/coverage-residue.json is "
+            "its home"
+        ),
+    ),
+    Allowance(
         doc="phase-0-gates-and-corrections.md",
         value=0,
         context="Expected qualifying occurrences",
