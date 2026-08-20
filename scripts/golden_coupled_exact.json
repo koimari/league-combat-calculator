@@ -50,8 +50,8 @@
       "combat/0:main/incoming": "3248.4",
       "combat/0:main/outgoing": "3310.1",
       "combat/1:ally:Lulu/incoming": "2129.0",
-      "combat/1:ally:Lulu/outgoing": "731.8",
-      "combat/2:enemy:Aatrox/incoming": "4041.9",
+      "combat/1:ally:Lulu/outgoing": "733.5",
+      "combat/2:enemy:Aatrox/incoming": "4043.6",
       "combat/2:enemy:Aatrox/outgoing": "5377.4",
       "fights/0:Aatrox": "3933.8"
     },
@@ -65,7 +65,7 @@
       "combat/3:enemy:Malphite/incoming": "2919.6",
       "combat/3:enemy:Malphite/outgoing": "1712.2",
       "fights/0:Aatrox": "8220.1",
-      "fights/1:Malphite": "10525.6"
+      "fights/1:Malphite": "10499.6"
     },
     "dream_maker_roster": {
       "combat/0:main/incoming": "1774.1",
@@ -87,21 +87,21 @@
     },
     "immolate_active_bruiser_roster": {
       "combat/0:main/incoming": "2562.0",
-      "combat/0:main/outgoing": "5335.3",
+      "combat/0:main/outgoing": "4778.3",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "703.2",
-      "combat/2:enemy:Aatrox/incoming": "6038.4",
+      "combat/2:enemy:Aatrox/incoming": "5481.5",
       "combat/2:enemy:Aatrox/outgoing": "4691.0",
       "fights/0:Aatrox": "5654.8"
     },
     "lethality_window_assassin_roster": {
       "combat/0:main/incoming": "2791.0",
-      "combat/0:main/outgoing": "2817.5",
+      "combat/0:main/outgoing": "2833.4",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "703.2",
-      "combat/2:enemy:Aatrox/incoming": "3520.7",
+      "combat/2:enemy:Aatrox/incoming": "3536.5",
       "combat/2:enemy:Aatrox/outgoing": "4920.0",
-      "fights/0:Aatrox": "3077.2"
+      "fights/0:Aatrox": "3093.1"
     },
     "liandry_reprice_mage_roster": {
       "combat/0:main/incoming": "736.3",
@@ -159,16 +159,16 @@
       "fights/0:Aatrox": "1643.9"
     },
     "swing_term_armed_carry_roster": {
-      "combat/0:main/incoming": "2797.3",
+      "combat/0:main/incoming": "2793.7",
       "combat/0:main/outgoing": "4813.6",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "716.6",
       "combat/2:enemy:Aatrox/incoming": "2610.6",
-      "combat/2:enemy:Aatrox/outgoing": "3050.2",
+      "combat/2:enemy:Aatrox/outgoing": "3046.6",
       "combat/3:enemy:Malphite/incoming": "2919.6",
       "combat/3:enemy:Malphite/outgoing": "1876.1",
       "fights/0:Aatrox": "3483.1",
-      "fights/1:Malphite": "4353.2"
+      "fights/1:Malphite": "4282.5"
     },
     "syndra_custom_order_120": {
       "combat/0:/incoming": "0.0",
@@ -232,11 +232,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "9f203860734ef48f40b43a37dd90bfb7cd668e2c",
+    "git_head": "e747e056f682b64b904f5d8bfb9949392dbbc6e7",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 24,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "b51b2599e68e3d242978b33051a66c696b42229a"
+    "src_tree_sha": "5d53c9484c4f90fa127068ff05b398e073078438"
   }
 }
