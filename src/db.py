@@ -914,36 +914,3 @@ def record_metric_event(
         db_session.add(row)
         db_session.commit()
         return row.id
-
-
-def list_metric_events(
-    event: str | None = None,
-    since: datetime | None = None,
-    limit: int = 200,
-) -> list[dict[str, Any]]:
-    """Return recent metrics events, newest first, optionally filtered.
-
-    ``since`` is a naive-UTC lower bound on ``created_at``; ``limit`` is
-    applied as given (no route exposes it, so there is no boundary to clamp).
-    """
-    statement = select(MetricsEvent).order_by(MetricsEvent.id.desc())
-    if event:
-        if event not in METRIC_EVENT_NAMES:
-            raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
-        statement = statement.where(MetricsEvent.event == event)
-    if since is not None:
-        statement = statement.where(MetricsEvent.created_at >= since)
-    statement = statement.limit(limit)
-    with session() as db_session:
-        rows = db_session.execute(statement).scalars().all()
-        return [
-            {
-                "event_id": row.id,
-                "event": row.event,
-                "session_id": row.session_id,
-                "took_ms": row.took_ms,
-                "payload": row.payload or {},
-                "created_at": _serialize_datetime(row.created_at),
-            }
-            for row in rows
-        ]

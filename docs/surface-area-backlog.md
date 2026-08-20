@@ -35,7 +35,7 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| C8 | `db.list_metric_events`, `data_updater.reparse_cached_rune_effects` | Test-only / REPL-only (the rune refresh is named in `data/README.md:31` but has no CLI). | Give the refresh a `scripts/` entry; cut the other if nothing will call it. |
+| C8 | `data_updater.reparse_cached_rune_effects` | REPL-only (named in `data/README.md:31` but has no CLI). | Give the refresh a `scripts/` entry. |
 
 ## D. Champion package
 
