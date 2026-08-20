@@ -20,7 +20,24 @@ E5-2 fixes:
   50/60/70/80 + 10% AP, +2/3/4/5 + 0.75% AP per additional stack,
   consumed when the stored total exceeds the target's current health)
   is a kill-boundary execute and is documented, not priced as damage.
+
+Coverage:
+
+- P (Searing Brilliance) is ``modeled``.  Its volley — one 8 : 30 (based
+  on level) (+ 4% AP) magic projectile per stack, up to 9, off the next
+  basic attack — is priced behind the explicit ``p_searing_brilliance``
+  option.  Overwhelm, the other half of the passive, stays unpriced and
+  stays a documented kill boundary rather than a coverage gap: it pays
+  its stored damage only once that total already exceeds the target's
+  current health and shields, and R already prices the stacks it
+  detonates.
+- W (Rebuttal) stays ``out_of_scope``, and the missing axis is an enemy
+  projectile.  Its damage is a percentage of an incoming projectile's own
+  damage, and the calculator's target is a stat block that never attacks,
+  so there is nothing to reflect.
 """
+
+import math
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
@@ -30,6 +47,8 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
+    find_named_leveling,
+    sum_modifiers,
 )
 
 PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"
@@ -42,6 +61,88 @@ PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648ae
 _R_DEFAULT_OVERWHELM_STACKS = 3
 # The per-stack term's fixed AP ratio: " (+ 4% AP) per Overwhelm stack".
 _R_PER_STACK_AP_RATIO = 0.04
+
+# Searing Brilliance: "Mel's ability casts each generate 3 stacks ... up to
+# 9 times.  Her next basic attack consumes all stacks ... to additionally
+# fire an equal number of blazing projectiles at the target.  Each
+# projectile deals 8 : 30 (based on level) (+ 4% AP) magic damage, for a
+# total possible damage of 72 : 270 (based on level) (+ 36% AP) at maximum
+# stacks."  The cache carries both per-level rows under one repeated
+# "Per-Level Scaling" attribute (index 0 per projectile, index 1 at nine
+# stacks) and the parser drops both AP ratios, so the ratio below is
+# HARDCODED: verify on patch updates against
+# https://wiki.leagueoflegends.com/en-us/Mel .  The two rows cross-check
+# each other at parse time (9 x index 0 == index 1).
+_P_PROJECTILE_AP_RATIO = 0.04
+_P_MAX_STACKS = 9
+
+
+def _searing_brilliance(packet_passive):
+    """P: the packet's state row, plus the Searing Brilliance volley.
+
+    The volley is the half of Mel's passive that is ordinary damage: N
+    stacks means N magic projectiles off the next basic attack, each the
+    cached per-level row plus the prose AP ratio.  ``p_searing_brilliance``
+    is the explicit pre-stack state (default 0, as Samira's Style and
+    Yasuo's Gathering Storm are), because how many casts precede the auto
+    is the player's, not something to infer.
+
+    Overwhelm — the other half — stays unpriced and stays documented: it
+    stores damage and pays it only once the stored total already exceeds
+    the target's current health and shields, so it is a kill boundary like
+    an execute threshold, not damage a full-health rotation deals.
+    """
+
+    def parse(ctx: SlotCtx):
+        entry = packet_passive(ctx)
+        if entry is None:
+            return entry
+        stacks = min(max(int(ctx.option("p_searing_brilliance")), 0), _P_MAX_STACKS)
+        if stacks < 1:
+            return entry
+        ability = ctx.ability("P", 0)
+        if ability is None:
+            return entry
+        flat = sum_modifiers(
+            find_named_leveling(ability, "Per-Level Scaling", 0), ctx.level
+        )
+        at_max = sum_modifiers(
+            find_named_leveling(ability, "Per-Level Scaling", 1), ctx.level
+        )
+        if not math.isclose(flat * _P_MAX_STACKS, at_max, rel_tol=1e-3):
+            raise ValueError(
+                "Mel P: the cached per-projectile row x 9 no longer equals "
+                "the maximum-stacks row — the 9-stack cap pinned here has "
+                "changed upstream"
+            )
+        per_projectile = flat + _P_PROJECTILE_AP_RATIO * float(
+            ctx.stat("ability_power") or 0.0
+        )
+        entry["damage_type"] = "magic"
+        entry["total_raw"] = per_projectile * stacks
+        # One volley, fired by one basic attack: the projectiles leave
+        # together, so they share an instant, and the whole row is a single
+        # proc that cannot happen in a fight with no swing to carry it.
+        entry["parts"] = (
+            DamagePart(
+                "magic",
+                per_projectile,
+                count=stacks,
+                time_offset=0.0,
+                hit_interval=0.0,
+            ),
+        )
+        entry["proc_count"] = 1
+        entry["requires_auto_timeline_coupling"] = True
+        entry["detail"] = (
+            f"{stacks}/{_P_MAX_STACKS} Searing Brilliance stacks: the next "
+            f"basic attack fires {stacks} projectile(s) of "
+            f"{per_projectile:g} magic each (8 : 30 by level + 4% AP).  "
+            "Overwhelm's stored damage is a kill boundary and is not priced."
+        )
+        return entry
+
+    return parse
 
 
 def _rebuttal(ctx: SlotCtx):
@@ -217,8 +318,10 @@ def _solar_snare(ctx: SlotCtx):
 # enemies" with no control clause, and R (Golden Eclipse) "deal[s] magic
 # damage to each of them" and reveals, which is not control.  E's orb and
 # field answer differently and are authored per part (see
-# ``_solar_snare``).  P and W author no damage part of their own.
-MODULE_CC = {"Q": "none", "R": "none"}
+# ``_solar_snare``).  P's Searing Brilliance projectiles "fire ... at the
+# target" and do nothing else, so the slot answers "none" once its volley
+# authors parts; W authors no damage part of its own.
+MODULE_CC = {"P": "none", "Q": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Mel",
@@ -229,10 +332,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "E": _solar_snare,
         "R": _golden_eclipse,
     },
+    slot_wrappers={"P": _searing_brilliance},
     cc_kinds=MODULE_CC,
 )
 
 OPTIONS = list(OPTIONS) + [
+    {
+        "key": "p_searing_brilliance",
+        "type": "int",
+        "default": 0,
+        "label": "Searing Brilliance stacks (3 per ability cast, cap 9)",
+        "min": 0,
+        "max": _P_MAX_STACKS,
+        "rotation": {"role": "self_state", "slot": "P"},
+    },
     {
         "key": "r_overwhelm_stacks",
         "type": "int",
@@ -267,7 +380,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "consumed when stored damage exceeds the target's current health "
     "and shields) is a kill boundary and is documented, not priced as "
     "damage.",
+    "P (Searing Brilliance) prices the volley behind the explicit "
+    "p_searing_brilliance option (default 0, so a default request is "
+    "unchanged): each stack is one projectile of the cached per-level "
+    "row (8 : 30 by level) plus the prose 4% AP, and the module "
+    "cross-checks 9 x that row against the cached maximum-stacks row "
+    "(72 : 270).  The 3-stacks-per-cast generation, the 5s window and "
+    "the next-basic-attack trigger are state, not cadence this module "
+    "infers.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("out_of_scope" if slot == "W" else "modeled") for slot in "PQWER"
 }

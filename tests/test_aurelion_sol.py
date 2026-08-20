@@ -21,12 +21,15 @@ import copy
 import pytest
 
 from tests.ability_math import parts_raw_total
-from src.calculator.champions import get_champion_options_meta
+from src.calculator.champions import (
+    get_champion_module_contract,
+    get_champion_options_meta,
+)
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.champions import aurelion_sol
-from tests import cc_review
+from tests import cc_review, coverage_truth, row_review
 
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 TARGET_1000 = {"target_max_health": 1000.0}
@@ -534,3 +537,44 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Aurelion Sol")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """P and W read ``out_of_scope`` but neither is a damage gap.
+
+    The frontier page flagged W because the cached entry carries a
+    leveling row with "Damage" in its name.  That row is
+    "Breath of Light Flat Damage Modifier" — a 108-112% multiplier on Q,
+    priced through ``w_active`` — and Cosmic Creator is the same story:
+    every Stardust effect the cache states augments another slot.  Neither
+    slot emits a row, and the contract lets a slot with no row be nothing
+    but ``out_of_scope``.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Aurelion Sol").coverage == {
+            "P": "out_of_scope",
+            "Q": "modeled",
+            "W": "out_of_scope",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert coverage_truth.emitted("Aurelion Sol") == {
+            "P": coverage_truth.ABSENT,
+            "Q": coverage_truth.PRICED,
+            "W": coverage_truth.ABSENT,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.PRICED,
+        }
+
+    def test_the_flagged_w_row_is_a_q_multiplier_not_w_damage(self):
+        rows = {
+            level["attribute"]
+            for ability in cc_review.kit("Aurelion Sol")["abilities"]["W"]
+            for effect in ability["effects"]
+            for level in effect["leveling"] or []
+        }
+        assert rows == {"Breath of Light Flat Damage Modifier"}
+        off = row_review.priced("Aurelion Sol", "Q", w_active=False)
+        on = row_review.priced("Aurelion Sol", "Q", w_active=True)
+        assert on > off

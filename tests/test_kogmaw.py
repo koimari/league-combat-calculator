@@ -10,6 +10,8 @@ Reference damage (level 9, rank 5 Q, rank 3 W, rank 3 E, rank 1 R, 80 AP):
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champions import get_champion_module_contract
+from tests import cc_review, coverage_truth
 from src.calculator.champions import kogmaw
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
@@ -585,3 +587,43 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+class TestCoverageMap:
+    """Icathian Surprise damages, and the engine has no death to hang it on.
+
+    The cache does carry a damage row (140 : 650 true damage by level), so
+    P is ``out_of_scope`` and not ``no_damage``.  The missing axis is the
+    attacker's own death: the explosion is paid four seconds after Kog'Maw
+    takes fatal damage, and the fight engine runs one attacker who never
+    dies.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Kog'Maw").coverage == {
+            "P": "out_of_scope",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert coverage_truth.emitted("Kog'Maw") == {
+            "P": coverage_truth.ABSENT,
+            "Q": coverage_truth.PRICED,
+            # W prices nothing directly: its damage rides the auto stream.
+            "W": coverage_truth.PRICED,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.PRICED,
+        }
+
+    def test_the_passive_row_is_gated_on_kogmaw_dying(self):
+        text = cc_review.slot_text(cc_review.kit("Kog'Maw"), "P")
+        assert "upon taking fatal damage" in text
+        assert "at the end of the duration, he explodes" in text
+        attributes = {
+            level["attribute"]
+            for ability in cc_review.kit("Kog'Maw")["abilities"]["P"]
+            for effect in ability["effects"]
+            for level in effect["leveling"] or []
+        }
+        assert attributes == {"Bonus True Damage"}

@@ -13,6 +13,16 @@ Stack mechanics modeled (E3):
 
 Q (Flair), W (Blade Whirl) and E (Wild Rush) keep the reviewed CP10.7
 packet pricing. All numeric values are read from the champion JSON data.
+
+P is ``out_of_scope``, not ``no_damage``: Daredevil Impulse's second
+innate does damage this module cannot price.  Blade attacks (basic
+attacks inside 200 units), Blade Whirl, Wild Rush and Flair's slash and
+explosives each deal 2 : 21 (based on level) (+ 3.5% : 11.32% (based on
+level) AD) bonus magic damage, doubled at the target's full missing
+health.  The engine has no range-gated per-hit rider that attaches to
+ability parts as well as to the basic-attack stream, and the packet's Q
+row is one number for both the ranged shot and the melee slash, so the
+rider has no slot to ride.  The other four slots price their own rows.
 """
 
 from __future__ import annotations
@@ -65,8 +75,8 @@ def _daredevil_impulse(ctx: SlotCtx) -> dict[str, Any] | None:
         reason=(
             f"Style: {state}.  Each stack grants {per_stack:.2f}% bonus "
             f"movement speed (up to {per_stack * _STYLE_MAX:.1f}% at "
-            "maximum stacks); the melee blade-zone bonus magic damage is "
-            "state."
+            "maximum stacks); the blade-zone bonus magic damage is not "
+            "priced (out_of_scope — see the module docstring)."
         ),
     )
 
@@ -106,6 +116,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "At 6 stacks (S rank) Inferno Trigger is available and consumes all stacks at the end of "
         "the effect",
         "Style's bonus movement speed (2.75/3/3.25/3.5% per stack by level) is state, not damage",
+        "Daredevil Impulse's blade-zone rider (2 : 21 by level + 3.5% : 11.32% AD bonus magic "
+        "damage on melee-range basic attacks, Blade Whirl, Wild Rush and Flair's slash, doubled "
+        "at full missing health) is NOT priced — P is out_of_scope",
         "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 sourced 0.2s shots)",
     ),
     packet_tick_fixes={
@@ -149,5 +162,5 @@ OPTIONS = [
 
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("out_of_scope" if slot == "P" else "modeled") for slot in "PQWER"
 }

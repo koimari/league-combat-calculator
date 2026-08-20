@@ -11,6 +11,18 @@ Why the Q slot is non-generic:
   rule). In the sustained auto path the empowered swing rides the auto
   stream, which the fight engine prices against its single time-weighted
   armor scalar like every other post-Q hit.
+
+Coverage:
+- P (Stone Skin) is ``no_damage``: bonus armor and health regeneration,
+  emitted as a ``stat_buff`` row so the rest of the fight reads it.
+- W (Warrior Trickster) is ``out_of_scope``, and the missing axis is a
+  pet timeline.  The clone's damage is not a W row at all: it basic
+  attacks autonomously for 4 seconds, takes Crushing Blow and Nimbus
+  Strike's attack speed, and casts Cyclone whenever Wukong does, all at
+  the cached "Clone Outgoing Damage" ratio (40/45/50/55/60%).  Pricing it
+  means running a second attacker's swing and cast stream at a scaled
+  output; the engine prices one attacker's timeline, and the cache states
+  no clone attack rate to author one from.
 """
 
 from typing import Any
@@ -141,6 +153,14 @@ SLOTS = {
 MODULE_CC = {"Q": "none", "E": "none", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
+
+MODULE_COVERAGE = {
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "out_of_scope",
+    "E": "modeled",
+    "R": "modeled",
+}
 
 OPTIONS = [
     {

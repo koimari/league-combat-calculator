@@ -10,8 +10,9 @@ cached text it was read from, and prove it reaches the event ledger.
 import pytest
 
 from src.calculator.calculate import calculate_payload
-from src.calculator.champions import kindred
+from src.calculator.champions import get_champion_module_contract, kindred
 from src.calculator.data_fetcher import get_champion
+from tests import coverage_truth, row_review
 
 # Every control word the Wiki uses for the classes an item passive keys on.
 CONTROL_WORDS = (
@@ -97,3 +98,36 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+class TestCoverageMap:
+    """Q prices a row; P and R price nothing and never could.
+
+    ``b03bbad9`` rewrote the set as ``{P, E}`` while adding the Mark stack
+    row, turning Dance of Arrows into a reported gap and losing the
+    ``no_damage`` reading the map had before it.  Mark of the Kindred is
+    range and scaling state, and Lamb's Respite is a minimum-health floor
+    plus a heal — neither deals damage, so neither is ``out_of_scope``.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Kindred").coverage == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "no_damage",
+        }
+        assert coverage_truth.emitted("Kindred") == {
+            "P": coverage_truth.ZERO,
+            "Q": coverage_truth.PRICED,
+            "W": coverage_truth.PRICED,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.ZERO,
+        }
+
+    def test_the_two_no_damage_slots_disclose_why_they_price_nothing(self):
+        for slot, expected in (("passive", "state"), ("R", "not enemy damage")):
+            entry = row_review.entry("Kindred", slot)
+            assert entry["total_raw"] == 0.0
+            assert expected in entry["detail"]
