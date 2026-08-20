@@ -7083,23 +7083,32 @@ def _spellblade_proc_times(
 
     Each accepted cast arms one charge (the engine assumes charges
     persist through the item cooldown, as its proc pricing already
-    does).  A charge is consumed one weave delay after the later of its
-    arming cast and the cooldown's end, and the cooldown restarts at the
-    consuming attack — matching the ``cooldown + weave_delay`` spacing
-    the proc count was priced with. Returns ``[]`` when the accepted
-    casts cannot reproduce the engine's priced proc count — the row then
-    stays coarse rather than carrying an event list that contradicts its
-    total.
+    does).  A charge is consumed by the first attack that can take it and
+    the cooldown restarts there.  The weave delay is the walk-up to an
+    auto attack; an ability that applies on-hit effects *is* the attack
+    (Ezreal Q, Senna Q), so one landing at or after the charge is armed
+    takes it at that ability's own authored hit time and nothing is walked.
+    Returns ``[]`` when the accepted casts cannot reproduce the engine's
+    priced proc count — the row then stays coarse rather than carrying an
+    event list that contradicts its total.
     """
     if procs <= 0:
         return []
     cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
+    onhit_times = sorted(
+        float(application.time)
+        for application in rotation.ability_item_applications
+        if application.on_hit and application.time is not None
+    )
     times: list[float] = []
     cooldown_ends = float("-inf")
     for cast_time in cast_times:
         if len(times) == procs:
             break
-        proc_time = max(cast_time, cooldown_ends) + effect.weave_delay
+        armed = max(cast_time, cooldown_ends)
+        proc_time = next(
+            (hit for hit in onhit_times if hit >= armed), armed + effect.weave_delay
+        )
         times.append(proc_time)
         cooldown_ends = proc_time + effect.cooldown
     return times if len(times) == procs else []
