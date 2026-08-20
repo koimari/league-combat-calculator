@@ -11195,6 +11195,11 @@ def _health_gated_events(
     its own order with health falling by everything already dealt; a row is
     amplified when the health standing before it satisfies the gate. Damage
     the ledger cannot timestamp never appears here, so the row is a floor.
+
+    Two things the walk does not model, disclosed by its caller: the target
+    is assumed to start the fight at full health, and the ledger is read
+    before shields, so a shielded target crosses a falling gate earlier here
+    than it would in game.
     """
     threshold = effect.health_ratio * max_health
     below = effect.condition is rune_effects.AmpCondition.TARGET_BELOW
@@ -11256,6 +11261,12 @@ def _add_rune_conditional_amp_damage(
             row["event_phase"] = "amplifier"
         state.breakdown[effect.breakdown_key] = row
         state.total_damage += bonus
+        state.notes.append(
+            f"{effect.rune_name}'s gate is walked over the fight's ordered "
+            "ledger with the target at full health when it starts and its "
+            "shields not yet subtracted; a shielded target would cross a "
+            "falling gate later than this."
+        )
 
 
 def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:

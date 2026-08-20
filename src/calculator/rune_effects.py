@@ -1376,12 +1376,14 @@ def _certify_path_shape(keystone: str, minors: Sequence[str]) -> None:
     for name in minors:
         path = str(_rune_field(name, "path"))
         counts[path] = counts.get(path, 0) + 1
-    if len(counts) > 2:
+    primary = _primary_path(keystone, counts)
+    if len([path for path in counts if path != primary]) > 1:
+        drawn = ", ".join(sorted(counts))
         raise ValueError(
             "a rune page draws from two paths; these minor runes come from "
-            + ", ".join(sorted(counts))
+            + drawn
+            + (f", and the keystone's path is {primary}" if keystone else "")
         )
-    primary = _primary_path(keystone, counts)
     primary_limit = len(_minor_rows())
     for path, count in sorted(counts.items()):
         limit = primary_limit if path == primary else SECONDARY_PATH_MINORS

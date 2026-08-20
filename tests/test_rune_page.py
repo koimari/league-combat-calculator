@@ -141,6 +141,14 @@ class TestPageValidation:
                 "", ["Scorch", "Coup de Grace", "Cosmic Insight"]
             )
 
+    def test_a_second_secondary_path_is_refused_even_under_the_keystone(self):
+        """Two minors each from two paths is three paths, not two."""
+        with pytest.raises(ValueError, match="keystone's path is Sorcery"):
+            rune_effects.validate_rune_page(
+                "Arcane Comet",
+                ["Triumph", "Legend: Haste", "Cheap Shot", "Sixth Sense"],
+            )
+
     def test_four_from_one_path_cannot_even_be_spelled(self):
         """A path has three minor rows, so one-per-row already forbids it."""
         with pytest.raises(ValueError, match="one rune per row"):
