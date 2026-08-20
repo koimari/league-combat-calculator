@@ -15,11 +15,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| B1 | `src/calculator/economy.py:55-73` `item_total()` | Falls back to the wiki-cache total when no sourced row exists. `refresh_economics_data.stale_reasons` now guarantees a row for every ordinary SR item, so the fallback is dead for them and silent for anything else. | Raise. |
-| B2 | `item_effects.py` ~4811 `ITEM_EFFECTS[name].get("ultimate_haste", 0.0)` | Same uneven-sibling read the U03 sites had. | `_declared_effect_value`. |
-| B3 | `item_effects.py` ~32 `ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"]` | No src reader (only `tests/test_issues_45_43.py:388`); a second home for the per-item static key's 24.0. | Delete; the static key is the owner. |
-| B4 | `passive_parser.py:2742-2745` `parse_all_item_effects` | Silently drops an item whose `parse_item_effect` returns None/empty; surfaces only on read or via the parity test. | Raise naming the item. |
-| B5 | `roster_composition.py:101,150-155`, `participant_timeline.py:965/975` (`Combatant.request: Any`); `survival/transitions.py:261,264` `getattr(self.ledger, "records_*", True)`; `program/compile.py:1569-1575` `getattr(payload, …)`; `item_coverage.py:~635-660`, `interpreters/stat_derivation.StatSlot.granted`, `gated_state_reason` `getattr(payload, name, None)` | The U09 family on other subjects: declared-absence reads across typed objects. | Type the field (Protocol/Union) and read directly, as 5a260de did for `defenses`. |
 | B11 | `static/data.json` | Hand-committed, no generator in `scripts/`, one patch stale. **Measured:** of its champion keys only `key`, `title`, `tags`, `resource` and `abilities` are read (`app.js:731,2556,3480,2395,685`); every stat key and `id`, `abilityCoverage`, `source`, `patch`, `coverage` are dead — stats come from `/api/loadout-stats`. Every item key is dead or overwritten by `/api/items`/`/api/boots` (`mergeItemCoverage` spreads the backend over the snapshot and `renderPicker` filters through `backendItemReady`), so the stale cells are unreachable; only `passiveText` is unique, and nothing reads it. Inside `abilities` the UI reads only `slot`, `name`, `icon`, `maxRank`, `maxHits`, `variants[].name` and `variants.length` — never a ratio. | Shrink: drop `items`, `patch`, `coverage` and the champion stat keys. Needs the `app.js` owner (`DATA.items` must stay an array or `engine.itemCatalogReady` never sets) and a browser pass, so it did not land with the scripts slice. |
 
 ## C. API / UI
@@ -46,7 +41,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| F5 | `item_effects.py:2417` `everlasting_trigger_kind: "crowd_control"` | Not what the consumer keys on (it reads `CcClass` from the bus). | Delete the key. |
 
 ## G. Traps (informational — not fixes)
 

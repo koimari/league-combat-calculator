@@ -1466,15 +1466,69 @@ def program_key(program: Program, projection: Projection) -> ProgramKey:
     )
 
 
-# What a routed payload compiles to.  A family absent from this table is not
-# a gap the compiler fills with a neutral action -- it raises, naming the
+class _StagedPayload(NamedTuple):
+    """The action fields one routed payload family contributes.
+
+    Each family carries its own half of the union -- ``Recovery`` has no
+    damage type, ``Damage`` no duration -- so each stages itself off its own
+    typed fields.  Reading them off an untyped payload with a default per
+    field could not tell an absent field from a family that never had one.
+    """
+
+    kind: ActionKind
+    amount: float
+    damage_type: str = ""
+    raw_formula: Any = None
+    raw_damage: float = 0.0
+    healing_category: str = ""
+    amount_formula: Any = None
+    duration: float = 0.0
+
+
+def _stage_damage(payload: ev.Damage) -> _StagedPayload:
+    return _StagedPayload(
+        ActionKind.DAMAGE,
+        max(0.0, float(payload.amount)),
+        damage_type=str(payload.damage_type),
+        raw_formula=payload.live_formula,
+        raw_damage=float(payload.raw_amount),
+    )
+
+
+def _stage_recovery(payload: ev.Recovery) -> _StagedPayload:
+    return _StagedPayload(
+        ActionKind.HEAL,
+        max(0.0, float(payload.amount)),
+        healing_category=str(payload.healing_category),
+        amount_formula=payload.amount_formula,
+    )
+
+
+def _stage_barrier(payload: ev.Barrier) -> _StagedPayload:
+    return _StagedPayload(
+        ActionKind.SHIELD,
+        max(0.0, float(payload.amount)),
+        duration=float(payload.duration),
+    )
+
+
+def _stage_temporary_health(payload: ev.TemporaryHealth) -> _StagedPayload:
+    return _StagedPayload(
+        ActionKind.TEMP_HEALTH,
+        max(0.0, float(payload.amount)),
+        duration=float(payload.duration),
+    )
+
+
+# How a routed payload compiles.  A family absent from this table is not a
+# gap the compiler fills with a neutral action -- it raises, naming the
 # family, because an event the compiler silently dropped is the whole
 # incident.
-_PAYLOAD_KINDS = {
-    ev.Damage: ActionKind.DAMAGE,
-    ev.Recovery: ActionKind.HEAL,
-    ev.Barrier: ActionKind.SHIELD,
-    ev.TemporaryHealth: ActionKind.TEMP_HEALTH,
+_PAYLOAD_STAGING: Mapping[type, Any] = {
+    ev.Damage: _stage_damage,
+    ev.Recovery: _stage_recovery,
+    ev.Barrier: _stage_barrier,
+    ev.TemporaryHealth: _stage_temporary_health,
 }
 
 # Which rider families this compiler can stage on the action it builds.
@@ -1486,7 +1540,7 @@ _PAYLOAD_KINDS = {
 # shape one axis over: a compiled action with the execute threshold dropped
 # is a hit that silently failed to kill.  Teaching the entry point a rider is
 # one row here beside the code that reads it -- the same shape as widening
-# ``_PAYLOAD_KINDS`` -- so a rider can never be staged by nobody.
+# ``_PAYLOAD_STAGING`` -- so a rider can never be staged by nobody.
 _STAGED_RIDERS: frozenset[type] = frozenset()
 
 
@@ -1526,8 +1580,8 @@ def compile_program(
     """
     actions: list[SurvivalAction] = []
     for aidx, event in enumerate(program.events):
-        kind = _PAYLOAD_KINDS.get(type(event.payload))
-        if kind is None:
+        stage = _PAYLOAD_STAGING.get(type(event.payload))
+        if stage is None:
             raise UncompilableActionError(
                 receipt=f"payload_family={type(event.payload).__name__}",
                 source=event_id_text(event.id),
@@ -1541,7 +1595,7 @@ def compile_program(
                 receipt=f"rider_family={type(unstageable).__name__}",
                 source=event_id_text(event.id),
             )
-        payload = event.payload
+        staged = stage(event.payload)
         text = event_id_text(event.id)
         actions.append(
             SurvivalAction(
@@ -1557,17 +1611,17 @@ def compile_program(
                 ),
                 time=float(event.time),
                 phase=event.rank,
-                kind=kind,
+                kind=staged.kind,
                 subject=int(event.subject),
                 attacker=int(event.source),
                 aidx=aidx,
-                amount=max(0.0, float(getattr(payload, "amount", 0.0))),
-                damage_type=str(getattr(payload, "damage_type", "")),
-                raw_formula=getattr(payload, "live_formula", None),
-                raw_damage=float(getattr(payload, "raw_amount", 0.0)),
-                healing_category=str(getattr(payload, "healing_category", "")),
-                amount_formula=getattr(payload, "amount_formula", None),
-                duration=float(getattr(payload, "duration", 0.0)),
+                amount=staged.amount,
+                damage_type=staged.damage_type,
+                raw_formula=staged.raw_formula,
+                raw_damage=staged.raw_damage,
+                healing_category=staged.healing_category,
+                amount_formula=staged.amount_formula,
+                duration=staged.duration,
                 event_slot=EVENT_SLOTS.slot(text),
                 sequence=event.sequence,
             )

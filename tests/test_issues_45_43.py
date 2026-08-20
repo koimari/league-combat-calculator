@@ -390,17 +390,17 @@ def test_hydra_cleave_secondary_cone_typed_and_boundary_documented():
 
 
 def test_energized_source_receipt_pins_e9_bis_cadence():
-    """The shared Energized cadence matches the E9-BIS Tip data receipt."""
+    """Every Energized item's own typed cadence cites the E9-BIS Tip data."""
     assert ENERGIZED_SOURCE_RECEIPT["source_revision_id"] == 4013385
-    assert ENERGIZED_SOURCE_RECEIPT["max_stacks"] == 100
-    assert ENERGIZED_SOURCE_RECEIPT["attack_stacks"] == 6
-    assert ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"] == 24.0
     for item_name in (
         "Statikk Shiv",
         "Rapid Firecannon",
         "Stormrazor",
         "Voltaic Cyclosword",
     ):
+        effect = ITEM_EFFECTS[item_name]
+        assert effect["energized_max_stacks"] == 100
+        assert effect["energized_distance_units_per_stack"] == 24.0
         receipt = energized_schedule_receipt(item_name)
         assert receipt["source_revision_id"] == 4013385
         assert receipt["max_stacks"] == 100

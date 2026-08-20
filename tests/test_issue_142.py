@@ -37,7 +37,6 @@ def _combatant(participant_id: str, team: str, name: str) -> Combatant:
         items=(),
         stats={},
         defenses=StartingDefenses(),
-        request=None,
     )
 
 

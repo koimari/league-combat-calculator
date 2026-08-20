@@ -15,7 +15,9 @@ from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters.stat_derivation import StatSlot
 from src.calculator.item_behavior import KernelField, EngineLane
 from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
 from src.calculator.roster_composition import (
+    ActorRequest,
     Combatant,
     actor_params,
     coalesce_darius_q_heals,
@@ -50,8 +52,63 @@ def test_a_combatant_refuses_defenses_that_are_not_starting_defenses(defenses):
         )
 
 
+@pytest.mark.parametrize(
+    "request_double",
+    [SimpleNamespace(role="mid"), None],
+    ids=["namespace", "none"],
+)
+def test_a_combatant_refuses_a_request_that_is_not_an_actor_request(
+    request_double,
+):
+    """``request`` is read by direct attribute the same way ``defenses`` is.
+
+    A stand-in used to buy every field it did not carry a silent default
+    -- an absent ``ability_ranks`` read as no manual allocation, an absent
+    ``ally_effects_enabled`` as opted out.
+    """
+    with pytest.raises(TypeError, match="ally:Lux: request must be an ActorRequest"):
+        Combatant(
+            participant_id="ally:Lux",
+            team="ally",
+            champion_data={"name": "Lux"},
+            level=12,
+            items=(),
+            stats={},
+            defenses=StartingDefenses(),
+            request=request_double,
+        )
+
+
+def test_a_roster_card_and_the_main_params_build_one_request_shape():
+    """Both producers emit an ``ActorRequest``; neither invents a type."""
+    params = FightParams.from_request(
+        {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+    )
+    main = main_combatant(
+        {"name": "Ahri"}, 18, [], stats={}, defenses=StartingDefenses(), params=params
+    )
+    loadout = SimpleNamespace(
+        champion_data={"name": "Lux"},
+        request=ChampionLoadout(champion="Lux", level=12, ally_effects_enabled=True),
+        item_data=(),
+        stats={},
+        defenses=StartingDefenses(),
+    )
+
+    ally = from_loadout("ally:Lux", "ally", loadout)
+
+    assert isinstance(main.request, ActorRequest)
+    assert isinstance(ally.request, ActorRequest)
+    assert ally.request.ally_effects_enabled is True
+    assert main.request.ally_effects_enabled is False
+    # ``None`` survives the carrier: an absent option map is the
+    # direct-caller default, and an empty one is not the same answer.
+    assert main.request.item_options is None
+    assert ally.request.item_options == {}
+
+
 def test_from_loadout_preserves_the_resolved_roster_fields():
-    request = SimpleNamespace(level=12)
+    request = ChampionLoadout(champion="Aatrox", level=12)
     loadout = SimpleNamespace(
         champion_data={"name": "Aatrox"},
         request=request,
@@ -96,7 +153,7 @@ def test_main_and_actor_params_keep_their_own_request_controls():
         items=(),
         stats={},
         defenses=StartingDefenses(),
-        request=SimpleNamespace(
+        request=ActorRequest(
             role="support",
             role_quest_complete=True,
             ability_ranks={"Q": 3},

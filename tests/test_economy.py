@@ -218,8 +218,9 @@ def test_stackability_review():
 
 
 def test_missing_price_fails_closed():
-    with pytest.raises(KeyError, match=r"Broken Item: shop\.prices\.total"):
-        item_total({"name": "Broken Item", "shop": {"prices": {}}})
+    """An unsourced item is withheld, never priced from the stale wiki cache."""
+    with pytest.raises(KeyError, match=r"Broken Item: economics-sourced"):
+        item_total({"name": "Broken Item", "shop": {"prices": {"total": 3000}}})
 
 
 def test_unaffordable_plan_raises():

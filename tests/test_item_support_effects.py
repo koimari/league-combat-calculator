@@ -19,6 +19,7 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.item_source import effect_entries, effect_text
 from src.calculator.item_effects import ITEM_EFFECTS, ally_item_effect_value
 from src.calculator.item_effects import ally_item_level_value
+from src.calculator.roster_composition import ActorRequest
 from src.calculator.item_support_effects import (
     _declared_authorities,
     derive_item_support_effects,
@@ -83,7 +84,7 @@ def _actor(
         level=level,
         items=tuple({"name": name} for name in item_names),
         stats={"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
-        request=SimpleNamespace(
+        request=ActorRequest(
             item_options=item_options or {},
             ally_effects_enabled=ally_effects_enabled,
         ),

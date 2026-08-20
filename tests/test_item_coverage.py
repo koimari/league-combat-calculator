@@ -25,7 +25,7 @@ from src.calculator.item_coverage import (
 from src.calculator.interpreters.threshold_defense import (
     threshold_health_coverage_source,
 )
-from src.calculator.item_behavior import UtilityDimension
+from src.calculator.item_behavior import AllyPacketRule, UtilityDimension
 from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_effects import ITEM_EFFECTS
 from src.calculator.data_fetcher import fetch_item_data
@@ -914,6 +914,37 @@ def test_every_holder_survival_field_is_a_field_of_a_declared_payload() -> None:
     }
 
     assert item_coverage._HOLDER_SURVIVAL_FIELDS <= declared
+
+
+def test_the_state_gated_payloads_are_the_ones_declaring_both_fields() -> None:
+    """The named tuple is the shape, so a third such payload is not silent.
+
+    ``gated_state_reason`` used to ask every payload for an ``exclusivity``
+    and an ``option`` and read an absence as "no gate"; it now selects the
+    payloads that declare both, and this pins the set to the declarations.
+    """
+    both = {
+        type(rule.payload)
+        for name in _cached_names()
+        for rule in behavior_rules(name)
+        if {"exclusivity", "option"}
+        <= {field.name for field in dataclasses.fields(rule.payload)}
+    }
+
+    assert both == set(item_coverage._STATE_GATED_PAYLOADS)
+
+
+def test_only_the_ally_packet_rule_declares_packets_or_a_redirect() -> None:
+    """The durability clause reads the one payload that carries them."""
+    carriers = {
+        type(rule.payload)
+        for name in _cached_names()
+        for rule in behavior_rules(name)
+        for field in dataclasses.fields(rule.payload)
+        if field.name in {"packets", "redirects_incoming_damage"}
+    }
+
+    assert carriers == {AllyPacketRule}
 
 
 def test_a_declared_defence_agrees_with_the_identifier_it_is_read_from() -> None:

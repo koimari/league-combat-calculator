@@ -39,12 +39,16 @@ from .coverage_evidence import (
 )
 from .data_fetcher import get_item_by_name
 from .interpreters import INTERPRETERS, lanes_for
+from .interpreters.stat_derivation import granted_stat
 from .item_behavior import (
     DURABILITY_STATS,
+    AllyPacketRule,
     BehaviorRule,
+    CombatStateRule,
     DefenseExclusivity,
     DefenseMechanic,
     EngineLane,
+    OpeningDefenseRule,
     PacketKind,
     RuleFamily,
     Subject,
@@ -387,6 +391,11 @@ def declares_state(name: str) -> bool:
     return bool(name in ITEM_INPUT_OPTIONS or families & _STATE_FAMILIES)
 
 
+# The two payloads that declare both an exclusive state and the bounded
+# option that arms it; a test holds this to the classes carrying both fields.
+_STATE_GATED_PAYLOADS: tuple[type, ...] = (CombatStateRule, OpeningDefenseRule)
+
+
 def gated_state_reason(name: str) -> str | None:
     """The defence-only branch's sub-question: is the defence *armed* by an input?
 
@@ -408,9 +417,10 @@ def gated_state_reason(name: str) -> str | None:
     """
     for rule in behavior_rules(name):
         payload = rule.payload
-        exclusivity = getattr(payload, "exclusivity", None)
-        option = getattr(payload, "option", None)
-        if option is None or exclusivity in (None, DefenseExclusivity.NONE):
+        if not isinstance(payload, _STATE_GATED_PAYLOADS):
+            continue
+        exclusivity, option = payload.exclusivity, payload.option
+        if option is None or exclusivity is DefenseExclusivity.NONE:
             continue
         state = exclusivity.value
         control = option.value.removeprefix(f"{state}_").replace("_", "-")
@@ -597,19 +607,17 @@ def _prices_holder_durability(rule: BehaviorRule) -> bool:
     if rule.family is RuleFamily.SUSTAIN and not isinstance(payload, SustainStatRule):
         return True
     if rule.family is RuleFamily.STAT_DERIVATION and (
-        getattr(payload, "granted", None) in DURABILITY_STATS
-        or getattr(payload, "subject", None) is Subject.TARGET
+        granted_stat(payload) in DURABILITY_STATS or payload.subject is Subject.TARGET
     ):
         return True
     if any(
         getattr(payload, field, None) is not None for field in _HOLDER_SURVIVAL_FIELDS
     ):
         return True
-    if getattr(payload, "redirects_incoming_damage", False):
-        return True
-    return any(
-        spec.kind in _DURABILITY_PACKET_KINDS
-        for spec in getattr(payload, "packets", ()) or ()
+    if not isinstance(payload, AllyPacketRule):
+        return False
+    return payload.redirects_incoming_damage or any(
+        spec.kind in _DURABILITY_PACKET_KINDS for spec in payload.packets
     )
 
 

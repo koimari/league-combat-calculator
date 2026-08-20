@@ -2730,7 +2730,11 @@ def parse_item_effect(
 def parse_all_item_effects(
     items_data: dict[str, Any],
 ) -> dict[str, dict[str, Any]]:
-    """Parse all configured item effects from JSON data.
+    """Parse every configured item effect, failing closed on an empty parse.
+
+    A configured item that parses to nothing is a cache or parser break, not
+    an absence: dropped silently it becomes a missing registry entry that
+    only surfaces on a downstream read.
 
     Args:
         items_data: Full items.json data dict (keyed by item ID).
@@ -2741,6 +2745,10 @@ def parse_all_item_effects(
     results: dict[str, dict[str, Any]] = {}
     for item_name in _ITEM_PARSE_CONFIG:
         parsed = parse_item_effect(item_name, items_data)
-        if parsed:
-            results[item_name] = parsed
+        if not parsed:
+            raise KeyError(
+                f"{item_name}: configured in _ITEM_PARSE_CONFIG but parsed no "
+                "effect values — check the cached item entry and its parsers"
+            )
+        results[item_name] = parsed
     return results

@@ -52,7 +52,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Protocol
 
 from .actions import (
     EVENT_SLOTS,
@@ -69,6 +69,44 @@ from . import pricing
 from .. import shield_ledger
 from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
 from ..resistance import apply_resistance
+
+
+class SurvivalLedger(Protocol):
+    """The observation adapter every walk drives.
+
+    The module docstring above is the contract; this is its signature.
+    All three implementations (receipt, score, outcome) satisfy it, so
+    the kernel reads the capability flags directly instead of asking.
+    """
+
+    # pylint: disable=missing-function-docstring  # documented above
+
+    # Verbosity, read once per walk onto ``TransitionContext``.
+    records_annotations: bool
+    records_event_fields: bool
+
+    def write(self, action: SurvivalAction, **fields: Any) -> None: ...
+
+    def annotate(self, action: SurvivalAction, **fields: Any) -> None: ...
+
+    def restore(self, action: SurvivalAction, **fields: Any) -> None: ...
+
+    def skip(
+        self,
+        action: SurvivalAction,
+        reason: str,
+        *,
+        damage_phase: bool = False,
+        preserve_reason: bool = False,
+    ) -> None: ...
+
+    def trigger_applied(self, action: SurvivalAction) -> bool: ...
+
+    def mark_applied(self, action: SurvivalAction) -> None: ...
+
+    def mark_blocked(self, action: SurvivalAction) -> None: ...
+
+    def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None: ...
 
 
 def resolve_grievous(
@@ -234,7 +272,7 @@ class TransitionContext:
     states: list[dict[str, Any]]
     combatants: Sequence[Any]
     index_of: Mapping[str, int]
-    ledger: Any
+    ledger: SurvivalLedger
     regeneration_windows: Sequence[RegenerationWindow | None]
     venom_profiles: list[tuple[float, float] | None] | None = None
     reduction_profiles: list[tuple[Any, ...]] | None = None
@@ -245,10 +283,10 @@ class TransitionContext:
     redirect_gate_checked: set[int] = field(default_factory=set)
     redirect_cancelled: set[int] = field(default_factory=set)
     # Derived per-walk speed fields (issue #171).  The ledger capability
-    # flags let the kernel skip building kwargs a no-op adapter would drop
-    # (missing attributes conservatively keep full observation), and
-    # ``_defense_profiles`` lazily caches each subject's per-event defense
-    # constants so the hot loop never repeats a getattr chain or item scan.
+    # flags let the kernel skip building kwargs a no-op adapter would
+    # drop, and ``_defense_profiles`` lazily caches each subject's
+    # per-event defense constants so the hot loop never repeats a getattr
+    # chain or item scan.
     records_annotations: bool = field(init=False)
     records_event_fields: bool = field(init=False)
     record_defy_damage: bool = field(init=False)
@@ -257,12 +295,8 @@ class TransitionContext:
     _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.records_annotations = bool(
-            getattr(self.ledger, "records_annotations", True)
-        )
-        self.records_event_fields = bool(
-            getattr(self.ledger, "records_event_fields", True)
-        )
+        self.records_annotations = bool(self.ledger.records_annotations)
+        self.records_event_fields = bool(self.ledger.records_event_fields)
         # ``damage_records`` feeds only Defy (Death's Dance) takedown
         # attribution; with no defy holder in the fight the per-event
         # record append is dead weight and is skipped entirely.

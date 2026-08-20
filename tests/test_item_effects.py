@@ -7,6 +7,7 @@ current patch's parsed numbers.
 """
 
 import copy
+import re
 
 import pytest
 
@@ -66,6 +67,20 @@ from src.calculator.item_effects import (
 def _build(*names: str) -> list[dict]:
     """Make a minimal item build from item names."""
     return [{"name": name} for name in names]
+
+
+def _stat_bonuses(*names: str):
+    """The compiled StatBonuses of a build, on neutral stat inputs."""
+    return resolve_stat_effects(
+        _build(*names),
+        bonus_mana=0.0,
+        max_mana=500.0,
+        bonus_health=0.0,
+        base_attack_damage=100.0,
+        bonus_mana_regen_percent=0.0,
+        is_melee=True,
+        level=18,
+    )
 
 
 def _charged_strikes(*owners: str, is_melee: bool = True):
@@ -1158,6 +1173,17 @@ class TestItemEffectProvenance:
         with pytest.raises(expected):
             item_effects._build_item_effects()
 
+    def test_configured_item_that_parses_to_nothing_raises_naming_it(self) -> None:
+        """A configured item is never silently absent from the registry."""
+        from src.calculator.passive_parser import (
+            _ITEM_PARSE_CONFIG,
+            parse_all_item_effects,
+        )
+
+        item_name = next(iter(_ITEM_PARSE_CONFIG))
+        with pytest.raises(KeyError, match=re.escape(item_name)):
+            parse_all_item_effects({})
+
     def test_every_reference_key_has_exactly_one_owner(self) -> None:
         for item_name, reference in item_effects._REFERENCE_ITEM_EFFECTS.items():
             static_keys = frozenset(item_effects._STATIC_ITEM_EFFECTS[item_name])
@@ -1294,6 +1320,38 @@ class TestDeclaredSiblingReads:
         )
         assert receipt["state"] == "ultimate_ready"
         assert receipt["cooldown"] == 0.0
+
+    def test_dropped_ultimate_haste_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The build-wide sum raises rather than reading one item as 0."""
+        broken = dict(item_effects.ITEM_EFFECTS["Malignance"])
+        broken.pop("ultimate_haste")
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Malignance", broken)
+        with pytest.raises(KeyError, match="Malignance.*ultimate_haste"):
+            _stat_bonuses("Malignance")
+
+    def test_undeclared_ultimate_haste_is_an_absence(self) -> None:
+        assert "ultimate_haste" not in item_effects.entry_schema_keys("Infinity Edge")
+        assert _stat_bonuses("Infinity Edge").ultimate_haste == 0.0
+        assert _stat_bonuses("Malignance").ultimate_haste == pytest.approx(20.0)
+
+    def test_a_build_with_no_registry_item_sums_no_terms(self) -> None:
+        """The zero's *type* is public, so the term population is too.
+
+        ``views.publish`` gives a float leaf a disposition entry and an
+        int leaf none, so summing a 0.0 term for an item with no registry
+        entry publishes a stat leaf that was not there before (it moved
+        ``dream_maker_roster`` in the coupled golden).  An item with an
+        entry contributes a float term even when it declares no haste.
+        """
+        assert "Dream Maker" not in item_effects.ITEM_EFFECTS
+        empty = _stat_bonuses("Dream Maker").ultimate_haste
+        assert empty == 0 and isinstance(empty, int)
+
+        assert "Infinity Edge" in item_effects.ITEM_EFFECTS
+        declared = _stat_bonuses("Infinity Edge").ultimate_haste
+        assert declared == 0.0 and isinstance(declared, float)
 
     def test_dropped_energized_distance_names_item_and_key(
         self, monkeypatch: pytest.MonkeyPatch
