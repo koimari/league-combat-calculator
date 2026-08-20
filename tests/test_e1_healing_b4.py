@@ -124,7 +124,12 @@ def test_volibear_frenzied_maul_heals_only_the_wounded_bite():
     # rank 1 flat heal = 20 ("Heal" modifier 0); 8% of missing health is 0
     # at full health.
     assert heals[0]["raw_amount"] == pytest.approx(20.0)
-    assert heals[0]["time"] == pytest.approx(5.25)
+    # The bite lands at its cast time, not at the cast instant: "Frenzied
+    # Maul deals bonus damage and heals if the target is still Wounded
+    # after the cast time" (cached W note) and that cast time is 0.25s, so
+    # the second W at 5.25 heals at 5.5.  One bite, one heal, however many
+    # parts the module prices the bite with.
+    assert heals[0]["time"] == pytest.approx(5.5)
 
 
 def test_volibear_frenzied_maul_scales_with_missing_health():

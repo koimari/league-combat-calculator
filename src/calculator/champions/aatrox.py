@@ -34,10 +34,11 @@ from .slotlib import (
     stat_buff,
 )
 from ..healing_legacy import (
+    HealAnchor,
     _ability,
-    _attributed_events,
     _is_persistent,
     _leveling_value,
+    _payments,
     _trigger_fields,
 )
 
@@ -51,6 +52,15 @@ _Q_NORMAL_ATTRS = [
     "Second Cast Damage",
     "Third Cast Damage",
 ]
+
+# The Darkin Blade's three strikes are one second apart: "Aatrox can
+# activate The Darkin Blade three times before the ability goes on
+# cooldown, with a 1-second static cooldown between casts" (data/
+# champions.json Aatrox Q), and the cache names each strike's damage on its
+# own row, so the triad reads as three strikes at 0, 1 and 2 seconds from
+# the first.  Still unauthored, but no longer for the reason it was: see
+# the comment above ``parse_abilities``.
+_Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED = 1.0
 
 
 def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -120,19 +130,27 @@ SLOTS = {
 }
 
 # No MODULE_CC, and for neither row is the reason a missing cadence — both
-# cadences are cached, and both are refused downstream.
+# cadences are cached, and both are refused by a committed receipt rather
+# than by the source.
 #
 # Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of
 # the area", which is this module's ``sweetspot`` option, and the cache
 # spaces its three casts ("with a 1-second static cooldown between casts")
 # while naming each strike's damage separately, so the triad reads as three
-# strikes at 0/1/2 seconds.  Two things refuse it: a hit authored past the
-# end of a roster fight leaves the whole incoming packet unusable
-# (``roster_composition.resource_restores`` rejects any event later than
-# the fight duration, and Aatrox's last Q in an eight-second roster fight
-# would land its third strike at 8.85s), and
-# docs/receipts/oracle-P5-resolver-leaf0.json records the ruling that this
-# kit's events are per-ability, not per-activation.
+# strikes at 0/1/2 seconds.  The engine no longer refuses that: an event
+# past the end of a roster fight used to leave the whole incoming packet
+# unusable (``roster_composition.resource_restores``, and Aatrox's last Q
+# in an eight-second roster fight lands its third strike at 8.85s), and
+# that check now drops the late event the way the survival walk skips every
+# other post-window action.  What is left is evidence:
+# data/practice-corpus/scenarios.json pins e9-e1-aatrox-umbral-dash-heal at
+# one Umbral Dash payment of 276.4 off a single Q event, and the triad pays
+# the same total as three (73.7 + 92.1 + 110.6) at 0/1/2 seconds — the heal
+# rule follows the hits honestly (``HealAnchor.DAMAGING_HIT``), but the
+# corpus scenario is pinned to a src-tree sha and re-pinning it is a
+# baseline re-capture, not a review.  The same split moves
+# docs/receipts/escalated-defects-P4-S9 and the live-amp roster scenarios,
+# which are pinned the same way.
 #
 # W (Infernal Chains) slows on the first hit ("slowing them for 1.5
 # seconds") and pulls on the second, which the cache times exactly ("a
@@ -140,9 +158,11 @@ SLOTS = {
 # dealt the same physical damage again and pulled to the center of the
 # area").  Splitting the cached Total into those two hits keeps every
 # total, including self-healing, but it splits Umbral Dash's heal from one
-# payment into two — and docs/receipts/oracle-P4B-leaf29.json pins that
-# single payment ("W 157.5 x 0.16 x 2.0 = 50.4") as corpus evidence.
-# Re-pinning an oracle receipt is not this review's to do.
+# payment into two — the heal is a share of each hit's damage
+# (``HealAnchor.DAMAGING_HIT``), so two hits are honestly two shares — and
+# docs/receipts/oracle-P4B-leaf29.json pins that single payment
+# ("W 157.5 x 0.16 x 2.0 = 50.4") as corpus evidence.  Re-pinning an oracle
+# receipt is not this review's to do.
 #
 # R fears "nearby enemy minions and monsters" only and authors no damage
 # part; P is the on-hit stance row.
@@ -161,9 +181,13 @@ def derive_self_healing(
     """Price Deathbringer Stance and Umbral Dash healing for Aatrox."""
     del cast_timeline, fight_duration_seconds
     healing: list[dict[str, Any]] = []
-    passive_events = _attributed_events(
+    # Both rules pay a share of what a hit dealt — Deathbringer Stance
+    # "heals for a percentage of the damage dealt" and Umbral Dash the same
+    # for every damage source — so both pay per hit that dealt some.
+    passive_payments = _payments(
+        HealAnchor.DAMAGING_HIT,
+        lambda source: "passive" in source.lower(),
         damage_events,
-        lambda source, _event: "passive" in source.lower(),
     )
     e_description = " ".join(
         effect.get("description", "")
@@ -183,7 +207,8 @@ def derive_self_healing(
     r_inc = _leveling_value(_ability(champion_data, "R"), "Increased Healing", r_rank)
     healing_amp = 1.0 + r_inc / 100.0 if r_rank > 0 else 1.0
 
-    for event in passive_events:
+    for payment in passive_payments:
+        event = payment.event
         amount = max(0.0, float(event.get("damage", 0.0))) * healing_amp
         if amount > 0:
             healing.append(
@@ -196,7 +221,10 @@ def derive_self_healing(
                 }
             )
 
-    for event in damage_events:
+    for payment in _payments(
+        HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+    ):
+        event = payment.event
         if _is_persistent(event):
             continue
         amount = max(0.0, float(event.get("damage", 0.0))) * e_ratio * healing_amp

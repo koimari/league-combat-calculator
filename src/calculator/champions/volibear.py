@@ -34,6 +34,16 @@ PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cc
 # distance, so the offset is a constant, not a travel estimate.
 _R_IMPACT_SECONDS = 1.0
 
+# Frenzied Maul's strike is its cast time: the cached note says "Frenzied
+# Maul deals bonus damage and heals if the target is still Wounded after
+# the cast time.  If the mark wears off before the cast time completes, the
+# ability's animation will appear as if the bite was applied but there is
+# no bonus damage or heal" (data/champions.json Volibear W), and that cast
+# time is the cached ``castTime`` of 0.25 seconds.  Both halves of the bite
+# — the base slash and the Wounded surplus — are the one strike, so both
+# land on that instant.
+_W_BITE_SECONDS = 0.25
+
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
     build_packet_module(
         "Volibear",
@@ -128,7 +138,9 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     name = ability.get("name", "Frenzied Maul")
 
     if not ctx.options.get("w_wounded", True):
-        return damage_entry(name, rank, cooldown, base, "physical")
+        entry = damage_entry(name, rank, cooldown, base, "physical")
+        entry["parts"] = (DamagePart("physical", base, time_offset=_W_BITE_SECONDS),)
+        return entry
 
     bonus_ad = ctx.stat("bonus_attack_damage")
     extra_ratio = (
@@ -137,8 +149,8 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     extra = base * extra_ratio
     entry = damage_entry(name, rank, cooldown, base + extra, "physical")
     entry["parts"] = (
-        DamagePart("physical", base),
-        DamagePart("physical", extra),
+        DamagePart("physical", base, time_offset=_W_BITE_SECONDS),
+        DamagePart("physical", extra, time_offset=_W_BITE_SECONDS),
     )
     entry["detail"] = (
         f"Wounded 2nd bite: +{extra_ratio * 100:g}% increased damage "
@@ -189,16 +201,14 @@ SLOTS["E"] = _sky_splitter
 # second" on the same impact that deals its damage, now authored at that
 # impact.
 #
-# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Frenzied Maul controls nothing, but the Wounded bite splits its one
-# slash into a base and a bonus part, so the single-part ``single_hit``
-# certification is unavailable, and authoring the bite's shared cast
-# instant instead is not a timing change alone: the self-heal rule counts
-# W *damage events* and skips the first (healing_legacy.py "Volibear"),
-# so two parts per bite turn one heal into three and move an applied heal
-# amount.  Fixing that means counting bites rather than parts, in a file
-# this review does not own.
-MODULE_CC = {"Q": "stun", "E": "slow", "R": "slow"}
+# Frenzied Maul "slashes the target enemy with his claws to deal physical
+# damage, apply on-hit effects, trigger on-attack effects, and mark the
+# target Wounded", and the Wounded bite only deals "increased damage and
+# heal[s] himself" — a mark and a heal, no control.  Both halves of the
+# bite now land on the cached cast time, so that review reaches the event
+# ledger; the self-heal rule pays per bite rather than per part
+# (``HealAnchor.CAST``), so the second half is not a second heal.
+MODULE_CC = {"Q": "stun", "W": "none", "E": "slow", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Volibear", cc_kinds=MODULE_CC)
 

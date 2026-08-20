@@ -66,8 +66,8 @@ class FrontierEntry:
 # tree and **six** after Phase 0's and Phase 2's new suites imported
 # `survival/{accumulate, actions, compile, transitions}` directly.  Two have
 # left since, each with a departure comment at the foot of the dict --
-# `survival.receipt_state` at Phase 4 S4 and `survival.score_state` at S10 --
-# leaving the **four** below.  That is the frontier working, and it is why
+# `survival.receipt_state` at Phase 4 S4, `survival.score_state` at S10 and
+# `healing_legacy` at the heal-anchor slice -- leaving the **three** below.  That is the frontier working, and it is why
 # neither the ten nor the six is written down anywhere as a target.
 #
 # Both counts above are facts about what follows, so both are asserted rather
@@ -89,14 +89,6 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
         reason=(
             "the exception vocabulary src/app.py and optimizer.py raise; every "
             "assertion about it runs through an app response instead"
-        ),
-    ),
-    "healing_legacy": FrontierEntry(
-        owning_phase="none — pre-campaign debt",
-        reason=(
-            "the pre-ledger healing path, reached only through healing.py and "
-            "champions/healing_rules.py; tests/test_healing.py covers it by "
-            "behaviour without naming it"
         ),
     ),
     "practice_dummy": FrontierEntry(
@@ -121,6 +113,11 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # It is recorded here as a comment rather than silently deleted because the
     # set is the receipt: a member that leaves without a sentence saying why is
     # indistinguishable from a member somebody deleted to make a gate pass.
+    # `healing_legacy` left this frontier at the heal-anchor slice, when the
+    # self-heal rules gained a declared anchor: `tests/test_healing.py` imports `HealAnchor` and
+    # `_payments` to pin what each rule pays on -- a cast, a hit that dealt
+    # damage, or a tick schedule of its own -- so the module that had been
+    # covered by behaviour without being named is named.
     # `survival.score_state` left this frontier at Phase 4 S10, the last of
     # the six `survival/` members the phase closes (criterion 18).  Its front
     # door is `tests/test_score_state.py`, and writing one was the work: the

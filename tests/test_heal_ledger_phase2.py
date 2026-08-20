@@ -337,17 +337,32 @@ def test_volibear_w_first_cast_applies_wound_only_and_never_scanner_heals():
         }
 
     volibear = get_champion("Volibear")
+    stats = {"level": 18, "health": 2000.0, "ability_power": 0.0}
     heals = derive_self_healing(
         volibear,
-        {"level": 18, "health": 2000.0, "ability_power": 0.0},
+        stats,
         {"W": {"rank": 5}},
         [w_event(1.0, 1), w_event(3.0, 2)],
-        [{"slot": "W", "time": 1.0}],
+        [{"slot": "W", "time": 1.0}, {"slot": "W", "time": 3.0}],
         5.0,
     )
     assert len(heals) == 1
     assert heals[0]["source"] == "Frenzied Maul"
     assert heals[0]["time"] == pytest.approx(3.0)
+
+    # Bites are what the rule counts, not the parts a bite is priced with:
+    # the Wounded bite is a base slash plus a surplus, both landing on the
+    # cast's own instant, and one cast still applies the Wound and heals
+    # nothing (``HealAnchor.CAST``).
+    one_cast_two_parts = derive_self_healing(
+        volibear,
+        stats,
+        {"W": {"rank": 5}},
+        [w_event(1.25, 1), w_event(1.25, 2)],
+        [{"slot": "W", "time": 1.0}],
+        5.0,
+    )
+    assert one_cast_two_parts == []
 
 
 def test_ekko_r_heals_self_once_at_the_minimum_heal_row():

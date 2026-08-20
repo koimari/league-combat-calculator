@@ -390,11 +390,12 @@ class TestFightIntegration:
 
 
 class TestReviewedCrowdControl:
-    """Briar's crowd-control review, and the slot that still withholds.
+    """Briar's crowd-control review, now complete.
 
     E's scream lands on the recast at the end of the cached charge, which
-    this module always prices in full - and which the E heal rule times
-    its own ticks off, so the landing stays unauthored.
+    this module always prices in full, and the charge's own healing stays
+    inside the charge because the heal rule counts from the cast
+    (``HealAnchor.CAST_SCHEDULE``) rather than from the scream.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -412,16 +413,10 @@ class TestReviewedCrowdControl:
         # its explosion damages, and it is not feared.
         assert "fears all non-marked targets" in cc_review.slot_text(data, "R")
 
-    def test_chilling_screams_charge_is_cached_but_the_heal_rule_owns_it(
+    def test_chilling_scream_lands_at_the_end_of_its_cached_charge(
         self, briar_data, parse_at
     ):
-        """The delay is sourced; authoring it would move an applied heal.
-
-        The E self-heal pays its four charge ticks at ``event.time + n *
-        0.25`` off the scream's OWN damage event (healing_legacy), so
-        putting the scream at the end of the charge puts the charge's
-        healing after it.
-        """
+        """The scream is the recast, one cached second after the cast."""
         text = cc_review.slot_text(cc_review.kit("Briar"), "E")
         assert (
             "briar prepares to unleash a scream in the target direction, "
@@ -433,11 +428,45 @@ class TestReviewedCrowdControl:
         )
         _, abilities = parse_at(briar_data, 18)
         (part,) = abilities["E"]["parts"]
-        assert part.time_offset is None
-        assert part.cc_kind is None
+        assert part.time_offset == briar.E_FULL_CHARGE_SECONDS == 1.0
+        assert part.cc_kind == "knockback"
 
-    def test_the_scream_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Briar") == ["E"]
+    def test_the_charge_heals_during_the_charge_not_after_the_scream(self):
+        """The four ticks belong to the charge: "charging for up to 1
+        second, during which she ... heals herself every 0.25 seconds".
+
+        This is the defect the anchor exists for.  The ticks used to hang
+        off the scream's own damage event, so timing the scream at the end
+        of the charge would have pushed the charge's healing to 1.25-2.0s
+        — after the thing it happens during.
+        """
+        from src.calculator.calculate import calculate_payload
+
+        payload = calculate_payload(
+            {
+                "champion": "Briar",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )
+        ticks = [
+            round(float(event["time"]), 3)
+            for event in payload["self_healing_events"]
+            if event["source"] == "Chilling Scream"
+        ]
+        assert ticks[:4] == [0.25, 0.5, 0.75, 1.0]
+        scream = [
+            round(float(event["time"]), 3)
+            for event in payload["damage_events"]
+            if event.get("source") == "E"
+        ]
+        assert scream and min(scream) == 1.0
+        assert max(ticks[:4]) <= min(scream)
+
+    def test_the_kit_clears_the_control_armed_scan(self):
+        assert cc_review.unreviewed_ability_slots("Briar") == []
         coverage = cc_review.fimbulwinter_coverage("Briar")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

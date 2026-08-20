@@ -107,6 +107,59 @@ def test_roster_helpers_keep_darius_coalescing_and_catalyst_presence_typed():
     assert slot is not None and slot.value("damage_taken_to_mana_ratio") > 0.0
 
 
+# ── the restore ledger's answer to a late hit ─────────────────────────────
+
+
+def _catalyst_actor() -> Combatant:
+    return Combatant(
+        participant_id="main",
+        team="ally",
+        champion_data={"name": "Ahri"},
+        level=18,
+        items=[{"name": "Catalyst of Aeons"}],
+        stats={},
+        defenses=None,
+    )
+
+
+def _incoming(*times: float) -> dict:
+    return {
+        "main": [
+            {"time": time, "raw_damage": 100.0, "attacker": "enemy:Aatrox"}
+            for time in times
+        ]
+    }
+
+
+def test_a_hit_past_the_window_is_dropped_rather_than_refusing_the_packet():
+    """A late hit is not an unreadable hit.
+
+    The survival walk skips every action past the fight window
+    (``outside_window``), damage included, so a restore derived from a
+    post-window hit would be mana for damage the fight never takes.  It is
+    dropped; refusing the whole packet for it would cap every authored
+    ``time_offset`` at the fight length — which is what kept Aatrox's Q
+    cadence out (its third strike lands at 8.85s in an eight-second fight).
+    """
+    restores, complete = roster_composition.resource_restores(
+        _catalyst_actor(), _incoming(2.0, 8.85), 8.0
+    )
+
+    assert complete is True
+    assert [time for time, _amount in restores] == [2.0]
+
+
+@pytest.mark.parametrize("bad_time", [float("nan"), float("inf"), -1.0])
+def test_a_time_the_packet_cannot_state_still_refuses_the_whole_packet(bad_time):
+    """The fail-closed check survives, on the cases it was built for."""
+    restores, complete = roster_composition.resource_restores(
+        _catalyst_actor(), _incoming(2.0, bad_time), 8.0
+    )
+
+    assert complete is False
+    assert restores == ()
+
+
 # ── the attack-speed aura, read from the declaration (3.9) ────────────────
 
 AURA_HOLDER = "Frozen Heart"

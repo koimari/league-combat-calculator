@@ -4,12 +4,23 @@ Healing is deliberately kept separate from item/stat heuristics.  A result
 contains post-mitigation, ordered damage events; this module applies only
 champion-specific Wiki rules to those events and returns another ordered
 ledger for the participant simulator.
+
+Every rule that reads the damage ledger declares what the game pays it on
+(:class:`HealAnchor`) and takes its payments from :func:`_payments`.  The
+ledger's shape is not the answer: a champion module authoring an ability's
+true hit cadence turns one row into several events, and a rule that counted
+events would turn one heal into several with it.  A rule with no damage to
+read — Kayle's Celestial Blessing, Janna's Monsoon — reads the cast
+timeline directly, which is the same declaration made the only way it can
+be.
 """
 
 from __future__ import annotations
 
 import re
 import math
+from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Iterable
 
 from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
@@ -190,13 +201,6 @@ def _is_persistent(event: dict[str, Any]) -> bool:
     )
 
 
-def _attributed_events(
-    events: Iterable[dict[str, Any]],
-    predicate,
-) -> list[dict[str, Any]]:
-    return [event for event in events if predicate(_event_source(event), event)]
-
-
 def _rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
     """Use the parser's sourced rank; omitted ranks are already level-derived."""
     try:
@@ -285,6 +289,125 @@ def _cast_slot_times(
         for cast in (cast_timeline or [])
         if cast.get("slot") == slot
     )
+
+
+class HealAnchor(Enum):
+    """What the game pays one self-heal on — the rule's own answer.
+
+    A self-heal rule reads a damage ledger, but the ledger's *shape* is not
+    what the wiki pays on: a champion module that authors an ability's true
+    hit cadence turns one row into several events, and a rule that counted
+    events would turn one heal into several with it.  So every rule that
+    reads the ledger names the occasion it pays on here, and the resolver
+    (``healing_legacy._payments``) turns that answer into the payments.
+
+    ``CAST``
+        One payment per activation, however many hits the cast authors —
+        Frenzied Maul's bite, Void Spike's explosion, Piercing Darkness'
+        ray.  The payment lands on the cast's first hit, which is where the
+        ability arrives.
+    ``DAMAGING_HIT``
+        One payment per hit that *dealt damage* — every rule whose amount
+        is a share of what the hit did (Severum, Soul Siphon, lifesteal,
+        Spirit of Dread).  A hit that dealt nothing pays nothing.
+    ``CAST_SCHEDULE``
+        The heal has a cadence of its own, counted from the cast, not from
+        the damage the cast eventually deals — Chilling Scream heals
+        "every 0.25 seconds" *while charging*, before the scream lands.
+    """
+
+    CAST = "cast"
+    DAMAGING_HIT = "damaging_hit"
+    CAST_SCHEDULE = "cast_schedule"
+
+
+# One cast's events and its cast time can disagree by the rounding the
+# engine applies to published cast times (damage.py rounds to 3 decimals
+# while authored offsets stay raw), so an event is attributed to the last
+# cast at or before it within this slack.
+_CAST_MATCH_TOLERANCE = 1e-3
+
+
+@dataclass(frozen=True, slots=True)
+class _Payment:
+    """One occasion a self-heal rule pays.
+
+    ``event`` is the damage event the payment rides — the cast's first hit
+    for a ``CAST`` payment, the hit itself for a ``DAMAGING_HIT`` one — and
+    is what links the heal receipt to the damage that caused it, so a heal
+    whose trigger the coupled walk skipped is skipped with it.
+    ``cast_time`` is the activation the event belongs to, which is where a
+    heal with a cadence of its own starts counting.
+    """
+
+    cast_time: float
+    event: dict[str, Any]
+
+
+def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
+    """Damage events whose source key the rule claims."""
+    if callable(source):
+        return [event for event in damage_events if source(_event_source(event))]
+    if isinstance(source, str):
+        return [event for event in damage_events if _event_source(event) == source]
+    return [event for event in damage_events if _event_source(event) in source]
+
+
+def _attributing_cast(cast_times: list[float], event_time: float) -> float | None:
+    """The activation an event at *event_time* came from, if one names it."""
+    attributed: float | None = None
+    for cast_time in cast_times:
+        if cast_time <= event_time + _CAST_MATCH_TOLERANCE:
+            attributed = cast_time
+        else:
+            break
+    return attributed
+
+
+def _payments(
+    anchor: HealAnchor,
+    source,
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+) -> list[_Payment]:
+    """The occasions a rule pays on, per the anchor the rule declares.
+
+    ``source`` is the event source key the rule reads — a slot letter, a
+    set of them, or a predicate over the key.  Only a slot letter can be
+    matched against the cast timeline, so only that form may anchor on a
+    cast.
+
+    The number of payments comes from the declaration, never from how many
+    events a champion module authored: a ``CAST`` rule pays once per
+    activation whether its module prices the ability as one hit or six.
+    When no cast in the timeline names an event (an ability the timeline
+    does not publish, or a caller that passed none), each distinct event
+    timestamp stands in for its own activation — which keeps the several
+    parts of one instant together and is the most a rule can honestly
+    conclude without a cast to point at.
+    """
+    events = _events_matching(source, damage_events)
+    if anchor is HealAnchor.DAMAGING_HIT:
+        return [
+            _Payment(float(event.get("time", 0.0)), event)
+            for event in events
+            if float(event.get("damage", 0.0) or 0.0) > 0.0
+        ]
+    if not isinstance(source, str):
+        raise ValueError(f"{anchor} needs one slot to match casts, got {source!r}")
+    cast_times = _cast_slot_times(cast_timeline, source)
+    activations: dict[float, dict[str, Any]] = {}
+    for event in events:
+        event_time = float(event.get("time", 0.0))
+        cast_time = _attributing_cast(cast_times, event_time)
+        if cast_time is None:
+            cast_time = event_time
+        held = activations.get(cast_time)
+        if held is None or event_time < float(held.get("time", 0.0)):
+            activations[cast_time] = event
+    return [
+        _Payment(cast_time, activations[cast_time]) for cast_time in sorted(activations)
+    ]
 
 
 # Compatibility names for the reviewed self-healing rules. The public
@@ -423,10 +546,8 @@ def _legacy_derive_self_healing(
         # heal of 5% of the missing health at the hit's timestamp, priced
         # by the participant ledger with the fighter's live health (the
         # Decimate missing-health pattern).
-        tentacle_hits = _attributed_events(
-            damage_events, lambda source, _event: source == "passive"
-        )
-        for event in tentacle_hits:
+        for payment in _payments(HealAnchor.DAMAGING_HIT, "passive", damage_events):
+            event = payment.event
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),
@@ -447,10 +568,14 @@ def _legacy_derive_self_healing(
         )
         # Public Execution heals from post-mitigation active ability damage.
         if ratio > 0:
-            for event in damage_events:
-                source = _event_source(event)
-                if source not in {"Q", "Q2", "W", "E", "R"}:
-                    continue
+            # A share of each hit's own post-mitigation damage, so one
+            # payment per hit that dealt some.
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT,
+                lambda source: source in {"Q", "Q2", "W", "E", "R"},
+                damage_events,
+            ):
+                event = payment.event
                 amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0
                 if amount > 0:
                     healing.append(
@@ -468,9 +593,8 @@ def _legacy_derive_self_healing(
         # champion hit, capped at 51% for three or more champions. Pair
         # packets mark the cast so the coupled timeline coalesces those
         # per-target receipts before applying one live heal.
-        for event in damage_events:
-            if _event_source(event) != "Q":
-                continue
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
+            event = payment.event
             trigger_time = float(event.get("time", 0.0))
             trigger_sequence = int(event.get("sequence", 0) or 0)
 
@@ -500,7 +624,13 @@ def _legacy_derive_self_healing(
         q = _ability(champion_data, "Q")
         q_rank = _rank(ability_damages, "Q")
         q_ratio = extract_named(q, "Healing Percentage", q_rank, champion_stats, {})
-        for event in damage_events:
+        # Both rules pay a share of what the hit dealt, so both pay per
+        # hit: Q heals "for a percentage of the damage dealt" and R "for
+        # 100% of all post-mitigation damage dealt to its target".
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT, lambda source: source in {"Q", "R"}, damage_events
+        ):
+            event = payment.event
             source = _event_source(event)
             if source == "Q":
                 _heal_from_damage(
@@ -509,7 +639,7 @@ def _legacy_derive_self_healing(
                     float(event.get("damage", 0.0)) * q_ratio / 100.0,
                     "Jaws of the Beast",
                 )
-            elif source == "R":
+            else:
                 # Infinite Duress explicitly heals for 100% of all
                 # post-mitigation damage dealt to its target.
                 _heal_from_damage(
@@ -592,21 +722,31 @@ def _legacy_derive_self_healing(
         per_tick = extract_named(ability, "Heal Per Tick", rank, champion_stats, {})
         maximum = extract_named(ability, "Maximum Heal", rank, champion_stats, {})
         if per_tick > 0.0 and maximum > 0.0:
-            for event in damage_events:
-                if _event_source(event) != "E":
-                    continue
+            # The ticks are the charge's, not the scream's: Briar is
+            # "charging for up to 1 second, during which she ... heals
+            # herself every 0.25 seconds" and only then unleashes the
+            # scream, so the cadence counts from the cast and stops before
+            # the damage the recast deals (cached E, data/champions.json).
+            # Nor is a tick caused by the scream's damage — it happens
+            # while Briar is still charging, before there is any — so the
+            # receipt carries no damage trigger.  An E event is still what
+            # proves the cast happened; it is not what the heal is paid
+            # for, and gating a 0.25s tick on a hit that lands at 1.0s
+            # would drop three quarters of the charge.
+            for payment in _payments(
+                HealAnchor.CAST_SCHEDULE, "E", damage_events, cast_timeline
+            ):
                 ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
                 for index in range(1, ticks + 1):
                     healing.append(
                         {
-                            "time": float(event.get("time", 0.0)) + index * 0.25,
+                            "time": payment.cast_time + index * 0.25,
                             "amount": min(
                                 float(per_tick),
                                 max(0.0, maximum - per_tick * (index - 1)),
                             ),
                             "source": "Chilling Scream",
                             "kind": "champion_ability",
-                            **_trigger_fields(event),
                         }
                     )
         # P (Crimson Curse) bleed self-heal: "The bleed always heals Briar
@@ -616,10 +756,12 @@ def _legacy_derive_self_healing(
         # pre-mitigation bleed damage at every stack level, so one sourced
         # rule prices the whole stream.  The wiki's missing-health healing
         # amplifier (0% : 40%) is a live-state boundary, not priced here.
-        for event in _attributed_events(
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT,
+            lambda source: source.startswith("stacking_dot_"),
             damage_events,
-            lambda source, _event: source.startswith("stacking_dot_"),
         ):
+            event = payment.event
             dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
             amount = 0.25 * dealt
             if amount > 0.0:
@@ -645,9 +787,8 @@ def _legacy_derive_self_healing(
             {},
         )
         max_health = float(champion_stats.get("health", 0.0) or 0.0)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
+        for payment in _payments(HealAnchor.CAST, "W", damage_events, cast_timeline):
+            event = payment.event
             snack_heal = (
                 0.05 * max_health
                 + float(event.get("damage", 0.0) or 0.0) * heal_percent / 100.0
@@ -661,13 +802,13 @@ def _legacy_derive_self_healing(
             _ability(champion_data, "R"), "Life Steal", r_rank, champion_stats, {}
         )
         if life_steal > 0.0:
-            for event in _attributed_events(
-                damage_events, lambda source, _event: source == "auto_attacks"
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT, "auto_attacks", damage_events
             ):
                 _heal_from_damage(
                     healing,
-                    event,
-                    float(event.get("damage", 0.0) or 0.0) * life_steal / 100.0,
+                    payment.event,
+                    float(payment.event.get("damage", 0.0) or 0.0) * life_steal / 100.0,
                     "Certain Death",
                 )
 
@@ -699,11 +840,9 @@ def _legacy_derive_self_healing(
         w = _ability(champion_data, "W")
         w_rank = _rank(ability_damages, "W")
         w_heal = extract_named(w, "Heal", w_rank, champion_stats)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
+        for payment in _payments(HealAnchor.CAST, "W", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, w_heal, "Void Spike", link_to_damage=False
+                healing, payment.event, w_heal, "Void Spike", link_to_damage=False
             )
 
     elif name == "Kindred":
@@ -741,17 +880,17 @@ def _legacy_derive_self_healing(
             heal = extract_named(
                 _ability(champion_data, "W"), "Heal", level, champion_stats, {}
             )
-            for event in _attributed_events(
-                damage_events, lambda source, _event: source == "auto_attacks"
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT, "auto_attacks", damage_events
             ):
                 healing.append(
                     {
-                        "time": float(event.get("time", 0.0)),
+                        "time": float(payment.event.get("time", 0.0)),
                         "amount": 0.0,
                         "amount_formula": _missing_health_scaled_heal(0.0, heal),
                         "source": "Hunter's Vigor",
                         "kind": "champion_passive",
-                        **_trigger_fields(event),
+                        **_trigger_fields(payment.event),
                     }
                 )
                 break
@@ -767,14 +906,14 @@ def _legacy_derive_self_healing(
         r_rank = _rank(ability_damages, "R")
         min_tick = extract_named(r, "Minimum Heal per Tick", r_rank, champion_stats)
         max_tick = extract_named(r, "Maximum Heal per Tick", r_rank, champion_stats)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
+        for payment in _payments(
+            HealAnchor.CAST_SCHEDULE, "R", damage_events, cast_timeline
         ):
-            trigger = _trigger_fields(event)
+            trigger = _trigger_fields(payment.event)
             for index in range(1, 11):
                 healing.append(
                     {
-                        "time": float(event.get("time", 0.0)) + index * 0.25,
+                        "time": payment.cast_time + index * 0.25,
                         "amount": 0.0,
                         "amount_formula": _missing_health_scaled_heal(
                             min_tick, max_tick
@@ -794,17 +933,15 @@ def _legacy_derive_self_healing(
         e_rank = _rank(ability_damages, "E")
         min_heal = extract_named(e, "Minimum Heal", e_rank, champion_stats)
         max_heal = extract_named(e, "Maximum Heal", e_rank, champion_stats)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "E"
-        ):
+        for payment in _payments(HealAnchor.CAST, "E", damage_events, cast_timeline):
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": float(payment.event.get("time", 0.0)),
                     "amount": 0.0,
                     "amount_formula": _missing_health_scaled_heal(min_heal, max_heal),
                     "source": "Primal Surge",
                     "kind": "champion_ability",
-                    **_trigger_fields(event),
+                    **_trigger_fields(payment.event),
                 }
             )
 
@@ -823,21 +960,12 @@ def _legacy_derive_self_healing(
         )
         # One heal per Q cast: the module emits the initial hit at the
         # cast boundary, then the bleed ticks and the recast share later
-        # timestamps, so the heal anchors to the cast's initial-hit event
-        # (the recast hits an already-bleeding champion the same cast).
-        q_events = _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        )
-        q_event_by_time: dict[float, dict[str, Any]] = {}
-        for event in q_events:
-            q_event_by_time.setdefault(round(float(event.get("time", 0.0)), 6), event)
-        for cast_time in _cast_slot_times(cast_timeline, "Q"):
-            anchor = q_event_by_time.get(round(cast_time, 6))
-            if anchor is None:
-                continue
+        # timestamps, so the heal anchors to the cast's first hit (the
+        # recast hits an already-bleeding champion the same cast).
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             _heal_from_damage(
                 healing,
-                anchor,
+                payment.event,
                 q_heal,
                 "Darkin Daggers",
                 link_to_damage=False,
@@ -851,11 +979,13 @@ def _legacy_derive_self_healing(
         q = _ability(champion_data, "Q")
         q_rank = _rank(ability_damages, "Q")
         q_heal = extract_named(q, "Healing", q_rank, champion_stats)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, q_heal, "Piercing Darkness", link_to_damage=False
+                healing,
+                payment.event,
+                q_heal,
+                "Piercing Darkness",
+                link_to_damage=False,
             )
 
     elif name == "Smolder":
@@ -865,11 +995,9 @@ def _legacy_derive_self_healing(
         r = _ability(champion_data, "R")
         r_rank = _rank(ability_damages, "R")
         r_heal = extract_named(r, "Self Heal", r_rank, champion_stats)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
-        ):
+        for payment in _payments(HealAnchor.CAST, "R", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, r_heal, "MMOOOMMMM!", link_to_damage=False
+                healing, payment.event, r_heal, "MMOOOMMMM!", link_to_damage=False
             )
 
     elif name == "Sylas":
@@ -881,19 +1009,17 @@ def _legacy_derive_self_healing(
         w_rank = _rank(ability_damages, "W")
         min_heal = extract_named(w, "Minimum Heal", w_rank, champion_stats)
         max_heal = extract_named(w, "Maximum Heal", w_rank, champion_stats)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
-            if float(event.get("damage", 0.0)) <= 0.0:
+        for payment in _payments(HealAnchor.CAST, "W", damage_events, cast_timeline):
+            if float(payment.event.get("damage", 0.0)) <= 0.0:
                 continue
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": float(payment.event.get("time", 0.0)),
                     "amount": 0.0,
                     "amount_formula": _missing_health_scaled_heal(min_heal, max_heal),
                     "source": "Kingslayer",
                     "kind": "champion_ability",
-                    **_trigger_fields(event),
+                    **_trigger_fields(payment.event),
                 }
             )
 
@@ -921,17 +1047,15 @@ def _legacy_derive_self_healing(
                 flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
             )
 
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": float(payment.event.get("time", 0.0)),
                     "amount": 0.0,
                     "amount_formula": tongue_lash_heal,
                     "source": "Tongue Lash",
                     "kind": "champion_ability",
-                    **_trigger_fields(event),
+                    **_trigger_fields(payment.event),
                 }
             )
 
@@ -965,7 +1089,12 @@ def _legacy_derive_self_healing(
         # health (wiki: "Heal: 20 / 35 / 50 / 65 / 80 (+ 8% / 11% / 14% /
         # 17% / 20% of his missing health)").  The first W applies the
         # Wound; the heal lands on every later W.  Each pair fight is one
-        # defender, so counting W events in this ledger is per-target.
+        # defender, so counting W bites in this ledger is per-target.
+        #
+        # One bite, one heal: the cached note is "Frenzied Maul deals bonus
+        # damage and heals if the target is still Wounded after the cast
+        # time", so the payment is the cast, not the parts the module
+        # prices that bite with (base slash + Wounded surplus).
         w = _ability(champion_data, "W")
         w_rank = _rank(ability_damages, "W")
         w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
@@ -981,21 +1110,19 @@ def _legacy_derive_self_healing(
                 flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
             )
 
-        w_hits = 0
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
+        for index, payment in enumerate(
+            _payments(HealAnchor.CAST, "W", damage_events, cast_timeline)
         ):
-            w_hits += 1
-            if w_hits < 2:
+            if index < 1:
                 continue
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": float(payment.event.get("time", 0.0)),
                     "amount": 0.0,
                     "amount_formula": frenzied_maul_heal,
                     "source": "Frenzied Maul",
                     "kind": "champion_ability",
-                    **_trigger_fields(event),
+                    **_trigger_fields(payment.event),
                 }
             )
 
@@ -1017,9 +1144,13 @@ def _legacy_derive_self_healing(
         ) -> float:
             return maximum_health * pct / 100.0
 
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
+        # "Each ability hit sheds a Goo chunk", so the chunk is the hit.
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT,
+            lambda source: source in {"Q", "W", "E", "R"},
+            damage_events,
         ):
+            event = payment.event
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),
@@ -1041,12 +1172,12 @@ def _legacy_derive_self_healing(
             _ability(champion_data, "Q"), "Heal", level, champion_stats
         )
         if heal > 0.0:
-            for event in _attributed_events(
-                damage_events, lambda source, _event: source == "Q"
+            for payment in _payments(
+                HealAnchor.CAST, "Q", damage_events, cast_timeline
             ):
                 healing.append(
                     {
-                        "time": float(event.get("time", 0.0)) + 3.0,
+                        "time": float(payment.event.get("time", 0.0)) + 3.0,
                         "amount": heal,
                         "source": "Gleaming Quill",
                         "kind": "champion_ability",
@@ -1279,11 +1410,9 @@ def _legacy_derive_self_healing(
         floor = extract_named(w_ability, "Minimum Heal", w_rank, champion_stats, {})
         ap = float(champion_stats.get("ability_power", 0.0) or 0.0)
         amount = max(floor, base * (0.80 + 0.15 * ap / 100.0))
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
+        for payment in _payments(HealAnchor.CAST, "W", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, amount, "Ebb and Flow", link_to_damage=False
+                healing, payment.event, amount, "Ebb and Flow", link_to_damage=False
             )
 
     elif name == "Nilah":
@@ -1301,7 +1430,14 @@ def _legacy_derive_self_healing(
         )
         q_ratio = 0.20 * crit / 100.0
         r_ratio = 0.20 + 0.30 * crit / 100.0
-        for event in damage_events:
+        # Both rules are a share of "the post-mitigation damage dealt to
+        # champions", so both pay per hit that dealt some.
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT,
+            lambda source: source in {"Q", "auto_attacks", "R"},
+            damage_events,
+        ):
+            event = payment.event
             source = _event_source(event)
             if source in ("Q", "auto_attacks") and q_ratio > 0.0:
                 _heal_from_damage(
@@ -1331,11 +1467,13 @@ def _legacy_derive_self_healing(
             _ability(champion_data, "Q"), "Champion Healing", q_rank
         )
         q_heal = q_heal_pct / 100.0 * float(champion_stats.get("health", 0.0))
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, q_heal, "The Darkin Glaive", link_to_damage=False
+                healing,
+                payment.event,
+                q_heal,
+                "The Darkin Glaive",
+                link_to_damage=False,
             )
         # Grim Deliverance (R): flat heal per champion hit
         # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
@@ -1348,11 +1486,13 @@ def _legacy_derive_self_healing(
             champion_stats,
             {},
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
-        ):
+        for payment in _payments(HealAnchor.CAST, "R", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, r_heal, "Grim Deliverance", link_to_damage=False
+                healing,
+                payment.event,
+                r_heal,
+                "Grim Deliverance",
+                link_to_damage=False,
             )
 
     elif name == "Aphelios":
@@ -1407,16 +1547,24 @@ def _legacy_derive_self_healing(
             # detail (the Shyvana dragon-form convention): "overheal shield
             # on" when the user enabled the conversion (default on).
             overheal_shield = "overheal shield on" in r_detail
-            for event in damage_events:
-                source = _event_source(event)
-                if source == "auto_attacks":
-                    ratio = basic_ratio
-                elif source == "Q":
-                    # With Severum equipped the Q row is Onslaught, whose
-                    # attacks count as ability attacks for the heal.
-                    ratio = ability_ratio
-                else:
-                    continue
+            # Severum pays per hit, and per hit is what it says: "Severum's
+            # attacks heal Aphelios for 2% : 7.1% (based on level) of the
+            # post-mitigation damage dealt".  An attack that dealt nothing
+            # heals nothing, and Onslaught's six attacks are six payments of
+            # their own shares, not six copies of one.
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT,
+                lambda source: source in {"auto_attacks", "Q"},
+                damage_events,
+            ):
+                event = payment.event
+                # With Severum equipped the Q row is Onslaught, whose
+                # attacks count as ability attacks for the heal.
+                ratio = (
+                    basic_ratio
+                    if _event_source(event) == "auto_attacks"
+                    else ability_ratio
+                )
                 amount = max(0.0, float(event.get("damage", 0.0))) * ratio
                 _heal_from_damage(healing, event, amount, "Severum")
                 if overheal_shield and amount > 0.0 and shield_cap > 0.0:
@@ -1438,9 +1586,8 @@ def _legacy_derive_self_healing(
         base_raw = extract_named(
             w_ability, "Physical Damage", w_rank, champion_stats, {}
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
+        for payment in _payments(HealAnchor.CAST, "W", damage_events, cast_timeline):
+            event = payment.event
             raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
             post = float(event.get("damage", 0.0) or 0.0)
             outer_raw = max(0.0, raw - base_raw)
@@ -1461,9 +1608,8 @@ def _legacy_derive_self_healing(
             )
             / 100.0
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
+        for payment in _payments(HealAnchor.DAMAGING_HIT, "W", damage_events):
+            event = payment.event
             dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
             _heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
 
@@ -1481,7 +1627,10 @@ def _legacy_derive_self_healing(
             if cast.get("slot") == "W"
         ]
         if w_casts:
-            for event in damage_events:
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+            ):
+                event = payment.event
                 event_time = float(event.get("time", 0.0))
                 if not any(
                     cast_time <= event_time <= cast_time + 4.0 for cast_time in w_casts
@@ -1520,12 +1669,10 @@ def _legacy_derive_self_healing(
             if heal_leveling is not None
             else 0.0
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
-        ):
+        for payment in _payments(HealAnchor.DAMAGING_HIT, "R", damage_events):
             _heal_from_damage(
                 healing,
-                event,
+                payment.event,
                 heal_per_tick,
                 "Demonic Ascension",
                 link_to_damage=False,
@@ -1538,9 +1685,8 @@ def _legacy_derive_self_healing(
         # leveling values.  The engine's R event carries the drain's
         # pre-mitigation damage, which is exactly the heal amount — the heal
         # does not pass through magic resistance.
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
-        ):
+        for payment in _payments(HealAnchor.DAMAGING_HIT, "R", damage_events):
+            event = payment.event
             dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
             _heal_from_damage(healing, event, dealt, "Subjugate", link_to_damage=False)
 
@@ -1552,16 +1698,16 @@ def _legacy_derive_self_healing(
         # lifesteal.
         lifesteal = float(champion_stats.get("lifesteal_percent", 0.0) or 0.0)
         if lifesteal > 0.0:
-            for event in _attributed_events(
-                damage_events, lambda source, _event: source == "W"
-            ):
+            for payment in _payments(HealAnchor.DAMAGING_HIT, "W", damage_events):
                 amount = (
                     0.333
-                    * max(0.0, float(event.get("damage", 0.0)))
+                    * max(0.0, float(payment.event.get("damage", 0.0)))
                     * lifesteal
                     / 100.0
                 )
-                _heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
+                _heal_from_damage(
+                    healing, payment.event, amount, "Wind Becomes Lightning"
+                )
 
     if name == "Nasus":
         # Soul Eater (P): innate lifesteal — "Nasus gains 12% / 18% / 24%
@@ -1578,10 +1724,12 @@ def _legacy_derive_self_healing(
         soul_eater_ratio = (
             0.24 if nasus_level >= 13 else (0.18 if nasus_level >= 7 else 0.12)
         )
-        for event in damage_events:
-            source = _event_source(event)
-            if source != "auto_attacks" and not source.startswith("on_hit_"):
-                continue
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT,
+            lambda source: source == "auto_attacks" or source.startswith("on_hit_"),
+            damage_events,
+        ):
+            event = payment.event
             if event.get("damage_type") != "physical":
                 continue
             amount = max(0.0, float(event.get("damage", 0.0))) * soul_eater_ratio
@@ -1594,20 +1742,17 @@ def _legacy_derive_self_healing(
         q_heal = extract_named(
             _ability(champion_data, "Q"), "Heal", q_rank, champion_stats
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, q_heal, "Transfusion", link_to_damage=False
+                healing, payment.event, q_heal, "Transfusion", link_to_damage=False
             )
         # Sanguine Pool (W): heals for 30% of pre-mitigation damage dealt
         # (patch 12.13: "Healing increased to 30% of damage dealt from 15%";
         # 18% against minions — champion targets assumed here).
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "W"
-        ):
+        for payment in _payments(HealAnchor.DAMAGING_HIT, "W", damage_events):
             # Pre-mitigation damage per the wiki ("30% of the pre-mitigation
             # damage dealt"); the engine exposes it as event["raw_damage"].
+            event = payment.event
             dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
             _heal_from_damage(healing, event, 0.30 * dealt, "Sanguine Pool")
         # Hemoplague (R): flat heal per infected champion, reduced for later
@@ -1625,12 +1770,10 @@ def _legacy_derive_self_healing(
         r_reduced = extract_named(
             _ability(champion_data, "R"), "Reduced Heal", r_rank, champion_stats
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
-        ):
+        for payment in _payments(HealAnchor.CAST, "R", damage_events, cast_timeline):
             _heal_from_damage(
                 healing,
-                event,
+                payment.event,
                 r_heal,
                 "Hemoplague",
                 later_target_amount=r_reduced,
@@ -1659,10 +1802,17 @@ def _legacy_derive_self_healing(
             flags=re.IGNORECASE,
         )
         self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
+        # "Q and W each generate one Triumph stack per enemy champion
+        # hit" — one stack per activation against this pair's defender, so
+        # the stacks count casts, not the parts a cast is priced with.
+        casts = sorted(
+            _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+            + _payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
+            key=lambda payment: float(payment.event.get("time", 0.0)),
+        )
         qw_seen = 0
-        for event in damage_events:
-            if _event_source(event) not in {"Q", "W"}:
-                continue
+        for payment in casts:
+            event = payment.event
             if stack_cap <= 0:
                 break
             qw_seen += 1
@@ -1689,11 +1839,9 @@ def _legacy_derive_self_healing(
         r_heal = extract_named(
             _ability(champion_data, "R"), "Minimum Heal", r_rank, champion_stats
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "R"
-        ):
+        for payment in _payments(HealAnchor.CAST, "R", damage_events, cast_timeline):
             _heal_from_damage(
-                healing, event, r_heal, "Chronobreak", link_to_damage=False
+                healing, payment.event, r_heal, "Chronobreak", link_to_damage=False
             )
 
     elif name == "Fiora":
@@ -1705,10 +1853,8 @@ def _legacy_derive_self_healing(
         p_heal = extract_named(
             _ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
         )
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "passive"
-        ):
-            _heal_from_damage(healing, event, p_heal, "Duelist's Dance")
+        for payment in _payments(HealAnchor.DAMAGING_HIT, "passive", damage_events):
+            _heal_from_damage(healing, payment.event, p_heal, "Duelist's Dance")
 
     elif name == "Gangplank":
         # Remove Scurvy: flat rank heal + 90% AP + 13% missing health at
@@ -1845,10 +1991,10 @@ def _legacy_derive_self_healing(
         per_instance_cap = extract_named(
             _ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
         )
-        for event in _attributed_events(
-            damage_events,
-            lambda source, _event: source == "on_hit_ability_passive",
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT, "on_hit_ability_passive", damage_events
         ):
+            event = payment.event
             dealt = float(event.get("damage", 0.0))
             _heal_from_damage(
                 healing,
@@ -1880,17 +2026,15 @@ def _legacy_derive_self_healing(
         ) -> float:
             return flat + max(0.0, maximum_health - current_health) * missing_ratio
 
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": float(payment.event.get("time", 0.0)),
                     "amount": 0.0,
                     "amount_formula": last_rites_heal,
                     "source": "Last Rites",
                     "kind": "champion_ability",
-                    **_trigger_fields(event),
+                    **_trigger_fields(payment.event),
                 }
             )
 
@@ -1979,13 +2123,15 @@ def _legacy_derive_self_healing(
         # champion duel every Q/W/R damage event is ability damage
         # against the champion target (W's storm ticks included); E is
         # a shield and deals no damage.
-        for event in damage_events:
-            if _event_source(event) not in {"Q", "W", "R"}:
-                continue
+        for payment in _payments(
+            HealAnchor.DAMAGING_HIT,
+            lambda source: source in {"Q", "W", "R"},
+            damage_events,
+        ):
             _heal_from_damage(
                 healing,
-                event,
-                0.18 * max(0.0, float(event.get("damage", 0.0))),
+                payment.event,
+                0.18 * max(0.0, float(payment.event.get("damage", 0.0))),
                 "Soul Siphon",
             )
 
@@ -2001,10 +2147,8 @@ def _legacy_derive_self_healing(
         # The 50% cooldown refund is a cooldown-state rider not modeled.
         level = max(1, int(champion_stats.get("level", 18) or 18))
         heal = _leveling_value(_ability(champion_data, "Q"), "Heal", level)
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
-            _heal_from_damage(healing, event, heal, "Noxian Diplomacy")
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
+            _heal_from_damage(healing, payment.event, heal, "Noxian Diplomacy")
 
     elif name == "Nunu & Willump":
         # Consume against a champion heals for the Base Champion Heal
@@ -2027,17 +2171,15 @@ def _legacy_derive_self_healing(
                 return base_amount * 1.5
             return base_amount
 
-        for event in _attributed_events(
-            damage_events, lambda source, _event: source == "Q"
-        ):
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline):
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": float(payment.event.get("time", 0.0)),
                     "amount": 0.0,
                     "amount_formula": consume_heal,
                     "source": "Consume",
                     "kind": "champion_ability",
-                    **_trigger_fields(event),
+                    **_trigger_fields(payment.event),
                 }
             )
     elif name == "Shyvana":
@@ -2074,19 +2216,19 @@ def _legacy_derive_self_healing(
                     + max(0.0, maximum_health - current_health) * missing_pct / 100.0
                 )
 
-            for event in _attributed_events(
-                damage_events, lambda source, _event: source == "W"
+            for payment in _payments(
+                HealAnchor.CAST, "W", damage_events, cast_timeline
             ):
-                if float(event.get("damage", 0.0)) <= 0.0:
+                if float(payment.event.get("damage", 0.0)) <= 0.0:
                     continue
                 healing.append(
                     {
-                        "time": float(event.get("time", 0.0)),
+                        "time": float(payment.event.get("time", 0.0)),
                         "amount": 0.0,
                         "amount_formula": inferno_aegis_heal,
                         "source": "Inferno Aegis",
                         "kind": "champion_ability",
-                        **_trigger_fields(event),
+                        **_trigger_fields(payment.event),
                     }
                 )
 

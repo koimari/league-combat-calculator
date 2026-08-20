@@ -8,7 +8,10 @@ from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 
 WEAPONS = ("calibrum", "severum", "gravitum", "infernum", "crescendum")
-REVIEWED_WEAPONS = ("calibrum", "gravitum", "infernum", "crescendum")
+# The four weapon forms whose Q prices exactly one hit; Severum's Q is
+# Onslaught, six attacks on a cached beat.
+SINGLE_HIT_WEAPONS = ("calibrum", "gravitum", "infernum", "crescendum")
+REVIEWED_WEAPONS = SINGLE_HIT_WEAPONS
 
 
 def _parse(weapon, level=18):
@@ -41,17 +44,16 @@ class TestReviewedCrowdControl:
             "bonus ad) (+ 70% ap) magic damage and rooting them for 1 second" in text
         )
         assert aphelios._Q_CC_BY_WEAPON["gravitum"] == "root"
-        for weapon in REVIEWED_WEAPONS:
+        for weapon in SINGLE_HIT_WEAPONS:
             (part,) = _parse(weapon)["Q"]["parts"]
             assert part.cc_kind == aphelios._Q_CC_BY_WEAPON[weapon]
 
-    def test_onslaughts_cadence_is_cached_but_the_heal_rule_owns_it(self):
-        """Severum's schedule is whole in the cache and stays unauthored.
+    def test_onslaught_spreads_its_attacks_over_the_cached_duration(self):
+        """Six attacks over 1.75 seconds, at the rate that implies.
 
-        Spreading the six attacks over the cached 1.75 seconds splits
-        Severum's self-heal from one payment into one per attack, and the
-        rule pays a full share for attacks that dealt nothing - healing the
-        fight has not earned.  That is a heal change, not a review.
+        The count is what scales with attack speed, not the window, so the
+        beat is ``duration / count`` and every attack lands inside the
+        cached duration.
         """
         text = cc_review.slot_text(cc_review.kit("Aphelios"), "Q")
         assert (
@@ -60,11 +62,41 @@ class TestReviewedCrowdControl:
             "performing up to 6 (+ 2 per 100% bonus attack speed) attacks "
             "over the duration" in text
         )
-        assert "severum" not in aphelios._Q_CC_BY_WEAPON
+        assert aphelios._Q_CC_BY_WEAPON["severum"] == "none"
         (part,) = _parse("severum")["Q"]["parts"]
         assert part.count == 6
-        assert part.hit_interval is None
-        assert part.cc_kind is None
+        assert part.time_offset == 0.0
+        assert part.hit_interval == pytest.approx(aphelios._Q_ONSLAUGHT_SECONDS / 6)
+        assert part.cc_kind == "none"
+        assert (part.count - 1) * part.hit_interval < aphelios._Q_ONSLAUGHT_SECONDS
+
+    def test_severum_pays_one_heal_per_attack_that_dealt_damage(self):
+        """ "Severum's attacks heal Aphelios for ... the post-mitigation
+        damage dealt" — six attacks, six shares, same total as the one
+        payment the unspread row used to make.
+        """
+        payload = calculate_payload(
+            {
+                "champion": "Aphelios",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+                "champion_options": {"aphelios_main_weapon": "severum"},
+            }
+        )
+        onslaught = [
+            event for event in payload["damage_events"] if event.get("source") == "Q"
+        ]
+        assert len(onslaught) == 6
+        heals = [
+            event
+            for event in payload["self_healing_events"]
+            if event["source"] == "Severum"
+        ]
+        by_time = {round(float(event["time"]), 3) for event in heals}
+        assert {round(float(event["time"]), 3) for event in onslaught} <= by_time
+        assert all(event["amount"] > 0.0 for event in heals)
 
     def test_moonlight_vigils_blast_slows_only_under_gravitum(self):
         text = cc_review.slot_text(cc_review.kit("Aphelios"), "R")
@@ -75,9 +107,9 @@ class TestReviewedCrowdControl:
             (part,) = entry["parts"]
             assert part.cc_kind == ("slow" if weapon == "gravitum" else "none")
 
-    def test_every_weapon_but_severum_clears_the_control_armed_scan(self):
+    def test_every_weapon_clears_the_control_armed_scan(self):
         assert cc_review.unreviewed_ability_slots("Aphelios") == []
-        for weapon in REVIEWED_WEAPONS:
+        for weapon in WEAPONS:
             payload = calculate_payload(
                 {
                     "champion": "Aphelios",
@@ -92,7 +124,7 @@ class TestReviewedCrowdControl:
             assert coverage["complete"] is True, weapon
             assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
-    def test_severum_is_the_weapon_that_stays_coarse(self):
+    def test_severum_clears_the_control_armed_scan_too(self):
         payload = calculate_payload(
             {
                 "champion": "Aphelios",
@@ -104,5 +136,5 @@ class TestReviewedCrowdControl:
             }
         )
         coverage = payload["timeline_coverage"]
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

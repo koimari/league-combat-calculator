@@ -263,13 +263,15 @@ class TestVolibear:
         assert len(abilities["W"]["parts"]) == 1
 
     def test_fight_w_prices_the_wounded_bite(self) -> None:
+        """One bite, two parts, both on the cached 0.25s cast time."""
         combat = _fight("Volibear")
         events = _main_events(combat, "W")
-        assert len(events) == 1
+        assert len(events) == 2
         ad = _stats("Volibear")["attack_damage"]
-        assert float(events[0]["raw_damage"]) == pytest.approx(
+        assert sum(float(event["raw_damage"]) for event in events) == pytest.approx(
             (105.0 + 1.1 * ad) * 1.5, abs=0.2
         )
+        assert {round(float(event["time"]), 3) for event in events} == {0.25}
 
     def test_fight_lightning_claws_ride_autos(self) -> None:
         combat = _fight(

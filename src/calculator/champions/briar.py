@@ -38,6 +38,7 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .inputs import target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
@@ -63,13 +64,11 @@ Q_SHRED_DURATION = 5.0
 # to unleash a scream in the target direction, charging for up to 1 second"
 # and "Chilling Scream can be recast within the duration, and does so
 # automatically afterwards" (data/champions.json Briar E).  A full charge
-# is therefore the whole cached second, and the scream lands at its end —
-# a sourced delay this module does NOT author, because the E self-heal rule
-# hangs its four charge ticks off the scream's damage event
-# (healing_legacy.py "Briar": ``event.time + index * 0.25``).  Moving the
-# scream to the end of the charge moves the charge's own healing to AFTER
-# the scream, which is a heal change, not a review.
-E_FULL_CHARGE_SECONDS_UNAUTHORED = 1.0
+# is therefore the whole cached second, and the scream lands at its end.
+# The charge's own healing stays inside the charge: it is declared
+# ``HealAnchor.CAST_SCHEDULE`` and counts its four 0.25-second ticks from
+# the cast, not from the damage the scream eventually deals.
+E_FULL_CHARGE_SECONDS = 1.0
 
 
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
@@ -256,6 +255,20 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
+    # One scream, at the end of the charge this module always prices in
+    # full, and it always knocks back there ("If Chilling Scream was
+    # charged for its full duration, enemies hit are also knocked back 575
+    # units"); the same hit also slows, but the knockback is the
+    # immobilize a control-armed holder reads.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            total,
+            time_offset=E_FULL_CHARGE_SECONDS,
+            cc_kind="knockback",
+        ),
+    )
+    entry["event_order_certified"] = "single_hit"
     entry["applies_dot_stack"] = True
     return entry
 
@@ -382,12 +395,10 @@ SLOTS = {
 # Cached kit review.  Q "stuns them for 0.85 seconds"; W's Snack Attack
 # bite and R's explosion apply nothing to the target they damage (R "fears
 # all non-marked targets", and the marked one is the target it damages).
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.  Its
-# scream lands at the end of the cached charge this module always prices in
-# full, and a full charge always knocks back ("enemies hit are also knocked
-# back 575 units") — but authoring that landing moves the charge's own heal
-# ticks past the scream (see ``E_FULL_CHARGE_SECONDS_UNAUTHORED``).
-# W_frenzy and P emit no ability damage.
+# E's scream now lands at the end of the cached charge and carries its
+# knockback on the part itself (see ``_chilling_scream``), because that
+# kind belongs to the full charge this module prices rather than to the
+# slot.  W_frenzy and P emit no ability damage.
 MODULE_CC = {"Q": "stun", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)

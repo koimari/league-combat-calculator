@@ -59,18 +59,22 @@ _Q_CC_BY_WEAPON = {
     "gravitum": "root",
     "infernum": "none",
     "crescendum": "none",
+    "severum": "none",
 }
 
 # Onslaught's whole schedule is in one cached sentence: "Aphelios enters an
 # onslaught for 1.75 seconds ... automatically performing up to 6 (+ 2 per
-# 100% bonus attack speed) attacks over the duration".  It is deliberately
-# NOT authored: spreading the attacks over that duration splits Severum's
-# self-heal from one payment into one per attack, and the rule pays a full
-# share for attacks that dealt nothing (healing_legacy pays off the row, not
-# off each event's own damage), so the fight gains healing it never earned.
-# That is a defect in the heal rule, not a reason to ship a heal change, so
-# Severum's Q stays the one weapon form this review leaves unreviewed.
-_Q_ONSLAUGHT_SECONDS_UNAUTHORED = 1.75
+# 100% bonus attack speed) attacks over the duration".  The count is what
+# scales, not the window, so the attacks come at a fixed rate of
+# ``count / 1.75`` per second — the first as he enters the onslaught, the
+# rest on that beat, all of them inside the cached duration.
+#
+# Severum's self-heal follows those attacks rather than the row, because
+# it says so: "Severum's attacks heal Aphelios for ... of the post-
+# mitigation damage dealt" is a share of each attack, and the rule is
+# declared ``HealAnchor.DAMAGING_HIT``, so six attacks pay six shares of
+# what they each dealt and an attack that dealt nothing pays nothing.
+_Q_ONSLAUGHT_SECONDS = 1.75
 
 # R's blast controls only under Gravitum, which "Increases the initial slow
 # to 99%"; every other weapon's follow-up is a mark, a heal, bonus damage
@@ -175,7 +179,16 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
         per_hit * count,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", amount=per_hit, count=count),)
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            amount=per_hit,
+            count=count,
+            time_offset=0.0,
+            hit_interval=_Q_ONSLAUGHT_SECONDS / count,
+            cc_kind=_Q_CC_BY_WEAPON["severum"],
+        ),
+    )
     entry["detail"] = f"Onslaught: {count} weapon attacks at {ratio:.1%} AD each"
     # Wiki: every Onslaught attack applies on-hit effects at 25% effectiveness.
     entry["applies_item_on_hits"] = {

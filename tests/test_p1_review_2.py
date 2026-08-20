@@ -174,13 +174,17 @@ class TestAphelios:
             if h.get("attacker") == "main" and h.get("source") == "Severum"
         ]
         assert heals
-        # The heal is all excess (applied_amount 0) and the walk converts
-        # it into the timed shield instead of wasting it (overheal 0), so
-        # the shield receipt equals the heal amount.
-        assert float(heals[0]["applied_amount"]) == 0.0
-        assert float(heals[0]["overheal"]) == 0.0
+        # Every heal is all excess (applied_amount 0) and the walk converts
+        # each into the timed shield instead of wasting it (overheal 0), so
+        # the shield receipt equals what the heals were worth.  Onslaught's
+        # six attacks are six of those heals, one per attack.
+        assert all(float(heal["applied_amount"]) == 0.0 for heal in heals)
+        assert all(float(heal["overheal"]) == 0.0 for heal in heals)
+        # The response rounds each heal to one decimal, so the tolerance
+        # grows with the number of rows summed.
         assert float(main["survival"]["support_shield_received"]) == pytest.approx(
-            float(heals[0]["amount"]), abs=0.15
+            sum(float(heal["amount"]) for heal in heals),
+            abs=0.15 + 0.05 * len(heals),
         )
         # The cap: 160 (level 18 flat) + 6% maximum health.
         cap = 160.0 + 0.06 * float(main["survival"]["max_health"])

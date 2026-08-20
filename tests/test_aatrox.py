@@ -260,8 +260,8 @@ class TestReviewedCrowdControl:
 
     Q knocks up only in the Sweetspot - this module's own option - and the
     cache spaces its three casts by a second; W slows on the chain hit and
-    pulls on the tether hit 1.5 cached seconds later.  Both are refused
-    downstream, not by the source: see the module comment above
+    pulls on the tether hit 1.5 cached seconds later.  Both are refused by
+    a committed receipt, not by the source: see the module comment above
     ``parse_abilities``.
     """
 
@@ -280,9 +280,19 @@ class TestReviewedCrowdControl:
         assert "pulled to the center of the area" in text
 
     def test_the_darkin_blade_states_its_own_cadence(self):
-        """The spacing is cached; what refuses it is downstream."""
+        """The spacing is cached; what refuses it now is a pinned receipt.
+
+        ``roster_composition.resource_restores`` used to reject the whole
+        incoming packet for any event past the fight duration — Aatrox's
+        last Q in an eight-second roster fight lands its third strike at
+        8.85s — and that check now drops the late event instead
+        (tests/test_roster_composition.py).  What still holds the cadence
+        back is evidence, not the engine: the corpus pins one Umbral Dash
+        payment off a single Q event.
+        """
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
         assert "with a 1-second static cooldown between casts" in text
+        assert aatrox._Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED == 1.0
 
     def test_infernal_chains_states_when_its_second_hit_lands(self):
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")

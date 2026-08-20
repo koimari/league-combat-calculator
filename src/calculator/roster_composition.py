@@ -276,9 +276,24 @@ def resource_restores(
             not math.isfinite(event_time)
             or not math.isfinite(raw_damage)
             or event_time < 0.0
-            or event_time > duration + 1e-9
         ):
+            # A number the packet cannot state is a packet this ledger
+            # cannot read, so it refuses rather than guess.  A time before
+            # the fight begins is the same kind of unreadable.
             return (), False
+        if event_time > duration + 1e-9:
+            # A hit past the end of the window is not unreadable, only
+            # late, and the survival walk already knows what to do with it:
+            # every action past ``duration`` is skipped ``outside_window``
+            # (survival/transitions.py), damage included.  Its restore is
+            # therefore mana for damage the fight never takes — dropped
+            # here rather than clamped forward, which would hand the actor
+            # a resource at a moment it never held one and could admit a
+            # cast the fight never paid for.  Refusing the whole packet for
+            # it would cap every authored ``time_offset`` at the fight
+            # length: Aatrox's third Q strike lands at 8.85s in an
+            # eight-second roster fight, and the cadence is sourced.
+            continue
         if raw_damage <= 0.0:
             continue
         amount = raw_damage * ratio
