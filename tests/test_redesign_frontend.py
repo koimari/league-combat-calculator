@@ -282,35 +282,29 @@ def test_item_prices_come_from_the_catalogue_not_a_formula(source: str):
         assert banned not in source
 
 
-def test_zeroed_coverage_metadata_never_blanks_the_snapshot_stats(source: str):
-    """/api/items reports 0 for every stat in this cache generation; merging
-    it verbatim blanked every item's stat line and price in the UI."""
-    assert "SNAPSHOT_NUMERIC_FIELDS" in source
-    body = function_body(source, "function preferReportedNumbers(")
-    assert "Number(metadata[field]) ? metadata[field] : snapshotItem[field]" in body
-    for field in ("price", "ap", "ad", "hp", "armor", "mr", "haste", "lethality"):
-        assert f'"{field}"' in source.split("SNAPSHOT_NUMERIC_FIELDS")[1][:600], field
+def test_served_item_numbers_win_over_the_snapshot(source: str):
+    """mergeItemCoverage spreads the served entry over the snapshot entry
+    verbatim: a served 0 is a real 0, and no snapshot-preference helper may
+    let static/data.json outrank /api/items or /api/boots."""
+    assert "SNAPSHOT_NUMERIC_FIELDS" not in source
+    assert "preferReportedNumbers" not in source
+    body = function_body(source, "function mergeItemCoverage(")
+    assert "...item,\n      ...metadata," in body
 
 
-def test_item_stat_lines_actually_resolve_from_the_served_catalogues():
-    """The merge fix is only real if the two served sources still disagree the
-    way it assumes: the snapshot carries stats, /api/items reports zeroes."""
+def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
+    """The stat line the UI shows is the served entry, so /api/items must
+    carry real numbers (an older cache generation sent zeroes for all)."""
     client = app_module.app.test_client()
     served = {entry["name"]: entry for entry in client.get("/api/items").get_json()}
-    snapshot = {
-        entry["name"]: entry
-        for entry in __import__("json").loads(
-            (ROOT / "static" / "data.json").read_text(encoding="utf-8")
-        )["items"]
-    }
-    shared = set(served) & set(snapshot)
-    assert shared
     with_stats = [
         name
-        for name in shared
-        if any(snapshot[name].get(field) for field in ("ap", "ad", "hp", "armor", "mr"))
+        for name, entry in served.items()
+        if any(entry[field] for field in ("ap", "ad", "hp", "armor", "mr"))
     ]
-    assert with_stats, "the patch snapshot must carry the stat block the UI shows"
+    assert len(with_stats) > len(served) // 2, "served catalogue must carry stats"
+    deathcap = served["Rabadon's Deathcap"]
+    assert deathcap["ap"] > 0 and deathcap["price"] > 0
 
 
 # ---------------------------------------------------------------------------
