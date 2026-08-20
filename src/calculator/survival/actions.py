@@ -15,6 +15,7 @@ composition and the score compiler build the same keys.
 
 from __future__ import annotations
 
+import math
 from enum import Enum
 from collections.abc import Mapping
 from typing import Any, NamedTuple
@@ -529,6 +530,12 @@ def survival_action_from_event(
     attacker_index = index_of.get(str(attacker_id), -1) if attacker_id else -1
     event_id = get("_event_id")
     time_value = float(get("time", 0.0))
+    if not math.isfinite(time_value):
+        raise ValueError(
+            f"survival_action_from_event: event time must be finite, got "
+            f"{time_value!r} (event_id={event_id!r}); a non-finite "
+            f"timestamp cannot establish a stable total order"
+        )
     trigger_id = get("_trigger_event_id")
     batch_id = get("_deferred_batch_id")
     defy_id = get("_defy_trigger_id")

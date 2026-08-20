@@ -932,21 +932,35 @@ def derive_item_support_effects(
                 packets.append(_denial(event, "missing_target_identity"))
                 continue
 
-            # The base shield remains sourced.  The actor model has no typed
-            # holder-centered position or distance snapshot, so the 1.8
-            # branch stays withheld.  Whole-roster size is not range proof.
-            multiplier = 1.0
-            packets.append(
-                _denial(
-                    event,
-                    "nearby_enemy_spatial_input_unavailable",
-                    denied_component="multi_target_multiplier",
-                    base_shield_applied=True,
-                    nearby_enemy_count=None,
-                    requested_multi_target_multiplier=range_authority["multiplier"],
-                    applied_multi_target_multiplier=multiplier,
-                )
+            # Evaluate holder-centered range: count enemies whose
+            # position is within the sourced 1200 units.  Spatial input
+            # flows from the actor stats (stats.position tuple).
+            from .spatial import enemies_within_range, SPATIAL_UNAVAILABLE
+
+            nearby_count: int
+            nearby_count, spatial_reason = enemies_within_range(
+                attacker, all_actors, range_authority["range_units"]
             )
+            if spatial_reason is not None:
+                nearby_count = 0
+                multiplier = 1.0
+                packets.append(
+                    _denial(
+                        event,
+                        SPATIAL_UNAVAILABLE,
+                        denied_component="multi_target_multiplier",
+                        base_shield_applied=True,
+                        nearby_enemy_count=None,
+                        requested_multi_target_multiplier=range_authority["multiplier"],
+                        applied_multi_target_multiplier=multiplier,
+                    )
+                )
+            else:
+                multiplier = (
+                    range_authority["multiplier"]
+                    if nearby_count >= range_authority["minimum_enemy_count"]
+                    else 1.0
+                )
             amount = (
                 required_effect_value("Fimbulwinter", "everlasting_base_shield")
                 + current_mana
@@ -975,10 +989,14 @@ def derive_item_support_effects(
                     trigger_kind=trigger_kind,
                     current_mana=current_mana,
                     mana_threshold=maximum_mana * threshold_ratio,
-                    nearby_enemy_count=None,
+                    nearby_enemy_count=nearby_count if spatial_reason is None else None,
                     nearby_enemy_range_units=range_authority["range_units"],
                     range_center=holder_identity,
-                    range_input_status=range_authority["spatial_input_status"],
+                    range_input_status=(
+                        "spatially_certified"
+                        if spatial_reason is None
+                        else range_authority["spatial_input_status"]
+                    ),
                     range_boundary_status=range_authority["boundary_status"],
                     requested_multi_target_multiplier=range_authority["multiplier"],
                     multi_target_multiplier=multiplier,

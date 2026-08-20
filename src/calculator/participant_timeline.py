@@ -1354,20 +1354,27 @@ def _support_effect_templates(
             resolved_effect = dict(effect)
             if resolved_effect.get("shield_gate_target") == "attacker":
                 resolved_effect["shield_gate_target"] = attacker.participant_id
-            templates.append(
-                {
-                    **resolved_effect,
-                    "attacker": attacker.participant_id,
-                    "target": ally_target_id,
-                    "target_policy": target_policy,
-                    "_event_id": str(
-                        effect.get(
-                            "_event_id",
-                            f"{attacker.participant_id}:support:{effect_index}:{target_index}",
-                        )
-                    ),
-                }
-            )
+            resolved_template = {
+                **resolved_effect,
+                "attacker": attacker.participant_id,
+                "target": ally_target_id,
+                "target_policy": target_policy,
+                "_event_id": str(
+                    effect.get(
+                        "_event_id",
+                        f"{attacker.participant_id}:support:{effect_index}:{target_index}",
+                    )
+                ),
+            }
+            # P1-Renata-W: a champion-authored fail-closed denial (Bailout's
+            # withheld lethal-damage half) is a RECEIPT, not an applied
+            # packet — it rides the same split the item scan already uses so
+            # the survival walk can never misread it as a shield or heal.
+            if resolved_template.get("kind") == "item_denial":
+                if denial_receipts is not None:
+                    denial_receipts.append(resolved_template)
+                continue
+            templates.append(resolved_template)
     # Issue #143: fan out champion-owned heal events (authored by the E1
     # self-heal rule for slots in ``_MODULE_AUTHORED_HEAL_SLOTS`` — Taric Q
     # today) to the attacker's selected teammates.  The self copy stays in
