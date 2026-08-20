@@ -27,9 +27,17 @@ class TestReviewedCrowdControl:
         ``r_clone_attacks`` set the entry carries a second, separately timed
         part, so the explosion is not a hit the ledger can time in every
         configuration."""
-        data = cc_review.kit("Shaco")
-        assert "deploy three mini-boxes that activate instantly" in (
-            cc_review.slot_text(data, "R")
+        r_text = cc_review.slot_text(cc_review.kit("Shaco"), "R")
+        assert "deploy three mini-boxes that activate instantly" in r_text
+        # The explosion has no instant either: the cache times it to the
+        # clone's death, and gives only the 18-second cap on its life.
+        assert (
+            "remaining within control range of him as a controllable clone "
+            "for up to 18 seconds" in r_text
+        )
+        assert (
+            "the clone will explode upon dying or expiring to deal magic "
+            "damage to nearby enemies" in r_text
         )
         assert "R" not in shaco.MODULE_CC
 

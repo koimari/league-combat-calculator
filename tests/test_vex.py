@@ -28,6 +28,23 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Vex")
         assert "slowing them for 2 seconds" in cc_review.slot_text(data, "E")
 
+    def test_shadow_surge_withholds_on_its_two_hit_total_row(self):
+        """R is outside Doom's reach and controls nothing, but its packet
+        prices the cached Total Magic Damage — the Shadow's hit plus the
+        recast dash's arrival — and the cache gives the recast no instant,
+        only the window it stays available in."""
+        r_text = cc_review.slot_text(cc_review.kit("Vex"), "R")
+        assert (
+            "shadow stops upon hitting an enemy champion to mark them for "
+            "4 seconds, during which they are revealed. shadow surge can "
+            "be recast while the target is marked" in r_text
+        )
+        assert (
+            "recast: vex dashes towards the marked target with "
+            "displacement immunity. upon arrival, she consumes their mark "
+            "and deals magic damage" in r_text
+        )
+
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Vex") == ["E", "Q", "R", "W"]
         coverage = cc_review.fimbulwinter_coverage("Vex")

@@ -27,8 +27,14 @@ class TestReviewedCrowdControl:
         """Knuckle Down "empowers his next two basic attacks", and the module
         prices both from one cached total, so no part of it is a hit the
         ledger can time — a declaration there would review nothing."""
-        data = cc_review.kit("Sett")
-        assert "empowers his next two basic attacks" in cc_review.slot_text(data, "Q")
+        q_text = cc_review.slot_text(cc_review.kit("Sett"), "Q")
+        assert (
+            "sett empowers his next two basic attacks within 5 seconds to "
+            "gain 50 bonus range and deal bonus physical damage" in q_text
+        )
+        # A 5-second window and an attack-timer reset are the only timing
+        # the entry gives: neither attack has a stated instant.
+        assert "knuckle down resets sett's basic attack timer" in q_text
         assert "Q" not in sett.MODULE_CC
 
     def test_the_unreviewable_slot_keeps_the_fight_coarse(self):

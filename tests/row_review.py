@@ -46,8 +46,7 @@ TARGET = {
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 
-def priced(champion, slot, **options):
-    """The raw total the champion's module prices for one slot."""
+def _slot_entry(champion, slot, options):
     parsed = parse_champion_abilities(
         load_public_champion(champion),
         18,
@@ -57,7 +56,22 @@ def priced(champion, slot, **options):
         target_stats=dict(TARGET),
         champion_options=options or None,
     )
-    return parsed[slot]["total_raw"]
+    return parsed[slot]
+
+
+def priced(champion, slot, **options):
+    """The raw total the champion's module prices for one slot."""
+    return _slot_entry(champion, slot, options)["total_raw"]
+
+
+def parts(champion, slot, **options):
+    """The damage parts the champion's module authors for one slot.
+
+    A part's ``time_offset`` / ``hit_interval`` is the module's authored
+    hit schedule, which is what puts the row in the fight's event ledger
+    and lets a reviewed ``cc_kind`` reach a control-armed item.
+    """
+    return _slot_entry(champion, slot, options)["parts"]
 
 
 def cached_row(champion, slot, attribute, entry=0):

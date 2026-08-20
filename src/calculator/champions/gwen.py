@@ -47,6 +47,37 @@ def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
 _thousand_cuts.phase = ONHIT
 
 
+# Snip Snip!'s snips are individually timed in the cached entry's notes:
+# "The first snip happens at 0.13 seconds, the last one at the end of the
+# cast time.  Bonus snips from Snippy stacks each happen at 0.45, 0.4,
+# 0.35 and 0.23 seconds into the cast time."  The last snip's instant is
+# the cached ``castTime``, read below rather than copied here.
+_Q_FIRST_SNIP_SECONDS = 0.13
+_Q_BONUS_SNIP_SECONDS = (0.23, 0.35, 0.4, 0.45)
+
+
+def _snip_times(ability: dict[str, Any], bonus: int) -> tuple[float, ...]:
+    """Every snip instant of one cast, first to last (the final snip last).
+
+    ``bonus`` is how many Snippy snips the cast consumes, and each takes
+    the next of the cached bonus instants; the final snip is the cast
+    time itself, which is where the entry puts it.
+    """
+    try:
+        final = float(str(ability.get("castTime", "")).strip())
+    except ValueError as exc:
+        raise ValueError(
+            "Gwen Q: the cached castTime is no longer a plain number, so "
+            "the final snip's sourced instant ('the last one at the end "
+            "of the cast time') cannot be read"
+        ) from exc
+    return (
+        (_Q_FIRST_SNIP_SECONDS,)
+        + tuple(sorted(_Q_BONUS_SNIP_SECONDS[:bonus]))
+        + (final,)
+    )
+
+
 def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -56,11 +87,19 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     stacks = min(max(int(ctx.option("q_snippy_stacks")), 0), 4)
     center = bool(ctx.options.get("q_center", True))
-    if center:
-        attr = "Maximum Center Damage" if stacks >= 4 else "Minimum Center Damage"
-    else:
-        attr = "Maximum Damage" if stacks >= 4 else "Minimum Damage"
-    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+    # Gwen "snips at least twice", and "if Gwen has any Snippy stacks, she
+    # consumes them to snip an additional time for each" — so the cached
+    # Minimum rows are one plain snip plus the final one, and the Maximum
+    # rows are five plus the final.  The reviewed reading prices a full
+    # four-stack cast or none, so the bonus count is 4 or 0.
+    bonus = 4 if stacks >= 4 else 0
+    plain_attr = "Center Damage per Snip" if center else "Damage per Snip"
+    final_attr = "Final Snip Center Damage" if center else "Final Snip Damage"
+    plain = extract_named(ability, plain_attr, rank, ctx.stats, ctx.target)
+    final = extract_named(ability, final_attr, rank, ctx.stats, ctx.target)
+    times = _snip_times(ability, bonus)
+    per_snip = tuple([plain] * (len(times) - 1) + [final])
+    value = sum(per_snip)
     entry = damage_entry(
         ability.get("name", "Snip Snip!"),
         rank,
@@ -68,16 +107,32 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "mixed" if center else "magic",
     )
-    if center:
-        entry["parts"] = (
-            DamagePart("magic", value * 0.5),
-            DamagePart("true", value * 0.5),
-        )
-    else:
-        entry["parts"] = (DamagePart("magic", value),)
+    parts: list[DamagePart] = []
+    for time_offset, amount in zip(times, per_snip):
+        if center:
+            # "The center of each snip converts 50% of the damage to true
+            # damage" — the magic half leads, as a mixed entry requires.
+            parts.append(
+                DamagePart(
+                    "magic", amount * 0.5, time_offset=time_offset, cc_kind="none"
+                )
+            )
+            parts.append(
+                DamagePart(
+                    "true", amount * 0.5, time_offset=time_offset, cc_kind="none"
+                )
+            )
+        else:
+            parts.append(
+                DamagePart("magic", amount, time_offset=time_offset, cc_kind="none")
+            )
+    entry["parts"] = tuple(parts)
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
-        f"{stacks} Snippy stack(s), {'center' if center else 'outer'} hit; center converts 50% to true damage."
+        f"{stacks} Snippy stack(s), {'center' if center else 'outer'} hit; "
+        f"{len(times)} snips at "
+        f"{', '.join(f'{time:g}s' for time in times)}; "
+        "center converts 50% to true damage."
     )
     return entry
 
@@ -159,13 +214,10 @@ SLOTS = {
 }
 # E only empowers attacks.  R (Needlework) "deals magic damage to enemies
 # hit and slows them for 1.5 seconds".  P and W author no damage part.
-#
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Snip Snip! is an aggregate of "at least twice" snips over the cast time
-# with no sourced per-snip cadence, so its row cannot carry a marker the
-# event ledger would see, and a declaration the ledger never reads reviews
-# nothing.
-MODULE_CC = {"E": "none", "R": "slow"}
+# Q (Snip Snip!) only cuts — its damage clauses carry no control word —
+# and the cached entry times every snip of the cast, so the row now says
+# so on hits the event ledger can see.
+MODULE_CC = {"E": "none", "Q": "none", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Gwen", cc_kinds=MODULE_CC)
 

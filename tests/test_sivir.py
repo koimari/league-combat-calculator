@@ -28,9 +28,18 @@ class TestReviewedCrowdControl:
         packet is one stand-in bounce for a four-second empowered attack
         stream — so neither is one authored hit."""
         data = cc_review.kit("Sivir")
-        assert "the crossblade returns to her" in cc_review.slot_text(data, "Q")
-        assert "bounce to additional surrounding enemies" in (
-            cc_review.slot_text(data, "W")
+        # The return is timed to an event, not to an instant: the cache
+        # says when the blade turns around, never when either pass lands.
+        assert (
+            "upon reaching maximum range, the crossblade returns to her, "
+            "resetting the damage modifier and dealing the same damage to "
+            "enemies on its way back" in cc_review.slot_text(data, "Q")
+        )
+        # Ricochet's bounces ride basic attacks over a 4-second buff.
+        assert (
+            "sivir empowers her crossblade for the next 4 seconds, gaining "
+            "bonus attack speed and causing her basic attacks to bounce to "
+            "additional surrounding enemies" in cc_review.slot_text(data, "W")
         )
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):

@@ -12,35 +12,42 @@ class TestReviewedCrowdControl:
     A control-armed holder shield (Fimbulwinter's Everlasting) has to know
     whether an ability event was a control event; an ability packet that
     never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text —
-    and Rumble is the batch's one kit that still cannot answer everywhere.
+    ``MODULE_CC`` is where this kit answers, read from the cached text.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rumble")
-        assert rumble.MODULE_CC == {"E": "slow", "R": "slow"}
+        assert rumble.MODULE_CC == {"E": "slow", "Q": "none", "R": "slow"}
+        assert rumble.parse_abilities.cc_kinds == rumble.MODULE_CC
         assert "slowing them for 2 seconds" in cc_review.slot_text(data, "E")
         assert "being slowed by 35%" in cc_review.slot_text(data, "R")
+        # Flamespitter only scorches: no control word in the whole entry.
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # W (a shield) and P (the heat system) carry no damage row.
         assert "W" not in rumble.MODULE_CC
         assert "P" not in rumble.MODULE_CC
 
-    def test_q_is_unreviewed_because_its_row_reaches_no_event(self):
-        # Flamespitter applies no control — but the module prices a
-        # 3-second flamethrower that ticks "every 0.25 seconds" as one
-        # aggregate row, so no event of its own could carry the answer.
-        # Declaring it would claim a review the ledger cannot show.
+    def test_flamespitter_ticks_on_the_cadence_the_cache_states(self):
+        """Fifteen ticks on a 0.25-second beat, both halves sourced."""
         data = cc_review.kit("Rumble")
         q_text = cc_review.slot_text(data, "Q")
-        assert "every 0.25 seconds" in q_text
-        assert cc_review.control_words(q_text) == []
-        assert "Q" not in rumble.MODULE_CC
-        assert cc_review.unreviewed_ability_slots("Rumble") == ["Q"]
+        assert (
+            "activate his flamethrower for 3 seconds, spewing forth flames "
+            "in a frontal cone every 0.25 seconds" in q_text
+        )
+        assert (
+            "scorched for 0.6 seconds, taking magic damage every 0.25 "
+            "seconds" in q_text
+        )
+        (part,) = row_review.parts("Rumble", "Q")
+        assert (part.time_offset, part.hit_interval, part.count) == (0.0, 0.25, 15)
+        assert part.cc_kind == "none"
 
-    def test_the_timed_fimbulwinter_fight_stays_coarse_on_that_slot(self):
+    def test_the_timed_fimbulwinter_fight_is_now_exact(self):
+        assert cc_review.unreviewed_ability_slots("Rumble") == []
         coverage = cc_review.fimbulwinter_coverage("Rumble")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestPricedRows:

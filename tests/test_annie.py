@@ -282,8 +282,23 @@ class TestReviewedCrowdControl:
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
-        data = cc_review.kit("Annie")
+        passive = cc_review.slot_text(cc_review.kit("Annie"), "P")
         assert not hasattr(annie, "MODULE_CC")
+        assert (
+            "annie generates a stack of pyromania whenever she hits an "
+            "enemy with disintegrate or casts her other abilities, "
+            "stacking up to 4 times" in passive
+        )
+        assert (
+            "annie empowers her next cast of disintegrate, incinerate, or "
+            "summon: tibbers to consume all pyromania stacks to stun "
+            "enemies hit" in passive
+        )
+
+    def test_no_damaging_slot_states_a_control_of_its_own(self):
+        data = cc_review.kit("Annie")
+        for slot in ("Q", "W", "R"):
+            assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Annie") == ["Q", "R", "W"]
