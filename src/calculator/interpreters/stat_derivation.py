@@ -1,11 +1,7 @@
-"""Stat derivation: nine shapes the build's stat block is assembled from.
+"""Stat derivation: the shapes the build's stat block is assembled from.
 
-A stat converted from another stat by a sourced ratio, a percentage
-multiplier on a total, the mana a charge ledger accrues, a stat that grows
-per stack, a flat grant, an aura that reduces a stat on the enemy, a
-regeneration a bonus-health threshold unlocks, an ultimate cooldown refund
-bought with lethality, and the casting trade an item active makes while its
-own window is open.
+``item_behavior.STAT_DERIVATION_REQUIRED_REFERENCES`` is the family's roster;
+this module interprets every member of it and nothing else.
 
 They are one family because of *when* they are answered, not what they say:
 every one of them is resolved before any damage exists, folded into the

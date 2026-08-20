@@ -1,4 +1,4 @@
-"""The stat-derivation family's front door: nine ways a stat block is built.
+"""The stat-derivation family's front door: how a stat block is built.
 
 Every case pins a declaration's number against the same registry key the
 engine's own accessor in ``item_effects`` reads, because this migration's
@@ -34,6 +34,11 @@ from src.calculator.stats import get_item_stats
 from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
     ActiveWindowCastEconomyRule,
+    STAT_DERIVATION_OPTIONAL_REFERENCES,
+    STAT_DERIVATION_PAYLOADS,
+    STAT_DERIVATION_REQUIRED_REFERENCES,
+    STAT_DERIVATION_TARGET_PAYLOADS,
+    STAT_DERIVATION_UNGRANTED_PAYLOADS,
     DURABILITY_STATS,
     DerivedStat,
     EngineLane,
@@ -248,7 +253,7 @@ def test_the_refund_shape_grants_no_stat_and_says_so() -> None:
 
 
 def test_the_cast_economy_shape_grants_no_stat_and_carries_its_window() -> None:
-    """The ninth shape: what an open active window costs the holder's casts.
+    """What an open active window costs the holder's casts.
 
     Like the refund it grants nothing — it moves a cost and a cooldown
     progression — and the window is carried on the rule rather than looked up,
@@ -391,6 +396,22 @@ def test_the_interpreter_refuses_a_payload_of_another_family() -> None:
         )
 
 
+def test_the_family_roster_is_the_reference_tables_and_nothing_else() -> None:
+    """One home for which shapes belong here — and therefore for how many.
+
+    The isinstance tuple the validator and the interpreter branch on, and
+    the two subsets that name the exceptions, are all derived from the
+    required-reference table.  A new shape joins the family in one edit or
+    fails here.
+    """
+    assert set(STAT_DERIVATION_REQUIRED_REFERENCES) == set(
+        STAT_DERIVATION_OPTIONAL_REFERENCES
+    )
+    assert set(STAT_DERIVATION_PAYLOADS) == set(STAT_DERIVATION_REQUIRED_REFERENCES)
+    assert set(STAT_DERIVATION_TARGET_PAYLOADS) <= set(STAT_DERIVATION_PAYLOADS)
+    assert set(STAT_DERIVATION_UNGRANTED_PAYLOADS) <= set(STAT_DERIVATION_PAYLOADS)
+
+
 # ── the fight-free accessor (3.9) ─────────────────────────────────────────
 
 
@@ -454,7 +475,7 @@ def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
         declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)
 
 
-# ── the tenth shape: where a cached percentage lands ──────────────────────
+# ── the penetration channel: where a cached percentage lands ────────────
 
 BONUS_CHANNEL_HOLDERS = ("Last Whisper", "Mortal Reminder", "Lord Dominik's Regards")
 TOTAL_CHANNEL_HOLDER = "Serylda's Grudge"

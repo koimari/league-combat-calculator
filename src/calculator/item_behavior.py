@@ -1682,14 +1682,10 @@ class ReceivedHealingRule:
 
 # ── stat derivation ───────────────────────────────────────────────────────
 #
-# Eight shapes that all answer one question — what does this item put in the
+# The shapes that all answer one question — what does this item put in the
 # build's stat block, and where does the number come from — and share no
-# arithmetic.  A stat derived from another stat by a sourced ratio, a
-# percentage multiplier on a total, the mana a charge ledger accrues, a stat
-# that grows per stack, a flat grant that is conditional on something the
-# resolver cannot see, an aura that reduces a stat on the enemy, a
-# regeneration a bonus-health threshold unlocks, and an ultimate cooldown
-# refund bought with lethality.
+# arithmetic.  ``STAT_DERIVATION_REQUIRED_REFERENCES`` is the roster and the
+# only count of it; each payload class below says what its own shape answers.
 #
 # They are one family because they are all resolved *before any damage
 # exists*: the stat resolver folds them into the block every engine then
