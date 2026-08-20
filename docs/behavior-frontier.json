@@ -531,7 +531,7 @@
       "illaoi.py": 1,
       "jayce.py": 1,
       "jhin.py": 1,
-      "kaisa.py": 1,
+      "kaisa.py": 2,
       "karthus.py": 1,
       "katarina.py": 1,
       "kayn.py": 1,
@@ -565,7 +565,7 @@
       "varus.py": 2,
       "veigar.py": 1,
       "velkoz.py": 1,
-      "vi.py": 1,
+      "vi.py": 2,
       "volibear.py": 1,
       "xayah.py": 1,
       "yorick.py": 1,
@@ -581,13 +581,13 @@
       "event": 4,
       "fix": 2,
       "part_timing": 1,
-      "spec": 5
+      "spec": 4
     },
     "rule": "a .get(key, <literal>) on a champion input block (stats, target, options) is forbidden outright \u2014 D-24's source assertion, and the guard the declared zero_policy default only holds with; the same shape on a block the tree produced is pinned non-growing per receiver, and hand-built ability entries per module, so neither can widen without a decision",
     "totals": {
       "forbidden_input_fallbacks": 0,
-      "hand_built_entries": 91,
-      "produced_fallbacks": 34
+      "hand_built_entries": 93,
+      "produced_fallbacks": 33
     }
   }
 }

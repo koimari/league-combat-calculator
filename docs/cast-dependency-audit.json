@@ -17,7 +17,7 @@
       "sample_author": "Briar"
     },
     "cc_kind": {
-      "authors": 3,
+      "authors": 142,
       "negative_test": "test_withholding_cc_kind_drops_the_cc_setup_fan_out",
       "sample_author": "Ahri"
     },

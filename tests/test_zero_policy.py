@@ -5,7 +5,7 @@ defaulted disposition is the indistinguishable zero this campaign exists to
 remove.  The champion tree is the one place that rule is discharged by a
 *declared default* instead: ``damage_entry`` and ``simple_damage`` are the
 single construction layer for every numeric leaf a champion module authors,
-so the policy is stated once there and the 375 call sites across 141
+so the policy is stated once there and the 385 call sites across 147
 champion modules are deliberately not edited — a required-no-default field
 there would be a campaign-wide champion sweep smuggled in by an idiom.  That
 blast radius is measured here rather than recalled, because a decision
@@ -117,7 +117,7 @@ def test_the_blast_radius_the_exception_avoids_is_measured_not_recalled() -> Non
     without this going red.
     """
     counts = _builder_call_sites()
-    assert (sum(counts.values()), len(counts)) == (375, 141)
+    assert (sum(counts.values()), len(counts)) == (385, 147)
 
 
 def test_the_declared_default_is_keyword_only_at_both_builders() -> None:
