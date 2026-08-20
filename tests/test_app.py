@@ -2314,7 +2314,6 @@ class TestUpdateDataDevGate:
 
 @pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5])
 def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     monkeypatch.setattr(
         app_module,
         "optimize_build",
@@ -2328,7 +2327,6 @@ def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
 
 
 def test_optimize_accepts_six_items_only_after_bottom_quest(monkeypatch):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     captured = {}
 
     def fake_optimize(**kwargs):
@@ -2359,7 +2357,6 @@ def test_optimize_accepts_six_items_only_after_bottom_quest(monkeypatch):
 
 
 def test_optimize_uses_tier_three_boots_only_for_completed_mid_quest(monkeypatch):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     tiers = []
 
     def fake_optimize(**kwargs):
@@ -2389,9 +2386,7 @@ def test_optimize_uses_tier_three_boots_only_for_completed_mid_quest(monkeypatch
 
 
 @pytest.mark.parametrize("slot_count", [0, 7, -1])
-def test_optimize_rejects_slot_counts_outside_one_through_six(monkeypatch, slot_count):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
-
+def test_optimize_rejects_slot_counts_outside_one_through_six(slot_count):
     payload = {"champion": "Ahri", "level": 18, "max_legendary_slots": slot_count}
     response = app_module.app.test_client().post("/api/optimize", json=payload)
 
@@ -2399,9 +2394,7 @@ def test_optimize_rejects_slot_counts_outside_one_through_six(monkeypatch, slot_
     assert "max_legendary_slots" in response.get_json()["error"]
 
 
-def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
-
+def test_optimize_rejects_more_locked_items_than_slots():
     payload = {
         "champion": "Ahri",
         "level": 18,
