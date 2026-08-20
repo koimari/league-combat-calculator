@@ -28,8 +28,8 @@ They exist so nothing about an item is decided by a hand-maintained list.
 | `sourceWarnings` | ingestion | Anything the merge could not match, named rather than dropped |
 
 A rune-ingestion fix reaches this cache without a whole patch pull through
-`data_updater.reparse_cached_rune_effects()`; item-ingestion fixes go through a
-full `data_updater` pull.
+`python scripts/reparse_runes.py` (`--check` reports drift without writing);
+item-ingestion fixes go through a full `data_updater` pull.
 
 (Not to be confused with `vendor/lolstaticdata/`'s scratch output of the same
 names — that's the scraper's raw intermediate, not read at runtime.)
