@@ -24,7 +24,7 @@
     },
     {
      "file": "src/calculator/damage.py",
-     "fragment": "row[\"cc_kind\"] = str(event[\"cc_kind\"])"
+     "fragment": "row[\"cc_kind\"] = str(cc_kind)"
     },
     {
      "file": "src/calculator/trigger_stream.py",

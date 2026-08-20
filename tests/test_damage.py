@@ -466,6 +466,105 @@ class TestOrderedDamageEvents:
         ) == pytest.approx(15.0)
 
 
+class TestLedgerRowShapes:
+    """The three ledger shapes stay projections of one row schema."""
+
+    # What ``lean`` drops: display-only fields no scoring consumer reads.
+    DISPLAY_ONLY = {
+        "ordinal",
+        "phase",
+        "order",
+        "source_missing_ratio",
+        "event_precision",
+    }
+
+    @staticmethod
+    def _ledger(**kwargs):
+        breakdown = {
+            "Q": {
+                "casts": 1,
+                "total_damage": 90.0,
+                "total_raw": 120.0,
+                "damage_type": "magic",
+            },
+            "auto_attacks": {
+                "count": 2,
+                "total_damage": 150.0,
+                "damage_type": "physical",
+                "damage_events": [
+                    {
+                        "time": 0.0,
+                        "damage": 50.0,
+                        "damage_type": "physical",
+                        "raw_damage": 60.0,
+                        "raw_formula": {"kind": "auto"},
+                        "basic_attack": True,
+                        "cc_kind": "slow",
+                        "source_missing_ratio": 0.25,
+                        "event_precision": "exact",
+                        "declared": ("mechanic", 60.0),
+                    },
+                    {"time": 0.5, "damage": 100.0, "damage_type": "physical"},
+                ],
+                # Shorter than the event list on purpose: the second swing
+                # has no shield to inherit.
+                "self_shield_events": [{"amount": 12.0}],
+            },
+            "burn_Test": {"total_damage": 40.0, "damage_by_type": {"magic": 40.0}},
+            "damage_amp_Test": {"total_damage": 20.0},
+        }
+        return _ordered_damage_events(breakdown, {"Q": {}}, ["Q"], **kwargs)
+
+    def test_every_shape_reports_the_same_events_in_the_same_order(self):
+        full = self._ledger()
+        lean = self._ledger(lean=True)
+        light = self._ledger(light=True)
+
+        assert len(full) == len(lean) == len(light) > 4
+        for full_row, lean_row, light_row in zip(full, lean, light):
+            assert light_row[0] == full_row["_lk"] == lean_row["_lk"]
+            assert light_row[1] == full_row["damage"]
+            assert light_row[2] == full_row["damage_type"]
+            assert light_row[3] == full_row["source_key"]
+            assert light_row[4] == full_row.get("raw_formula")
+            assert light_row[5] == full_row.get("raw_damage", 0.0)
+            assert light_row[6] == full_row.get("declared")
+
+    def test_lean_drops_the_display_fields_and_nothing_else(self):
+        for full_row, lean_row in zip(self._ledger(), self._ledger(lean=True)):
+            assert set(lean_row) == set(full_row) - self.DISPLAY_ONLY
+            for key, value in lean_row.items():
+                assert full_row[key] == value
+            assert self.DISPLAY_ONLY & set(full_row)
+
+    def test_pricing_markers_ride_the_scoring_shape(self):
+        swing = next(
+            row
+            for row in self._ledger(lean=True)
+            if row["source_key"] == "auto_attacks" and row["time"] == 0.0
+        )
+
+        assert swing["basic_attack"] is True
+        assert swing["omnivamp_effectiveness"] == 1.0
+        assert swing["cc_kind"] == "slow"
+        assert swing["cc_reviewed"] is True
+        assert swing["declared"] == ("mechanic", 60.0)
+        assert swing["raw_damage"] == 60.0
+
+    def test_entry_shield_list_shorter_than_its_events_lands_once(self):
+        swings = [row for row in self._ledger() if row["source_key"] == "auto_attacks"]
+
+        assert [row.get("self_shield") for row in swings] == [{"amount": 12.0}, None]
+
+    def test_synthesized_rows_carry_the_same_schema_as_authored_ones(self):
+        ability = next(row for row in self._ledger() if row["source_key"] == "Q")
+
+        assert ability["raw_damage"] == 120.0
+        assert ability["is_ability"] is True
+        assert ability["phase"] == "ability"
+        assert "omnivamp_effectiveness" not in ability
+
+
 class TestAmplifierEventAttribution:
     """damage_amp_<source> rows author their delta onto the amplified events."""
 

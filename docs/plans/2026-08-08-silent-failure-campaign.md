@@ -813,9 +813,9 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > re-pricing"*. A retirement lane that went to start `delta_amp` measured that the path as built
    > does not carry one term the pair engine does. `damage._add_item_active_damage` mitigates an item
    > active's raw value against the holder's magic amplifier —
-   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:8913`) — and
+   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:8889`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
-   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8330`);
+   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8306`);
    > `survival.pricing.price_declared_packet` (`pricing.py:483`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
@@ -1323,7 +1323,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > what `survival.pricing.price_declared_packet` (`pricing.py:483`) carries. A Runaan's bolt is
    > priced by `_mitigate_basic_attack_swing` (`damage.py:685`), which applies three further
    > target-side terms, and the family's *other* authored row is the attack's on-hit effects copied
-   > onto a second subject by `_copied_on_hit_packet` (`damage.py:9471`), for which
+   > onto a second subject by `_copied_on_hit_packet` (`damage.py:9383`), for which
    > `runaans_hurricane.secondary_target` declares no magnitude at all. The lane refused four moves,
    > each already forbidden in terms by the three amendments that built the stage, filed its
    > measurement at

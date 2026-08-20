@@ -485,8 +485,8 @@ def test_the_ladder_reads_immobilize_evidence_before_slow_evidence():
     Everlasting, and an immobilize is the stronger claim about the row —
     which moves Everlasting's rung on a control row carrying a slow fact and
     an immobilize fact together, and on that row alone.  No ``src/`` writer
-    emits one: the two ``cc_kind`` writers (``damage.py:1452-1454``,
-    ``damage.py:2934-2936``) write no legacy boolean at all.
+    emits one: the two ``cc_kind`` writers (``_damage_event_row`` and
+    ``_evaluate_cast_parts``) write no legacy boolean at all.
     """
     both = _row(hard_cc=True, slowed=True)
     assert ts._classify_cc(both)[0] is ts.CcClass.IMMOBILIZE
@@ -996,10 +996,10 @@ def test_a_self_scoped_delivery_naming_nothing_is_rejected(monkeypatch, empty):
 # branching on it; it is pinned here so each of those deletions was a
 # visible, attributable edit rather than a silent one.
 CC_KIND_READERS = {
-    # ``add_declared_events`` copies the token onto the ledger row; it is
+    # ``_damage_event_row`` copies the token onto the ledger row; it is
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
-    "src/calculator/damage.py": frozenset({"add_declared_events"}),
+    "src/calculator/damage.py": frozenset({"_damage_event_row"}),
     "src/calculator/program/compile.py": frozenset({"action_from_event"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
 }
@@ -2030,7 +2030,7 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
     It is also wider in one place: ``is True`` became a truth test, so a
     truthy non-``True`` marker now certifies.
 
-    Neither direction is reachable from the engine.  ``damage.py:1452-1454``
+    Neither direction is reachable from the engine.  ``_damage_event_row``
     writes ``cc_reviewed`` in the same two lines that write ``cc_kind``, and
     writes it ``True`` by default, so no engine row can carry an empty token
     without a certifying flag beside it.
@@ -2053,8 +2053,8 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
     # The control that makes both unreachable from the engine.
     ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
     assert (
-        'row["cc_kind"] = str(event["cc_kind"])\n'
-        '                row["cc_reviewed"] = bool(event.get("cc_reviewed", True))'
+        'row["cc_kind"] = str(cc_kind)\n'
+        '        row["cc_reviewed"] = bool(fields.get("cc_reviewed", True))'
     ) in ledger
 
 
@@ -2624,7 +2624,7 @@ class TestTheEscalatedDefectIsStillTracked:
             {"parts": (), "damage_events": [{"time": 0.0, "cc_kind": kind}]},
         )
         # ...is copied onto the ledger row verbatim...
-        assert 'row["cc_kind"] = str(event["cc_kind"])' in (
+        assert 'row["cc_kind"] = str(cc_kind)' in (
             SRC / "calculator" / "damage.py"
         ).read_text(encoding="utf-8")
         # ...and raises a bare ValueError, not the type the one request

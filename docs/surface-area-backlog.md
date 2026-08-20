@@ -5,12 +5,6 @@ but did not fix: asides from the eleven unit reports and the blind audit, de-dup
 re-verified against the tree at `0fa19e6`. Ordered by the cost paid today. Delete a row
 when its fix lands; this file is the one home for the list.
 
-## A. Engine numbers and semantics
-
-| # | Where | What | Action |
-|---|---|---|---|
-| A6 | `damage.py:1403-1781` `_ordered_damage_events` (+ `_event_timeline_coverage` ~1782) | One row schema in six literal spellings (light tuple / lean dict / full dict × `add` / `add_declared_events`), kept in step by a comment. | One row factory the three shapes project; float-addition order is load-bearing (`survival/accumulate.py`), so golden must show zero diffs. |
-
 ## B. Fallbacks and single-home violations still standing
 
 | # | Where | What | Action |

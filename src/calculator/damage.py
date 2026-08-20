@@ -1443,6 +1443,110 @@ def _row_declaration_share(
 # Phase precedence inside one timestamp of the reconstructed ledger.
 _EVENT_PHASE_ORDER = {"ability": 0, "auto": 1, "effect": 2, "amplifier": 3}
 
+# Sources whose packets carry omnivamp's full-effectiveness marker.
+_VAMP_SOURCE_PREFIXES = ("auto_attacks", "on_hit_")
+
+# A row whose entry authored no optional fields.
+_NO_EVENT_FIELDS: Mapping[str, Any] = MappingProxyType({})
+
+
+def _damage_event_row(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    light: bool,
+    lean: bool,
+    source_key: str,
+    damage_type: str,
+    damage: float,
+    time: float,
+    sequence: int,
+    order_value: float,
+    phase: str,
+    ordinal: int,
+    fields: Mapping[str, Any],
+    is_ability: bool,
+    vamp_source: bool,
+    shield_events: list[Any] | None,
+) -> Any:
+    """One reconstructed-ledger row, in the shape its consumer reads.
+
+    The one home of the row schema.  ``fields`` is the authored event (or,
+    for an entry the reconstruction had to synthesize, a mapping spelled the
+    same way), and everything optional is read off it here, so the three
+    shapes stay projections of one field list: ``light`` is the tuple
+    mid-fight scans read, ``lean`` the dict the scoring path reads without
+    display-only fields, and the default the full dict receipts serialize.
+    ``_lk`` is the ``(time, order, phase, sequence)`` sort key, built once
+    here so ordering never rebuilds it per event.
+    """
+    sort_key = (time, order_value, _EVENT_PHASE_ORDER[phase], sequence)
+    raw_damage = fields.get("raw_damage")
+    if light:
+        return (
+            sort_key,
+            damage,
+            damage_type,
+            source_key,
+            fields.get("raw_formula"),
+            0.0 if raw_damage is None else float(raw_damage),
+            fields.get("declared"),
+        )
+    row: dict[str, Any] = {
+        "source_key": source_key,
+        "damage_type": damage_type,
+        "damage": damage,
+        "time": time,
+        "sequence": sequence,
+        "_lk": sort_key,
+    }
+    if not lean:
+        row["ordinal"] = ordinal
+        row["phase"] = phase
+        row["order"] = order_value
+        missing_ratio = fields.get("source_missing_ratio")
+        if missing_ratio is not None:
+            row["source_missing_ratio"] = float(missing_ratio)
+        precision = fields.get("event_precision")
+        if precision is not None:
+            row["event_precision"] = str(precision)
+    cc_kind = fields.get("cc_kind")
+    if cc_kind is not None:
+        row["cc_kind"] = str(cc_kind)
+        row["cc_reviewed"] = bool(fields.get("cc_reviewed", True))
+    if is_ability:
+        row["is_ability"] = True
+    # The event names its own shield; the entry's parallel list supplies one
+    # for events that do not.
+    shield = fields.get("self_shield")
+    if shield is None and shield_events is not None and ordinal <= len(shield_events):
+        shield = shield_events[ordinal - 1]
+    if isinstance(shield, Mapping):
+        row["self_shield"] = dict(shield)
+    if raw_damage is not None:
+        row["raw_damage"] = float(raw_damage)
+    raw_formula = fields.get("raw_formula")
+    if raw_formula is not None:
+        row["raw_formula"] = raw_formula
+    # The declaration this packet is a price of, for a family whose
+    # retirement moved the pricing to the walk: ``(mechanic_id,
+    # pre-mitigation magnitude)``.  Absent on every packet whose family the
+    # pair engine still prices, which is what keeps the walk's
+    # from-declaration path reachable only by a family that opted in.
+    declared = fields.get("declared")
+    if declared is not None:
+        row["declared"] = declared
+    basic_attack = fields.get("basic_attack")
+    if basic_attack:
+        row["basic_attack"] = True
+    if basic_attack or vamp_source:
+        # Omnivamp's full-effectiveness branch is certified only for the
+        # primary attack/on-hit packet. Area, pet, and copied target rows
+        # deliberately carry no eligibility marker.  Both vamp markers are a
+        # pricing input, not display, so the lean shape keeps them: the
+        # lifesteal/omnivamp derivations and the item support scan read them
+        # off score-only rows too (issue #169).
+        row["omnivamp_effectiveness"] = 1.0
+    return row
+
+
 # ``cast_events`` publishes times rounded to 3 decimals (the one rounding
 # site, in ``_compute_ability_rotation``) while rows author raw plan times.
 # Walkers matching authored events against that public boundary must accept
@@ -1469,19 +1573,13 @@ def _ordered_damage_events(
     already-known damage composition so shield accounting never invents a
     fourth damage type.
 
-    ``light=True`` returns ``(sort_key, damage, damage_type, source_key,
-    raw_formula, raw_damage, declared)`` tuples instead of full rows — the same
-    events, the same ``(time, order, phase, sequence)`` order, one shared
-    iteration — for the mid-fight consumers (threshold-trigger scans,
+    ``light`` and ``lean`` pick which shape :func:`_damage_event_row` builds
+    — the same events in the same ``(time, order, phase, sequence)`` order,
+    one shared iteration, and the field list of each shape lives there.
+    ``light`` serves the mid-fight consumers (threshold-trigger scans,
     amplifier delta authoring) that never serve the returned ledger
-    contract.
-
-    ``lean=True`` keeps dict rows but drops the display-only fields
-    (``ordinal``, ``phase``, ``order``, ``event_precision``,
-    ``source_missing_ratio``) nothing on the scoring path reads; the
-    fields that price, order, or link events are all present.  Only the
-    score-only pipeline may request it — public receipts serialize the
-    full rows.
+    contract; only the score-only pipeline may ask for ``lean``, because
+    public receipts serialize the full rows.
 
     This ledger is deliberately internal. It is exact at the cast boundary,
     but it does not claim champion-specific spell-shield behavior within a
@@ -1492,12 +1590,7 @@ def _ordered_damage_events(
     sequence = 0
     typed_totals = {"physical": 0.0, "magic": 0.0, "true": 0.0}
 
-    # The parameter list is the row schema, and the schema is pinned to mirror
-    # ``add_declared_events`` below field for field: a local removed here by
-    # bundling two of them into a mapping would be one more place the two
-    # spellings of one row could drift, which the comment inside says is the
-    # thing that must not happen.
-    def add(  # pylint: disable=too-many-locals
+    def add(
         source_key: str,
         damage_type: str,
         damage: float,
@@ -1505,90 +1598,31 @@ def _ordered_damage_events(
         time: float,
         ordinal: int,
         phase: str,
-        order: float | None = None,
-        raw_damage: float | None = None,
-        raw_formula: Any = None,
-        source_missing_ratio: float | None = None,
-        event_precision: str | None = None,
-        basic_attack: bool = False,
-        declared: tuple[Any, ...] | None = None,
-        cc_marker: Mapping[str, Any] | None = None,
+        fields: Mapping[str, Any] = _NO_EVENT_FIELDS,
     ) -> None:
-        # Row schema (including ``_lk``) must mirror add_declared_events'
-        # inlined fast path below exactly; change them together.
+        """Append one row the reconstruction synthesized for a coarse entry."""
         nonlocal sequence
         if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
             return
-        order_value = float(sequence) if order is None else order
         typed_totals[damage_type] += damage
-        if light:
-            events.append(
-                (
-                    (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
-                    damage,
-                    damage_type,
-                    source_key,
-                    raw_formula,
-                    0.0 if raw_damage is None else raw_damage,
-                    declared,
-                )
+        events.append(
+            _damage_event_row(
+                light,
+                lean,
+                source_key,
+                damage_type,
+                damage,
+                time,
+                sequence,
+                float(sequence),
+                phase,
+                ordinal,
+                fields,
+                source_key in cast_order,
+                source_key.startswith(_VAMP_SOURCE_PREFIXES),
+                None,
             )
-            sequence += 1
-            return
-        if lean:
-            event = {
-                "source_key": source_key,
-                "damage_type": damage_type,
-                "damage": damage,
-                "time": time,
-                "sequence": sequence,
-                "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
-            }
-            if raw_damage is not None:
-                event["raw_damage"] = raw_damage
-            # Vamp eligibility is a pricing input, not display: the
-            # lifesteal/omnivamp derivations and the item support scan read
-            # these markers off score-only rows too (issue #169).
-            if basic_attack:
-                event["basic_attack"] = True
-            if basic_attack or source_key.startswith(("auto_attacks", "on_hit_")):
-                event["omnivamp_effectiveness"] = 1.0
-        else:
-            event = {
-                "source_key": source_key,
-                "damage_type": damage_type,
-                "damage": damage,
-                "time": time,
-                "ordinal": ordinal,
-                "phase": phase,
-                "sequence": sequence,
-                "order": order_value,
-                "_lk": (time, order_value, _EVENT_PHASE_ORDER[phase], sequence),
-            }
-            if raw_damage is not None:
-                event["raw_damage"] = raw_damage
-            if source_missing_ratio is not None:
-                event["source_missing_ratio"] = source_missing_ratio
-            if event_precision is not None:
-                event["event_precision"] = event_precision
-            if basic_attack:
-                event["basic_attack"] = True
-            if basic_attack or source_key.startswith(("auto_attacks", "on_hit_")):
-                # Omnivamp's full-effectiveness branch is certified only for
-                # the primary attack/on-hit packet. Area, pet, and copied
-                # target rows deliberately carry no eligibility marker.
-                event["omnivamp_effectiveness"] = 1.0
-        if cc_marker:
-            event.update(cc_marker)
-        if source_key in cast_order:
-            event["is_ability"] = True
-        if raw_damage is not None:
-            event["raw_damage"] = raw_damage
-        if raw_formula is not None:
-            event["raw_formula"] = raw_formula
-        if declared is not None:
-            event["declared"] = declared
-        events.append(event)
+        )
         sequence += 1
 
     def add_declared_events(
@@ -1600,26 +1634,22 @@ def _ordered_damage_events(
         """Append an engine-authored event list, returning whether it existed.
 
         This is the hot path of ledger reconstruction — module champions
-        declare nearly every event — so the row is built directly instead of
-        going through ``add``'s keyword plumbing for each declared hit.  The
-        row schema (including ``_lk``) must mirror ``add()`` above exactly;
-        change them together.
+        declare nearly every event.
         """
         nonlocal sequence
-        declared = entry.get("damage_events")
-        if not isinstance(declared, list):
+        declared_events = entry.get("damage_events")
+        if not isinstance(declared_events, list):
             return False
         phase = str(entry.get("event_phase", default_phase))
         if phase not in _EVENT_PHASE_ORDER:
             phase = default_phase
-        phase_rank = _EVENT_PHASE_ORDER[phase]
         # Per-entry constants, hoisted out of the per-event loop.
         is_ability_source = source_key in cast_order
-        vamp_source = source_key.startswith(("auto_attacks", "on_hit_"))
+        vamp_source = source_key.startswith(_VAMP_SOURCE_PREFIXES)
         shield_events = entry.get("self_shield_events")
         if not isinstance(shield_events, list):
             shield_events = None
-        for ordinal, event in enumerate(declared, start=1):
+        for ordinal, event in enumerate(declared_events, start=1):
             if not isinstance(event, dict):
                 continue
             damage = float(event.get("damage", 0.0))
@@ -1627,82 +1657,25 @@ def _ordered_damage_events(
             if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
                 continue
             order = event.get("timeline_order")
-            time = float(event.get("time", 0.0))
-            order_value = float(sequence) if order is None else float(order)
             typed_totals[damage_type] += damage
-            if light:
-                events_append(
-                    (
-                        (time, order_value, phase_rank, sequence),
-                        damage,
-                        damage_type,
-                        source_key,
-                        event.get("raw_formula"),
-                        float(event.get("raw_damage", 0.0) or 0.0),
-                        event.get("declared"),
-                    )
+            events_append(
+                _damage_event_row(
+                    light,
+                    lean,
+                    source_key,
+                    damage_type,
+                    damage,
+                    float(event.get("time", 0.0)),
+                    sequence,
+                    float(sequence) if order is None else float(order),
+                    phase,
+                    ordinal,
+                    event,
+                    is_ability_source,
+                    vamp_source,
+                    shield_events,
                 )
-                sequence += 1
-                continue
-            if lean:
-                row = {
-                    "source_key": source_key,
-                    "damage_type": damage_type,
-                    "damage": damage,
-                    "time": time,
-                    "sequence": sequence,
-                    "_lk": (time, order_value, phase_rank, sequence),
-                }
-            else:
-                row = {
-                    "source_key": source_key,
-                    "damage_type": damage_type,
-                    "damage": damage,
-                    "time": time,
-                    "ordinal": ordinal,
-                    "phase": phase,
-                    "sequence": sequence,
-                    "order": order_value,
-                    "_lk": (time, order_value, phase_rank, sequence),
-                }
-                source_missing_ratio = event.get("source_missing_ratio")
-                if source_missing_ratio is not None:
-                    row["source_missing_ratio"] = float(source_missing_ratio)
-                event_precision = event.get("event_precision")
-                if event_precision is not None:
-                    row["event_precision"] = str(event_precision)
-            if event.get("cc_kind") is not None:
-                row["cc_kind"] = str(event["cc_kind"])
-                row["cc_reviewed"] = bool(event.get("cc_reviewed", True))
-            if is_ability_source:
-                row["is_ability"] = True
-            if shield_events is not None and ordinal - 1 < len(shield_events):
-                shield = shield_events[ordinal - 1]
-                if isinstance(shield, Mapping):
-                    row["self_shield"] = dict(shield)
-            raw_damage = event.get("raw_damage")
-            if raw_damage is not None:
-                row["raw_damage"] = float(raw_damage)
-            raw_formula = event.get("raw_formula")
-            if raw_formula is not None:
-                row["raw_formula"] = raw_formula
-            # The declaration this packet is a price of, for a family whose
-            # retirement moved the pricing to the walk: ``(mechanic_id,
-            # pre-mitigation magnitude)``.  Absent on every packet whose
-            # family the pair engine still prices, which is what keeps the
-            # walk's from-declaration path reachable only by a family that
-            # opted in.
-            declared = event.get("declared")
-            if declared is not None:
-                row["declared"] = declared
-            basic_attack = event.get("basic_attack")
-            if basic_attack:
-                row["basic_attack"] = True
-            if isinstance(event.get("self_shield"), Mapping):
-                row["self_shield"] = dict(event["self_shield"])
-            if basic_attack or vamp_source:
-                row["omnivamp_effectiveness"] = 1.0
-            events_append(row)
+            )
             sequence += 1
         return True
 
@@ -1733,13 +1706,20 @@ def _ordered_damage_events(
         slot_timeline = timeline_by_slot.get(key, [])
         info = ability_damages.get(key, {})
         instances = max(1, int(info.get("cast_instances", 1)))
+        raw_total = float(entry.get("total_raw", 0.0) or 0.0)
         # An empowering row's lump IS the attack its cast forced (the row
         # already says ``basic_attack``), so it carries the slot's declared
         # control marker — the one ``_author_empowered_swing_events`` lands
         # on the consumed swing when an auto stream exists.  Without it the
         # same reviewed slot certified with the stream on and went coarse
         # with it off.
-        marker = _declared_cc_marker(info) if info.get("empowers_next_auto") else None
+        cast_fields = {
+            **(_declared_cc_marker(info) if info.get("empowers_next_auto") else {}),
+            "basic_attack": bool(entry.get("basic_attack")),
+            "raw_damage": (
+                raw_total / (casts * instances) if raw_total > 0.0 else None
+            ),
+        }
         for cast_index in range(casts):
             cast_time = (
                 float(slot_timeline[cast_index].get("time", 0.0))
@@ -1747,10 +1727,6 @@ def _ordered_damage_events(
                 else 0.0
             )
             last_ability_time = max(last_ability_time, cast_time)
-            raw_total = float(entry.get("total_raw", 0.0) or 0.0)
-            raw_per_instance = (
-                raw_total / (casts * instances) if raw_total > 0.0 else None
-            )
             for dtype, amount in _row_damage_parts(entry):
                 per_instance = amount / (casts * instances)
                 for instance_index in range(instances):
@@ -1761,9 +1737,7 @@ def _ordered_damage_events(
                         time=cast_time,
                         ordinal=cast_index * instances + instance_index + 1,
                         phase="ability",
-                        basic_attack=bool(entry.get("basic_attack")),
-                        raw_damage=raw_per_instance,
-                        cc_marker=marker,
+                        fields=cast_fields,
                     )
 
     auto = breakdown.get("auto_attacks")
@@ -1806,9 +1780,11 @@ def _ordered_damage_events(
                     time=last_ability_time,
                     ordinal=1,
                     phase="effect",
-                    declared=_row_declaration_share(
-                        entry.get("declared"), amount, row_total
-                    ),
+                    fields={
+                        "declared": _row_declaration_share(
+                            entry.get("declared"), amount, row_total
+                        )
+                    },
                 )
         else:
             damage = float(entry.get("total_damage", 0.0))
