@@ -159,8 +159,9 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 # Heartbreaker "strikes the most wounded enemy champion nearby, dealing
 # physical damage, slowing them by 99% for 0.25 seconds" — the slow is what
 # lands on the target this module prices (the knockback is for the *other*
-# nearby enemies).  E creates a mist trail and P is the possession mechanic;
-# both are out_of_scope and author no damage part.
+# nearby enemies).  E creates a mist trail and P is the possession
+# mechanic; neither authors a damage part, so neither can carry a kind —
+# E's attack-speed grant is a stat row, and P prices nothing at all.
 MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
 
 
