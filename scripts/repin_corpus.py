@@ -1,28 +1,19 @@
-"""The E9 practice corpus's staleness anchor and its one writer.
+"""The E9 practice corpus and its one writer.
 
-The corpus pins every receipt to an *engine* rather than to a commit: a
-scenario is asserted only while the ``src/`` tree it was verified against is
-the tree the suite is running.  This module owns that anchor and is the only
-writer of ``data/practice-corpus/scenarios.json``.
+Every non-legacy scenario is asserted on every run.  A receipt the engine no
+longer reproduces fails on its own numbers, which is the whole gate; there is
+no selection that could quietly shrink to nothing, and nothing here reads
+repository history.  A scenario's ``sha`` records the commit its receipt was
+last probed at -- provenance a reader can follow, never a filter.
 
-The anchor is the ``src/`` tree at the **merge base with ``main``** — never
-HEAD's.  Anchored at HEAD, the gate demanded a value that cannot exist until
-after the commit producing it exists, so every ``src/`` edit deselected the
-whole corpus and the suite reported green over nothing; and two branches
-editing ``src/`` wrote two different shas into one field and conflicted on
-every merge.  Against the merge base the pin is stable for a whole branch, and
-a scenario whose receipt an in-branch change breaks stays *executed* and fails
-loudly on its own numbers — which is the gate the corpus was always meant to
-be.
+Re-pinning re-probes: ``repin`` drives every non-legacy scenario through
+``/api/calculate`` and refuses to stamp a scenario whose receipt no longer
+reproduces, so the writer can never launder a broken receipt into a fresh pin.
 
-A scenario's ``sha`` therefore records the anchor commit its receipt is filed
-under, not the commit it happened to be probed at.  Re-pinning re-probes:
-``repin`` drives every non-legacy scenario through ``/api/calculate`` and
-refuses to stamp a scenario whose receipt no longer reproduces, so the writer
-can never launder a broken receipt into a fresh pin.
-
-``--check`` is the commit gate.  It fails on a stale pin and on an empty or
-short selection, so silence cannot be mistaken for success.
+``--check`` is the commit gate.  It fails on a missing pin and on a corpus that
+has shrunk away from the count ``docs/receipts/campaign-fingerprints.json``
+pins or from the set ``tests/test_e9_corpus.py`` parametrizes, so silence
+cannot be mistaken for success.
 
 Usage:
     python scripts/repin_corpus.py --check    # gate: verify, write nothing
@@ -35,7 +26,6 @@ import argparse
 import json
 import subprocess
 import sys
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Collection, Iterable, Mapping, Sequence
 
@@ -46,9 +36,8 @@ CORPUS_PATH = REPO_ROOT / "data" / "practice-corpus" / "scenarios.json"
 FINGERPRINTS_PATH = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 
 # The four pre-E-series receipts.  Their expected values predate the E-series
-# rework, so they are exempt from the anchor and re-verified only by a
-# deliberate re-capture.  Enumerated here, once, for both readers and the
-# writer.
+# rework, so they are re-verified only by a deliberate re-capture rather than
+# on every run.  Enumerated here, once, for both the reader and the writer.
 LEGACY_SCENARIO_IDS = frozenset(
     {
         "cp21-ziggs-outer-blast",
@@ -60,55 +49,7 @@ LEGACY_SCENARIO_IDS = frozenset(
 
 
 # ---------------------------------------------------------------------------
-# The anchor
-# ---------------------------------------------------------------------------
-
-
-def _git(*args: str) -> str:
-    """One git command's stdout, or ``""`` when git rejects the request."""
-    result = subprocess.run(
-        ["git", *args],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.stdout.strip() if result.returncode == 0 else ""
-
-
-@lru_cache(maxsize=None)
-def src_tree_sha(commit: str) -> str:
-    """The ``src/`` tree object at ``commit``, or ``""`` if it is unknown here.
-
-    Comparing ``src`` trees rather than commits is the exact check: a receipt
-    is valid iff the engine it was verified against is byte-identical to the
-    engine being run, and the corpus commit itself touches only data and docs.
-    """
-    return _git("rev-parse", f"{commit}:src")
-
-
-@lru_cache(maxsize=None)
-def anchor_commit(*, base: str = "main") -> str:
-    """The merge-base commit with ``base`` — the current branch's window start."""
-    merge_base = _git("merge-base", "HEAD", base)
-    if not merge_base:
-        raise RuntimeError(
-            f"no merge base between HEAD and {base!r}; the corpus anchor is undefined"
-        )
-    return merge_base
-
-
-def anchor_src_sha(*, base: str = "main") -> str:
-    """The ``src/`` tree object at the merge base — the corpus's staleness anchor.
-
-    The single anchor: both readers in ``tests/test_e9_corpus.py`` and this
-    module's writer resolve staleness through this one call.
-    """
-    return src_tree_sha(anchor_commit(base=base))
-
-
-# ---------------------------------------------------------------------------
-# The corpus and its executed selection
+# The corpus
 # ---------------------------------------------------------------------------
 
 
@@ -124,27 +65,15 @@ def write_corpus(corpus: Mapping[str, Any], path: Path = CORPUS_PATH) -> None:
 
 
 def non_legacy_scenarios(corpus: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Every scenario the anchor governs — the four legacy receipts excluded."""
+    """Every scenario the suite executes — the four legacy receipts excluded."""
     return [s for s in corpus["scenarios"] if s["id"] not in LEGACY_SCENARIO_IDS]
-
-
-def pinned_scenarios(
-    corpus: Mapping[str, Any], *, anchor: str | None = None
-) -> list[dict[str, Any]]:
-    """The scenarios the suite executes: those pinned at the anchor engine."""
-    target = anchor_src_sha() if anchor is None else anchor
-    return [
-        s
-        for s in corpus["scenarios"]
-        if s.get("sha") and src_tree_sha(s["sha"]) == target
-    ]
 
 
 def parametrized_ids() -> tuple[str, ...]:
     """The scenario ids ``tests/test_e9_corpus.py`` parametrizes (R-22)."""
-    from tests.test_e9_corpus import _PINNED  # local: keeps the import edge one-way
+    from tests.test_e9_corpus import _EXECUTED  # local: keeps the import edge one-way
 
-    return tuple(s["id"] for s in _PINNED)
+    return tuple(s["id"] for s in _EXECUTED)
 
 
 def expected_non_legacy_count() -> int | None:
@@ -171,55 +100,37 @@ def expected_non_legacy_count() -> int | None:
 def check_pins(
     corpus: Mapping[str, Any],
     *,
-    anchor: str,
     parametrized: Collection[str],
     expected_count: int | None = None,
 ) -> tuple[str, ...]:
     """Every reason ``--check`` should fail; an empty tuple is the pass condition.
 
-    Two failure families, both required: a pin that no longer names the anchor
-    engine, and a selection that is empty or short.  Without the second family
-    a corpus that selects nothing reports green.
+    Two failure families, both required: a scenario that carries no provenance
+    at all, and an executed set that has shrunk.  Without the second family a
+    corpus somebody deleted rows from reports green.
     """
     reasons: list[str] = []
-    for scenario in non_legacy_scenarios(corpus):
-        sha = scenario.get("sha")
-        if not sha:
+    governed = non_legacy_scenarios(corpus)
+    for scenario in governed:
+        if not scenario.get("sha"):
             reasons.append(f"{scenario['id']} is missing its pinned SHA")
-            continue
-        tree = src_tree_sha(sha)
-        if not tree:
-            reasons.append(
-                f"{scenario['id']} is pinned at {sha}, a commit this repository "
-                "does not have -- its engine cannot be resolved"
-            )
-        elif tree != anchor:
-            reasons.append(
-                f"{scenario['id']} is pinned at {sha} (src {tree}) but the anchor "
-                f"engine is {anchor} -- re-probe the receipt and run "
-                "`python scripts/repin_corpus.py`"
-            )
 
-    selected = pinned_scenarios(corpus, anchor=anchor)
-    selected_ids = tuple(
-        s["id"] for s in selected if s["id"] not in LEGACY_SCENARIO_IDS
-    )
-    total = len(non_legacy_scenarios(corpus))
-    if not selected_ids:
+    executed = tuple(s["id"] for s in governed)
+    if not executed:
         reasons.append(
-            f"the corpus executes 0 of its {total} non-legacy scenarios -- the "
-            "suite would pass by asserting nothing"
+            "the corpus holds 0 non-legacy scenarios -- the suite would pass "
+            "by asserting nothing"
         )
-    if expected_count is not None and len(selected_ids) != expected_count:
+    if expected_count is not None and len(executed) != expected_count:
         reasons.append(
-            f"the corpus executes {len(selected_ids)} non-legacy scenarios but the "
+            f"the corpus executes {len(executed)} non-legacy scenarios but the "
             f"fingerprints receipt pins corpus.non_legacy_count at {expected_count}"
         )
-    if set(selected_ids) != set(parametrized):
-        missing = sorted(set(parametrized) - set(selected_ids))
-        extra = sorted(set(selected_ids) - set(parametrized))
+    if set(executed) != set(parametrized):
+        missing = sorted(set(parametrized) - set(executed))
+        extra = sorted(set(executed) - set(parametrized))
         reasons.append(
-            "the executed selection does not match the set test_e9_corpus "
+            "the executed set does not match the set test_e9_corpus "
             f"parametrizes (missing {missing}, unexpected {extra})"
         )
     return tuple(reasons)
@@ -228,6 +139,23 @@ def check_pins(
 # ---------------------------------------------------------------------------
 # The writer
 # ---------------------------------------------------------------------------
+
+
+def _git(*args: str) -> str:
+    """One git command's stdout, or ``""`` when git rejects the request.
+
+    The one git call in this module, and it names HEAD: the writer stamps the
+    commit a receipt was probed at.  Nothing above reads it, so the corpus
+    gate runs on a shallow checkout.
+    """
+    result = subprocess.run(
+        ["git", *args],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip() if result.returncode == 0 else ""
 
 
 def reprobe_failures(
@@ -259,19 +187,11 @@ def reprobe_failures(
 
 def repin(
     *,
-    at: str = "merge-base",
     check: bool,
-    base: str = "main",
     corpus_path: Path = CORPUS_PATH,
     parametrized: Sequence[str] | None = None,
 ) -> int:
-    """Re-probe and rewrite every non-legacy sha; ``check`` verifies and writes nothing.
-
-    ``at`` defaults to the anchor, never HEAD: writing HEAD's sha while
-    comparing against the merge base makes ``--check`` fail the moment ``src/``
-    diverges, including on a comment-only commit.
-    """
-    anchor = anchor_src_sha(base=base)
+    """Re-probe and rewrite every non-legacy sha; ``check`` verifies and writes nothing."""
     corpus = load_corpus(corpus_path)
 
     if check:
@@ -284,26 +204,17 @@ def repin(
                 file=sys.stderr,
             )
         ids = parametrized_ids() if parametrized is None else tuple(parametrized)
-        reasons = check_pins(
-            corpus, anchor=anchor, parametrized=ids, expected_count=expected_count
-        )
+        reasons = check_pins(corpus, parametrized=ids, expected_count=expected_count)
         for reason in reasons:
             print(f"corpus pin: {reason}", file=sys.stderr)
         if reasons:
             return 1
-        print(f"corpus pin: {len(ids)} non-legacy scenarios executed at {anchor}")
+        print(f"corpus pin: {len(ids)} non-legacy scenarios executed")
         return 0
 
-    target = anchor_commit(base=base) if at == "merge-base" else _git("rev-parse", at)
+    target = _git("rev-parse", "HEAD")
     if not target:
-        print(f"corpus pin: cannot resolve {at!r}", file=sys.stderr)
-        return 1
-    if src_tree_sha(target) != anchor:
-        print(
-            f"corpus pin: {at!r} resolves to {target}, whose src/ tree is not the "
-            f"anchor {anchor} -- the pin would be born stale",
-            file=sys.stderr,
-        )
+        print("corpus pin: cannot resolve HEAD", file=sys.stderr)
         return 1
 
     governed = non_legacy_scenarios(corpus)
@@ -330,21 +241,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="verify the pins and the executed selection; write nothing",
-    )
-    parser.add_argument(
-        "--at",
-        default="merge-base",
-        help="revision to pin at (default: the merge-base anchor)",
-    )
-    parser.add_argument(
-        "--base", default="main", help="branch the anchor is the merge base with"
+        help="verify the pins and the executed set; write nothing",
     )
     parser.add_argument(
         "--corpus", type=Path, default=CORPUS_PATH, help=argparse.SUPPRESS
     )
     args = parser.parse_args(argv)
-    return repin(at=args.at, check=args.check, base=args.base, corpus_path=args.corpus)
+    return repin(check=args.check, corpus_path=args.corpus)
 
 
 if __name__ == "__main__":

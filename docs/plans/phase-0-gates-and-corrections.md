@@ -27,13 +27,12 @@ moves no number.
 **Gate hardening (0A) — no commit here may move a number.** Slices are numbered `0A.1`…`0A.10`; the
 runbook cites them by number, so the numbering is part of the contract.
 
-- **0A.1 — The corpus gate is fixed first and alone (D-94, D-100).** `tests/test_e9_corpus.py:443-452`
-  compares each scenario's pinned `src/` tree against the **merge-base** tree, not HEAD's;
-  `:412-416`'s `_PINNED` selector takes the same anchor; and `scripts/repin_corpus.py --check`
-  becomes the single writer of `data/practice-corpus/scenarios.json`, writing the anchor's sha, not
-  HEAD's (R-21). *Why: today's assert demands a value that cannot exist until after the commit exists,
-  so every `src/` edit is red and parallel worktrees conflict by construction — and a writer anchored
-  at HEAD against a reader anchored at the merge base re-creates the same red one commit later.*
+- **0A.1 — The corpus gate is fixed first and alone (D-94, D-100).** `tests/test_e9_corpus.py`
+  asserts every non-legacy receipt on every run, with no selection standing between the corpus and
+  the engine, and `scripts/repin_corpus.py --check` is the single writer of
+  `data/practice-corpus/scenarios.json` (R-21). *Why: a selection that can empty out passes by
+  asserting nothing, and one derived from repository history cannot be evaluated on the shallow
+  checkout CI takes.*
 - **0A.2 — Golden gains an instrument and a *second* baseline, never a widened first one (D-93).**
   `fingerprint`, `compare --report` and `capture-coupled [--exact]` are new subcommands and `metadata`
   takes its counts from the same function that prints them; `scripts/golden_coupled_baseline.json` is
