@@ -77,18 +77,8 @@ def test_the_published_roster_is_the_engine_registry():
     assert checked_in["ability_slots"] == list(BASE_CAST_SLOTS)
 
 
-def test_a_cached_champion_with_no_module_stops_the_build(tmp_path):
-    """Fail closed: an unregistered cache row is never published to the UI."""
-    raw = json.loads((ROOT / "data" / "champions.json").read_text(encoding="utf-8"))
-    raw["Nobody"] = {"name": "Nobody", "key": "Nobody", "id": -1, "abilities": {}}
-    source = tmp_path / "champions.json"
-    source.write_text(json.dumps(raw), encoding="utf-8")
-
-    with pytest.raises(ValueError, match="no validated module: Nobody"):
-        build_catalog(source, PATCH)
-
-
 def test_a_registered_module_with_no_cache_row_stops_the_build(tmp_path):
+    """The engine's own attacker must never go missing from the picker."""
     raw = json.loads((ROOT / "data" / "champions.json").read_text(encoding="utf-8"))
     dropped = next(key for key, value in raw.items() if value.get("name") == "Aatrox")
     del raw[dropped]

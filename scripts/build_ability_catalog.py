@@ -105,24 +105,21 @@ def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
     }
 
 
-def registered_champions(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """The cached rows of every validated champion module, by display name.
+def catalogue_champions(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """The cached champion rows a catalogue publishes, by display name.
 
-    The registry is the roster, not the cache: an attacker the engine refuses
-    must not be published to the picker, and a module whose cache row is gone
-    is a broken build rather than a quiet omission.
+    Every cached champion is here, because an unregistered one is still a legal
+    ally or target.  What the registry buys is the other direction: a validated
+    module whose cache row is gone would leave the engine's own attacker absent
+    from the picker, so that fails the build.  The two rosters agreeing today is
+    a gate on the published asset (``tests/test_ability_catalog.py``), not a
+    filter here.
     """
     by_name = {str(champion.get("name", "")): champion for champion in raw.values()}
-    registered = set(registered_champion_names())
-    unregistered = sorted(name for name in by_name if name not in registered)
-    if unregistered:
-        raise ValueError(
-            "cached champions with no validated module: " + ", ".join(unregistered)
-        )
-    absent = sorted(name for name in registered if name not in by_name)
+    absent = sorted(name for name in registered_champion_names() if name not in by_name)
     if absent:
         raise ValueError("registered modules with no cached row: " + ", ".join(absent))
-    return [by_name[name] for name in sorted(registered)]
+    return [by_name[name] for name in sorted(by_name)]
 
 
 def build_catalog(source: Path, patch: str) -> dict[str, Any]:
@@ -131,7 +128,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         raise ValueError(f"Expected champion mapping in {source}")
 
     champions = []
-    for champion in registered_champions(raw):
+    for champion in catalogue_champions(raw):
         abilities = champion.get("abilities", {})
         entries = [
             _ability_entry(slot, abilities.get(slot, [])) for slot in BASE_CAST_SLOTS
