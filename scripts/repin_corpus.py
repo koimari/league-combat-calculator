@@ -141,15 +141,14 @@ def check_pins(
 # ---------------------------------------------------------------------------
 
 
-def _git(*args: str) -> str:
-    """One git command's stdout, or ``""`` when git rejects the request.
+def _head_commit() -> str:
+    """The commit a re-probe stamps, or ``""`` when git cannot say.
 
-    The one git call in this module, and it names HEAD: the writer stamps the
-    commit a receipt was probed at.  Nothing above reads it, so the corpus
-    gate runs on a shallow checkout.
+    The one git call in this module, and it names HEAD: nothing above reads a
+    commit at all, so the corpus gate runs on a shallow checkout.
     """
     result = subprocess.run(
-        ["git", *args],
+        ["git", "rev-parse", "HEAD"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -212,7 +211,7 @@ def repin(
         print(f"corpus pin: {len(ids)} non-legacy scenarios executed")
         return 0
 
-    target = _git("rev-parse", "HEAD")
+    target = _head_commit()
     if not target:
         print("corpus pin: cannot resolve HEAD", file=sys.stderr)
         return 1
