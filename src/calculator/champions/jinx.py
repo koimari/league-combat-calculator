@@ -105,6 +105,12 @@ MODULE_CC = {"W": "slow", "E": "root", "R": "none"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Jinx",
     PACKET_SHA256,
+    assumption_overrides=(
+        "Pow-Pow uses the selected Rev'd Up stack count; Fishbones uses 110% AD per basic attack.",
+        "Get Excited! is opt-in because takedowns are not implied by a damage package.",
+        "W, E, and R use the pinned Wiki rank packets; R's missing-health term is evaluated after "
+        "prior damage events.",
+    ),
     # W's one shock blast lands at the cast: "Jinx fires a shock blast
     # in the target direction that deals physical damage to the first
     # enemy it hits", with no travel duration in the cached entry, and
@@ -148,11 +154,7 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "Pow-Pow uses the selected Rev'd Up stack count; Fishbones uses 110% AD per basic attack.",
-    "Get Excited! is opt-in because takedowns are not implied by a damage package.",
-    "W, E, and R use the pinned Wiki rank packets; R's missing-health term is evaluated after prior damage events.",
-]
+
 SOURCES = list(SOURCES) + [
     {
         "label": "Jinx Switcheroo!",

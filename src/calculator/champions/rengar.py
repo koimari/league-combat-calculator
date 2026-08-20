@@ -231,6 +231,19 @@ MODULE_CC = {"Q": "none", "W": "none"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rengar",
     PACKET_SHA256,
+    assumption_overrides=(
+        "W (Battle Roar) stores 50% of post-mitigation damage taken in the last 1.5 seconds as "
+        "grey health and the active heals the stored pool (the E8a grey-health primitive authors "
+        "the heal from the incoming ledger at each W cast)",
+        "Ferocity caps at 4 stacks (1-second expiry not modeled); at 4 stacks the next Q/W/E cast "
+        "is empowered and prices the wiki Ferocity Bonus values, consuming all stacks",
+        "p_ferocity is the explicit pre-stack state; 0 prices base Q/W/E",
+        "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array as per-rank base "
+        "damage; this module prices base Q from the rank array (20 : 160 + 5% AD) and the empower "
+        "from the level array (35 : 260 + 20% AD)",
+        "R (Thrill of the Hunt) keeps the reviewed packet pricing; its armor reduction and leap "
+        "bonus are target/state effects",
+    ),
     slot_parsers={
         "P": _unseen_predator,
         "Q": _savagery,
@@ -252,22 +265,6 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "W (Battle Roar) stores 50% of post-mitigation damage taken in the "
-    "last 1.5 seconds as grey health and the active heals the stored "
-    "pool (the E8a grey-health primitive authors the heal from the "
-    "incoming ledger at each W cast)",
-    "Ferocity caps at 4 stacks (1-second expiry not modeled); at 4 stacks "
-    "the next Q/W/E cast is empowered and prices the wiki Ferocity Bonus "
-    "values, consuming all stacks",
-    "p_ferocity is the explicit pre-stack state; 0 prices base Q/W/E",
-    "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array "
-    "as per-rank base damage; this module prices base Q from the rank "
-    "array (20 : 160 + 5% AD) and the empower from the level array "
-    "(35 : 260 + 20% AD)",
-    "R (Thrill of the Hunt) keeps the reviewed packet pricing; its armor "
-    "reduction and leap bonus are target/state effects",
-]
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")

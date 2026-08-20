@@ -239,6 +239,18 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Aphelios",
     PACKET_SHA256,
+    assumption_overrides=(
+        "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
+        "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at "
+        "100%. Moonlight Vigil follow-ups remain unmodeled.",
+        "Moonlight Vigil models the sourced initial blast; weapon-specific follow-up attacks "
+        "remain listed in the result as a separate coverage boundary.",
+        "Severum's excess healing converts into a shield capped at the sourced per-level 'Heal' "
+        "row (10 : 160 by level + 6% maximum health) that lingers for up to 30 seconds (wiki P "
+        "prose); with aphelios_overheal_shield (default True) the healing rule stamps each Severum "
+        "heal with the sourced cap and duration, and the participant timeline converts "
+        "heal-in-excess-of-maximum-health into a timed shield at the heal's timestamp.",
+    ),
     slot_parsers={
         "P": _weapon_master,
         "W": _phase,
@@ -292,18 +304,7 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
-    "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at 100%. Moonlight Vigil follow-ups remain unmodeled.",
-    "Moonlight Vigil models the sourced initial blast; weapon-specific follow-up attacks remain listed in the result as a separate coverage boundary.",
-    "Severum's excess healing converts into a shield capped at the sourced "
-    "per-level 'Heal' row (10 : 160 by level + 6% maximum health) that "
-    "lingers for up to 30 seconds (wiki P prose); with "
-    "aphelios_overheal_shield (default True) the healing rule stamps each "
-    "Severum heal with the sourced cap and duration, and the participant "
-    "timeline converts heal-in-excess-of-maximum-health into a timed "
-    "shield at the heal's timestamp.",
-]
+
 SOURCES = list(SOURCES) + [
     {
         "label": "Aphelios weapon system",

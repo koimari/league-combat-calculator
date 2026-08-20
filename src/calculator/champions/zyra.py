@@ -134,6 +134,15 @@ MODULE_CC = {"Q": "none", "E": "root", "R": "knockup"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zyra",
     PACKET_SHA256,
+    assumption_overrides=(
+        "Plant attack damage (15 : 75 by level + 20% AP magic, 0.8 attack speed, 8s duration) is a "
+        "game-file constant (ZyraP PlantDamage); verify on patch updates against Community Dragon",
+        "Thorn Spitters (Q) and Vine Lashers (E) share the same attack formula; the Vine Lasher "
+        "slow and the Stranglethorns enrage flurry (2 shots per attack at 150%) are state, not "
+        "modeled",
+        "The 50% damage falloff for plants that are not the first to attack their target and the "
+        "Monster Hunter bonus vs non-epic monsters are not modeled",
+    ),
     # E's vines burst on the enemies they reach and R damages "as it
     # expands"; neither packet carries a travel or tick phase to place.
     single_hit_slots=frozenset({"E", "R"}),
@@ -167,27 +176,7 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "Every slot is an explicit packet or sourced no-damage entry from the "
-    "pinned local Wiki cache; no runtime archetype inference is used.",
-    "Numeric packets preserve rank/level arrays, typed scaling, target-health "
-    "terms, and explicit variant selectors where the source lists them.",
-    "The complete parent Wiki entry was read before certifying this module.",
-    "Passive plus Q/W/E/R entries are represented by explicit packet or "
-    "no-damage slot declarations.",
-    "Rank arrays, cooldowns, typed target-health terms, and packet variants "
-    "remain sourced from the local reviewed-packet asset.",
-    "Non-damaging shields, buffs, movement, and utility branches remain "
-    "explicit state/out-of-scope rows rather than invented damage.",
-    "Plant attack damage (15 : 75 by level + 20% AP magic, 0.8 attack speed, ",
-    "8s duration) is a game-file constant (ZyraP PlantDamage); verify on patch ",
-    "updates against Community Dragon",
-    "Thorn Spitters (Q) and Vine Lashers (E) share the same attack formula; ",
-    "the Vine Lasher slow and the Stranglethorns enrage flurry (2 shots per ",
-    "attack at 150%) are state, not modeled",
-    "The 50% damage falloff for plants that are not the first to attack their ",
-    "target and the Monster Hunter bonus vs non-epic monsters are not modeled",
-]
+
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
