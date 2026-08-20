@@ -17,6 +17,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -126,9 +127,5 @@ MODULE_CC = {"Q": "slow", "E": "root"}
 
 parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Soraka")

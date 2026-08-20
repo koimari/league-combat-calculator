@@ -25,6 +25,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
@@ -210,9 +211,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Naafiri")

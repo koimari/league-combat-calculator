@@ -9,6 +9,7 @@ authored by the engine's ally-support scanner from the cached W leveling
 declares W in SLOTS so the fight rotation casts it.
 """
 
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "2590188ce529af2e9f91b00238597c2b85f6f388447f0e0f4f34f6e9c4b692f3"
@@ -45,9 +46,5 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Nami")

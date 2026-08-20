@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
@@ -200,9 +201,5 @@ ASSUMPTIONS = [
     "Devastating Charge is one empowered basic attack and therefore shares the item/on-hit timeline.",
 ]
 SOURCES = load_champion_sources("Hecarim")
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Hecarim")

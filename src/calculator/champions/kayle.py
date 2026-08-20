@@ -12,6 +12,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import (
     ability_on_hit_entry,
@@ -145,9 +146,5 @@ def parse_abilities(*args, **kwargs):
 # wiring are one dict off whichever function the module exports.
 parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Kayle")

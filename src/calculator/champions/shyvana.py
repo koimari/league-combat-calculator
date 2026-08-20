@@ -16,6 +16,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -299,9 +300,5 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Shyvana")
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Shyvana")

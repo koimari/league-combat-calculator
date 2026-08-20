@@ -9,6 +9,7 @@ champion death; the selected fight does not invent one.
 from typing import Any
 
 from .engine import build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
@@ -49,9 +50,5 @@ MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Lissandra")

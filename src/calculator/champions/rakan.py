@@ -16,6 +16,7 @@ packet.
 from typing import Any
 
 from .engine import build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import attach_self_shield, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -99,9 +100,5 @@ MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm"}
 
 parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Rakan")

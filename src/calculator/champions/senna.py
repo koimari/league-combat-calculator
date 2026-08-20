@@ -25,6 +25,7 @@ from functools import partial
 from typing import Any
 
 from .engine import BUFF, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits, attach_self_shield, extract_named, extract_value
 
@@ -213,9 +214,5 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Senna")

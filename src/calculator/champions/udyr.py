@@ -27,6 +27,7 @@ rule already models.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .healing_contract import declare_healing_rule
 from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -239,9 +240,5 @@ OPTIONS.append(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R", "W"} else "out_of_scope") for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Udyr")

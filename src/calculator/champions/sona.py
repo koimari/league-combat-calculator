@@ -7,6 +7,7 @@ scanner from the cached W leveling (Heal 30-90 + 30% AP; Shield Strength
 declares W in SLOTS so the fight rotation casts it.
 """
 
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "c78392f6b8f667c85594d31be2e6a9c1b7c6504d5cd02e3c5b385271dafc6c06"
@@ -30,9 +31,5 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R"} else "out_of_scope") for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Sona")

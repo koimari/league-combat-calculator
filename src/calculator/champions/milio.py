@@ -10,6 +10,7 @@ ally-support scanner from cached leveling at the cast times; the module
 declares W/R in SLOTS so the fight rotation casts them.
 """
 
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
@@ -32,9 +33,5 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot == "Q" else "out_of_scope") for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Milio")

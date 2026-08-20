@@ -25,6 +25,7 @@ import dataclasses
 from typing import Any
 
 from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
@@ -119,9 +120,5 @@ OPTIONS.append(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Nidalee")

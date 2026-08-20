@@ -10,6 +10,7 @@ anchor transfer of E ("Affects the Anchor instead of Yuumi") is a scope
 detection the scanner does not express — see E8d reply for the missing hook.
 """
 
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module, full_plus_reduced_parser
 
 PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c82942"
@@ -47,9 +48,5 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R"} else "out_of_scope") for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Yuumi")

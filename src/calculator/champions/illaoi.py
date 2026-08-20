@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
@@ -150,9 +151,5 @@ ASSUMPTIONS = [
     "authors one live missing-health heal per tentacle hit event.",
 ]
 SOURCES = load_champion_sources("Illaoi")
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Illaoi")

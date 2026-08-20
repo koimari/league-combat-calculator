@@ -43,6 +43,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
@@ -240,9 +241,5 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Smolder")

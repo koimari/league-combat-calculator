@@ -17,6 +17,7 @@ reviewed bounce packet pricing is unchanged.
 from dataclasses import replace
 
 from ..ability_spec import DamagePart
+from .healing_contract import declare_healing_rule
 from .inputs import champion_stat
 from .engine import SlotCtx
 from .packet_module import build_packet_module, full_plus_reduced_parser
@@ -174,9 +175,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "
     "(cached passive prose; all four bloblets assumed to survive).",
 ]
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Zac")

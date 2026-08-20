@@ -13,7 +13,7 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import DAMAGE, SlotCtx, SlotParser
+from .engine import SlotCtx, SlotParser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -103,7 +103,7 @@ def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
         )
         return entry
 
-    parse.phase = getattr(base, "phase", DAMAGE)
+    parse.phase = base.phase
     return parse
 
 

@@ -39,6 +39,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .healing_contract import declare_healing_rule
 from .inputs import target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
@@ -395,9 +396,5 @@ parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Briar")
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Briar")

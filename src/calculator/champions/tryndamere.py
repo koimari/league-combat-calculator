@@ -21,6 +21,7 @@ hardcoded.
 from typing import Any
 
 from .engine import build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import simple_damage
@@ -79,9 +80,5 @@ OPTIONS: list[dict[str, Any]] = []
 MODULE_CC = {"E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Tryndamere")

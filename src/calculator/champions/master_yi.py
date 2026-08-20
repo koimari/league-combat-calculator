@@ -23,6 +23,7 @@ stage.
 from typing import Any
 
 from .engine import ONHIT, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
 
@@ -138,9 +139,5 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
     for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Master Yi")

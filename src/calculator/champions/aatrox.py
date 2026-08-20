@@ -22,6 +22,7 @@ hardcoded.
 import re
 from typing import Any
 
+from .healing_contract import declare_healing_rule
 from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
@@ -243,9 +244,5 @@ def derive_self_healing(
 
 
 SOURCES = load_champion_sources("Aatrox")
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Aatrox", derive_self_healing)

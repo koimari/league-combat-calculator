@@ -6,6 +6,7 @@ E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
 
 from functools import partial
 
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
 
@@ -54,9 +55,5 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Renekton")

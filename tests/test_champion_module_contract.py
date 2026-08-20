@@ -136,6 +136,21 @@ def test_review_campaign_batch_modules_and_imports_are_gone():
         assert "reviewed_batch_" not in path.read_text(encoding="utf-8"), path
 
 
+def test_champion_modules_import_only_at_the_top():
+    """No champion module needs a late import: `healing_contract` imports clean."""
+
+    for path in sorted(Path("src/calculator/champions").glob("*.py")):
+        source = path.read_text(encoding="utf-8")
+        assert "wrong-import-position" not in source, path
+
+        seen_code = False
+        for node in ast.parse(source).body:
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                assert not seen_code, f"{path}:{node.lineno} imports after code"
+            elif not isinstance(node, ast.Expr):
+                seen_code = True
+
+
 def test_packet_compiler_contains_no_champion_name_override_registries():
     source = Path("src/calculator/champions/packet_module.py").read_text(
         encoding="utf-8"

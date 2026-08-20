@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -107,9 +108,5 @@ ASSUMPTIONS = [
     "Inspire/Defiance shields and Gathering Fire cooldown refunds remain ally/state utility.",
 ]
 SOURCES = load_champion_sources("Karma")
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Karma")

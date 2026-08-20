@@ -17,6 +17,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
@@ -150,9 +151,5 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Vladimir")

@@ -28,6 +28,7 @@ import re
 from dataclasses import replace
 from typing import Any
 
+from .healing_contract import declare_healing_rule
 from .inputs import champion_stat
 from .engine import SlotCtx, SlotParser, build_parser
 from .scaling import is_flat_unit, resolve_scaling
@@ -334,9 +335,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 
 SOURCES = load_champion_sources("Ambessa")
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Ambessa")
