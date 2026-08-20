@@ -336,8 +336,8 @@ def _wiki_kit(champion):
     return kit
 
 
-def _champion_options_payload(champion, variants, tmp_path):
-    """The ``champion_options`` app.js would POST, from its real builder."""
+def _payload_probe(champion, variants, tmp_path):
+    """Run app.js's real payload builder: ``options`` and ``bindings``."""
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not installed")
@@ -360,6 +360,11 @@ def _champion_options_payload(champion, variants, tmp_path):
         check=True,
     )
     return json.loads(result.stdout)
+
+
+def _champion_options_payload(champion, variants, tmp_path):
+    """The ``champion_options`` app.js would POST."""
+    return _payload_probe(champion, variants, tmp_path)["options"]
 
 
 def test_variant_flattening_pins_the_boolean_option_indices():
@@ -428,12 +433,38 @@ def test_global_form_binding_checks_set_membership_not_property_lookup():
     assert "globalFormToggles().find((key) => declared.has(key))" in source
 
 
-def test_slot_owned_options_are_never_global_form_toggles():
-    """One list, not two: a boolean bound to a single slot (Ziggs' R) must not
-    also answer the global-form lookup for that champion's other slots."""
+@pytest.mark.parametrize(
+    ("champion", "expected"),
+    [
+        ("Ziggs", {"P": None, "Q": None, "W": None, "E": None, "R": "r_sweet_spot"}),
+        (
+            "Jayce",
+            {
+                "P": "hammer_stance",
+                "Q": "accelerated_q",
+                "W": "hammer_stance",
+                "E": "hammer_stance",
+                "R": None,
+            },
+        ),
+    ],
+)
+def test_slot_owned_booleans_never_answer_the_global_form_lookup(
+    champion, expected, tmp_path
+):
+    """A boolean a single slot claims — by explicit binding (Ziggs' R) or by
+    name (Jayce's ``accelerated_q``) — must not be offered to that champion's
+    other slots just because it joined the index map."""
+    assert _payload_probe(champion, {}, tmp_path)["bindings"] == expected
+
+
+def test_the_variant_index_to_boolean_rule_has_one_home():
+    """The dedicated ``r_sweet_spot`` branch is gone; the map is the rule."""
     source = _source()
-    assert "const owned = new Set(Object.values(SLOT_OPTION_BINDINGS));" in source
     assert 'options[option.key] = abilityInput("R").variant === 0;' not in source
+    assert (
+        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
+    )
 
 
 def test_global_form_variant_click_syncs_every_bound_slot():

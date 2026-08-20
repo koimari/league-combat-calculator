@@ -4,7 +4,8 @@
  * Usage: node champion_options_harness.mjs <app.js> <fixture.json>
  * The fixture supplies `champion`, `options` (the backend's option contract),
  * `abilities` (the rendered kit) and `variants` (slot -> the Variant button
- * clicked); stdout is the JSON `champion_options` the UI would POST.
+ * clicked); stdout is JSON: `options` (the `champion_options` the UI would
+ * POST) and `bindings` (the module option each slot's Variant control writes).
  */
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -63,5 +64,11 @@ console.log(vm.runInContext(`
     state.attacker.abilityInputs[slot].variant = index;
     syncGlobalFormVariants(slot, index);
   });
-  JSON.stringify(engineChampionOptions());
+  JSON.stringify({
+    options: engineChampionOptions(),
+    bindings: Object.fromEntries(activeAbilityKit().map((ability) => [
+      ability.slot,
+      abilityOptionBinding(ability.slot, "ability_variants"),
+    ])),
+  });
 `, context));

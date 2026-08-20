@@ -578,10 +578,23 @@ const VARIANT_BOOLEAN_OPTIONS = {
   "accelerated_q": 2,
 };
 
+// The option keys one slot's Variant control claims by name.
+function slotVariantKeys(slot) {
+  const key = slot.toLowerCase();
+  return [
+    `${key}_variant`, `${key}_stance`, `${key}_mode`,
+    `${key}_form`, `${key}_charge`, `${key}_style`,
+    `accelerated_${key}`, `${key}_accelerated`,
+  ];
+}
+
 // The boolean options no single slot claims: global form toggles that
 // re-shape every Q/W/E entry rather than one slot's variant list.
 function globalFormToggles() {
-  const owned = new Set(Object.values(SLOT_OPTION_BINDINGS));
+  const owned = new Set([
+    ...Object.values(SLOT_OPTION_BINDINGS),
+    ...ABILITY_SLOTS.flatMap(slotVariantKeys),
+  ]);
   return Object.keys(VARIANT_BOOLEAN_OPTIONS).filter((key) => !owned.has(key));
 }
 
@@ -600,13 +613,8 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   // per-slot variant/stance/mode key, or a global form toggle (Jayce
   // hammer_stance, Gnar mega, stance) that re-shapes every Q/W/E/R entry.
   const slotKey = slot.toLowerCase();
-  const perSlot = [
-    `${slotKey}_variant`, `${slotKey}_stance`, `${slotKey}_mode`,
-    `${slotKey}_form`, `${slotKey}_charge`, `${slotKey}_style`,
-    `accelerated_${slotKey}`, `${slotKey}_accelerated`,
-  ];
   const declared = new Set(options.map((option) => option.key));
-  const direct = perSlot.find((key) => declared.has(key));
+  const direct = slotVariantKeys(slot).find((key) => declared.has(key));
   if (direct) return direct;
   if (slot !== "R") {
     const toggle = globalFormToggles().find((key) => declared.has(key));
