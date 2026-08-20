@@ -1000,13 +1000,13 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > Amendment M already ruled.* Scanned over `damage.py` for assignment to a `damage`,
    > `total_damage` or `damage_per_hit` subscript: 14 sites in 8 functions, of which **four**
    > functions write rows or events they did not author — the two the ruling names, plus
-   > `_reattribute_empowered_swings` (`damage.py:11804`), which moves damage between two authored
+   > `_reattribute_empowered_swings` (`damage.py:11838`), which moves damage between two authored
    > rows with the fight total untouched, and `_resolve_starting_shield_outcome`
    > (`damage.py:10586`), which re-prices every max-health-scaled packet against the target's live
    > pools and then recomputes `state.total_damage` from the rewritten rows. That is a **third**
    > re-pricing site the prose does not name, which is what Ruling 2's *anything else the scan
    > finds* was written for. And the amp fold appears in that scan **not at all**:
-   > `_apply_command_amp` (`damage.py:11285`) and `_apply_general_amplifiers` (`damage.py:11090`)
+   > `_apply_command_amp` (`damage.py:11322`) and `_apply_general_amplifiers` (`damage.py:11090`)
    > mutate no packet in place — they read the ordered ledger and author a derived bonus row beside
    > it — so a census keyed only on in-place packet writes would enumerate this amendment's term and
    > silently miss Amendment M's. The census owes both shapes.
