@@ -568,12 +568,6 @@ class Pool(Enum):
     COARSE_ROW = "coarse_row"
 
 
-class Attribution(Enum):
-    """Who the rule's contribution is credited to in the receipt."""
-
-    HOLDER = "holder"
-
-
 class BonusTyping(Enum):
     """What damage type an amplifier's own bonus lands as.
 
@@ -1294,9 +1288,9 @@ class ResistanceShredRule:
 class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     """One amplification slot: which events, when, how much, and to whom.
 
-    Nine fields because the amp chain has nine independent questions and
-    collapsing any two of them is what let a pair-side preview and a coupled
-    number both call themselves the answer.  ``lane_chain_rank`` is an
+    One field per independent question the amp chain asks; collapsing any
+    two of them is what let a pair-side preview and a coupled number both
+    call themselves the answer.  ``lane_chain_rank`` is an
     explicit integer: the seven chain slots are ordered, nothing in the
     engine stops a refactor reordering them, and every mixed build's number
     moves when they do.  It is :func:`chain_rank` of the rule's
@@ -1309,7 +1303,6 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     activation: Activation
     consumption: Consumption
     magnitude: Magnitude
-    attribution: Attribution
     typing: Typing
     bonus_typing: BonusTyping
     subject: Subject
@@ -1326,7 +1319,7 @@ class PartAmpRule:  # pylint: disable=too-many-instance-attributes
     own damage where the rotation prices it, and Hexoptics C44 amplifies each
     basic-damage part where the auto-attack path prices it.  Giving them a
     chain rank would claim an ordering against the chain that they do not
-    have, so they carry the same eight policy axes with the rank deliberately
+    have, so they carry the same policy axes with the rank deliberately
     absent — the one field whose meaning is "which position of the chain".
 
     ``typing.attack_classes`` is what tells the two apart and is how the
@@ -1338,7 +1331,6 @@ class PartAmpRule:  # pylint: disable=too-many-instance-attributes
     activation: Activation
     consumption: Consumption
     magnitude: Magnitude
-    attribution: Attribution
     typing: Typing
     bonus_typing: BonusTyping
     subject: Subject
@@ -3583,7 +3575,6 @@ __all__ = [
     "AmpChainSlot",
     "AtLeast",
     "AttackCooldownRefundRule",
-    "Attribution",
     "Basis",
     "BehaviorRule",
     "BehaviorRuleError",
