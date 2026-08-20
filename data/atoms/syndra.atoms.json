@@ -675,6 +675,32 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SyndraRCastTime",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 3.5,
+   "cooldown_rank_max": 3.5,
+   "range": 1650.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Syndra/Spells/SyndraRCastTime"
+   ],
+   "evidence": "name:casttime"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.additive-stacking",
   "family": "stack-transform-summon-resource",
   "behavior": "SyndraRSpread1",
@@ -1070,56 +1096,6 @@
    ],
    "inherited_from": "SyndraE",
    "evidence": "inherited:SyndraE"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SyndraPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Transcendent",
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Syndra/Spells/SyndraPassiveAbility/SyndraPassive"
-   ],
-   "evidence": "wiki-map: passive collects Splinters of Wrath, stacking up to 120"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.upgrade",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SyndraPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Transcendent",
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Syndra/Spells/SyndraPassiveAbility/SyndraPassive"
-   ],
-   "evidence": "wiki-map: collected Splinters enhance each ability at thresholds"
   }
  }
 ]

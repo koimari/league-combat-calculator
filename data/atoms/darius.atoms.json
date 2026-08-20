@@ -282,6 +282,31 @@
   }
  },
  {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "DariusCleaveCloseTarget",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Darius/Spells/DariusCleaveAbility/DariusCleaveCloseTarget"
+   ],
+   "evidence": "name:cleave"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "DariusBasicAttack2",
@@ -735,174 +760,6 @@
    ],
    "inherited_from": "DariusNoxianTacticsONH",
    "evidence": "inherited:DariusNoxianTacticsONH"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "DariusHemo",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage over time",
-    "Bleed"
-   ],
-   "binary": [
-    "Characters/Darius/Spells/DariusHemoMarkerAbility/DariusHemo"
-   ],
-   "evidence": "wiki:P Hemorrhage bleed deals physical damage over 5 seconds"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "DariusHemo",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Bleed"
-   ],
-   "binary": [
-    "Characters/Darius/Spells/DariusHemoMarkerAbility/DariusHemo"
-   ],
-   "evidence": "wiki:P stacks Hemorrhage up to 5 times, refreshed on application"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "DariusHemoInternal",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Darius/Spells/DariusHemoMarkerAbility/DariusHemoInternal"
-   ],
-   "evidence": "binary:internal bleed-stack counter tracker"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "DariusHemoMax",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Darius/Spells/DariusHemoMarkerAbility/DariusHemoMax"
-   ],
-   "evidence": "binary:max-stack trigger state for Noxian Might"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "DariusNoxianTacticsActive",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff",
-    "Attack damage"
-   ],
-   "binary": [
-    "Characters/Darius/Spells/DariusNoxianTacticsONHAbility/DariusNoxianTacticsActive"
-   ],
-   "evidence": "wiki:P at 5 stacks Noxian Might grants massive bonus AD for 5 seconds"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "DariusCleaveCloseTarget",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 5.0,
-   "cooldown_rank_max": 5.0,
-   "range": 465.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Darius/Spells/DariusCleaveAbility/DariusCleaveCloseTarget"
-   ],
-   "evidence": "wiki:Q inner radius deals 35% damage (sweetspot vs handle distinction)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "DariusAxeGrabArmorPen",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 24.0,
-   "cooldown_rank_max": 12.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff",
-    "Armor penetration"
-   ],
-   "binary": [
-    "Characters/Darius/Spells/DariusAxeGrabConeAbility/DariusAxeGrabArmorPen"
-   ],
-   "evidence": "wiki:E passive grants Darius armor penetration"
   }
  }
 ]

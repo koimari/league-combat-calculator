@@ -1,26 +1,449 @@
 [
  {
-  "atom_id": "damage.tag-item",
-  "family": "damage",
-  "behavior": "ItemHurricaneKalistaAttack",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPassiveAllyBuff",
   "trigger": "on_effect",
-  "target_policy": "enemy",
+  "target_policy": "ally",
   "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1400.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveAllyBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 75.0,
+   "range": 1200.0,
    "damage_type": null,
    "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage"
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
    ],
    "binary": [
-    "Characters/Kalista/Spells/ItemHurricaneKalistaAttack"
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunMarker"
    ],
-   "evidence": "name:item"
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRAllyStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 75.0,
+   "range": 1200.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyStun",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 75.0,
+   "range": 1200.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDash",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyDash"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyStunBuffer",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 75.0,
+   "range": 1200.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunBuffer"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRAllyStunBuffer",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 75.0,
+   "cooldown_rank_max": 75.0,
+   "range": 1200.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunBuffer"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 650.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPAltarBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1100.0,
+   "damage_type": null,
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPAltarBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPAltarChannel",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 2.0,
+   "cooldown_rank_max": 2.0,
+   "range": 250.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPAltarChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPBondingRootAlly",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPBondingRootAlly"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveDashSpell",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashSpell"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveDashTargeter",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashTargeter"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveDashSpellActual",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashSpellActual"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 30.0,
+   "cooldown_rank_max": 30.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaWAbility/KalistaW"
+   ],
+   "evidence": "tag:Trait_Ammo"
   }
  },
  {
@@ -48,9 +471,9 @@
   }
  },
  {
-  "atom_id": "damage.basic-attack",
+  "atom_id": "damage.critical-strike",
   "family": "damage",
-  "behavior": "KalistaBasicAttack",
+  "behavior": "KalistaCritAttack",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
@@ -63,45 +486,97 @@
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
+    "Critical strike",
+    "Damage"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttack"
+    "Characters/Kalista/Spells/KalistaCritAttack"
    ],
-   "evidence": "name:basicattack"
+   "evidence": "rule:crit"
   }
  },
  {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "KalistaBasicAttack",
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaCoopStrikeMarkSelf",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
    "damage_type": null,
-   "affects_type_flags": 5327
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KalistaMysticShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
   },
   "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
-    "Attack effects"
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttack"
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
    ],
-   "evidence": "name:basicattack"
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
   "atom_id": "damage.basic-attack",
   "family": "damage",
-  "behavior": "KalistaBasicAttackNone",
+  "behavior": "KalistaBasicAttackPow",
   "trigger": "on_cast",
   "target_policy": "enemy",
   "parameters": {
@@ -119,7 +594,7 @@
     "Attack effects"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackNone"
+    "Characters/Kalista/Spells/KalistaBasicAttackPow"
    ],
    "evidence": "name:basicattack"
   }
@@ -127,7 +602,7 @@
  {
   "atom_id": "damage.tag-basicattack",
   "family": "damage",
-  "behavior": "KalistaBasicAttackNone",
+  "behavior": "KalistaBasicAttackPow",
   "trigger": "on_cast",
   "target_policy": "enemy",
   "parameters": {
@@ -144,9 +619,223 @@
     "Attack effects"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackNone"
+    "Characters/Kalista/Spells/KalistaBasicAttackPow"
    ],
    "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaExpungeMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaCoopStrikeMarkAlly",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaBasicAttackSlow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackSlow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackSlow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "KalistaWSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaWSight"
+   ],
+   "evidence": "name:sight"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDashCantCast2",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast2"
+   ],
+   "evidence": "name:dash"
   }
  },
  {
@@ -228,801 +917,17 @@
   }
  },
  {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "KalistaBasicAttackPow",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackPow"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "KalistaBasicAttackPow",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackPow"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaBasicAttackSlow",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
-   ],
-   "evidence": "name:slow"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "KalistaBasicAttackSlow",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "KalistaBasicAttackSlow",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaCoopStrikeAlly",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
-   ],
-   "evidence": "manual: Oathsworn applies Soul-Mark (wiki W passive)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaCoopStrikeMarkAlly",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
-   ],
-   "evidence": "name:mark"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaCoopStrikeMarkSelf",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
-   ],
-   "evidence": "name:mark"
-  }
- },
- {
-  "atom_id": "damage.proc",
-  "family": "damage",
-  "behavior": "KalistaCoopStrikeProc",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "On-damage effects"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeProc"
-   ],
-   "evidence": "name:proc"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaCoopStrikeSelf",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
-   ],
-   "evidence": "manual: W Soul-Marked applies mark to target hit (wiki W passive)"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "KalistaCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaESlow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaESlow"
-   ],
-   "evidence": "name:slow"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KalistaExpunge",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
-   ],
-   "evidence": "manual: E Rend rips spears for physical damage (wiki E)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaExpungeMarker",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
-   ],
-   "evidence": "name:mark"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KalistaExpungeWrapper",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
-   ],
-   "evidence": "manual: E Rend rips spears for physical damage (wiki E)"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "KalistaMysticShot",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KalistaMysticShot",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "KalistaMysticShotMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMis"
-   ],
-   "inherited_from": "KalistaMysticShot",
-   "evidence": "inherited:KalistaMysticShot"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KalistaMysticShotMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMis"
-   ],
-   "inherited_from": "KalistaMysticShot",
-   "evidence": "inherited:KalistaMysticShot"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KalistaMysticShotMisTrue",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
-   ],
-   "evidence": "variant of KalistaMysticShot (Q Pierce missile)"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "KalistaMysticShotMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMissile"
-   ],
-   "inherited_from": "KalistaMysticShot",
-   "evidence": "inherited:KalistaMysticShot"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KalistaMysticShotMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMissile"
-   ],
-   "inherited_from": "KalistaMysticShot",
-   "evidence": "inherited:KalistaMysticShot"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaPAltarBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1100.0,
-   "damage_type": null,
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPAltarBuff"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.channel",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaPAltarChannel",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 2.0,
-   "cooldown_rank_max": 2.0,
-   "range": 250.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Interrupt",
-    "Types of Crowd Control/Summary"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPAltarChannel"
-   ],
-   "evidence": "name:channel"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.root",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaPBondingRootAlly",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Dash",
-    "Blink",
-    "Cleanse"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPBondingRootAlly"
-   ],
-   "evidence": "name:root"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.channel",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaPChannel",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Interrupt",
-    "Types of Crowd Control/Summary"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPChannel"
-   ],
-   "evidence": "name:channel"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaPInvocation",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
-   ],
-   "evidence": "manual: Oathsworn bond invocation (wiki P)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaPassiveAllyBuff",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveAllyBuff"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaPassiveBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.channel",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaPassiveChannel",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Interrupt",
-    "Types of Crowd Control/Summary"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveChannel"
-   ],
-   "evidence": "name:channel"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaPassiveCoopStrike",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
-   ],
-   "evidence": "manual: W Soul-Marked applies mark to target hit (wiki W passive)"
-  }
- },
- {
   "atom_id": "crowd-control-mobility.dash",
   "family": "crowd-control-mobility",
-  "behavior": "KalistaPassiveDashSpell",
+  "behavior": "KalistaRAllyDashCantCast3",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
    "range": 25000.0,
    "damage_type": null,
-   "affects_type_flags": 6154
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
@@ -1034,115 +939,7 @@
     "Interrupt"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashSpell"
-   ],
-   "evidence": "name:dash"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaPassiveDashSpellActual",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashSpellActual"
-   ],
-   "evidence": "name:dash"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaPassiveDashTargeter",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashTargeter"
-   ],
-   "evidence": "name:dash"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaPassiveOn",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
-   ],
-   "evidence": "manual: Martial Poise passive active state (wiki P)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRAllyDash",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyDash"
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast3"
    ],
    "evidence": "name:dash"
   }
@@ -1229,297 +1026,62 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRAllyDashCantCast2",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRAllyDashCantCast2"
-   ],
-   "evidence": "name:dash"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRAllyDashCantCast3",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRAllyDashCantCast3"
-   ],
-   "evidence": "name:dash"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stun",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRAllyStun",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 75.0,
-   "cooldown_rank_max": 75.0,
-   "range": 1200.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStun"
-   ],
-   "evidence": "name:stun"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stun",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRAllyStunBuffer",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 75.0,
-   "cooldown_rank_max": 75.0,
-   "range": 1200.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunBuffer"
-   ],
-   "evidence": "name:stun"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaRAllyStunBuffer",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 75.0,
-   "cooldown_rank_max": 75.0,
-   "range": 1200.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunBuffer"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stun",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRAllyStunMarker",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 75.0,
-   "cooldown_rank_max": 75.0,
-   "range": 1200.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunMarker"
-   ],
-   "evidence": "name:stun"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaRAllyStunMarker",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 75.0,
-   "cooldown_rank_max": 75.0,
-   "range": 1200.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunMarker"
-   ],
-   "evidence": "name:mark"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaRInvuln",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff",
-    "Invulnerability"
-   ],
-   "binary": [
-    "KalistaRInvuln"
-   ],
-   "evidence": "manual: R renders Oathsworn invulnerable and untargetable (wiki R Fate's Call)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "KalistaRMis",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyDash"
-   ],
-   "evidence": "variant of KalistaRAllyDash (R Oathsworn dash missile)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaRSpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
-   ],
-   "evidence": "manual: R hold/tether state for Oathsworn (wiki R Fate's Call)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaW",
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackNone",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 30.0,
-   "cooldown_rank_max": 30.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Ability resource"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaWAbility/KalistaW"
+    "Characters/Kalista/Spells/KalistaBasicAttackNone"
    ],
-   "evidence": "tag:Trait_Ammo"
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaWAllyPassive",
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackNone",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackNone"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "KalistaCoopStrikeProc",
   "trigger": "on_effect",
-  "target_policy": "ally",
+  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -1530,89 +1092,186 @@
   "relations": [],
   "provenance": {
    "wiki": [
-    "Debuff"
+    "Damage",
+    "On-damage effects"
    ],
    "binary": [
-    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
+    "Characters/Kalista/Spells/KalistaCoopStrikeProc"
    ],
-   "evidence": "manual: allied basic attacks apply Soul-Mark (wiki W passive)"
+   "evidence": "name:proc"
   }
  },
  {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "KalistaWSeen",
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttack",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Sight",
-    "Ward",
-    "Vision score"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaWSight"
-   ],
-   "evidence": "variant of KalistaWSight (W Sentinel grants sight)"
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "KalistaWSight",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Sight",
-    "Ward",
-    "Vision score",
-    "Stealth"
-   ],
-   "binary": [
-    "Characters/Kalista/Spells/KalistaWSight"
-   ],
-   "evidence": "name:sight"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KalistaWSpawnMinion",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 5327
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Summon"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "KalistaWSpawnMinion"
+    "Characters/Kalista/Spells/KalistaBasicAttack"
    ],
-   "evidence": "manual: W summons a Sentinel patrol (wiki W Sentinel)"
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneKalistaAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1400.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/ItemHurricaneKalistaAttack"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMis"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMis"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMissile"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMissile"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
   }
  }
 ]

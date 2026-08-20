@@ -515,9 +515,16 @@ ASSUMPTIONS = [
     "With no auto stream the restore has nothing to ride; Hyper Charge's "
     "forced ability-row swings (one-rotation mode) are not basic-attack "
     "stream autos and do not restore. The restore's per-swing timing is "
-    "the modeled auto schedule; Hail of Blades/Lethal Tempo and Lich "
-    "Bane-adjusted schedules resolve after the resource walk, so their "
-    "per-swing restore timing is not mirrored (count is)",
+    "the modeled auto schedule, INCLUDING Hail of Blades/Lethal Tempo's "
+    "stack-sensitive schedule (the resource walk resolves it directly "
+    "from the keystone effect since it runs before the engine installs "
+    "it on state). Lich Bane's proc-timed speedup still resolves after "
+    "the resource walk, so ONLY its per-swing restore timing is not "
+    "mirrored (count is). The walk rides EVERY modeled basic attack, "
+    "including the one R (Transform) consumes via empowers_next_auto — "
+    "that swing is a basic attack, so it restores, even though the "
+    "public auto_attacks row hands its event to the R row instead "
+    "(the row is the stream's prefix, one event short)",
     "Cannon E (Acceleration Gate) emits nothing: its movement speed is "
     "utility and its Shock Blast supercharge is the accelerated_q option",
     "Cannon R raises attack range from 125 to 500; Jayce's JSON attackType "

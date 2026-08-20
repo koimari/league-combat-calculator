@@ -834,26 +834,5 @@
    ],
    "evidence": "name:basicattack"
   }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "ViPassive",
-  "trigger": "on_ability_hit",
-  "target_policy": "self",
-  "parameters": {
-   "percent_max_health": 12.0,
-   "duration_seconds": 3.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Blast Shield"
-   ],
-   "binary": [
-    "Characters/Vi/Spells/ViPassiveAbility/ViPassive"
-   ],
-   "evidence": "wiki P: next ability hit grants a shield equal to 12% max health for 3 seconds"
-  }
  }
 ]

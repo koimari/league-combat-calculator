@@ -236,6 +236,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "SlipstreamCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Singed/Spells/SlipstreamCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "SingedBasicAttack2",
@@ -287,179 +312,57 @@
   }
  },
  {
-  "atom_id": "damage.dot",
+  "atom_id": "damage.aoe",
   "family": "damage",
-  "behavior": "PoisonTrail",
-  "trigger": "on_effect",
+  "behavior": "MegaAdhesive",
+  "trigger": "threshold",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 1.0,
-   "cooldown_rank_max": 1.0,
-   "range": 0.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
+   "cooldown_rank1": 17.0,
+   "cooldown_rank_max": 13.0,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
   },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "damage.damage-instance"
-  ],
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Poison Trail",
+    "Damage",
     "Damage over time"
    ],
    "binary": [
-    "Characters/Singed/Spells/PoisonTrailAbility/PoisonTrail"
+    "Characters/Singed/Spells/MegaAdhesiveAbility/MegaAdhesive"
    ],
-   "evidence": "wiki: poison tick magic damage every 0.25s over 2s"
+   "evidence": "tag:Trait_AoE"
   }
  },
  {
-  "atom_id": "damage.persistent-area",
+  "atom_id": "damage.execute",
   "family": "damage",
-  "behavior": "PoisonTrail",
-  "trigger": "on_effect",
+  "behavior": "MegaAdhesive",
+  "trigger": "threshold",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 1.0,
-   "cooldown_rank_max": 1.0,
-   "range": 0.0,
+   "cooldown_rank1": 17.0,
+   "cooldown_rank_max": 13.0,
+   "range": 1000.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 6154
   },
   "relations": [
-   "damage.dot"
+   "stats.health",
+   "damage.missing-health"
   ],
   "provenance": {
    "wiki": [
-    "Poison Trail"
+    "Execution",
+    "True damage",
+    "Damage"
    ],
    "binary": [
-    "Characters/Singed/Spells/PoisonTrailAbility/PoisonTrail"
+    "Characters/Singed/Spells/MegaAdhesiveAbility/MegaAdhesive"
    ],
-   "evidence": "wiki: toxic cloud lingers 3.25s in Singed's wake"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.ground",
-  "family": "crowd-control-mobility",
-  "behavior": "MegaAdhesive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 17.0,
-   "cooldown_rank_max": 13.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mega Adhesive",
-    "Ground"
-   ],
-   "binary": [
-    "Characters/Singed/Spells/MegaAdhesive"
-   ],
-   "evidence": "wiki: field grounds enemies for 3s"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "MegaAdhesive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 17.0,
-   "cooldown_rank_max": 13.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mega Adhesive",
-    "Slow"
-   ],
-   "binary": [
-    "Characters/Singed/Spells/MegaAdhesive"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SingedP",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Noxious Slipstream"
-   ],
-   "binary": [
-    "Characters/Singed/Spells/SingedPAbility/SingedP"
-   ],
-   "evidence": "wiki: stacks up to 25 on passing near champions"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mana",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SingedQPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 1.0,
-   "cooldown_rank_max": 1.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Poison Trail",
-    "Mana cost"
-   ],
-   "binary": [
-    "Characters/Singed/Spells/SingedQPassive"
-   ],
-   "evidence": "wiki: toggle toggled off when unable to pay mana cost"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SlipstreamCooldown",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Noxious Slipstream"
-   ],
-   "binary": [
-    "Characters/Singed/Spells/SlipstreamCooldown"
-   ],
-   "evidence": "wiki: same-target slipstream limited to once every few seconds"
+   "evidence": "rule:execute"
   }
  }
 ]

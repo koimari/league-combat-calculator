@@ -1,504 +1,114 @@
 [
  {
-  "atom_id": "damage.tag-item",
+  "atom_id": "damage.damage-instance",
   "family": "damage",
-  "behavior": "ItemHurricaneJinxAttack",
+  "behavior": "JinxW",
   "trigger": "on_cast",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 1400.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 3.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
   },
-  "relations": [],
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
    ],
    "binary": [
-    "Characters/Jinx/Spells/ItemHurricaneJinxAttack"
+    "Characters/Jinx/Spells/JinxWAbility/JinxW"
    ],
-   "evidence": "name:item"
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack4"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack4"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack5",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack5"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack5",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack5"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack6",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack6"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JinxBasicAttack6",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxBasicAttack6"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JinxCatchMe/JinxPassiveKill (Get Excited! movement speed)",
-  "trigger": "on_takedown",
-  "target_policy": "self",
-  "parameters": {
-   "bonus_move_speed_pct": 175,
-   "decay_seconds": 6
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Jinx Get Excited!"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxPassiveAbility/JinxCatchMe",
-    "Characters/Jinx/Spells/JinxPassiveAbility/JinxPassiveKill"
-   ],
-   "evidence": "BuffData game_buff_tooltip_JinxCatchMe / JinxPassiveKill"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JinxCritAttack",
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "JinxWSight",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Critical strike",
-    "Damage"
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
    ],
    "binary": [
-    "Characters/Jinx/Spells/JinxCritAttack"
+    "Characters/Jinx/Spells/JinxWAbility/JinxWSight"
    ],
-   "evidence": "rule:crit"
+   "evidence": "name:sight"
   }
  },
  {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JinxCritAttack2",
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "JinxEMineSight",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Critical strike",
-    "Damage"
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
    ],
    "binary": [
-    "Characters/Jinx/Spells/JinxCritAttack2"
+    "Characters/Jinx/Spells/JinxEAbility/JinxEMineSight"
    ],
-   "evidence": "rule:crit"
+   "evidence": "name:sight"
   }
  },
  {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JinxCritAttack3",
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "JinxEMineSnare",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Critical strike",
-    "Damage"
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
    ],
    "binary": [
-    "Characters/Jinx/Spells/JinxCritAttack3"
+    "Characters/Jinx/Spells/JinxEAbility/JinxEMineSnare"
    ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JinxCritAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxCritAttack4"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JinxCritAttack5",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxCritAttack5"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JinxCritAttack6",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxCritAttack6"
-   ],
-   "evidence": "rule:crit"
+   "evidence": "name:snare"
   }
  },
  {
@@ -582,199 +192,6 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "JinxEHit",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 27.5,
-   "cooldown_rank_max": 10.0,
-   "range": 925.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
-   ],
-   "inherited_from": "JinxE",
-   "evidence": "inherited:JinxE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "JinxEHit",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 27.5,
-   "cooldown_rank_max": 10.0,
-   "range": 925.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
-   ],
-   "inherited_from": "JinxE",
-   "evidence": "inherited:JinxE"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "JinxEHit",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 27.5,
-   "cooldown_rank_max": 10.0,
-   "range": 925.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
-   ],
-   "inherited_from": "JinxE",
-   "evidence": "inherited:JinxE"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.trap",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JinxEMine (Flame Chompers unit)",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "count": 3
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Jinx Flame Chompers!"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxEAbility/JinxEMine"
-   ],
-   "evidence": "BuffData game_buff_tooltip_JinxEMine"
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "JinxEMineSight",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Sight",
-    "Ward",
-    "Vision score",
-    "Stealth"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxEAbility/JinxEMineSight"
-   ],
-   "evidence": "name:sight"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.root",
-  "family": "crowd-control-mobility",
-  "behavior": "JinxEMineSnare",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Dash",
-    "Blink",
-    "Cleanse"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxEAbility/JinxEMineSnare"
-   ],
-   "evidence": "name:snare"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.additive-stacking",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JinxPassiveKillAttackSpeed (Rev'd up attack-speed stacks)",
-  "trigger": "on_attack",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Jinx Switcheroo! (Pow-Pow Rev'd up attack-speed stacks)"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxPassiveAbility/JinxPassiveKillAttackSpeed"
-   ],
-   "evidence": "BuffData game_buff_tooltip_JinxPassiveKillAttackSpeed; wiki Q documents the stacking"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JinxPassiveMarker",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxPassiveMarkerAbility/JinxPassiveMarker"
-   ],
-   "evidence": "name:mark"
-  }
- },
- {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "JinxQ",
@@ -853,152 +270,6 @@
   }
  },
  {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "JinxQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.8999999761581421,
-   "cooldown_rank_max": 0.8999999761581421,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13519
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
-   ],
-   "inherited_from": "JinxQ",
-   "evidence": "inherited:JinxQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "JinxQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.8999999761581421,
-   "cooldown_rank_max": 0.8999999761581421,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13519
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
-   ],
-   "inherited_from": "JinxQ",
-   "evidence": "inherited:JinxQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.toggle-form",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JinxQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.8999999761581421,
-   "cooldown_rank_max": 0.8999999761581421,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13519
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
-   ],
-   "inherited_from": "JinxQ",
-   "evidence": "inherited:JinxQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "JinxQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.8999999761581421,
-   "cooldown_rank_max": 0.8999999761581421,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13519
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
-   ],
-   "inherited_from": "JinxQ",
-   "evidence": "inherited:JinxQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "JinxQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.8999999761581421,
-   "cooldown_rank_max": 0.8999999761581421,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13519
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
-   ],
-   "inherited_from": "JinxQ",
-   "evidence": "inherited:JinxQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.toggle-form",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JinxQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.8999999761581421,
-   "cooldown_rank_max": 0.8999999761581421,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13519
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
-   ],
-   "inherited_from": "JinxQ",
-   "evidence": "inherited:JinxQ"
-  }
- },
- {
   "atom_id": "damage.critical-strike",
   "family": "damage",
   "behavior": "JinxQCritAttack",
@@ -1021,6 +292,54 @@
     "Characters/Jinx/Spells/JinxQAbility/JinxQCritAttack"
    ],
    "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxPassiveMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxPassiveMarkerAbility/JinxPassiveMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneJinxAttack",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 1400.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/ItemHurricaneJinxAttack"
+   ],
+   "evidence": "name:item"
   }
  },
  {
@@ -1107,32 +426,459 @@
   }
  },
  {
-  "atom_id": "damage.damage-instance",
+  "atom_id": "damage.critical-strike",
   "family": "damage",
-  "behavior": "JinxW",
-  "trigger": "on_cast",
+  "behavior": "JinxCritAttack",
+  "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 3.0,
-   "range": 10000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 13327
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
   },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
+  "relations": [],
   "provenance": {
    "wiki": [
+    "Critical strike",
     "Damage"
    ],
    "binary": [
-    "Characters/Jinx/Spells/JinxWAbility/JinxW"
+    "Characters/Jinx/Spells/JinxCritAttack"
    ],
-   "evidence": "tag:Trait_DamageAbility"
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack5"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack4"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack6"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack3"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack5"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack5"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack6"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack6"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -1160,30 +906,224 @@
   }
  },
  {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "JinxWSight",
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JinxEHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 27.5,
+   "cooldown_rank_max": 10.0,
+   "range": 925.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
+   ],
+   "inherited_from": "JinxE",
+   "evidence": "inherited:JinxE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxEHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 27.5,
+   "cooldown_rank_max": 10.0,
+   "range": 925.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
+   ],
+   "inherited_from": "JinxE",
+   "evidence": "inherited:JinxE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxEHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 27.5,
+   "cooldown_rank_max": 10.0,
+   "range": 925.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
+   ],
+   "inherited_from": "JinxE",
+   "evidence": "inherited:JinxE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxQAttack2",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.8999999761581421,
+   "cooldown_rank_max": 0.8999999761581421,
+   "range": 600.0,
    "damage_type": "physical",
-   "affects_type_flags": null
+   "affects_type_flags": 13519
   },
-  "relations": [],
   "provenance": {
    "wiki": [
-    "Sight",
-    "Ward",
-    "Vision score",
-    "Stealth"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Jinx/Spells/JinxWAbility/JinxWSight"
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
    ],
-   "evidence": "name:sight"
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.8999999761581421,
+   "cooldown_rank_max": 0.8999999761581421,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.8999999761581421,
+   "cooldown_rank_max": 0.8999999761581421,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.8999999761581421,
+   "cooldown_rank_max": 0.8999999761581421,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.8999999761581421,
+   "cooldown_rank_max": 0.8999999761581421,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.8999999761581421,
+   "cooldown_rank_max": 0.8999999761581421,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
   }
  }
 ]

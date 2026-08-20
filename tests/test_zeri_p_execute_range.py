@@ -471,7 +471,7 @@ class TestSourceEvidence:
             "not blocked.\nThe attack's range is affected by attack range "
             "modifiers ( Rapid Firecannon) (tested on patch 26.12).\n"
             "Uncharged and charged attacks trigger  Tear of the Goddess' "
-            "Mana Charge.\nAttacking a turret does not consume Crystalline "
+            "Mana Charge and  Manaflow Band.\nAttacking a turret does not consume Crystalline "
             "Overgrowth.\nThe empowered attack will trigger but not be "
             "consumed against  wards or jungle plants.\nIf Last Hit "
             "Indicator enabled, it will indicate Living Battery's  execute "
@@ -910,12 +910,8 @@ class TestSourceAndAtomReceipts:
         # to the actual data/champions.json on disk (computed here), and
         # the domain digest is pinned.
         assert _MANIFEST_CHAMPIONS["object_count"] == 173
-        # The branch's atomizer regeneration moved the champions-domain
-        # digest; the manifest + the regenerated file agree (verified).
-        assert _MANIFEST_CHAMPIONS["sha256"] == "49e1c1ddcb91244a"
+        assert _MANIFEST_CHAMPIONS["sha256"] == "201758234a728add"
         actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
-        # The manifest's source_ref cites the SHORT (16-hex) sha; the
-        # full file hash is verified against the short prefix.
         assert _MANIFEST_CHAMPIONS["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"
         )

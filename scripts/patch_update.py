@@ -34,7 +34,7 @@ Usage:
     python scripts/patch_update.py audit           # re-print audit, no pull
     python scripts/patch_update.py detail NAME...  # full leaf diff for any
                                                    # champion/item vs HEAD
-    python scripts/patch_update.py run --patch 16.16  # pin the staleness gate
+    python scripts/patch_update.py run --patch 26.16  # public patch label
 """
 
 import argparse
@@ -52,6 +52,7 @@ from src.calculator.champions import registered_champion_names
 from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.item_effects import _STATIC_VALUE_KEYS_BY_ITEM
 from src.calculator.item_source import branch_losses, source_audit
+from src.calculator.patch_identity import client_patch
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 REVIEWED_PACKETS = REPO_ROOT / "static" / "reviewed-packets.json"
@@ -610,6 +611,11 @@ def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int
         str(out),
     ]
     if patch:
+        try:
+            patch = client_patch(patch)
+        except ValueError as exc:
+            print(f"\nFAIL: invalid public patch label: {exc}", flush=True)
+            return 2
         command += ["--patch", patch]
     result = subprocess.run(command, cwd=REPO_ROOT, check=False)
     if result.returncode == 2:

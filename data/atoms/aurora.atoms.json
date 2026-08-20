@@ -1,5 +1,218 @@
 [
  {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 825.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraEAbility/AuroraE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 15.0,
+   "cooldown_rank_max": 10.0,
+   "range": 825.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraEAbility/AuroraE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 10.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraRAbility/AuroraR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 10.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraRAbility/AuroraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 6.5,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraQAbility/AuroraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 6.5,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraQAbility/AuroraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{5c9deb39}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "{5c9deb39}"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.dash",
   "family": "crowd-control-mobility",
   "behavior": "AuroraW",
@@ -25,508 +238,6 @@
     "Characters/Aurora/Spells/AuroraWAbility/AuroraW"
    ],
    "evidence": "tag:Trait_PlayerSelectedDashDirection"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.speed-buff",
-  "family": "crowd-control-mobility",
-  "behavior": "AuroraWMS",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Across the Veil: Realm Hopper \u2014 ghosted and gains bonus movement speed for 4 seconds (MoveSpeedCalc/BonusMSCalc calcs)"
-   ],
-   "binary": [
-    "{8ea20d6a}"
-   ]
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AuroraE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 15.0,
-   "cooldown_rank_max": 10.0,
-   "range": 825.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraEAbility/AuroraE"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AuroraQ",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 6.5,
-   "range": 900.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraQAbility/AuroraQ"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AuroraQReturnMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 6.5,
-   "range": 900.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{fe565ec8}"
-   ],
-   "inherited_from": "AuroraQ",
-   "evidence": "inherited:AuroraQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AuroraR",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 10.0,
-   "range": 700.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraRAbility/AuroraR"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AuroraRMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 10.0,
-   "range": 700.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{36b6a65c}"
-   ],
-   "inherited_from": "AuroraR",
-   "evidence": "inherited:AuroraR"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AuroraBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "{5c9deb39}"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AuroraBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "AuroraCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AuroraE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 15.0,
-   "cooldown_rank_max": 10.0,
-   "range": 825.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraEAbility/AuroraE"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AuroraQ",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 6.5,
-   "range": 900.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraQAbility/AuroraQ"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AuroraQReturnMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 6.5,
-   "range": 900.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{fe565ec8}"
-   ],
-   "inherited_from": "AuroraQ",
-   "evidence": "inherited:AuroraQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AuroraR",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 10.0,
-   "range": 700.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraRAbility/AuroraR"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AuroraRMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 10.0,
-   "range": 700.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{36b6a65c}"
-   ],
-   "inherited_from": "AuroraR",
-   "evidence": "inherited:AuroraR"
-  }
- },
- {
-  "atom_id": "damage.missile",
-  "family": "damage",
-  "behavior": "AuroraQRecast",
-  "trigger": "on_recast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Twofold Hex recast: expunges the curse, returning bolts deal magic damage (Trait_FreeRecast)"
-   ],
-   "binary": [
-    "{55293a74}"
-   ]
-  }
- },
- {
-  "atom_id": "damage.proc",
-  "family": "damage",
-  "behavior": "AuroraPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Spirit Abjuration: third stack consumes all to deal bonus magic damage equal to 1% (+2.7% per 100 AP) of max health (ProcDamage calc)"
-   ],
-   "binary": [
-    "{55fe4142}"
-   ]
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AuroraBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "{5c9deb39}"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AuroraBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Aurora/Spells/AuroraBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "heal.self",
-  "family": "heal-shield",
-  "behavior": "AuroraPassive",
-  "trigger": "on_tick",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Spirit Abjuration: for each active Spirit, Aurora is healed every second; up to 4 Spirits (HealCalc calc)"
-   ],
-   "binary": [
-    "{55fe4142}"
-   ]
-  }
- },
- {
-  "atom_id": "interaction.zone-end",
-  "family": "interaction",
-  "behavior": "AuroraRRecast",
-  "trigger": "on_recast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Between Worlds recast: closes the rift prematurely; no damage or crowd control"
-   ],
-   "binary": [
-    "{f84a9cce}"
-   ]
   }
  },
  {
@@ -556,6 +267,180 @@
     "Characters/Aurora/Spells/AuroraWAbility/AuroraW"
    ],
    "evidence": "tag:Trait_Invisibility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AuroraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AuroraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Aurora/Spells/AuroraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 10.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{36b6a65c}"
+   ],
+   "inherited_from": "AuroraR",
+   "evidence": "inherited:AuroraR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 10.0,
+   "range": 700.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{36b6a65c}"
+   ],
+   "inherited_from": "AuroraR",
+   "evidence": "inherited:AuroraR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AuroraQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 6.5,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{fe565ec8}"
+   ],
+   "inherited_from": "AuroraQ",
+   "evidence": "inherited:AuroraQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AuroraQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 6.5,
+   "range": 900.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{fe565ec8}"
+   ],
+   "inherited_from": "AuroraQ",
+   "evidence": "inherited:AuroraQ"
   }
  }
 ]

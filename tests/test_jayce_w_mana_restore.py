@@ -16,9 +16,7 @@ CURRENT kernel:
 
 This matrix is DISJOINT from ``tests/test_mana_restore_refund.py`` (the
 RLM-1 M1-M10/S1/S2 package matrix): every test here is named
-``test_p112_*`` and pins the P1-12 completion rules 1-14 directly.  A
-mechanic the kernel genuinely does not have is marked xfail with reason
-``awaiting P1-12 ...`` (see the Hail of Blades timing test).
+``test_p112_*`` and pins the P1-12 completion rules 1-15 directly.
 
 Contract map (completion rule -> test):
 
@@ -40,7 +38,7 @@ Contract map (completion rule -> test):
  13 unchanged boundaries                 test_p112_damage_pricing_untouched_by_restore,
                                          test_p112_unrelated_refunds_and_champions_untouched
  14 existing regression surface          test_p112_existing_regression_surface_invariants
-     (+ xfail)                           test_p112_hail_of_blades_per_swing_restore_timing
+ 15 HoB/LT-adjusted restore timing      test_p112_hail_of_blades_per_swing_restore_timing
 """
 
 import math
@@ -62,6 +60,7 @@ from src.calculator.resource_ledger import (
     ResourceEvent,
     ResourceLedger,
 )
+from src.calculator.rune_effects import resolve_keystone
 
 # The sourced atom behind Jayce's W-slot mana restore.  Source path:
 # Jayce.W[0].effects[0].leveling[0].modifiers[0] ("Mana Restored",
@@ -826,24 +825,33 @@ def test_p112_existing_regression_surface_invariants():
 
 
 # ---------------------------------------------------------------------------
-# Genuinely-absent mechanics (xfail until P1-12 repair lands)
+# 15. Keystone-adjusted (Hail of Blades) per-swing restore timing
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason=(
-        "awaiting P1-12 Hail of Blades/Lethal Tempo per-swing restore timing "
-        "(module ASSUMPTIONS: restore count rides the uniform base schedule; "
-        "HoB/LT-adjusted swing timing is not mirrored by the resource walk)"
-    ),
-)
 def test_p112_hail_of_blades_per_swing_restore_timing():
-    """The restore walk runs before ``_prepare_hail_attack_schedule``, so
-    per-swing restore times follow the uniform base schedule.  The pinned
-    contract (each auto restores AT ITS swing time) implies that once the
-    HoB/LT-adjusted schedule is the fight's auto schedule, restore times
-    must mirror it — today they do not (documented absence)."""
+    """Rule 15: the restore walk rides the HAIL-ADJUSTED swing schedule.
+
+    ``_auto_restore_schedule`` runs before ``_prepare_hail_attack_schedule``
+    installs Hail's stack-sensitive schedule on ``state.hail_attack_times``,
+    so it used to fall back to the uniform base schedule.  It now goes
+    through ``_restore_stream_attack_timestamps``
+    (``src/calculator/damage.py``), which resolves that SAME schedule
+    directly from the keystone effect, so every restore lands at its real
+    swing time.
+
+    Every expected timestamp below is derived from sourced values only:
+
+      * ``attack_speed`` / ``attack_speed_ratio`` from the fight's own
+        champion stats,
+      * Hail's bonus attack speed, stack count, stack duration and
+        cooldown from ``data/runes.json`` via
+        ``rune_effects.resolve_keystone`` accessors.
+
+    Jayce is RANGED in both stances (module ASSUMPTIONS: his JSON
+    ``attackType`` is RANGED and the wiki classifies him that way), so the
+    sourced ranged branch (60%) is the one that applies.
+    """
     champ = get_champion("Jayce")
     result = run_fight(
         champ,
@@ -855,11 +863,66 @@ def test_p112_hail_of_blades_per_swing_restore_timing():
             champion_options={"hammer_stance": True},
         ),
     )
+
+    # --- sourced inputs -------------------------------------------------
+    effect = resolve_keystone("Hail of Blades")
+    stats = result["champion_stats"]
+    base_rate = stats["attack_speed"]  # uptime is 1.0 in _params
+    ranged_percent = effect.bonus_attack_speed_percent(False)
+    assert ranged_percent == 60.0  # data/runes.json melee/ranged = 90/60
+    assert effect.initial_stacks == 2
+    assert effect.stack_duration_seconds == 3.0
+    assert effect.cooldown_seconds == 10.0
+    # AS formula: base_AS + AS_ratio x (bonus_percent / 100)
+    active_rate = base_rate + stats["attack_speed_ratio"] * ranged_percent / 100.0
+    base_interval = 1.0 / base_rate
+    active_interval = 1.0 / active_rate
+    assert active_interval < base_interval
+
+    # --- closed-form Hail swing schedule over the 12s window ------------
+    # Window 1 opens on swing 0 (2 stacks, 3s). Swings 0 and 1 consume
+    # them, so the only ACTIVE-rate gap is 0 -> 1.
+    swing_0 = 0.0
+    swing_1 = swing_0 + active_interval
+    # Stacks are gone after swing 1, so the cooldown starts there and the
+    # stream reverts to the base rate for swings 2..11.
+    cooldown_ready = swing_1 + effect.cooldown_seconds
+    mid_swings = [swing_1 + index * base_interval for index in range(1, 11)]
+    # Window 2 opens on the first swing at/after the cooldown: swing 11,
+    # not swing 10.
+    assert mid_swings[-2] < cooldown_ready  # swing 10 is too early
+    assert mid_swings[-1] >= cooldown_ready  # swing 11 re-arms Hail
+    swing_12 = mid_swings[-1] + active_interval
+    assert swing_12 < 12.0  # lands inside the fight window
+    # Swings 11 and 12 consume the second window's 2 stacks, so the next
+    # swing would be a base-rate one past the end of the fight.
+    assert swing_12 + base_interval >= 12.0
+    expected_swings = [swing_0, swing_1, *mid_swings, swing_12]
+    assert len(expected_swings) == 13
+
+    # --- the restore walk mirrors that schedule swing for swing --------
     restores = _jayce_restores(result["resource_ledger"]["receipts"])
-    auto_times = [
-        event["time"] for event in result["breakdown"]["auto_attacks"]["damage_events"]
-    ]
     assert [r["time"] for r in restores] == [
-        pytest.approx(t, abs=1e-6) for t in auto_times
+        pytest.approx(t, abs=1e-6) for t in expected_swings
     ]
-    assert len(restores) == len(auto_times)
+    assert all(r["amount"] == pytest.approx(25.0) for r in restores)
+
+    # Hail's own damage row proves the ACTIVE swings are 0, 1, 11 and 12.
+    hail_row = result["breakdown"]["keystone_Hail of Blades"]
+    assert [event["time"] for event in hail_row["damage_events"]] == [
+        pytest.approx(t, abs=1e-6) for t in (swing_0, swing_1, mid_swings[-1], swing_12)
+    ]
+
+    # The public ``auto_attacks`` row is one event SHORT of the modeled
+    # basic-attack stream, and that is not a restore-walk defect: Jayce's
+    # R (Transform Mercury Hammer) declares ``empowers_next_auto``, so one
+    # swing is accounted for on the R row instead ("incl. basic attack").
+    # The restore walk correctly rides all 13 basic attacks; the auto row
+    # is the 12-swing prefix of them.
+    auto_row = result["breakdown"]["auto_attacks"]
+    auto_times = [event["time"] for event in auto_row["damage_events"]]
+    assert auto_row["count"] == len(auto_times) == len(expected_swings) - 1
+    assert auto_times == [
+        pytest.approx(t, abs=1e-6) for t in expected_swings[: len(auto_times)]
+    ]
+    assert "incl. basic attack" in result["breakdown"]["R"]["detail"]

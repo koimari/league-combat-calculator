@@ -1,56 +1,26 @@
 [
  {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "GangplankPassiveHaste",
-  "trigger": "on_proc",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankRWithRaiseMorale",
+  "trigger": "on_cast",
   "target_policy": "self",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Trial by Fire"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveHaste"
-   ],
-   "evidence": "wiki:P-bonus-movement-speed"
-  },
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "GangplankESlow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 120.0,
+   "range": 30000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
+    "Buff"
    ],
    "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankESlow"
+    "Characters/Gangplank/Spells/GangplankRAbility/GangplankRWithRaiseMorale"
    ],
-   "evidence": "name:slow"
+   "evidence": "tag:PositiveEffect_Boon"
   }
  },
  {
@@ -84,78 +54,6 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.stasis",
-  "family": "crowd-control-mobility",
-  "behavior": "GangplankW",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 24.0,
-   "cooldown_rank_max": 14.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankWAbility/GangplankW"
-   ],
-   "evidence": "tag:SpecialCase_StasisLocked"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "GangplankE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "GangplankEBarrelActive",
-  "trigger": "on_detonate",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Powder Keg"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankEBarrelActive"
-   ],
-   "evidence": "wiki:E-keg-explosion-physical-damage"
-  }
- },
- {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "GangplankR",
@@ -178,135 +76,6 @@
     "Characters/Gangplank/Spells/GangplankRAbility/GangplankR"
    ],
    "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "GangplankBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "GangplankCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "GangplankQProceedCrit",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 30000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6186
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQProceedCrit"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GangplankE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GangplankEBarrelFuseMissile",
-  "trigger": "on_detonate",
-  "target_policy": "enemy",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Powder Keg"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankEBarrelFuseMissile"
-   ],
-   "evidence": "wiki:E-keg-fuse-missile"
-  },
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
   }
  },
  {
@@ -336,54 +105,6 @@
     "Characters/Gangplank/Spells/GangplankRAbility/GangplankR"
    ],
    "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "GangplankPassiveAttack",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "true"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Trial by Fire"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttack"
-   ],
-   "evidence": "wiki:P-burn-true-damage"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "GangplankPassiveAttackDOT",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage over time",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
-   ],
-   "evidence": "name:dot"
   }
  },
  {
@@ -440,6 +161,31 @@
   }
  },
  {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GangplankQProceedCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 30000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6186
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQProceedCrit"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
   "atom_id": "damage.proc",
   "family": "damage",
   "behavior": "GangplankQProceedCrit",
@@ -462,6 +208,140 @@
     "Characters/Gangplank/Spells/GangplankQWrapperAbility/GangplankQProceedCrit"
    ],
    "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GangplankESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GangplankE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GangplankE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GangplankE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GangplankBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankBasicAttack"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -490,28 +370,30 @@
   }
  },
  {
-  "atom_id": "damage.tag-periodic",
-  "family": "damage",
-  "behavior": "GangplankPassiveAttackDOT",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "GangplankW",
+  "trigger": "on_cast",
+  "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
+   "cooldown_rank1": 24.0,
+   "cooldown_rank_max": 14.0,
    "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
+   "damage_type": null,
+   "affects_type_flags": 15567
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Damage over time"
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
    ],
    "binary": [
-    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
+    "Characters/Gangplank/Spells/GangplankWAbility/GangplankW"
    ],
-   "evidence": "name:dot"
+   "evidence": "tag:SpecialCase_StasisLocked"
   }
  },
  {
@@ -546,118 +428,56 @@
   }
  },
  {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "gangplank Passive (Remove Scurvy (W))",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "provenance": {
-   "wiki": [
-    "Healing",
-    "Heal",
-    "Health",
-    "Remove Scurvy (W)"
-   ],
-   "binary": [],
-   "source": "wiki-map",
-   "evidence": "wiki-map"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankE",
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "GangplankPassiveAttackDOT",
   "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ability resource"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankE"
-   ],
-   "evidence": "tag:Trait_Ammo"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Trial by Fire"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassive"
-   ],
-   "evidence": "wiki:P-empowered-attack-ready"
-  },
+  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": null,
+   "damage_type": "true",
    "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
+   ],
+   "evidence": "name:dot"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankPassiveAttackCD",
-  "trigger": "passive",
-  "target_policy": "self",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Trial by Fire"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackCD"
-   ],
-   "evidence": "wiki:P-internal-cooldown-tracker"
-  },
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "GangplankPassiveAttackDOT",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": null,
+   "damage_type": "true",
    "affects_type_flags": null
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankRWithRaiseMorale",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 160.0,
-   "cooldown_rank_max": 120.0,
-   "range": 30000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Gangplank/Spells/GangplankRAbility/GangplankRWithRaiseMorale"
+    "Characters/Gangplank/Spells/GangplankPassiveAbility/GangplankPassiveAttackDOT"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "name:dot"
   }
  },
  {
@@ -685,100 +505,47 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankEShred",
-  "trigger": "on_detonate",
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GangplankCritAttack",
+  "trigger": "on_effect",
   "target_policy": "enemy",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Powder Keg"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankEShred"
-   ],
-   "evidence": "wiki:E-keg-armor-shred"
-  },
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
    "damage_type": null,
    "affects_type_flags": null
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankBilgewaterToken",
-  "trigger": "on_takedown",
-  "target_policy": "self",
+  },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Parrrley"
+    "Critical strike",
+    "Damage"
    ],
    "binary": [
-    "Characters/Gangplank/Spells/GangplankQAbility/GangplankBilgewaterToken"
+    "Characters/Gangplank/Spells/GangplankCritAttack"
    ],
-   "evidence": "wiki:Q-silver-serpents"
-  },
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
+   "evidence": "rule:crit"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankESpellPassive",
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "gangplank Passive (Remove Scurvy (W))",
   "trigger": "passive",
   "target_policy": "self",
-  "relations": [],
+  "parameters": {},
   "provenance": {
    "wiki": [
-    "Powder Keg"
+    "Healing",
+    "Heal",
+    "Health",
+    "Remove Scurvy (W)"
    ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankEAbility/GangplankESpellPassive"
-   ],
-   "evidence": "wiki:E-passive-keg-empower"
-  },
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.upgrade",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GangplankRSpeed",
-  "trigger": "on_upgrade",
-  "target_policy": "self",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Cannon Barrage",
-    "Fire at Will"
-   ],
-   "binary": [
-    "Characters/Gangplank/Spells/GangplankRAbility/GangplankRSpeed"
-   ],
-   "evidence": "wiki:R-Fire-at-Will-upgrade-barrage-speed"
-  },
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
   }
  }
 ]

@@ -161,6 +161,10 @@ class ChampionLoadout:
     support_target_selections: dict[str, int] = dataclass_field(default_factory=dict)
     cast_order: list[str] | None = None
     target_stats: dict[str, float] = dataclass_field(default_factory=dict)
+    #: Optional starting health for this participant.  ``None`` means the
+    #: participant starts the fight at full health; a number starts them at
+    #: exactly that many health, bounded by their resolved maximum health.
+    current_health: float | None = None
 
     @property
     def is_practice_dummy(self) -> bool:
@@ -294,6 +298,20 @@ class ChampionLoadout:
                     f"{field}.cast_order must be a permutation of Q, W, E, R"
                 )
 
+        raw_current_health = value.get("current_health")
+        if raw_current_health is None:
+            current_health = None
+        else:
+            if isinstance(raw_current_health, bool) or not isinstance(
+                raw_current_health, (int, float)
+            ):
+                raise ValueError(f"{field}.current_health must be a number")
+            current_health = float(raw_current_health)
+            if not math.isfinite(current_health):
+                raise ValueError(f"{field}.current_health must be finite")
+            if current_health <= 0.0:
+                raise ValueError(f"{field}.current_health must be greater than 0")
+
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
             raise ValueError(f"{field} must not contain duplicate items")
@@ -313,6 +331,7 @@ class ChampionLoadout:
             support_target_selections=support_target_selections,
             cast_order=list(cast_order) if cast_order is not None else None,
             target_stats=target_stats,
+            current_health=current_health,
         )
 
     def resolve(self) -> "ResolvedLoadout":
@@ -348,6 +367,17 @@ class ChampionLoadout:
         )
         if self.is_practice_dummy:
             stats = apply_stat_overrides(stats, self.target_stats)
+        # The starting-health input is bounded by the participant's resolved
+        # maximum health, which is only known here.  A request that asks for
+        # more health than the build provides fails closed instead of being
+        # silently clamped.
+        if self.current_health is not None:
+            maximum_health = float(stats.get("health", 0.0) or 0.0)
+            if self.current_health > maximum_health:
+                raise ValueError(
+                    "current_health must not exceed "
+                    f"{self.champion}'s maximum health ({maximum_health:g})"
+                )
         return ResolvedLoadout(
             request=self,
             champion_data=champion_data,

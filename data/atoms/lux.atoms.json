@@ -754,47 +754,5 @@
    "inherited_from": "LuxR",
    "evidence": "inherited:LuxR"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "LuxIlluminationPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration_seconds": 6,
-   "affects_type_flags": 24527
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Illumination"
-   ],
-   "binary": [
-    "Characters/Lux/Spells/LuxIlluminationPassiveAbility/LuxIlluminationPassive"
-   ],
-   "evidence": "wiki: damaging abilities apply the Illumination mark for 6s (refreshing); binary DataValues DebuffDuration=6"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "LuxIlluminatingFraulein",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 24527
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Illumination"
-   ],
-   "binary": [
-    "Characters/Lux/Spells/LuxIlluminationPassiveAbility/LuxIlluminatingFraulein"
-   ],
-   "evidence": "wiki: basic attacks and Final Spark consume the mark for 30-200 + 35% AP bonus magic damage"
-  }
  }
 ]

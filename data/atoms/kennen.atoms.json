@@ -547,53 +547,5 @@
    ],
    "evidence": "tag:Trait_DamageAbility"
   }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "KennenMoSDiminish",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Lightning Rush: 100% bonus movement speed, decaying over 2 seconds"
-   ],
-   "binary": [
-    "Characters/Kennen/Spells/KennenPassiveAbility/KennenMoSDiminish"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.additive-stacking",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KennenDoubleStrikeLive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Electrical Surge: basic attacks on-attack generate a stack, up to 4; at 4 stacks next basic attack consumes them for bonus magic damage"
-   ],
-   "binary": [
-    "Characters/Kennen/Spells/KennenDoubleStrikeLive"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
  }
 ]

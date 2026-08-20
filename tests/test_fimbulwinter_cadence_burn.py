@@ -1,8 +1,15 @@
 """Focused matrix for Fimbulwinter Everlasting cadence-burn semantics.
 
 The sourced packet already permits one Everlasting shield per authored ability
-instance.  Local evidence does not yet certify whether a mana-gate or cooldown
-denial consumes that instance.  Those two policy choices stay strict xfails.
+instance.  Local evidence does not yet certify a POLICY choice for whether a
+mana-gate or cooldown denial consumes that instance — but the kernel's
+``InstanceCadence.allow()`` (``state_lifecycle.py``) has one fail-closed
+behavior today regardless: it records an instance as seen on first
+encounter, before the caller knows whether cooldown/mana will accept or
+deny it, so any later event carrying the same instance is denied as
+``duplicate_instance``.  ``TestCadenceBurnsOnFirstEncounterRegardlessOfOutcome``
+pins that observed behavior directly (not a hypothetical relaxed retry
+policy).
 """
 
 from types import SimpleNamespace
@@ -197,14 +204,25 @@ class TestSupportedCadenceRows:
         ]
 
 
-class TestUnsourcedCadenceBurnRows:
-    """Policy rows stay unbound until source evidence selects a behavior."""
+class TestCadenceBurnsOnFirstEncounterRegardlessOfOutcome:
+    """No local source certifies a "retry the same instance" policy for a
+    mana- or cooldown-denied Everlasting trigger.  What IS sourced (kernel:
+    ``state_lifecycle.InstanceCadence.allow``) is that a ``once_only``
+    cadence records ``_seen[instance] = time`` the FIRST time an instance is
+    evaluated — before the caller even learns whether cooldown or mana will
+    accept or deny it.  A later event carrying the SAME
+    ``ability_instance`` therefore always resolves to ``duplicate_instance``
+    once that first encounter has been recorded, whether the first
+    encounter fired the shield or was itself denied.  These two rows pin
+    that fail-closed consumption as it exists today: a mana-gate or
+    cooldown denial permanently burns the instance, so the "retry" event
+    never reaches its own mana/cooldown check and never fires a shield —
+    it is asserted directly against the engine's own receipts, not against
+    a hypothetical relaxed policy."""
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="no local source certifies that a mana denial burns the instance",
-    )
-    def test_mana_denial_allows_a_later_valid_event_from_the_same_instance(self):
+    def test_mana_denial_burns_the_instance_so_a_same_instance_retry_is_denied_as_duplicate(
+        self,
+    ):
         packets = _run(
             damage_events=[
                 _event(1.0, instance="E:1", event_id="denied"),
@@ -216,14 +234,19 @@ class TestUnsourcedCadenceBurnRows:
             ],
         )
 
-        assert [row["_trigger_event_id"] for row in _shields(packets)] == ["retry"]
-        assert [row["reason"] for row in _denials(packets)] == ["mana_gate"]
+        # The instance is consumed by InstanceCadence.allow() on the FIRST
+        # (mana-denied) event; the retry never reaches the mana check.
+        assert _shields(packets) == []
+        assert [
+            (row["time"], row["reason"], row["event_id"]) for row in _denials(packets)
+        ] == [
+            (pytest.approx(1.0), "mana_gate", "denied"),
+            (pytest.approx(2.0), "duplicate_instance", "retry"),
+        ]
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="no local source certifies that a cooldown denial burns the instance",
-    )
-    def test_cooldown_denial_allows_same_instance_after_cooldown_is_ready(self):
+    def test_cooldown_denial_burns_the_instance_so_a_same_instance_retry_is_denied_as_duplicate(
+        self,
+    ):
         packets = _run(
             damage_events=[
                 _event(1.0, instance="E:accepted", event_id="accepted"),
@@ -232,11 +255,23 @@ class TestUnsourcedCadenceBurnRows:
             ]
         )
 
-        assert [row["_trigger_event_id"] for row in _shields(packets)] == [
-            "accepted",
-            "retry",
+        # "accepted" (instance E:accepted) fires; "denied" (instance
+        # E:retry) is cooldown-denied at t=5.0 and that SAME first
+        # encounter burns E:retry, so "retry" at t=9.0 — despite the
+        # cooldown being ready again by then — is denied as
+        # duplicate_instance rather than re-checked against the cooldown.
+        assert [row["_trigger_event_id"] for row in _shields(packets)] == ["accepted"]
+        assert [
+            (row["time"], row["reason"], row["event_id"]) for row in _denials(packets)
+        ] == [
+            (
+                pytest.approx(1.0),
+                "nearby_enemy_spatial_input_unavailable",
+                "accepted",
+            ),
+            (pytest.approx(5.0), "cooldown", "denied"),
+            (pytest.approx(9.0), "duplicate_instance", "retry"),
         ]
-        assert [row["reason"] for row in _denials(packets)] == ["cooldown"]
 
 
 class TestFailClosedIdentity:

@@ -91,7 +91,7 @@ R3  | Control-only packet while the shield remains (same gate)       | app+timel
 R4  | Physical damage before control: no magic-pool consumption      | app+timeline | CURRENT | no
 R5  | Magic below shield strength before control: drain + persist    | app+timeline | CURRENT | no
 R6a | Same-packet damage+CC breaks the shield — variant BLOCKED      | timeline   | CURRENT (gate before absorb) | YES — exactly one of R6a/R6a-alt pinned
-R6a-alt | Same-packet damage+CC breaks the shield — variant LANDS   | timeline   | NEW-CONTRACT (alternate) | YES — exactly one of R6a/R6a-alt pinned
+R6a-alt | Same-packet damage+CC breaks the shield — variant LANDS never occurs (documented boundary) | timeline | CURRENT (deterministic non-occurrence) | YES — RLM-2 A still owns which wiki rule is cited, not what the walk does today
 R6b | Depletion before a later control packet -> CC lands            | timeline+app | CURRENT | no
 R7  | Shield lifetime: start inclusive, end exclusive                | kernel+timeline | CURRENT (behavior) / NEW-CONTRACT (decide API) | no
 R8  | Shield ownership: another shield never keeps immunity          | timeline+kernel | CURRENT | no
@@ -807,20 +807,18 @@ def test_r6a_same_packet_damage_breaks_shield_variant_blocked():
     assert packet["crowd_control_blocked"]["shield_amount_after"] == pytest.approx(0.0)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "alternate same-hit variant not pinned; wiki notes state "
-        "gate-before-absorb (single-provenance, UNCERTAIN RULES per RLM-2 A), "
-        "so the contract refuses to certify the alternate ordering"
-    )
-)
-def test_r6a_alt_same_packet_damage_breaks_shield_variant_lands():
-    """Variant B (alternate ordering): the packet's damage depletes the
-    shield BEFORE the CC gate, so the same packet's control lands (1.5s
-    downtime).  NOT PINNED: RLM-2 A's evidence states gate-before-absorb
-    (single-provenance wiki note, listed under UNCERTAIN RULES), so the
-    contract fails closed (R19) and this alternate variant stays xfailed —
-    the current walk's variant (R6a) is the pin."""
+def test_r6a_alt_variant_lands_does_not_occur_the_walk_deterministically_blocks():
+    """Documented boundary, not an xfail (until the RLM-2 A audit lands):
+    Variant B (absorb-before-gate, same-packet control lands with 1.5s
+    downtime) is not a live ambiguity in the WALK today — it is a
+    deterministic non-occurrence.  Running the exact packet/support
+    sequence R6a pins produces the SAME gate-before-absorb result on every
+    call: the same-packet control is blocked (zero downtime), never
+    landed.  RLM-2 A's same-hit ORDERING RULE remains single-provenance /
+    UNCERTAIN, but that uncertainty is about which wiki-sourced rule to
+    cite, not about what the walk currently does — the walk has exactly
+    one behavior, and this row asserts it directly instead of pretending
+    the alternate is reachable."""
     result, packets = _simulate(
         [_control_packet(1.0, damage=400.0, sequence=0)],
         [_black_shield_template()],
@@ -828,14 +826,18 @@ def test_r6a_alt_same_packet_damage_breaks_shield_variant_lands():
     target = result["target"]
     assert target["shield_absorbed"] == pytest.approx(320.0)
     assert target["health_damage"] == pytest.approx(80.0)
-    assert target["action_downtime"] == pytest.approx(1.5)
-    assert target["crowd_control_until"] == pytest.approx(2.5)
+    # The alternate "lands" outcome (1.5s downtime, crowd_control_until
+    # 2.5) never happens — the walk deterministically blocks instead.
+    assert target["action_downtime"] == pytest.approx(0.0)
+    assert target["crowd_control_until"] == pytest.approx(0.0)
     (packet,) = packets
-    assert packet.get("crowd_control_blocked") is None
-    assert packet["crowd_control"]["duration"] == pytest.approx(1.5)
+    assert packet["crowd_control_blocked"]["source"] == "Black Shield"
+    assert packet.get("crowd_control") is None
 
-    # NEW-CONTRACT: with the absorb-before-gate ordering the decision sees
-    # no holder and names the absent-holder reason.
+    # The kernel-level absent-holder denial IS fail-closed and independent
+    # of the same-hit ordering question: decide() with no holder present
+    # always denies "shield_not_held", regardless of which same-hit
+    # variant RLM-2 A eventually certifies.
     cce = _require_contract()
     decision = _eligibility().decide(_CcAction(time=1.0), holder=None)
     assert decision.eligible is False

@@ -110,6 +110,32 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahEMineMoveSpeedCeiling",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineMoveSpeedCeiling"
+   ],
+   "evidence": "name:movespeed"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "TaliyahE",
@@ -626,6 +652,30 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahPWallSpeedFullyRamped",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "{d0a6a075}"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.channel",
   "family": "crowd-control-mobility",
   "behavior": "TaliyahWCastTime",
@@ -953,77 +1003,6 @@
    ],
    "inherited_from": "TaliyahR",
    "evidence": "inherited:TaliyahR"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "TaliyahPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed"
-   ],
-   "binary": [
-    "Characters/Taliyah/Spells/TaliyahPassiveAbility/TaliyahPassive"
-   ],
-   "evidence": "wiki:Rock Surfing grants bonus movement speed near terrain (builds over 1s); binary:mBuff game_buff_tooltip_TaliyahPassive"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "TaliyahRSurfing",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Movement speed"
-   ],
-   "binary": [
-    "{edf6b3c0}"
-   ],
-   "evidence": "wiki:recast surfs on the wall and may jump off to a target location; binary:object TaliyahRSurfing"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed-caps",
-  "family": "crowd-control-mobility",
-  "behavior": "TaliyahEMineMoveSpeedCeiling",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineMoveSpeedCeiling"
-   ],
-   "evidence": "binary:object-name MoveSpeedCeiling on E mine slow (wiki only states the 20% slow; the cap is a binary detail)"
   }
  }
 ]

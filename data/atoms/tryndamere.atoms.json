@@ -349,50 +349,5 @@
    ],
    "evidence": "tag:Trait_ActiveHeal"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
-  "family": "stack-transform-summon-resource",
-  "behavior": "Battle Fury",
-  "trigger": "on_hit",
-  "target_policy": "self",
-  "parameters": {
-   "stack_cap": 100.0
-  },
-  "relations": [
-   "damage.critical-strike"
-  ],
-  "provenance": {
-   "wiki": [
-    "Fury",
-    "Battle Fury"
-   ],
-   "binary": [
-    "Characters/Tryndamere/Spells/TryndamerePassiveAbility/TryndamerePassive"
-   ],
-   "evidence": "wiki: resource FURY; generates Fury on-hit (5/10/15) with crit chance scaling per Fury; E and R also grant Fury"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "Mocking Shout",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration": 4.0
-  },
-  "relations": [
-   "crowd-control-mobility.slow"
-  ],
-  "provenance": {
-   "wiki": [
-    "Mocking Shout"
-   ],
-   "binary": [
-    "Characters/Tryndamere/Spells/TryndamereWAbility/TryndamereW"
-   ],
-   "evidence": "wiki: reduces bonus attack damage of nearby enemy champions by 20-80 for 4 seconds"
-  }
  }
 ]

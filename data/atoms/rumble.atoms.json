@@ -464,6 +464,30 @@
  {
   "atom_id": "stack-transform-summon-resource.heat",
   "family": "stack-transform-summon-resource",
+  "behavior": "RumbleOverheatAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleHeatSystemAbility/RumbleOverheatAttack"
+   ],
+   "evidence": "name:overheat"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.heat",
+  "family": "stack-transform-summon-resource",
   "behavior": "RumbleHeatSystem",
   "trigger": "threshold",
   "target_policy": "self",
@@ -483,6 +507,30 @@
     "Characters/Rumble/Spells/RumbleHeatSystemAbility/RumbleHeatSystem"
    ],
    "evidence": "name:heat"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.heat",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RumbleOverheat",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Rumble/Spells/RumbleHeatSystemAbility/RumbleOverheat"
+   ],
+   "evidence": "name:overheat"
   }
  },
  {
@@ -681,178 +729,6 @@
    ],
    "inherited_from": "RumbleCarpetBomb",
    "evidence": "inherited:RumbleCarpetBomb"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RumbleFlameThrowerSpray",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Flamespitter",
-    "Magic damage"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrowerSpray"
-   ],
-   "evidence": "inherited:RumbleFlameThrower; per-tick cone damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RumbleFlameThrowerSpraySuper",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Flamespitter",
-    "Danger Zone",
-    "Magic damage"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleFlameThrowerAbility/RumbleFlameThrowerSpraySuper"
-   ],
-   "evidence": "inherited:RumbleFlameThrower; Danger Zone empowered spray"
-  }
- },
- {
-  "atom_id": "damage.resistance-mitigation",
-  "family": "damage",
-  "behavior": "RumbleGrenadeShred",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "shred_target": "magic",
-   "duration_seconds": 4.0
-  },
-  "relations": [
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Electro Harpoon",
-    "magic resistance reduction"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeShred"
-   ],
-   "evidence": "buff_desc_RumbleGrenadeShred; stacks additively"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RumbleGrenadeMissileDangerZone",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Electro Harpoon",
-    "Danger Zone",
-    "Magic damage"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleGrenadeAbility/RumbleGrenadeMissileDangerZone"
-   ],
-   "evidence": "inherited:RumbleGrenade; Danger Zone empowered harpoon"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.transform",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RumbleOverheat",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "heat_threshold": 100.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Junkyard Titan",
-    "Overheated"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleOverheat"
-   ],
-   "evidence": "game_buff_tooltip_RumbleOverheat; overheat form at 100 heat"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "RumbleOverheatAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 5375
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Junkyard Titan",
-    "empowered attacks deal bonus magic damage"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleOverheatAttack"
-   ],
-   "evidence": "name:basicattack; overheat empowered"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "RumbleOverheatAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 5375
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Junkyard Titan",
-    "empowered attacks deal bonus magic damage"
-   ],
-   "binary": [
-    "Characters/Rumble/Spells/RumbleOverheatAttack"
-   ],
-   "evidence": "name:basicattack"
   }
  }
 ]

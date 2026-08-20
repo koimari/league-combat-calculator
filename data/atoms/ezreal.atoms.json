@@ -401,49 +401,5 @@
    "inherited_from": "EzrealE",
    "evidence": "inherited:EzrealE"
   }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "EzrealW",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Magic damage",
-    "Essence Flux"
-   ],
-   "binary": [
-    "Characters/Ezreal/Spells/EzrealWAbility/EzrealW"
-   ],
-   "evidence": "calc:Damage"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "EzrealWAttach",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration_seconds": 4.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mark",
-    "Essence Flux"
-   ],
-   "binary": [
-    "Characters/Ezreal/Spells/EzrealWAbility/EzrealWAttach"
-   ],
-   "evidence": "wiki-map",
-   "source": "wiki-map"
-  }
  }
 ]

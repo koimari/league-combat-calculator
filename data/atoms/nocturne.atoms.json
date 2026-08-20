@@ -1,5 +1,29 @@
 [
  {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NocturneShroudOfDarknessBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{0a460f01}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.cc-immunity",
   "family": "crowd-control-mobility",
   "behavior": "NocturneShroudofDarkness",
@@ -26,55 +50,88 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.channel",
-  "family": "crowd-control-mobility",
-  "behavior": "NocturneParanoia",
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NocturneShroudofDarknessShield",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 90.0,
-   "range": 2500.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
   },
-  "relations": [],
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Interrupt",
-    "Types of Crowd Control/Summary"
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
    ],
    "binary": [
-    "Characters/Nocturne/Spells/NocturneParanoiaAbility/NocturneParanoia"
+    "Characters/Nocturne/Spells/NocturneShroudofDarknessAbility/NocturneShroudofDarknessShield"
    ],
-   "evidence": "tag:Trait_ChannelSpell"
+   "evidence": "name:shield"
   }
  },
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "NocturneUnspeakableHorror",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NocturneDuskbringer",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 11.0,
-   "range": 425.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
+   "range": 1200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14346
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Nocturne/Spells/NocturneUnspeakableHorrorAbility/NocturneUnspeakableHorror"
+    "Characters/Nocturne/Spells/NocturneDuskbringerAbility/NocturneDuskbringer"
    ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NocturneDuskbringer",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
+   "range": 1200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14346
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nocturne/Spells/NocturneDuskbringerAbility/NocturneDuskbringer"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
   }
  },
  {
@@ -108,182 +165,29 @@
   }
  },
  {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NocturneDuskbringer",
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "NocturneParanoia",
   "trigger": "on_effect",
-  "target_policy": "enemy",
+  "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": 8.0,
-   "cooldown_rank_max": 8.0,
-   "range": 1200.0,
+   "cooldown_rank1": 140.0,
+   "cooldown_rank_max": 90.0,
+   "range": 2500.0,
    "damage_type": "physical",
-   "affects_type_flags": 14346
+   "affects_type_flags": 9221
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Damage over time"
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
    ],
    "binary": [
-    "Characters/Nocturne/Spells/NocturneDuskbringerAbility/NocturneDuskbringer"
+    "Characters/Nocturne/Spells/NocturneParanoiaAbility/NocturneParanoia"
    ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NocturneP",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 12.0,
-   "cooldown_rank_max": 12.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Umbra Blades"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturnePAbility/NocturneP"
-   ],
-   "evidence": "wiki:P periodically empowers next basic attack to slash in a circle (120% AD)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NocturneBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NocturneBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NocturneUmbraBladesAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": "physical",
-   "affects_type_flags": 512
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Umbra Blades"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturnePAbility/NocturneUmbraBladesAttack"
-   ],
-   "evidence": "wiki:P empowered circular cleave attack instance"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "NocturneCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "NocturneDuskbringer",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.0,
-   "cooldown_rank_max": 8.0,
-   "range": 1200.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14346
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneDuskbringerAbility/NocturneDuskbringer"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
+   "evidence": "tag:Trait_ChannelSpell"
   }
  },
  {
@@ -313,6 +217,32 @@
     "Characters/Nocturne/Spells/NocturneParanoiaAbility/NocturneParanoia"
    ],
    "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NocturneUnspeakableHorror",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 11.0,
+   "range": 425.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nocturne/Spells/NocturneUnspeakableHorrorAbility/NocturneUnspeakableHorror"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
   }
  },
  {
@@ -373,6 +303,32 @@
   }
  },
  {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NocturneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nocturne/Spells/NocturneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
   "atom_id": "damage.tag-basicattack",
   "family": "damage",
   "behavior": "NocturneBasicAttack",
@@ -393,6 +349,32 @@
    ],
    "binary": [
     "Characters/Nocturne/Spells/NocturneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NocturneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nocturne/Spells/NocturneBasicAttack2"
    ],
    "evidence": "name:basicattack"
   }
@@ -423,6 +405,31 @@
   }
  },
  {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NocturneCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nocturne/Spells/NocturneCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
   "atom_id": "heal-shield.heal",
   "family": "heal-shield",
   "behavior": "nocturne Passive (Umbra Blades)",
@@ -439,157 +446,6 @@
    "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "NocturneShroudofDarknessShield",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [
-   "heal-shield.shield-reduction",
-   "heal-shield.shield-destruction",
-   "heal-shield.heal-and-shield-power"
-  ],
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneShroudofDarknessAbility/NocturneShroudofDarknessShield"
-   ],
-   "evidence": "name:shield"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NocturneESpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unspeakable Horror"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneUnspeakableHorrorAbility/NocturneESpellPassive"
-   ],
-   "evidence": "wiki:E passive 90% bonus movement speed while facing nearby feared targets"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NocturneShroudOfDarknessBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{0a460f01}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NocturneUmbraBlades",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Umbra Blades"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturnePAbility/NocturneUmbraBlades"
-   ],
-   "evidence": "wiki:P passive-ready empowered attack buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NocturneWSpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Shroud of Darkness"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneShroudofDarknessAbility/NocturneWSpellPassive"
-   ],
-   "evidence": "wiki:W passive bonus attack speed"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NocturneParanoiaTarget",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Paranoia"
-   ],
-   "binary": [
-    "Characters/Nocturne/Spells/NocturneParanoiaAbility/NocturneParanoiaTarget"
-   ],
-   "evidence": "wiki:R target mark enabling recast gap-close; binary buff game_buff_tooltip_NocturneParanoiaTarget"
   }
  }
 ]

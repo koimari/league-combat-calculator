@@ -1,653 +1,599 @@
 [
-  {
-    "atom_id": "stack-transform-summon-resource.mark",
-    "family": "stack-transform-summon-resource",
-    "behavior": "CaitlynPassiveRangeMarker",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": null,
-      "cooldown_rank_max": null,
-      "range": null,
-      "damage_type": "physical",
-      "affects_type_flags": null
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Debuff"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveRangeMarker"
-      ],
-      "evidence": "name:mark"
-    }
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynPassiveRangeMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
   },
-  {
-    "atom_id": "damage.basic-attack",
-    "family": "damage",
-    "behavior": "CaitlynBasicAttack",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 0.0,
-      "cooldown_rank_max": 0.0,
-      "range": 600.0,
-      "damage_type": null,
-      "affects_type_flags": 5327
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Damage",
-        "Attack damage",
-        "Attack effects"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynBasicAttack"
-      ],
-      "evidence": "name:basicattack"
-    }
-  },
-  {
-    "atom_id": "damage.tag-basicattack",
-    "family": "damage",
-    "behavior": "CaitlynBasicAttack",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 0.0,
-      "cooldown_rank_max": 0.0,
-      "range": 600.0,
-      "damage_type": null,
-      "affects_type_flags": 5327
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Damage",
-        "Attack effects"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynBasicAttack"
-      ],
-      "evidence": "name:basicattack"
-    }
-  },
-  {
-    "atom_id": "crowd-control-mobility.slow",
-    "family": "crowd-control-mobility",
-    "behavior": "CaitlynE",
-    "trigger": "on_cast",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 18.0,
-      "cooldown_rank_max": 6.0,
-      "range": 10000.0,
-      "damage_type": "magic",
-      "affects_type_flags": 15375
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Crowd control",
-        "Types of Crowd Control",
-        "Types of Crowd Control/Summary",
-        "Slow resist",
-        "Movement speed",
-        "Cleanse",
-        "Combat status"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynE"
-      ],
-      "evidence": "tag:PositiveEffect_MoveBlock"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynE",
-    "trigger": "on_cast",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 18.0,
-      "cooldown_rank_max": 6.0,
-      "range": 10000.0,
-      "damage_type": "magic",
-      "affects_type_flags": 15375
-    },
-    "relations": [
-      "damage.resistance-mitigation",
-      "heal-shield.life-steal",
-      "heal-shield.omnivamp",
-      "heal-shield.grey-health"
-    ],
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynE"
-      ],
-      "evidence": "tag:Trait_Low_Damage"
-    }
-  },
-  {
-    "atom_id": "crowd-control-mobility.immobilize",
-    "family": "crowd-control-mobility",
-    "behavior": "CaitlynW",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 0.5,
-      "cooldown_rank_max": 0.5,
-      "range": 800.0,
-      "damage_type": null,
-      "affects_type_flags": 1029
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Crowd control",
-        "Types of Crowd Control/Summary",
-        "Tenacity"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
-      ],
-      "evidence": "tag:Trait_ImmobilizingCCSpell"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynW",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 0.5,
-      "cooldown_rank_max": 0.5,
-      "range": 800.0,
-      "damage_type": null,
-      "affects_type_flags": 1029
-    },
-    "relations": [
-      "damage.resistance-mitigation",
-      "heal-shield.life-steal",
-      "heal-shield.omnivamp",
-      "heal-shield.grey-health"
-    ],
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
-      ],
-      "evidence": "tag:Trait_Low_Damage"
-    }
-  },
-  {
-    "atom_id": "stack-transform-summon-resource.ammo",
-    "family": "stack-transform-summon-resource",
-    "behavior": "CaitlynW",
-    "trigger": "on_effect",
-    "target_policy": "self",
-    "parameters": {
-      "cooldown_rank1": 0.5,
-      "cooldown_rank_max": 0.5,
-      "range": 800.0,
-      "damage_type": null,
-      "affects_type_flags": 1029
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Ability resource"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
-      ],
-      "evidence": "tag:Trait_Ammo"
-    }
-  },
-  {
-    "atom_id": "stack-transform-summon-resource.trap",
-    "family": "stack-transform-summon-resource",
-    "behavior": "CaitlynW",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 0.5,
-      "cooldown_rank_max": 0.5,
-      "range": 800.0,
-      "damage_type": null,
-      "affects_type_flags": 1029
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Champion summoned units"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
-      ],
-      "evidence": "tag:Trait_Trap"
-    }
-  },
-  {
-    "atom_id": "crowd-control-mobility.root",
-    "family": "crowd-control-mobility",
-    "behavior": "CaitlynWSnare",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": null,
-      "cooldown_rank_max": null,
-      "range": null,
-      "damage_type": null,
-      "affects_type_flags": 2
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Crowd control",
-        "Types of Crowd Control",
-        "Types of Crowd Control/Summary",
-        "Dash",
-        "Blink",
-        "Cleanse"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynWSnare"
-      ],
-      "evidence": "name:snare"
-    }
-  },
-  {
-    "atom_id": "vision-economy.sight",
-    "family": "vision-economy",
-    "behavior": "CaitlynWSight",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": null,
-      "cooldown_rank_max": null,
-      "range": null,
-      "damage_type": null,
-      "affects_type_flags": null
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Sight",
-        "Ward",
-        "Vision score",
-        "Stealth"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynWSight"
-      ],
-      "evidence": "name:sight"
-    }
-  },
-  {
-    "atom_id": "damage.critical-strike",
-    "family": "damage",
-    "behavior": "CaitlynCritAttack",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 0.0,
-      "cooldown_rank_max": 0.0,
-      "range": 600.0,
-      "damage_type": null,
-      "affects_type_flags": 5327
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Critical strike",
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynCritAttack"
-      ],
-      "evidence": "rule:crit"
-    }
-  },
-  {
-    "atom_id": "crowd-control-mobility.channel",
-    "family": "crowd-control-mobility",
-    "behavior": "CaitlynR",
-    "trigger": "on_effect",
-    "target_policy": "self",
-    "parameters": {
-      "cooldown_rank1": 90.0,
-      "cooldown_rank_max": 90.0,
-      "range": 3500.0,
-      "damage_type": "physical",
-      "affects_type_flags": 4106
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Crowd control",
-        "Interrupt",
-        "Types of Crowd Control/Summary"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynR"
-      ],
-      "evidence": "tag:Trait_ChannelSpell"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynR",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 90.0,
-      "cooldown_rank_max": 90.0,
-      "range": 3500.0,
-      "damage_type": "physical",
-      "affects_type_flags": 4106
-    },
-    "relations": [
-      "damage.resistance-mitigation",
-      "heal-shield.life-steal",
-      "heal-shield.omnivamp",
-      "heal-shield.grey-health"
-    ],
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynR"
-      ],
-      "evidence": "tag:Trait_DamageAbility"
-    }
-  },
-  {
-    "atom_id": "damage.aoe",
-    "family": "damage",
-    "behavior": "CaitlynQ",
-    "trigger": "on_cast",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 11.0,
-      "cooldown_rank_max": 6.0,
-      "range": 1300.0,
-      "damage_type": "physical",
-      "affects_type_flags": 6154
-    },
-    "relations": [],
-    "provenance": {
-      "wiki": [
-        "Damage",
-        "Damage over time"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ"
-      ],
-      "evidence": "tag:Trait_AoE"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynQ",
-    "trigger": "on_cast",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 11.0,
-      "cooldown_rank_max": 6.0,
-      "range": 1300.0,
-      "damage_type": "physical",
-      "affects_type_flags": 6154
-    },
-    "relations": [
-      "damage.resistance-mitigation",
-      "heal-shield.life-steal",
-      "heal-shield.omnivamp",
-      "heal-shield.grey-health"
-    ],
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ"
-      ],
-      "evidence": "tag:Trait_DamageAbility"
-    }
-  },
-  {
-    "atom_id": "stack-transform-summon-resource.trap",
-    "family": "stack-transform-summon-resource",
-    "behavior": "caitlyn Passive (Yordle Snap Trap)",
-    "trigger": "passive",
-    "target_policy": "self",
-    "parameters": {},
-    "provenance": {
-      "wiki": [
-        "Champion summoned units",
-        "Yordle Snap Trap"
-      ],
-      "binary": [],
-      "source": "wiki-map",
-      "evidence": "wiki-map"
-    }
-  },
-  {
-    "atom_id": "crowd-control-mobility.slow",
-    "family": "crowd-control-mobility",
-    "behavior": "CaitlynEMissile",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 18.0,
-      "cooldown_rank_max": 6.0,
-      "range": 10000.0,
-      "damage_type": "magic",
-      "affects_type_flags": 15375
-    },
-    "provenance": {
-      "wiki": [
-        "Crowd control",
-        "Types of Crowd Control",
-        "Types of Crowd Control/Summary",
-        "Slow resist",
-        "Movement speed",
-        "Cleanse",
-        "Combat status"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynEMissile"
-      ],
-      "inherited_from": "CaitlynE",
-      "evidence": "inherited:CaitlynE"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynEMissile",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 18.0,
-      "cooldown_rank_max": 6.0,
-      "range": 10000.0,
-      "damage_type": "magic",
-      "affects_type_flags": 15375
-    },
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynEMissile"
-      ],
-      "inherited_from": "CaitlynE",
-      "evidence": "inherited:CaitlynE"
-    }
-  },
-  {
-    "atom_id": "crowd-control-mobility.channel",
-    "family": "crowd-control-mobility",
-    "behavior": "CaitlynRMissile",
-    "trigger": "on_effect",
-    "target_policy": "self",
-    "parameters": {
-      "cooldown_rank1": 90.0,
-      "cooldown_rank_max": 90.0,
-      "range": 3500.0,
-      "damage_type": "physical",
-      "affects_type_flags": 4106
-    },
-    "provenance": {
-      "wiki": [
-        "Crowd control",
-        "Interrupt",
-        "Types of Crowd Control/Summary"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynRMissile"
-      ],
-      "inherited_from": "CaitlynR",
-      "evidence": "inherited:CaitlynR"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynRMissile",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 90.0,
-      "cooldown_rank_max": 90.0,
-      "range": 3500.0,
-      "damage_type": "physical",
-      "affects_type_flags": 4106
-    },
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynRMissile"
-      ],
-      "inherited_from": "CaitlynR",
-      "evidence": "inherited:CaitlynR"
-    }
-  },
-  {
-    "atom_id": "damage.aoe",
-    "family": "damage",
-    "behavior": "CaitlynQ2",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 11.0,
-      "cooldown_rank_max": 6.0,
-      "range": 1300.0,
-      "damage_type": "physical",
-      "affects_type_flags": 6154
-    },
-    "provenance": {
-      "wiki": [
-        "Damage",
-        "Damage over time"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ2"
-      ],
-      "inherited_from": "CaitlynQ",
-      "evidence": "inherited:CaitlynQ"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynQ2",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": 11.0,
-      "cooldown_rank_max": 6.0,
-      "range": 1300.0,
-      "damage_type": "physical",
-      "affects_type_flags": 6154
-    },
-    "provenance": {
-      "wiki": [
-        "Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ2"
-      ],
-      "inherited_from": "CaitlynQ",
-      "evidence": "inherited:CaitlynQ"
-    }
-  },
-  {
-    "atom_id": "stack-transform-summon-resource.stack",
-    "family": "stack-transform-summon-resource",
-    "behavior": "CaitlynPassiveCount",
-    "trigger": "on_attack",
-    "target_policy": "self",
-    "parameters": {
-      "cooldown_rank1": null,
-      "cooldown_rank_max": null,
-      "range": null,
-      "damage_type": "physical",
-      "affects_type_flags": null
-    },
-    "relations": [
-      "damage.damage-instance"
-    ],
-    "provenance": {
-      "wiki": [
-        "Buff",
-        "Headshot"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveCount"
-      ],
-      "evidence": "wiki:Headshot on-attack stack counter; object name:count"
-    }
-  },
-  {
-    "atom_id": "damage.damage-instance",
-    "family": "damage",
-    "behavior": "CaitlynPassiveMissile",
-    "trigger": "on_effect",
-    "target_policy": "enemy",
-    "parameters": {
-      "cooldown_rank1": null,
-      "cooldown_rank_max": null,
-      "range": null,
-      "damage_type": "physical",
-      "affects_type_flags": null
-    },
-    "relations": [
-      "damage.on-hit"
-    ],
-    "provenance": {
-      "wiki": [
-        "Headshot",
-        "Physical Damage"
-      ],
-      "binary": [
-        "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveMissile"
-      ],
-      "evidence": "wiki:Headshot empowered basic attack bonus physical damage; object name:missile"
-    }
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveRangeMarker"
+   ],
+   "evidence": "name:mark"
   }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "CaitlynBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "CaitlynBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15375
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 800.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 800.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 800.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 800.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynWSnare",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynWSnare"
+   ],
+   "evidence": "name:snare"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "CaitlynWSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynWSight"
+   ],
+   "evidence": "name:sight"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "CaitlynCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 90.0,
+   "cooldown_rank_max": 90.0,
+   "range": 3500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 90.0,
+   "cooldown_rank_max": 90.0,
+   "range": 3500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CaitlynQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1300.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1300.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "caitlyn Passive (Yordle Snap Trap)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Yordle Snap Trap"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15375
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynEMissile"
+   ],
+   "inherited_from": "CaitlynE",
+   "evidence": "inherited:CaitlynE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 6.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15375
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynEMissile"
+   ],
+   "inherited_from": "CaitlynE",
+   "evidence": "inherited:CaitlynE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 90.0,
+   "cooldown_rank_max": 90.0,
+   "range": 3500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynRMissile"
+   ],
+   "inherited_from": "CaitlynR",
+   "evidence": "inherited:CaitlynR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 90.0,
+   "cooldown_rank_max": 90.0,
+   "range": 3500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynRMissile"
+   ],
+   "inherited_from": "CaitlynR",
+   "evidence": "inherited:CaitlynR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CaitlynQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1300.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ2"
+   ],
+   "inherited_from": "CaitlynQ",
+   "evidence": "inherited:CaitlynQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 1300.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ2"
+   ],
+   "inherited_from": "CaitlynQ",
+   "evidence": "inherited:CaitlynQ"
+  }
+ }
 ]

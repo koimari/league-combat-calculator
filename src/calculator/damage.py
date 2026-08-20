@@ -4140,12 +4140,17 @@ def _auto_restore_schedule(
     The restore COUNT therefore mirrors the engine's post-admission auto
     stream in denial-free fights (normal autos outside the burst window
     plus the burst swings themselves); a denied burst cast's swings are
-    skipped at pop time.  Hail of Blades / Lethal Tempo and Lich
-    Bane-adjusted schedules resolve after the walk, so their per-swing
-    timing is not mirrored (the count is); documented in the champion
-    module's ASSUMPTIONS.
+    skipped at pop time.  Hail of Blades / Lethal Tempo per-swing timing
+    IS mirrored: ``_restore_stream_attack_timestamps`` resolves the same
+    stack-sensitive schedule ``_prepare_hail_attack_schedule`` /
+    ``_prepare_lethal_tempo_attack_schedule`` install later, directly from
+    the keystone effect, because this walk runs before that installation.
+    Lich Bane-adjusted schedules still resolve after the walk (Spellblade
+    proc times are not known yet), so THEIR per-swing timing is not
+    mirrored (the count is); documented in the champion module's
+    ASSUMPTIONS.
     """
-    times = _auto_attack_timestamps(state)
+    times = _restore_stream_attack_timestamps(state)
     if not times:
         return (), ()
     burst_swings = 0
@@ -6345,10 +6350,12 @@ def _ability_dot_tick_events(
     without a sourced cadence author nothing (fail-closed — a cadence is
     never invented), as do rows whose totals a later step may move
     (``empowers_next_auto`` swings) or whose typed parts do not reproduce
-    the row total.
+    the row total. A malformed cadence (non-finite or non-numeric
+    ``dot_duration``/``dot_tick_interval``) is treated the same as a missing
+    one — fail-closed, never coerced or invented.
     """
-    dot_duration = float(info.get("dot_duration", 0.0))
-    tick_interval = float(info.get("dot_tick_interval", 0.0))
+    dot_duration = _finite_numeric_receipt(info.get("dot_duration", 0.0)) or 0.0
+    tick_interval = _finite_numeric_receipt(info.get("dot_tick_interval", 0.0)) or 0.0
     if dot_duration <= 0 or tick_interval <= 0:
         return None
     if info.get("empowers_next_auto"):
@@ -7040,6 +7047,48 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
         )
     )
     return _apply_spellblade_attack_speed(state, times)
+
+
+def _restore_stream_attack_timestamps(state: FightState) -> list[float]:
+    """The auto-attack swing schedule the per-auto resource walk rides.
+
+    ``_auto_restore_schedule`` runs BEFORE ``_prepare_hail_attack_schedule``
+    / ``_prepare_lethal_tempo_attack_schedule`` install their stack-sensitive
+    schedules onto ``state.hail_attack_times`` / ``state.lethal_attack_times``
+    (see ``calculate_fight_damage``'s ordering), so reading those fields here
+    would silently fall back to the uniform base schedule.  Resolve the SAME
+    schedule those two installers compute directly from the keystone effect
+    instead — ``_hail_attack_schedule`` / ``_lethal_tempo_attack_schedule``
+    depend only on ``state.attack_speed``, ``state.auto_attack_uptime``,
+    ``state.fight_duration_seconds`` and the keystone effect, none of which
+    the cast plan or the installers' own state mutations (``num_auto_attacks``,
+    re-resolved resistances) affect — so recomputing here is side-effect free
+    and always superseded moments later by the real installer call once the
+    resource walk has consumed it.
+
+    If the schedule fields are ALREADY populated (a future caller after the
+    installers ran), prefer them outright rather than recomputing. Lich
+    Bane's proc-timed speedup is not resolved yet at this point in the
+    pipeline (``_prepare_spellblade_attack_schedule`` needs the priced
+    rotation), so it is not mirrored here — matching the champion module's
+    documented ASSUMPTIONS.
+    """
+    if state.hail_attack_times:
+        return list(state.hail_attack_times)
+    if state.lethal_attack_times:
+        return list(state.lethal_attack_times)
+    effect = state.keystone_effect
+    if isinstance(effect, rune_effects.KeystoneHailOfBladesEffect):
+        times, _active_indexes, _activation_times = _hail_attack_schedule(state, effect)
+        if times:
+            return list(times)
+    elif isinstance(effect, rune_effects.KeystoneLethalTempoEffect):
+        times, _bolt_indexes, _stack_counts, _activation_times = (
+            _lethal_tempo_attack_schedule(state, effect)
+        )
+        if times:
+            return list(times)
+    return _base_auto_attack_timestamps(state)
 
 
 def _find_auto_attack_override(

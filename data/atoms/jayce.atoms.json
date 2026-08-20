@@ -1,154 +1,259 @@
 [
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "JayceAccelerationGate",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceStaticField",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 16.0,
-   "range": 25000.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 285.0,
    "damage_type": "magic",
-   "affects_type_flags": 15567
+   "affects_type_flags": 1029
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceAccelerationGateAbility/JayceAccelerationGate"
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
    ],
-   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
+   "evidence": "tag:Trait_AoE"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceStaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 285.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "JayceStaticField",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 285.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
   "family": "stack-transform-summon-resource",
-  "behavior": "JayceAccelerationGate",
+  "behavior": "JaycePassiveMeleeAttack",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 16.0,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 12.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveMeleeAttack"
+   ],
+   "evidence": "name:melee"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JaycePassiveRangedAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 485.6000061035156,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveRangedAttack"
+   ],
+   "evidence": "name:ranged"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceShockBlast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
    "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceAccelerationGateAbility/JayceAccelerationGate"
-   ],
-   "evidence": "tag:PositiveEffect_Boon"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JayceBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
+   "damage_type": "physical",
+   "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
-    "Attack damage",
-    "Attack effects"
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceBasicAttack"
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlast"
    ],
-   "evidence": "name:basicattack"
+   "evidence": "tag:Trait_AoE"
   }
  },
  {
-  "atom_id": "damage.tag-basicattack",
+  "atom_id": "damage.damage-instance",
   "family": "damage",
-  "behavior": "JayceBasicAttack",
+  "behavior": "JayceShockBlast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlast"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceShockBlastWallMis",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 2000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastWallMis"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JayceRangedCritAttack",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
-   "range": 200.0,
+   "range": 485.6000061035156,
    "damage_type": null,
-   "affects_type_flags": 5327
+   "affects_type_flags": 21711
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Attack effects"
+    "Critical strike",
+    "Damage"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceBasicAttack"
+    "Characters/Jayce/Spells/JayceRangedCritAttack"
    ],
-   "evidence": "name:basicattack"
+   "evidence": "rule:crit"
   }
  },
  {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "JayceBasicAttack2",
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRangedCritAttack",
   "trigger": "on_effect",
-  "target_policy": "enemy",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
-   "range": 200.0,
+   "range": 485.6000061035156,
    "damage_type": null,
-   "affects_type_flags": 5327
+   "affects_type_flags": 21711
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
+    "Gnar"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceBasicAttack2"
+    "Characters/Jayce/Spells/JayceRangedCritAttack"
    ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "JayceBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
+   "evidence": "name:ranged"
   }
  },
  {
@@ -174,6 +279,184 @@
     "Characters/Jayce/Spells/JayceCritAttack"
    ],
    "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceStanceGun",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceStanceGun"
+   ],
+   "evidence": "name:stance"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JayceThunderingBlow",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 240.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "JayceThunderingBlow",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 240.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceThunderingBlow",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 240.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRangedAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 485.6000061035156,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRangedAttack2"
+   ],
+   "evidence": "name:ranged"
   }
  },
  {
@@ -342,375 +625,27 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "atom_id": "stack-transform-summon-resource.toggle-form",
   "family": "stack-transform-summon-resource",
-  "behavior": "JayceIsMelee",
-  "trigger": "on_effect",
+  "behavior": "JayceStanceHtG",
+  "trigger": "on_cast",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 600.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Gnar"
-   ],
-   "binary": [
-    "{b12aa05d}"
-   ],
-   "evidence": "name:melee"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "JaycePassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null,
-   "flat_movement_speed": 30.0,
-   "movement_speed_duration": 0.75
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed",
-    "Passive"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassive"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JaycePassiveMeleeAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 12.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": 6794
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Gnar"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveMeleeAttack"
-   ],
-   "evidence": "name:melee"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JaycePassiveRangedAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 485.6000061035156,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Gnar"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveRangedAttack"
-   ],
-   "evidence": "name:ranged"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JaycePassiveShred",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Armor reduction",
-    "Magic resistance reduction"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JaycePassiveAbility/JaycePassiveShred"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JayceRangedAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Gnar"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceRangedAttack"
-   ],
-   "evidence": "name:ranged"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JayceRangedAttack2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 485.6000061035156,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Gnar"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceRangedAttack2"
-   ],
-   "evidence": "name:ranged"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "JayceRangedCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 485.6000061035156,
-   "damage_type": null,
-   "affects_type_flags": 21711
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceRangedCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JayceRangedCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 485.6000061035156,
-   "damage_type": null,
-   "affects_type_flags": 21711
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Gnar"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceRangedCritAttack"
-   ],
-   "evidence": "name:ranged"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JayceRunSpeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null,
-   "flat_movement_speed": 30.0,
-   "movement_speed_duration": 0.75
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed",
     "Buff"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceRunSpeed"
-   ]
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "JayceShockBlast",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.0,
-   "cooldown_rank_max": 8.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
+    "Characters/Jayce/Spells/JayceStanceHtGAbility/JayceStanceHtG"
    ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlast"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "JayceShockBlast",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.0,
-   "cooldown_rank_max": 8.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlast"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "JayceShockBlastMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.0,
-   "cooldown_rank_max": 8.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastMis"
-   ],
-   "inherited_from": "JayceShockBlast",
-   "evidence": "inherited:JayceShockBlast"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "JayceShockBlastMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.0,
-   "cooldown_rank_max": 8.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastMis"
-   ],
-   "inherited_from": "JayceShockBlast",
-   "evidence": "inherited:JayceShockBlast"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
-  "family": "stack-transform-summon-resource",
-  "behavior": "JayceShockBlastWallMis",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 11.0,
-   "cooldown_rank_max": 11.0,
-   "range": 2000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Champion summoned units"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastWallMis"
-   ],
-   "evidence": "name:wall"
+   "evidence": "name:stance"
   }
  },
  {
@@ -746,125 +681,89 @@
   }
  },
  {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "JayceStaticField",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceStanceGtH",
+  "trigger": "on_cast",
+  "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 285.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Damage over time"
+    "Buff"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
+    "Characters/Jayce/Spells/JayceStanceHtGAbility/JayceStanceGtH"
    ],
-   "evidence": "tag:Trait_AoE"
+   "evidence": "name:stance"
   }
  },
  {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "JayceStaticField",
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceStanceHammer",
   "trigger": "on_effect",
-  "target_policy": "enemy",
+  "target_policy": "self",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
-   "range": 285.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "JayceStaticField",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 285.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage over time",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticField"
-   ],
-   "evidence": "tag:Trait_DoT"
-  }
- },
- {
-  "atom_id": "damage.on-attack",
-  "family": "damage",
-  "behavior": "JayceStaticFieldPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": "magic",
+   "range": null,
+   "damage_type": null,
    "affects_type_flags": null
   },
-  "relations": [
-   "damage.resistance-mitigation"
-  ],
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Magic damage",
-    "On-attack"
+    "Buff"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceStaticFieldAbility/JayceStaticFieldPassive"
-   ]
+    "Characters/Jayce/Spells/JayceStanceHammer"
+   ],
+   "evidence": "name:stance"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceIsMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "{b12aa05d}"
+   ],
+   "evidence": "name:melee"
   }
  },
  {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
-  "behavior": "JayceThunderingBlow",
-  "trigger": "threshold",
+  "behavior": "JayceAccelerationGate",
+  "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 10.0,
-   "range": 240.0,
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 25000.0,
    "damage_type": "magic",
-   "affects_type_flags": 6154
+   "affects_type_flags": 15567
   },
   "relations": [],
   "provenance": {
@@ -874,62 +773,108 @@
     "Tenacity"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+    "Characters/Jayce/Spells/JayceAccelerationGateAbility/JayceAccelerationGate"
    ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
   }
  },
  {
-  "atom_id": "crowd-control-mobility.knockback",
-  "family": "crowd-control-mobility",
-  "behavior": "JayceThunderingBlow",
-  "trigger": "threshold",
-  "target_policy": "enemy",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceAccelerationGate",
+  "trigger": "on_effect",
+  "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 10.0,
-   "range": 240.0,
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 16.0,
+   "range": 25000.0,
    "damage_type": "magic",
-   "affects_type_flags": 6154
+   "affects_type_flags": 15567
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Types of Crowd Control"
+    "Buff"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+    "Characters/Jayce/Spells/JayceAccelerationGateAbility/JayceAccelerationGate"
    ],
-   "evidence": "tag:Trait_KnockBack"
+   "evidence": "tag:PositiveEffect_Boon"
   }
  },
  {
-  "atom_id": "damage.damage-instance",
+  "atom_id": "damage.basic-attack",
   "family": "damage",
-  "behavior": "JayceThunderingBlow",
-  "trigger": "threshold",
+  "behavior": "JayceBasicAttack",
+  "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 10.0,
-   "range": 240.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
   },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Damage"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Jayce/Spells/JayceThunderingBlowAbility/JayceThunderingBlow"
+    "Characters/Jayce/Spells/JayceBasicAttack"
    ],
-   "evidence": "tag:Trait_DamageAbility"
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JayceBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JayceRangedAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceRangedAttack"
+   ],
+   "evidence": "name:ranged"
   }
  },
  {
@@ -1014,6 +959,55 @@
     "Characters/Jayce/Spells/JayceToTheSkiesAbility/JayceToTheSkies"
    ],
    "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JayceShockBlastMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastMis"
+   ],
+   "inherited_from": "JayceShockBlast",
+   "evidence": "inherited:JayceShockBlast"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JayceShockBlastMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 8.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jayce/Spells/JayceShockBlastAbility/JayceShockBlastMis"
+   ],
+   "inherited_from": "JayceShockBlast",
+   "evidence": "inherited:JayceShockBlast"
   }
  }
 ]

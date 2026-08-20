@@ -380,6 +380,33 @@
   }
  },
  {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "NaafiriRVision",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "{a5cb97fe}"
+   ],
+   "evidence": "name:vision"
+  }
+ },
+ {
   "atom_id": "heal-shield.shield",
   "family": "heal-shield",
   "behavior": "NaafiriRShield",
@@ -776,101 +803,6 @@
     "Characters/Naafiri/Spells/NaafiriBasicAttack"
    ],
    "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "vision-economy.reveal",
-  "family": "vision-economy",
-  "behavior": "NaafiriRVision",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Hounds' Pursuit — on champion takedown within 7s, pulse grants sight of the surrounding area for 1s and reveals enemy champions"
-   ],
-   "binary": [
-    "NaafiriRVision"
-   ],
-   "evidence": "wiki R takedown vision + bin object"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NaafiriPackmateRecalling",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Eviscerate — Packmates vanish during the dash and reappear near Naafiri on her arrival",
-    "The Call of the Pack — vanishing all of her active Packmates"
-   ],
-   "binary": [
-    "NaafiriPackmateRecalling",
-    "NaafiriEPackmates"
-   ],
-   "evidence": "wiki E/W packmate vanish+reappear + bin objects"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "NaafiriEPackmates",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Eviscerate — Packmates are also healed to full health upon their reappearance"
-   ],
-   "binary": [
-    "NaafiriEPackmates"
-   ],
-   "evidence": "wiki E full-heal on reappear"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "NaafiriQRecast",
-  "trigger": "on_condition",
-  "target_policy": "enemy",
-  "parameters": {
-   "condition": "target_bleeding"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Darkin Daggers — if the dagger hits a target that is already bleeding, they are instead dealt the remaining bleed damage plus additional bonus physical damage"
-   ],
-   "binary": [
-    "NaafiriQRecast"
-   ],
-   "evidence": "tag:Trait_FreeRecast + wiki Q recast"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "NaafiriPackmateLeap",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "packmate pursuit behavior during the hunt (Q recast / The Call of the Pack)"
-   ],
-   "binary": [
-    "NaafiriPackmateLeap",
-    "NaafiriPackmateLeapNoAttack"
-   ],
-   "evidence": "bin packmate leap objects targeting enemies"
   }
  }
 ]

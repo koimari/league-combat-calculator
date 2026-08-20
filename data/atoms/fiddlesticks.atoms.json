@@ -243,6 +243,60 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.flee",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksQMissileNoFear",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1050.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileNoFear"
+   ],
+   "evidence": "name:fear"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.flee",
+  "family": "crowd-control-mobility",
+  "behavior": "FiddleSticksQMissileFear",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileFear"
+   ],
+   "evidence": "name:fear"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "FiddleSticksBasicAttackMelee2",
@@ -291,6 +345,30 @@
     "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee2"
    ],
    "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FiddleSticksBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee2"
+   ],
+   "evidence": "name:melee"
   }
  },
  {
@@ -393,6 +471,30 @@
     "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee"
    ],
    "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FiddleSticksBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 500.0,
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/FiddleSticks/Spells/FiddleSticksBasicAttackMelee"
+   ],
+   "evidence": "name:melee"
   }
  },
  {
@@ -633,131 +735,6 @@
     "Characters/Fiddlesticks/Spells/FiddleSticksEAbility/FiddleSticksE"
    ],
    "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "vision-economy.ward",
-  "family": "vision-economy",
-  "behavior": "FiddleSticksPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ward",
-    "Effigy",
-    "A Harmless Scarecrow"
-   ],
-   "binary": [
-    "Characters/Fiddlesticks/Spells/FiddleSticksPassiveAbility/FiddleSticksPassive"
-   ],
-   "evidence": "wiki-map",
-   "source": "wiki-map"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.transform",
-  "family": "stack-transform-summon-resource",
-  "behavior": "FiddleSticksPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {
-   "channel_seconds": 2.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Transform",
-    "Effigy",
-    "A Harmless Scarecrow"
-   ],
-   "binary": [
-    "Characters/Fiddlesticks/Spells/FiddleSticksPassiveAbility/FiddleSticksPassive"
-   ],
-   "evidence": "wiki-map",
-   "source": "wiki-map"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "FiddleSticksQPassive",
-  "trigger": "passive",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Fear",
-    "Terrify"
-   ],
-   "binary": [
-    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQPassive"
-   ],
-   "evidence": "wiki-map",
-   "source": "wiki-map"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "FiddleSticksQMissileFear",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Fear",
-    "Terrify"
-   ],
-   "binary": [
-    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileFear"
-   ],
-   "evidence": "inherited:FiddleSticksQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "FiddleSticksQMissileFear",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Terrify"
-   ],
-   "binary": [
-    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileFear"
-   ],
-   "evidence": "inherited:FiddleSticksQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "FiddleSticksQMissileNoFear",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Terrify"
-   ],
-   "binary": [
-    "Characters/Fiddlesticks/Spells/FiddleSticksQAbility/FiddleSticksQMissileNoFear"
-   ],
-   "evidence": "inherited:FiddleSticksQ"
   }
  }
 ]

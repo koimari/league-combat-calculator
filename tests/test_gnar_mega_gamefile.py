@@ -31,13 +31,13 @@ the API/fight output in both forms.
       the BUFFED health (E rank 0 at level 1 -> absent in both forms);
       R is Mega-only and prices flat 600 at 18/20 with zero bonus AD
       (wall) and 400 without the wall.
-- S7  Malformed/stale evidence: the GnarBig CharacterRecords root is
-      ABSENT locally (no data/bin/characters/gnarbig.bin.json and no
-      Characters/GnarBig/CharacterRecords/Root inside gnar.bin.json,
-      which does carry the GnarBig SPELL nodes) — the fail-closed
-      record; the delta verification against the real root is a STRICT
-      xfail ("awaiting P4-Gnar-Mega ...") that flips live when the
-      coordinator lands the authority.
+- S7  Game-file authority: data/bin/characters/gnarbig.bin.json (fetched
+      from raw.communitydragon.org/latest/game/data/characters/gnarbig/
+      gnarbig.bin.json — gnar.py's own header names this exact path) now
+      carries Characters/GnarBig/CharacterRecords/Root; gnar.bin.json
+      (the Mini-side root) still carries only the GnarBig SPELL nodes,
+      never the stat root.  The delta verification against the real root
+      runs live and passes exactly.
 - S8  Source/atom receipts: the module SOURCES (wiki revision
       4008132/2026-04-13T18:59:15Z) and the meta surface; the
       stats-domain atom hashes for the Gnar root; the Rage Gene
@@ -56,15 +56,18 @@ the API/fight output in both forms.
 
 AMBIGUITY NOTES for the coordinator:
 
-1. GNARBIG-ROOT ABSENCE VERDICT: the authority is missing at BOTH
-   levels — data/bin/characters/gnarbig.bin.json does not exist AND
+1. GNARBIG-ROOT AUTHORITY LANDED: data/bin/characters/gnarbig.bin.json
+   was fetched from raw.communitydragon.org (gnar.py's own header names
+   this exact path) and carries Characters/GnarBig/CharacterRecords/Root;
    gnar.bin.json (which DOES contain the GnarBig spell nodes
-   GnarBigQ/W/E + GnarBigAttackTower) has no
-   Characters/GnarBig/CharacterRecords/Root.  The five constants'
-   receipts (640/122, 66/5.5, 36/6.7, 33/4.8, 0.5%/lvl) therefore
-   cannot be re-derived locally; S7 pins the absence fail-closed and
-   the delta check stays a strict xfail until the authority lands.
-   Per the client directive no replacement values were invented.
+   GnarBigQ/W/E + GnarBigAttackTower) still has no CharacterRecords root
+   of its own.  The five constants' receipts (640/122, 66/5.5, 36/6.7,
+   33/4.8, 0.5%/lvl) are now re-derived from the landed root and match
+   the module's hardcoded constants exactly (S7's live verification).
+   The AS constant's growth delta uses the loss-magnitude convention
+   (mini-minus-big, 6.0 - 0.5 = 5.5) — the opposite sign from the other
+   four constants' gain convention (big-minus-mini) — matching the
+   module's own documented semantics.
 2. LEVEL-20 REFERENCE VALUES: the parent brief guessed "+943.5?" for
    HP at 20; the exact value is +945.595 (growth multiplier at 20 =
    19 x 1.035 = 19.665; 43 x 19.665 = 845.595).  AD +51.2295, armor
@@ -113,8 +116,6 @@ from src.calculator.champions.gnar import (
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats, growth_stat
-
-_AWAIT = "awaiting P4-Gnar-Mega ..."
 
 # ---------------------------------------------------------------------------
 # Data roots (read-only evidence reads; nothing is written)
@@ -621,12 +622,15 @@ class TestRConsumers:
 
 
 class TestGnarBigRootAuthority:
-    def test_gnarbig_file_is_absent(self) -> None:
-        # Fail-closed record, file level: the coordinator must land
-        # data/bin/characters/gnarbig.bin.json for this pin to flip.
-        assert not _GNARBIG_PATH.exists(), (
-            "GnarBig root landed: update the S7 fail-closed pins and flip "
-            "the delta xfail to a live verification"
+    def test_gnarbig_file_is_present(self) -> None:
+        # The game-file authority landed (fetched from
+        # raw.communitydragon.org/latest/game/data/characters/gnarbig/
+        # gnarbig.bin.json, the path gnar.py's own header comment names):
+        # the fail-closed absence pin flips to a live-verification pin.
+        assert _GNARBIG_PATH.exists(), (
+            "data/bin/characters/gnarbig.bin.json is the landed game-file "
+            "authority; see test_constants_match_gnarbig_minus_gnar_deltas "
+            "for the live delta verification"
         )
 
     def test_gnarbig_character_records_root_is_absent_inside_gnar_bin(self) -> None:
@@ -645,33 +649,29 @@ class TestGnarBigRootAuthority:
             pytest.skip("local Gnar game-file evidence is unavailable")
         assert _GNAR_ROOT is not None
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=_AWAIT + " game-file authority (data/bin/characters/gnarbig.bin.json "
-        "Characters/GnarBig/CharacterRecords/Root absent locally)",
-    )
-    def test_xfail_constants_match_gnarbig_minus_gnar_deltas(self) -> None:
-        # The completion's live verification: once the coordinator lands
-        # the GnarBig root, this must pass as a real test (the strict
-        # xfail trips on an unexpected PASS, forcing the marker off) and
-        # the receipts must hold exactly.
+    def test_constants_match_gnarbig_minus_gnar_deltas(self) -> None:
+        # The live verification: the GnarBig root landed
+        # (data/bin/characters/gnarbig.bin.json, fetched from
+        # raw.communitydragon.org), so this runs for real and the
+        # receipts must hold exactly.
         if not _GNARBIG_PATH.exists():
             raise AssertionError("GnarBig root absent: " + str(_GNARBIG_PATH))
         big_root = json.loads(_GNARBIG_PATH.read_text(encoding="utf-8"))[
             "Characters/GnarBig/CharacterRecords/Root"
         ]
-        pairs = [
+        # HP/AD/armor are GAINS (GnarBig > Gnar): base/growth deltas read
+        # big-minus-mini directly. The AS constant instead stores a LOSS
+        # magnitude (Mini's 6.0%/lvl growth is larger than Mega's
+        # 0.5%/lvl), so its growth delta reads mini-minus-big — the sign
+        # convention test_constants_equal_the_documented_gnarbig_minus_gnar_receipts
+        # already pins via (0.0, 6.0 - 0.5).
+        gain_pairs = [
             (MEGA_BONUS_HEALTH, "baseHPModifiable", "hpPerLevelModifiable"),
             (MEGA_BONUS_AD, "baseDamageModifiable", "damagePerLevelModifiable"),
             (MEGA_BONUS_ARMOR, "baseArmorModifiable", "armorPerLevelModifiable"),
             (MEGA_BONUS_MR, "baseMR", None),
-            (
-                MEGA_ATTACK_SPEED_LOSS,
-                "attackSpeedModifiable",
-                "attackSpeedPerLevelModifiable",
-            ),
         ]
-        for constant, base_key, growth_key in pairs:
+        for constant, base_key, growth_key in gain_pairs:
             delta_base = _root_value(big_root, base_key) - _root_value(
                 _GNAR_ROOT, base_key
             )
@@ -681,10 +681,17 @@ class TestGnarBigRootAuthority:
                     _GNAR_ROOT, growth_key
                 )
                 assert constant[1] == pytest.approx(delta_growth)
-        # The AS loss is the per-level growth delta (6.0 - 0.5).
+        # AS base is unchanged (0.625 both forms): a plain big-minus-mini
+        # delta of 0.0 holds regardless of direction.
+        assert MEGA_ATTACK_SPEED_LOSS[0] == pytest.approx(
+            _root_value(big_root, "attackSpeedModifiable")
+            - _root_value(_GNAR_ROOT, "attackSpeedModifiable")
+        )
+        # The AS loss is the per-level growth delta (6.0 - 0.5): Mini
+        # minus GnarBig, the loss-magnitude convention.
         assert MEGA_ATTACK_SPEED_LOSS[1] == pytest.approx(
-            _root_value(big_root, "attackSpeedPerLevelModifiable")
-            - _root_value(_GNAR_ROOT, "attackSpeedPerLevelModifiable")
+            _root_value(_GNAR_ROOT, "attackSpeedPerLevelModifiable")
+            - _root_value(big_root, "attackSpeedPerLevelModifiable")
         )
 
 
@@ -775,9 +782,9 @@ class TestSourceAndAtomReceipts:
         # the actual file bytes.
         domains = _MANIFEST["domains"]
         assert domains["champions"]["object_count"] == 173
-        assert domains["champions"]["sha256"] == "49e1c1ddcb91244a"
-        assert domains["stats"]["sha256"] == "2917a0f457713533"
-        assert domains["abilities"]["sha256"] == "56c47afaf5f0b20b"
+        assert domains["champions"]["sha256"] == "201758234a728add"
+        assert domains["stats"]["sha256"] == "757476e6a6854688"
+        assert domains["abilities"]["sha256"] == "f209b18e736b4eaa"
         actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
         assert domains["champions"]["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"

@@ -2,10 +2,10 @@
 certification.
 
 This file is the focused acceptance-matrix owner for Guardian Angel's Rebirth
-passive.  It pins the OBSERVABLES the coordinator's P3-3P completion must
-satisfy and runs against today's source: every behavior that already exists
-passes now; every assertion that targets a contract piece the source does
-not emit yet is marked ``xfail`` with reason ``awaiting P3-3P ...``.
+passive.  It pins the OBSERVABLES of the completed P3-3P contract against
+today's source.  Every bullet below is a named, passing assertion: there are
+no ``xfail`` rows left, and the one genuine limit (the request parser's
+<=30s ``fight_duration`` cap) is asserted explicitly rather than skipped.
 
 Contract under test (current runtime facts, verified before pinning):
 
@@ -18,11 +18,11 @@ Contract under test (current runtime facts, verified before pinning):
   "defensive_start" with ``revive_health_ratio 0.50`` / ``revive_delay
   4.0`` / ``revive_cooldown 300.0`` (read via ``required_effect_value``);
   a missing key raises ``KeyError`` naming "Guardian Angel" AND the key
-  (AGENTS.md rule 5 — no silent fallbacks).  The P3-3P completion adds the
+  (AGENTS.md rule 5 — no silent fallbacks).  The P3-3P completion added the
   mana restore (100% max mana), the one-use flag, and the wiki source
-  receipt (``source_url`` / ``source_revision_id``) to the typed registry —
-  all absent today (KeyError today, so the fail-closed path is pinned and
-  the typed additions are xfail).
+  receipt (``source_url`` / ``source_revision_id`` — revision 4046863) to
+  the typed registry; all four are present and pinned, and the fail-closed
+  KeyError path is pinned on a deliberately-never-real key.
 * ORDINARY STAT PARITY: equipping GA changes EXACTLY attack_damage +55 and
   armor +45 (plus their bonus_* twins) vs the bare build; no other stat.
   When the holder never takes lethal damage, arming the revive changes
@@ -36,27 +36,36 @@ Contract under test (current runtime facts, verified before pinning):
   earliest candidate that finds the participant dead.  In the aligned case
   (lethal packet is the fight's first damage, e.g. death at t=0) the
   applied revive lands exactly at death_time + 4.0 and the death interval
-  spans exactly [death_time, revive_time] (4.0s).  CAVEAT (reported to the
-  coordinator): in a sustained fight the earliest candidate while dead can
-  be authored from a pre-lethal packet, so the revive can fire EARLIER than
-  death_time + 4.0 (probe: death 9.981, revive 10.654 from the 6.654
-  packet).  The aligned contract is pinned PASS; the lethal-anchored
-  exactness in sustained fights is xfail.
-* STASIS DURING THE WINDOW: implemented as the dead state, not as an
-  explicit stasis state today — incoming damage during the window is
-  ignored (public event kept with damage 0.0 + ``skipped_reason
-  target_dead``), the holder authors no damage (events kept with damage 0.0
-  + ``skipped_reason attacker_dead``), and the holder acts again after the
-  revive.  ``stasis_until`` / ``stasis_source`` stay 0.0/"" — an explicit
-  stasis-state authoring is xfail.
-* ONE REVIVE ONLY + COOLDOWN: after the first revive the kernel sets
-  ``revive_used``; a second lethal after the revive does NOT re-trigger
-  Rebirth (second ``death_time`` recorded, terminal_phase "dead", single
-  revive_time).  The typed cooldown is 300.0s — a <=60s fight can never see
-  a second revive — and the one-use gate is the enforceable rule.  A
-  >300s-cooldown RE-ARM (the real game lets a second Rebirth fire once the
-  cooldown expires) is unrepresentable today (``revive_used`` never
-  re-arms) — xfail.
+  spans exactly [death_time, revive_time] (4.0s).  The window is now
+  lethal-anchored in sustained fights too: candidates authored from
+  PRE-lethal packets are skipped (``revive_window_not_elapsed``) until the
+  full sourced 4.0s has elapsed since the lethal hit, so the sustained case
+  (death 9.981 -> revive 13.981) matches the aligned case.
+* STASIS DURING THE WINDOW: authored EXPLICITLY at the lethal packet
+  (P3-3P) — ``stasis_until == revive_time``, ``stasis_source "Guardian
+  Angel (Rebirth)"``, ``stasis_started_at == first_death_time``, plus one
+  ``revive_stasis`` receipt row per armed window (start / end / sourced
+  duration / source / sourced cooldown / resolved / ready_at).  The window
+  is coextensive with the dead state, which keeps owning every skip:
+  incoming damage is still ignored (public event kept with damage 0.0 +
+  ``skipped_reason target_dead``), the holder still authors no damage
+  (``skipped_reason attacker_dead``), the death downtime interval is still
+  the single [death, revive] row, and the holder acts again after the
+  revive.  A holder with no armed revive emits no ``revive_stasis`` key and
+  keeps ``stasis_until`` / ``stasis_source`` at 0.0/"".
+* ONE REVIVE ONLY + COOLDOWN: the sourced 300.0s cooldown — not a spent
+  one-shot boolean — is the re-arm gate (P3-3P).  The applied revive parks
+  re-arm at ``revive_time + 300``; a lethal packet before that arms no
+  stasis window and is terminal (its candidate is denied with the named
+  receipt reason ``revive_on_cooldown``), and a lethal packet at or after
+  it arms a second window and revives again.  Requested fights are bounded
+  to <=30s by the request parser, so no modeled fight can span the
+  cooldown: inside a fight the observable rule stays exactly one revive
+  (second ``death_time`` recorded, terminal_phase "dead", single
+  revive_time, ONE ``revive_stasis`` row).  The re-arm is therefore pinned
+  at the kernel, where the rule lives — the sibling walk pattern from
+  ``tests/test_survival_kernel.py``, driven by the REAL cached item's
+  resolved defenses.
 * EXTRA DAMAGE WHILE DEAD: damage landing after death (during the window
   or after the final death) never compounds — every post-death packet is
   ignored (``target_dead``), so ``health_damage`` counts only lethal hits.
@@ -70,11 +79,12 @@ Contract under test (current runtime facts, verified before pinning):
   equality holds by construction.  The legacy pair surface
   (``run_fight(score_only=True)``) carries NO survival state (target_*
   fields are None) — that is the named fail-closed boundary; the coupled
-  survival rows and the (future) item_state_receipts row are the carriers.
-* RECEIPT ROW (P3-3P surface, absent today → xfail): the coordinator's
-  completion adds ONE ``item_state_receipts`` row for Guardian Angel (the
-  3M/3N/3O pattern) carrying the revive state (revived / restored amount /
-  delay / cooldown / one-use / mana ratio / wiki source revision).
+  survival rows and the item_state_receipts row are the carriers.
+* RECEIPT ROW (P3-3P surface, present): ``item_state_receipts`` emits ONE
+  Guardian Angel row (the 3M/3N/3O pattern), state "rebirth", carrying the
+  revive state (revived / restored amount / delay / cooldown / one-use /
+  mana ratio / wiki source revision) plus the named mana, cooldown and
+  stasis boundary strings.
 * NO OUTGOING TDD: the revive itself authors no damage anywhere — no
   damage event carries a revive/Rebirth source, no breakdown row exists for
   it, and the holder's total_damage comes only from ordinary sources.
@@ -87,11 +97,13 @@ Contract under test (current runtime facts, verified before pinning):
   optimizer_eligible + calculation_eligible True, outcome_dimensions
   ["revive"]; ``target_item_model_coverage`` is "modeled" naming Rebirth
   and 50% base health.
-* XFAIL ONLY for genuinely absent mechanics: (1) the typed mana/one-use/
-  source-receipt keys; (2) the explicit stasis-state authoring; (3) the
-  300s-cooldown re-arm (second revive after cooldown expiry); (4) the
-  item_state_receipts Rebirth row; (5) the lethal-anchored 4s window in a
-  sustained fight.  All five are ``awaiting P3-3P ...``.
+* XFAIL: none remain.  The five originally-absent mechanics — the typed
+  mana/one-use/source-receipt keys, the explicit stasis-state authoring,
+  the 300s-cooldown re-arm, the item_state_receipts Rebirth row, and the
+  lethal-anchored 4s window in a sustained fight — are all implemented and
+  pinned as named tests.  The one genuine BOUNDARY left is the <=30s
+  request cap on ``fight_duration``, which is asserted explicitly rather
+  than hidden: it is why the cooldown re-arm is pinned at the kernel.
 
 Sibling owners: the Gunmetal Greaves precedent is pinned in
 ``tests/test_gunmetal_greaves_riot_branch.py`` (3O receipt-only named-
@@ -348,10 +360,12 @@ def test_malformed_typed_values_fail_loudly():
 
 
 def test_typed_mana_one_use_and_source_receipt_keys():
-    """P3-3P typed surface (absent today): the registry adds the 100% max
-    mana restore, the one-use flag, and the wiki source receipt.  Today
-    every key raises KeyError (fail-closed), so this xfails until the
-    coordinator's completion adds the typed keys."""
+    """P3-3P typed surface (implemented): the registry carries the 100% max
+    mana restore, the one-use flag, and the wiki source receipt
+    (``source_url`` / ``source_revision_id``).  Each is read directly off the
+    typed entry, so a removed key fails this row loudly instead of falling
+    back — the fail-closed KeyError path itself is pinned by
+    ``test_missing_typed_key_fails_loud_naming_item_and_key`` above."""
     effect = ITEM_EFFECTS[ITEM_NAME]
     assert effect["revive_mana_ratio"] == pytest.approx(REVIVE_MANA_RATIO)
     assert effect["one_use"] is True
@@ -546,13 +560,14 @@ def test_holder_authors_no_damage_during_the_window_and_acts_after_revival():
     assert all(float(event["damage"]) > 0.0 for event in post_revive)
 
 
-@pytest.mark.xfail(reason="awaiting P3-3P explicit Rebirth stasis state")
 def test_explicit_stasis_state_is_authored_for_the_window():
-    """The 4s window is implemented today as the dead state (target_dead /
-    attacker_dead blocking, pinned above).  P3-3P contract question: an
-    explicit stasis state for the window — stasis_until == revive_time with
-    stasis_source "Guardian Angel (Rebirth)" — is absent today (stasis_until
-    stays 0.0, stasis_source "")."""
+    """P3-3P (implemented): the 4s window is an EXPLICIT stasis state, not
+    only the implicit dead state.  The lethal packet authors
+    ``stasis_until == revive_time`` with ``stasis_source "Guardian Angel
+    (Rebirth)"`` starting at the death, and the survival row carries one
+    ``revive_stasis`` receipt row per armed window with every value traced
+    to the typed registry (delay 4.0, cooldown 300.0, source label) plus the
+    resolution (``resolved`` / ``ready_at == revive_time + 300``)."""
     result = _holder_fight(
         4.1,
         stats=dict(
@@ -566,6 +581,102 @@ def test_explicit_stasis_state_is_authored_for_the_window():
     survival = _holder_survival(result)
     assert survival["stasis_until"] == pytest.approx(survival["revive_time"])
     assert survival["stasis_source"] == REVIVE_SOURCE
+    assert survival["stasis_started_at"] == pytest.approx(
+        survival["first_death_time"], abs=1e-3
+    )
+    # The receipt: exactly one armed window, spanning exactly the sourced
+    # delay, resolved by the revive, with the sourced cooldown and the
+    # re-arm timestamp it implies.
+    assert survival["revive_stasis"] == [
+        {
+            "start": pytest.approx(survival["first_death_time"], abs=1e-3),
+            "end": pytest.approx(survival["revive_time"], abs=1e-3),
+            "duration": pytest.approx(REVIVE_DELAY),
+            "source": REVIVE_SOURCE,
+            "cooldown": pytest.approx(REVIVE_COOLDOWN),
+            "resolved": True,
+            "ready_at": pytest.approx(survival["revive_time"] + REVIVE_COOLDOWN),
+        }
+    ]
+
+
+def test_explicit_stasis_adds_no_second_gate_and_no_row_without_a_window():
+    """The explicit stasis is a state/receipt authoring, NOT a second
+    blocking gate: the coextensive dead state keeps owning every skip, so
+    packets inside the window still read "target_dead" (incoming) and
+    "attacker_dead" (outgoing) rather than a stasis reason, and the death
+    downtime interval is still the single [death, revive] row.  A holder
+    with no armed revive emits NO ``revive_stasis`` key at all and keeps
+    ``stasis_until``/``stasis_source`` at 0.0/"" — the key is fail-closed
+    keyed to an actually-armed window."""
+    stats = dict(
+        health=100.0,
+        base_health=200.0,
+        bonus_health=0.0,
+        armor=0.0,
+        magic_resistance=0.0,
+    )
+    result = _holder_fight(4.1, stats=stats)
+    survival = _holder_survival(result)
+    holder_id = result["participants"][1]["participant_id"]
+    window = (survival["first_death_time"], survival["revive_time"])
+    incoming = [
+        event
+        for event in result["events"]
+        if str(event.get("target", "")) == holder_id
+        and window[0] < float(event["time"]) < window[1]
+    ]
+    outgoing = [
+        event
+        for event in result["events"]
+        if str(event.get("attacker", "")) == holder_id
+        and window[0] < float(event["time"]) < window[1]
+    ]
+    assert incoming and outgoing
+    assert {event["skipped_reason"] for event in incoming} == {"target_dead"}
+    assert {event["skipped_reason"] for event in outgoing} == {"attacker_dead"}
+    assert [row["kind"] for row in survival["action_downtime_intervals"]] == ["death"]
+    assert survival["action_downtime"] == pytest.approx(REVIVE_DELAY, abs=1e-3)
+
+    bare = _holder_survival(_holder_fight(4.1, holder_items=(), stats=stats))
+    assert "revive_stasis" not in bare
+    assert bare["stasis_until"] == 0.0
+    assert bare["stasis_source"] == ""
+
+
+def test_stasis_window_unresolved_at_the_fight_end_claims_nothing():
+    """Fail-closed on a truncated window: when the fight ends INSIDE the 4s
+    stasis (death at 0.0, fight ends at 2.0), the receipt records the armed
+    window with ``resolved`` False and NO ``ready_at`` — the cooldown starts
+    only after a resurrection that never happened, so it is never claimed.
+    The row makes no revive claim either (revived False, revive_time None,
+    terminal "dead", survived_window False), and the death downtime interval
+    stays clamped to the fight even though the window extends past it."""
+    survival = _holder_survival(
+        _holder_fight(
+            2.0,
+            stats=dict(
+                health=100.0,
+                base_health=200.0,
+                bonus_health=0.0,
+                armor=0.0,
+                magic_resistance=0.0,
+            ),
+        )
+    )
+    assert survival["revived"] is False
+    assert survival["revive_time"] is None
+    assert survival["revive_health_restored"] == 0.0
+    assert survival["terminal_phase"] == "dead"
+    assert survival["survived_window"] is False
+    (window,) = survival["revive_stasis"]
+    assert window["resolved"] is False
+    assert "ready_at" not in window
+    assert window["start"] == pytest.approx(0.0, abs=1e-3)
+    assert window["end"] == pytest.approx(REVIVE_DELAY)
+    assert window["cooldown"] == pytest.approx(REVIVE_COOLDOWN)
+    assert survival["action_downtime"] == pytest.approx(2.0, abs=1e-3)
+    assert survival["action_downtime_intervals"][0]["end"] == pytest.approx(2.0)
 
 
 # ---------------------------------------------------------------------------
@@ -602,17 +713,119 @@ def test_second_lethal_after_revive_does_not_revive_again():
     )
 
 
-@pytest.mark.xfail(reason="awaiting P3-3P 300s cooldown rearm")
-def test_second_revive_after_cooldown_expiry_is_unrepresentable():
-    """The real-game rule: Rebirth's 300s cooldown starts after the
-    resurrection ends, so a second lethal 300+s later WOULD re-trigger
-    Rebirth.  The engine's one-use gate (revive_used) never re-arms, so the
-    re-arm is unrepresentable — a holder that dies, revives, and dies again
-    in a long fight shows exactly one revive.  This xfails until P3-3P adds
-    the cooldown re-arm state; the <=60s-fight one-use rule is pinned PASS
-    by the test above."""
+def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, list]:
+    """One participant, real Guardian Angel defenses, driven straight through
+    the survival kernel (the sibling pattern in ``tests/test_survival_kernel.py``
+    ~700-890).
+
+    A REQUESTED fight cannot host this: ``fight_duration`` is bounded to
+    1-30s by the request parser (pinned below), while Rebirth's cooldown is
+    300s.  The kernel — which owns the re-arm rule — carries no such bound,
+    so this is where the sourced cooldown gate is pinned.  Every revive
+    number comes from ``resolve_starting_defenses`` on the REAL cached item,
+    i.e. from the typed registry; nothing is authored by hand.
+    """
+    from src.calculator.roster_composition import Combatant
+    from src.calculator.survival import (
+        ActionKind,
+        ReceiptLedger,
+        ScoreLedger,
+        SurvivalAction,
+        TransitionContext,
+        assemble_survival_rows,
+        build_states,
+        finalize_states,
+        run_survival_walk,
+    )
+
+    duration = second_lethal + 60.0
+    defenses = resolve_starting_defenses(
+        "Ashe", 18, {"health": 100.0, "base_health": 200.0}, [_ga_item()]
+    )
+    combatant = Combatant(
+        participant_id="holder",
+        team="enemy",
+        champion_data={"name": "Ashe"},
+        level=18,
+        items=(_ga_item(),),
+        stats={"health": 100.0, "is_melee": False},
+        defenses=defenses,
+    )
+
+    def _lethal(time: float, seq: int) -> object:
+        return SurvivalAction(
+            sort_key=(time, time, 0, 0, seq, "holder", f"hit{seq}", "auto_attacks"),
+            time=time,
+            phase=time,
+            kind=ActionKind.PLAIN_DAMAGE,
+            subject=0,
+            attacker=0,
+            aidx=seq,
+            amount=150.0,
+            damage_type="physical",
+            source_key="auto_attacks",
+            source="auto_attacks",
+            event_id=f"hit{seq}",
+            sequence=seq,
+        )
+
+    def _revive_candidate(time: float, seq: int) -> object:
+        return SurvivalAction(
+            sort_key=(time, time, 0, 0, seq, "holder", f"rev{seq}", "revive"),
+            time=time,
+            phase=time,
+            kind=ActionKind.REVIVE,
+            subject=0,
+            attacker=0,
+            aidx=seq,
+            amount=defenses.revive_health_amount,
+            delay=defenses.revive_delay,
+            source_key="revive_Guardian Angel",
+            source=defenses.revive_source,
+            event_id=f"rev{seq}",
+            sequence=seq,
+        )
+
+    actions = [
+        _lethal(0.0, 0),
+        _revive_candidate(defenses.revive_delay, 1),
+        _lethal(second_lethal, 2),
+        _revive_candidate(second_lethal + defenses.revive_delay, 3),
+    ]
+    states = build_states([combatant])
+    if receipt:
+        walk_actions = [action._replace(event={}) for action in actions]
+        ledger = ReceiptLedger(
+            actions=[action._replace(event={}) for action in actions],
+            index_of={"holder": 0},
+            annotating=False,
+        )
+    else:
+        walk_actions = actions
+        ledger = ScoreLedger(len(actions))
+    ctx = TransitionContext(
+        duration=duration,
+        states=states,
+        combatants=[combatant],
+        index_of={"holder": 0},
+        ledger=ledger,
+    )
+    run_survival_walk(walk_actions, ctx)
+    finalize_states(states, duration)
+    return assemble_survival_rows(states, [combatant])["holder"], walk_actions
+
+
+def test_requested_fights_cannot_reach_the_300s_rebirth_cooldown():
+    """The named bound behind the kernel-level pin below: the request parser
+    caps ``fight_duration`` at 30s, so no REQUESTED fight can span Rebirth's
+    300s cooldown.  Inside a modeled fight the observable rule is therefore
+    exactly one revive — and the second lethal arms NO second stasis window
+    (the cooldown, not a spent one-shot boolean, is the reason)."""
+    with pytest.raises(ValueError) as excinfo:
+        _holder_fight(320.0, stats=dict(health=100.0, base_health=200.0))
+    assert "fight_duration must be between 1 and 30" in str(excinfo.value)
     result = _holder_fight(
-        320.0,
+        12.0,
         stats=dict(
             health=100.0,
             base_health=200.0,
@@ -622,10 +835,71 @@ def test_second_revive_after_cooldown_expiry_is_unrepresentable():
         ),
     )
     survival = _holder_survival(result)
-    # Contract: the second lethal (death #2) re-arms and revives again.
-    assert survival["revive_time"] == pytest.approx(
-        survival["death_time"] + REVIVE_DELAY, abs=1e-3
+    assert survival["revive_time"] == pytest.approx(4.0, abs=1e-3)
+    assert survival["death_time"] == pytest.approx(4.436, abs=1e-3)
+    assert survival["terminal_phase"] == "dead"
+    # One armed window only: the second lethal (4.436) is inside the 300s
+    # cooldown that opened at revive_time + 300 = 304.0.
+    assert len(survival["revive_stasis"]) == 1
+    assert survival["revive_stasis"][0]["ready_at"] == pytest.approx(
+        survival["revive_time"] + REVIVE_COOLDOWN
     )
+    assert survival["revive_stasis"][0]["ready_at"] > result["duration"]
+
+
+def test_second_revive_re_arms_after_the_sourced_300s_cooldown():
+    """P3-3P (implemented): Rebirth's 300s cooldown starts after the
+    resurrection ends and IS the re-arm gate, so a second lethal at or after
+    ``revive_time + 300`` arms a second resurrection and revives again.  A
+    second lethal INSIDE the cooldown is terminal, and the receipt names the
+    reason ("revive_on_cooldown") instead of silently retrying it."""
+    late, _ = _rebirth_kernel_walk(310.0, receipt=False)
+    assert late["first_death_time"] == pytest.approx(0.0)
+    assert late["revive_time"] == pytest.approx(310.0 + REVIVE_DELAY)
+    assert late["revived"] is True
+    assert late["terminal_phase"] == "revived"
+    assert late["death_time"] is None
+    assert late["revive_health_restored"] == pytest.approx(REVIVE_HEALTH_RATIO * 200.0)
+    # Two armed windows, each 4.0s, each re-parking the 300s cooldown.
+    assert [row["start"] for row in late["revive_stasis"]] == [0.0, 310.0]
+    assert [row["end"] for row in late["revive_stasis"]] == [4.0, 314.0]
+    assert [row["ready_at"] for row in late["revive_stasis"]] == [
+        pytest.approx(4.0 + REVIVE_COOLDOWN),
+        pytest.approx(314.0 + REVIVE_COOLDOWN),
+    ]
+    assert all(row["resolved"] is True for row in late["revive_stasis"])
+    assert all(
+        row["cooldown"] == pytest.approx(REVIVE_COOLDOWN)
+        for row in late["revive_stasis"]
+    )
+
+    # Inside the cooldown: terminal death, ONE window, no second revive.
+    early, _ = _rebirth_kernel_walk(100.0, receipt=False)
+    assert early["revive_time"] == pytest.approx(REVIVE_DELAY)
+    assert early["death_time"] == pytest.approx(100.0)
+    assert early["terminal_phase"] == "dead"
+    assert len(early["revive_stasis"]) == 1
+
+
+def test_rebirth_cooldown_gate_is_exact_and_named_on_the_receipt():
+    """The gate is the sourced timestamp, not an approximation: a lethal one
+    tick BEFORE ``revive_time + 300`` does not re-arm, one AT it does.  The
+    denied candidate carries skipped_reason "revive_on_cooldown" and applies
+    0.0, and the receipt and score adapters agree row-for-row."""
+    ready_at = REVIVE_DELAY + REVIVE_COOLDOWN
+    before, _ = _rebirth_kernel_walk(ready_at - 0.1, receipt=False)
+    exactly, _ = _rebirth_kernel_walk(ready_at, receipt=False)
+    assert before["revive_time"] == pytest.approx(REVIVE_DELAY)
+    assert before["terminal_phase"] == "dead"
+    assert exactly["revive_time"] == pytest.approx(ready_at + REVIVE_DELAY)
+    assert exactly["terminal_phase"] == "revived"
+
+    receipt_row, walk_actions = _rebirth_kernel_walk(100.0, receipt=True)
+    denied = walk_actions[3].event
+    assert denied["skipped_reason"] == "revive_on_cooldown"
+    assert denied["applied_amount"] == pytest.approx(0.0)
+    score_row, _ = _rebirth_kernel_walk(100.0, receipt=False)
+    assert score_row == receipt_row
 
 
 # ---------------------------------------------------------------------------
@@ -763,9 +1037,10 @@ def test_item_state_receipts_emits_exactly_one_rebirth_row():
     emits exactly ONE Guardian Angel row — state "rebirth" (coordinator's
     named state), carrying the armed revive: restored health (0.5 x base),
     delay 4.0, cooldown 300.0, one-use True, mana ratio 1.0, and the wiki
-    source receipt.  Absent today: item_state_receipts returns [] for GA
-    (the fail-closed absent claim is pinned by the absent-GA test below, and
-    the row's absence is what this xfail tracks)."""
+    source receipt.  Implemented: exactly one GA row is emitted, and the
+    complementary fail-closed claim (no GA in the build -> no rebirth row at
+    all, never an inert placeholder) is pinned by the absent-GA test
+    below."""
     receipts = item_state_receipts(
         [_ga_item()],
         {},
@@ -959,11 +1234,13 @@ def test_sustained_fight_revive_is_anchored_to_the_lethal_hit():
 
 
 def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_packet():
-    """THE contract pin for item 4 in a sustained fight: the resurrection
-    window is exactly 4.0s from the LETHAL packet (death_time + 4.0), like
-    the aligned case.  Today the earliest candidate while dead can be
-    authored from a pre-lethal packet (death 9.981 -> revive 10.654, not
-    13.981), so this is genuinely absent and xfails."""
+    """THE contract pin for item 4 in a sustained fight, in ABSOLUTE numbers
+    (the test above pins the same rule relationally).  The engine no longer
+    lets a pre-lethal candidate shorten the window (it would have revived at
+    10.654): the lethal packet at 9.981 arms the stasis, the applied revive
+    lands at exactly 13.981 = 9.981 + the sourced 4.0s, and the armed window
+    receipt spans exactly those two timestamps with the sourced 300s
+    cooldown."""
     result = _holder_fight(
         20.0,
         stats=dict(
@@ -976,9 +1253,17 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
+    assert survival["first_death_time"] == pytest.approx(9.981, abs=1e-3)
+    assert survival["revive_time"] == pytest.approx(13.981, abs=1e-3)
     assert survival["revive_time"] == pytest.approx(
         survival["first_death_time"] + REVIVE_DELAY, abs=1e-3
     )
+    (window,) = survival["revive_stasis"]
+    assert window["start"] == pytest.approx(9.981, abs=1e-3)
+    assert window["end"] == pytest.approx(13.981, abs=1e-3)
+    assert window["duration"] == pytest.approx(REVIVE_DELAY)
+    assert window["cooldown"] == pytest.approx(REVIVE_COOLDOWN)
+    assert window["resolved"] is True
 
 
 # ---------------------------------------------------------------------------

@@ -562,25 +562,5 @@
    "inherited_from": "BrandQ",
    "evidence": "inherited:BrandQ"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "BrandPassiveRunspeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Brand/Spells/BrandPassiveRunspeed"
-   ],
-   "evidence": "binary object name: passive movement-speed component of Blaze passive"
-  }
  }
 ]

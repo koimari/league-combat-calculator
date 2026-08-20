@@ -448,6 +448,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "PoppyPassiveCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Poppy/Spells/PoppyPassiveAbility/PoppyPassiveCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "PoppyE",
@@ -780,121 +805,6 @@
    ],
    "inherited_from": "PoppyR",
    "evidence": "inherited:PoppyR"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "PoppyPassive (Iron Ambassador)",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "bonus_range": 350.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Iron Ambassador",
-    "Bonus magic damage"
-   ],
-   "binary": [
-    "Characters/Poppy/Spells/PoppyPassiveAbility/PoppyPassive"
-   ],
-   "source": "wiki-map",
-   "evidence": "wiki-map; empowered attack throws buckler, +350 range, bonus magic damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "PoppyPassiveAttack (Iron Ambassador buckler hit)",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Iron Ambassador",
-    "Bonus magic damage"
-   ],
-   "binary": [
-    "Characters/Poppy/Spells/PoppyPassiveAbility/PoppyPassiveAttack"
-   ],
-   "source": "wiki-map",
-   "evidence": "wiki-map; buckler deals bonus magic damage on hit"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "PoppyWZone (Steadfast Presence grounding)",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration_seconds": 2.0,
-   "slow_pct": 25.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Steadfast Presence",
-    "Grounded",
-    "Slow"
-   ],
-   "binary": [
-    "Characters/Poppy/Spells/PoppyWAbility/PoppyWZone"
-   ],
-   "source": "wiki-map",
-   "evidence": "wiki-map; interrupted dashers become grounded and slowed 25% for 2s"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.airborne",
-  "family": "crowd-control-mobility",
-  "behavior": "PoppyRSpell (Keeper's Verdict)",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration_seconds": 1.0,
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Keeper's Verdict",
-    "Knock up"
-   ],
-   "binary": [
-    "Characters/Poppy/Spells/PoppyRAbility/PoppyRSpell"
-   ],
-   "source": "wiki-map",
-   "evidence": "wiki-map; recast knocks enemies up for 1 second"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.airborne",
-  "family": "crowd-control-mobility",
-  "behavior": "PoppyRSpellInstant (Keeper's Verdict instant)",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration_seconds": 1.0,
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Keeper's Verdict",
-    "Knock up"
-   ],
-   "binary": [
-    "Characters/Poppy/Spells/PoppyRAbility/PoppyRSpellInstant"
-   ],
-   "source": "wiki-map",
-   "evidence": "wiki-map; uncharged recast knocks up (no knock-back)"
   }
  }
 ]

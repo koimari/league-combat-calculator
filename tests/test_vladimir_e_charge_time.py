@@ -921,17 +921,18 @@ class TestSourceAndAtomReceipts:
         assert _ability_atom("timing.active_duration")["hash"] == "367b90ae9fc5cf38"
 
     def test_manifest_receipts_match_the_on_disk_files(self):
-        abilities = _MANIFEST["domains"]["abilities"]
-        champions = _MANIFEST["domains"]["champions"]
-        assert abilities["sha256"] == "56c47afaf5f0b20b"
-        assert abilities["source_ref"] == "data/champions.json@sha256:afea81a9976904c1"
-        assert champions["sha256"] == "49e1c1ddcb91244a"
-        assert champions["object_count"] == 173
+        # The atoms manifest digests; the depth-2 regeneration updated
+        # the domain hashes and the champions.json source hash.
+        domains = _MANIFEST["domains"]
+        assert domains["champions"]["object_count"] == 173
+        assert domains["champions"]["sha256"] == "201758234a728add"
+        assert domains["stats"]["sha256"] == "757476e6a6854688"
+        assert domains["abilities"]["sha256"] == "f209b18e736b4eaa"
         actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
-        assert champions["source_ref"].endswith(
+        assert domains["champions"]["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"
         )
-        assert actual[:16] == "afea81a9976904c1"
+        assert actual[:16] == "77f8cce3fae087dc"
 
     def test_packet_spec_digests_to_the_module_hash(self):
         assert _packet_sha256(_PACKET_VLADIMIR) == PACKET_SHA256

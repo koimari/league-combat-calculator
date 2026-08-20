@@ -54,8 +54,24 @@ BAILOUT_AUTHORITY = {
     "wiki_description_damage_class": "true",
     "wiki_notes_damage_class": "raw",
     "gamefile_path": "data/bin/characters/renata.bin.json",
+    # sha256 of the RAW BYTES of the file named above, so a reader can
+    # re-verify the conflicting evidence with `shasum -a 256`.  ``data/bin/``
+    # is gitignored, so this digest is checkable locally only — the test that
+    # compares it against the file skips when the evidence is absent rather
+    # than passing on an unchecked literal.
     "gamefile_sha256": (
-        "9f6ffc8c07f63734978479b3f56c2b364d07cd2bcb46f061936c0bebd03d5000"
+        "d05e6d6eabc614f8821be6ec4c01e09018f6606c6b94eee1712ca04f00e4211e"
+    ),
+    # The survival components this conflict withholds.  ``support_effects``
+    # publishes one public denial receipt per component beside every Bailout
+    # cast, so a covered participant's survival row is never read as a
+    # complete answer (the alternative — reporting the plain death, or a
+    # Guardian Angel resurrection the cached notes say Bailout pre-empts —
+    # would be a silently wrong number rather than a named gap).
+    "denied_survival_components": (
+        "lethal_damage_restore",
+        "maximum_health_burn",
+        "resurrection_precedence",
     ),
 }
 

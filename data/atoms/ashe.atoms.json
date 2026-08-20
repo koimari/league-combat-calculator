@@ -1,499 +1,5 @@
 [
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "EnchantedCrystalArrow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 100.0,
-   "cooldown_rank_max": 60.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 4106
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
-   ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "AshePassiveSlow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AshePassiveAbility/AshePassiveSlow"
-   ],
-   "evidence": "name:slow"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "EnchantedCrystalArrowSlow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrowSlow"
-   ],
-   "evidence": "name:slow"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "EnchantedCrystalArrow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 100.0,
-   "cooldown_rank_max": 60.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 4106
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "Volley",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 4.0,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23759
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/VolleyAbility/Volley"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "VolleyAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 4.0,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23759
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/VolleyAbility/VolleyAttack"
-   ],
-   "inherited_from": "Volley",
-   "evidence": "inherited:Volley"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "VolleyCenterAttack",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/VolleyAbility/VolleyCenterAttack"
-   ],
-   "evidence": "wiki W: volley of arrows in a cone, each arrow damages first enemy hit"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "VolleyRightAttack",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/VolleyAbility/VolleyRightAttack"
-   ],
-   "evidence": "wiki W: volley of arrows in a cone, each arrow damages first enemy hit"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AsheBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AsheBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.critical-chance",
-  "family": "damage",
-  "behavior": "AsheCritChance",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheCritChance"
-   ],
-   "evidence": "name:critchance"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "AsheCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "AsheCritChance",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheCritChance"
-   ],
-   "evidence": "name:critchance"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AshePassive",
-  "trigger": "on_attack",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AshePassiveAbility/AshePassive"
-   ],
-   "evidence": "wiki P: basic attacks deal bonus physical damage scaling with crit; crits deal no extra"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AsheQ",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 13327
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheQAbility/AsheQ"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AsheQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
-   ],
-   "inherited_from": "AsheQ",
-   "evidence": "inherited:AsheQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "EnchantedCrystalArrow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 100.0,
-   "cooldown_rank_max": 60.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 4106
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "Volley",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 4.0,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23759
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/VolleyAbility/Volley"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "VolleyAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 4.0,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23759
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/VolleyAbility/VolleyAttack"
-   ],
-   "inherited_from": "Volley",
-   "evidence": "inherited:Volley"
-  }
- },
- {
   "atom_id": "damage.on-attack",
   "family": "damage",
   "behavior": "AsheQAttackNoOnHit",
@@ -548,77 +54,32 @@
   }
  },
  {
-  "atom_id": "damage.tag-basicattack",
+  "atom_id": "damage.damage-instance",
   "family": "damage",
-  "behavior": "AsheBasicAttack",
+  "behavior": "AsheQ",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
   },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AsheBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-item",
-  "family": "damage",
-  "behavior": "ItemHurricaneAsheAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1400.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
    ],
    "binary": [
-    "Characters/Ashe/Spells/ItemHurricaneAsheAttack"
+    "Characters/Ashe/Spells/AsheQAbility/AsheQ"
    ],
-   "evidence": "name:item"
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -650,55 +111,6 @@
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "AsheQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Attack speed",
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
-   ],
-   "inherited_from": "AsheQ",
-   "evidence": "inherited:AsheQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AsheSpiritOfTheHawk",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 5.0,
-   "cooldown_rank_max": 5.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 16384
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ability resource"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheSpiritOfTheHawkAbility/AsheSpiritOfTheHawk"
-   ],
-   "evidence": "tag:Trait_Ammo"
-  }
- },
- {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
   "behavior": "AsheQ",
@@ -720,30 +132,6 @@
     "Characters/Ashe/Spells/AsheQAbility/AsheQ"
    ],
    "evidence": "tag:Trait_AttackBuff_Duration"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AsheQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 13327
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
-   ],
-   "inherited_from": "AsheQ",
-   "evidence": "inherited:AsheQ"
   }
  },
  {
@@ -771,27 +159,291 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AshePassiveNeutralDebuff",
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "EnchantedCrystalArrowSlow",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": "physical",
+   "damage_type": "magic",
    "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Debuff"
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
    ],
    "binary": [
-    "Characters/Ashe/Spells/AshePassiveAbility/AshePassiveNeutralDebuff"
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrowSlow"
    ],
-   "evidence": "name:debuff"
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "EnchantedCrystalArrow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 60.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "EnchantedCrystalArrow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 60.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "EnchantedCrystalArrow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 60.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/EnchantedCrystalArrowAbility/EnchantedCrystalArrow"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "Volley",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 4.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/Volley"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Volley",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 4.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/Volley"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-chance",
+  "family": "damage",
+  "behavior": "AsheCritChance",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheCritChance"
+   ],
+   "evidence": "name:critchance"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AsheCritChance",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheCritChance"
+   ],
+   "evidence": "name:critchance"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheSpiritOfTheHawk",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 5.0,
+   "cooldown_rank_max": 5.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 16384
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheSpiritOfTheHawkAbility/AsheSpiritOfTheHawk"
+   ],
+   "evidence": "tag:Trait_Ammo"
   }
  },
  {
@@ -843,6 +495,282 @@
     "{93b9a272}"
    ],
    "evidence": "name:vision"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AshePassiveNeutralDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AshePassiveAbility/AshePassiveNeutralDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AshePassiveSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AshePassiveAbility/AshePassiveSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AsheBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneAsheAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1400.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/ItemHurricaneAsheAttack"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AsheCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 600.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AsheQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
+   ],
+   "inherited_from": "AsheQ",
+   "evidence": "inherited:AsheQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "AsheQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
+   ],
+   "inherited_from": "AsheQ",
+   "evidence": "inherited:AsheQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AsheQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/AsheQAbility/AsheQAttack"
+   ],
+   "inherited_from": "AsheQ",
+   "evidence": "inherited:AsheQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VolleyAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 4.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/VolleyAttack"
+   ],
+   "inherited_from": "Volley",
+   "evidence": "inherited:Volley"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VolleyAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 4.0,
+   "range": 600.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23759
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ashe/Spells/VolleyAbility/VolleyAttack"
+   ],
+   "inherited_from": "Volley",
+   "evidence": "inherited:Volley"
   }
  }
 ]

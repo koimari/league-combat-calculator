@@ -1,5 +1,446 @@
 [
  {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SettSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAbility/SettQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SettQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAbility/SettQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SettQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAbility/SettQ"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SettQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAbility/SettQ"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SettBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.health-regeneration",
+  "family": "heal-shield",
+  "behavior": "SettPassive_Regen",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Health regeneration",
+    "Health",
+    "Grievous Wounds"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettPassive_Regen"
+   ],
+   "evidence": "name:regen"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SettWPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 1000.0,
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettWPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SettCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SettCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SettBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SettBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SettBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "SettE",
@@ -23,6 +464,113 @@
     "Characters/Sett/Spells/SettEAbility/SettE"
    ],
    "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SettE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 10250
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettEAbility/SettE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SettE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 10250
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettEAbility/SettE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SettE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 10250
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettEAbility/SettE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SettWMaxGrit",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "other",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "{c969f3b0}"
+   ],
+   "evidence": "name:grit"
   }
  },
  {
@@ -82,61 +630,6 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "SettSlow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettSlow"
-   ],
-   "evidence": "name:slow"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "SettE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 10250
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettEAbility/SettE"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "SettR",
@@ -159,395 +652,6 @@
     "Characters/Sett/Spells/SettRAbility/SettR"
    ],
    "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "SettW",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 12.0,
-   "range": 25000.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettWAbility/SettW"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack4"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation"
-  ],
-  "provenance": {
-   "wiki": [
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettPassiveAbility/SettPassive"
-   ],
-   "evidence": "dval MaxHPOnHit 0.06 (wiki Heavy Hands right punch bonus damage)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettQ",
-  "trigger": "threshold",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAbility/SettQ"
-   ],
-   "evidence": "tag:Trait_Strike"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SettQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack2"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "SettCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "SettCritAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettCritAttack2"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SettE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 10250
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettEAbility/SettE"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SettQ",
-  "trigger": "threshold",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAbility/SettQ"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SettQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SettQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack2"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
   }
  },
  {
@@ -580,138 +684,9 @@
   }
  },
  {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SettW",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 12.0,
-   "range": 25000.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettWAbility/SettW"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "SettBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "SettBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "SettBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "SettBasicAttack4",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettBasicAttack4"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "heal-shield.health-regeneration",
-  "family": "heal-shield",
-  "behavior": "SettPassive_Regen",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SettQMSBuff",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -724,45 +699,12 @@
   "relations": [],
   "provenance": {
    "wiki": [
-    "Health regeneration",
-    "Health",
-    "Grievous Wounds"
+    "Buff"
    ],
    "binary": [
-    "Characters/Sett/Spells/SettPassive_Regen"
+    "Characters/Sett/Spells/SettQMSBuff"
    ],
-   "evidence": "name:regen"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "SettW",
-  "trigger": "on_cast",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 12.0,
-   "range": 25000.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "heal-shield.shield-reduction",
-   "heal-shield.shield-destruction",
-   "heal-shield.heal-and-shield-power"
-  ],
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettWAbility/SettW"
-   ],
-   "evidence": "tag:Trait_Shield"
+   "evidence": "name:buff"
   }
  },
  {
@@ -797,229 +739,88 @@
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "SettE",
-  "trigger": "on_effect",
-  "target_policy": "self",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SettW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 10.0,
+   "cooldown_rank_max": 12.0,
    "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 10250
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettWAbility/SettW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SettW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "other",
+   "affects_type_flags": 6154
   },
   "relations": [
-   "stats.attack-speed",
-   "damage.basic-attack"
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
   ],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Damage"
    ],
    "binary": [
-    "Characters/Sett/Spells/SettEAbility/SettE"
+    "Characters/Sett/Spells/SettWAbility/SettW"
    ],
-   "evidence": "tag:Trait_AttackReset"
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "SettPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SettW",
+  "trigger": "on_cast",
+  "target_policy": "ally",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettPassiveAbility/SettPassive"
-   ],
-   "evidence": "dval NumHits 2 + LockoutTimer (wiki Heavy Hands left/right punch alternation)"
-  }
- },
- {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "SettQ",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
+   "cooldown_rank1": 18.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "other",
+   "affects_type_flags": 6154
   },
   "relations": [
-   "stats.attack-speed",
-   "damage.basic-attack"
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
   ],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
    ],
    "binary": [
-    "Characters/Sett/Spells/SettQAbility/SettQ"
+    "Characters/Sett/Spells/SettWAbility/SettW"
    ],
-   "evidence": "tag:Trait_AttackReset"
-  }
- },
- {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "SettQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Attack speed",
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "SettQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Attack speed",
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack2"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SettQ",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAbility/SettQ"
-   ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SettQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SettQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": 14984
-  },
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQAttack2"
-   ],
-   "inherited_from": "SettQ",
-   "evidence": "inherited:SettQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SettQMSBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Sett/Spells/SettQMSBuff"
-   ],
-   "evidence": "name:buff"
+   "evidence": "tag:Trait_Shield"
   }
  },
  {
@@ -1047,51 +848,201 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SettWMaxGrit",
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAttack2"
+   ],
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SettQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAttack2"
+   ],
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SettQAttack2",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
   },
-  "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Attack speed",
+    "Basic attack"
    ],
    "binary": [
-    "{c969f3b0}"
+    "Characters/Sett/Spells/SettQAttack2"
    ],
-   "evidence": "wiki Haymaker center cone true damage at max Grit; object SettWMaxGrit"
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
   }
  },
  {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
-  "behavior": "SettWPassiveBuff",
+  "behavior": "SettQAttack2",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 1000.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
   },
-  "relations": [],
   "provenance": {
    "wiki": [
     "Buff"
    ],
    "binary": [
-    "Characters/Sett/Spells/SettWPassiveBuff"
+    "Characters/Sett/Spells/SettQAttack2"
    ],
-   "evidence": "name:buff"
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SettQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAttack"
+   ],
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SettQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAttack"
+   ],
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SettQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAttack"
+   ],
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SettQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": 14984
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sett/Spells/SettQAttack"
+   ],
+   "inherited_from": "SettQ",
+   "evidence": "inherited:SettQ"
   }
  }
 ]

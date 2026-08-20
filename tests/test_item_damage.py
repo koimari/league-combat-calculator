@@ -236,7 +236,7 @@ class TestSpellbladeSiblingParsing:
         from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Runaan's Hurricane", fetch_item_data())
-        assert parsed["secondary_ad_ratio"] == pytest.approx(0.55)
+        assert parsed["secondary_ad_ratio"] == pytest.approx(0.65)
         assert parsed["max_secondary_targets"] == 2
         assert parsed["applies_on_hit"] is True
 
@@ -2071,29 +2071,29 @@ class TestEclipseEverRisingMoon:
         assert effect is not None
         assert effect["type"] == "max_hp_proc"
         assert effect["damage_type"] == "physical"
-        assert effect["target_max_hp_ratio_melee"] == 0.06
-        assert effect["target_max_hp_ratio_ranged"] == 0.04
+        assert effect["target_max_hp_ratio_melee"] == 0.08
+        assert effect["target_max_hp_ratio_ranged"] == 0.05
         assert effect["cooldown"] == 6.0
 
     def test_ranged_single_proc_damage(self) -> None:
-        """Ranged: 4% of 2000 max HP = 80 raw physical damage (one proc)."""
+        """Ranged: 5% of 2000 max HP = 100 raw physical damage (one proc)."""
         effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, False, 2000.0, 2000.0))
-        assert abs(damage - 80.0) < 0.01
+        assert abs(damage - 100.0) < 0.01
 
     def test_melee_single_proc_damage(self) -> None:
-        """Melee: 6% of 2000 max HP = 120 raw physical damage (one proc)."""
+        """Melee: 8% of 2000 max HP = 160 raw physical damage (one proc)."""
         effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, True, 2000.0, 2000.0))
-        assert abs(damage - 120.0) < 0.01
+        assert abs(damage - 160.0) < 0.01
 
     def test_multiple_procs_over_duration(self) -> None:
         """6s cooldown: 12s fight = 3 procs (0s, 6s, 12s)."""
         effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
         per_proc = effect.source.raw_damage(DamageInputs({}, 18, False, 1000.0, 1000.0))
         damage = per_proc * (1 + int(12.0 / effect.cooldown))
-        # 3 procs * 4% * 1000 = 120
-        assert abs(damage - 120.0) < 0.01
+        # 3 procs * 5% * 1000 = 150
+        assert abs(damage - 150.0) < 0.01
 
     def test_zero_target_health_returns_zero(self) -> None:
         """Zero target max HP should result in zero Eclipse damage."""
@@ -2156,7 +2156,7 @@ class TestEclipseEverRisingMoon:
         assert proc["total_damage"] > 0
         assert proc["self_shield_events"] == [
             {
-                "amount": 80.0,
+                "amount": 75.0,
                 "duration": 2.0,
                 "source": "Eclipse (Ever Rising Moon)",
                 # P3-3C: the shield receipt carries the pair event's time
@@ -2166,7 +2166,7 @@ class TestEclipseEverRisingMoon:
             }
         ]
         assert fight["damage_events"][-1]["self_shield"] == {
-            "amount": 80.0,
+            "amount": 75.0,
             "duration": 2.0,
             "source": "Eclipse (Ever Rising Moon)",
             "time": 0.0,

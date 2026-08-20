@@ -18,6 +18,7 @@ import base64
 import hashlib
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -228,9 +229,13 @@ def test_deep_health_golden_stale_after_14_days(monkeypatch, tmp_path):
 
 
 def test_deep_health_golden_fresh_is_ok(monkeypatch, tmp_path):
+    # Freshness is measured against the wall clock, so this fixture must be
+    # relative to "now". A hardcoded date silently expires once it drifts past
+    # the 14-day threshold and turns this into a false "stale" failure.
+    checked_at = datetime.now(timezone.utc) - timedelta(days=1)
     report = tmp_path / "staleness.json"
     report.write_text(
-        json.dumps({"patch": "16.15", "checked_at": "2026-08-05T00:00:00+00:00"}),
+        json.dumps({"patch": "16.15", "checked_at": checked_at.isoformat()}),
         encoding="utf-8",
     )
     monkeypatch.setattr(app_module, "_staleness_path", lambda: report)

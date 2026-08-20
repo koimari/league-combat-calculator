@@ -252,6 +252,36 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "XerathArcanopulseChargeUp",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 5.0,
+   "range": 750.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Xerath/Spells/XerathArcanopulseChargeUpAbility/XerathArcanopulseChargeUp"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "XerathBasicAttack2",
@@ -615,128 +645,6 @@
    ],
    "inherited_from": "XerathMageSpear",
    "evidence": "inherited:XerathMageSpear"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "XerathRRampUp",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Rite of the Arcane"
-   ],
-   "binary": [
-    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathRRampUp"
-   ],
-   "evidence": "R channel ramp-up state enabling recasts; buff tooltip Buff_XerathRRampUp"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "XerathLocusPulse",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Rite of the Arcane"
-   ],
-   "binary": [
-    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusPulse"
-   ],
-   "evidence": "R recast shot dealing magic damage; Trait_Ultimate + Trait_FreeRecast + R icon"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "XerathLocusPulse",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Rite of the Arcane"
-   ],
-   "binary": [
-    "Characters/Xerath/Spells/XerathLocusOfPower2Ability/XerathLocusPulse"
-   ],
-   "evidence": "R recast shot damage instance"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "XerathArcanopulse2",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Arcanopulse"
-   ],
-   "binary": [
-    "Characters/Xerath/Spells/XerathArcanopulseAbility/XerathArcanopulse2"
-   ],
-   "evidence": "Q Arcanopulse charged missile dealing magic damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "XerathArcanopulse2",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Arcanopulse"
-   ],
-   "binary": [
-    "Characters/Xerath/Spells/XerathArcanopulseAbility/XerathArcanopulse2"
-   ],
-   "evidence": "Q Arcanopulse charged missile damage instance"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "XerathMageChains",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Shocking Orb"
-   ],
-   "binary": [
-    "Characters/Xerath/Spells/XerathEAbility/XerathMageChains"
-   ],
-   "evidence": "E stun buff; tooltip game_buff_tooltip_XerathMageChains; E stuns 0.75-2.25s by travel distance"
   }
  }
 ]

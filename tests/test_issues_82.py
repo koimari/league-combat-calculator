@@ -252,7 +252,7 @@ class TestTierThreeBootStatsAffectCalculation:
         )
 
         assert tier_two["champion_stats"]["magic_penetration_flat"] == 12.0
-        assert tier_three["champion_stats"]["magic_penetration_flat"] == 18.0
+        assert tier_three["champion_stats"]["magic_penetration_flat"] == 20.0
         assert tier_three["total_damage"] > tier_two["total_damage"]
 
     def test_lifesteal_boots_change_effective_health(self):

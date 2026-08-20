@@ -664,58 +664,5 @@
    ],
    "evidence": "name:basicattack"
   }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "LeeSinETwo",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 11.0,
-   "cooldown_rank_max": 6.0,
-   "range": 1000.0,
-   "damage_type": null
-  },
-  "relations": [
-   "stack-transform-summon-resource.debuff"
-  ],
-  "provenance": {
-   "wiki": [
-    "Slow",
-    "Tempest"
-   ],
-   "binary": [
-    "{e3b299ac}"
-   ],
-   "evidence": "wiki E recast: Cripples enemies, slowing them; mirrors LeeSinQTwo slow pattern"
-  }
- },
- {
-  "atom_id": "heal-shield.life-steal",
-  "family": "heal-shield",
-  "behavior": "LeeSinWTwo",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 7.0,
-   "range": 700.0,
-   "damage_type": null
-  },
-  "relations": [
-   "stack-transform-summon-resource.buff"
-  ],
-  "provenance": {
-   "wiki": [
-    "Lifesteal",
-    "Spell vamp",
-    "Safeguard"
-   ],
-   "binary": [
-    "{5c418040}"
-   ],
-   "evidence": "wiki W recast: Iron Will grants lifesteal and spell vamp; binary key verified: {5c418040}"
-  }
  }
 ]

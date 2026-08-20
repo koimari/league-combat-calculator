@@ -878,8 +878,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -905,8 +904,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -930,13 +928,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ]
+  }
  },
  {
   "atom_id": "damage.on-hit",
@@ -963,11 +955,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": [
-   "damage.damage-instance",
-   "stack-transform-summon-resource.stack"
-  ]
+  }
  },
  {
   "atom_id": "interaction.attack-reset",
@@ -992,11 +980,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": [
-   "damage.basic-attack",
-   "stats.attack-speed"
-  ]
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -1021,8 +1005,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -1048,8 +1031,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1073,13 +1055,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ]
+  }
  },
  {
   "atom_id": "damage.on-hit",
@@ -1106,11 +1082,7 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": [
-   "damage.damage-instance",
-   "stack-transform-summon-resource.stack"
-  ]
+  }
  },
  {
   "atom_id": "interaction.attack-reset",
@@ -1135,82 +1107,6 @@
    ],
    "inherited_from": "ShyvanaQ",
    "evidence": "inherited:ShyvanaQ"
-  },
-  "relations": [
-   "damage.basic-attack",
-   "stats.attack-speed"
-  ]
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShyvanaPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Scalemail"
-   ],
-   "binary": [
-    "Characters/Shyvana/Spells/ShyvanaPassive"
-   ],
-   "evidence": "wiki: Scaled armor/magic resistance per takedown stack"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShyvanaPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Bonus armor and magic resistance"
-   ],
-   "binary": [
-    "Characters/Shyvana/Spells/ShyvanaPassive"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShyvanaRPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dragon's Descent",
-    "Fury"
-   ],
-   "binary": [
-    "Characters/Shyvana/Spells/ShyvanaRPassive"
-   ],
-   "evidence": "wiki: generates Dragon Fury, consumed by R"
   }
  }
 ]

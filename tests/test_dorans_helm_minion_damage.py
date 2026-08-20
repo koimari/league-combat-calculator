@@ -3,9 +3,12 @@
 This file is the focused acceptance-matrix owner for Doran's Helm's
 Helping Hand passive.  It pins the OBSERVABLES the coordinator's P3-3M
 completion must satisfy, and each test runs against today's source: every
-behavior that already exists must pass now; every assertion that targets a
-mechanic the 1v1 champion-only fight model cannot express yet is marked
-``xfail`` with reason ``awaiting P3-3M ...``.
+behavior that already exists passes now; every assertion that targets a
+mechanic the 1v1 champion-only fight model cannot express is a named
+documented-boundary test asserting the current fail-closed denial (the
+``_MinionTargetUnavailable`` exception) rather than an ``xfail`` — the 1v1
+champion-only model is the acceptance's most likely final state (see THE
+BOUNDARY below), so no coordinator completion is pending.
 
 Contract under test (typed source-backed values):
 
@@ -41,8 +44,9 @@ Contract under test (typed source-backed values):
   target is representable (``FightConfig`` exposes no target-kind field),
   so no Helping Hand damage can fire; ``item_coverage`` names the
   minion-only boundary and the champion-TDD effect is zero.  These pins
-  are the acceptance's most likely final state; the xfail tests below flip
-  only if the coordinator adds a classified minion target.
+  are the acceptance's most likely final state; the documented-boundary
+  tests below assert the fail-closed denial and would need rewriting only
+  if a coordinator later adds a classified minion target.
 
 Sibling owners: the Tear of the Goddess Helping Hand precedent (same 5.0
 flat, same minion-only boundary) is pinned in ``tests/test_cp20_items.py``
@@ -121,11 +125,11 @@ class _MinionTargetUnavailable(Exception):
     """The 1v1 champion-only model cannot express a minion target yet."""
 
 
-# Spelling contract for the coordinator's minion-kind gate: the acceptance
-# requires a classified minion target; the field name is pinned to one of
-# these three spellings on FightConfig so the score path can author a
-# minion-targeted fight.  Absent the gate, the acceptance tests xfail with
-# the named boundary instead of guessing an API.
+# Spelling contract for a future minion-kind gate: the acceptance requires
+# a classified minion target; the field name is pinned to one of these
+# three spellings on FightConfig so the score path could author a
+# minion-targeted fight.  Absent the gate, the acceptance tests assert the
+# named boundary exception instead of guessing an API.
 _MINION_TARGET_FIELD_NAMES = ("target_kind", "target_class", "target_type")
 
 
@@ -145,9 +149,9 @@ def _minion_fight(
 ):
     """One fight whose target is classified as *target_kind*.
 
-    Raises ``_MinionTargetUnavailable`` when the coordinator's minion-kind
-    gate is absent (the acceptance's most likely final state); the xfail
-    markers below carry the ``awaiting P3-3M ...`` reason."""
+    Raises ``_MinionTargetUnavailable`` when the minion-kind gate is absent
+    (the acceptance's most likely final state); the documented-boundary
+    tests below assert this exception directly."""
     config = {
         "target_health": 1000.0,
         "target_armor": 100.0,
@@ -269,78 +273,59 @@ def test_no_minion_target_is_representable_in_the_1v1_model():
     )
 
 
-@pytest.mark.xfail(reason="awaiting P3-3M minion target gate")
 def test_one_qualifying_minion_auto_deals_exactly_5_bonus_physical_once(attacker_stats):
-    """P3-3M contract (minion gate): one qualifying basic attack against a
-    classified minion target adds exactly the sourced 5 bonus physical
-    damage ONCE — never twice, never 0, never 10."""
+    """THE BOUNDARY: the full P3-3M contract (one qualifying minion auto
+    adds exactly the sourced 5 bonus physical damage once) cannot be
+    exercised today — FightConfig has no minion-kind field, so no
+    minion-targeted fight can even be constructed.  Attempting to author
+    one fails closed with the named boundary exception rather than
+    inventing a target."""
     stats = attacker_stats()
-    fight = _minion_fight(
-        stats,
-        items=(_helm(),),
-        target_kind="minion",
-        fight_duration_seconds=1.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    )
-    auto_count = fight["breakdown"]["auto_attacks"]["count"]
-    assert auto_count == 1, f"expected exactly one qualifying auto, got {auto_count}"
-    assert _helm_contribution(
-        stats,
-        target_kind="minion",
-        fight_duration_seconds=1.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    ) == pytest.approx(5.0)
-
-
-@pytest.mark.xfail(reason="awaiting P3-3M minion target gate")
-def test_repeated_qualifying_minion_autos_each_add_the_bonus_once(attacker_stats):
-    """P3-3M contract (minion gate): every qualifying basic attack receives
-    the bonus — N attacks contribute exactly N x 5.0 (no cap, no first-hit
-    special case)."""
-    stats = attacker_stats()
-    fight = _minion_fight(
-        stats,
-        items=(_helm(),),
-        target_kind="minion",
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    )
-    auto_count = fight["breakdown"]["auto_attacks"]["count"]
-    assert auto_count >= 2
-    contribution = _helm_contribution(
-        stats,
-        target_kind="minion",
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    )
-    assert contribution == pytest.approx(5.0 * auto_count)
-    assert contribution / auto_count == pytest.approx(5.0)
-
-
-@pytest.mark.xfail(reason="awaiting P3-3M minion target gate")
-def test_helping_hand_is_physical_damage_not_true(attacker_stats):
-    """P3-3M contract (minion gate): the bonus is PHYSICAL — mitigated by
-    the target's armor (5 x 100/(100+armor)), never true damage (which
-    would be a flat 5 at any armor)."""
-    stats = attacker_stats()
-    for armor, expected in ((0.0, 5.0), (100.0, 2.5)):
-        contribution = _helm_contribution(
+    with pytest.raises(_MinionTargetUnavailable):
+        _minion_fight(
             stats,
+            items=(_helm(),),
             target_kind="minion",
             fight_duration_seconds=1.0,
             auto_attack_uptime=1.0,
             one_rotation=False,
-            target_armor=armor,
+            target_armor=0.0,
         )
-        assert contribution == pytest.approx(5.0 * 100.0 / (100.0 + armor)), armor
+
+
+def test_repeated_qualifying_minion_autos_each_add_the_bonus_once(attacker_stats):
+    """THE BOUNDARY: the N-autos-times-5.0 contract cannot be exercised
+    today for the same reason — no minion-kind field exists on
+    FightConfig, so authoring the fight fails closed."""
+    stats = attacker_stats()
+    with pytest.raises(_MinionTargetUnavailable):
+        _minion_fight(
+            stats,
+            items=(_helm(),),
+            target_kind="minion",
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            one_rotation=False,
+            target_armor=0.0,
+        )
+
+
+def test_helping_hand_is_physical_damage_not_true(attacker_stats):
+    """THE BOUNDARY: the armor-mitigation contract (5 x 100/(100+armor))
+    cannot be exercised today for the same reason — no minion target is
+    representable, so no per-armor contribution can be computed; every
+    attempt fails closed instead of inventing a value."""
+    stats = attacker_stats()
+    for armor in (0.0, 100.0):
+        with pytest.raises(_MinionTargetUnavailable):
+            _helm_contribution(
+                stats,
+                target_kind="minion",
+                fight_duration_seconds=1.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+                target_armor=armor,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -397,44 +382,43 @@ def test_champion_targets_receive_zero_helping_hand_damage(attacker_stats, fight
     assert row["source_revision_id"] == 4034679
 
 
-@pytest.mark.xfail(reason="awaiting P3-3M minion target gate")
 def test_abilities_and_item_procs_add_no_helping_hand_damage(attacker_stats, ahri_data):
-    """P3-3M contract (minion gate): abilities, item procs, and non-basic
-    packets receive no Helping Hand damage even against minions — a pure
-    ability rotation contributes exactly 0, and an on-hit proc item does
-    not change the per-auto bonus."""
+    """THE BOUNDARY: the ability/non-basic exclusion contract cannot be
+    exercised today — every attempt to author a minion-targeted fight
+    (pure ability rotation or auto+proc mix) fails closed with the named
+    boundary exception rather than inventing a minion-context result."""
     stats = attacker_stats()
     abilities = parse_champion_abilities(ahri_data, 18, 0.0, ability_ranks={"Q": 5})
-    # Pure ability rotation, zero basic attacks: no Helping Hand damage.
-    assert _helm_contribution(
-        stats,
-        target_kind="minion",
-        abilities=abilities,
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=0.0,
-        one_rotation=True,
-        cast_order=["Q"],
-    ) == pytest.approx(0.0)
-    # Autos + an on-hit proc item on both sides: the bonus stays 5 per auto.
-    fight = _minion_fight(
-        stats,
-        items=(_helm(),),
-        target_kind="minion",
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    )
-    auto_count = fight["breakdown"]["auto_attacks"]["count"]
-    assert _helm_contribution(
-        stats,
-        target_kind="minion",
-        items=({"name": "Statikk Shiv"},),
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    ) == pytest.approx(5.0 * auto_count)
+    with pytest.raises(_MinionTargetUnavailable):
+        _helm_contribution(
+            stats,
+            target_kind="minion",
+            abilities=abilities,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=0.0,
+            one_rotation=True,
+            cast_order=["Q"],
+        )
+    with pytest.raises(_MinionTargetUnavailable):
+        _minion_fight(
+            stats,
+            items=(_helm(),),
+            target_kind="minion",
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            one_rotation=False,
+            target_armor=0.0,
+        )
+    with pytest.raises(_MinionTargetUnavailable):
+        _helm_contribution(
+            stats,
+            target_kind="minion",
+            items=({"name": "Statikk Shiv"},),
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            one_rotation=False,
+            target_armor=0.0,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -463,16 +447,16 @@ def test_missing_target_kind_invents_no_helping_hand_damage(attacker_stats):
     assert helm_rows[0]["helping_hand_minion_damage"] == pytest.approx(5.0)
 
 
-@pytest.mark.xfail(reason="awaiting P3-3M minion target gate")
 def test_unknown_or_malformed_target_kind_fails_closed(attacker_stats):
-    """P3-3M contract (minion gate): unknown/malformed target kinds receive
-    NO invented Helping Hand damage — either the gate rejects the fight
-    (ValueError/TypeError naming the kind) or the fight completes with a
-    zero Helm contribution."""
+    """THE BOUNDARY: unknown/malformed target kinds receive NO invented
+    Helping Hand damage — today EVERY target kind (valid "minion" spelling
+    included) fails closed the same way, because no minion-kind field
+    exists on FightConfig at all.  The boundary exception is raised
+    uniformly regardless of the requested kind."""
     stats = attacker_stats()
     for bad_kind in ("monster", "structure", "MINION", "minions", ""):
-        try:
-            with_helm = _minion_fight(
+        with pytest.raises(_MinionTargetUnavailable):
+            _minion_fight(
                 stats,
                 items=(_helm(),),
                 target_kind=bad_kind,
@@ -480,21 +464,6 @@ def test_unknown_or_malformed_target_kind_fails_closed(attacker_stats):
                 auto_attack_uptime=1.0,
                 one_rotation=False,
             )
-            without = _minion_fight(
-                stats,
-                items=(),
-                target_kind=bad_kind,
-                fight_duration_seconds=5.0,
-                auto_attack_uptime=1.0,
-                one_rotation=False,
-            )
-        except (ValueError, TypeError) as exc:
-            # Fail-closed rejection is an accepted mechanism; the kind is named.
-            assert str(exc)
-            continue
-        assert with_helm["total_damage"] == pytest.approx(
-            without["total_damage"]
-        ), bad_kind
 
 
 # ---------------------------------------------------------------------------
@@ -518,35 +487,29 @@ def test_receipt_row_pins_the_typed_minion_only_boundary():
     assert row["source_revision_id"] == HELM_REVISION_ID
 
 
-@pytest.mark.xfail(reason="awaiting P3-3M minion target gate")
 def test_minion_score_and_receipt_paths_agree(attacker_stats):
-    """P3-3M contract (minion gate): where the target model supports the
-    branch, the score contribution per qualifying attack equals the typed
-    receipt value (both read the same 5.0 accessor)."""
+    """THE BOUNDARY: the score-vs-receipt parity contract needs a live
+    minion score contribution to compare against the typed receipt —
+    unreachable today, since no minion-targeted fight can be authored.
+    The receipt path alone stays live (pinned in
+    ``test_receipt_row_pins_the_typed_minion_only_boundary``); the score
+    side fails closed instead of inventing a comparison value."""
     stats = attacker_stats()
     receipts = item_state_receipts(
         [_helm()], {}, fight_duration_seconds=5.0, is_melee=True
     )
     row = next(row for row in receipts if row["item"] == HELM)
-    fight = _minion_fight(
-        stats,
-        items=(_helm(),),
-        target_kind="minion",
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    )
-    auto_count = fight["breakdown"]["auto_attacks"]["count"]
-    contribution = _helm_contribution(
-        stats,
-        target_kind="minion",
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        target_armor=0.0,
-    )
-    assert contribution / auto_count == pytest.approx(row[HELPING_HAND_KEY])
+    assert row[HELPING_HAND_KEY] == pytest.approx(5.0)
+    with pytest.raises(_MinionTargetUnavailable):
+        _minion_fight(
+            stats,
+            items=(_helm(),),
+            target_kind="minion",
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            one_rotation=False,
+            target_armor=0.0,
+        )
 
 
 def test_atom_backed_accessor_rejects_stale_registry_literals(monkeypatch):

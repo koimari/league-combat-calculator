@@ -336,6 +336,31 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedRDashEffectShadow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedRAbility/ZedRDashEffectShadow"
+   ],
+   "evidence": "name:shadow"
+  }
+ },
+ {
   "atom_id": "damage.execute",
   "family": "damage",
   "behavior": "ZedUltExecute",
@@ -466,6 +491,31 @@
     "Characters/Zed/Spells/ZedShadowBasicAttack"
    ],
    "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedShadowBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 4234
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Zed/Spells/ZedShadowBasicAttack"
+   ],
+   "evidence": "name:shadow"
   }
  },
  {
@@ -704,6 +754,31 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZedSpiritShadowQuestLoss",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "{4336a59a}"
+   ],
+   "evidence": "name:shadow"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.clone",
   "family": "stack-transform-summon-resource",
   "behavior": "zed Passive (Living Shadow)",
@@ -719,8 +794,7 @@
    "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.dash",
@@ -748,8 +822,7 @@
    ],
    "inherited_from": "ZedW",
    "evidence": "inherited:ZedW"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.blink",
@@ -776,8 +849,7 @@
    ],
    "inherited_from": "ZedR",
    "evidence": "inherited:ZedR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.untargetable",
@@ -801,8 +873,7 @@
    ],
    "inherited_from": "ZedR",
    "evidence": "inherited:ZedR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -828,8 +899,7 @@
    ],
    "inherited_from": "ZedR",
    "evidence": "inherited:ZedR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -853,8 +923,7 @@
    ],
    "inherited_from": "ZedR",
    "evidence": "inherited:ZedR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "interaction.projectile-destruction",
@@ -878,8 +947,7 @@
    ],
    "inherited_from": "ZedR",
    "evidence": "inherited:ZedR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -904,8 +972,7 @@
    ],
    "inherited_from": "ZedQ",
    "evidence": "inherited:ZedQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -929,30 +996,6 @@
    ],
    "inherited_from": "ZedQ",
    "evidence": "inherited:ZedQ"
-  },
-  "relations": []
- },
- {
-  "atom_id": "damage.execute",
-  "family": "damage",
-  "behavior": "ZedPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "health_threshold": 0.5,
-   "max_health_percent_damage_min": 5.0,
-   "max_health_percent_damage_max": 10.0,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Contempt for the Weak"
-   ],
-   "binary": [
-    "Characters/Zed/Spells/ZedPassive"
-   ],
-   "evidence": "refined:wiki-p"
   }
  }
 ]

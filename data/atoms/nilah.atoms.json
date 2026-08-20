@@ -1,28 +1,419 @@
 [
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "NilahR",
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NilahCritAttack",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 110.0,
-   "cooldown_rank_max": 100.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
+    "Critical strike",
+    "Damage"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+    "Characters/Nilah/Spells/NilahCritAttack"
    ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NilahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahQ",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 21.0,
+   "range": 150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 21.0,
+   "range": 150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 21.0,
+   "range": 150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 26.0,
+   "cooldown_rank_max": 21.0,
+   "range": 150.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahWAllyBuff",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{d9c606db}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahWBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f0b0ac31}"
+   ],
+   "evidence": "name:buff"
   }
  },
  {
@@ -56,338 +447,6 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.stasis",
-  "family": "crowd-control-mobility",
-  "behavior": "NilahR",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 110.0,
-   "cooldown_rank_max": 100.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahRAbility/NilahR"
-   ],
-   "evidence": "tag:SpecialCase_StasisLocked"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NilahQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NilahQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NilahR",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 110.0,
-   "cooldown_rank_max": 100.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahRAbility/NilahR"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "NilahW",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 26.0,
-   "cooldown_rank_max": 21.0,
-   "range": 150.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahWAbility/NilahW"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NilahBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NilahBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
-   ],
-   "evidence": "tag:Trait_Strike"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NilahQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "NilahQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "NilahCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "NilahCritAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahCritAttack2"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
   "atom_id": "damage.damage-instance",
   "family": "damage",
   "behavior": "NilahE",
@@ -417,104 +476,215 @@
   }
  },
  {
-  "atom_id": "damage.damage-instance",
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "NilahE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23567
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NilahE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 23567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahPShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "{672d95e0}"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
   "family": "damage",
-  "behavior": "NilahEQMis",
+  "behavior": "NilahBasicAttack2",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
-   "range": 1200.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6794
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Formless Blade"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahEQMis"
+    "Characters/Nilah/Spells/NilahBasicAttack2"
    ],
-   "evidence": "wiki:Q active physical damage wave projectile (castRange 2000 in binary)"
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "damage.damage-instance",
+  "atom_id": "damage.tag-basicattack",
   "family": "damage",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "NilahQAttack",
+  "behavior": "NilahBasicAttack2",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
   },
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Damage"
+    "Damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+    "Characters/Nilah/Spells/NilahBasicAttack2"
    ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "NilahQAttack2",
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NilahR",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 100.0,
+   "range": null,
    "damage_type": "physical",
-   "affects_type_flags": 6154
+   "affects_type_flags": 9221
   },
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Damage"
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
    ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 100.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:SpecialCase_StasisLocked"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 110.0,
+   "cooldown_rank_max": 100.0,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahRAbility/NilahR"
+   ],
+   "evidence": "tag:Trait_AoE"
   }
  },
  {
@@ -575,247 +745,6 @@
   }
  },
  {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "stack-transform-summon-resource.stack",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
-   ],
-   "evidence": "tag:PositiveEffect_EmpowerAttack"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "NilahQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "NilahQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "NilahBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "NilahBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 200.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "heal-shield.heal-amplification",
-   "heal-shield.healing-negation",
-   "heal-shield.overheal"
-  ],
-  "provenance": {
-   "wiki": [
-    "Healing",
-    "Heal",
-    "Health"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
-   ],
-   "evidence": "tag:Trait_ActiveHeal"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "NilahQAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Healing",
-    "Heal",
-    "Health"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "NilahQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Healing",
-    "Heal",
-    "Health"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "NilahQSpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 325.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Formless Blade"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQSpellPassive"
-   ],
-   "evidence": "wiki:Q passive heals 0-20% of post-mitigation champion damage; excess becomes shield"
-  }
- },
- {
   "atom_id": "heal-shield.heal",
   "family": "heal-shield",
   "behavior": "NilahR",
@@ -844,122 +773,6 @@
     "Characters/Nilah/Spells/NilahRAbility/NilahR"
    ],
    "evidence": "tag:Trait_ActiveHeal"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "NilahPShield",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [
-   "heal-shield.shield-reduction",
-   "heal-shield.shield-destruction",
-   "heal-shield.heal-and-shield-power"
-  ],
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "{672d95e0}"
-   ],
-   "evidence": "name:shield"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "heal-shield.shield-reduction",
-   "heal-shield.shield-destruction",
-   "heal-shield.heal-and-shield-power"
-  ],
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
-   ],
-   "evidence": "tag:Trait_Shield"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "NilahQAttack",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "NilahQAttack2",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 4.0,
-   "cooldown_rank_max": 4.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
-   ],
-   "inherited_from": "NilahQ",
-   "evidence": "inherited:NilahQ"
   }
  },
  {
@@ -994,110 +807,110 @@
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "NilahE",
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NilahCritAttack2",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 0.5,
-   "cooldown_rank_max": 0.5,
-   "range": 550.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23567
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
   },
-  "relations": [
-   "stats.attack-speed",
-   "damage.basic-attack"
-  ],
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Critical strike",
+    "Damage"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahEAbility/NilahE"
+    "Characters/Nilah/Spells/NilahCritAttack2"
    ],
-   "evidence": "tag:Trait_AttackReset"
+   "evidence": "rule:crit"
   }
  },
  {
-  "atom_id": "interaction.parry",
-  "family": "interaction",
-  "behavior": "NilahW",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 26.0,
-   "cooldown_rank_max": 21.0,
-   "range": 150.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7375
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
   },
-  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
   "provenance": {
    "wiki": [
     "Damage"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahWAbility/NilahW"
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
    ],
-   "evidence": "tag:Trait_Parry"
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahE",
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NilahQAttack",
   "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.5,
-   "cooldown_rank_max": 0.5,
-   "range": 550.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ability resource"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahEAbility/NilahE"
-   ],
-   "evidence": "tag:Trait_Ammo"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Joy Unending"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahPassiveAbility/NilahPassive"
-   ],
-   "evidence": "wiki:P Joy Unending innate: bonus experience share on minion kills"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahQ",
-  "trigger": "on_cast",
   "target_policy": "self",
   "parameters": {
    "cooldown_rank1": 4.0,
@@ -1106,15 +919,71 @@
    "damage_type": "physical",
    "affects_type_flags": 6154
   },
-  "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
    ],
    "binary": [
-    "Characters/Nilah/Spells/NilahQAbility/NilahQ"
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
   }
  },
  {
@@ -1142,6 +1011,161 @@
   }
  },
  {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "NilahQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Nilah/Spells/NilahQAbility/NilahQAttack2"
+   ],
+   "inherited_from": "NilahQ",
+   "evidence": "inherited:NilahQ"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
   "behavior": "NilahQAttack2",
@@ -1163,102 +1187,6 @@
    ],
    "inherited_from": "NilahQ",
    "evidence": "inherited:NilahQ"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahW",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 26.0,
-   "cooldown_rank_max": 21.0,
-   "range": 150.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahWAbility/NilahW"
-   ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahWAllyBuff",
-  "trigger": "on_effect",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{d9c606db}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahWBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{f0b0ac31}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.trap",
-  "family": "stack-transform-summon-resource",
-  "behavior": "NilahW",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 26.0,
-   "cooldown_rank_max": 21.0,
-   "range": 150.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Champion summoned units"
-   ],
-   "binary": [
-    "Characters/Nilah/Spells/NilahWAbility/NilahW"
-   ],
-   "evidence": "tag:Trait_Trap"
   }
  }
 ]

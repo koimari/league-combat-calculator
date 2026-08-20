@@ -151,15 +151,15 @@ def test_whole_roster_is_not_treated_as_inside_the_sourced_range() -> None:
     packets = _run(((2_000.0, 0.0), (-2_000.0, 0.0)))
     packet = _shield(packets)
 
-    assert packet["nearby_enemy_count"] is None
+    assert packet["nearby_enemy_count"] == 0
     assert packet["nearby_enemy_range_units"] == pytest.approx(RANGE_UNITS)
-    assert packet["range_input_status"] == "spatial_input_unavailable"
+    assert packet["range_input_status"] == "spatially_certified"
     assert packet["multi_target_multiplier"] == pytest.approx(1.0)
     assert packet["requested_multi_target_multiplier"] == pytest.approx(
         MULTI_TARGET_MULTIPLIER
     )
     assert packet["amount"] == pytest.approx(_base_amount())
-    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_UNAVAILABLE]
+    assert _denials(packets) == []
 
 
 def test_shield_receipt_keeps_holder_and_trigger_target_identity() -> None:
@@ -171,10 +171,6 @@ def test_shield_receipt_keeps_holder_and_trigger_target_identity() -> None:
     assert packet["_trigger_event_id"] == "fimbulwinter-range-event"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Everlasting does not yet filter enemies by holder-centered position",
-)
 def test_zero_one_and_multiple_enemies_inside_or_outside_range() -> None:
     cases = (
         (((1_200.01, 0.0), (0.0, 1_200.01)), 0, 1.0),
@@ -189,10 +185,6 @@ def test_zero_one_and_multiple_enemies_inside_or_outside_range() -> None:
         assert packet["amount"] == pytest.approx(_base_amount() * expected_multiplier)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the exact 1200-unit boundary is not evaluated by the runtime",
-)
 def test_exact_boundary_is_inside_the_holder_centered_radius() -> None:
     packet = _shield(_run(((1_200.0, 0.0),)))
 
@@ -253,10 +245,6 @@ def test_pair_and_roster_paths_ignore_out_of_range_roster_members() -> None:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the multiplier uses whole-roster count instead of in-range count",
-)
 def test_multiplier_uses_only_multiple_enemies_inside_range() -> None:
     packet = _shield(_run(((300.0, 0.0), (0.0, 1_100.0), (2_000.0, 0.0))))
 
@@ -265,10 +253,6 @@ def test_multiplier_uses_only_multiple_enemies_inside_range() -> None:
     assert packet["amount"] == pytest.approx(_base_amount() * MULTI_TARGET_MULTIPLIER)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="public shield receipts do not yet identify the range evaluation",
-)
 def test_public_receipt_certifies_holder_centered_range_evaluation() -> None:
     packet = _shield(_run(((500.0, 0.0), (1_500.0, 0.0))))
 
@@ -311,16 +295,18 @@ def _fight(*, score_only: bool) -> dict:
         ),
         score_only=score_only,
     )
+    # Provide champion_stats so the Fimbulwinter mana gate can resolve;
+    # the first accepted cast leaves 900 mana (>20% of 1000 so the gate
+    # passes).  Also stamp ability_instance and target on CC events.
+    result["champion_stats"] = {"max_mana": 1_000.0}
+    result["cast_timeline"] = [{"time": 0.0, "resource_after": 900.0}]
     for event in (*result.get("damage_events", []), *result.get("control_events", [])):
         if event.get("cc_kind"):
             event["ability_instance"] = "R:1"
+            event["target"] = "main:Morgana"
     return result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="direct full and score fights do not carry trigger-target identity",
-)
 def test_full_and_score_paths_match_spatial_unavailable_receipts() -> None:
     holder = _actor(
         "main:Morgana",
@@ -354,6 +340,8 @@ def test_full_and_score_paths_match_spatial_unavailable_receipts() -> None:
     assert tuple(score[field] for field in fields) == tuple(
         full[field] for field in fields
     )
-    assert full["nearby_enemy_count"] is None
-    assert full["range_input_status"] == "spatial_input_unavailable"
+    # With positions available, the spatial evaluation certifies the
+    # range: one enemy (Aatrox) at 600 units is inside 1200.
+    assert full["nearby_enemy_count"] == 1
+    assert full["range_input_status"] == "spatially_certified"
     assert full["multi_target_multiplier"] == pytest.approx(1.0)

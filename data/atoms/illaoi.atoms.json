@@ -165,6 +165,31 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IllaoiTentacleHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Illaoi/Spells/IllaoiPassiveAbility/IllaoiTentacleHeal"
+   ],
+   "evidence": "name:tentacle"
+  }
+ },
+ {
   "atom_id": "damage.tag-activespell",
   "family": "damage",
   "behavior": "IllaoiTentacleHealCooldown",
@@ -221,6 +246,31 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IllaoiTentacleHealCooldown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Illaoi/Spells/IllaoiPassiveAbility/IllaoiTentacleHealCooldown"
+   ],
+   "evidence": "name:tentacle"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.slow",
   "family": "crowd-control-mobility",
   "behavior": "IllaoiTentacleSlow",
@@ -248,6 +298,31 @@
     "Characters/Illaoi/Spells/IllaoiPassiveAbility/IllaoiTentacleSlow"
    ],
    "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IllaoiTentacleSlow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Illaoi/Spells/IllaoiPassiveAbility/IllaoiTentacleSlow"
+   ],
+   "evidence": "name:tentacle"
   }
  },
  {
@@ -737,102 +812,6 @@
    ],
    "inherited_from": "IllaoiW",
    "evidence": "inherited:IllaoiW"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "IllaoiESpiritMissile",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 12.0,
-   "range": null,
-   "damage_type": "other",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Test of Spirit"
-   ],
-   "binary": [
-    "Characters/Illaoi/Spells/IllaoiEAbility/IllaoiESpiritMissile"
-   ],
-   "evidence": "wiki: E tendril rips spirit"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "IllaoiESpirit",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 12.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Test of Spirit"
-   ],
-   "binary": [
-    "Characters/Illaoi/Spells/IllaoiEAbility/IllaoiESpirit"
-   ],
-   "evidence": "wiki: E spirit stands before Illaoi"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "IllaoiEVessel",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 12.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Test of Spirit"
-   ],
-   "binary": [
-    "Characters/Illaoi/Spells/IllaoiEAbility/IllaoiEVessel"
-   ],
-   "evidence": "wiki: E vessel mark on target"
-  }
- },
- {
-  "atom_id": "interaction.damage-transfer",
-  "family": "interaction",
-  "behavior": "IllaoiESpirit",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 12.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Test of Spirit"
-   ],
-   "binary": [
-    "Characters/Illaoi/Spells/IllaoiEAbility/IllaoiESpirit"
-   ],
-   "evidence": "wiki: damage to spirit transfers to target"
   }
  }
 ]

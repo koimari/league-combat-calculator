@@ -1,5 +1,65 @@
 [
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HecarimCharge",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 160.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HecarimChargeCharge",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimChargeCharge"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "HecarimRamp",
@@ -186,6 +246,36 @@
     "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash"
    ],
    "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HecarimUltCharge",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltCharge"
+   ],
+   "evidence": "name:charge"
   }
  },
  {
@@ -944,131 +1034,6 @@
    ],
    "inherited_from": "HecarimUlt",
    "evidence": "inherited:HecarimUlt"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "HecarimCharge",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 160.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (E Devastating Charge hit damage)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.knockback",
-  "family": "crowd-control-mobility",
-  "behavior": "HecarimCharge",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 160.0,
-   "cooldown_rank_max": 4.0,
-   "range": 10000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Knockback"
-   ],
-   "binary": [
-    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (E knockback on impact)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "HecarimCharge",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 160.0,
-   "cooldown_rank_max": 4.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed",
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (E bonus movement speed while charging)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.flee",
-  "family": "crowd-control-mobility",
-  "behavior": "HecarimUltPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Fear"
-   ],
-   "binary": [
-    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltPassive"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (R Onslaught of Shadows fear application)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "HecarimPassive",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff",
-    "Attack damage"
-   ],
-   "binary": [
-    "Characters/Hecarim/Spells/HecarimPassiveAbility/HecarimPassive"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (P Warpath: bonus AD from bonus move speed)"
   }
  }
 ]

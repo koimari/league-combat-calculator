@@ -192,7 +192,7 @@ def test_loadout_allows_tier_three_boots_after_mid_quest_completion():
     ).resolve()
 
     assert loadout.item_data[0]["name"] == "Spellslinger's Shoes"
-    assert loadout.stats["magic_penetration_flat"] == 18.0
+    assert loadout.stats["magic_penetration_flat"] == 20.0
 
 
 def test_loadout_rejects_tier_two_boots_after_mid_quest_completion():

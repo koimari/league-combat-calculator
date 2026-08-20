@@ -909,6 +909,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "LeblancPCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Leblanc/Spells/LeblancPCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "damage.proc",
   "family": "damage",
   "behavior": "LeblancPMarkProc",
@@ -1202,58 +1227,6 @@
    ],
    "inherited_from": "LeblancRE",
    "evidence": "inherited:LeblancRE"
-  }
- },
- {
-  "atom_id": "damage.proc",
-  "family": "damage",
-  "behavior": "LeblancQDetonate",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 6.0,
-   "range": 700.0,
-   "damage_type": "magic"
-  },
-  "relations": [
-   "stack-transform-summon-resource.mark"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Sigil of Malice"
-   ],
-   "binary": [
-    "{257c9645}"
-   ],
-   "evidence": "name:detonate; wiki Q: consuming the mark deals bonus magic damage"
-  }
- },
- {
-  "atom_id": "damage.proc",
-  "family": "damage",
-  "behavior": "LeblancRQDetonate",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 45.0,
-   "cooldown_rank_max": 25.0,
-   "range": 700.0,
-   "damage_type": "magic"
-  },
-  "relations": [
-   "stack-transform-summon-resource.mark"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Mimic"
-   ],
-   "binary": [
-    "{9c18eeef}"
-   ],
-   "evidence": "name:detonate; wiki R: mimicked Sigil of Malice mark consumption; binary key verified: {9c18eeef}"
   }
  }
 ]

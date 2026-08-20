@@ -383,7 +383,7 @@ def test_calculate_fleet_footwork_uses_explicit_starting_charges():
     assert response.status_code == 200
     result = response.get_json()
     row = result["breakdown"]["heal_Fleet Footwork"]
-    assert row["total_amount"] == pytest.approx(78.0)
+    assert row["total_amount"] == pytest.approx(96.0)
     healing = [
         event
         for event in result["self_healing_events"]

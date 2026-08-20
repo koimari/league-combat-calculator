@@ -875,6 +875,61 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KledRChargeAllySpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledRAbility/KledRChargeAllySpeedBuff"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "KledPassiveCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Kled/Spells/KledPassiveAbility/KledPassiveCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "KledBasicAttack3",
@@ -1657,30 +1712,6 @@
    ],
    "inherited_from": "KledW",
    "evidence": "inherited:KledW"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KledWActive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Violent Tendencies"
-   ],
-   "binary": [
-    "Characters/Kled/Spells/KledWActive"
-   ],
-   "evidence": "passive: periodically gains Violent Tendencies, expiring on the next basic attack; buff tooltip game_buff_tooltip_KledWActive"
   }
  }
 ]

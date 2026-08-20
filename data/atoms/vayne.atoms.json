@@ -208,6 +208,30 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VayneSilverBolts",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "true",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Vayne/Spells/VayneSilverBolts"
+   ],
+   "evidence": "name:silverbolts"
+  }
+ },
+ {
   "atom_id": "damage.critical-strike",
   "family": "damage",
   "behavior": "VayneCritAttack",
@@ -944,301 +968,6 @@
    ],
    "inherited_from": "VayneTumble",
    "evidence": "inherited:VayneTumble"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "VaynePassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 2000.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement Speed",
-    "Night Hunter"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VaynePassiveAbility/VaynePassive"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "VayneHunt",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement Speed",
-    "Night Hunter"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneHunt"
-   ]
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VayneUltAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Basic Attack",
-    "Final Hour"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneUltAttack"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VayneUltAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff",
-    "Final Hour"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneUltAttack"
-   ]
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VayneTumbleUltAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 2.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 15567
-  },
-  "relations": [
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Basic Attack",
-    "Tumble",
-    "Final Hour"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneTumbleUltAttack"
-   ]
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "VayneTumbleUltAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 2.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "On Hit",
-    "Tumble",
-    "Final Hour"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneTumbleUltAttack"
-   ]
-  }
- },
- {
-  "atom_id": "damage.attack-damage",
-  "family": "damage",
-  "behavior": "VayneTumbleUltAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 2.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Attack Damage",
-    "Tumble",
-    "Final Hour"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneTumbleUltAttack"
-   ]
-  }
- },
- {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "VayneTumbleUltAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 2.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Attack Reset",
-    "Tumble"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneTumbleUltAttack"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VayneSilverBolts",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Silver Bolts"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneSilverBolts"
-   ]
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "VayneSilverBolts",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "On Hit",
-    "Silver Bolts"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneSilverBolts"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VayneSilveredBolts",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Silver Bolts"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneSilveredBolts"
-   ]
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "VayneSilveredBolts",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "On Hit",
-    "Silver Bolts"
-   ],
-   "binary": [
-    "Characters/Vayne/Spells/VayneSilveredBolts"
-   ]
   }
  }
 ]

@@ -1,28 +1,244 @@
 [
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "ApheliosGravitumQ",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosOffHandBuffSeverum",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{0369540f}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosOffHandBuffGravitum",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{15510ee1}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosPBuffAS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{5002828c}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosPBuffAP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{53028745}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.attack-damage",
+  "family": "damage",
+  "behavior": "ApheliosPBuffAD",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
-   "range": 30000.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
+    "Attack damage",
+    "Physical damage",
+    "Damage"
    ],
    "binary": [
-    "{b3ce4169}"
+    "{5f029a29}"
    ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
+   "evidence": "name:ad"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosPBuffAD",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{5f029a29}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosOffHandBuffCalibrum",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{7bc36b5d}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosOffHandBuffCrescendum",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{87bc3cbd}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosOffHandBuffInfernum",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{cfb353c4}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosGravitumDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{0b58a71c}"
+   ],
+   "evidence": "name:debuff"
   }
  },
  {
@@ -55,277 +271,29 @@
   }
  },
  {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "ApheliosInfernumQ",
-  "trigger": "on_cast",
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ApheliosGravitumQ",
+  "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 850.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 30000.0,
    "damage_type": null,
    "affects_type_flags": 6154
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Damage over time"
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
    ],
    "binary": [
-    "{d29e7023}"
+    "{b3ce4169}"
    ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "ApheliosInfernumQMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 850.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{cda54a5e}"
-   ],
-   "inherited_from": "ApheliosInfernumQ",
-   "evidence": "inherited:ApheliosInfernumQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "ApheliosInfernumSplashMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 900.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6794
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{3acf8baa}"
-   ],
-   "evidence": "name:splash"
-  }
- },
- {
-  "atom_id": "damage.attack-damage",
-  "family": "damage",
-  "behavior": "ApheliosPBuffAD",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Attack damage",
-    "Physical damage",
-    "Damage"
-   ],
-   "binary": [
-    "{5f029a29}"
-   ],
-   "evidence": "name:ad"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "ApheliosCalibrumAttack",
-  "trigger": "on_attack",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Aphelios/Spells/ApheliosCalibrumAttack"
-   ],
-   "evidence": "gun basic attack (Calibrum)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "ApheliosCrescendumAttack",
-  "trigger": "on_attack",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Aphelios/Spells/ApheliosCrescendumAttack"
-   ],
-   "evidence": "gun basic attack (Crescendum)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "ApheliosGravitumAttack",
-  "trigger": "on_attack",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Aphelios/Spells/ApheliosGravitumAttack"
-   ],
-   "evidence": "gun basic attack (Gravitum)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "ApheliosInfernumAttack",
-  "trigger": "on_attack",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Aphelios/Spells/ApheliosInfernumAttack"
-   ],
-   "evidence": "gun basic attack (Infernum)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "ApheliosSeverumAttack",
-  "trigger": "on_attack",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "Characters/Aphelios/Spells/ApheliosSeverumAttack"
-   ],
-   "evidence": "gun basic attack (Severum)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ApheliosCalibrumQ",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 1450.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{9501e989}"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ApheliosCrescendumQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "{ad4cfba9}"
-   ],
-   "evidence": "wiki Q (Crescendum): turret fires at nearby enemies"
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
   }
  },
  {
@@ -358,6 +326,56 @@
   }
  },
  {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ApheliosInfernumSplashMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 900.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6794
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{3acf8baa}"
+   ],
+   "evidence": "name:splash"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ApheliosInfernumQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{d29e7023}"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
   "atom_id": "damage.damage-instance",
   "family": "damage",
   "behavior": "ApheliosInfernumQ",
@@ -384,30 +402,6 @@
     "{d29e7023}"
    ],
    "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ApheliosInfernumQMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 850.0,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{cda54a5e}"
-   ],
-   "inherited_from": "ApheliosInfernumQ",
-   "evidence": "inherited:ApheliosInfernumQ"
   }
  },
  {
@@ -440,27 +434,80 @@
   }
  },
  {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ApheliosRMis",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosCalibrumBonusRangeBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{67ef6547}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ApheliosCalibrumBonusRangeDebuff",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 100.0,
-   "range": 1300.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
    "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "{8799956c}"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ApheliosCalibrumQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 1450.0,
+   "damage_type": null,
    "affects_type_flags": 6154
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
    ],
    "binary": [
-    "{59f20a00}"
+    "{9501e989}"
    ],
-   "inherited_from": "ApheliosR",
-   "evidence": "inherited:ApheliosR"
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -526,342 +573,6 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosPReload",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "{1b552b6c}"
-   ],
-   "evidence": "wiki P: weapon ammo + reload mechanic"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosCalibrumBonusRangeBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{67ef6547}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosOffHandBuffCalibrum",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{7bc36b5d}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosOffHandBuffCrescendum",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{87bc3cbd}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosOffHandBuffGravitum",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{15510ee1}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosOffHandBuffInfernum",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{cfb353c4}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosOffHandBuffSeverum",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{0369540f}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosP",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "{267f31a5}"
-   ],
-   "evidence": "wiki P: weapon system passive (each gun's passive effects)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosPBuffAD",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{5f029a29}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosPBuffAP",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{53028745}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosPBuffAS",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{5002828c}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosCalibrumBonusRangeDebuff",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "{8799956c}"
-   ],
-   "evidence": "name:debuff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosGravitumDebuff",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Debuff"
-   ],
-   "binary": [
-    "{0b58a71c}"
-   ],
-   "evidence": "name:debuff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ApheliosCrescendumQ",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Community Dragon champion cache"
-   ],
-   "binary": [
-    "{ad4cfba9}"
-   ],
-   "evidence": "wiki Q (Crescendum): summons a chakram turret"
-  }
- },
- {
   "atom_id": "stack-transform-summon-resource.toggle-form",
   "family": "stack-transform-summon-resource",
   "behavior": "ApheliosW",
@@ -883,6 +594,79 @@
     "Characters/Aphelios/Spells/ApheliosWAbility/ApheliosW"
    ],
    "evidence": "tag:Trait_Toggle"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ApheliosInfernumQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{cda54a5e}"
+   ],
+   "inherited_from": "ApheliosInfernumQ",
+   "evidence": "inherited:ApheliosInfernumQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ApheliosInfernumQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{cda54a5e}"
+   ],
+   "inherited_from": "ApheliosInfernumQ",
+   "evidence": "inherited:ApheliosInfernumQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ApheliosRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 100.0,
+   "range": 1300.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{59f20a00}"
+   ],
+   "inherited_from": "ApheliosR",
+   "evidence": "inherited:ApheliosR"
   }
  }
 ]

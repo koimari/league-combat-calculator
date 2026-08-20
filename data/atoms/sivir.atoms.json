@@ -570,8 +570,7 @@
     "Damage over time"
    ],
    "binary": [
-    "Characters/Sivir/Spells/SivirQMissileReturn",
-    "Characters/Sivir/Spells/SivirQMissileReturnDead"
+    "Characters/Sivir/Spells/SivirQMissileReturn"
    ],
    "inherited_from": "SivirQ",
    "evidence": "inherited:SivirQ"
@@ -595,8 +594,7 @@
     "Damage"
    ],
    "binary": [
-    "Characters/Sivir/Spells/SivirQMissileReturn",
-    "Characters/Sivir/Spells/SivirQMissileReturnDead"
+    "Characters/Sivir/Spells/SivirQMissileReturn"
    ],
    "inherited_from": "SivirQ",
    "evidence": "inherited:SivirQ"
@@ -822,77 +820,6 @@
    ],
    "inherited_from": "SivirR",
    "evidence": "inherited:SivirR"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "FleetOfFoot",
-  "trigger": "on_hit",
-  "target_policy": "self",
-  "parameters": {
-   "duration_seconds": 2.0,
-   "bonus_movement_speed_min": 35.0,
-   "bonus_movement_speed_max": 70.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Fleet of Foot"
-   ],
-   "binary": [
-    "Characters/Sivir/Spells/SivirPassiveAbility/SivirPassive",
-    "Characters/Sivir/Spells/SivirPassiveSpeed"
-   ],
-   "evidence": "manual:wiki-passive:FleetOfFoot"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "OnTheHunt",
-  "trigger": "on_cast",
-  "target_policy": "ally",
-  "parameters": {
-   "duration_seconds_min": 8.0,
-   "duration_seconds_max": 12.0,
-   "bonus_movement_speed_percent_min": 20.0,
-   "bonus_movement_speed_percent_max": 30.0,
-   "aura_range": 1000.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "On the Hunt"
-   ],
-   "binary": [
-    "Characters/Sivir/Spells/On_The_Hunt"
-   ],
-   "evidence": "manual:wiki-r:OnTheHunt"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "RicochetBounce",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "bounce_damage_percent_ad_min": 40.0,
-   "bounce_damage_percent_ad_max": 50.0,
-   "max_bounces": 8.0,
-   "effect_radius": 500.0,
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ricochet"
-   ],
-   "binary": [
-    "Characters/Sivir/Spells/SivirWAttackBounce"
-   ],
-   "evidence": "manual:wiki-w:RicochetBounce"
   }
  }
 ]

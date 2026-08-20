@@ -1,7 +1,7 @@
 {
  "domain": "items",
- "generated_at": 1786460564.1183941,
- "source_ref": "data/items.json@sha256:6f6cd65950efbbf3",
+ "generated_at": 1787171591.352721,
+ "source_ref": "data/items.json@sha256:eeef96e8550dc0b0",
  "objects": {
   "1001": [
    {
@@ -6389,6 +6389,32 @@
     "hash": "1becafd45bc23d83"
    },
    {
+    "atom_id": "damage.pet",
+    "behavior": "damage",
+    "source": "Actualizer.actives[0].branches[0]",
+    "name": "Mana Made Real",
+    "values": [
+     8.0,
+     100.0,
+     15.0,
+     0.5,
+     100.0,
+     30.0
+    ],
+    "units": [
+     "s",
+     "percent",
+     "percent",
+     "flat",
+     "flat",
+     "percent"
+    ],
+    "evidence": [
+     "active:Mana Made Real@kw:pet damage"
+    ],
+    "hash": "917f9e25b179fe79"
+   },
+   {
     "atom_id": "economy.total",
     "behavior": "economy",
     "source": "Actualizer.shop.prices.total",
@@ -7453,7 +7479,7 @@
     "source": "Berserker's Greaves.stats.attackSpeed",
     "name": "attackSpeed",
     "values": [
-     25.0
+     30.0
     ],
     "units": [
      "flat"
@@ -7461,7 +7487,7 @@
     "evidence": [
      "stats.attackSpeed.flat"
     ],
-    "hash": "cb5eb978bdbc2951"
+    "hash": "ae0c7dbe74154899"
    },
    {
     "atom_id": "stat.movespeed",
@@ -9228,7 +9254,7 @@
     "source": "Sterak's Gage.passives[0].branches[0]",
     "name": "The Claws that Catch",
     "values": [
-     45.0
+     50.0
     ],
     "units": [
      "percent"
@@ -9236,7 +9262,7 @@
     "evidence": [
      "passive:The Claws that Catch@kw:attack damage"
     ],
-    "hash": "78b52f766bc3e2f6"
+    "hash": "b92343a765173bb5"
    },
    {
     "atom_id": "stat.health",
@@ -9580,16 +9606,16 @@
     "values": [
      3.0,
      20.0,
-     1.0,
+     1.5,
      325.0,
      100.0,
-     160.0,
-     200.0
+     150.0,
+     180.0
     ],
     "units": [
      "s",
      "flat",
-     "percent",
+     "flat",
      "flat",
      "percent",
      "percent",
@@ -9598,7 +9624,7 @@
     "evidence": [
      "passive:Immolate@kw:magic damage"
     ],
-    "hash": "87de45deb6fc1a3e"
+    "hash": "b11d4a43b6208673"
    },
    {
     "atom_id": "economy.gold",
@@ -9608,16 +9634,16 @@
     "values": [
      3.0,
      20.0,
-     1.0,
+     1.5,
      325.0,
      100.0,
-     160.0,
-     200.0
+     150.0,
+     180.0
     ],
     "units": [
      "s",
      "flat",
-     "percent",
+     "flat",
      "flat",
      "percent",
      "percent",
@@ -9626,7 +9652,7 @@
     "evidence": [
      "passive:Immolate@kw:kill"
     ],
-    "hash": "2e2477b0449b4ee4"
+    "hash": "f331579966c8245d"
    },
    {
     "atom_id": "economy.total",
@@ -9634,7 +9660,7 @@
     "source": "Sunfire Aegis.shop.prices.total",
     "name": "total",
     "values": [
-     2700.0
+     2800.0
     ],
     "units": [
      "gold"
@@ -9642,7 +9668,7 @@
     "evidence": [
      "shop.prices.total"
     ],
-    "hash": "d7d37615dbaecfa1"
+    "hash": "ae36ddb933dff403"
    },
    {
     "atom_id": "heal.flat",
@@ -9652,16 +9678,16 @@
     "values": [
      3.0,
      20.0,
-     1.0,
+     1.5,
      325.0,
      100.0,
-     160.0,
-     200.0
+     150.0,
+     180.0
     ],
     "units": [
      "s",
      "flat",
-     "percent",
+     "flat",
      "flat",
      "percent",
      "percent",
@@ -9670,7 +9696,7 @@
     "evidence": [
      "passive:Immolate@kw:heal"
     ],
-    "hash": "6b03a999cb7ff206"
+    "hash": "f7602d0de8ac7f6b"
    },
    {
     "atom_id": "stat.ability_haste",
@@ -9723,6 +9749,30 @@
    }
   ],
   "3070": [
+   {
+    "atom_id": "damage.ability",
+    "behavior": "damage",
+    "source": "Tear of the Goddess.passives[0].branches[0]",
+    "name": "Manaflow",
+    "values": [
+     8.0,
+     4.0,
+     3.0,
+     6.0,
+     360.0
+    ],
+    "units": [
+     "s",
+     "flat",
+     "flat",
+     "flat",
+     "flat"
+    ],
+    "evidence": [
+     "passive:Manaflow@kw:ability damage"
+    ],
+    "hash": "94d89d18f7c43967"
+   },
    {
     "atom_id": "damage.basic_attack",
     "behavior": "damage",
@@ -9813,16 +9863,18 @@
     "name": "Fervor",
     "values": [
      20.0,
+     10.0,
      2.0
     ],
     "units": [
+     "flat",
      "flat",
      "s"
     ],
     "evidence": [
      "passive:Fervor@kw:movement speed"
     ],
-    "hash": "4e0b6c24a2886a6f"
+    "hash": "44c2605a799447c4"
    },
    {
     "atom_id": "damage.physical",
@@ -9935,7 +9987,7 @@
     "source": "Black Cleaver.stats.attackDamage",
     "name": "attackDamage",
     "values": [
-     40.0
+     45.0
     ],
     "units": [
      "flat"
@@ -9943,7 +9995,7 @@
     "evidence": [
      "stats.attackDamage.flat"
     ],
-    "hash": "a0da4926f31cd546"
+    "hash": "c770a63f23b61f91"
    },
    {
     "atom_id": "stat.health",
@@ -10691,7 +10743,7 @@
     "source": "Tiamat.stats.attackDamage",
     "name": "attackDamage",
     "values": [
-     20.0
+     25.0
     ],
     "units": [
      "flat"
@@ -10699,7 +10751,7 @@
     "evidence": [
      "stats.attackDamage.flat"
     ],
-    "hash": "9c6e407fa98a7615"
+    "hash": "50bf45e021ea5b66"
    }
   ],
   "3078": [
@@ -11280,7 +11332,7 @@
     "values": [
      2.0,
      180.0,
-     55.0
+     65.0
     ],
     "units": [
      "flat",
@@ -11290,7 +11342,7 @@
     "evidence": [
      "passive:Wind's Fury@kw:basic attack"
     ],
-    "hash": "16e109d8d3007f1a"
+    "hash": "7bf12658580a5e4c"
    },
    {
     "atom_id": "damage.on_hit",
@@ -11300,7 +11352,7 @@
     "values": [
      2.0,
      180.0,
-     55.0
+     65.0
     ],
     "units": [
      "flat",
@@ -11310,7 +11362,7 @@
     "evidence": [
      "passive:Wind's Fury@kw:on-hit"
     ],
-    "hash": "0aa99d8448eca74f"
+    "hash": "457da2d201cb5cc1"
    },
    {
     "atom_id": "damage.physical",
@@ -11320,7 +11372,7 @@
     "values": [
      2.0,
      180.0,
-     55.0
+     65.0
     ],
     "units": [
      "flat",
@@ -11330,7 +11382,7 @@
     "evidence": [
      "passive:Wind's Fury@kw:physical damage"
     ],
-    "hash": "e93a824f87dec248"
+    "hash": "692347af46208608"
    },
    {
     "atom_id": "economy.total",
@@ -11372,7 +11424,7 @@
     "values": [
      2.0,
      180.0,
-     55.0
+     65.0
     ],
     "units": [
      "flat",
@@ -11382,7 +11434,7 @@
     "evidence": [
      "passive:Wind's Fury@kw:critical strike"
     ],
-    "hash": "96611d4ffe732932"
+    "hash": "28a3f8320a125fcf"
    }
   ],
   "3086": [
@@ -16377,7 +16429,7 @@
     "source": "Gunmetal Greaves.stats.attackSpeed",
     "name": "attackSpeed",
     "values": [
-     40.0
+     45.0
     ],
     "units": [
      "flat"
@@ -16385,7 +16437,7 @@
     "evidence": [
      "stats.attackSpeed.flat"
     ],
-    "hash": "819c15a12e066e1e"
+    "hash": "4db166798f85c15c"
    },
    {
     "atom_id": "stat.movespeed",
@@ -16515,7 +16567,7 @@
     "source": "Chainlaced Crushers.stats.magicResistance",
     "name": "magicResistance",
     "values": [
-     30.0
+     25.0
     ],
     "units": [
      "flat"
@@ -16523,7 +16575,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "468b105c2353c518"
+    "hash": "b1f7eb7e9898fb97"
    },
    {
     "atom_id": "stat.movespeed",
@@ -16719,7 +16771,7 @@
     "source": "Spellslinger's Shoes.stats.magicPenetration",
     "name": "magicPenetration",
     "values": [
-     18.0
+     20.0
     ],
     "units": [
      "flat"
@@ -16727,7 +16779,7 @@
     "evidence": [
      "stats.magicPenetration.flat"
     ],
-    "hash": "982b5290646dc919"
+    "hash": "83e75ff8b5c8b27d"
    },
    {
     "atom_id": "stat.movespeed",
@@ -19861,11 +19913,10 @@
      20.0,
      3.0,
      1050.0,
-     15.0,
+     18.0,
      50.0,
      30.0,
-     22.0,
-     20.0
+     18.0
     ],
     "units": [
      "s",
@@ -19874,13 +19925,12 @@
      "flat",
      "percent",
      "percent",
-     "flat",
      "flat"
     ],
     "evidence": [
      "passive:Shared Riches@kw:basic attack"
     ],
-    "hash": "d3c10ea224ca11d8"
+    "hash": "4112b29a721c28e9"
    },
    {
     "atom_id": "economy.gold",
@@ -19927,11 +19977,10 @@
      20.0,
      3.0,
      1050.0,
-     15.0,
+     18.0,
      50.0,
      30.0,
-     22.0,
-     20.0
+     18.0
     ],
     "units": [
      "s",
@@ -19940,13 +19989,12 @@
      "flat",
      "percent",
      "percent",
-     "flat",
      "flat"
     ],
     "evidence": [
      "passive:Shared Riches@kw:heal"
     ],
-    "hash": "72099b28a79014c8"
+    "hash": "3d563394256ad7ed"
    },
    {
     "atom_id": "stat.gold_per10",
@@ -19992,11 +20040,10 @@
      20.0,
      3.0,
      1050.0,
-     20.0,
+     21.0,
      50.0,
      30.0,
-     24.0,
-     22.0
+     21.0
     ],
     "units": [
      "s",
@@ -20005,13 +20052,12 @@
      "flat",
      "percent",
      "percent",
-     "flat",
      "flat"
     ],
     "evidence": [
      "passive:Shared Riches@kw:basic attack"
     ],
-    "hash": "10b10d220e1450ac"
+    "hash": "e1fc98547a8e161a"
    },
    {
     "atom_id": "economy.gold",
@@ -20058,11 +20104,10 @@
      20.0,
      3.0,
      1050.0,
-     20.0,
+     21.0,
      50.0,
      30.0,
-     24.0,
-     22.0
+     21.0
     ],
     "units": [
      "s",
@@ -20071,13 +20116,12 @@
      "flat",
      "percent",
      "percent",
-     "flat",
      "flat"
     ],
     "evidence": [
      "passive:Shared Riches@kw:heal"
     ],
-    "hash": "94bc1b802e4b5df6"
+    "hash": "f363793049fdc619"
    },
    {
     "atom_id": "stat.gold_per10",
@@ -30855,9 +30899,9 @@
      60.0,
      80.0,
      80.0,
-     100.0,
-     50.0,
-     6.0,
+     90.0,
+     45.0,
+     4.0,
      10.0,
      8.0
     ],
@@ -30874,7 +30918,7 @@
     "evidence": [
      "passive:Lightshield Strike@kw:basic attack"
     ],
-    "hash": "e261ad6db0d865f5"
+    "hash": "2d6e4b5ae974d450"
    },
    {
     "atom_id": "economy.total",
@@ -30901,9 +30945,9 @@
      60.0,
      80.0,
      80.0,
-     100.0,
-     50.0,
-     6.0,
+     90.0,
+     45.0,
+     4.0,
      10.0,
      8.0
     ],
@@ -30921,7 +30965,7 @@
      "passive:Lightshield Strike@kw:heal",
      "passive:Lightshield Strike@kw:healing"
     ],
-    "hash": "fe4f39fe833b29cf"
+    "hash": "6f4a852f0e5c4293"
    },
    {
     "atom_id": "stat.ability_haste",
@@ -30964,9 +31008,9 @@
      60.0,
      80.0,
      80.0,
-     100.0,
-     50.0,
-     6.0,
+     90.0,
+     45.0,
+     4.0,
      10.0,
      8.0
     ],
@@ -30983,7 +31027,7 @@
     "evidence": [
      "passive:Lightshield Strike@kw:critical strike"
     ],
-    "hash": "4ecb5dca92e0c0c4"
+    "hash": "5ecbaa2312991e67"
    },
    {
     "atom_id": "stat.health",
@@ -30991,7 +31035,7 @@
     "source": "Sundered Sky.stats.health",
     "name": "health",
     "values": [
-     400.0
+     450.0
     ],
     "units": [
      "flat"
@@ -31000,7 +31044,7 @@
      "passive:Lightshield Strike@kw:health",
      "stats.health.flat"
     ],
-    "hash": "535d550f67272e8e"
+    "hash": "e597ec6570e926ea"
    },
    {
     "atom_id": "timing.cooldown",
@@ -31011,9 +31055,9 @@
      60.0,
      80.0,
      80.0,
-     100.0,
-     50.0,
-     6.0,
+     90.0,
+     45.0,
+     4.0,
      10.0,
      8.0
     ],
@@ -31030,7 +31074,7 @@
     "evidence": [
      "passive:Lightshield Strike@kw:cooldown"
     ],
-    "hash": "3a3d9174df187272"
+    "hash": "9e305b045025ea26"
    }
   ],
   "6616": [
@@ -31808,6 +31852,34 @@
      "passive:Torment@kw:magic damage"
     ],
     "hash": "6431e58a1c814b9a"
+   },
+   {
+    "atom_id": "damage.pet",
+    "behavior": "damage",
+    "source": "Liandry's Torment.passives[0].branches[0]",
+    "name": "Torment",
+    "values": [
+     1.0,
+     0.5,
+     3.0,
+     20.0,
+     6.0,
+     3.0,
+     120.0
+    ],
+    "units": [
+     "percent",
+     "flat",
+     "s",
+     "flat",
+     "percent",
+     "s",
+     "flat"
+    ],
+    "evidence": [
+     "passive:Torment@kw:pet damage"
+    ],
+    "hash": "24b69dfd5298d77f"
    },
    {
     "atom_id": "economy.total",
@@ -34089,10 +34161,10 @@
     "values": [
      2.0,
      2.0,
-     6.0,
-     4.0,
-     160.0,
-     80.0,
+     8.0,
+     5.0,
+     150.0,
+     75.0,
      40.0,
      20.0,
      2.0
@@ -34111,7 +34183,7 @@
     "evidence": [
      "passive:Ever Rising Moon@kw:basic attack"
     ],
-    "hash": "3bdee724ad552df8"
+    "hash": "d5e20d85f7c36eb6"
    },
    {
     "atom_id": "damage.physical",
@@ -34121,10 +34193,10 @@
     "values": [
      2.0,
      2.0,
-     6.0,
-     4.0,
-     160.0,
-     80.0,
+     8.0,
+     5.0,
+     150.0,
+     75.0,
      40.0,
      20.0,
      2.0
@@ -34143,7 +34215,7 @@
     "evidence": [
      "passive:Ever Rising Moon@kw:physical damage"
     ],
-    "hash": "8e61e2cdde2aba7c"
+    "hash": "16f2420cb2cfbfed"
    },
    {
     "atom_id": "economy.total",
@@ -34169,10 +34241,10 @@
     "values": [
      2.0,
      2.0,
-     6.0,
-     4.0,
-     160.0,
-     80.0,
+     8.0,
+     5.0,
+     150.0,
+     75.0,
      40.0,
      20.0,
      2.0
@@ -34191,7 +34263,7 @@
     "evidence": [
      "passive:Ever Rising Moon@kw:heal"
     ],
-    "hash": "e992f158cf58bd40"
+    "hash": "4aa4007de1b77e78"
    },
    {
     "atom_id": "shield.flat",
@@ -34201,10 +34273,10 @@
     "values": [
      2.0,
      2.0,
-     6.0,
-     4.0,
-     160.0,
-     80.0,
+     8.0,
+     5.0,
+     150.0,
+     75.0,
      40.0,
      20.0,
      2.0
@@ -34223,7 +34295,7 @@
     "evidence": [
      "passive:Ever Rising Moon@kw:shield"
     ],
-    "hash": "f64d6cb8c8e1a4fe"
+    "hash": "b46de1a82fb1d124"
    },
    {
     "atom_id": "stack.gain",
@@ -34233,10 +34305,10 @@
     "values": [
      2.0,
      2.0,
-     6.0,
-     4.0,
-     160.0,
-     80.0,
+     8.0,
+     5.0,
+     150.0,
+     75.0,
      40.0,
      20.0,
      2.0
@@ -34255,7 +34327,7 @@
     "evidence": [
      "passive:Ever Rising Moon@kw:stack"
     ],
-    "hash": "8aa332d540c24c9b"
+    "hash": "02eaed935ef4dec0"
    },
    {
     "atom_id": "stat.ability_haste",
@@ -34297,10 +34369,10 @@
     "values": [
      2.0,
      2.0,
-     6.0,
-     4.0,
-     160.0,
-     80.0,
+     8.0,
+     5.0,
+     150.0,
+     75.0,
      40.0,
      20.0,
      2.0
@@ -34319,7 +34391,7 @@
     "evidence": [
      "passive:Ever Rising Moon@kw:health"
     ],
-    "hash": "b38a93dd90750244"
+    "hash": "f4d65ffcbcf210bd"
    }
   ],
   "6694": [

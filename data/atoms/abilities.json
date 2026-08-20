@@ -1,7 +1,7 @@
 {
  "domain": "abilities",
- "generated_at": 1786460564.199966,
- "source_ref": "data/champions.json@sha256:afea81a9976904c1",
+ "generated_at": 1787171591.51013,
+ "source_ref": "data/champions.json@sha256:77f8cce3fae087dc",
  "objects": {
   "Aatrox": [
    {
@@ -8852,11 +8852,11 @@
     "source": "Azir.Q[0].effects[0].leveling[0].modifiers[0]",
     "name": "Conquering Sands",
     "values": [
-     60.0,
-     80.0,
-     100.0,
-     120.0,
-     140.0
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
     ],
     "units": [
      "",
@@ -8868,7 +8868,7 @@
     "evidence": [
      "Magic Damage@effects[0]"
     ],
-    "hash": "6f8a2e3ba5a7514e"
+    "hash": "1f7ea47835911d61"
    },
    {
     "atom_id": "ability.magic _damage.modifier_1",
@@ -10564,9 +10564,9 @@
     "source": "Belveth.R[0].effects[3].leveling[3].modifiers[0]",
     "name": "Endless Banquet",
     "values": [
-     5.0,
-     15.0,
-     25.0
+     6.0,
+     13.0,
+     20.0
     ],
     "units": [
      "%",
@@ -10576,7 +10576,7 @@
     "evidence": [
      "Increased Total Attack Speed@effects[3]"
     ],
-    "hash": "780fa42230f3523a"
+    "hash": "6a88540ad2c1f35e"
    },
    {
     "atom_id": "ability.maximum _monster _damage.modifier_0",
@@ -14134,9 +14134,9 @@
     "source": "Camille.P[0].cooldown",
     "name": "Adaptive Defenses",
     "values": [
-     18.0,
      14.0,
-     10.0
+     11.0,
+     8.0
     ],
     "units": [
      "s",
@@ -14146,7 +14146,7 @@
     "evidence": [
      "cooldown.modifiers[0]"
     ],
-    "hash": "5cc64625bd70349c"
+    "hash": "5f434b67aba7bdd7"
    },
    {
     "atom_id": "timing.shield_duration",
@@ -14328,11 +14328,11 @@
     "source": "Camille.W[0].effects[2].leveling[1].modifiers[0]",
     "name": "Tactical Sweep",
     "values": [
-     3.0,
-     3.25,
      3.5,
      3.75,
-     4.0
+     4.0,
+     4.25,
+     4.5
     ],
     "units": [
      "%  of target's maximum health",
@@ -14344,7 +14344,7 @@
     "evidence": [
      "Bonus Non-Epic Monster Damage@effects[2]"
     ],
-    "hash": "eaf62869408546da"
+    "hash": "94602cf6fe02818a"
    },
    {
     "atom_id": "ability.bonus _non-_epic _monster _damage.modifier_1",
@@ -14424,11 +14424,11 @@
     "source": "Camille.W[0].effects[1].leveling[0].modifiers[0]",
     "name": "Tactical Sweep",
     "values": [
-     6.0,
-     6.5,
      7.0,
      7.5,
-     8.0
+     8.0,
+     8.5,
+     9.0
     ],
     "units": [
      "%  of target's maximum health",
@@ -14440,7 +14440,7 @@
     "evidence": [
      "Outer Cone Additional Damage@effects[1]"
     ],
-    "hash": "e3148746b1aa7757"
+    "hash": "41e5de059333286a"
    },
    {
     "atom_id": "ability.outer _cone _additional _damage.modifier_1",
@@ -14536,11 +14536,11 @@
     "source": "Camille.W[0].cooldown",
     "name": "Tactical Sweep",
     "values": [
-     15.0,
-     14.0,
-     13.0,
      12.0,
-     11.0
+     11.5,
+     11.0,
+     10.5,
+     10.0
     ],
     "units": [
      "s",
@@ -14552,7 +14552,7 @@
     "evidence": [
      "cooldown.modifiers[0]"
     ],
-    "hash": "c9e6b6de77cb0cc4"
+    "hash": "a38b41c9e33d5196"
    },
    {
     "atom_id": "ability.bonus _attack _speed",
@@ -28920,46 +28920,46 @@
     "source": "Gwen.P[0].effects[1].leveling[0].modifiers[0]",
     "name": "A Thousand Cuts",
     "values": [
-     10.0,
-     10.88,
-     11.76,
-     12.65,
-     13.53,
-     14.41,
+     12.0,
+     13.65,
      15.29,
-     16.18,
-     17.06,
-     17.94,
-     18.82,
-     19.71,
-     20.59,
-     21.47,
-     22.35,
-     23.24,
-     24.12,
-     25.0,
-     25.88,
-     26.76,
-     27.65,
-     28.53,
-     29.41,
-     30.29,
-     31.18,
-     32.06,
-     32.94,
-     33.82,
-     34.71,
-     35.59,
-     36.47,
-     37.35,
-     38.24,
-     39.12,
+     16.94,
+     18.59,
+     20.24,
+     21.88,
+     23.53,
+     25.18,
+     26.82,
+     28.47,
+     30.12,
+     31.76,
+     33.41,
+     35.06,
+     36.71,
+     38.35,
      40.0,
-     40.88,
-     41.76,
-     42.65,
-     43.53,
-     44.41
+     41.65,
+     43.29,
+     44.94,
+     46.59,
+     48.24,
+     49.88,
+     51.53,
+     53.18,
+     54.82,
+     56.47,
+     58.12,
+     59.76,
+     61.41,
+     63.06,
+     64.71,
+     66.35,
+     68.0,
+     69.65,
+     71.29,
+     72.94,
+     74.59,
+     76.24
     ],
     "units": [
      "",
@@ -29006,7 +29006,7 @@
     "evidence": [
      "Bonus Damage@effects[1]"
     ],
-    "hash": "956b242e11ca6730"
+    "hash": "311d039cf840523f"
    },
    {
     "atom_id": "ability.bonus _damage.modifier_1",
@@ -29014,7 +29014,7 @@
     "source": "Gwen.P[0].effects[1].leveling[0].modifiers[1]",
     "name": "A Thousand Cuts",
     "values": [
-     6.5
+     7.0
     ],
     "units": [
      "% AP"
@@ -29022,7 +29022,7 @@
     "evidence": [
      "Bonus Damage@effects[1]"
     ],
-    "hash": "9b6b7d148e13bc1d"
+    "hash": "e450b60dc78fd977"
    },
    {
     "atom_id": "ability.bonus _magic _damage",
@@ -45134,9 +45134,9 @@
     "source": "Kennen.R[0].effects[0].leveling[0].modifiers[0]",
     "name": "Slicing Maelstrom",
     "values": [
-     20.0,
-     40.0,
-     60.0
+     25.0,
+     50.0,
+     75.0
     ],
     "units": [
      "",
@@ -45146,7 +45146,7 @@
     "evidence": [
      "Bonus Resistances@effects[0]"
     ],
-    "hash": "9224c3cf02f2a742"
+    "hash": "8445b667db3312d2"
    },
    {
     "atom_id": "ability.magic _damage _per _bolt.modifier_0",
@@ -45155,8 +45155,8 @@
     "name": "Slicing Maelstrom",
     "values": [
      40.0,
-     75.0,
-     110.0
+     80.0,
+     120.0
     ],
     "units": [
      "",
@@ -45166,7 +45166,7 @@
     "evidence": [
      "Magic Damage Per Bolt@effects[1]"
     ],
-    "hash": "3e43744bff75eb11"
+    "hash": "463a63868b9ff78a"
    },
    {
     "atom_id": "ability.magic _damage _per _bolt.modifier_1",
@@ -45174,9 +45174,9 @@
     "source": "Kennen.R[0].effects[1].leveling[0].modifiers[1]",
     "name": "Slicing Maelstrom",
     "values": [
-     22.5,
-     22.5,
-     22.5
+     25.0,
+     25.0,
+     25.0
     ],
     "units": [
      "% AP",
@@ -45186,7 +45186,7 @@
     "evidence": [
      "Magic Damage Per Bolt@effects[1]"
     ],
-    "hash": "ee5b1f3c0739729f"
+    "hash": "f3e49733784a3016"
    },
    {
     "atom_id": "ability.total _single-_target _damage.modifier_0",
@@ -45195,8 +45195,8 @@
     "name": "Slicing Maelstrom",
     "values": [
      300.0,
-     562.5,
-     825.0
+     600.0,
+     900.0
     ],
     "units": [
      "",
@@ -45206,7 +45206,7 @@
     "evidence": [
      "Total Single-Target Damage@effects[2]"
     ],
-    "hash": "f3cefc48ffcd2095"
+    "hash": "7f7bc569e4a5e3ea"
    },
    {
     "atom_id": "ability.total _single-_target _damage.modifier_1",
@@ -45214,9 +45214,9 @@
     "source": "Kennen.R[0].effects[2].leveling[0].modifiers[1]",
     "name": "Slicing Maelstrom",
     "values": [
-     168.75,
-     168.75,
-     168.75
+     187.5,
+     187.5,
+     187.5
     ],
     "units": [
      "% AP",
@@ -45226,7 +45226,7 @@
     "evidence": [
      "Total Single-Target Damage@effects[2]"
     ],
-    "hash": "ccec993fa2431281"
+    "hash": "dd2a9b63d5f4aa12"
    },
    {
     "atom_id": "timing.active_duration",
@@ -70952,11 +70952,11 @@
     "source": "Poppy.Q[0].effects[0].leveling[1].modifiers[0]",
     "name": "Hammer Shock",
     "values": [
-     75.0,
-     105.0,
-     135.0,
-     165.0,
-     195.0
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
     ],
     "units": [
      "",
@@ -70968,7 +70968,7 @@
     "evidence": [
      "Capped Minion/Monster Health Damage@effects[0]"
     ],
-    "hash": "4ad4aadd29bc31d3"
+    "hash": "4fa7fb2768d93b17"
    },
    {
     "atom_id": "ability.maximum _minion/_monster _damage.modifier_0",
@@ -70976,11 +70976,11 @@
     "source": "Poppy.Q[0].effects[0].leveling[2].modifiers[0]",
     "name": "Hammer Shock",
     "values": [
-     105.0,
-     160.0,
-     215.0,
-     270.0,
-     325.0
+     115.0,
+     175.0,
+     235.0,
+     295.0,
+     355.0
     ],
     "units": [
      "",
@@ -70992,7 +70992,7 @@
     "evidence": [
      "Maximum Minion/Monster Damage@effects[0]"
     ],
-    "hash": "b10de88a24a9abec"
+    "hash": "80340219fe11bc2a"
    },
    {
     "atom_id": "ability.maximum _minion/_monster _damage.modifier_1",
@@ -71000,11 +71000,11 @@
     "source": "Poppy.Q[0].effects[0].leveling[2].modifiers[1]",
     "name": "Hammer Shock",
     "values": [
-     100.0,
-     100.0,
-     100.0,
-     100.0,
-     100.0
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
     ],
     "units": [
      "% bonus AD",
@@ -71016,7 +71016,7 @@
     "evidence": [
      "Maximum Minion/Monster Damage@effects[0]"
     ],
-    "hash": "5a1b5807f6c11ed0"
+    "hash": "aa125d0189e28723"
    },
    {
     "atom_id": "ability.physical _damage.modifier_0",
@@ -71048,11 +71048,11 @@
     "source": "Poppy.Q[0].effects[0].leveling[0].modifiers[1]",
     "name": "Hammer Shock",
     "values": [
-     100.0,
-     100.0,
-     100.0,
-     100.0,
-     100.0
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
     ],
     "units": [
      "% bonus AD",
@@ -71064,7 +71064,7 @@
     "evidence": [
      "Physical Damage@effects[0]"
     ],
-    "hash": "5bd5f1d55ea950ea"
+    "hash": "887fa057e38b8f1a"
    },
    {
     "atom_id": "ability.physical _damage.modifier_2",
@@ -71072,10 +71072,10 @@
     "source": "Poppy.Q[0].effects[0].leveling[0].modifiers[2]",
     "name": "Hammer Shock",
     "values": [
-     9.0,
-     9.0,
-     9.0,
-     9.0,
+     7.0,
+     7.5,
+     8.0,
+     8.5,
      9.0
     ],
     "units": [
@@ -71088,19 +71088,19 @@
     "evidence": [
      "Physical Damage@effects[0]"
     ],
-    "hash": "3d7ebd0f7186f178"
+    "hash": "27d0c01c6b64ec42"
    },
    {
-    "atom_id": "ability.slow",
+    "atom_id": "ability.slow.modifier_0",
     "behavior": "ability",
     "source": "Poppy.Q[0].effects[1].leveling[0].modifiers[0]",
     "name": "Hammer Shock",
     "values": [
      20.0,
-     25.0,
-     30.0,
-     35.0,
-     40.0
+     23.0,
+     26.0,
+     29.0,
+     32.0
     ],
     "units": [
      "%",
@@ -71112,7 +71112,31 @@
     "evidence": [
      "Slow@effects[1]"
     ],
-    "hash": "5eccb853f4cb312d"
+    "hash": "c428db6b776d9807"
+   },
+   {
+    "atom_id": "ability.slow.modifier_1",
+    "behavior": "ability",
+    "source": "Poppy.Q[0].effects[1].leveling[0].modifiers[1]",
+    "name": "Hammer Shock",
+    "values": [
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8
+    ],
+    "units": [
+     "% per 100 Poppy's bonus health",
+     "% per 100 Poppy's bonus health",
+     "% per 100 Poppy's bonus health",
+     "% per 100 Poppy's bonus health",
+     "% per 100 Poppy's bonus health"
+    ],
+    "evidence": [
+     "Slow@effects[1]"
+    ],
+    "hash": "0ce94be3eab769cd"
    },
    {
     "atom_id": "ability.total _maximum _minion/_monster _damage.modifier_0",
@@ -71120,11 +71144,11 @@
     "source": "Poppy.Q[0].effects[1].leveling[2].modifiers[0]",
     "name": "Hammer Shock",
     "values": [
-     210.0,
-     320.0,
-     430.0,
-     540.0,
-     650.0
+     230.0,
+     350.0,
+     470.0,
+     590.0,
+     710.0
     ],
     "units": [
      "",
@@ -71136,7 +71160,7 @@
     "evidence": [
      "Total Maximum Minion/Monster Damage@effects[1]"
     ],
-    "hash": "26b10d17d5f66407"
+    "hash": "6084f6893c61fe2f"
    },
    {
     "atom_id": "ability.total _maximum _minion/_monster _damage.modifier_1",
@@ -71144,11 +71168,11 @@
     "source": "Poppy.Q[0].effects[1].leveling[2].modifiers[1]",
     "name": "Hammer Shock",
     "values": [
-     200.0,
-     200.0,
-     200.0,
-     200.0,
-     200.0
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
     ],
     "units": [
      "% bonus AD",
@@ -71160,7 +71184,7 @@
     "evidence": [
      "Total Maximum Minion/Monster Damage@effects[1]"
     ],
-    "hash": "4228ee9bd3fb8091"
+    "hash": "fa493156d0332a77"
    },
    {
     "atom_id": "ability.total _physical _damage.modifier_0",
@@ -71192,11 +71216,11 @@
     "source": "Poppy.Q[0].effects[1].leveling[1].modifiers[1]",
     "name": "Hammer Shock",
     "values": [
-     200.0,
-     200.0,
-     200.0,
-     200.0,
-     200.0
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
     ],
     "units": [
      "% bonus AD",
@@ -71208,7 +71232,7 @@
     "evidence": [
      "Total Physical Damage@effects[1]"
     ],
-    "hash": "6903e2acea6e69b7"
+    "hash": "0d30aca471e15f06"
    },
    {
     "atom_id": "ability.total _physical _damage.modifier_2",
@@ -71216,10 +71240,10 @@
     "source": "Poppy.Q[0].effects[1].leveling[1].modifiers[2]",
     "name": "Hammer Shock",
     "values": [
-     18.0,
-     18.0,
-     18.0,
-     18.0,
+     14.0,
+     15.0,
+     16.0,
+     17.0,
      18.0
     ],
     "units": [
@@ -71232,7 +71256,7 @@
     "evidence": [
      "Total Physical Damage@effects[1]"
     ],
-    "hash": "65b959974e5f616c"
+    "hash": "29a988ebcbcb85e2"
    },
    {
     "atom_id": "timing.cooldown",

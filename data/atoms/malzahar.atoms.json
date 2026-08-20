@@ -166,6 +166,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "MalzaharPassiveShieldCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Malzahar/Spells/MalzaharPassiveAbility/MalzaharPassiveShieldCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "heal-shield.shield",
   "family": "heal-shield",
   "behavior": "MalzaharPassiveShieldCooldown",
@@ -704,13 +729,10 @@
     "Pets",
     "Voidling"
    ],
-   "binary": [
-    "malzahar Passive (Voidling)"
-   ],
+   "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -735,8 +757,7 @@
    ],
    "inherited_from": "MalzaharQ",
    "evidence": "inherited:MalzaharQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -760,43 +781,6 @@
    ],
    "inherited_from": "MalzaharQ",
    "evidence": "inherited:MalzaharQ"
-  },
-  "relations": []
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "MalzaharWPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Void Swarm"
-   ],
-   "binary": [
-    "Characters/Malzahar/Spells/MalzaharWAbility/MalzaharWPassive"
-   ],
-   "evidence": "wiki:Void Swarm - voidlings attack nearby enemies"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "MalzaharWFrenzy",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Void Swarm"
-   ],
-   "binary": [
-    "Characters/Malzahar/Spells/MalzaharWAbility/MalzaharWFrenzy"
-   ],
-   "evidence": "wiki:Void Swarm - voidlings gain attack speed when Malzahar casts spells (frenzy buff)"
   }
  }
 ]

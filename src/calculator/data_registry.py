@@ -75,6 +75,7 @@ def write_runtime_cache(
             tmp_path.unlink(missing_ok=True)
 
     from .data_fetcher import _read_json_version  # local: no import cycle
+    from .patch_identity import PatchIdentityError, canonical_patch
 
     _read_json_version.cache_clear()
     metadata: dict[str, Any] = {
@@ -84,6 +85,21 @@ def write_runtime_cache(
         "source_version": source_version,
         "source_hash": source_hash,
     }
+    if source_version:
+        try:
+            identity = canonical_patch(source_version)
+        except PatchIdentityError:
+            # Keep the source receipt. A non-Riot source version must not be
+            # relabelled as a guessed public patch.
+            pass
+        else:
+            metadata["public_patch"] = identity.public_patch
+            metadata["client_patch"] = identity.client_patch
+            metadata["patch_namespace"] = {
+                "public_patch": identity.public_patch,
+                "client_patch": identity.client_patch,
+                "source_version": source_version,
+            }
     meta_path = data_directory / f".{filename}.meta"
     with open(meta_path, "w", encoding="utf-8") as meta_file:
         json.dump(metadata, meta_file, indent=2)

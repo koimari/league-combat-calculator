@@ -436,10 +436,10 @@ class TestSourceEvidence:
         # The branch's atomizer regeneration moves the abilities-domain
         # sha; the manifest + the regenerated file agree (verified), so
         # the pin tracks the live manifest.
-        assert abilities_domain["sha256"] == "56c47afaf5f0b20b"
+        assert abilities_domain["sha256"] == "f209b18e736b4eaa"
         assert (
             abilities_domain["source_ref"]
-            == "data/champions.json@sha256:afea81a9976904c1"
+            == "data/champions.json@sha256:77f8cce3fae087dc"
         )
 
     def test_module_sources_pin_wiki_revisions(self):

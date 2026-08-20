@@ -76,6 +76,14 @@ from ..delivery_eligibility import (
 from ..item_effects import sustain_effect_value
 from ..resistance import apply_resistance
 
+#: The revive label used when a participant's resolved defenses arm a revive
+#: without naming its own source.  Guardian Angel is the item-source carrier
+#: of the shared revive interface, so the timeline authoring
+#: (``participant_timeline`` / ``survival.compile``) already defaults to this
+#: same label; the kernel mirrors it so the resurrection stasis and the
+#: applied revive can never disagree about who owns the window.
+_DEFAULT_REVIVE_SOURCE = "Guardian Angel (Rebirth)"
+
 
 def resolve_grievous(
     profiles: tuple[Any, ...], damage_type: str
@@ -123,8 +131,16 @@ def evaluate_live_raw_formula(
 def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
     """Stage one participant's starting health, shields, and Lifelines."""
     defenses = combatant.defenses
+    # An authored starting health (roster ``current_health``) is the one way
+    # a participant enters the fight below full health.  It is bounded to
+    # (0, max health] by its parser, so a missing/None value is full health
+    # rather than an unsourced guess.
+    starting_health = getattr(combatant.request, "current_health", None)
     return shield_ledger.build_pools(
         max(0.0, float(combatant.stats.get("health", 0.0))),
+        starting_health=(
+            None if starting_health is None else max(0.0, float(starting_health))
+        ),
         magic_shield=float(defenses.magic_shield),
         physical_shield=float(defenses.physical_shield),
         general_shield=float(defenses.general_shield),
@@ -841,12 +857,97 @@ def grant_reactive_shield(
 # ---------------------------------------------------------------------------
 
 
+def _actor_stasis_blocks(state: dict[str, Any], event_time: float) -> bool:
+    """Whether an actor's stasis blocks the action it is authoring.
+
+    Ordinary stasis (Zhonya's Time Stop, Bard's Tempered Fate) blocks.  The
+    resurrection stasis authored by :func:`arm_revive_stasis` does NOT own
+    the skip: it is exactly coextensive with the dead window, and the
+    ``attacker_dead`` gate a few lines below is the specific, already-pinned
+    reason for a dead holder's blocked packets.  Deferring to it keeps the
+    explicit Rebirth stasis a pure state/receipt authoring — identical
+    skip reasons, identical downtime, identical deferred-damage handling.
+
+    The bypass is deliberately narrow: it applies only while the actor is
+    dead AND the resurrection window is the operative ceiling of
+    ``stasis_until``.  A longer ordinary stasis stacked on top of a
+    resurrection window still blocks on its own terms, so this can never
+    launder a real Time Stop into an unblocked action.
+    """
+    stasis_until = float(state["stasis_until"])
+    if stasis_until <= event_time:
+        return False
+    revive_stasis_until = float(state["revive_stasis_until"])
+    if (
+        state["death_time"] is not None
+        and revive_stasis_until > event_time
+        and revive_stasis_until >= stasis_until - 1e-9
+    ):
+        return False
+    return True
+
+
+def arm_revive_stasis(state: dict[str, Any], event_time: float) -> bool:
+    """Author the explicit resurrection stasis window at a lethal packet.
+
+    Guardian Angel's Rebirth (and the champion revives that share the
+    ``StartingDefenses`` revive interface — Anivia, Zac, Zilean) is a
+    *Stasis*, not a plain death: the holder is untargetable, invulnerable
+    and unable to act for the sourced delay, then restores.  P3 package
+    3P authors that window explicitly instead of leaving it implicit in
+    the dead state.
+
+    The window is armed ONLY when a revive is genuinely pending: a sourced
+    restore amount, a sourced delay, and an OPEN re-arm gate.  A lethal
+    packet that finds the revive spent and still on cooldown is an
+    ordinary death — no stasis, and (via the same gate in
+    :func:`_apply_revive`) no delayed resurrection later.  That is the
+    game rule: Rebirth triggers on the lethal hit or not at all.
+
+    Returns whether the window was armed.  The dead-state gates already own
+    the blocking (``target_dead`` / ``attacker_dead`` fire before the
+    combat-state gates), so this authors state + receipt only and never
+    appends a second downtime interval — the death interval it rides
+    inside spans exactly the same seconds.
+    """
+    amount = float(state["revive_armed_amount"])
+    delay = float(state["revive_delay"])
+    if amount <= 0.0 or delay <= 0.0:
+        return False
+    if state["revive_used"]:
+        cooldown = float(state["revive_cooldown"])
+        # Fail closed: an absent/zero sourced cooldown never re-arms, so the
+        # strict one-use rule stands rather than inventing a free re-use.
+        if cooldown <= 0.0:
+            return False
+        if float(event_time) < float(state["revive_ready_at"]) - 1e-9:
+            return False
+    source = state["revive_armed_source"] or _DEFAULT_REVIVE_SOURCE
+    until = float(event_time) + delay
+    state["revive_stasis_until"] = until
+    state["revive_stasis_death"] = float(event_time)
+    state["stasis_until"] = max(float(state["stasis_until"]), until)
+    state["stasis_started_at"] = float(event_time)
+    state["stasis_source"] = source
+    state["revive_stasis_windows"].append(
+        {
+            "start": round(float(event_time), 3),
+            "end": round(until, 3),
+            "duration": round(delay, 3),
+            "source": source,
+            "cooldown": round(float(state["revive_cooldown"]), 3),
+            "resolved": False,
+        }
+    )
+    return True
+
+
 def _apply_revive(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
     """Revive is a state transition rather than healing: it is allowed to
     run after a lethal packet and restores a sourced resource amount."""
-    if state["death_time"] is None or state["revive_used"]:
+    if state["death_time"] is None:
         ctx.ledger.skip(action, "revive_not_available")
         return
     # The resurrection window is anchored to the lethal hit: the holder
@@ -858,6 +959,36 @@ def _apply_revive(
     if float(action.time) < float(state["death_time"]) + delay - 1e-9:
         ctx.ledger.skip(action, "revive_window_not_elapsed")
         return
+    # Which gate owns "may this revive fire?" depends on whether the
+    # participant carries a SOURCED revive interface (Guardian Angel's
+    # Rebirth, or the champion revives that share the ``StartingDefenses``
+    # revive fields).  Only a sourced revive has a cooldown to re-arm
+    # against, so only a sourced revive is gated on the armed window.
+    if float(state["revive_armed_amount"]) > 0.0 and float(state["revive_delay"]) > 0.0:
+        # The lethal packet itself decides whether Rebirth fires: the death
+        # transition arms the resurrection stasis only when the re-arm gate
+        # is open (see :func:`arm_revive_stasis`).  A death that armed no
+        # window is terminal — the sourced cooldown is the reason, and it is
+        # named on the receipt rather than silently retried by a later
+        # candidate.
+        if float(state["revive_stasis_death"]) < float(state["death_time"]) - 1e-9:
+            ctx.ledger.skip(
+                action,
+                (
+                    "revive_on_cooldown"
+                    if state["revive_used"] and float(state["revive_cooldown"]) > 0.0
+                    else "revive_not_available"
+                ),
+            )
+            return
+    elif state["revive_used"]:
+        # An AUTHORED revive action carrying its own amount/ratio with no
+        # sourced arming behind it (synthetic and development fixtures).
+        # There is no sourced cooldown to re-arm against, so the original
+        # strict one-use rule stands unchanged — fail closed rather than
+        # inventing a cooldown the source never declared.
+        ctx.ledger.skip(action, "revive_not_available")
+        return
     ratio = max(0.0, min(1.0, action.health_ratio))
     amount = max(0.0, action.amount)
     restore = amount if amount > 0.0 else state["pools"].max_health * ratio
@@ -868,7 +999,21 @@ def _apply_revive(
     state["revive_health_restored"] = float(state["pools"].health)
     state["revived"] = True
     state["revive_used"] = True
+    # The wiki rule: Rebirth's cooldown starts AFTER the resurrection ends.
+    # ``revive_ready_at`` is the re-arm timestamp; a zero sourced cooldown
+    # parks it at infinity so the one-use gate is never re-opened.
+    cooldown = float(state["revive_cooldown"])
+    state["revive_ready_at"] = (
+        float(action.time) + cooldown if cooldown > 0.0 else float("inf")
+    )
     state["terminal_phase"] = "revived"
+    if state["revive_stasis_windows"]:
+        state["revive_stasis_windows"][-1]["resolved"] = True
+        state["revive_stasis_windows"][-1]["ready_at"] = (
+            round(state["revive_ready_at"], 3)
+            if cooldown > 0.0
+            else state["revive_ready_at"]
+        )
     for interval in reversed(state["action_downtime_intervals"]):
         if (
             interval.get("kind") == "death"
@@ -2120,6 +2265,7 @@ def _apply_mundo_p_resist(
                 "source": str(action.source or action.source_key or "Death"),
             }
         )
+        arm_revive_stasis(state, float(event_time))
     resist = state["mundo_p_resist"]
     resist["armed"] = False
     resist["last_ability_instance"] = action.ability_instance
@@ -2772,6 +2918,7 @@ def _apply_damage(
         trigger_defy(
             ctx, ctx.combatants[action.subject].participant_id, float(event_time)
         )
+        arm_revive_stasis(state, float(event_time))
     # Grievous Wounds sources do not stack; refresh the strongest
     # sourced window when another qualifying hit lands.
     if ctx.reduction_profiles is not None:
@@ -2860,7 +3007,11 @@ def _apply_damage(
         )
         # A revive packet is intentionally scheduled by the caller.  A
         # dead participant remains terminal until that explicit packet;
-        # no item is inferred from the loadout here.
+        # no item is inferred from the loadout here.  The lethal packet DOES
+        # decide whether a sourced revive fires at all: arming the explicit
+        # resurrection stasis here is what makes the scheduled candidate
+        # eligible, so a Rebirth still on cooldown is a plain death.
+        arm_revive_stasis(state, float(event_time))
 
 
 _DAMAGE_KINDS = frozenset(
@@ -3268,7 +3419,7 @@ def run_survival_walk(
             and 0 <= action.attacker < len(states)
             and not action.reactive
             and (
-                states[action.attacker]["stasis_until"] > event_time
+                _actor_stasis_blocks(states[action.attacker], event_time)
                 or states[action.attacker]["invulnerable_until"] > event_time
                 or states[action.attacker]["untargetable_until"] > event_time
                 or (

@@ -376,6 +376,33 @@
   }
  },
  {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "NamiRVision",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiRVision"
+   ],
+   "evidence": "name:vision"
+  }
+ },
+ {
   "atom_id": "damage.critical-strike",
   "family": "damage",
   "behavior": "NamiCritAttack",
@@ -650,44 +677,6 @@
    ],
    "inherited_from": "NamiR",
    "evidence": "inherited:NamiR"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "NamiPassive (Surging Tides)",
-  "trigger": "passive",
-  "target_policy": "ally",
-  "parameters": {
-   "move_speed_flat": 100
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Surging Tides — Nami's abilities grant 100 (+25% AP) bonus movement speed to allied champions hit, decaying over 1.5 seconds"
-   ],
-   "binary": [
-    "NamiPassive"
-   ],
-   "evidence": "DataValues FlatMS 100.0 + wiki P"
-  }
- },
- {
-  "atom_id": "vision-economy.reveal",
-  "family": "vision-economy",
-  "behavior": "NamiRVision",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Tidal Wave — granting sight around its trajectory as it travels"
-   ],
-   "binary": [
-    "NamiRVision"
-   ],
-   "evidence": "wiki R sight + bin object"
   }
  }
 ]

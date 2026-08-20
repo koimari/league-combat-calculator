@@ -22,6 +22,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
+
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.healing_reduction import (
@@ -527,10 +529,6 @@ def test_serpents_fang_venom_requires_the_item():
     assert result["target"]["venom_until"] == 0.0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Fimbulwinter mana-gate authority is source-unavailable",
-)
 def test_serpents_fang_venom_end_to_end_cuts_fimbulwinter_shield():
     """Katarina (melee, Serpent's Fang) cuts Ahri's mid-fight shield by 50%."""
     main = get_champion("Katarina")

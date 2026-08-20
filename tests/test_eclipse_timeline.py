@@ -65,7 +65,7 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
     assert row["damage_events"] == [
         {
             "time": 0.0,
-            "damage": 80.0,
+            "damage": 100.0,
             "damage_type": "physical",
             "event_precision": "exact",
             "target_id": "target:0",
@@ -88,7 +88,7 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
     assert row["damage_events"] == [
         {
             "time": 0.5,
-            "damage": 80.0,
+            "damage": 100.0,
             "damage_type": "physical",
             "event_precision": "hit",
             "target_id": "target:0",

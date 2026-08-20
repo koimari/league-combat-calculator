@@ -93,7 +93,7 @@ class TestEclipseConsumer:
         assert row["damage_events"] == [
             {
                 "time": 0.0,
-                "damage": 80.0,
+                "damage": 100.0,
                 "damage_type": "physical",
                 "event_precision": "exact",
                 "target_id": "target:0",
@@ -151,7 +151,7 @@ class TestEclipseConsumer:
         row = fight["breakdown"]["proc_Eclipse"]
         assert row["self_shield_events"] == [
             {
-                "amount": 80.0,
+                "amount": 75.0,
                 "duration": 2.0,
                 "source": "Eclipse (Ever Rising Moon)",
                 # P3-3C: the shield receipt carries the pair event's time

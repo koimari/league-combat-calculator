@@ -1,7 +1,7 @@
 {
  "domain": "stats",
- "generated_at": 1786460564.2525802,
- "source_ref": "data/champions.json@sha256:afea81a9976904c1",
+ "generated_at": 1787171591.583454,
+ "source_ref": "data/champions.json@sha256:77f8cce3fae087dc",
  "objects": {
   "Aatrox": [
    {
@@ -63908,7 +63908,7 @@
     "source": "Poppy.stats.attackDamage.flat",
     "name": "attackDamage",
     "values": [
-     60.0
+     56.0
     ],
     "units": [
      "flat"
@@ -63916,7 +63916,7 @@
     "evidence": [
      "stats.attackDamage.flat"
     ],
-    "hash": "d10c94de5631738c"
+    "hash": "44f12d8db14e0294"
    },
    {
     "atom_id": "stat.attack_damage.per_level",
@@ -64100,7 +64100,7 @@
     "source": "Poppy.stats.healthRegen.flat",
     "name": "healthRegen",
     "values": [
-     8.0
+     9.0
     ],
     "units": [
      "flat"
@@ -64108,7 +64108,7 @@
     "evidence": [
      "stats.healthRegen.flat"
     ],
-    "hash": "e82b3a98886f8483"
+    "hash": "8732c69d8cd33287"
    },
    {
     "atom_id": "stat.health_regen.per_level",
@@ -64164,7 +64164,7 @@
     "source": "Poppy.stats.mana.flat",
     "name": "mana",
     "values": [
-     280.0
+     300.0
     ],
     "units": [
      "flat"
@@ -64172,7 +64172,7 @@
     "evidence": [
      "stats.mana.flat"
     ],
-    "hash": "3db361cd80939908"
+    "hash": "52ac2f02ca9cfe66"
    },
    {
     "atom_id": "stat.mana.per_level",
@@ -64180,7 +64180,7 @@
     "source": "Poppy.stats.mana.perLevel",
     "name": "mana",
     "values": [
-     40.0
+     45.0
     ],
     "units": [
      "per_level"
@@ -64188,7 +64188,7 @@
     "evidence": [
      "stats.mana.perLevel"
     ],
-    "hash": "1464ef2fc2c65e88"
+    "hash": "6b36af0a806da9b9"
    },
    {
     "atom_id": "stat.mana_regen.flat",

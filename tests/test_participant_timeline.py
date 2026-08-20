@@ -1203,7 +1203,14 @@ def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
             "ability_ranks": {"Q": 5, "W": 3, "E": 1, "R": 2},
             "champion_options": {"splinters": 100, "r_spheres": 3},
             "enemies_attack": False,
-            "enemies": [{"champion": "Ryze", "level": 11, "items": []}],
+            # Level 12: the depth2 atom corpus regen raised Syndra's Q/W/E
+            # burst enough that a level-11 Ryze died outright to ordinary
+            # damage before R landed (overkill via normal HP clipping),
+            # never reaching the execute_threshold_ratio branch. Level 12
+            # gives Ryze enough HP/MR that the burst lands him just above
+            # the 15% execute band and R's own hit crosses it, exercising
+            # the actual "Unleashed Power" execute path this test targets.
+            "enemies": [{"champion": "Ryze", "level": 12, "items": []}],
         },
     )
 

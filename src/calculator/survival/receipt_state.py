@@ -316,6 +316,34 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "revive_health_restored": 0.0,
         "revived": False,
         "revive_used": False,
+        # P3-3P (Guardian Angel Rebirth, and the champion revives that share
+        # the interface): the armed revive is carried into the kernel so the
+        # death transition can author the explicit resurrection stasis, and
+        # so the sourced cooldown — not a one-shot boolean — is the re-arm
+        # gate.  Every value comes from the resolved defenses (which read the
+        # typed item/champion registries); a zero cooldown NEVER re-arms
+        # (fail-closed: an unsourced cooldown keeps the one-use rule).
+        "revive_armed_amount": max(
+            0.0, float(getattr(defenses, "revive_health_amount", 0.0) or 0.0)
+        ),
+        "revive_delay": max(0.0, float(getattr(defenses, "revive_delay", 0.0) or 0.0)),
+        "revive_cooldown": max(
+            0.0, float(getattr(defenses, "revive_cooldown", 0.0) or 0.0)
+        ),
+        "revive_armed_source": str(getattr(defenses, "revive_source", "") or ""),
+        # ``revive_ready_at`` is the re-arm timestamp: 0.0 while the revive
+        # has never fired, then ``revive_time + revive_cooldown`` (the wiki
+        # rule: the cooldown starts after the resurrection ends).
+        "revive_ready_at": 0.0,
+        # The explicit resurrection stasis window (start/end/source), armed
+        # at the lethal packet and closed by the revive.  The public row
+        # carries it as ``rebirth_stasis`` beside the stasis_* projection.
+        "revive_stasis_until": 0.0,
+        # The death timestamp whose lethal packet armed the window above.
+        # ``-inf`` means "no death has armed a resurrection": the applied
+        # revive refuses to fire for a death that never entered stasis.
+        "revive_stasis_death": float("-inf"),
+        "revive_stasis_windows": [],
         "terminal_phase": "alive",
         "damage_deferral_pending": 0.0,
         "damage_deferral_cleared": 0.0,
@@ -561,6 +589,17 @@ def assemble_survival_rows(
             ),
             "revive_health_restored": round(state["revive_health_restored"], 1),
             "revive_source": state["revive_source"],
+            # P3-3P: the explicit resurrection-stasis lifecycle.  One entry
+            # per lethal packet that actually armed a Rebirth window
+            # (start / end / sourced duration / source / sourced cooldown /
+            # whether the restore resolved and when the re-arm opens).  The
+            # key is emitted ONLY when a window was armed, so every row that
+            # never entered stasis keeps its pinned shape byte-for-byte.
+            **(
+                {"revive_stasis": [dict(row) for row in state["revive_stasis_windows"]]}
+                if state["revive_stasis_windows"]
+                else {}
+            ),
             "terminal_phase": state["terminal_phase"],
             "execute_time": (
                 round(state["execute_time"], 3)

@@ -127,6 +127,7 @@ class Absorption(NamedTuple):
 def build_pools(
     health: float,
     *,
+    starting_health: float | None = None,
     magic_shield: float = 0.0,
     physical_shield: float = 0.0,
     general_shield: float = 0.0,
@@ -144,6 +145,11 @@ def build_pools(
     The one place defense values become absorbing state, so the one-pair
     engine and the coupled ledger cannot stage the same item differently.
     A Lifeline with no amount is absent rather than present-and-inert.
+
+    ``starting_health`` is the participant's health at the first instant of
+    the fight.  It defaults to full health; an authored value is bounded to
+    ``(0, health]`` by its parser, and every ratio Lifeline still arms off
+    the MAXIMUM health, exactly as the game states them.
     """
     threshold_shield = None
     if threshold_shield_amount > 0.0:
@@ -162,7 +168,11 @@ def build_pools(
             duration=max(0.0, threshold_health_duration),
         )
     return ShieldPools(
-        health=health,
+        health=(
+            health
+            if starting_health is None
+            else max(0.0, min(float(starting_health), health))
+        ),
         max_health=health,
         magic_shield=max(0.0, magic_shield),
         physical_shield=max(0.0, physical_shield),

@@ -14,6 +14,13 @@ Hash tables auto-download from raw.communitydragon.org/data/hashes/lol/.
 Contents:
 - `characters/<name>.bin.json` — 203 CharacterRecords (base stats, spell data,
   buff data) parsed from `Champions/<name>.wad.client`.
+- `characters/gnarbig.bin.json` — the GnarBig (Mega Gnar) CharacterRecords
+  root. `decompose_binaries.py` only walks `Champions/<name>.wad.client` per
+  champion, and GnarBig is not its own WAD unit, so this file was fetched
+  directly from `https://raw.communitydragon.org/latest/game/data/characters/gnarbig/gnarbig.bin.json`
+  (same fallback pattern as `decompose_items`'s CommunityDragon dump).
+  Verifies `src/calculator/champions/gnar.py`'s `MEGA_BONUS_*` /
+  `MEGA_ATTACK_SPEED_LOSS` constants — see `tests/test_gnar_mega_gamefile.py`.
 - `decompose-receipt.json` — extraction receipt (counts, sizes) — tracked.
 - `characters/aatrox.bin.json.sample`, `behavior-index.json` (per-champion heal/shield name index) — tracked.
 
