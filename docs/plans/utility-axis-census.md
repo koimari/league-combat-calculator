@@ -55,7 +55,8 @@ axis. Nine rows below are already modelled through another channel.
 | `support_effects.py:316` (Mordekaiser W) | Emits `heal 12.0` scoped `one_teammate` from the cached `Heal` row - which is the Potential Shield **decay rate** ("decays by 8-25 by level every second"), not a heal, and Morde's recast heals only himself. |
 | `champions/aphelios.py` E | Weapon Queue System is a text prompt with no gameplay effect. Per decision 6 that is `no_damage`, not `out_of_scope`; it is not a missing axis. |
 | `MODULE_COVERAGE` vs docstrings | Blitzcrank P and Camille P author `self_shield_events`, Anivia P / Zac P / Zilean R implement `starting_revive_defense`, and Morgana P / Aatrox E / Milio R / Taric Q are healing-rule-owned - all nine still report `out_of_scope`. |
-| Docstring says `no_damage`, map says `out_of_scope` | Rumble P/W ("P/W no_damage rows"), Nasus W and Tristana P/Q ("zero-damage rows"), Varus P, Morgana P, Pantheon P, Jarvan IV W. |
+| Docstring says `no_damage`, map says `out_of_scope` | rumble.py:24 "no_damage rows"; nasus.py:20, tristana.py:13, varus.py:22 and morgana.py:14 "zero-damage row(s)"; pantheon.py:18 "a documented no-damage row". Eight slots whose own module contradicts the map. |
+| tristana.py:131 | The module's own assumption reads "zero-damage rows; the AS buff is not applied to the auto count" - Rapid Fire's 60-120% attack speed is stated as unpriced, in the file, for a marksman whose whole output is autos. |
 | `data/champions.json` attribute names | Dr. Mundo P, Rek'Sai P, Zac P and Tahm Kench E carry heal/regen rows labelled `Max Health Damage`; Jayce P has two duplicate `Hextech Capacitor` entries. |
 | `champions/slotlib.py:589` | `attach_self_shield` can only ride an ability that emits a damage event, so a shield-only slot (Vi P, Shen P, Rakan P) has no channel except the ally scanner - which skips P. |
 
