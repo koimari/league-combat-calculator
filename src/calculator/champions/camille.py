@@ -24,7 +24,11 @@ Why each slot is non-generic:
   with ``proc_window`` (zone duration): the fight engine procs it on
   the autos landing inside the window against decaying current health,
   and shows zero with no autos (one-rotation / autos off).
-- P (Adaptive Defenses) is a defensive shield — absent from the map.
+- P (Adaptive Defenses) is a defensive shield with no cast of its own,
+  so it is absent from the slot map; ``_tactical_sweep_with_shield``
+  hangs its ``self_shield_events`` payload on W's damage event instead,
+  which is why the coverage map calls P ``modeled`` through the
+  ``self_shield_events`` channel.
 
 All numeric values are read from the champion JSON data.
 """
@@ -336,3 +340,9 @@ parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Camille")
 
 SELF_HEALING_RULE = declare_healing_rule("Camille")
+
+# P emits no cast row, so the derivation would call it out_of_scope; the
+# shield W carries is what the engine prices (466.6 for 2s at level 18
+# with no items, 20% of max health).
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

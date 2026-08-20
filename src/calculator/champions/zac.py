@@ -7,6 +7,9 @@ changes outgoing damage, so no stack slot is added — the chunk heal row
 the packet prices as target-max-health damage is the passive's existing
 packet read and is left untouched (not part of the E3 worklist).
 
+Coverage: P is ``modeled`` through the revive channel, not through its
+own packet row; Q/W/E/R price their cached damage rows.
+
 E4 boundary: the E4-3 worklist skips Zac — R (Let's Bounce!) is the
 self-movement rework, not a summoned unit (the "Champion summoned
 units" page lists only Zac's Cell Division Bloblets, which are a death
@@ -160,10 +163,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+# All five slots are emitted, so the derived map already calls them
+# modeled.  P's own packet row is the one that prices nothing (its cached
+# chunk percentage is read as target-max-health damage and resolves to
+# zero); what the engine prices for the slot is the revive — 1269.0, half
+# of Zac's level-18 itemless maximum health — plus the Goo chunk heal the
+# healing rule authors, so P names both channels.
+COVERAGE_CHANNELS = {"P": ("starting_revive_defense", "self_healing_rule")}
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced "
     "per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row "

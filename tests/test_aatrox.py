@@ -311,3 +311,35 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Aatrox")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
+    """E emits no cast row; the heal rule is what prices the slot.
+
+    A level-18 itemless timed fight with autos pays Umbral Dash 821.5 —
+    the receipt behind E's ``modeled`` label.
+    """
+    import pytest
+
+    from src.calculator.calculate import calculate_payload
+    from src.calculator.champions import get_champion_module_contract
+
+    contract = get_champion_module_contract("Aatrox")
+    assert "E" not in contract.slots
+    assert contract.coverage["E"] == "modeled"
+    assert contract.coverage_channels["E"] == ("self_healing_rule",)
+
+    payload = calculate_payload(
+        {
+            "champion": "Aatrox",
+            "level": 18,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+    )
+    paid = sum(
+        float(event["amount"])
+        for event in payload["self_healing_events"]
+        if event["source"] == "Umbral Dash"
+    )
+    assert paid == pytest.approx(821.5, abs=0.1)
