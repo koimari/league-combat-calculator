@@ -15,8 +15,6 @@ when its fix lands; this file is the one home for the list.
 | A4 | `damage.py` ~4830 | Post-rotation Vile Decay MR is overwritten by `use_auto_pen()` when Terminus is held — ordering quirk. | Resolve MR once, after both. |
 | A5 | `damage.py` `_simulate_ordered_damage` + `program/build.py:410-443` | In coupled fights with Shadowflame the second shield walk runs in full and its Cinderbloom row is dropped and re-priced (`pair_preview_of`); only the Liandry `adjustments` half survives. | Skip the Cinderbloom half when the caller is coupled. Golden-relevant. |
 | A6 | `damage.py:1403-1781` `_ordered_damage_events` (+ `_event_timeline_coverage` ~1782) | One row schema in six literal spellings (light tuple / lean dict / full dict × `add` / `add_declared_events`), kept in step by a comment. | One row factory the three shapes project; float-addition order is load-bearing (`survival/accumulate.py`), so golden must show zero diffs. |
-| A7 | `public_response.py` / `calculate.py` | Solo `/api/calculate` carries a `combat.breakdown` row with `participant_id ""` and `total_damage 0.0` — a placeholder in the public shape. | Drop the empty row. |
-| A8 | `static/js/app.js:2378` `exactObjectiveMetric` | With allies, the "damage" objective shows team damage while the validation receipt predicts the attacker's row — a number no receipt should match. | Either the widget says so or `displayed_prediction` grows the rule. |
 
 ## B. Fallbacks and single-home violations still standing
 
@@ -27,22 +25,12 @@ when its fix lands; this file is the one home for the list.
 | B3 | `item_effects.py` ~32 `ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"]` | No src reader (only `tests/test_issues_45_43.py:388`); a second home for the per-item static key's 24.0. | Delete; the static key is the owner. |
 | B4 | `passive_parser.py:2742-2745` `parse_all_item_effects` | Silently drops an item whose `parse_item_effect` returns None/empty; surfaces only on read or via the parity test. | Raise naming the item. |
 | B5 | `roster_composition.py:101,150-155`, `participant_timeline.py:965/975` (`Combatant.request: Any`); `survival/transitions.py:261,264` `getattr(self.ledger, "records_*", True)`; `program/compile.py:1569-1575` `getattr(payload, …)`; `item_coverage.py:~635-660`, `interpreters/stat_derivation.StatSlot.granted`, `gated_state_reason` `getattr(payload, name, None)` | The U09 family on other subjects: declared-absence reads across typed objects. | Type the field (Protocol/Union) and read directly, as 5a260de did for `defenses`. |
-| B6 | `app.py api_champions` `champ_data.get("icon","")` / `get("patchLastChanged")`; `optimizer.item_gold` `.get(...).get("total", 0)` | Literal defaults on cache-owned fields. | Required reads. |
 | B11 | `static/data.json` | Hand-committed, no generator in `scripts/`, one patch stale. **Measured:** of its champion keys only `key`, `title`, `tags`, `resource` and `abilities` are read (`app.js:731,2556,3480,2395,685`); every stat key and `id`, `abilityCoverage`, `source`, `patch`, `coverage` are dead — stats come from `/api/loadout-stats`. Every item key is dead or overwritten by `/api/items`/`/api/boots` (`mergeItemCoverage` spreads the backend over the snapshot and `renderPicker` filters through `backendItemReady`), so the stale cells are unreachable; only `passiveText` is unique, and nothing reads it. Inside `abilities` the UI reads only `slot`, `name`, `icon`, `maxRank`, `maxHits`, `variants[].name` and `variants.length` — never a ratio. | Shrink: drop `items`, `patch`, `coverage` and the champion stat keys. Needs the `app.js` owner (`DATA.items` must stay an array or `engine.itemCatalogReady` never sets) and a browser pass, so it did not land with the scripts slice. |
 
 ## C. API / UI
 
 | # | Where | What | Action |
 |---|---|---|---|
-| C1 | `/api/champions` entries; `app.js:41-42,2061,3766,4733`; `public_loadout_summary` | One registry fact in five fields (`verified`, `engine_registered`, `engine_backend_enabled`, `availability.ready`, `engine_registration`); app.js keeps two always-equal sets; the summary emits it thrice. | One field. UI-visible contract change — propose first. |
-| C2 | `app.js` (~1965, 2378, 3172, 3238) + `validation_receipts.displayed_prediction` | The "headline the main combat row" rule is spelled ≥3× in JS and once in Python; nothing ties them. | A `headline_total` leaf on the response, read by both. |
-| C3 | `static/js/feedback.js:200,302` | Hand-rolled `fetch("/api/receipts", {method:"POST"…})`; `postJson` exists. | Use it. |
-| C4 | `/api/items` `into`, `categories` | Always `[]` — reads `item.get("into")`/`("categories")` while the cache keys are `buildsInto` / `shop.tags`; no consumer beyond the merge (`app.js:313-314`). | Serve them or drop them. |
-| C5 | `app.py` `api_save_build`, `api_create_share` | DB writes with no `_spend_rate_limit` (the only sites are calculate/bis/optimize/receipts/metrics). | Spend a token. |
-| C6 | `app.py:261` `_DEV_UPDATE_TOKEN = secrets.token_urlsafe(32)` | Minted per import → per-worker cookie for `/api/update-data`. | Derive from config or accept single-worker. |
-| C7 | `docs/invite-flow.md:88` | Says the landing page calls `POST /api/auth/invite`; `templates/beta_landing.html` has no fetch (form posts to `/auth/login`). | Fix the doc or wire the check. |
-| C8 | `db.list_metric_events` | Test-only. | Cut it if nothing will call it. |
-| C9 | `docs/deploy.md:42` | Post-deploy metrics smoke only checks for a non-503. | Assert the scorecard shape. |
 
 ## D. Champion package
 

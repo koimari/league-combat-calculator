@@ -236,11 +236,16 @@ _RATE_LIMIT_POLICIES = {
     # session; a generous burst budget still bounds scripted spam to one
     # write every five seconds sustained.
     "metrics_event": (60, 0.2),
+    # Saving a build and minting its share link are two persistent rows per
+    # click of the share button. The burst covers a session of re-shares
+    # while one token every two seconds bounds scripted row creation.
+    "build_write": (20, 0.5),
 }
 _SCOPE_LABELS = {
     "calculate": "Calculator",
     "optimize": "Optimizer",
     "metrics_event": "Metrics",
+    "build_write": "Build sharing",
 }
 # One table for the per-operation cache/rate-limit policy (issue #138).
 # ``rate_limit_scope`` names the token bucket; ``cache_namespace`` names the
@@ -255,7 +260,6 @@ _OPERATION_POLICY = {
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
-_DEV_UPDATE_TOKEN = secrets.token_urlsafe(32)
 _ICON_SOURCES = " ".join(f"https://{host}" for host in sorted(_ICON_HOSTS))
 _SECURITY_HEADERS = {
     "Content-Security-Policy": "; ".join(
@@ -668,6 +672,17 @@ def _dev_mode() -> bool:
     return os.environ.get("LOL_CALC_DEV") == "1" and os.environ.get("RENDER") != "true"
 
 
+def _dev_update_token() -> str:
+    """The shared secret guarding /api/update-data; empty disables it.
+
+    The cookie is minted by one worker and presented to another, so a token
+    minted per import would only ever match inside the worker that made it.
+    It comes from ``LOL_CALC_DEV_UPDATE_TOKEN`` instead, and an unset value
+    fails closed: no cookie, and the endpoint stays 404.
+    """
+    return os.environ.get("LOL_CALC_DEV_UPDATE_TOKEN", "").strip()
+
+
 def _local_dev_request() -> bool:
     """Require both local dev mode and a loopback network peer."""
     if not _dev_mode() or not request.remote_addr:
@@ -971,6 +986,19 @@ def api_health_deep():
     )
 
 
+def _cached_champion_field(champ_data: Mapping[str, Any], key: str) -> Any:
+    """Read one cache-owned champion field, failing closed on the key.
+
+    ``data/champions.json`` owns every value this endpoint republishes; a
+    literal default here would serve a plausible blank for a parser that
+    stopped writing the field.
+    """
+    if key not in champ_data:
+        name = champ_data.get("name", "unknown champion")
+        raise KeyError(f"{name}: cached champion record has no {key}")
+    return champ_data[key]
+
+
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
     """Slot identity for /api/champions: name, icon, and whether it was ingested.
 
@@ -991,20 +1019,16 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified``, ``engine_registered`` and ``availability`` are the module
-    registry: a cached champion is an attacker exactly when a validated
-    module is registered for it. Source receipts and packet assumptions
-    remain available through the config metadata.
+    ``engine_registration`` is the module registry and the one field that
+    carries it: the validated module's kind, or ``null`` for a cached
+    champion no module registers -- which is exactly when it may not attack.
+    Source receipts and packet assumptions remain available through the
+    config metadata.
     """
     champions = fetch_champion_data()
     result = []
     for champ_data in champions.values():
         registration = engine_registration_kind(champ_data["name"])
-        availability = {
-            "ready": registration is not None,
-            "verification": registration,
-            "blockers": [],
-        }
         ability_slots = {}
         for slot in BASE_CAST_SLOTS:
             ability_slots[slot] = _public_ability_entry(
@@ -1018,19 +1042,17 @@ def api_champions():
         result.append(
             {
                 "name": champ_data["name"],
-                "icon": _https_icon(champ_data.get("icon", "")),
-                "verified": availability["ready"],
-                "engine_registered": availability["ready"],
+                "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
                 "engine_registration": registration,
-                "engine_backend_enabled": availability["ready"],
                 "supported_fight_modes": (
                     list(supported_modes) if supported_modes is not None else None
                 ),
                 "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
                     champ_data["name"]
                 ),
-                "availability": availability,
-                "patch_last_changed": champ_data.get("patchLastChanged"),
+                "patch_last_changed": _cached_champion_field(
+                    champ_data, "patchLastChanged"
+                ),
                 "abilities": ability_slots,
                 "ability_ingestion": {
                     "complete": all(
@@ -1045,7 +1067,7 @@ def api_champions():
         )
     result = sorted(
         result,
-        key=lambda c: (not c["verified"], c["name"]),
+        key=lambda c: (c["engine_registration"] is None, c["name"]),
     )
     return jsonify(result)
 
@@ -1097,8 +1119,6 @@ def api_items():
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
-                "into": item.get("into") or [],
-                "categories": item.get("categories") or [],
                 "tier": item["tier"],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
                 "model_coverage": item_model_coverage(
@@ -1125,8 +1145,6 @@ def api_boots():
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
-                "into": item.get("into") or [],
-                "categories": item.get("categories") or [],
                 "tier": item["tier"],
                 "upgrade_from": upgrade_from.get(item.get("name")),
                 "upgrade_to": next(
@@ -1214,10 +1232,11 @@ def api_config():
             },
         }
     )
-    if local_dev:
+    dev_update_token = _dev_update_token()
+    if local_dev and dev_update_token:
         response.set_cookie(
             _DEV_UPDATE_COOKIE,
-            _DEV_UPDATE_TOKEN,
+            dev_update_token,
             max_age=3600,
             httponly=True,
             samesite="Strict",
@@ -1526,6 +1545,10 @@ def api_save_build():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
+    rate_limit_response = _spend_rate_limit("build_write")
+    if rate_limit_response is not None:
+        return rate_limit_response
+
     try:
         build_id = save_build(data, session_id=_anon_session_id())
     except SQLAlchemyError as exc:  # surface DB failure to the client
@@ -1551,6 +1574,10 @@ def api_create_share():
             raise ValueError("slug must be at most 50 characters")
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+
+    rate_limit_response = _spend_rate_limit("build_write")
+    if rate_limit_response is not None:
+        return rate_limit_response
 
     try:
         share = create_share_link(
@@ -1895,11 +1922,15 @@ def api_staleness():
 
 @app.route("/api/update-data")
 def api_update_data():
-    """Stream data update progress via Server-Sent Events. Dev-only:
-    404s unless LOL_CALC_DEV=1 (see _dev_mode)."""
+    """Stream data update progress via Server-Sent Events. Dev-only: 404s
+    unless LOL_CALC_DEV=1 (see _dev_mode) and LOL_CALC_DEV_UPDATE_TOKEN is
+    configured (see _dev_update_token)."""
+    token = _dev_update_token()
     supplied_token = request.cookies.get(_DEV_UPDATE_COOKIE, "")
-    if not _local_dev_request() or not hmac.compare_digest(
-        supplied_token, _DEV_UPDATE_TOKEN
+    if (
+        not token
+        or not _local_dev_request()
+        or not hmac.compare_digest(supplied_token, token)
     ):
         return jsonify({"error": "Data updates are disabled on this server"}), 404
 

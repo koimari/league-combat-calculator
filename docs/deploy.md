@@ -17,7 +17,7 @@ Run the full verification commands in `README.md`, verify the preview, then depl
 vercel deploy --prod
 ```
 
-The tracked `data/` cache is read-only at runtime. `/api/update-data` is available only in explicit local development mode; patch refreshes are committed before deployment.
+The tracked `data/` cache is read-only at runtime. `/api/update-data` is available only in explicit local development mode and only when `LOL_CALC_DEV_UPDATE_TOKEN` is set — unset, it 404s on every worker. Never set either variable on a deployment; patch refreshes are committed before deployment.
 
 ## Private access
 
@@ -39,4 +39,17 @@ If Vercel rejects a CLI upload because the local Git author is not a team member
 
 ## Metrics smoke (issue #144)
 
-After deploy, GET /api/metrics must NOT return "Metrics module unavailable" (that 503 means the scorecard module failed to ship). Without Postgres it may return the distinct 503 "Database unavailable"; with a configured DB it returns the scorecard with the `gate` key. The CI container job asserts exactly this.
+After deploy, `GET /api/metrics` must return the scorecard, not a 503 — "Metrics module unavailable" means the module failed to ship, "Database unavailable" means Postgres is unreachable. Assert the shape, not the status:
+
+```bash
+curl --silent --show-error --cookie "scryglass_session=<session>" \
+  https://<beta-host>/api/metrics | python -c 'import json,sys
+s = json.load(sys.stdin)
+assert set(s["criteria"]) == {"retention", "receipts", "bias", "staleness"}, s
+assert s["gate"]["verdict"] in {"PASS", "PENDING", "FAIL"}, s["gate"]
+print(s["gate"]["verdict"], {k: v["status"] for k, v in s["criteria"].items()})'
+```
+
+The CI container job runs without a database, so it asserts only what a
+DB-less container can show: the module shipped (`gate` present, or the
+distinct "Database unavailable" 503).

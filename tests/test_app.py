@@ -326,6 +326,49 @@ def test_calculate_exposes_immolate_cadence_in_the_shared_frontend_ledger():
     assert [event["time"] for event in events] == [1.0, 2.0, 3.0, 4.0, 5.0]
 
 
+def test_solo_combat_breakdown_publishes_no_unattributed_row():
+    """A manual-target fight has no coupled opponent, so it has no rows."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "items": ["Luden's Echo"],
+            "target_health": 2000,
+            "target_armor": 60,
+            "target_mr": 50,
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    assert combat["breakdown"] == []
+    assert not [key for key in combat["dispositions"] if key.startswith("breakdown")]
+    assert [row["participant_id"] for row in combat["participants"]] == ["main"]
+
+
+def test_roster_combat_breakdown_keeps_every_named_participant():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "items": ["Luden's Echo"],
+            "enemies": [{"champion": "Garen", "level": 11}],
+            "allies": [{"champion": "Lulu", "level": 11}],
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    assert [row["participant_id"] for row in combat["breakdown"]] == [
+        "main",
+        "ally:Lulu",
+        "enemy:Garen",
+    ]
+    assert all(row["participant_id"] for row in combat["breakdown"])
+
+
 def test_calculate_applies_self_granted_annie_molten_shield():
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -1779,14 +1822,23 @@ def test_config_exclusivity_groups_cover_frontend_optimizer_families():
     assert "Ravenous Hydra" in groups["Hydra"]
 
 
-def test_frontend_exposes_the_full_reviewed_module_contract():
+def test_frontend_reads_one_registry_field():
+    """One field in, one map out: no second always-equal registry set."""
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert 'entry.engine_registration === "reviewed_module"' in source
     assert (
-        "if (entry.availability?.ready) engine.reviewed.add(entry.name);" not in source
+        "engine.registration.set(entry.name, entry.engine_registration || null);"
+        in source
     )
-    assert "champion.engineRegistration = entry.engine_registration || null" in source
+    for retired in (
+        "engine.reviewed",
+        "engine.backend",
+        "engine.availability",
+        "engineRegistration",
+        "engine_backend_enabled",
+        "verified_attacker",
+    ):
+        assert retired not in source
     assert "generated packet · not reviewed" not in source
 
 
@@ -1946,10 +1998,11 @@ class TestIconUrlsAreHttps:
         items = client.get("/api/items").get_json()
         boots = client.get("/api/boots").get_json()
 
-        assert all(
-            item["id"] and "price" in item and "categories" in item
-            for item in items + boots
-        )
+        assert all(item["id"] and "price" in item for item in items + boots)
+        # C4: `into`/`categories` read cache keys that do not exist
+        # (`buildsInto` / `shop.tags`), so they were always [] and no
+        # consumer read them.
+        assert not any({"into", "categories"} & set(item) for item in items + boots)
         assert {item["id"] for item in items} & {2530, 3040, 3042, 3121, 3866}
         assert any(item["name"] == "Blade of the Ruined King" for item in items)
         bloodthirster = next(item for item in items if item["name"] == "Bloodthirster")
@@ -2156,49 +2209,114 @@ class TestIconUrlsAreHttps:
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert sum(champion["verified"] for champion in champions) == len(
-            registered_champion_names()
-        )
+        assert sum(
+            champion["engine_registration"] is not None for champion in champions
+        ) == len(registered_champion_names())
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
         assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
         assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
 
-class TestChampionVerifiedFlags:
-    """/api/champions exposes the complete dedicated-module registry."""
+@pytest.mark.parametrize("key", ["icon", "patchLastChanged"])
+def test_champion_cache_fields_are_required_reads(key):
+    """A cache-owned champion field is never defaulted into the response."""
+    with pytest.raises(KeyError, match=f"Ahri: cached champion record has no {key}"):
+        app_module._cached_champion_field({"name": "Ahri"}, key)
 
-    def test_flags_match_the_module_registry(self):
+
+def test_headline_total_is_the_attacker_row_in_a_roster_fight():
+    """One published answer to which number the result headlines."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+            "enemies": [{"champion": "Garen", "level": 18, "items": ["Sunfire Aegis"]}],
+            "enemies_attack": True,
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    main = next(
+        row for row in data["combat"]["breakdown"] if row["participant_id"] == "main"
+    )
+    assert data["headline_total"] == main["total_damage"]
+    assert data["headline_total"] != data["total_damage"]
+    assert data["dispositions"]["headline_total"]["disposition"] == "MEASURED"
+
+
+def test_headline_total_is_the_rotation_total_without_a_coupled_row():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Ahri", "level": 11, "target_health": 2000},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["headline_total"] == data["total_damage"]
+
+
+def test_frontend_reads_the_published_headline_and_team_receipt():
+    """A8/C2: neither the headline nor the team total is re-derived in JS."""
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "const total = Number(result.headline_total);" in source
+    assert 'participant_id === "main")?.total_damage' not in source
+    assert "combat?.objective?.main_team_damage_before_death" in source
+    assert "alliedRows" not in source
+
+
+def test_loadout_summary_carries_the_registry_once():
+    """The summary emitted the same fact three times; one field now."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "enemies": [{"champion": "Garen", "level": 11}],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]["target"]
+    assert target["engine_registration"] == "reviewed_module"
+    assert "verified_attacker" not in target
+    assert "engine_registered" not in target
+
+
+class TestChampionRegistrationField:
+    """``engine_registration`` is the one registry fact /api/champions serves."""
+
+    def test_registration_matches_the_module_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {c["name"]: c["verified"] for c in champs}
+        by_name = {c["name"]: c["engine_registration"] for c in champs}
 
-        assert by_name["Aatrox"] is True
-        assert by_name["Bel'Veth"] is True
-        assert by_name["Kled"] is True
-        assert by_name["Zoe"] is True
-        assert by_name["Zyra"] is True
+        assert by_name["Aatrox"] == "reviewed_module"
+        assert by_name["Bel'Veth"] == "reviewed_module"
+        assert by_name["Kled"] == "reviewed_module"
+        assert by_name["Soraka"] == "reviewed_module"
+        assert by_name["Zoe"] == "reviewed_module"
+        assert by_name["Zyra"] == "reviewed_module"
 
-    def test_availability_is_the_module_registry(self):
+    def test_no_second_field_repeats_the_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {champion["name"]: champion for champion in champs}
 
-        assert by_name["Soraka"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
+        assert set(champs[0]) == {
+            "name",
+            "icon",
+            "engine_registration",
+            "supported_fight_modes",
+            "unsupported_fight_mode_reason",
+            "patch_last_changed",
+            "abilities",
+            "ability_ingestion",
         }
-        assert by_name["Zoe"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
-        assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
-        assert by_name["Zyra"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
-        assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
     def test_every_champion_publishes_an_unrestricted_fight_window(self):
         """The published contract carries the restriction and its sourced
@@ -2216,16 +2334,20 @@ class TestChampionVerifiedFlags:
             champion["unsupported_fight_mode_reason"] is None for champion in champs
         )
 
-    def test_verified_champions_sort_first(self):
+    def test_registered_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        flags = [c["verified"] for c in champs]
+        flags = [c["engine_registration"] is not None for c in champs]
 
         assert flags == sorted(flags, reverse=True)
 
     def test_each_group_is_alphabetical(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        for group in (True, False):
-            names = [c["name"] for c in champs if c["verified"] is group]
+        for registered in (True, False):
+            names = [
+                c["name"]
+                for c in champs
+                if (c["engine_registration"] is not None) is registered
+            ]
             assert names == sorted(names)
 
 
@@ -2241,8 +2363,27 @@ class TestUpdateDataDevGate:
 
         assert response.status_code == 404
 
+    def test_update_data_is_404_without_a_configured_token(self, monkeypatch):
+        """The endpoint fails closed on an unset LOL_CALC_DEV_UPDATE_TOKEN."""
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.delenv("LOL_CALC_DEV_UPDATE_TOKEN", raising=False)
+        client = app_module.app.test_client()
+
+        config = client.get("/api/config")
+        response = client.get("/api/update-data")
+
+        assert "Set-Cookie" not in config.headers
+        assert response.status_code == 404
+
+    def test_dev_update_token_is_the_configured_value(self, monkeypatch):
+        """Every worker reads one token, so a minted-per-import one is gone."""
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "  shared-secret  ")
+
+        assert app_module._dev_update_token() == "shared-secret"
+
     def test_update_data_streams_events_in_dev_mode(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         monkeypatch.setattr(
             app_module, "_run_data_update", lambda: iter([{"phase": "done"}])
         )
@@ -2264,6 +2405,7 @@ class TestUpdateDataDevGate:
 
     def test_update_data_needs_same_site_bootstrap_cookie(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
 
         response = app_module.app.test_client().get("/api/update-data")
 
@@ -2271,6 +2413,7 @@ class TestUpdateDataDevGate:
 
     def test_dev_mode_rejects_non_local_host_even_from_loopback(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         client = app_module.app.test_client()
 
         config = client.get("/api/config", headers={"Host": "attacker.example"})
@@ -2283,6 +2426,7 @@ class TestUpdateDataDevGate:
         self, monkeypatch
     ):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         monkeypatch.setattr(
             app_module,
             "_run_data_update",

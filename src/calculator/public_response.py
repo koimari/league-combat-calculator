@@ -60,10 +60,7 @@ def public_loadout_summary(loadout) -> dict:
     summary = loadout.public_summary()
     summary["icon"] = https_icon(summary["icon"])
     summary["item_icons"] = [https_icon(icon) for icon in summary["item_icons"]]
-    registration = engine_registration_kind(summary["champion"])
-    summary["verified_attacker"] = registration is not None
-    summary["engine_registered"] = registration is not None
-    summary["engine_registration"] = registration
+    summary["engine_registration"] = engine_registration_kind(summary["champion"])
     return summary
 
 

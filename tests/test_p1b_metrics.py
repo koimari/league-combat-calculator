@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 
 import src.app as app_module
 
@@ -23,6 +24,17 @@ import src.app as app_module
 from src import db
 
 ROOT = Path(__file__).parents[1]
+
+
+def _recorded_events():
+    """Every persisted metrics event, through the ORM the scorecard reads."""
+    with db.session() as db_session:
+        return list(
+            db_session.execute(
+                select(db.MetricsEvent).order_by(db.MetricsEvent.id)
+            ).scalars()
+        )
+
 
 # Fixed beta timeline: 2 complete weeks, UTC-naive (storage convention).
 BETA_START = datetime(2026, 7, 23, 0, 0, 0)
@@ -174,11 +186,11 @@ def test_metrics_event_records_and_mints_anon_session(sqlite_database):
     )
     assert second.status_code == 201
 
-    events = db.list_metric_events()
+    events = _recorded_events()
     assert len(events) == 2
-    assert {row["took_ms"] for row in events} == {500, 900}
-    assert {row["session_id"] for row in events} == {anon}
-    assert all(row["event"] == "page_view" for row in events)
+    assert {row.took_ms for row in events} == {500, 900}
+    assert {row.session_id for row in events} == {anon}
+    assert all(row.event == "page_view" for row in events)
 
 
 def test_metrics_event_validation(sqlite_database):
@@ -265,7 +277,7 @@ def test_metrics_event_is_pre_auth(invite_env, sqlite_database):
         "/api/metrics/event", json={"event": "page_view", "took_ms": 250}
     )
     assert response.status_code == 201
-    assert len(db.list_metric_events()) == 1
+    assert len(_recorded_events()) == 1
 
 
 def test_metrics_scorecard_is_auth_gated(invite_env, sqlite_database):
@@ -289,6 +301,7 @@ def test_metrics_scorecard_is_auth_gated(invite_env, sqlite_database):
     scorecard = client.get("/api/metrics")
     assert scorecard.status_code == 200
     body = scorecard.get_json()
+    # The exact shape the post-deploy smoke in docs/deploy.md asserts.
     assert set(body) >= {"generated_at", "beta", "criteria", "gate"}
     assert set(body["criteria"]) == {
         "retention",
@@ -297,6 +310,7 @@ def test_metrics_scorecard_is_auth_gated(invite_env, sqlite_database):
         "staleness",
     }
     assert body["gate"]["status"] in {"pass", "pending", "fail"}
+    assert body["gate"]["verdict"] in {"PASS", "PENDING", "FAIL"}
 
 
 # ---------------------------------------------------------------------------

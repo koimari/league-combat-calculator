@@ -5,6 +5,7 @@ This module owns scenario resolution, fight execution, comparison curves, and
 the stable JSON-safe payload returned to every in-process consumer.
 """
 
+import re
 from collections.abc import Mapping
 from dataclasses import replace
 
@@ -31,6 +32,7 @@ from .scenario import (
     resolve_scenario,
 )
 from .stats import calculate_total_stats
+from .validation_receipts import displayed_prediction
 
 
 def _comparison_curve(
@@ -129,6 +131,40 @@ def _ally_effects_receipt(resolved: ResolvedScenario) -> dict:
     }
 
 
+#: One ``combat.breakdown`` row's ``dispositions`` keys, which carry its index.
+_BREAKDOWN_ROW = re.compile(r"^breakdown\[(\d+)\]")
+
+
+def _drop_unattributed_breakdown(combat: dict) -> None:
+    """Withhold breakdown rows that no participant stands behind.
+
+    A fight against a manual target has no coupled opponent, so the walk
+    folds one outcome carrying no identity and no damage -- published, that
+    is a blank row in the public shape.  Each row's ``dispositions`` entries
+    are keyed by its index, so the survivors are renumbered with it.
+    """
+    rows = combat["breakdown"]
+    renumbered = {
+        old: new
+        for new, old in enumerate(
+            index for index, row in enumerate(rows) if row["participant_id"]
+        )
+    }
+    if len(renumbered) == len(rows):
+        return
+    combat["breakdown"] = [rows[old] for old in renumbered]
+    kept: dict[str, object] = {}
+    for path, entry in combat["dispositions"].items():
+        match = _BREAKDOWN_ROW.match(path)
+        if match is None:
+            kept[path] = entry
+            continue
+        target = renumbered.get(int(match.group(1)))
+        if target is not None:
+            kept[f"breakdown[{target}]{path[match.end():]}"] = entry
+    combat["dispositions"] = kept
+
+
 def _combat_receipt(
     resolved: ResolvedScenario, request: ScenarioRequest
 ) -> dict | None:
@@ -147,7 +183,7 @@ def _combat_receipt(
         role_quest_complete=params.role_quest_complete,
         external_stat_bonuses=params.ally_stat_bonuses,
     )
-    return build_participant_timeline(
+    combat = build_participant_timeline(
         champion_data,
         request.level,
         items,
@@ -163,6 +199,8 @@ def _combat_receipt(
         enemies=list(resolved.enemies),
         allies=list(resolved.allies),
     )
+    _drop_unattributed_breakdown(combat)
+    return combat
 
 
 def _role_quest_receipt(resolved: ResolvedScenario) -> dict | None:
@@ -277,9 +315,16 @@ def _name_the_response(response: dict) -> None:
 
 
 def calculate_payload(data: Mapping[str, object]) -> dict:
-    """Return the complete JSON-safe calculate payload without Flask state."""
+    """Return the complete JSON-safe calculate payload without Flask state.
+
+    ``headline_total`` is the one published answer to "which number does
+    this result headline": the attacker's own coupled combat row when the
+    fight has one, else the rotation total.  ``displayed_prediction`` is the
+    rule; the browser reads the leaf instead of re-deriving it.
+    """
     request = parse_scenario_request(data)
     resolved = resolve_scenario(request)
     response = _calculate_resolved(request, resolved)
+    response["headline_total"] = displayed_prediction(response)[0]
     _name_the_response(response)
     return response

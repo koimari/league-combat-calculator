@@ -54,6 +54,11 @@
    * Loadout capture
    * ------------------------------------------------------------------ */
 
+  // app.js owns the one JSON POST; the widget never hand-rolls a second.
+  function postReceiptJson(body) {
+    return window.scryglass.postJson("/api/receipts", body);
+  }
+
   function captureLoadout() {
     var hook = window.scryglass && window.scryglass.getCurrentLoadout;
     var loadout = typeof hook === "function" ? hook() : null;
@@ -89,6 +94,7 @@
   }
 
   function statusMarkup() {
+    var loadout = STATE.loadout;
     return (
       '<details class="feedback-disclosure">' +
       "<summary>Validate against a real game</summary>" +
@@ -101,7 +107,10 @@
       '<button type="button" data-fb-action="off">Off by %</button>' +
       "</div>" +
       '<div class="feedback-fields" hidden>' +
-      '<label>Damage you saw in game <input type="number" id="fbObserved" min="0" step="any" placeholder="e.g. 1234" /></label>' +
+      // The receipt predicts one participant's row, never the team's, so
+      // the field names whose damage it wants: with allies selected the
+      // Damage tile above shows the main team's total instead.
+      '<label>Damage <b>' + escapeHtml(loadout.champion) + '</b> dealt in game <input type="number" id="fbObserved" min="0" step="any" placeholder="e.g. 1234" /></label>' +
       '<label id="fbOffRow" hidden>Off by <input type="number" id="fbOffPct" min="0" max="1000" step="any" /> % ' +
       '<select id="fbOffDir"><option value="higher">higher</option><option value="lower">lower</option></select></label>' +
       '<span><button type="button" data-fb-submit>Submit</button> ' +
@@ -197,11 +206,7 @@
     var payload = { champion: loadout.champion, loadout: loadout, source: "manual" };
     if (observed !== undefined) payload.observed = observed;
     setBusy(true);
-    fetch("/api/receipts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    postReceiptJson(payload)
       .then(function (response) {
         return response.json().then(function (body) {
           return { ok: response.ok, body: body };
@@ -299,15 +304,11 @@
         return;
       }
       setBusy(true);
-      fetch("/api/receipts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          champion: loadout2.champion,
-          loadout: loadout2,
-          observed: text,
-          source: "combat_log",
-        }),
+      postReceiptJson({
+        champion: loadout2.champion,
+        loadout: loadout2,
+        observed: text,
+        source: "combat_log",
       })
         .then(function (response) {
           return response.json().then(function (body) {

@@ -117,6 +117,57 @@ def test_save_build_validation(sqlite_database):
     assert client.post("/api/builds", json=_build_payload(level=99)).status_code == 400
 
 
+class _RecordingLimiter:
+    """A token bucket that records the scope of every spend."""
+
+    def __init__(self, allowed=True):
+        self.scopes = []
+        self.allowed = allowed
+
+    def consume(self, scope, **_kwargs):
+        self.scopes.append(scope)
+        return self.allowed, 2.0
+
+
+def _budgeted(monkeypatch, limiter):
+    monkeypatch.setattr(app_module, "_rate_limiter", limiter)
+    monkeypatch.setitem(app_module.app.config, "TESTING", False)
+    monkeypatch.setitem(app_module.app.config, "RATE_LIMIT_ENABLED", True)
+    return _client()
+
+
+def test_build_and_share_writes_spend_a_token(sqlite_database, monkeypatch):
+    """Both persisting routes are budgeted, like every other public write."""
+    limiter = _RecordingLimiter()
+    client = _budgeted(monkeypatch, limiter)
+
+    saved = client.post("/api/builds", json=_build_payload())
+    assert saved.status_code == 201
+    share = client.post("/api/share", json={"build_id": saved.get_json()["build_id"]})
+
+    assert share.status_code == 201
+    assert limiter.scopes == ["build_write", "build_write"]
+
+
+def test_exhausted_build_budget_returns_a_labelled_429(sqlite_database, monkeypatch):
+    client = _budgeted(monkeypatch, _RecordingLimiter(allowed=False))
+
+    response = client.post("/api/builds", json=_build_payload())
+
+    assert response.status_code == 429
+    assert response.get_json() == {"error": "Build sharing is busy; retry shortly"}
+    assert int(response.headers["Retry-After"]) >= 1
+
+
+def test_malformed_build_write_does_not_spend_a_token(sqlite_database, monkeypatch):
+    limiter = _RecordingLimiter()
+    client = _budgeted(monkeypatch, limiter)
+
+    assert client.post("/api/builds", json={}).status_code == 400
+    assert client.post("/api/share", json={}).status_code == 400
+    assert limiter.scopes == []
+
+
 # ---------------------------------------------------------------------------
 # Share links
 # ---------------------------------------------------------------------------
