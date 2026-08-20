@@ -11,15 +11,18 @@ Why each slot is non-generic:
 - Q (Cosmic Binding) parses generically ("Magic Damage" is exactly
   right); pinned to the explicit attr so a JSON reshuffle can't move
   it. The slow/stun is CC with no damage component.
-- W (Caretaker's Shrine) is an ally-only heal/MS buff — its "Minimum
-  Heal"/"Maximum Heal" attributes are NOT damage; absent from the map.
-  E8d: the engine's ally-support scanner looks up ("Total Heal", "Heal",
-  "Heal Per Tick") only, so Bard's "Minimum Heal"/"Maximum Heal" rows are
-  not readable by the support path — the W ally heal is a documented missing
-  engine hook (support_effects heal-attribute lookup), not an emitted packet.
-- E (Magical Journey) is a one-way terrain portal, zero damage — absent.
-- R (Tempered Fate) is 2.5s stasis, zero damage (stasis prevents damage
-  during it) — absent; no zero-damage display row wanted.
+- W (Caretaker's Shrine) is an ally-only heal: a zero-damage cast whose
+  only job is to exist, so the rotation casts it and the ally-support
+  scanner prices the sourced heal (200.0 to one teammate at rank 5, 0 AP,
+  the cached "Maximum Heal" row).  The 5-second charge that separates that
+  row from "Minimum Heal" is the boundary; the shrine is priced at full
+  power.
+- E (Magical Journey) is a one-way terrain portal: ``out_of_scope`` on the
+  terrain axis, which the fight engine does not model at all.
+- R (Tempered Fate) is 2.5s stasis on everything it hits: ``out_of_scope``
+  on the crowd-control magnitude axis — ``ability_spec.cc_kind`` is one
+  vocabulary string per part with no duration and no percent, so a stasis
+  can be declared but never priced.
 """
 
 from typing import Any

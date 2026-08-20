@@ -7,6 +7,16 @@ row (120-320 + 140% bonus AD + 120% AP) is exactly double the
 single-pass "Physical Damage" row the reviewed packet priced.  The
 module now prices the Total row so a full out-and-back pass deals the
 in-game 2x damage (320 at rank 5 vs the old 160).
+
+E (Spell Shield) is ``modeled``: blocking a hostile effect heals Sivir for
+81.6 at rank 5 (80% of her level-18 total AD, 102.0), scoped to herself —
+"she heals herself and activates Fleet of Foot" names no ally.  The spell
+shield's own block has no engine axis.
+
+P (Fleet of Foot) and R (On The Hunt) stay ``out_of_scope`` on the
+movement-speed axis: ``slotlib``'s ``stat_buff`` dispatch has no
+movement-speed key at all, and R's "-0.5s basic-ability cooldown per
+attack" needs a cooldown-refund channel a champion module cannot author.
 """
 
 from typing import Any

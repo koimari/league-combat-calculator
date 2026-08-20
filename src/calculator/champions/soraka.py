@@ -5,6 +5,14 @@ again after 1.5 seconds when the target remains in the zone. Its second hit is
 an explicit option because crowd control does not guarantee that condition.
 Soraka's passive and R do not damage enemies.
 
+R (Wish) is a zero-damage cast so the ally-support scanner prices the
+sourced team heal (350.0 to Soraka and every selected teammate at rank 3,
+0 AP); its "+50% on targets below 40% of their maximum health" is a
+live-health condition the scan cannot establish and is not priced.
+
+P (Salvation) stays ``out_of_scope`` on the movement-speed axis: its 90%
+bonus toward wounded allies has no ``stat_buff`` key at all.
+
 E8d: W (Astral Infusion) is an ally-only heal with no enemy damage.  The slot
 is declared here so the ability is CAST in the fight rotation; the engine's
 ally-support scanner then derives the heal packet from the cached W leveling

@@ -7,10 +7,15 @@ receives one hit. Fey Feathers and Battle Dance do not damage enemies.
 E8d ally-support: Q (Gleaming Quill) heals Rakan and nearby allies (cached
 Heal 40-230 by level + 55% AP; scope self_and_all_teammates) — the event is
 authored by the engine's ally-support scanner from cached leveling at the Q
-cast time.  P (Fancy Footwork) is a passive periodic self-shield (cached
-Shield 30-247.94 by level + 95% AP); the scanner only reads Q/W/E/R slots,
-so the passive shield is a documented missing engine hook, not an emitted
-packet.
+cast time.  E (Battle Dance) is a zero-damage cast so the scanner prices its
+sourced ally shield (150.0 at rank 5, 0 AP); the free recast within 5
+seconds re-applies it and is not modeled.
+
+P (Fey Feathers) is ``modeled`` through the ``self_shield_events`` channel,
+not through the scanner: the periodic self-shield (30 : 247.94 by level +
+95% AP — 247.94 at level 18) rides the Q cast, which is the only channel a
+shield-only passive has (a passive is never cast, so no packet can hang on
+it).  The out-of-combat refresh cadence stays state.
 """
 
 from typing import Any
@@ -109,6 +114,12 @@ SLOTS = {
 MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm"}
 
 parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
+
+# P emits no cast row of its own — a passive is never cast — so the
+# derivation would call it out_of_scope; the shield Q carries is what the
+# engine prices (247.94 for 10s at level 18 with no items).
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
 SELF_HEALING_RULE = declare_healing_rule("Rakan")

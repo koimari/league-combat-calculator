@@ -32,7 +32,7 @@
       "sample_author": "Alistar"
     },
     "on_hit": {
-      "authors": 47,
+      "authors": 51,
       "negative_test": "test_withholding_on_hit_changes_the_edge_citation",
       "sample_author": "Aatrox"
     },
@@ -279,7 +279,7 @@
       11,
       18
     ],
-    "states_walked": 4120
+    "states_walked": 4176
   },
   "order_override_frontier": {
     "champions": [

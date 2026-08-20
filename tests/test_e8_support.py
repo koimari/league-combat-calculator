@@ -474,6 +474,47 @@ def test_revive_module_sourcing_matches_cached_rows():
         ("Thresh", "W", "Dark Passage", "shield", 130.0, "one_teammate", "ally:Jinx"),
         # Zoomies "Shield" 65/90/115/140/165 (+40% AP), rank 5, to the anchor.
         ("Yuumi", "E", "Zoomies", "shield", 165.0, "one_teammate", "ally:Jinx"),
+        # --- census slice 3: the row was cached; the hook was missing ------
+        # Caretaker's Shrine "Maximum Heal" 50/87.5/125/162.5/200 (+70% AP).
+        (
+            "Bard",
+            "W",
+            "Caretaker's Shrine",
+            "heal",
+            200.0,
+            "one_teammate",
+            "ally:Jinx",
+        ),
+        # Golden Aegis "Shield Strength" 60-140 (+70% bonus AD), rank 5.
+        ("Jarvan IV", "W", "Golden Aegis", "shield", 140.0, "self", "main"),
+        # Battle Dance "Shield Strength" 50/75/100/125/150 (+70% AP), rank 5.
+        ("Rakan", "E", "Battle Dance", "shield", 150.0, "one_teammate", "ally:Jinx"),
+        # Wish "Heal" 150/250/350 (+50% AP), rank 3.
+        ("Soraka", "R", "Wish", "heal", 350.0, "self_and_all_teammates", "ally:Jinx"),
+        # Stand United "Minimum Shield Strength" 120/220/320 (+135% AP
+        # + 15% bonus health), rank 3 — the floor, because the 0-60%
+        # missing-health increase is a live-health condition.
+        ("Shen", "R", "Stand United", "shield", 320.0, "one_teammate", "ally:Jinx"),
+        # Ki Barrier "Shield" 47:128.59 by level (+13% bonus health) at 18,
+        # riding the E cast as a self_shield_events payload.
+        ("Shen", "P", "Ki Barrier", "shield", 120.0, "self", "main"),
+        # Black Shield "Magic Shield Strength" 100-320 (+70% AP), rank 5.
+        (
+            "Morgana",
+            "E",
+            "Black Shield",
+            "shield",
+            320.0,
+            "one_teammate",
+            "ally:Jinx",
+        ),
+        # Bastion "Shield Strength" 7/8/9/10/11% of the RECIPIENT's maximum
+        # health; the scan holds only the caster's, so Taric's own copy is
+        # priced (11% of his level-18 2328.0) and granted to him alone.
+        ("Taric", "W", "Bastion", "shield", 256.08, "self", "main"),
+        # Fey Feathers "Shield" 30:247.94 by level (+95% AP) at 18, riding
+        # the Q cast as a self_shield_events payload.
+        ("Rakan", "P", "Fey Feathers", "shield", 247.94, "self", "main"),
     ],
 )
 def test_a_modeled_support_slot_publishes_its_row_in_the_coupled_walk(

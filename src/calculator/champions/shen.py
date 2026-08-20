@@ -14,6 +14,21 @@ cast schedule while the ledger prices each bonus instance at its swing.
 
 Shadow Dash is authored at the selected travel distance. Its cooldown begins
 after the dash, so travel time is added to the data's post-effect cooldown.
+It also carries P (Ki Barrier), which fires "after completing an ability's
+effects": the sourced self-shield (120.0 at level 18 with no bonus health)
+rides the E cast as a ``self_shield_events`` payload, because a shield-only
+slot has no channel of its own and a passive is never cast.
+
+R (Stand United) is a zero-damage cast so the ally-support scanner prices
+the sourced ally shield at its floor (320.0 at rank 3 with no AP or bonus
+health, the cached "Minimum Shield Strength" row); the "increased by
+0% : 60% (based on target's missing health)" that separates it from the
+maximum is a live-health condition the scan cannot establish, and the
+3-second channel's teleport is not modeled.
+
+W (Spirit's Refuge) stays ``out_of_scope`` on the enemy-basic-attack-block
+axis: the zone nullifies incoming basic attacks for Shen and his allies, and
+the engine has no channel that withholds an attacker's swing.
 """
 
 from dataclasses import replace
@@ -303,3 +318,10 @@ SLOTS = {
 MODULE_CC = {"E": "taunt", "Q": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
+
+# P emits no cast row of its own; the Ki Barrier shield E carries is what
+# the engine prices (120.0 for 2.5s at level 18 with no bonus health).
+MODULE_COVERAGE = {
+    slot: ("out_of_scope" if slot == "W" else "modeled") for slot in "PQWER"
+}
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

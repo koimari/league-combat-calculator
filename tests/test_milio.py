@@ -10,6 +10,8 @@ cached text it was read from, and prove it reaches the event ledger.
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champions import get_champion_module_contract
+from tests import rider_probe
 from src.calculator.champions import milio
 from src.calculator.data_fetcher import get_champion
 
@@ -61,3 +63,30 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+class TestFiredUpRider:
+    """Milio P prices the burn the enchanted hit applies (census slice 6)."""
+
+    def test_the_burn_reaches_the_total(self):
+        """Level 18, no items, one enchanted hit: 50.0 raw magic.
+
+        Cached P "Per-Level Scaling" 10 : 50 (based on level) + 20% of
+        Milio's AP; the probe target halves magic damage, so 25.0 lands.
+        """
+        result = rider_probe.fight("Milio")
+        row = result["breakdown"][rider_probe.RIDER_ROW]
+
+        assert row["name"] == "Fired Up! (on-hit)"
+        assert row["count"] == 1
+        assert row["total_damage"] == pytest.approx(25.0, abs=0.05)
+        assert row["total_damage"] < result["total_damage"]
+
+    def test_no_enchanted_hit_prices_nothing(self):
+        result = rider_probe.fight("Milio", champion_options={"p_procs": 0})
+        assert rider_probe.RIDER_ROW not in result["breakdown"]
+
+    def test_every_slot_now_prices_something(self):
+        assert get_champion_module_contract("Milio").coverage == {
+            slot: "modeled" for slot in "PQWER"
+        }

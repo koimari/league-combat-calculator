@@ -6,8 +6,21 @@ E8d ally-support: E (Zoomies) grants the caster a shield (Shield 65-165 +
 Heal, scope one_teammate).  Both events are authored by the engine's
 ally-support scanner from cached leveling at the cast times; the module
 declares E/R in SLOTS so the fight rotation casts them.  The attached-bonus
-anchor transfer of E ("Affects the Anchor instead of Yuumi") is a scope
-detection the scanner does not express — see E8d reply for the missing hook.
+anchor transfer of E ("Affects the Anchor instead of Yuumi") is expressed by
+the scanner's sourced scope override (``support_effects._SCOPE_OVERRIDES``),
+so the shield lands on the anchor rather than on Yuumi.
+
+P (Feline Friendship) stays ``out_of_scope`` on the empowered-attack trigger
+axis.  Its heal is cached (20 : 120.59 by level + 30% AP) but pays "upon
+hitting them with the basic attack or Prowling Projectile": the ally-support
+scanner hangs packets on CASTS and a passive is never cast
+(``champions/engine.py`` keys a P entry "passive" and no rotation schedules
+one), while the healing rule's Yuumi body anchors on Final Chapter's waves
+only.  A hit-anchored heal rule is the channel it is waiting on.
+
+W (You and Me!) stays ``out_of_scope`` on the attachment axis: an attached
+Yuumi is untargetable and casts from her anchor, and the engine has no
+participant-attachment state to express either half.
 """
 
 from .healing_contract import declare_healing_rule

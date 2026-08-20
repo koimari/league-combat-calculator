@@ -23,9 +23,9 @@ P1 addition over the reviewed packet:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
@@ -36,6 +36,38 @@ PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995
 # it is cross-checked by the cached "Maximum Enhanced Damage" row
 # (105-280 + 70% AP == 1.75 x the base row at every rank).
 _Q_MISSING_HEALTH_MAX_BONUS = 0.75
+
+# Notes "stack up to 4 times on each unit" and every ability cast grants
+# one, so a full Q/W/E/R rotation puts the cap on Seraphine — the default.
+_NOTE_CAP = 4
+
+
+def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the empowered attack fires every active Note at the target."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    per_note = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target, level=ctx.level
+    )
+    if per_note <= 0:
+        return None
+    notes = min(max(0, int(ctx.option("p_notes"))), _NOTE_CAP)
+    entry = on_hit_entry(
+        ability.get("name", "Stage Presence"), per_note * notes, "magic"
+    )
+    # One empowered attack fires every Note it holds; the next attack has
+    # none until her abilities grant more.
+    entry["on_hit"]["max_procs"] = 1 if notes else 0
+    entry["detail"] = (
+        f"{notes} Note(s) of {per_note:.2f} bonus magic damage each "
+        "(4 : 27.47 based on level + 4% AP) on one empowered attack; Notes "
+        "from allies (reduced by 75%) and Echo's free recast are unpriced"
+    )
+    return entry
+
+
+_stage_presence.phase = ONHIT
 
 
 def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -97,17 +129,29 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"E", "R"}),
     slot_parsers={
         "Q": _high_note,
+        "P": _stage_presence,
     },
     cc_kinds=MODULE_CC,
 )
+
+OPTIONS = list(OPTIONS) + [
+    {
+        "key": "p_notes",
+        "type": "int",
+        "default": _NOTE_CAP,
+        "min": 0,
+        "max": _NOTE_CAP,
+        "label": "Notes on the empowered attack",
+    },
+]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (High Note) prices the missing-health amplifier: base (60-160 + "
     "40% AP) plus 0.75 x base x the target's live missing-health ratio "
     "(0%:75% based on missing health; equals the cached Maximum Enhanced "
     "Damage row at full missing health)",
+    "P (Stage Presence) prices the empowered attack's Notes: the sourced "
+    "per-Note row (4 : 27.47 based on level + 4% AP) times the selected "
+    "Note count (default 4, the cap a full rotation reaches); Notes granted "
+    "by allies (reduced by 75%) and Echo's free recast are not priced.",
 ]
-
-MODULE_COVERAGE = {
-    slot: ("out_of_scope" if slot == "P" else "modeled") for slot in "PQWER"
-}
