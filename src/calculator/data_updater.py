@@ -530,8 +530,9 @@ def _ordered_roster(
     """
     rank = {name: index for index, name in enumerate(path_order(wikitext))}
     unknown = len(rank)
-    return sorted(roster, key=lambda entry: (rank.get(entry["path"], unknown),
-                                             entry["row"]))
+    return sorted(
+        roster, key=lambda entry: (rank.get(entry["path"], unknown), entry["row"])
+    )
 
 
 def update_runes(

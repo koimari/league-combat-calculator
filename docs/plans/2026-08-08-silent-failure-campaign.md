@@ -417,7 +417,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
 ## Success criteria
 
 1. **The invariant holds by machine.** Every serialized numeric leaf of `/api/calculate` — score, breakdown,
-   survival, TDD and timeline — **and of `/api/bis` (`app.py:1294`) and `/api/optimize` (`app.py:1329`), the
+   survival, TDD and timeline — **and of `/api/bis` (`app.py:1304`) and `/api/optimize` (`app.py:1339`), the
    two score-serving endpoints the Goal's "every numeric leaf" also binds** — is covered by exactly one
    entry in its payload's parallel `dispositions` map, keyed by leaf path and resolving to exactly one of
    the four spellings. That map is the ruled serialization (Phase 4's S9 owns it): a bare JSON number
@@ -813,9 +813,9 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > re-pricing"*. A retirement lane that went to start `delta_amp` measured that the path as built
    > does not carry one term the pair engine does. `damage._add_item_active_damage` mitigates an item
    > active's raw value against the holder's magic amplifier —
-   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:8889`) — and
+   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:8929`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
-   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8306`);
+   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8322`);
    > `survival.pricing.price_declared_packet` (`pricing.py:483`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
@@ -912,7 +912,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > `survival.pricing.price_declared_packet` (`pricing.py:483`) prices a declaration at the **one**
    > effective resistance a fight publishes, while the pair engine re-prices already-authored
    > packets once the complete ledger exists — `_apply_temporary_lethality_windows`
-   > (`damage.py:9894`) for physical packets, `_apply_liandry_reprice` (`damage.py:10637`) for magic
+   > (`damage.py:9894`) for physical packets, `_apply_liandry_reprice` (`damage.py:10677`) for magic
    > ones. Voltaic Cyclosword's Firmament grants its lethality *after* its own energized packet, so
    > an item active authored earlier is re-priced afterwards; measured on `mundo_3champ`'s locked
    > build, a declared raw of `324.423936` was priced by the pair engine at `0.0` and `0.45`
@@ -1000,13 +1000,13 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > Amendment M already ruled.* Scanned over `damage.py` for assignment to a `damage`,
    > `total_damage` or `damage_per_hit` subscript: 14 sites in 8 functions, of which **four**
    > functions write rows or events they did not author — the two the ruling names, plus
-   > `_reattribute_empowered_swings` (`damage.py:11688`), which moves damage between two authored
+   > `_reattribute_empowered_swings` (`damage.py:11804`), which moves damage between two authored
    > rows with the fight total untouched, and `_resolve_starting_shield_outcome`
    > (`damage.py:10586`), which re-prices every max-health-scaled packet against the target's live
    > pools and then recomputes `state.total_damage` from the rewritten rows. That is a **third**
    > re-pricing site the prose does not name, which is what Ruling 2's *anything else the scan
    > finds* was written for. And the amp fold appears in that scan **not at all**:
-   > `_apply_command_amp` (`damage.py:11169`) and `_apply_general_amplifiers` (`damage.py:11050`)
+   > `_apply_command_amp` (`damage.py:11285`) and `_apply_general_amplifiers` (`damage.py:11090`)
    > mutate no packet in place — they read the ordered ledger and author a derived bonus row beside
    > it — so a census keyed only on in-place packet writes would enumerate this amendment's term and
    > silently miss Amendment M's. The census owes both shapes.
@@ -1321,9 +1321,9 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > swing.* Every family retired so far reaches its target through `_mitigate`
    > (`damage.py:395`) and nothing else — a resistance and the holder's own amps, which is exactly
    > what `survival.pricing.price_declared_packet` (`pricing.py:483`) carries. A Runaan's bolt is
-   > priced by `_mitigate_basic_attack_swing` (`damage.py:685`), which applies three further
+   > priced by `_mitigate_basic_attack_swing` (`damage.py:701`), which applies three further
    > target-side terms, and the family's *other* authored row is the attack's on-hit effects copied
-   > onto a second subject by `_copied_on_hit_packet` (`damage.py:9383`), for which
+   > onto a second subject by `_copied_on_hit_packet` (`damage.py:9423`), for which
    > `runaans_hurricane.secondary_target` declares no magnitude at all. The lane refused four moves,
    > each already forbidden in terms by the three amendments that built the stage, filed its
    > measurement at
@@ -1337,7 +1337,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > (Amendment M, Ruling 1, already carried), and then met by the target-side terms. Two of those
    > three **fold**, because a pure factor on a linear mitigation composes into the declared
    > magnitude and prices to the same real number — the target's critical-strike damage multiplier,
-   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:651`) applies —
+   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:667`) applies —
    > which is the argument the `on_hit_strike` retirement already used for on-hit effectiveness and
    > is used here for the last time on these two terms. Warden's Mail's Rock Solid is **never
    > folded**. `min(flat, per_hit × cap)` is a **capped flat subtraction**, not a factor on a

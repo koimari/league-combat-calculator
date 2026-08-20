@@ -524,9 +524,7 @@ def required_level_table(name: str, effects: RuneValues, key: str) -> list[float
     return by_level
 
 
-def required_pair(
-    name: str, effects: RuneValues, key: str
-) -> tuple[float, float]:
+def required_pair(name: str, effects: RuneValues, key: str) -> tuple[float, float]:
     """Read a rune's melee/ranged pair, in that order."""
     values = [float(value) for value in effects.value(key)]
     if len(values) != 2:
@@ -559,9 +557,7 @@ def certify_smaller_table_first(
         )
 
 
-def certify_uniform_escalation(
-    name: str, effects: RuneValues, key: str
-) -> None:
+def certify_uniform_escalation(name: str, effects: RuneValues, key: str) -> None:
     """Certify the second table is the first scaled by one factor above 1.
 
     The escalated table is the base table times a single stated increase, so
@@ -909,13 +905,9 @@ def _compile_grasp_of_the_undying(entry: Mapping[str, Any]) -> RuneProcEffect:
     """
     name = "Grasp of the Undying"
     effects = RuneValues(name, entry.get("effects", {}))
-    melee_ratio, ranged_ratio = required_pair(
-        name, effects, "max_health_damage_ratios"
-    )
+    melee_ratio, ranged_ratio = required_pair(name, effects, "max_health_damage_ratios")
     melee_heal, ranged_heal = required_pair(name, effects, "max_health_heal_ratios")
-    melee_health, ranged_health = required_pair(
-        name, effects, "permanent_bonus_health"
-    )
+    melee_health, ranged_health = required_pair(name, effects, "permanent_bonus_health")
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
@@ -1317,13 +1309,18 @@ def validate_rune_page(
     name = _validated_keystone(keystone)
     minors = _validated_minor_runes(minor_runes)
     _certify_path_shape(name, minors)
+    # Modeling last, and deliberately: a page that breaks a rule of the game
+    # should hear which rule, not which of its runes this engine has yet to
+    # compile.  Every name here is already known and legally placed.
+    for rune in (name, *minors):
+        resolve_rune(rune)
     shards = _validated_stat_shards(stat_shards)
     page = RunePage(name, minors, shards)
     return RunePage(name, minors, shards, _validated_rune_options(rune_options, page))
 
 
 def _validated_keystone(value: Any) -> str:
-    """Parse the request's keystone field, rejecting unmodeled selections."""
+    """Parse the request's keystone field: a known rune from a keystone row."""
     if value is None:
         return ""
     if not isinstance(value, str):
@@ -1331,25 +1328,32 @@ def _validated_keystone(value: Any) -> str:
     name = value.strip()
     if not name:
         return ""
-    resolve_rune(name)
-    if int(_rune_field(name, "row", KEYSTONE_ROW)) != KEYSTONE_ROW:
+    if _rune_row(name) != KEYSTONE_ROW:
         raise ValueError(
-            f"{name!r} is a minor rune, not a keystone; it belongs in "
-            "minor_runes"
+            f"{name!r} is a minor rune, not a keystone; it belongs in " "minor_runes"
         )
     return name
 
 
+def _rune_row(name: str) -> int:
+    """One rune's roster row, or a refusal naming the rune the roster lacks."""
+    entry = RUNE_EFFECTS.get(name)
+    if entry is None:
+        raise ValueError(f"Unknown rune {name!r}")
+    return int(entry.get("row", KEYSTONE_ROW))
+
+
 def _validated_minor_runes(value: Any) -> tuple[str, ...]:
-    """Parse the minor-rune list: known, modeled, distinct, one per row."""
+    """Parse the minor-rune list: known, distinct, minor, one per row."""
     rows = _minor_rows()
-    requested = [name for name in _string_list(value, "minor_runes", len(rows) + 2) if name]
+    requested = [
+        name for name in _string_list(value, "minor_runes", len(rows) + 2) if name
+    ]
     if len(set(requested)) != len(requested):
         raise ValueError("minor_runes must not repeat a rune")
     claimed: dict[tuple[str, int], str] = {}
     for name in requested:
-        resolve_rune(name)
-        row = int(_rune_field(name, "row", KEYSTONE_ROW))
+        row = _rune_row(name)
         if row == KEYSTONE_ROW:
             raise ValueError(
                 f"{name!r} is a keystone, not a minor rune; it belongs in "
@@ -1421,9 +1425,7 @@ def _validated_stat_shards(value: Any) -> tuple[str, ...]:
     return requested
 
 
-def _validated_rune_options(
-    value: Any, page: RunePage
-) -> dict[str, dict[str, float]]:
+def _validated_rune_options(value: Any, page: RunePage) -> dict[str, dict[str, float]]:
     """Validate requested rune options against what the page's runes declare.
 
     Shaped like ``item_options``: one entry per rune, one value per declared

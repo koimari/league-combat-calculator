@@ -8447,9 +8447,7 @@ def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[fl
     )
 
 
-def _rune_instance_times(
-    state: FightState, rotation: RotationResult
-) -> list[float]:
+def _rune_instance_times(state: FightState, rotation: RotationResult) -> list[float]:
     """Chronological damage-instance times the keystone stack counter sees.
 
     One instance per accepted damaging ability cast (wiki: up to one
@@ -8568,16 +8566,14 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
         _record_rune_proc_row(state, effect, proc_times)
 
 
-_RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = (
-    MappingProxyType(
-        {
-            rune_effects.RuneTrigger.BASIC_ATTACKS: "basic attacks",
-            rune_effects.RuneTrigger.DAMAGING_CASTS: "damaging ability casts",
-            rune_effects.RuneTrigger.DAMAGE_INSTANCES: (
-                "damage instances (damaging ability casts and basic attacks)"
-            ),
-        }
-    )
+_RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = MappingProxyType(
+    {
+        rune_effects.RuneTrigger.BASIC_ATTACKS: "basic attacks",
+        rune_effects.RuneTrigger.DAMAGING_CASTS: "damaging ability casts",
+        rune_effects.RuneTrigger.DAMAGE_INSTANCES: (
+            "damage instances (damaging ability casts and basic attacks)"
+        ),
+    }
 )
 
 
@@ -8614,9 +8610,19 @@ def _add_rune_no_damage_receipts(state: FightState) -> None:
         state.notes.extend(effect.receipts)
 
 
-def _add_rune_ability_proc_damage(
-    state: FightState, rotation: RotationResult
-) -> None:
+def _add_rune_stat_grant_receipts(state: FightState) -> None:
+    """Publish what every selected stat rune assumed to grant what it granted.
+
+    The grant itself is applied in ``stats.py``, before the fight; what the
+    fight owes the reader is the assumption behind it — the health share a
+    gate was priced at, the stack count a default supplied. A grant that
+    resolved silently is a number the reader cannot audit.
+    """
+    for effect in _page_effects(state, rune_effects.RuneStatGrantEffect):
+        state.notes.extend(effect.disclosures)
+
+
+def _add_rune_ability_proc_damage(state: FightState, rotation: RotationResult) -> None:
     """Add ability-cast rune proc damage (Arcane Comet-class).
 
     Every accepted damaging ability cast hurls the proc when the rune is
@@ -8681,9 +8687,7 @@ def _certified_only_pool(
     return events, set(coverage["exact_sources"]), coverage["coarse_sources"]
 
 
-def _add_rune_window_amp_damage(
-    state: FightState, rotation: RotationResult
-) -> None:
+def _add_rune_window_amp_damage(state: FightState, rotation: RotationResult) -> None:
     """Price every selected opening-window rune (First Strike-class)."""
     for effect in _page_effects(state, rune_effects.RuneWindowAmpEffect):
         _price_rune_window_amp(state, rotation, effect)
@@ -12029,6 +12033,7 @@ def calculate_fight_damage(
 
     # ── Runes that book no damage, and their receipts ───────────────────
     _add_rune_no_damage_receipts(state)
+    _add_rune_stat_grant_receipts(state)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state, rotation)

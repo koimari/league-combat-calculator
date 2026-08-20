@@ -734,9 +734,7 @@ def rune_payload(
     return payload
 
 
-def _certify_roster_agreement(
-    params: dict[str, str], path: str, row: int
-) -> list[str]:
+def _certify_roster_agreement(params: dict[str, str], path: str, row: int) -> list[str]:
     """Warn when the wiki template disagrees with the Data Dragon roster.
 
     The template spells its slot ``Keystone`` on row 0 and the row number
@@ -779,7 +777,9 @@ def path_order(wikitext: str) -> list[str]:
 # read where it is written and cached with the revision it was read at.
 _SHARD_SECTION = re.compile(r"===\s*Shards\s*===(.*?)(?=\n==)", re.DOTALL)
 _SHARD_ROW = re.compile(r"^!.*?\|\s*Slot (\d+)<br />\{\{sbc\|(\w+)\}\}\s*$")
-_SHARD_OPTION = re.compile(r"^\|\s*\[\[File:Rune shard (.+?)\.png\|[^\]]*\]\]<br />(.*)$")
+_SHARD_OPTION = re.compile(
+    r"^\|\s*\[\[File:Rune shard (.+?)\.png\|[^\]]*\]\]<br />(.*)$"
+)
 
 
 def shard_payload(wikitext: str, *, source: str, revision: int) -> dict[str, Any]:

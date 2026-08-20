@@ -666,7 +666,9 @@ def calculate_total_stats(
             "critical_strike_damage_percent"
         ],
         "ability_haste": (
-            total_item_stats["ability_haste"] + bonuses.ability_haste + runes.ability_haste
+            total_item_stats["ability_haste"]
+            + bonuses.ability_haste
+            + runes.ability_haste
         ),
         "basic_ability_haste": bonuses.basic_ability_haste,
         "ultimate_haste": bonuses.ultimate_haste,

@@ -156,9 +156,7 @@ def fetch_rune_data(
     data = _read_cache(data_directory, filename)
     if not isinstance(data, dict) or not data:
         raise ValueError("Rune data must be a non-empty dictionary")
-    runes = [
-        entry for name, entry in data.items() if name not in RESERVED_CACHE_KEYS
-    ]
+    runes = [entry for name, entry in data.items() if name not in RESERVED_CACHE_KEYS]
     if not runes:
         raise ValueError("Rune data holds no runes")
     if "name" not in runes[0]:

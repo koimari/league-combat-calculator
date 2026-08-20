@@ -30,8 +30,8 @@ def _compile_cosmic_insight(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
         zero_policy=ZeroPolicy(
             Disposition.WITHHELD,
             "it grants summoner-spell haste and item haste, and the engine "
-            "reads neither: summoner spells are outside the damage model and "
-            "an item active is priced once per fight whatever its cooldown",
+            "reads neither — summoner spells are outside the damage model, "
+            "and an item active is priced once per fight whatever its cooldown",
         ),
         disclosures=(
             f"{name} grants no ability haste, so nothing in the fight's "
