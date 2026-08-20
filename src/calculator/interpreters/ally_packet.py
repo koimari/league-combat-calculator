@@ -35,6 +35,7 @@ from ..item_behavior import (
     BuildContext,
     EngineLane,
     KernelField,
+    LevelSubject,
     PacketKind,
     PacketSpec,
     PacketTrigger,
@@ -65,9 +66,10 @@ class AllyPacketWalkInterpreter:  # pylint: disable=too-few-public-methods
     One field per declared value, named by the registry key it reads, so the
     compiled form of a producer is exactly "the numbers this mechanic is
     allowed to use, resolved".  Level ramps resolve at the build context's
-    level; the emitters re-resolve them per recipient, because a shield read
-    at the *holder's* level when it lands on an ally of another level is a
-    wrong number nobody would see.
+    level here; the emitters re-resolve each one at the level its declared
+    :class:`~..item_behavior.LevelSubject` names, because whose level scales a
+    ramp is a fact the source states per item and not a property of the
+    packet's direction.
     """
 
     FAMILY = RuleFamily.ALLY_PACKET
@@ -159,13 +161,25 @@ class AllyPacketSlot:
         """One declared level ramp, read at *level*.
 
         *key* is the ramp's low key, which is how the declaration names it —
-        a ramp is one number with two ends, not two numbers.
+        a ramp is one number with two ends, not two numbers.  *level* is the
+        level of whichever participant :meth:`level_subject` names, which is
+        the source's answer rather than the call site's.
         """
         for reference in _payload(self.rule).values:
             if isinstance(reference, LevelValueRef) and reference.min_key == key:
                 return reference.get(level)
         raise AllyPacketInterpretationError(
             f"{self.rule.mechanic_id} declares no {key!r} level ramp"
+        )
+
+    def level_subject(self, key: str) -> LevelSubject:
+        """Whose level the *key* ramp is read at, as the declaration states it."""
+        for ramp in _payload(self.rule).ramps:
+            if ramp.min_key == key:
+                return ramp.subject
+        raise AllyPacketInterpretationError(
+            f"{self.rule.mechanic_id} declares no {key!r} level ramp, so "
+            "nothing states whose level would read it"
         )
 
     def declared(self, kind: PacketKind) -> PacketSpec:

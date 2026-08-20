@@ -10,8 +10,12 @@ Why each slot is non-generic:
   (default 5 s, floored at 1.5 s so the initial phase always completes),
   and the cooldown is pinned to 999 s so the fight engine casts it
   exactly once per fight.
-- W (utility wall) and the passive (resurrection) deal no damage and are
-  deliberately absent from the slot map.
+- W (Crystallize) is an impassable wall: terrain, an axis the engine
+  lacks, so W is out of scope and absent from the slot map.
+- P (Rebirth) deals no damage and so is absent from the slot map, but
+  ``starting_revive_defense`` below prices its revive state, which is
+  why the coverage map calls P ``modeled`` through the
+  ``starting_revive_defense`` channel.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -166,3 +170,15 @@ parse_abilities = build_parser(SLOTS, "Anivia", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Anivia")
+
+# P emits no cast row, so the derivation would call it out_of_scope; the
+# revive above is what the engine prices (2114.0 restored at level 18 with
+# no items).  W stays out of scope — the wall is terrain, with no axis.
+MODULE_COVERAGE = {
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "out_of_scope",
+    "E": "modeled",
+    "R": "modeled",
+}
+COVERAGE_CHANNELS = {"P": ("starting_revive_defense",)}

@@ -13,8 +13,10 @@ E9-1 closes the two remaining audit gaps over the CP10.8 packet:
   HEALING_RULE_CHAMPIONS rule in healing.py (the kill condition is a
   documented boundary there).
 
-W two-hit and R are modeled; E (Assassin's Path) parkour is documented
-out_of_scope.
+W two-hit and R are modeled.
+
+Coverage: E (Assassin's Path) vaults terrain and deals nothing. Mobility
+is an axis the engine does not have, so the slot stays out of scope.
 """
 
 from typing import Any

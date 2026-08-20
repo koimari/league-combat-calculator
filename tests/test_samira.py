@@ -1,7 +1,7 @@
 """Tests for the Samira champion module."""
 
-from src.calculator.champions import samira
-from tests import cc_review
+from src.calculator.champions import get_champion_module_contract, samira
+from tests import cc_review, coverage_truth, row_review
 
 
 class TestReviewedCrowdControl:
@@ -39,3 +39,44 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Samira")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """Q/W/E price rows; the map said ``out_of_scope`` until this campaign.
+
+    ``b03bbad9`` added the Style stack row to P and rewrote the whole
+    ``MODULE_COVERAGE`` set as ``{P, R}`` instead of adding P to the
+    ``{Q, W, E, R}`` that was there — three priced slots reported as gaps.
+    P is the slot that really is a gap, and it is ``out_of_scope`` rather
+    than ``no_damage`` because Daredevil Impulse does damage this module
+    cannot price.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Samira").coverage == {
+            "P": "out_of_scope",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert coverage_truth.emitted("Samira") == {
+            "P": coverage_truth.ZERO,
+            "Q": coverage_truth.PRICED,
+            "W": coverage_truth.PRICED,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.PRICED,
+        }
+
+    def test_the_passive_is_out_of_scope_because_its_kit_damages(self):
+        """The blade-zone rider is a cached damage row, and it is unpriced."""
+        blade = [
+            effect
+            for effect in cc_review.kit("Samira")["abilities"]["P"][0]["effects"]
+            if "bonus magic damage" in (effect.get("description") or "")
+        ]
+        assert len(blade) == 1
+        assert "Bonus Magic Damage" in {
+            level["attribute"] for level in blade[0]["leveling"]
+        }
+        assert row_review.priced("Samira", "passive") == 0.0

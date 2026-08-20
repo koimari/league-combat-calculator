@@ -20,9 +20,20 @@ Magic Damage; this module prices the "Maximum Magic Damage" row
 the target's maximum health), which is the whole 3-second flamethrower
 — 15 ticks of "Magic Damage per Tick" at every rank.
 
-The heat/Danger Zone system remains documented out_of_scope (P/W
-no_damage rows); rotation numbers assume no heat state (the CP-era
-review boundary).  E's damage packet is correct.
+The Danger Zone half of the heat system stays unpriced: rotation
+numbers assume no heat state (the CP-era review boundary), so Q/E/R
+price their base rows and the Enhanced rows go unread.
+
+Overheated, the other half, is now priced.  At 150 Heat Rumble's mech
+"empowers his basic attacks to deal 5 : 44.12 (based on level) (+ 25%
+AP) (+ 4% of the target's maximum health) bonus magic damage on-hit" —
+a complete sourced on-hit row, gated by the explicit ``p_overheated``
+option (default off, so a default request is unchanged).  What the
+option does NOT price is the rest of the state: the 50% : 142.54%
+bonus attack speed and the ability lockout arrive together, and the
+engine can express the first but not the second, so pricing the attack
+speed alone would make Overheating a free upgrade.  W (Scrap Shield) is
+``no_damage`` — a shield and a movement-speed burst.
 """
 
 import math
@@ -95,14 +106,56 @@ def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _flamespitter_full_channel.phase = "damage"
 
+
+def _junkyard_titan(packet_passive):
+    """P: the packet's Heat row, plus the Overheated on-hit rider.
+
+    The compiled row is kept whole — with the option off this returns
+    exactly what the packet compiled — and the rider is added on top, so
+    the sourced "Bonus Magic Damage" leveling (flat by level + 25% AP +
+    4% of the target's maximum health) reaches the fight through the same
+    ability-on-hit channel Kog'Maw W uses.  The monster cap on the health
+    share ("Bonus Damage", 65 : 163.32 by level) is not read: this
+    calculator's target is a champion.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_passive(ctx)
+        if entry is None or not ctx.options.get("p_overheated", False):
+            return entry
+        ability = ctx.ability()
+        if ability is None:
+            return entry
+        per_hit = extract_named(
+            ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
+        )
+        entry["on_hit"] = {
+            "name": "Junkyard Titan (Overheated)",
+            "damage_per_hit": per_hit,
+            "damage_type": "magic",
+        }
+        entry["target_max_health_sensitive"] = True
+        entry["detail"] = (
+            f"Overheated: every basic attack deals {per_hit:.2f} bonus "
+            "magic damage on-hit (5 : 44.12 by level + 25% AP + 4% of the "
+            "target's maximum health).  Overheating's bonus attack speed "
+            "and its ability lockout are both unmodeled."
+        )
+        return entry
+
+    return parse
+
+
 # Cached kit review.  E's harpoon deals magic damage while "inflicting them
 # with magic resistance reduction ... and slowing them for 2 seconds" — the
 # shred is a resistance effect, the slow is the control.  R's field marks
 # enemies burning, "taking magic damage every 0.25 seconds and being slowed
 # by 35%".  Q's flames only scorch: the entry's damage clauses carry no
 # control word, so the answer is a reviewed "none", and the fifteen ticks
-# authored above are what carries it to the event ledger.  W (a shield) and
-# P (the heat system) carry no damage row at all.
+# authored above are what carries it to the event ledger.  W is a shield,
+# and P authors no ability damage part either: the Overheated rider is an
+# on-hit that rides the basic-attack stream, which carries no ability
+# event for a kind to answer for.
 MODULE_CC = {"E": "slow", "Q": "none", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -121,8 +174,18 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # the event ledger.  R already authors its own twenty-tick timing.
     single_hit_slots=frozenset({"E"}),
     slot_parsers={"Q": _flamespitter_full_channel},
+    slot_wrappers={"P": _junkyard_titan},
     cc_kinds=MODULE_CC,
 )
+OPTIONS = list(OPTIONS) + [
+    {
+        "key": "p_overheated",
+        "type": "bool",
+        "default": False,
+        "label": "Overheated (150 Heat): basic attacks deal bonus magic damage",
+        "rotation": {"role": "self_state", "slot": "P"},
+    },
+]
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Flamespitter) prices the cached Maximum Magic Damage row "
     "(62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5% : 10% of the "
@@ -139,10 +202,18 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "0.25-second intervals over up to 5 seconds (packet_module "
     "local packet timing declaration). The initial rocket impact has no separate "
     "damage row in the cache.",
-    "The heat/Danger Zone system is state outside the damage model: "
-    "Q/E/R rotation numbers assume no heat state (the CP-era review "
-    "boundary).",
+    "The Danger Zone (50+ Heat) empower is state outside the damage "
+    "model: Q/E/R rotation numbers assume no heat state (the CP-era "
+    "review boundary).",
+    "P (Junkyard Titan) prices the Overheated rider behind the explicit "
+    "p_overheated option (default off): the sourced Bonus Magic Damage "
+    "leveling (5 : 44.12 by level + 25% AP + 4% of the target's maximum "
+    "health) on every basic attack of the fight.  Overheating's real 4s "
+    "window, its Heat cost, its 50% : 142.54% bonus attack speed and its "
+    "ability lockout are not modeled — the attack speed is left out "
+    "deliberately, because granting it without the lockout would price "
+    "Overheating as a pure gain.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
 }

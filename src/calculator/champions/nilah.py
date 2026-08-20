@@ -14,6 +14,11 @@ minimum at every rank, so the Q is modeled as the minimum row times
 ``1 + 0.91 x crit_chance`` — exact at both sourced endpoints, linear in
 between.  The test fights (no items) sit at 0% crit and price exactly
 the minimum row.
+
+Coverage: P (Joy Unending) amplifies nearby allied heals and shields, and
+W (Jubilant Veil) is a flat magic-damage reduction plus a full
+basic-attack dodge. An ally heal/shield amplifier and damage taken are
+axes the engine does not have, so both slots are out of scope.
 """
 
 from .healing_contract import declare_healing_rule

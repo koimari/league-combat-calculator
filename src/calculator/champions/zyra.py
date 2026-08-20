@@ -8,8 +8,11 @@ Why each slot is non-generic:
   HARDCODED block below), so W emits a fixed-count proc over the fight
   window: ``plant_count`` plants x ``plant_attacks`` attacks of
   ``15 : 75`` (based on level) (+ 20% AP) magic damage.
-- Q/E/R keep the reviewed CP10.11 packet pricing; P keeps its explicit
-  seed-spawn state row.
+- Q/E/R keep the reviewed CP10.11 packet pricing.  P (Garden of Thorns)
+  stays out of scope: its own seeds spawn on a timer and sprout into
+  plants, a summon timeline the engine does not have.  The seed-spawn
+  state row it emits prices nothing; the plants a player seeds through
+  W are what the fight prices.
 
 Plant boundaries: plants are static turrets with 0 move speed — the
 model prices their attacks only while the target is in range for the

@@ -335,9 +335,11 @@ def test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients
         holder.participant_id,
         target.participant_id,
     }
-    assert next(p for p in solstice if p["target"] == target.participant_id)[
-        "amount"
-    ] == pytest.approx(50.0 + (230.0 - 50.0) * 5.0 / 11.0)
+    # "{{pp|50 to 230 for 13|1;7 to 18|type=your level}}": Going Sledding's
+    # ramp is the *holder's* level, so the level-12 ally receives the same
+    # bonus health the level-18 holder does.  The emitter used to read each
+    # recipient's own level and hand the ally 131.8.
+    assert [p["amount"] for p in solstice] == pytest.approx([230.0, 230.0])
 
 
 def test_fimbulwinter_everlasting_uses_current_mana_and_nearby_enemy_multiplier():

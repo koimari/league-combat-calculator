@@ -43,16 +43,93 @@ def test_every_registered_champion_satisfies_the_module_contract():
         assert contract.sources == tuple(module.SOURCES)
         assert set(contract.coverage) == REQUIRED_SLOTS
         assert set(contract.coverage.values()) <= VALID_COVERAGE
-        # A slot the module does not emit can only be out of scope.
-        covered = {
-            slot
-            for slot, status in contract.coverage.items()
-            if status != "out_of_scope"
+        # A modeled slot the module does not emit names the channel that
+        # prices it instead; nothing else may claim to be modeled.
+        modeled = {
+            slot for slot, status in contract.coverage.items() if status == "modeled"
         }
-        assert covered <= set(contract.slots), name
+        assert modeled <= set(contract.slots) | set(contract.coverage_channels), name
         assert contract.review_status == "reviewed_module"
         if contract.packet_spec is not None:
             assert contract.packet_sha256 == packet_spec_sha256(contract.packet_spec)
+
+
+def _channel_receipts(name: str, slot: str, channel: str) -> list[tuple[str, float]]:
+    """Every ``(source, amount)`` the *channel* pays for *name*'s *slot*.
+
+    One shape answers all three channels, which is what makes the claim
+    checkable: a channel that prices a slot pays a receipt carrying that
+    slot's own ability name.  A relabel with no engine behind it pays
+    nothing and the caller's assertion fails.
+    """
+    from src.calculator.calculate import calculate_payload
+    from src.calculator.data_fetcher import get_champion
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.stats import calculate_total_stats
+
+    champion = get_champion(name)
+    stats = calculate_total_stats(champion, 18, [])
+    if channel == "starting_revive_defense":
+        defenses = resolve_starting_defenses(name, 18, stats, [])
+        return [(defenses.revive_source, defenses.revive_health_amount)]
+    if channel == "self_shield_events":
+        parsed = parse_abilities(
+            name, champion, 18, stats["ability_power"], champion_stats=stats
+        )
+        return [
+            (payload["source"], float(payload["amount"]))
+            for entry in parsed.values()
+            for payload in entry.get("self_shield_events", ())
+        ]
+    # The coupled walk, not the one-pair fight: a heal the rule prices with
+    # a formula (Zac's Goo chunk) resolves against running health there and
+    # publishes zero in the one-pair receipt.
+    payload = calculate_payload(
+        {
+            "champion": name,
+            "level": 18,
+            "fight_mode": "time_based",
+            "fight_duration": 6,
+            "include_auto_attacks": True,
+            "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+        }
+    )
+    return [
+        (event["source"], float(event.get("applied_amount", event["amount"])))
+        for event in payload["combat"]["healing_events"]
+        if event["attacker"] == "main"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("name", "slot", "channel"),
+    [
+        (name, slot, channel)
+        for name in _CHAMPION_MODULES
+        for slot, channels in get_champion_module_contract(
+            name
+        ).coverage_channels.items()
+        for channel in channels
+    ],
+)
+def test_a_declared_coverage_channel_pays_its_slot(name, slot, channel):
+    """``modeled`` without an emitted row means a channel really pays it.
+
+    The map may not say ``modeled`` for a slot the module never emits
+    unless a channel is named, and this is what stops the name from being
+    a relabel: the channel must pay a receipt in the slot's own ability
+    name, with a number above zero.
+    """
+    from src.calculator.data_fetcher import get_champion
+
+    ability = get_champion(name)["abilities"][slot][0]["name"]
+    paid = [
+        amount
+        for source, amount in _channel_receipts(name, slot, channel)
+        if source == ability
+    ]
+    assert paid, f"{name} {slot}: {channel} paid nothing named {ability!r}"
+    assert max(paid) > 0.0, f"{name} {slot}: {channel} paid only zero"
 
 
 def test_no_packet_module_replaces_the_compiled_assumptions():
@@ -116,6 +193,38 @@ class TestOneHomePerFact:
         declared = {"P": "out_of_scope", "Q": "modeled", "W": "no_damage"}
         declared.update(E="out_of_scope", R="out_of_scope")
         assert self._contract(MODULE_COVERAGE=declared).coverage == declared
+
+    def test_modeled_without_a_row_or_a_channel_is_refused(self):
+        """The relabel this campaign bans: ``modeled`` backed by nothing."""
+        declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
+        with pytest.raises(ChampionModuleContractError, match=r"\['P'\]"):
+            self._contract(MODULE_COVERAGE=declared | {"P": "modeled"})
+
+    def test_a_channel_names_the_engine_home_that_prices_the_slot(self):
+        declared = dict.fromkeys("PQWER", "out_of_scope") | {
+            "P": "modeled",
+            "Q": "modeled",
+        }
+        contract = self._contract(
+            MODULE_COVERAGE=declared,
+            COVERAGE_CHANNELS={"P": "starting_revive_defense"},
+        )
+        assert contract.coverage_channels == {"P": ("starting_revive_defense",)}
+
+    def test_a_channel_the_vocabulary_does_not_know_is_refused(self):
+        declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
+        with pytest.raises(ChampionModuleContractError, match="unknown"):
+            self._contract(
+                MODULE_COVERAGE=declared, COVERAGE_CHANNELS={"Q": ("vibes",)}
+            )
+
+    def test_a_channel_on_a_slot_the_map_does_not_call_modeled_is_refused(self):
+        declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
+        with pytest.raises(ChampionModuleContractError, match="out_of_scope"):
+            self._contract(
+                MODULE_COVERAGE=declared,
+                COVERAGE_CHANNELS={"R": ("self_healing_rule",)},
+            )
 
 
 def test_dispatcher_fails_closed_for_an_unregistered_name():

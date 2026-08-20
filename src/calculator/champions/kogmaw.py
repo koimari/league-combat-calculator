@@ -18,8 +18,13 @@ Why each slot is non-generic:
   carries the wiki missing-HP curve as a ``hp_scaled_damage`` closure
   (+50% linearly to 60% missing, then +100%) — the engine re-evaluates
   it per shot against the target's falling HP.
-- P (Icathian Surprise) is a death passive — not modeled, absent from
-  the slot map.
+- P (Icathian Surprise) stays ``out_of_scope``, and the missing axis is
+  the attacker's own death.  The cache does carry a damage row (140 : 650
+  by level true damage), but it is paid four seconds after Kog'Maw takes
+  fatal damage, from a zombie state in which he cannot attack or cast.
+  The fight engine runs one attacker who never dies — it has no event to
+  hang the explosion on, and no window after it — so the row has nowhere
+  to land and the slot is absent from the map.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -172,7 +177,9 @@ ASSUMPTIONS = [
     "R Living Artillery stacks (cap 9, +40 mana cost per stack) only "
     "raise the spell's mana cost — no damage impact, so the stack count "
     "is not modeled",
-    "Passive (Icathian Surprise) is not modeled",
+    "Passive (Icathian Surprise) is not modeled: its 140 : 650 (based on "
+    "level) true damage is paid 4s after Kog'Maw takes fatal damage, and "
+    "the fight engine has no attacker-death event to pay it on",
 ]
 
 SLOTS = {

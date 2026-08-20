@@ -5,7 +5,7 @@ control.
 """
 
 from src.calculator.champions import get_champion_module_contract, wukong
-from tests import cc_review
+from tests import cc_review, coverage_truth, row_review
 
 
 class TestReviewedCrowdControl:
@@ -42,3 +42,47 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Wukong")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """Stone Skin damages nobody; the clone's damage needs an axis we lack.
+
+    Derivation alone called P ``modeled`` because it emits a row — a
+    ``stat_buff`` of bonus armor with a zero damage part.  W is the real
+    gap and the missing axis is a pet timeline: the cached "Clone Outgoing
+    Damage" row (40/45/50/55/60%) scales a *second attacker's* autos and
+    copied casts, and the engine prices one attacker's timeline.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Wukong").coverage == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "out_of_scope",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert coverage_truth.emitted("Wukong") == {
+            "P": coverage_truth.ZERO,
+            "Q": coverage_truth.PRICED,
+            "W": coverage_truth.ABSENT,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.PRICED,
+        }
+
+    def test_the_passive_grants_armor_and_no_damage(self):
+        entry = row_review.entry("Wukong", "passive", stone_skin_stacks=5)
+        assert entry["total_raw"] == 0.0
+        assert entry["stat_buff"]["armor"] > 0.0
+
+    def test_the_clone_row_is_an_output_ratio_not_a_damage_row(self):
+        rows = {
+            level["attribute"]
+            for ability in cc_review.kit("Wukong")["abilities"]["W"]
+            for effect in ability["effects"]
+            for level in effect["leveling"] or []
+        }
+        assert rows == {"Clone Outgoing Damage"}
+        assert "can basic attack autonomously" in cc_review.slot_text(
+            cc_review.kit("Wukong"), "W"
+        )
