@@ -9,8 +9,8 @@ These tests pin the *contracts the browser UI consumes* without a browser:
   round trip with view counting, including the ``ability_ranks`` sanitize the
   UI applies for level-derived transform kits
 * trust labels: /api/certainty and /api/not-modeled consumption with the
-  documented response shapes (the routes deploy with P7; until then the UI
-  falls back to a contract-shaped mock — both paths are pinned here)
+  documented response shapes; a failed fetch renders an unavailable state,
+  never placeholder chips
 * mobile/touch requirements: portrait media queries that stack the top-3
   cards and single-column picker grids
 """
@@ -359,20 +359,18 @@ def test_share_index_loads_with_share_query_param():
 
 
 def test_certainty_and_not_modeled_endpoint_contracts():
-    """If the P7 routes are deployed, assert the exact documented contract.
-    Until then, assert the frontend consumes those routes and its fallback
-    mock satisfies the documented response shapes."""
+    """The frontend consumes the deployed routes and renders a non-2xx answer
+    as an unavailable state: no chips, the backend's error in the legend note.
+    No contract-shaped mock may stand in for sourced data."""
     source = APP_JS.read_text(encoding="utf-8")
     assert "fetch(`${path}?champion=${encodeURIComponent(champion)}`)" in source
     assert 'fetchTrustContract("/api/certainty"' in source
     assert 'fetchTrustContract("/api/not-modeled"' in source
-
-    # The mock must match the documented contract:
-    #   {"champion": "...", "slots": {"Q": {"certainty": "exact|estimate|boundary", "reason": "..."}}}
-    for slot in ("P", "Q", "W", "E", "R"):
-        assert f"{slot}: {{ certainty:" in source, slot
-    assert '"boundary"' in source and '"estimate"' in source and '"exact"' in source
-    assert "items: []" in source
+    assert "throw new Error(payload?.error || `HTTP ${response.status}`)" in source
+    assert "return { error: `${path} unavailable (${error.message})` }" in source
+    assert "`Certainty unavailable — ${failure}`" in source
+    for gone in ("certaintyMock", "notModeledMock", "Placeholder", "mockBuilder"):
+        assert gone not in source, gone
 
     # The UI labels every allowed certainty value.
     assert 'exact: { label: "EXACT"' in source

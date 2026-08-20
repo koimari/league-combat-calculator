@@ -3430,7 +3430,7 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
   // P4: the per-ability damage table carries a certainty chip next to every
   // sourced number. It re-renders on every result so chips track the loaded
-  // /api/certainty contract (or its placeholder fallback).
+  // /api/certainty contract.
   renderExactBreakdown(aResult, bResult);
   // F0: the starting-defense and shield/healing receipts ride the same
   // result pass, now in the visible result column.
@@ -4778,8 +4778,8 @@ Promise.all([
 // Build sharing + trust labels
 // A self-contained layer on top of the analyst engine above. It owns:
 //   - build sharing (POST /api/builds + POST /api/share + ?share=<token>)
-//   - trust chips (GET /api/certainty, GET /api/not-modeled) with a
-//     contract-shaped mock fallback until the P7 backend routes deploy.
+//   - trust chips (GET /api/certainty, GET /api/not-modeled); a failed
+//     fetch renders as an unavailable state, never as placeholder chips.
 // (The casual Quick view that used to live here left with its DOM in
 // 2026-08; the analyst view is the app.)
 // ============================================================================
@@ -4791,47 +4791,29 @@ const PRACTICE_TARGETS = [
 ];
 
 // --- Trust labels (P4) ------------------------------------------------------
-// Consumed contract (owned by the P7 backend agent):
+// Consumed contract (src/app.py api_certainty / api_not_modeled):
 //   GET /api/certainty?champion=X -> {"champion": "...", "slots": {"Q": {"certainty": "exact|estimate|boundary", "reason": "..."}}}
 //   GET /api/not-modeled?champion=X -> {"champion": "...", "items": ["..."]}
-// A missing/erroring route falls back to a contract-shaped mock; the UI shows
-// a "placeholder" note whenever the fallback is active so no chip is ever
+// A non-2xx answer (unknown champion, engine refusal, outage) renders no
+// chips and names the failure in the legend note, so nothing is ever
 // presented as sourced data it is not.
 const CERTAINTY_LABELS = {
   exact: { label: "EXACT", detail: "Fully sourced formula, no player-controlled options." },
   estimate: { label: "ESTIMATE", detail: "Uses a defaulted player-controlled option." },
   boundary: { label: "BOUNDARY", detail: "Documented mechanic that is not computed." },
 };
-const CERTAINTY_STATE = { source: "api", champion: null, slots: {}, loading: false };
-const NOT_MODELED_STATE = { source: "api", champion: null, items: [], loading: false };
+const CERTAINTY_STATE = { error: "", champion: null, slots: {}, loading: false };
+const NOT_MODELED_STATE = { error: "", champion: null, items: [], loading: false };
 
-function certaintyMock(champion) {
-  return {
-    champion,
-    slots: {
-      P: { certainty: "boundary", reason: "Passive mechanics are documented but not computed by the shared event model." },
-      Q: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-      W: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-      E: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-      R: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-    },
-  };
-}
-
-function notModeledMock(champion) {
-  return { champion, items: [] };
-}
-
-async function fetchTrustContract(path, champion, mockBuilder) {
+async function fetchTrustContract(path, champion) {
   try {
     const response = await fetch(`${path}?champion=${encodeURIComponent(champion)}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error || `HTTP ${response.status}`);
     if (!payload || typeof payload !== "object") throw new Error("malformed payload");
-    return { ...payload, source: "api" };
+    return { ...payload, error: "" };
   } catch (error) {
-    const mock = mockBuilder(champion);
-    return { ...mock, source: "mock", reason: `endpoint unavailable (${error.message})` };
+    return { error: `${path} unavailable (${error.message})` };
   }
 }
 
@@ -4842,13 +4824,13 @@ async function loadTrustLabels(champion) {
   CERTAINTY_STATE.loading = true;
   NOT_MODELED_STATE.loading = true;
   const [certainty, notModeled] = await Promise.all([
-    fetchTrustContract("/api/certainty", champion, certaintyMock),
-    fetchTrustContract("/api/not-modeled", champion, notModeledMock),
+    fetchTrustContract("/api/certainty", champion),
+    fetchTrustContract("/api/not-modeled", champion),
   ]);
-  CERTAINTY_STATE.source = certainty.source === "api" ? "api" : "mock";
-  CERTAINTY_STATE.slots = (certainty && certainty.slots) || {};
-  NOT_MODELED_STATE.source = notModeled.source === "api" ? "api" : "mock";
-  NOT_MODELED_STATE.items = Array.isArray(notModeled && notModeled.items) ? notModeled.items : [];
+  CERTAINTY_STATE.error = certainty.error;
+  CERTAINTY_STATE.slots = certainty.slots || {};
+  NOT_MODELED_STATE.error = notModeled.error;
+  NOT_MODELED_STATE.items = Array.isArray(notModeled.items) ? notModeled.items : [];
   CERTAINTY_STATE.loading = false;
   NOT_MODELED_STATE.loading = false;
   renderTrustPanels();
@@ -4876,16 +4858,14 @@ function certaintyChipHtml(slot) {
 
 function renderTrustPanels() {
   const champion = state.attacker.champion || "";
-  const placeholder = CERTAINTY_STATE.source === "mock" || NOT_MODELED_STATE.source === "mock";
+  const failure = [CERTAINTY_STATE.error, NOT_MODELED_STATE.error].filter(Boolean).join(" · ");
   const legend = document.getElementById("trustLegend");
   if (legend) {
     legend.hidden = !champion;
     const note = legend.querySelector(".trust-legend-note");
     if (note) {
-      note.textContent = placeholder
-        ? "Placeholder chips — certainty endpoints are not deployed yet."
-        : "";
-      note.hidden = !placeholder;
+      note.textContent = failure ? `Certainty unavailable — ${failure}` : "";
+      note.hidden = !failure;
     }
   }
   const panel = document.getElementById("notModeledPanel");
