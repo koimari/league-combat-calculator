@@ -50,3 +50,25 @@ U11a/U11b above; category 1 (a deleted live reader/writer) came up empty after a
 
 Every aside the units and the audit surfaced, de-duplicated and re-verified, lives in
 `docs/surface-area-backlog.md` — the one home for that list.
+
+## Backlog sweep (same day)
+
+Twelve Opus 5 workers, one worktree each, file-ownership slices, merged through `sa/integration`.
+56 of 59 backlog rows closed; `docs/surface-area-backlog.md` holds what is left (D3, E12, E14,
+and C10 — Gnar's Q form/packet conflation, found while fixing Ziggs' and Jayce's variant 400s).
+
+| Gate (fresh at the merge head) | Result |
+|---|---|
+| `pytest` | 9,623 passed |
+| `black --check src/ tests/ scripts/` | 766 files unchanged |
+| `pylint src/` | 9.64/10 |
+| `golden_snapshot.py compare` pair / coupled | identical / identical (coupled re-captured for D5) |
+| `golden_snapshot.py compare` coupled exact | 1 declared diff, receipt `expected-golden-diff-surface-area-A2-expose-weakness-pool.json` |
+| `coverage_census.py check` | passes: 100 cells, 25 acknowledged (A2 retired the 17 Expose Weakness coarse cells) |
+| `plan_audit.py` | 12 documents clean |
+
+Numbers that moved, all receipted in their commits: A1 burns need an ability hit; A2 Expose
+Weakness prices its own pool; A5 composed fights skip the Cinderbloom half. Worker claims
+overturned at reconciliation: "pre-existing" coupled failures on B2 (a stash-based base check
+made after committing), D11 (refuted by a runtime probe), F2 (superseded by B7's single asset).
+
