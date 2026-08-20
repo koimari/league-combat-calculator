@@ -4,7 +4,7 @@ Nothing Zed himself casts controls: Shadow Slash's slow belongs to a
 Shadow's copy of it, which this module does not price.
 """
 
-from src.calculator.champions import zed
+from src.calculator.champions import get_champion_module_contract, zed
 from tests import cc_review
 
 
@@ -34,8 +34,8 @@ class TestReviewedCrowdControl:
 
     def test_the_no_damage_slots_stay_absent(self):
         assert "P" not in zed.MODULE_CC and "W" not in zed.MODULE_CC
-        assert zed.MODULE_COVERAGE["P"] == "no_damage"
-        assert zed.MODULE_COVERAGE["W"] == "no_damage"
+        assert get_champion_module_contract("Zed").coverage["P"] == "no_damage"
+        assert get_champion_module_contract("Zed").coverage["W"] == "no_damage"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Zed") == []

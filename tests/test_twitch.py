@@ -5,7 +5,7 @@ whether an ability event was a control event; an ability packet that never
 says makes the whole timed fight fall back to coarse ordering.
 """
 
-from src.calculator.champions import twitch
+from src.calculator.champions import get_champion_module_contract, twitch
 from tests import cc_review
 
 
@@ -18,7 +18,7 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # Venom Cask is where the kit's slow lives, and it deals no damage.
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == ["slow"]
-        assert twitch.MODULE_COVERAGE["W"] == "out_of_scope"
+        assert get_champion_module_contract("Twitch").coverage["W"] == "out_of_scope"
         for slot in ("P", "Q", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
 

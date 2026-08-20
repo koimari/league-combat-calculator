@@ -4,7 +4,11 @@ A lone Time Bomb only explodes; the kit's stun needs a second bomb inside
 the first one's fuse.
 """
 
-from src.calculator.champions import parse_champion_abilities, zilean
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
+    zilean,
+)
 from tests import cc_review
 
 
@@ -44,7 +48,9 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Zilean")
         for slot in ("W", "E", "R"):
             assert slot not in zilean.MODULE_CC, slot
-            assert zilean.MODULE_COVERAGE[slot] == "out_of_scope", slot
+            assert (
+                get_champion_module_contract("Zilean").coverage[slot] == "out_of_scope"
+            ), slot
         assert "if the target is an enemy, they are slowed" in (
             cc_review.slot_text(data, "E")
         )

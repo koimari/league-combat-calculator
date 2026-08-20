@@ -5,7 +5,11 @@ the cached 1.221-second delay rather than at the cast, which is both what
 the source says and what puts the row in the event ledger.
 """
 
-from src.calculator.champions import parse_champion_abilities, veigar
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
+    veigar,
+)
 from tests import cc_review
 
 
@@ -29,7 +33,7 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Veigar")
         assert "E" not in veigar.MODULE_CC
         assert "stunned for a duration" in cc_review.slot_text(data, "E")
-        assert veigar.MODULE_COVERAGE["E"] == "no_damage"
+        assert get_champion_module_contract("Veigar").coverage["E"] == "no_damage"
 
     def test_dark_matter_lands_on_its_sourced_impact_delay(self):
         """The offset is the cached number, from the cast start."""

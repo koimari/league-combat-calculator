@@ -5,7 +5,7 @@ whether an ability event was a control event; an ability packet that never
 says makes the whole timed fight fall back to coarse ordering.
 """
 
-from src.calculator.champions import udyr
+from src.calculator.champions import get_champion_module_contract, udyr
 from tests import cc_review
 
 
@@ -19,7 +19,7 @@ class TestReviewedCrowdControl:
         # Blazing Stampede is where the kit's stun lives, and it deals no
         # damage of its own, so no part can carry that answer.
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == ["stun"]
-        assert udyr.MODULE_COVERAGE["E"] == "out_of_scope"
+        assert get_champion_module_contract("Udyr").coverage["E"] == "out_of_scope"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Udyr") == []

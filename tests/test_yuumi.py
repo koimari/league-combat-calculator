@@ -4,7 +4,7 @@ Both damaging slots slow: Prowling Projectile by 20%, Final Chapter's
 waves by a stacking 10%.
 """
 
-from src.calculator.champions import yuumi
+from src.calculator.champions import get_champion_module_contract, yuumi
 from tests import cc_review
 
 
@@ -28,8 +28,8 @@ class TestReviewedCrowdControl:
     def test_the_ally_slots_stay_absent(self):
         """W attaches and E shields; neither damages an enemy."""
         assert "W" not in yuumi.MODULE_CC and "E" not in yuumi.MODULE_CC
-        assert yuumi.MODULE_COVERAGE["W"] == "out_of_scope"
-        assert yuumi.MODULE_COVERAGE["E"] == "out_of_scope"
+        assert get_champion_module_contract("Yuumi").coverage["W"] == "out_of_scope"
+        assert get_champion_module_contract("Yuumi").coverage["E"] == "out_of_scope"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Yuumi") == []

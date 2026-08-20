@@ -4,7 +4,7 @@ Infinite Duress suppresses for the whole channel it damages through;
 Jaws of the Beast only bites.
 """
 
-from src.calculator.champions import warwick
+from src.calculator.champions import get_champion_module_contract, warwick
 from tests import cc_review
 
 
@@ -31,7 +31,7 @@ class TestReviewedCrowdControl:
         """E holds the fear and the 90% slow, but prices no damage."""
         data = cc_review.kit("Warwick")
         assert "W" not in warwick.MODULE_CC and "E" not in warwick.MODULE_CC
-        assert warwick.MODULE_COVERAGE["E"] == "out_of_scope"
+        assert get_champion_module_contract("Warwick").coverage["E"] == "out_of_scope"
         assert "fearing nearby enemies for 1 second" in cc_review.slot_text(data, "E")
 
     def test_every_ability_event_carries_the_review(self):

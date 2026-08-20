@@ -5,7 +5,7 @@ whether an ability event was a control event; an ability packet that never
 says makes the whole timed fight fall back to coarse ordering.
 """
 
-from src.calculator.champions import tryndamere
+from src.calculator.champions import get_champion_module_contract, tryndamere
 from tests import cc_review
 
 
@@ -19,7 +19,7 @@ class TestReviewedCrowdControl:
         # Mocking Shout is where the kit's slow lives, and it deals no
         # damage, so no part can carry that answer.
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == ["slow"]
-        assert tryndamere.MODULE_COVERAGE["W"] == "no_damage"
+        assert get_champion_module_contract("Tryndamere").coverage["W"] == "no_damage"
         for slot in ("P", "Q", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
 

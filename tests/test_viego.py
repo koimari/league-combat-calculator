@@ -4,7 +4,7 @@ Spectral Maw stuns, Heartbreaker slows the champion it strikes, Blade of
 the Ruined King only damages.
 """
 
-from src.calculator.champions import viego
+from src.calculator.champions import get_champion_module_contract, viego
 from tests import cc_review
 
 
@@ -33,8 +33,8 @@ class TestReviewedCrowdControl:
     def test_the_out_of_scope_slots_stay_absent(self):
         """E leaves a mist trail and P is possession — neither damages."""
         assert "E" not in viego.MODULE_CC and "P" not in viego.MODULE_CC
-        assert viego.MODULE_COVERAGE["E"] == "out_of_scope"
-        assert viego.MODULE_COVERAGE["P"] == "out_of_scope"
+        assert get_champion_module_contract("Viego").coverage["E"] == "out_of_scope"
+        assert get_champion_module_contract("Viego").coverage["P"] == "out_of_scope"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Viego") == []

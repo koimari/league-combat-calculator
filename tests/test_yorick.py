@@ -4,7 +4,7 @@ Mourning Mist slows; Dark Procession's displacement lives on a wall that
 deals no damage.
 """
 
-from src.calculator.champions import yorick
+from src.calculator.champions import get_champion_module_contract, yorick
 from tests import cc_review
 
 
@@ -32,7 +32,7 @@ class TestReviewedCrowdControl:
         w_text = cc_review.slot_text(data, "W")
         assert "knocking aside enemies hit by the walls" in w_text
         assert "they are pulled inside" in w_text
-        assert yorick.MODULE_COVERAGE["W"] == "out_of_scope"
+        assert get_champion_module_contract("Yorick").coverage["W"] == "out_of_scope"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Yorick") == []

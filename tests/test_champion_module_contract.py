@@ -1,5 +1,6 @@
 """Champion modules are the single runtime and review authority (issue #161)."""
 
+import ast
 import importlib
 from pathlib import Path
 from types import ModuleType
@@ -13,6 +14,7 @@ from src.calculator.champions import (
     parse_abilities,
 )
 from src.calculator.champions.module_contract import (
+    VALID_COVERAGE,
     ChampionModuleContractError,
     contract_from_module,
     default_coverage,
@@ -38,10 +40,15 @@ def test_every_registered_champion_satisfies_the_module_contract():
         assert contract.options == tuple(module.OPTIONS)
         assert contract.assumptions == tuple(module.ASSUMPTIONS)
         assert contract.sources == tuple(module.SOURCES)
-        assert contract.coverage == getattr(
-            module, "MODULE_COVERAGE", default_coverage(module.SLOTS)
-        )
         assert set(contract.coverage) == REQUIRED_SLOTS
+        assert set(contract.coverage.values()) <= VALID_COVERAGE
+        # A slot the module does not emit can only be out of scope.
+        covered = {
+            slot
+            for slot, status in contract.coverage.items()
+            if status != "out_of_scope"
+        }
+        assert covered <= set(contract.slots), name
         assert contract.review_status == "reviewed_module"
         if contract.packet_spec is not None:
             assert contract.packet_sha256 == packet_spec_sha256(contract.packet_spec)
@@ -362,19 +369,35 @@ class TestPacketPinCarriers:
         assert packet_modules >= 76
 
     def test_no_packet_module_builds_a_parser_of_its_own(self):
-        """Source-level: a module that compiles through ``build_packet_module``
-        passes its overrides in and never calls ``build_parser`` itself."""
+        """A module that compiles through ``build_packet_module`` passes its
+        overrides in: it never calls ``build_parser`` and never rebinds the
+        packet declaration.  Read from the parsed syntax tree, so a mention in
+        a docstring or comment is not an offence."""
         champions = Path("src/calculator/champions")
         offenders = []
+        compiled = 0
         for path in sorted(champions.glob("*.py")):
             if path.name in {"packet_module.py", "module_contract.py"}:
                 continue
-            source = path.read_text(encoding="utf-8")
-            if "build_packet_module(" not in source:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            called = {
+                node.func.id
+                for node in ast.walk(tree)
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+            }
+            if "build_packet_module" not in called:
                 continue
-            if "build_parser" in source or "PACKET_SPEC" in source:
+            compiled += 1
+            bound = {
+                target.id
+                for node in ast.walk(tree)
+                for target in getattr(node, "targets", ())
+                if isinstance(target, ast.Name)
+            }
+            if "build_parser" in called or "PACKET_SPEC" in bound:
                 offenders.append(path.name)
         assert offenders == []
+        assert compiled >= 76
 
 
 def test_add_champion_skills_describe_the_same_single_module_flow():

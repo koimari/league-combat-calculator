@@ -4,7 +4,7 @@ Every modelled slot is control-free; the slow and stun live in Gravity
 Field, which this module does not price.
 """
 
-from src.calculator.champions import viktor
+from src.calculator.champions import get_champion_module_contract, viktor
 from tests import cc_review
 
 
@@ -28,7 +28,7 @@ class TestReviewedCrowdControl:
     def test_gravity_field_is_absent_because_the_module_does_not_price_it(self):
         data = cc_review.kit("Viktor")
         assert "W" not in viktor.MODULE_CC
-        assert viktor.MODULE_COVERAGE["W"] == "out_of_scope"
+        assert get_champion_module_contract("Viktor").coverage["W"] == "out_of_scope"
         w_text = cc_review.slot_text(data, "W")
         assert "slow enemies within for 1 second" in w_text
         assert "knock down and stun the target for 1.5 seconds" in w_text
