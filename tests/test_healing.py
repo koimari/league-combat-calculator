@@ -167,3 +167,30 @@ class TestTheAnchorIsDeclaredNotInferred:
             10.0,
         )
         assert len(heals) == 1
+
+
+class TestTheDeclarationAndTheRegistryAgreeBothWays:
+    """``healing._load_declarations`` walks the registry and demands a
+    declaration; these cover the other direction."""
+
+    def test_declaring_a_rule_the_registry_does_not_know_fails_closed(self):
+        from src.calculator.champions.healing_contract import declare_healing_rule
+
+        with pytest.raises(RuntimeError, match="absent from"):
+            declare_healing_rule("Teemo")
+
+    def test_no_champion_module_declares_a_rule_outside_the_set(self):
+        import importlib
+
+        from src.calculator import healing
+        from src.calculator.champions import _CHAMPION_MODULES
+
+        declared = {
+            name
+            for name, module_name in _CHAMPION_MODULES.items()
+            if hasattr(
+                importlib.import_module(f"src.calculator.champions.{module_name}"),
+                "SELF_HEALING_RULE",
+            )
+        }
+        assert declared == set(healing.HEALING_RULE_CHAMPIONS)

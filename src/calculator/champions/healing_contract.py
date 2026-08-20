@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from collections.abc import Callable
 from typing import Any
 
+from ..healing_legacy import HEALING_RULE_CHAMPIONS, _legacy_derive_self_healing
+
 
 @dataclass(frozen=True, slots=True)
 class ChampionHealingRule:
@@ -34,8 +36,6 @@ class ChampionHealingRule:
                 fight_duration_seconds,
             )
 
-        from ..healing_legacy import _legacy_derive_self_healing
-
         return _legacy_derive_self_healing(
             champion_data,
             champion_stats,
@@ -50,5 +50,16 @@ def declare_healing_rule(
     champion_name: str,
     resolver: Callable[..., list[dict[str, Any]]] | None = None,
 ) -> ChampionHealingRule:
-    """Declare the self-healing rule owned by a champion module."""
+    """Declare the self-healing rule owned by a champion module.
+
+    ``healing._load_declarations`` walks the registry and demands a
+    declaration from every named champion; this is the other direction.  A
+    module that declares a rule the registry does not know would otherwise
+    import clean and never heal, so the declaration fails closed here.
+    """
+    if champion_name not in HEALING_RULE_CHAMPIONS:
+        raise RuntimeError(
+            f"{champion_name!r} declares SELF_HEALING_RULE but is absent from "
+            "healing_legacy.HEALING_RULE_CHAMPIONS"
+        )
     return ChampionHealingRule(champion_name=champion_name, resolver=resolver)
