@@ -1,7 +1,7 @@
 {
  "audit": "full_coverage_acknowledged_residue",
  "rule": "A frontier entry the campaign cannot close without inventing data is acknowledged here, never left silent. Each row names the champion, the coarse source, the blocking slots, the cached sentence that describes those hits, and precisely what that sentence fails to say. scripts/coverage_census.py fails two ways against this file: on an entry no row acknowledges, and on a row whose entry no longer reproduces - so the list can neither grow in silence nor outlive its cause.",
- "why_these_cannot_close": "The Everlasting scan certifies a timed fight only when every damaging ability event carries a reviewed crowd-control kind, and a slot reaches that ledger when its hits have instants. Each row below is a slot whose hits have no instant the cache states, or whose control belongs to stack state no single cast applies. Authoring a cadence the source does not give would be inventing data, which this campaign's own banned shortcuts forbid. The Expose Weakness rows are the windows without an auto stream, where the empowered attack that arms the amp is the last event the ledger holds: the amp's pool is whatever the player casts after it, and the cache states no such sequence.",
+ "why_these_cannot_close": "The Everlasting scan certifies a timed fight only when every damaging ability event carries a reviewed crowd-control kind, and a slot reaches that ledger when its hits have instants. Each row below is a slot whose hits have no instant the cache states, or whose control belongs to stack state no single cast applies. Authoring a cadence the source does not give would be inventing data, which this campaign's own banned shortcuts forbid.",
  "acknowledged": [
   {
    "champion": "Aatrox",
@@ -53,13 +53,6 @@
    "what_it_omits": "which cast stuns; the stun follows a four-stack counter, so no slot-wide kind is true of any of the three"
   },
   {
-   "champion": "Aphelios",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "After 0.25 seconds, Aphelios then fires a volley of attacks at each locked-on target from his current off-hand weapon, dealing 100% AD physical damage and applying on-hit effects.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
    "champion": "Bel'Veth",
    "source": "fimbulwinter_everlasting",
    "slots": ["Q"],
@@ -67,25 +60,11 @@
    "what_it_omits": "the length of that cooldown; four dashes sit in one part spaced by an interval the cache never names"
   },
   {
-   "champion": "Blitzcrank",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["E"],
-   "cached_sentence": "Blitzcrank empowers their next basic attack within 5 seconds to have an uncancellable windup, deal 100% AD (+ 25% AP) bonus physical damage and knock up the target for 1 second.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
    "champion": "Brand",
    "source": "fimbulwinter_everlasting",
    "slots": ["Q", "R"],
    "cached_sentence": "Ablaze Bonus: The target is stunned for 1.75 seconds. ... Ablaze Bonus: The target is slowed for 0.25 seconds.",
    "what_it_omits": "which cast controls; the opening cast applies Ablaze and controls nothing, every later one does. R's bounce cadence is already authored - the kind alone is unstatable."
-  },
-  {
-   "champion": "Cho'Gath",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["E"],
-   "cached_sentence": "Cho'Gath empowers its next 3 basic attacks within 6 seconds to gain 50 bonus range and launch a blast of spikes on-attack in the target's direction.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
   },
   {
    "champion": "Darius",
@@ -100,41 +79,6 @@
    "slots": ["W", "E"],
    "cached_sentence": "creates three spheres that orbit her ... detonating upon contact with an enemy ... If Moonlight is consumed from the target, Lunar Rush's current cooldown is reduced to 0.25 seconds",
    "what_it_omits": "when a sphere makes contact (contact-driven, no beat) and when a second dash lands (a cooldown floor is not an arrival)"
-  },
-  {
-   "champion": "Draven",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Draven starts spinning his axe, empowering his next basic attack within 5.8 seconds to deal bonus physical damage.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
-   "champion": "Evelynn",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["E"],
-   "cached_sentence": "Evelynn whips the target enemy with her lashers, dealing magic damage and applying on-hit effects.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
-   "champion": "Ezreal",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Ezreal fires a bolt of energy in the target direction that deals physical damage to the first enemy hit, applying on-hit effects and triggering on-attack effects.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
-   "champion": "Jayce",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["W"],
-   "cached_sentence": "Jayce empowers his next 3 basic attacks within 4 seconds to deal modified physical damage and gain 360% bonus attack speed.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
-   "champion": "Kassadin",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["W"],
-   "cached_sentence": "Kassadin empowers his next basic attack on-hit within 5 seconds to have an uncancellable windup, gain 50 bonus range, deal increased bonus magic damage, and restore mana, with the restoration amount quintupled against champions.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
   },
   {
    "champion": "Kennen",
@@ -158,25 +102,11 @@
    "what_it_omits": "when; the second hit is timed to another cast the entry does not name, inside a mark window"
   },
   {
-   "champion": "Locke",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["E"],
-   "cached_sentence": "After a 0.1-second delay, he empowers his next attack command within 4 seconds to gain 275 bonus range and cause him to dash in the target's direction, dealing magic damage to nearby enemies along the way, and applying on-hit effects to the primary target hit.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
    "champion": "Master Yi",
    "source": "fimbulwinter_everlasting",
    "slots": ["E"],
    "cached_sentence": "empowers his basic attacks within the next 5 seconds to deal bonus true damage on-hit",
    "what_it_omits": "any instant; the rider lands on later basic attacks and the row must move onto the on-hit stream before it can carry one"
-  },
-  {
-   "champion": "Senna",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "It also applies on-hit effects against champions and turrets hit, and triggers on-attack effects against one champion hit.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
   },
   {
    "champion": "Sett",
@@ -193,25 +123,11 @@
    "what_it_omits": "when the clone dies; 'up to 18 seconds' caps its life rather than timing the explosion"
   },
   {
-   "champion": "Shyvana",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Each cast empowers Shyvana's next basic attack within 6 seconds to have an uncancellable windup and trigger an additional exclusive effect.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
    "champion": "Sivir",
    "source": "fimbulwinter_everlasting",
    "slots": ["Q", "W"],
    "cached_sentence": "Upon reaching maximum range, the crossblade returns to her ... Sivir empowers her crossblade for the next 4 seconds ... causing her basic attacks to bounce",
    "what_it_omits": "when either pass reaches the target (speed and max range are cached, target distance is not), and any interval for W's bounces, which ride basic attacks"
-  },
-  {
-   "champion": "Smolder",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Smolder spits a fireball at the target enemy that deals physical damage, increased by 0% : 75% (+ 0% : 22.5%) (based on critical strike chance); applies on-hit effects; applies life steal at 50% effectiveness; and triggers on-attack effects.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
   },
   {
    "champion": "Syndra",
@@ -221,25 +137,11 @@
    "what_it_omits": "the interval between spheres; the row is one part repeating once per sphere"
   },
   {
-   "champion": "Vayne",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Vayne dashes a fixed distance in the target direction, though not through terrain, and empowers her next basic attack within 3 seconds to have an uncancellable windup and deal bonus physical damage.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
    "champion": "Vex",
    "source": "fimbulwinter_everlasting",
    "slots": ["Q", "W", "E", "R"],
    "cached_sentence": "Periodically, Vex empowers her next basic ability to knock down and fear enemies hit. If Looming Darkness triggers Doom, enemies hit will flee from the epicenter instead.",
    "what_it_omits": "which cast; Doom replaces even E's own slow, so neither a slot-wide fear nor a slot-wide absence is true. R additionally sums the Shadow hit and the recast arrival."
-  },
-  {
-   "champion": "Warwick",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Warwick lunges at the target enemy over 0.264 seconds and bites them, dealing magic damage, healing himself for a percentage of the post-mitigation damage dealt, applying on-hit effects and life steal, and triggering on-attack effects.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
   },
   {
    "champion": "Xayah",
@@ -261,20 +163,6 @@
    "slots": ["E"],
    "cached_sentence": "Yone dashes back to his body ... consuming the marks ... to deal true damage equal to the total amount of damage stored",
    "what_it_omits": "nothing about timing - the cache times it and the module prices it there. The event is built by the fight engine from stored damage, so the module authors no part for a kind to ride."
-  },
-  {
-   "champion": "Yunara",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Yunara unleashes for 5 seconds: gaining bonus attack speed, dealing additional bonus magic damage on-hit, and augmenting her basic attacks to have increased missile speed, a 40% lower windup time, and an uncancellable windup.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
-  },
-  {
-   "champion": "Zaahen",
-   "source": "expose_weakness_Bloodsong",
-   "slots": ["Q"],
-   "cached_sentence": "Zaahen empowers his next basic attack within 4 seconds to have an uncancellable windup and gain 25 bonus range.",
-   "what_it_omits": "which casts follow the empowered attack. In a window with no auto stream the engine lands the arming attack after the opening casts, so it is the ledger's last event and Expose Weakness has no later event to ride; the row keeps the pair engine's aggregate reading (the declared preview of the roster walk's mechanic) rather than re-pricing it from a cast sequence the cache never states."
   },
   {
    "champion": "Zoe",
