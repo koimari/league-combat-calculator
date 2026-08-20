@@ -51,3 +51,35 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Zac")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_p_is_modeled_through_the_1269_cell_division_revive() -> None:
+    """P's own packet row prices nothing; two channels price the slot.
+
+    Cell Division revives with 50% of Zac's maximum health — 1269.0 at
+    level 18 with no items — and the healing rule pays the Goo chunk on
+    every ability hit.  Those are the receipts behind P's ``modeled``
+    label, not the zero-valued packet row.
+    """
+    import pytest
+
+    from src.calculator.champions import get_champion_module_contract
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.stats import calculate_total_stats
+
+    contract = get_champion_module_contract("Zac")
+    assert contract.coverage["P"] == "modeled"
+    assert contract.coverage_channels["P"] == (
+        "starting_revive_defense",
+        "self_healing_rule",
+    )
+
+    data = cc_review.kit("Zac")
+    parsed = parse_champion_abilities(data, 18, 0.0, _RANKS)
+    assert parsed["passive"]["total_raw"] == 0.0
+
+    defenses = resolve_starting_defenses(
+        "Zac", 18, calculate_total_stats(data, 18, []), []
+    )
+    assert defenses.revive_source == "Cell Division"
+    assert defenses.revive_health_amount == pytest.approx(1269.0)

@@ -1,4 +1,15 @@
-"""Ornn's authored multi-hit combat timeline."""
+"""Ornn's authored multi-hit combat timeline.
+
+Coverage: P (Living Forge) is out of scope, and for two reasons at once.
+Master Craftsman's Masterwork upgrades are shop economics, an axis the
+engine does not have. Temper's Brittle consume — 9% : 17.94% of the
+target's maximum health when an immobilise breaks the debuff — is a real
+damage rider, but the cached passive carries no leveling row for it
+(every effect in ``data/champions.json`` Ornn P has ``leveling: []``);
+the percentage lives only in the Temper description prose. Pricing it
+means a prose-sourced per-level array plus a Brittle apply-and-consume
+timeline, which is a champion-module unit, not a relabel.
+"""
 
 from typing import Any
 

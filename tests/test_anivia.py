@@ -288,3 +288,28 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Anivia")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+def test_p_is_modeled_through_the_2114_rebirth_revive() -> None:
+    """P emits no cast row; Rebirth's revive state is what prices the slot.
+
+    At level 18 with no items Anivia's maximum health is 2114.0, and
+    Rebirth "restores all of her health" — the receipt behind P's
+    ``modeled`` label.  W stays out of scope: the wall is terrain.
+    """
+    from src.calculator.champions import get_champion_module_contract
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.stats import calculate_total_stats
+
+    contract = get_champion_module_contract("Anivia")
+    assert "P" not in contract.slots
+    assert contract.coverage["P"] == "modeled"
+    assert contract.coverage["W"] == "out_of_scope"
+    assert contract.coverage_channels["P"] == ("starting_revive_defense",)
+
+    data = cc_review.kit("Anivia")
+    defenses = resolve_starting_defenses(
+        "Anivia", 18, calculate_total_stats(data, 18, []), []
+    )
+    assert defenses.revive_source == "Rebirth"
+    assert defenses.revive_health_amount == pytest.approx(2114.0)

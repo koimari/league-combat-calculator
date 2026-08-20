@@ -7,6 +7,10 @@ E8d ally-support: W (Ebb and Flow) heals the selected teammate.  The event is
 authored by the engine's ally-support scanner from the cached W leveling
 (Heal 55-155 + 40% AP; scope one_teammate) at the W cast time; the module
 declares W in SLOTS so the fight rotation casts it.
+
+Coverage: P (Surging Tides) grants movement speed to allies Nami's
+abilities touch. Movement speed is an axis the engine does not have, so
+the slot is out of scope.
 """
 
 from .healing_contract import declare_healing_rule

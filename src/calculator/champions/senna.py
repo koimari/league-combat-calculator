@@ -19,6 +19,10 @@ E3 additions over the CP10.7 packet module:
      with the target's current health, the model uses max health.
 - The remaining slots keep their reviewed packet reads; Q/W/R scale off
   the Mist-buffed AD because P runs first in the BUFF phase.
+
+Coverage: E (Curse of the Black Mist) wraps Senna and her team in
+camouflage. Vision and stealth are axes the engine does not have, so the
+slot is out of scope.
 """
 
 from functools import partial

@@ -15,6 +15,11 @@ cast-exactly-once idiom (the ability entry declares cooldown 0.0 and authors
 every hit itself, like Aurelion Sol's continuous Q channel), with ability
 haste applied to both cooldowns; E and W recast on their own cooldowns
 through the shared scheduler, each E window detonating the selected stones.
+
+Coverage: P (Rock Surfing) grants movement speed near terrain and R
+(Weaver's Wall) raises a wall Taliyah can ride. Movement speed, mobility
+and terrain are axes the engine does not have, so both slots are out of
+scope.
 """
 
 import math

@@ -1,4 +1,9 @@
-"""Ryze — CP10.7 full-entry-reviewed packet module."""
+"""Ryze — CP10.7 full-entry-reviewed packet module.
+
+Coverage: P (Arcane Mastery) converts ability power into maximum mana,
+which the rest of Ryze's kit then scales off. A resource pool is an axis
+the engine does not have, so the slot is out of scope.
+"""
 
 from .packet_module import build_packet_module
 

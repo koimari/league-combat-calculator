@@ -22,7 +22,11 @@ Why each slot is non-generic:
   selects the active by the ABSENCE of the passive's '% maximum mana'
   modifier (robust to effect reordering on data re-pulls).
 - Q (Rocket Grab) is a clean generic read, kept explicit here.
-- P (Mana Barrier) is a defensive shield only — absent from the map.
+- P (Mana Barrier) is a defensive shield with no cast of its own, so it
+  is absent from the slot map; ``_rocket_grab`` hangs its
+  ``self_shield_events`` payload on Q's damage event instead, which is
+  why the coverage map calls P ``modeled`` through the
+  ``self_shield_events`` channel.
 """
 
 from typing import Any
@@ -232,3 +236,9 @@ parse_abilities = build_parser(SLOTS, "Blitzcrank", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Blitzcrank")
+
+# P emits no cast row, so the derivation would call it out_of_scope; the
+# shield Q carries is what the engine prices (331.45 for 10s at level 18
+# with no items, 30% of max mana).
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
