@@ -149,4 +149,3 @@ def test_cooldown_formula_lives_only_in_damage():
         assert (
             "100.0 / (100.0" not in line
         ), f"rotation_resolver reimplements cooldown math at line {lineno}"
-
