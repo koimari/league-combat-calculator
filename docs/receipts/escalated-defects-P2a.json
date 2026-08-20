@@ -40,7 +40,8 @@
      "commit": "146a69cb44c162014e8a3a76bec07f31abf20ba7",
      "subject": "docs(receipts): the two escalated defects get a ledger the re-capture cannot absorb",
      "plan_audit_exit": 0,
-     "test_plan_audit": "44 passed"
+     "test_plan_audit": "44 passed",
+     "findings": []
     },
     "breached_in": {
      "commit": "969bd4f2547c824b6247b5b0dc806978be28716d",
@@ -61,7 +62,8 @@
     "repaired_in": {
      "commit": "312ccd9e482dd02e18e2ee237601f5906fcb32bd",
      "subject": "docs(plans): the two /api route locators are refreshed after P2a's line shift",
-     "plan_audit_exit": 0
+     "plan_audit_exit": 0,
+     "findings": []
     },
     "commit_body_claim": "2 pre-existing plan_audit citation-locator failures caused by app.py's line shift, refreshed in the following doc-only commit per R-37",
     "commit_body_claim_is_true": false,

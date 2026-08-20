@@ -2744,8 +2744,7 @@ class TestTheP2aGateBreachIsStillTracked:
             assert len(block["commit"]) == 40, handle
             assert block["subject"], handle
             assert block["plan_audit_exit"] == (0 if clean else 1), handle
-            findings = block.get("findings", [])
-            assert (findings == []) is clean, handle
+            assert (block["findings"] == []) is clean, handle
         assert len(signature["breached_in"]["findings"]) == 4
 
     def test_the_withdrawn_claim_is_quoted_and_marked_false(self):
