@@ -1117,27 +1117,30 @@ def test_no_campaign_stage_is_declared_anywhere_under_src() -> None:
     assert not offenders, offenders
 
 
-def test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process() -> None:
+def test_the_two_committed_artifacts_are_each_read_once_per_process() -> None:
     """R-05's red for the two I/O leaves the overdue clause stands on.
 
     Both run per deferral row: fourteen rows asked ``declared_stages`` the
-    same question, and ``completed_stages`` spawned a ``git log`` over the
-    whole campaign range for each of them.  Importing this module alone parsed
+    same question, and ``completed_stages`` walked the whole campaign range in
+    a subprocess for each of them.  Importing this module alone parsed
     the ruled artifact fourteen times.  The cost is not the point — the point
     is that a reader cannot tell fourteen identical reads from one, and a
     derivation that re-reads its own inputs mid-run can answer two ways in one
     check.  Asserted by counting the reads rather than by trusting a decorator
     to still be there.
+
+    The git walk is gone with the same argument taken one step further: the
+    campaign range is closed, so its slice tags are derived once and committed.
+    No git call is tolerated here at all — that is what lets CI check out the
+    tree instead of the repository.
     """
-    stage_reads = 0
+    reads: dict[str, int] = {}
     git_calls = 0
     real_read_text = Path.read_text
     real_run = subprocess.run
 
     def counted_read(self: Path, *args: object, **kwargs: object) -> str:
-        nonlocal stage_reads
-        if self.name == "campaign-stages.json":
-            stage_reads += 1
+        reads[self.name] = reads.get(self.name, 0) + 1
         return real_read_text(self, *args, **kwargs)  # type: ignore[arg-type]
 
     def counted_run(command: object, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
@@ -1147,7 +1150,7 @@ def test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process() -> Non
         return real_run(command, *args, **kwargs)  # type: ignore[arg-type]
 
     for cached in (
-        behavior_frontier.declared_stages,
+        behavior_frontier._campaign_stages_block,  # noqa: SLF001
         behavior_frontier._tag_first_seen,  # noqa: SLF001
     ):
         # Tolerated rather than required, so that dropping a decorator fails
@@ -1165,8 +1168,26 @@ def test_the_ruled_artifact_and_the_tree_are_each_read_once_per_process() -> Non
             behavior_frontier.completed_stages()
             behavior_frontier.deferral_creditor_stage()
 
-    assert stage_reads == 1, f"the ruled artifact was read {stage_reads} times"
-    assert git_calls == 1, f"the campaign range was walked {git_calls} times"
+    assert reads.get("campaign-stages.json") == 1, reads
+    assert reads.get("campaign-slice-tags.json") == 1, reads
+    assert git_calls == 0, f"the campaign range was walked {git_calls} times"
+
+
+def test_the_pinned_slice_tags_name_the_range_the_stage_records_declare() -> None:
+    """One home for the range; a tag map read against another one is refused."""
+    pinned = json.loads(
+        behavior_frontier.CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8")
+    )
+    assert pinned["range"] == behavior_frontier.campaign_range()
+    behavior_frontier._tag_first_seen.cache_clear()  # noqa: SLF001
+    try:
+        with mock.patch.object(
+            behavior_frontier, "campaign_range", lambda: "deadbee..cafe000"
+        ):
+            with pytest.raises(RuntimeError, match="campaign range"):
+                behavior_frontier._tag_first_seen()  # noqa: SLF001
+    finally:
+        behavior_frontier._tag_first_seen.cache_clear()  # noqa: SLF001
 
 
 def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:

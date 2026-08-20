@@ -26,7 +26,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| E3 | `tests/test_migration_frontier.py:150-170,305` (`REPORT_TIP="067c94c"`), `tests/test_trigger_stream.py` ~2711-2800 (`git archive <commit>` per test) | Closed-campaign git walks inside kept product tests; the reason CI keeps `fetch-depth: 0`. | Pin the artefacts, drop the history walk, shallow-fetch CI. |
 | E12 | `tests/coverage_resolver.py` (1.8k) + `test_coverage_claims.py` (2.7k, subprocess pytest at `:654`) + `coverage_evidence.py` (1.1k) | 5.6k lines proving evidence strings name real symbols, run through `conftest.py` on every `pytest -k`. | Not deletable; worth knowing it is the largest non-domain cost per run. |
 | E14 | `scripts/load_sanity.py` | Updated in 39d3794 for `checks.cache`; not run live (needs `DATABASE_URL`/`REDIS_URL`). | Run once against a deployed target. |
 

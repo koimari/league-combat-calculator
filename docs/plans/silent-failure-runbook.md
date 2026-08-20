@@ -24,7 +24,7 @@ Every commit in the campaign is judged by one named gate set whose baselines wer
 | 6 | `black --check src/ tests/ scripts/` | clean | clean | formatter drift (version pinned in `requirements.txt`) |
 | 7 | `pylint src/ --fail-under=9` | pass | pass | new lint warnings in a touched file |
 | 8 | `python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json` | counters, residual, winner, score identical | moves only as declared in advance | cache loss, fallback, search poisoning |
-| 9 | `python scripts/repin_corpus.py --check` | pass | pass | a corpus receipt pinned at a different engine |
+| 9 | `python scripts/repin_corpus.py --check` | pass | pass | a corpus that has shrunk away from the receipts it claims to execute |
 | 10 | `pytest tests/test_survival_kernel.py` (the compiled-vs-receipt equivalence suite) | green | green | compiled score path desyncing from the walk |
 | 11 | `python scripts/bench_coupled_optimizer.py --fixed-work --isolate --no-compiled --json` versus row 8's default run, all four bench scenarios | identical winner and score | identical, or an explained rung change | a routing change that only shows up as a different answer |
 
