@@ -100,14 +100,14 @@ so every gunicorn worker reports the same totals for `/api/cache-status`.
 
 ### `metrics_events` — anonymous product events (P1b beta metrics)
 
-Funnel events recorded by `POST /api/metrics/event`.  No PII: `session_id`
+Anonymous product events recorded by `POST /api/metrics/event`.  No PII: `session_id`
 is a random first-party cookie id, never an account identifier.  See
 `docs/beta-metrics.md` for the metric definitions.
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | integer PK | |
-| `event` | varchar(50) | indexed; whitelisted (`quick_complete`, `page_view`) |
+| `event` | varchar(50) | indexed; whitelisted in `src/db.py::METRIC_EVENT_NAMES` (currently `page_view`) |
 | `session_id` | varchar(100) null | indexed; the `scryglass_anon` cookie value |
 | `took_ms` | integer null | wall-clock duration of the instrumented flow |
 | `payload` | JSON | optional bounded extras |

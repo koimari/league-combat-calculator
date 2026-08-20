@@ -168,7 +168,7 @@ response = client.get("/api/metrics")
 assert response.status_code == 200, (response.status_code, response.get_data(as_text=True))
 body = response.get_json()
 assert set(body) >= {"generated_at", "beta", "criteria", "gate"}
-assert set(body["criteria"]) == {"activation", "retention", "receipts", "bias", "staleness"}
+assert set(body["criteria"]) == {"retention", "receipts", "bias", "staleness"}
 assert body["gate"]["status"] in {"pass", "pending", "fail"}
 print("METRICS-OK", json.dumps(body))
 """

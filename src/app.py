@@ -138,6 +138,8 @@ from src.rate_limit import TokenBucketStore
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from src.db import (
+    METRIC_EVENT_MAX_TOOK_MS,
+    METRIC_EVENT_NAMES,
     CacheUnavailable,
     add_feedback,
     cache_backend,
@@ -349,7 +351,7 @@ def _current_session() -> dict | None:
 
 
 # Anonymous beta-metrics session (P1b). The id is a random cookie value that
-# never encodes account material, so activation/retention are measurable
+# never encodes account material, so retention is measurable
 # without a user table and without PII (see docs/beta-metrics.md).
 _ANON_SESSION_COOKIE = "scryglass_anon"
 _ANON_SESSION_MAX_AGE = 90 * 24 * 60 * 60
@@ -1817,18 +1819,14 @@ def api_validation_champions():
 
 
 # --- Beta metrics (P1b) ---------------------------------------------------
-# Whitelist mirrors db._VALID_METRIC_EVENTS; keep the two in sync.
-_METRICS_EVENT_NAMES = frozenset({"quick_complete", "page_view"})
-_METRICS_EVENT_MAX_TOOK_MS = 3_600_000
 
 
 @app.route("/api/metrics/event", methods=["POST"])
 def api_metrics_event():
     """Record one anonymous, session-scoped product event (no PII).
 
-    Body: ``{"event": "quick_complete", "took_ms": 1234}`` where
-    ``took_ms`` is the wall-clock time the user took to complete
-    champion -> role -> Best-next-item (the beta activation funnel).  The
+    Body: ``{"event": "page_view", "took_ms": 0}`` where ``took_ms`` is the
+    optional wall-clock duration of the instrumented flow.  The
     anonymous session id is a first-party cookie (``scryglass_anon``)
     minted here when missing; it never contains account material.  The
     route is deliberately pre-auth so funnel events can be collected from
@@ -1837,15 +1835,15 @@ def api_metrics_event():
     try:
         data = _json_object()
         event = _request_string(data, "event", required=True)
-        if event not in _METRICS_EVENT_NAMES:
-            raise ValueError(f"event must be one of {sorted(_METRICS_EVENT_NAMES)}")
+        if event not in METRIC_EVENT_NAMES:
+            raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
         took_ms = data.get("took_ms")
         if took_ms is not None:
             if not isinstance(took_ms, int) or isinstance(took_ms, bool):
                 raise ValueError("took_ms must be an integer")
-            if took_ms < 0 or took_ms > _METRICS_EVENT_MAX_TOOK_MS:
+            if took_ms < 0 or took_ms > METRIC_EVENT_MAX_TOOK_MS:
                 raise ValueError(
-                    f"took_ms must be between 0 and {_METRICS_EVENT_MAX_TOOK_MS}"
+                    f"took_ms must be between 0 and {METRIC_EVENT_MAX_TOOK_MS}"
                 )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

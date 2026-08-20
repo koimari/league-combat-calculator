@@ -5,10 +5,8 @@ the ``scripts/beta_metrics.py`` CLI both import this module so the endpoint
 and the operator CLI share one definition of the gate (see
 docs/beta-metrics.md).
 
-The beta succeeds when the four PASS criteria hold across its 2-week run:
+The beta succeeds when the three PASS criteria hold across its 2-week run:
 
-- Activation >= 60% of engaged sessions complete champion -> role ->
-  Best-next-item in under 10 seconds (``quick_complete`` events).
 - 7-day retention >= 25% (sessions that return within 7 days of their
   first observed activity).
 - Validation receipts >= 20 per week with the systematic-bias scan keeping
@@ -41,19 +39,17 @@ from src import db
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 
 # Thresholds — the beta success contract (docs/beta-metrics.md).
-ACTIVATION_THRESHOLD = 0.60
 RETENTION_THRESHOLD = 0.25
 RECEIPTS_PER_WEEK = 20
 BIAS_FLAGGED_MAX = 2
 STALE_MAX_HOURS = 72
-QUICK_COMPLETE_MAX_MS = 10_000
 RETENTION_WINDOW_DAYS = 7
 BETA_WINDOW_DAYS = 14
 BIAS_MIN_RECEIPTS = 5
 BIAS_MAX_PERCENT = 15.0
 
 _GATE_RULE = (
-    "PASS = activation >= 60%, 7-day retention >= 25%, receipts >= 20/week, "
+    "PASS = 7-day retention >= 25%, receipts >= 20/week, "
     "no stale > 72h across the 2-week beta; FAIL = any criterion missed "
     "2 weeks running"
 )
@@ -103,27 +99,6 @@ def _activity_rows(
             )
             rows.extend(db_session.execute(statement).all())
     return rows
-
-
-def _quick_complete_rows(
-    db_module: Any, start: datetime, end: datetime
-) -> list[tuple[str | None, datetime, int | None]]:
-    """``(session_id, created_at, took_ms)`` for quick_complete events."""
-    with db_module.session() as db_session:
-        statement = (
-            select(
-                db_module.MetricsEvent.session_id,
-                db_module.MetricsEvent.created_at,
-                db_module.MetricsEvent.took_ms,
-            )
-            .where(
-                db_module.MetricsEvent.event == "quick_complete",
-                db_module.MetricsEvent.created_at >= start,
-                db_module.MetricsEvent.created_at <= end,
-            )
-            .order_by(db_module.MetricsEvent.created_at)
-        )
-        return list(db_session.execute(statement).all())
 
 
 def _receipt_count(db_module: Any, start: datetime, end: datetime) -> int:
@@ -227,39 +202,6 @@ def _session_timeline(
     for stamps in timeline.values():
         stamps.sort()
     return timeline
-
-
-def _activation_metrics(db_module: Any, start: datetime, end: datetime) -> dict:
-    """Activation over one range: quick completions / engaged sessions."""
-    all_rows = _activity_rows(db_module, start, end)
-    quick_rows = _quick_complete_rows(db_module, start, end)
-    sessions = {session_id for session_id, _ in all_rows if session_id}
-    quick_sessions = {
-        session_id
-        for session_id, _, took_ms in quick_rows
-        if session_id and took_ms is not None and took_ms < QUICK_COMPLETE_MAX_MS
-    }
-    denominator = len(sessions)
-    numerator = len(quick_sessions & sessions)
-    if denominator == 0:
-        return {
-            "status": "insufficient_data",
-            "value": None,
-            "numerator": 0,
-            "denominator": 0,
-            "detail": "no engaged sessions in range",
-        }
-    value = numerator / denominator
-    return {
-        "status": "pass" if value >= ACTIVATION_THRESHOLD else "fail",
-        "value": round(value, 4),
-        "numerator": numerator,
-        "denominator": denominator,
-        "detail": (
-            f"{numerator}/{denominator} sessions completed the funnel in "
-            f"< {QUICK_COMPLETE_MAX_MS} ms"
-        ),
-    }
 
 
 def _retention_metrics(
@@ -385,7 +327,7 @@ def _weekly_gate(week_results: list[dict]) -> str:
 
 
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-# The gate composes five independent weekly criteria into one scorecard; the
+# The gate composes four independent weekly criteria into one scorecard; the
 # verbatim computation is moved from the operator CLI (scripts/beta_metrics.py).
 def compute_scorecard(
     *,
@@ -445,25 +387,6 @@ def compute_scorecard(
         ),
     }
     receipts_total = _receipt_count(db_module, beta_start, effective_end)
-
-    # --- activation -------------------------------------------------------
-    activation_overall = _activation_metrics(db_module, beta_start, effective_end)
-    activation_weeks = []
-    for index, (wk_start, wk_end) in enumerate(windows, start=1):
-        wk_end_eff = min(now, wk_end)
-        metrics = _activation_metrics(db_module, wk_start, wk_end_eff)
-        complete = now >= wk_end
-        activation_weeks.append(
-            {
-                "week": index,
-                "complete": complete,
-                "status": metrics["status"] if complete else "insufficient_data",
-                "value": metrics["value"],
-                "numerator": metrics["numerator"],
-                "denominator": metrics["denominator"],
-            }
-        )
-    activation_gate = _weekly_gate(activation_weeks)
 
     # --- retention --------------------------------------------------------
     retention_overall = _retention_metrics(timeline, beta_start, effective_end, now)
@@ -550,7 +473,6 @@ def compute_scorecard(
     # --- overall gate -----------------------------------------------------
     beta_complete = now >= beta_end
     gates = {
-        "activation": activation_gate,
         "retention": retention_gate,
         "receipts": receipts_gate,
         "bias": bias_gate,
@@ -589,20 +511,12 @@ def compute_scorecard(
         )
 
     missed_weeks = {
-        name: (
-            sum(1 for week in activation_weeks if week["status"] == "fail")
-            if name == "activation"
-            else (
-                sum(1 for week in receipt_weeks if week["status"] == "fail")
-                if name == "receipts"
-                else (
-                    sum(1 for week in bias_weeks if week["status"] == "fail")
-                    if name == "bias"
-                    else sum(1 for week in staleness_weeks if week["status"] == "fail")
-                )
-            )
+        name: sum(1 for week in weeks if week["status"] == "fail")
+        for name, weeks in (
+            ("receipts", receipt_weeks),
+            ("bias", bias_weeks),
+            ("staleness", staleness_weeks),
         )
-        for name in ("activation", "receipts", "bias", "staleness")
     }
 
     scorecard = {
@@ -622,15 +536,6 @@ def compute_scorecard(
             "cache": cache,
         },
         "criteria": {
-            "activation": {
-                "status": activation_gate,
-                "value": activation_overall["value"],
-                "threshold": ACTIVATION_THRESHOLD,
-                "numerator": activation_overall["numerator"],
-                "denominator": activation_overall["denominator"],
-                "detail": activation_overall["detail"],
-                "weeks": activation_weeks,
-            },
             "retention": {
                 "status": retention_gate,
                 "value": retention_overall["value"],

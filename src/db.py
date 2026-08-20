@@ -222,8 +222,7 @@ class MetricsEvent(Base):
 
     No PII by construction: ``session_id`` is a random first-party cookie
     id minted by the app, never an account name or email.  ``took_ms`` is
-    the wall-clock duration the session took to complete the instrumented
-    flow (e.g. the ``quick_complete`` activation funnel).
+    the wall-clock duration of the instrumented flow, when it has one.
     """
 
     __tablename__ = "metrics_events"
@@ -879,11 +878,12 @@ def cache_stats() -> dict[str, Any]:
 # Beta metrics events (P1b)
 # ---------------------------------------------------------------------------
 
-# The app validates the event name against the same whitelist before it
-# calls this helper; the check is repeated here so direct callers (the
-# scorecard CLI, tests) cannot write arbitrary event names either.
-_VALID_METRIC_EVENTS = frozenset({"quick_complete", "page_view"})
-_METRIC_EVENT_MAX_TOOK_MS = 3_600_000
+# The one home of the event whitelist and the ``took_ms`` bound: the API
+# route imports both to reject bad input before spending a rate-limit token,
+# and this helper checks them again so direct callers (tests, scripts)
+# cannot write arbitrary names either.
+METRIC_EVENT_NAMES = frozenset({"page_view"})
+METRIC_EVENT_MAX_TOOK_MS = 3_600_000
 
 
 def record_metric_event(
@@ -900,15 +900,15 @@ def record_metric_event(
     the instrumented flow; the whitelist and bounds mirror the API route so
     direct callers get the same rejections.
     """
-    if event not in _VALID_METRIC_EVENTS:
-        raise ValueError(f"event must be one of {sorted(_VALID_METRIC_EVENTS)}")
+    if event not in METRIC_EVENT_NAMES:
+        raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
     if not session_id or not isinstance(session_id, str) or len(session_id) > 100:
         raise ValueError("session_id must be a non-empty string of at most 100 chars")
     if took_ms is not None:
         took_ms = int(took_ms)
-        if took_ms < 0 or took_ms > _METRIC_EVENT_MAX_TOOK_MS:
+        if took_ms < 0 or took_ms > METRIC_EVENT_MAX_TOOK_MS:
             raise ValueError(
-                f"took_ms must be between 0 and {_METRIC_EVENT_MAX_TOOK_MS}"
+                f"took_ms must be between 0 and {METRIC_EVENT_MAX_TOOK_MS}"
             )
     with session() as db_session:
         row = MetricsEvent(
@@ -934,8 +934,8 @@ def list_metric_events(
     """
     statement = select(MetricsEvent).order_by(MetricsEvent.id.desc())
     if event:
-        if event not in _VALID_METRIC_EVENTS:
-            raise ValueError(f"event must be one of {sorted(_VALID_METRIC_EVENTS)}")
+        if event not in METRIC_EVENT_NAMES:
+            raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
         statement = statement.where(MetricsEvent.event == event)
     if since is not None:
         statement = statement.where(MetricsEvent.created_at >= since)

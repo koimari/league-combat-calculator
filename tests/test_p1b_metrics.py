@@ -1,6 +1,6 @@
 """P1b beta-metrics contract tests.
 
-Covers the anonymous funnel-event capture (POST /api/metrics/event), the
+Covers the anonymous product-event capture (POST /api/metrics/event), the
 auth-gated scorecard endpoint (GET /api/metrics), the anonymous session id
 recorded on builds/share links/feedback, the scorecard computation over
 seeded rows, the 2-weeks-running PASS/FAIL gate, the schema backfill for
@@ -119,7 +119,7 @@ def _add_receipt(db_module, session_id, champion, delta, created_at, tdd=1000.0)
         s.commit()
 
 
-def _add_event(db_module, session_id, took_ms, created_at, event="quick_complete"):
+def _add_event(db_module, session_id, took_ms, created_at, event="page_view"):
     with db_module.session() as s:
         s.add(
             db_module.MetricsEvent(
@@ -156,12 +156,12 @@ def _write_staleness_report(path, checked_at, patch="16.15"):
 def test_metrics_event_records_and_mints_anon_session(sqlite_database):
     client = _client()
     first = client.post(
-        "/api/metrics/event", json={"event": "quick_complete", "took_ms": 500}
+        "/api/metrics/event", json={"event": "page_view", "took_ms": 500}
     )
     assert first.status_code == 201
     body = first.get_json()
     assert isinstance(body["event_id"], int)
-    assert body["event"] == "quick_complete"
+    assert body["event"] == "page_view"
 
     # The anonymous session cookie was minted and persists across requests.
     anon_cookie = client.get_cookie("scryglass_anon")
@@ -170,7 +170,7 @@ def test_metrics_event_records_and_mints_anon_session(sqlite_database):
     assert len(anon) >= 20
 
     second = client.post(
-        "/api/metrics/event", json={"event": "quick_complete", "took_ms": 900}
+        "/api/metrics/event", json={"event": "page_view", "took_ms": 900}
     )
     assert second.status_code == 201
 
@@ -178,7 +178,7 @@ def test_metrics_event_records_and_mints_anon_session(sqlite_database):
     assert len(events) == 2
     assert {row["took_ms"] for row in events} == {500, 900}
     assert {row["session_id"] for row in events} == {anon}
-    assert all(row["event"] == "quick_complete" for row in events)
+    assert all(row["event"] == "page_view" for row in events)
 
 
 def test_metrics_event_validation(sqlite_database):
@@ -186,9 +186,9 @@ def test_metrics_event_validation(sqlite_database):
     cases = [
         ({"event": "nope", "took_ms": 10}, "event must be one of"),
         ({"took_ms": 10}, "event is required"),
-        ({"event": "quick_complete", "took_ms": "fast"}, "took_ms must be an integer"),
-        ({"event": "quick_complete", "took_ms": -1}, "took_ms must be between"),
-        ({"event": "quick_complete", "took_ms": 3_600_001}, "took_ms must be between"),
+        ({"event": "page_view", "took_ms": "fast"}, "took_ms must be an integer"),
+        ({"event": "page_view", "took_ms": -1}, "took_ms must be between"),
+        ({"event": "page_view", "took_ms": 3_600_001}, "took_ms must be between"),
         ({}, "event is required"),
     ]
     for payload, fragment in cases:
@@ -217,7 +217,7 @@ def test_metrics_event_rate_limited(sqlite_database, monkeypatch):
     app_module.app.config["RATE_LIMIT_ENABLED"] = True
     client = _client()
     denied = client.post(
-        "/api/metrics/event", json={"event": "quick_complete", "took_ms": 100}
+        "/api/metrics/event", json={"event": "page_view", "took_ms": 100}
     )
     assert denied.status_code == 429
     assert denied.headers["Retry-After"] == "7"
@@ -225,7 +225,7 @@ def test_metrics_event_rate_limited(sqlite_database, monkeypatch):
 
     monkeypatch.setattr(app_module, "_rate_limiter", Allowed())
     allowed = client.post(
-        "/api/metrics/event", json={"event": "quick_complete", "took_ms": 100}
+        "/api/metrics/event", json={"event": "page_view", "took_ms": 100}
     )
     assert allowed.status_code == 201
 
@@ -262,7 +262,7 @@ def test_metrics_event_is_pre_auth(invite_env, sqlite_database):
     """Funnel events must be collectable without an approved session."""
     client = _client()
     response = client.post(
-        "/api/metrics/event", json={"event": "quick_complete", "took_ms": 250}
+        "/api/metrics/event", json={"event": "page_view", "took_ms": 250}
     )
     assert response.status_code == 201
     assert len(db.list_metric_events()) == 1
@@ -291,7 +291,6 @@ def test_metrics_scorecard_is_auth_gated(invite_env, sqlite_database):
     body = scorecard.get_json()
     assert set(body) >= {"generated_at", "beta", "criteria", "gate"}
     assert set(body["criteria"]) == {
-        "activation",
         "retention",
         "receipts",
         "bias",
@@ -359,17 +358,13 @@ def test_session_id_recorded_on_build_share_and_receipt(sqlite_database):
 
 def _seed_pass_scenario(db_module, tmp_path):
     """A beta that clears every criterion: gate PASS."""
-    # 10 engaged sessions; 7 complete the funnel under 10s in each week.
+    # 10 engaged sessions active in both weeks; the page_view ping is one
+    # more activity source (same-day, so it never changes the retention math).
     for index in range(1, 11):
         session = f"session-{index:02d}"
         _add_build(db_module, session, BETA_START + 2 * DAY)  # week 1 activity
         _add_build(db_module, session, BETA_START + 10 * DAY)  # week 2 activity
-        if index <= 7:
-            _add_event(db_module, session, 3_000, BETA_START + 2 * DAY)
-            _add_event(db_module, session, 4_000, BETA_START + 10 * DAY)
-        elif index == 8:
-            # too slow to count toward the funnel
-            _add_event(db_module, session, 15_000, BETA_START + 2 * DAY)
+        _add_event(db_module, session, 0, BETA_START + 2 * DAY)
     # Retention: sessions 1-5 return within 7 days of first activity.
     for index in range(1, 6):
         _add_build(db_module, f"session-{index:02d}", BETA_START + 4 * DAY)
@@ -403,13 +398,6 @@ def test_scorecard_pass_gate_from_seeded_rows(sqlite_database, tmp_path):
     assert scorecard["data_sources"]["sessions_observed"] == 10
     assert scorecard["data_sources"]["receipts"] == 47
 
-    activation = scorecard["criteria"]["activation"]
-    assert activation["status"] == "pass"
-    assert activation["value"] == pytest.approx(0.70)
-    assert activation["numerator"] == 7
-    assert activation["denominator"] == 10
-    assert [w["status"] for w in activation["weeks"]] == ["pass", "pass"]
-
     retention = scorecard["criteria"]["retention"]
     assert retention["status"] == "pass"
     assert retention["value"] == pytest.approx(0.50)
@@ -435,7 +423,6 @@ def test_scorecard_pass_gate_from_seeded_rows(sqlite_database, tmp_path):
     assert scorecard["gate"]["status"] == "pass"
     assert scorecard["gate"]["verdict"] == "PASS"
     assert scorecard["gate"]["missed_weeks"] == {
-        "activation": 0,
         "receipts": 0,
         "bias": 0,
         "staleness": 0,
@@ -444,14 +431,11 @@ def test_scorecard_pass_gate_from_seeded_rows(sqlite_database, tmp_path):
 
 def test_scorecard_fail_gate_two_weeks_running(sqlite_database, tmp_path):
     """Every hard criterion missed in BOTH weeks -> gate FAIL."""
-    # 10 sessions, only 4 quick completions per week (40% < 60%).
+    # 10 sessions active in both weeks.
     for index in range(1, 11):
         session = f"session-{index:02d}"
         _add_build(db_module=db, session_id=session, created_at=BETA_START + 2 * DAY)
         _add_build(db_module=db, session_id=session, created_at=BETA_START + 10 * DAY)
-        if index <= 4:
-            _add_event(db, session, 2_000, BETA_START + 2 * DAY)
-            _add_event(db, session, 2_000, BETA_START + 10 * DAY)
     # Retention: only one session returns within 7 days.
     _add_build(db, "session-01", BETA_START + 4 * DAY)
     # Receipts: 10 in week 2 only (below the 20/week floor in both weeks;
@@ -469,7 +453,6 @@ def test_scorecard_fail_gate_two_weeks_running(sqlite_database, tmp_path):
         "src.metrics", fromlist=["compute_scorecard"]
     ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
     criteria = scorecard["criteria"]
-    assert criteria["activation"]["status"] == "fail"
     assert criteria["retention"]["status"] == "fail"
     assert criteria["receipts"]["status"] == "fail"
     assert criteria["staleness"]["status"] == "fail"
@@ -478,7 +461,6 @@ def test_scorecard_fail_gate_two_weeks_running(sqlite_database, tmp_path):
     assert scorecard["gate"]["status"] == "fail"
     assert scorecard["gate"]["verdict"] == "FAIL"
     assert scorecard["gate"]["missed_weeks"] == {
-        "activation": 2,
         "receipts": 2,
         "bias": 0,
         "staleness": 2,
@@ -491,13 +473,6 @@ def test_scorecard_pending_on_single_week_miss(sqlite_database, tmp_path):
         session = f"session-{index:02d}"
         _add_build(db, session, BETA_START + 2 * DAY)
         _add_build(db, session, BETA_START + 10 * DAY)
-        # week 1: 8/10 quick; week 2: 4/10 quick
-        week1_quick = index <= 8
-        week2_quick = index <= 4
-        if week1_quick:
-            _add_event(db, session, 2_000, BETA_START + 2 * DAY)
-        if week2_quick:
-            _add_event(db, session, 2_000, BETA_START + 10 * DAY)
     # Retention passes (5/10).
     for index in range(1, 6):
         _add_build(db, f"session-{index:02d}", BETA_START + 4 * DAY)
@@ -525,7 +500,6 @@ def test_scorecard_pending_on_single_week_miss(sqlite_database, tmp_path):
     scorecard = __import__(
         "src.metrics", fromlist=["compute_scorecard"]
     ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
-    assert scorecard["criteria"]["activation"]["status"] == "at_risk"
     assert scorecard["criteria"]["receipts"]["status"] == "at_risk"
     assert scorecard["criteria"]["retention"]["status"] == "pass"
     assert scorecard["criteria"]["staleness"]["status"] == "pass"
@@ -538,8 +512,6 @@ def test_scorecard_pending_while_beta_in_progress(sqlite_database, tmp_path):
     now = BETA_START + 9 * DAY  # week 2 is only 2 days old
     for index in range(1, 11):
         _add_build(db, f"session-{index:02d}", BETA_START + 2 * DAY)
-        if index <= 8:
-            _add_event(db, f"session-{index:02d}", 2_000, BETA_START + 2 * DAY)
     for offset in range(25):
         _add_receipt(
             db,
@@ -582,24 +554,6 @@ def test_scorecard_retention_insufficient_until_7_days_elapse(
     assert retention["denominator"] == 1  # only the eligible session
     assert retention["value"] == pytest.approx(1.0)
     assert retention["status"] == "pass"
-
-
-def test_scorecard_activation_ten_second_boundary(sqlite_database, tmp_path):
-    """took_ms < 10000 counts; took_ms >= 10000 does not."""
-    _add_build(db, "fast", BETA_START + 1 * DAY)
-    _add_build(db, "slow", BETA_START + 1 * DAY)
-    _add_event(db, "fast", 9_999, BETA_START + 1 * DAY)
-    _add_event(db, "slow", 10_000, BETA_START + 1 * DAY)
-    report = tmp_path / "staleness.json"
-    _write_staleness_report(report, NOW - timedelta(hours=6))
-
-    scorecard = __import__(
-        "src.metrics", fromlist=["compute_scorecard"]
-    ).compute_scorecard(now=NOW, beta_start=BETA_START, weeks=2, staleness_path=report)
-    activation = scorecard["criteria"]["activation"]
-    assert activation["numerator"] == 1
-    assert activation["denominator"] == 2
-    assert activation["value"] == pytest.approx(0.5)
 
 
 # ---------------------------------------------------------------------------
@@ -668,7 +622,6 @@ def test_beta_metrics_cli_json(sqlite_database, tmp_path):
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["gate"]["status"] == "pass"
-    assert payload["criteria"]["activation"]["value"] == pytest.approx(0.70)
 
     # A failing gate exits non-zero so dashboards/CI can react.  Seed the
     # two-weeks-running FAIL scenario (its own stale report is written by
@@ -678,9 +631,6 @@ def test_beta_metrics_cli_json(sqlite_database, tmp_path):
         session = f"session-{index:02d}"
         _add_build(fail_db, session, BETA_START + 2 * DAY)
         _add_build(fail_db, session, BETA_START + 10 * DAY)
-        if index <= 4:
-            _add_event(fail_db, session, 2_000, BETA_START + 2 * DAY)
-            _add_event(fail_db, session, 2_000, BETA_START + 10 * DAY)
     _add_build(fail_db, "session-01", BETA_START + 4 * DAY)
     for offset in range(10):
         _add_receipt(
@@ -723,11 +673,10 @@ def test_beta_metrics_docs_exist():
     assert doc.exists(), "docs/beta-metrics.md is required (P1b deliverable)"
     text = doc.read_text(encoding="utf-8")
     for required in (
-        "60%",
         "25%",
         "20",
         "72",
-        "quick_complete",
+        "page_view",
         "metrics_events",
         "session_id",
     ):
