@@ -207,6 +207,20 @@ def test_feedback_read_filters(sqlite_database):
     assert client.get("/api/feedback?source=combat_log").get_json()["count"] == 1
 
 
+def test_feedback_query_strings_go_through_request_parsing(sqlite_database):
+    """GET query strings use the shared public coercion policy: bounded
+    integers and 100-char strings, rejected (400) rather than clamped."""
+    client = _client()
+    assert client.get("/api/feedback?limit=200").status_code == 200
+    for bad in ("0", "201", "abc", "1.5"):
+        response = client.get(f"/api/feedback?limit={bad}")
+        assert response.status_code == 400, bad
+        assert response.get_json()["error"].startswith("limit must be"), bad
+    assert client.get("/api/feedback?champion=" + "x" * 101).status_code == 400
+    assert client.get("/api/validation?limit=500").status_code == 400
+    assert client.get("/api/certainty?champion=" + "x" * 101).status_code == 400
+
+
 def test_feedback_has_no_client_supplied_writer(sqlite_database):
     """A client may not write expected/actual/matched verbatim into the table
     that drives the /api/validation bias flag; the receipt route derives them."""
@@ -285,16 +299,17 @@ def test_cache_consulted_by_calculate_when_configured(sqlite_database):
     assert warm.status_code == 200
     assert cold.get_json() == warm.get_json()
 
-    status = client.get("/api/cache-status").get_json()
-    assert status["cache_enabled"] is True
-    assert status["hits"] == 1
-    assert status["misses"] == 1
-    assert status["cached_entries"] == 1
+    cache = client.get("/api/health/deep").get_json()["checks"]["cache"]
+    assert cache["enabled"] is True
+    assert cache["hits"] == 1
+    assert cache["misses"] == 1
+    assert cache["cached_entries"] == 1
 
     # A different request is a separate key.
     payload["rotations"] = 2
     assert client.post("/api/calculate", json=payload).status_code == 200
-    assert client.get("/api/cache-status").get_json()["misses"] == 2
+    cache = client.get("/api/health/deep").get_json()["checks"]["cache"]
+    assert cache["misses"] == 2
 
 
 def test_cache_bypassed_in_testing_mode(sqlite_database):
@@ -319,10 +334,10 @@ def test_cache_bypassed_in_testing_mode(sqlite_database):
     first = client.post("/api/calculate", json=payload)
     assert first.status_code == 200
     assert client.post("/api/calculate", json=payload).status_code == 200
-    status = client.get("/api/cache-status").get_json()
-    assert status["cache_enabled"] is False
-    assert status["hits"] == 0
-    assert status["misses"] == 0
+    cache = client.get("/api/health/deep").get_json()["checks"]["cache"]
+    assert cache["enabled"] is False
+    assert cache["hits"] == 0
+    assert cache["misses"] == 0
 
 
 # ---------------------------------------------------------------------------

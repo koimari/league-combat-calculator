@@ -371,9 +371,10 @@ def test_redis_cache_failure_fails_closed(redis_env, monkeypatch):
     key = db.stable_cache_key("calculate", {"champion": "Ahri"})
     with pytest.raises(db.CacheUnavailable):
         db.cache_get(key)
-    status = app_module.app.test_client().get("/api/cache-status")
-    assert status.status_code == 503
-    assert "Cache backend unavailable" in status.get_json()["error"]
+    deep = app_module.app.test_client().get("/api/health/deep").get_json()
+    assert deep["status"] == "error"
+    assert deep["checks"]["cache"]["status"] == "error"
+    assert deep["checks"]["cache"]["error"]
 
 
 def test_result_cache_uses_redis_when_only_redis_configured(redis_env):
@@ -418,13 +419,13 @@ def test_calculate_route_serves_from_redis_cache(redis_env):
         assert warm.status_code == 200
         assert cold.get_json() == warm.get_json()
 
-        status = client.get("/api/cache-status").get_json()
-        assert status["cache_enabled"] is True
-        assert status["cache_backend"] == "redis"
-        assert status["database_configured"] is False
-        assert status["hits"] == 1
-        assert status["misses"] == 1
-        assert status["cached_entries"] == 1
+        checks = client.get("/api/health/deep").get_json()["checks"]
+        assert checks["cache"]["enabled"] is True
+        assert checks["cache"]["backend"] == "redis"
+        assert checks["db"]["configured"] is False
+        assert checks["cache"]["hits"] == 1
+        assert checks["cache"]["misses"] == 1
+        assert checks["cache"]["cached_entries"] == 1
     finally:
         if previous_testing is None:
             app_module.app.config.pop("TESTING", None)

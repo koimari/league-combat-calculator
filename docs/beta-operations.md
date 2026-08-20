@@ -8,7 +8,7 @@ backup verification, validation-corpus bias scan, feedback triage.
 
 | # | Item | Command / endpoint | What to look for | Budget |
 |---|---|---|---|---|
-| 1 | Health & cache status | `curl https://<beta-host>/healthz`, `curl https://<beta-host>/api/cache-status` | `/healthz` 200; cache backend up; hit/miss counters sane (a miss spike means the cache was flushed, not an outage) | 5 min |
+| 1 | Health & cache status | `curl https://<beta-host>/healthz`, `curl https://<beta-host>/api/health/deep` | `/healthz` 200; `checks.cache` ok with the backend up; hit/miss counters sane (a miss spike means the cache was flushed, not an outage) | 5 min |
 | 2 | Error surface | app logs (Vercel) — 5xx, 429s, `CacheUnavailable`, SQLAlchemy errors | no new 503/500 classes; 429s on `/api/calculate` at the cap are normal, sustained 429s are not | 5 min |
 | 3 | Backup verification | managed Postgres snapshot + Redis persistence (provider console, or a `pg_dump` dry run) | snapshot completed this week; restore path documented and current (`docs/deploy-runbook.md` §1-2) | 5 min |
 | 4 | Validation-corpus bias scan | `curl https://<beta-host>/api/validation/champions`, `curl "https://<beta-host>/api/validation?champion=<name>"` | `flagged: true` entries — n >= 5 receipts with \|bias\| > 15% — open a tracking issue and note it in the next announcement | 5 min |

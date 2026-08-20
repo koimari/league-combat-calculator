@@ -1586,13 +1586,17 @@ def api_get_share(token: str):
     return jsonify(payload)
 
 
+# Largest /api/feedback and /api/validation page; the default page is 50.
+_FEEDBACK_PAGE_MAX = 200
+
+
 @app.route("/api/feedback")
 def api_list_feedback():
     """Return recent validation feedback for the review loop."""
-    champion = request.args.get("champion", "").strip() or None
-    source = request.args.get("source", "").strip() or None
     try:
-        limit = int(request.args.get("limit", "50"))
+        champion = _request_string(request.args, "champion") or None
+        source = _request_string(request.args, "source") or None
+        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
         rows = list_feedback(champion=champion, source=source, limit=limit)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1707,12 +1711,9 @@ def api_validation():
     the champion (not just the returned page) so the +-15% / n>=5 flag is
     stable.
     """
-    champion = request.args.get("champion", "").strip() or None
     try:
-        limit = int(request.args.get("limit", "50"))
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    try:
+        champion = _request_string(request.args, "champion") or None
+        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
         rows = list_feedback(champion=champion, limit=limit)
         systematic = validation_summary(champion=champion)
     except ValueError as exc:
@@ -1821,9 +1822,10 @@ def api_certainty():
     * ``boundary`` — a documented non-computed mechanic exists (utility-
       only slot, death-only trigger, out-of-scope row).
     """
-    champion = request.args.get("champion", "").strip()
-    if not champion:
-        return jsonify({"error": "champion is required"}), 400
+    try:
+        champion = _request_string(request.args, "champion", required=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     try:
         champion_data = _load_public_champion(champion)
     except LookupError as exc:
@@ -1847,9 +1849,10 @@ def api_not_modeled():
     ``stays state``).  Computed approximations (ESTIMATE) are deliberately
     excluded — they belong in /api/certainty, not here.
     """
-    champion = request.args.get("champion", "").strip()
-    if not champion:
-        return jsonify({"error": "champion is required"}), 400
+    try:
+        champion = _request_string(request.args, "champion", required=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     try:
         _champion_data = _load_public_champion(champion)  # existence + mode gate
     except LookupError as exc:
@@ -1864,26 +1867,6 @@ def api_not_modeled():
         if _classify_assumption(line) == _CERTAINTY_BOUNDARY
     ]
     return jsonify({"champion": champion, "items": items})
-
-
-@app.route("/api/cache-status")
-def api_cache_status():
-    """Cache hit/miss counters plus live entry count."""
-    try:
-        stats = cache_stats()
-    except (SQLAlchemyError, CacheUnavailable) as exc:
-        # surface backend failure (database or Redis) to the client
-        app.logger.exception("Failed to read cache status")
-        return jsonify({"error": f"Cache backend unavailable: {exc}"}), 503
-    return jsonify(
-        {
-            "cache_enabled": _result_cache_enabled(),
-            "database_configured": is_configured(),
-            "database": "postgresql" if is_postgres() else "sqlite",
-            "cache_backend": cache_backend(),
-            **stats,
-        }
-    )
 
 
 def _staleness_path() -> Path:

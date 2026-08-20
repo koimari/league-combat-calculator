@@ -182,6 +182,14 @@ function usesLevelDerivedRanks(championName) {
 }
 
 const $ = (id) => document.getElementById(id);
+/** The one JSON POST: every backend write and scoring call goes through it. */
+function postJson(url, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
 const fmt = (value) => Math.round(value).toLocaleString("en-US");
 const one = (value) => Number(value).toFixed(1).replace(/\.0$/, "");
 // An event's timestamp, or null when the receipt withheld one. Number(null)
@@ -494,11 +502,7 @@ function maybeInitConsentAnalytics() {
   // page_view ping per session via the existing /api/metrics/event
   // endpoint; nothing is sent without explicit consent (localStorage).
   if (localStorage.getItem("scryglass_analytics_consent") === "true") {
-    fetch("/api/metrics/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "page_view", took_ms: 0 }),
-    }).catch(() => {});
+    postJson("/api/metrics/event", { event: "page_view", took_ms: 0 }).catch(() => {});
     return;
   }
   if (localStorage.getItem("scryglass_analytics_consent") !== null) return; // declined
@@ -515,11 +519,7 @@ function maybeInitConsentAnalytics() {
   banner.querySelector("#consentYes").addEventListener("click", () => {
     localStorage.setItem("scryglass_analytics_consent", "true");
     banner.remove();
-    fetch("/api/metrics/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "page_view", took_ms: 0 }),
-    }).catch(() => {});
+    postJson("/api/metrics/event", { event: "page_view", took_ms: 0 }).catch(() => {});
   });
   banner.querySelector("#consentNo").addEventListener("click", () => {
     localStorage.setItem("scryglass_analytics_consent", "false");
@@ -2052,11 +2052,7 @@ function scheduleEngineCalculation() {
     hideEngineError();
     const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
     const payloads = builds.map((side) => engineFightPayload(side));
-    Promise.all(payloads.map((payload) => fetch("/api/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).then((response) => response.json())))
+    Promise.all(payloads.map((payload) => postJson("/api/calculate", payload).then((response) => response.json())))
       .then((results) => {
         if (requestId !== engine.requestId) return;
         const failure = results.find((result) => result.error);
@@ -2533,11 +2529,7 @@ function scheduleLoadoutStats() {
   engine.loadoutStatsPending = true;
   engine.loadoutStatsTimer = setTimeout(() => {
     engine.loadoutStatsTimer = null;
-    fetch("/api/loadout-stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(loadoutStatsPayload()),
-    })
+    postJson("/api/loadout-stats", loadoutStatsPayload())
       .then((response) => response.json())
       .then((result) => {
         if (requestId !== engine.loadoutStatsRequestId) return;
@@ -3666,11 +3658,7 @@ async function openBackendBis(path) {
   }
   $("bis").showModal();
   try {
-    const response = await fetch("/api/bis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postJson("/api/bis", payload);
     const result = await response.json();
     if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
     const certifiedRows = result.candidates || [];
@@ -3758,11 +3746,7 @@ function rosterOptimizationPaths(rootOrPath) {
 async function requestBis(path) {
   const payload = bisBackendPayload(path);
   if (!payload) throw new Error("Invalid roster optimization path");
-  const response = await fetch("/api/bis", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const response = await postJson("/api/bis", payload);
   const result = await response.json();
   if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
   return result;
@@ -3859,11 +3843,7 @@ async function optimizeMainBuildFromBackend() {
     payload.locked_items = [];
     payload.locked_boots = "";
     payload.max_legendary_slots = ordinarySlotCount("A");
-    const response = await fetch("/api/optimize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postJson("/api/optimize", payload);
     const result = await response.json();
     if (!response.ok || result.error) {
       const message = result.error_code === "no_complete_event_order"
@@ -3944,11 +3924,7 @@ async function startPurchaseOptimize() {
     payload.objective = "total_damage";
     payload.locked_items = ownedNames;
     payload.locked_boots = state.attacker.questBootA ? itemName(state.attacker.questBootA) : "";
-    const response = await fetch("/api/optimize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postJson("/api/optimize", payload);
     const result = await response.json();
     if (!response.ok || result.error) throw new Error(result.error || "Best-buy search unavailable");
     if (result.recommendation_type === "no_affordable_purchase") {
@@ -4862,14 +4838,6 @@ function renderTrustPanels() {
       .map((item) => `<li>${escapeHtml(item)}</li>`)
       .join("");
   }
-}
-
-function postJson(url, body) {
-  return fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
 }
 
 async function mintShareUrl(payload, slug) {

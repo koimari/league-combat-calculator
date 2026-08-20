@@ -89,7 +89,7 @@ champion.
 ### `cache_counters` — shared cache hit/miss counters
 
 Single row (`id = 1`) updated atomically (`INSERT … ON CONFLICT DO UPDATE`)
-so every gunicorn worker reports the same totals for `/api/cache-status`.
+so every gunicorn worker reports the same totals for `/api/health/deep`.
 
 | Column | Type |
 | --- | --- |
@@ -129,5 +129,4 @@ step.
 | `POST /api/share` | `{"build_id": …, "slug": …}` → `{"token": …, "url": "/api/share/<token>"}` (201) |
 | `GET /api/share/<token>` | build payload + `share` block; increments `views` |
 | `POST /api/receipts` | record one game-receipt observation; the engine computes `expected`/`matched`/`delta` itself → `{"feedback_id": …, …}` (201) |
-| `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (limit ≤ 200, default 50) |
-| `GET /api/cache-status` | `{hits, misses, cached_entries, cache_enabled, cache_backend, database_configured, database}` |
+| `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (`limit` 1–200, default 50; anything else is a 400) |

@@ -201,7 +201,7 @@ class ValidationFeedback(Base):
 
 
 class CacheCounter(Base):
-    """Single-row hit/miss counters for /api/cache-status.
+    """Single-row hit/miss counters for /api/health/deep (checks.cache).
 
     Kept in the database rather than in memory so every gunicorn worker
     reports the same totals.
@@ -632,7 +632,10 @@ def list_feedback(
     source: str | None = None,
     limit: int = 50,
 ) -> list[dict[str, Any]]:
-    """Return recent feedback, newest first, optionally filtered."""
+    """Return recent feedback, newest first, optionally filtered.
+
+    ``limit`` is bounded at the API boundary (``app._FEEDBACK_PAGE_MAX``).
+    """
     statement = select(ValidationFeedback).order_by(ValidationFeedback.id.desc())
     if champion:
         statement = statement.where(ValidationFeedback.champion == champion)
@@ -640,7 +643,7 @@ def list_feedback(
         if source not in _VALID_FEEDBACK_SOURCES:
             raise ValueError(f"source must be one of {sorted(_VALID_FEEDBACK_SOURCES)}")
         statement = statement.where(ValidationFeedback.source == source)
-    statement = statement.limit(max(1, min(int(limit), 200)))
+    statement = statement.limit(limit)
     with session() as db_session:
         rows = db_session.execute(statement).scalars().all()
         return [

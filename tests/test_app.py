@@ -2839,3 +2839,18 @@ def test_a_panel_that_repeats_an_event_id_is_a_400_and_not_a_receipt(monkeypatch
     )
     assert response.status_code == 400
     assert "twice" in response.get_json()["error"]
+
+
+def test_retired_routes_are_not_registered():
+    """Surfaces the API no longer carries; each had a more complete twin
+    (/api/champions, /api/share/<token>, /api/receipts, /api/health/deep,
+    scripts/patch_update.py)."""
+    rules = {rule.rule: rule.methods for rule in app_module.app.url_map.iter_rules()}
+    for gone in (
+        "/api/abilities/<champion_name>",
+        "/api/builds/<int:build_id>",
+        "/api/cache-status",
+        "/api/staleness/regenerate",
+    ):
+        assert gone not in rules, gone
+    assert "POST" not in rules["/api/feedback"]

@@ -70,8 +70,9 @@ Cache behavior:
 - `cache_delete_all()` (called after data updates) clears only the entry
   prefix.
 - If Redis is unreachable, cache reads raise `CacheUnavailable` and the
-  affected requests fail closed rather than serve stale data; `/api/cache-status`
-  reports a 503 with the backend name.
+  affected requests fail closed rather than serve stale data;
+  `/api/health/deep` reports `checks.cache.status: "error"` with the backend
+  name.
 
 ## 3. Configure Vercel
 
@@ -132,9 +133,10 @@ Promote only after the verification gates pass (see `README.md`):
 - Public probe: `curl -fsS https://scryglass-item-calculator.vercel.app/healthz`
   → `{"status":"ok"}`.
 - Deeper check after deploy:
-  `curl -fsS https://…/api/cache-status` → includes `cache_backend`,
-  `cache_enabled`, `hits`, `misses`, `cached_entries`. Expect
-  `"cache_backend":"redis"` and `"database_configured":true` on the beta.
+  `curl -fsS https://…/api/health/deep` → `checks.cache` carries `backend`,
+  `enabled`, `hits`, `misses`, `cached_entries`; `checks.db` carries
+  `backend` and `configured`. Expect `"backend":"redis"` under `cache` and
+  `"configured":true` under `db` on the beta.
 - Optional uptime monitor (UptimeRobot / Cronitor) hitting `/healthz` every
   60s; alert on non-200.
 

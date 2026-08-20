@@ -414,6 +414,24 @@ def test_app_js_wires_the_share_endpoints_and_carries_no_quick_layer():
         assert gone not in source, gone
 
 
+def test_app_js_posts_json_through_one_helper():
+    """Every backend POST in app.js goes through postJson, so the method,
+    headers and encoding have one home."""
+    source = APP_JS.read_text(encoding="utf-8")
+    assert source.count('method: "POST"') == 1
+    for url in (
+        "/api/metrics/event",
+        "/api/calculate",
+        "/api/loadout-stats",
+        "/api/bis",
+        "/api/optimize",
+        "/api/builds",
+        "/api/share",
+    ):
+        assert f'postJson("{url}"' in source, url
+        assert f'fetch("{url}"' not in source, url
+
+
 def test_node_check_passes_for_app_js():
     node = shutil.which("node")
     if node is None:
