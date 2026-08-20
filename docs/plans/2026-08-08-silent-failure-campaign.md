@@ -417,7 +417,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
 ## Success criteria
 
 1. **The invariant holds by machine.** Every serialized numeric leaf of `/api/calculate` — score, breakdown,
-   survival, TDD and timeline — **and of `/api/bis` (`app.py:1283`) and `/api/optimize` (`app.py:1318`), the
+   survival, TDD and timeline — **and of `/api/bis` (`app.py:1275`) and `/api/optimize` (`app.py:1310`), the
    two score-serving endpoints the Goal's "every numeric leaf" also binds** — is covered by exactly one
    entry in its payload's parallel `dispositions` map, keyed by leaf path and resolving to exactly one of
    the four spellings. That map is the ruled serialization (Phase 4's S9 owns it): a bare JSON number
