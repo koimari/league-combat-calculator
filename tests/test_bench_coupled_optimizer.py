@@ -234,20 +234,28 @@ class TestScenarioSet:
         scenario = bench.SCENARIOS["syndra_mandate_3champ"]
         assert scenario["locked_items"] == ["Imperial Mandate"]
 
-    def test_exactly_one_scenario_main_authors_an_immobilize(self, bench):
+    def test_which_scenario_mains_author_an_immobilize(self, bench):
         """Asserted against the champion modules, not against the name.
 
-        If Syndra's E ever stops authoring its stun this fails on the
-        mechanism, and if one of the three legacy mains gains one the
-        scenario stops being the campaign's only immobilizing shape and
-        says so.
+        This said *exactly one* while Syndra's was the only authored
+        immobilize in the set, and it was written to say so if a legacy main
+        ever gained one.  One has: the crowd-control fan-out gave Cassiopeia's
+        R its reviewed stun, so both Cassiopeia scenarios now author one and
+        the membership is re-measured here.  Syndra's E is still asserted,
+        because the fourth scenario exists to price the Command amp and a
+        Syndra who stops stunning stops pricing it.
         """
         authoring = {
             name
             for name, scenario in bench.SCENARIOS.items()
             if _authors_an_immobilize(scenario["champion"])
         }
-        assert authoring == {"syndra_mandate_3champ"}
+        assert authoring == {
+            "syndra_mandate_3champ",
+            "cassiopeia_3champ",
+            "cassiopeia_5champ",
+        }
+        assert not _authors_an_immobilize(bench.SCENARIOS["mundo_3champ"]["champion"])
 
     def test_the_time_budget_is_the_app_clamp_ceiling(self, bench):
         assert bench.TIME_BUDGET_CLAMP_MS == 60_000

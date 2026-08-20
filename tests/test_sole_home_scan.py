@@ -194,12 +194,17 @@ def test_the_forced_restatements_are_criterion_4s_counted_carve_out(scan) -> Non
     # counts.  A receipt naming a number the fingerprints no longer hold is not
     # a criterion-4 site at all, so its carve-out retires with it: the count
     # falls rather than the rows being carried as an allowlist nobody re-reads,
-    # which is exactly what the stale check above is for.
-    assert block["forced_restatements"] == 1
+    # which is exactly what the stale check above is for.  It then rose to two,
+    # across two sources, when that capture's own allowlist landed a commit
+    # later claiming the coupled leaf counter in order to supersede the claim
+    # before it -- the fourth run of the pattern, and the first where the fall
+    # and the rise sit in two commits rather than one, which is why the scan
+    # reported the arriving site instead of nothing at all.
+    assert block["forced_restatements"] == 2
     assert block["coincidences"] == 1
     allowances = scan.load_allowlist()
     forced = [row for row in allowances if row.kind == "forced_restatement"]
-    assert len({row.source for row in forced}) == 1
+    assert len({row.source for row in forced}) == 2
     assert all(
         row.reason.startswith("R-1") or row.reason.startswith("R-3") for row in forced
     )

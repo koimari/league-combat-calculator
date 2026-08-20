@@ -20,5 +20,11 @@
     }
    }
   }
+ },
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17 -- the slice landed against the three committed baselines, which the campaign then re-captured in the commit this receipt is committed with (641695d); the coupled exact pair it declares is what that capture holds."
  }
 }

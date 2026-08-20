@@ -137,12 +137,14 @@ MUNDO_SCENARIO = {
     ],
 }
 
-# The campaign's fourth scenario (runbook R-27).  The three above author no
-# ``cc_kind`` at all, so the immobilize-triggered half of the model — the
-# Imperial Mandate Command amp this whole campaign exists because of — is
-# invisible to the harness that is supposed to police it.  Syndra's E is
-# authored as a stun (``champions/syndra.py``) and Imperial Mandate is locked
-# into every candidate, so the amp is priced on every evaluation.
+# The campaign's fourth scenario (runbook R-27).  It was added when the three
+# above authored no ``cc_kind`` at all, which left the immobilize-triggered
+# half of the model — the Imperial Mandate Command amp this whole campaign
+# exists because of — invisible to the harness that is supposed to police it.
+# The crowd-control fan-out has since given the reviewed modules their kinds,
+# so Cassiopeia's R authors a stun too; this scenario is still the one that
+# *prices* the amp, because Imperial Mandate is locked into every candidate
+# here and Syndra's E is authored as a stun (``champions/syndra.py``).
 SYNDRA_MANDATE_SCENARIO = {
     "champion": "Syndra",
     "level": 13,

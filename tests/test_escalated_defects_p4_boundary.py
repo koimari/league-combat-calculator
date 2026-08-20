@@ -99,8 +99,10 @@ _SEGMENT = re.compile(r"([^\[\]]+)((?:\[\d+\])*)")
 _MISSING = object()
 
 
-def _resolve_supersession(path: str, recorded, blocks):
-    """What an allowlist that **declares** it supersedes this ledger says.
+def _resolve_supersession(
+    path: str, recorded, blocks, origin=None, origin_entry=RETIRED_ID
+):
+    """What an allowlist that **declares** it supersedes a receipt says.
 
     A boundary receipt pins a leaf's certified value, and a later slice may
     move that leaf again.  Which claim wins is decided by the claim, never by
@@ -126,7 +128,14 @@ def _resolve_supersession(path: str, recorded, blocks):
     different entry is.  *blocks* is the ``(name, parsed allowlist)``
     sequence, taken as an argument so the negatives below can pose every
     failure without writing a file into ``docs/receipts/``.
+
+    ``origin`` is the receipt the chain is rooted at, defaulting to this
+    ledger.  It is a parameter because this ledger is not the only receipt
+    whose recorded values a later capture moves: two other gates read a pin
+    of their own through the same chain, and one resolver reading one
+    declaration form is the point.
     """
+    origin = RECEIPT.name if origin is None else origin
     claims: dict[str, tuple[str, dict]] = {}
     for name, block in blocks:
         for claimed, row in (block.get("expected_diff_values") or {}).items():
@@ -136,8 +145,8 @@ def _resolve_supersession(path: str, recorded, blocks):
             if not isinstance(supersedes, dict):
                 continue
             target = supersedes.get("receipt")
-            if target == RECEIPT.name:
-                if supersedes.get("entry") != RETIRED_ID:
+            if target == origin:
+                if supersedes.get("entry") != origin_entry:
                     continue
             elif not isinstance(target, str) or not target.startswith(
                 "expected-golden-diff-"
@@ -149,7 +158,7 @@ def _resolve_supersession(path: str, recorded, blocks):
                     f"supersede {target}; supersession is not a precedence question"
                 )
             claims[target] = (name, row)
-    value, predecessor, walked = recorded, RECEIPT.name, {RECEIPT.name}
+    value, predecessor, walked = recorded, origin, {origin}
     while predecessor in claims:
         name, row = claims[predecessor]
         assert "new" in row, f"{name} claims to supersede {path} without a new value"
@@ -180,9 +189,11 @@ def _committed_allowlists():
     ]
 
 
-def _superseding_value(path: str, recorded):
+def _superseding_value(path: str, recorded, origin=None, origin_entry=RETIRED_ID):
     """``_resolve_supersession`` over the committed allowlists."""
-    return _resolve_supersession(path, recorded, _committed_allowlists())
+    return _resolve_supersession(
+        path, recorded, _committed_allowlists(), origin, origin_entry
+    )
 
 
 def _ledger():

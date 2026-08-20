@@ -36,6 +36,13 @@ from tests.test_coupled_golden_allowlist import (  # noqa: E402
     unexplained,
 )
 
+# The supersession chain's one implementation: a receipt records what it
+# measured on its own tree, and a later capture that moves the reading declares
+# the move in a committed allowlist naming the claim it replaces.
+from tests.test_escalated_defects_p4_boundary import (  # noqa: E402
+    _superseding_value,
+)
+
 from src.calculator.ability_spec import AttackClass, DamageClass  # noqa: E402
 from src.calculator.survival.actions import SurvivalAction  # noqa: E402
 from src.calculator.survival.transitions import (  # noqa: E402
@@ -405,6 +412,36 @@ def _classification(name):
     return json.loads((RECEIPTS / name).read_text(encoding="utf-8"))
 
 
+def _c3_identity(field, recorded):
+    """The identity a later capture declares for one C3 ``measured_after`` field.
+
+    The identity's last part is the pair walk's own per-pair index, so a
+    capture that changes how many rows that walk authors renumbers it.  The
+    classification keeps what it measured on its tree; the successor is read
+    from the committed allowlist that declares it.
+    """
+    return _superseding_value(
+        f"/classification-P4D-C3/the_instrument_fix/measured_after/{field}",
+        recorded,
+        C3_CLASSIFICATION,
+        "the_instrument_fix.measured_after",
+    )
+
+
+def _c4_path(recorded):
+    """The ordinal a later capture declares for the C4 record's own leaf.
+
+    Same reason as above, one list over: the record is addressed by position
+    in a list that grew, so the position moved while the record did not.
+    """
+    return _superseding_value(
+        "/classification-P4D-C4/the_instrument_fix/measured_after/path",
+        recorded,
+        C4_CLASSIFICATION,
+        "the_instrument_fix.measured_after",
+    )
+
+
 def _allowlisted():
     body = json.loads((RECEIPTS / P4D_ALLOWLIST).read_text(encoding="utf-8"))
     return set(body["expected_diff_paths"]["coupled_golden"])
@@ -518,15 +555,27 @@ class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
         c3 = _classification(C3_CLASSIFICATION)["the_instrument_fix"]["measured_after"]
         events = _cleaver("events")
         identities = [event.get(gs.IDENTITY_FIELD) for event in events]
-        assert c3["identity"] not in identities, c3["identity"]
-        assert "main:enemy:Aatrox:34" not in identities
+        removed = _c3_identity("identity", c3["identity"])
+        assert removed not in identities, removed
+        sibling = _c3_identity("sibling_removal/identity", "main:enemy:Aatrox:34")
+        assert sibling not in identities, sibling
         ordinal = int(c3["path"].rsplit("[", 1)[1].rstrip("]"))
-        assert events[ordinal][gs.IDENTITY_FIELD] == "main:enemy:Aatrox:35"
+        assert events[ordinal][gs.IDENTITY_FIELD] == _c3_identity(
+            "the_record_the_ordinal_used_to_substitute/identity",
+            "main:enemy:Aatrox:35",
+        )
 
         c4 = _classification(C4_CLASSIFICATION)["the_instrument_fix"]["measured_after"]
         support = _cleaver("support_events")
-        ordinal = int(c4["path"].rsplit("/", 1)[0].rsplit("[", 1)[1].rstrip("]"))
-        assert ordinal >= len(support), c4["path"]
+        # The record, not the ordinal: this list grew by four Carve armings
+        # when the re-capture landed, so the position the classification
+        # measured moved.  The successor is declared in a committed allowlist
+        # and the record is asserted there, carrying the absence the ruling
+        # made -- a stronger reading than the ordinal merely running off the
+        # end of a shorter list, which is what it used to say.
+        ordinal = int(_c4_path(c4["path"]).rsplit("/", 1)[0].rsplit("[", 1)[1][:-1])
+        assert support[ordinal][gs.IDENTITY_FIELD] == c4["identity"]
+        assert "owner" not in support[ordinal]
         armings = [
             row for row in support if row.get("source") == "Bloodsong — Expose Weakness"
         ]
@@ -549,11 +598,13 @@ class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
             "measured_after"
         ]["the_record_the_ordinal_used_to_substitute"]
         assert "main:enemy:Aatrox:35" in quoted
+        standing = _c3_identity(
+            "the_record_the_ordinal_used_to_substitute/identity",
+            "main:enemy:Aatrox:35",
+        )
         events = _cleaver("events")
         matching = [
-            event
-            for event in events
-            if event.get(gs.IDENTITY_FIELD) == "main:enemy:Aatrox:35"
+            event for event in events if event.get(gs.IDENTITY_FIELD) == standing
         ]
         assert len(matching) == 1
         assert events.index(matching[0]) == len(events) - 1

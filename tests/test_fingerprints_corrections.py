@@ -28,6 +28,12 @@ from pathlib import Path
 
 import pytest
 
+# The supersession chain's one implementation: a receipt records what it
+# measured on its own tree, and a later capture that moves the value declares
+# the move in a committed allowlist naming the claim it replaces.  Read from
+# the boundary ledger's gate rather than re-implemented here.
+from tests.test_escalated_defects_p4_boundary import _superseding_value
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RECEIPT = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 COUPLED_EXACT = REPO_ROOT / "scripts" / "golden_coupled_exact.json"
@@ -53,6 +59,16 @@ def exact_values_digest(scenarios: dict) -> str:
 
 def corrections() -> list[dict]:
     return _load(RECEIPT).get("corrections", [])
+
+
+def _superseded_total(key: str, recorded: str) -> str:
+    """The reading a later capture declares for one exact-baseline total."""
+    return _superseding_value(
+        f"/coupled_exact/cleaver_bloodsong_roster/{key}",
+        recorded,
+        RECEIPT.name,
+        TestTheThreeMovedTotalsAreWhatTheCorrectionSays.ENTRY_ID,
+    )
 
 
 class TestTheDigestIsTheFieldThatMoves:
@@ -116,7 +132,11 @@ class TestTheThreeMovedTotalsAreWhatTheCorrectionSays:
     def test_the_baseline_holds_the_new_value_of_every_total_the_entry_lists(self):
         totals = _load(COUPLED_EXACT)["coupled_scenarios"]["cleaver_bloodsong_roster"]
         for moved in self.entry["what_is_true"]["moved"]:
-            assert totals[moved["key"]] == moved["new"]
+            # A total may move again after this correction, and two did.  The
+            # later reading is declared in a committed allowlist naming the
+            # claim it replaces, and is read here rather than written over
+            # what this correction measured on its own tree.
+            assert totals[moved["key"]] == _superseded_total(moved["key"], moved["new"])
             assert moved["old"] != moved["new"]
             assert float(moved["new"]) - float(moved["old"]) == pytest.approx(
                 moved["delta"], abs=0.05
@@ -144,9 +164,8 @@ class TestTheThreeMovedTotalsAreWhatTheCorrectionSays:
             assert attackers == pytest.approx(
                 float(moved["combat/2:enemy:Aatrox/incoming"][side]), abs=0.05
             )
-        assert totals["combat/2:enemy:Aatrox/incoming"] == (
-            moved["combat/2:enemy:Aatrox/incoming"]["new"]
-        )
+        key = "combat/2:enemy:Aatrox/incoming"
+        assert totals[key] == _superseded_total(key, moved[key]["new"])
 
 
 class TestTheAllocationRemeasurement:

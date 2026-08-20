@@ -179,5 +179,11 @@
     "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight fits another cast; this leaf is that cast arriving."
    }
   }
+ },
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17 -- this receipt moves no baseline. It declares the readings the campaign's re-capture (641695d) landed, for the leaves the Phase 4 boundary's owed population still pins."
  }
 }
