@@ -83,6 +83,7 @@ from src.calculator.capabilities import public_capability_contract
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_selectable_items,
+    item_gold,
     optimize_build,
     optimize_purchase,
 )
@@ -1049,9 +1050,28 @@ def api_champions():
 
 
 def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
-    """Expose the cached sustain/stat families the browser can display."""
+    """Every number the item picker and hover card display, from the typed
+    stats accessor and the sourced shop price — never a literal fallback on
+    the cached record, whose numbers live under ``stats`` (rule 5)."""
     stats = get_item_stats(item)
     return {
+        "ap": stats["ability_power"],
+        "hp": stats["health"],
+        "mana": stats["mana"],
+        "ad": stats["attack_damage"],
+        "armor": stats["armor"],
+        "mr": stats["magic_resistance"],
+        "haste": stats["ability_haste"],
+        "pen": stats["magic_penetration_flat"],
+        "percentPen": stats["magic_penetration_percent"],
+        "lethality": stats["lethality"],
+        # The split routes one wiki percentage into exactly one channel; the
+        # card shows that percentage whichever armour it reaches.
+        "percentArmorPen": stats["armor_penetration_percent"]
+        + stats["armor_penetration_bonus_percent"],
+        "attackSpeed": stats["attack_speed_percent"],
+        "crit": stats["critical_strike_chance"],
+        "price": item_gold(item),
         "lifesteal": stats["lifesteal_percent"],
         "omnivamp": stats["omnivamp_percent"],
         "healAndShieldPower": stats["heal_and_shield_power_percent"],
@@ -1075,21 +1095,7 @@ def api_items():
                 "id": item["id"],
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
-                "ap": item.get("ap", 0),
-                "hp": item.get("hp", 0),
-                "mana": item.get("mana", 0),
-                "ad": item.get("ad", 0),
-                "armor": item.get("armor", 0),
-                "mr": item.get("mr", 0),
-                "haste": item.get("haste", 0),
-                "pen": item.get("pen", 0),
-                "percentPen": item.get("percentPen", 0),
-                "lethality": item.get("lethality", 0),
-                "percentArmorPen": item.get("percentArmorPen", 0),
-                "attackSpeed": item.get("attackSpeed", 0),
-                "crit": item.get("crit", 0),
                 **_item_picker_stat_fields(item),
-                "price": item.get("price", 0),
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
                 "tier": item["tier"],
@@ -1117,21 +1123,7 @@ def api_boots():
                 "id": item["id"],
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
-                "ap": item.get("ap", 0),
-                "hp": item.get("hp", 0),
-                "mana": item.get("mana", 0),
-                "ad": item.get("ad", 0),
-                "armor": item.get("armor", 0),
-                "mr": item.get("mr", 0),
-                "haste": item.get("haste", 0),
-                "pen": item.get("pen", 0),
-                "percentPen": item.get("percentPen", 0),
-                "lethality": item.get("lethality", 0),
-                "percentArmorPen": item.get("percentArmorPen", 0),
-                "attackSpeed": item.get("attackSpeed", 0),
-                "crit": item.get("crit", 0),
                 **_item_picker_stat_fields(item),
-                "price": item.get("price", 0),
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
                 "tier": item["tier"],

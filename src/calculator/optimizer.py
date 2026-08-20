@@ -628,14 +628,14 @@ def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _item_gold(item: dict[str, Any]) -> int:
+def item_gold(item: dict[str, Any]) -> int:
     """Return the sourced total shop price for one item."""
     return int(item.get("shop", {}).get("prices", {}).get("total", 0))
 
 
 def _build_gold(items: list[dict[str, Any]]) -> int:
     """Return total shop price for a resolved build."""
-    return sum(_item_gold(item) for item in items)
+    return sum(item_gold(item) for item in items)
 
 
 def _greedy_fill(

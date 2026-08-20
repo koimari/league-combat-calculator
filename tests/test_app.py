@@ -2001,6 +2001,15 @@ class TestIconUrlsAreHttps:
         assert phantom["tier"] == 3
         assert swiftness["moveSpeed"] == 55.0 and swiftness["tier"] == 2
         assert all("moveSpeed" in item and "tier" in item for item in items + boots)
+        # Stat numbers and price come from the typed accessor and the sourced
+        # shop price; the cache keeps them under ``stats``/``shop``, so a
+        # top-level .get(key, 0) read served zero for every item.
+        deathcap = next(item for item in items if item["name"] == "Rabadon's Deathcap")
+        assert deathcap["ap"] == 130.0 and deathcap["price"] == 3500
+        assert swiftness["price"] == 1000
+        edge = next(item for item in items if item["name"] == "Infinity Edge")
+        assert edge["crit"] == 25.0 and edge["ad"] > 0
+        assert sum(1 for item in items if item["price"] > 0) > len(items) // 2
 
     def test_item_apis_expose_optimizer_coverage(self):
         client = app_module.app.test_client()
