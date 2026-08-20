@@ -120,12 +120,16 @@ class Absorption(NamedTuple):
     threshold_shield_triggered: bool = False
     threshold_shield_expires_at: float | None = None
     threshold_health_triggered: bool = False
-    #: The full heal a threshold-health Lifeline started, as sourced.
+    #: The heal a threshold-health Lifeline started, after any live Grievous
+    #: window cut it -- what a heal author still owes the defender.
     threshold_health_heal: float = 0.0
     #: The part of it the arming instant could take -- the transition has to
     #: apply this itself, because it lands before the crossing damage does.
     #: Anything left over belongs to the caller's own heal author.
     threshold_health_healed: float = 0.0
+    #: What the live Grievous window took off the sourced heal, for the
+    #: caller's ``healing_reduced`` receipt.
+    threshold_health_reduced: float = 0.0
 
 
 def build_pools(
@@ -286,7 +290,11 @@ def expire_threshold_health(pools: ShieldPools, event_time: float) -> float:
 
 
 def absorb(
-    pools: ShieldPools, damage: float, damage_type: str, event_time: float
+    pools: ShieldPools,
+    damage: float,
+    damage_type: str,
+    event_time: float,
+    healing_factor: float = 1.0,
 ) -> Absorption:
     """Apply one post-mitigation damage instance to a defender's pools.
 
@@ -294,6 +302,11 @@ def absorb(
     Lifelines arm against the damage still coming, the general pool absorbs,
     and whatever is left reaches health -- damage past health being overkill
     rather than more effective HP.
+
+    ``healing_factor`` is the defender's live healing multiplier at this
+    instant: a Lifeline's heal is healing, so a Grievous window open when it
+    arms cuts it exactly as it cuts an authored heal.  A walk with no wound
+    model leaves it at 1.0 and the arithmetic is unchanged.
     """
     if (
         not pools.timed
@@ -344,7 +357,9 @@ def absorb(
 
     armed = None
     if pools.threshold_shield is not None or pools.threshold_health is not None:
-        armed = _arm_thresholds(pools, remaining, damage_type, event_time)
+        armed = _arm_thresholds(
+            pools, remaining, damage_type, event_time, healing_factor
+        )
         if armed.shield_pool is not None and armed.shield_pool != GENERAL:
             # A typed Lifeline (Maw's magic shield) blocks the very hit that
             # armed it, but its own pool was already drained above.
@@ -380,6 +395,7 @@ def absorb(
         threshold_health_triggered=armed.health_triggered,
         threshold_health_heal=armed.health_heal,
         threshold_health_healed=armed.health_healed,
+        threshold_health_reduced=armed.health_reduced,
     )
 
 
@@ -391,13 +407,18 @@ class _Armed(NamedTuple):
     health_triggered: bool = False
     health_heal: float = 0.0
     health_healed: float = 0.0
+    health_reduced: float = 0.0
 
 
 _NOTHING_ARMED = _Armed()
 
 
 def _arm_thresholds(
-    pools: ShieldPools, remaining: float, damage_type: str, event_time: float
+    pools: ShieldPools,
+    remaining: float,
+    damage_type: str,
+    event_time: float,
+    healing_factor: float = 1.0,
 ) -> _Armed:
     """Arm whichever Lifelines this damage would carry past their threshold.
 
@@ -446,12 +467,16 @@ def _arm_thresholds(
 
     heal = 0.0
     healed = 0.0
+    reduced = 0.0
     if health_due:
         pools.max_health += health.bonus
         pools.health += health.bonus
         health.triggered = True
         health.expires_at = event_time + health.duration
-        heal = health.heal
+        # The bonus health is a grant, not healing, so a Grievous window
+        # leaves it alone and cuts only the heal beside it.
+        heal = health.heal * healing_factor
+        reduced = health.heal - heal
         # The heal lands before the crossing damage, so it can only take the
         # health the defender was already missing.  Whatever the sourced heal
         # has left over is the caller's heal author to deliver.
@@ -463,6 +488,7 @@ def _arm_thresholds(
         health_triggered=health_due,
         health_heal=heal,
         health_healed=healed,
+        health_reduced=reduced,
     )
 
 

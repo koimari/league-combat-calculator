@@ -733,6 +733,61 @@ def test_grievous_window_expires_between_triggers_in_a_timed_walk():
         assert event["reduced_amount"] == pytest.approx(event["raw_amount"])
 
 
+def test_a_wounded_lifeline_heal_is_cut_like_any_authored_heal():
+    """Protoplasm Harness fires its heal as the Lifeline arms.
+
+    That heal never reaches the walk's heal author — ``shield_ledger``
+    delivers it inside the arming instant — so it needs its own receipt
+    that the wound reached it.  Two arms, identical but for the wound.
+    """
+    protoplasm = get_item_by_name("Protoplasm Harness")
+    shen = get_champion("Shen")
+    sourced_heal = resolve_starting_defenses(
+        "Shen", 18, calculate_total_stats(shen, 18, [protoplasm]), [protoplasm]
+    ).threshold_health_heal
+    assert sourced_heal > 0.0
+
+    def lifeline_arm(items):
+        payload = calculate_payload(
+            {
+                "champion": "Ziggs",
+                "level": 18,
+                "items": list(items),
+                "fight_mode": "timed",
+                "fight_duration": 15.0,
+                "include_auto_attacks": False,
+                "enemies": [
+                    {
+                        "champion": "Shen",
+                        "level": 18,
+                        "items": ["Protoplasm Harness"],
+                    }
+                ],
+            }
+        )
+        survival = next(
+            participant
+            for participant in payload["combat"]["participants"]
+            if participant["participant_id"] == "enemy:Shen"
+        )
+        assert survival["survival"]["threshold_health_triggered"] is True
+        return survival["survival"]
+
+    burst = ["Rabadon's Deathcap", "Void Staff", "Shadowflame"]
+    unwounded = lifeline_arm(burst)
+    wounded = lifeline_arm(burst + ["Morellonomicon"])
+
+    assert unwounded["healing_received"] == pytest.approx(sourced_heal)
+    assert unwounded["healing_reduced"] == 0.0
+    assert wounded["healing_reduction_until"] > 0.0
+    assert wounded["healing_received"] == pytest.approx(
+        sourced_heal * GRIEVOUS_WOUNDS_FACTOR
+    )
+    assert wounded["healing_reduced"] == pytest.approx(
+        sourced_heal * (1.0 - GRIEVOUS_WOUNDS_FACTOR)
+    )
+
+
 @pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
 def test_compiled_search_walk_prices_the_wound_like_the_receipt_walk(
     item_name, damage_type
