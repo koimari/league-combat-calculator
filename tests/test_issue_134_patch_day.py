@@ -338,6 +338,7 @@ def test_patch_update_run_aborts_before_capture_on_stale_packet(monkeypatch):
 
     monkeypatch.setattr(patch_update, "clear_wiki_caches", lambda: None)
     monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
+    monkeypatch.setattr(patch_update, "refresh_economics", lambda: 0)
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
     monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda: 0)
     monkeypatch.setattr(
@@ -364,6 +365,7 @@ def test_patch_update_run_aborts_before_capture_on_review_pending(monkeypatch):
 
     monkeypatch.setattr(patch_update, "clear_wiki_caches", lambda: None)
     monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
+    monkeypatch.setattr(patch_update, "refresh_economics", lambda: 0)
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
     monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda: 0)
     monkeypatch.setattr(patch_update, "check_reviewed_packets_current", lambda **kw: [])
@@ -380,11 +382,55 @@ def test_patch_update_run_aborts_before_capture_on_review_pending(monkeypatch):
     assert gate_calls == []
 
 
+def test_patch_update_run_aborts_before_audit_on_failed_economics_refresh(
+    monkeypatch,
+):
+    """The economy engine must never price the new patch from the old table:
+    a refresh that did not land stops the run before the audit even prints."""
+    calls = []
+
+    monkeypatch.setattr(patch_update, "clear_wiki_caches", lambda: None)
+    monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
+    monkeypatch.setattr(patch_update, "refresh_economics", lambda: 1)
+    monkeypatch.setattr(
+        patch_update, "print_audit", lambda: calls.append("audit") or True
+    )
+    monkeypatch.setattr(patch_update, "run_gates", lambda: calls.append("capture") or 0)
+
+    assert patch_update.run_full() == 1
+    assert calls == []
+
+
+def test_patch_update_run_aborts_before_capture_on_census_frontier(monkeypatch):
+    gate_calls = []
+
+    monkeypatch.setattr(patch_update, "clear_wiki_caches", lambda: None)
+    monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
+    monkeypatch.setattr(patch_update, "refresh_economics", lambda: 0)
+    monkeypatch.setattr(patch_update, "print_audit", lambda: True)
+    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda: 0)
+    monkeypatch.setattr(patch_update, "check_reviewed_packets_current", lambda **kw: [])
+    monkeypatch.setattr(patch_update, "run_full_entry_audit", lambda output=None: 0)
+    monkeypatch.setattr(
+        patch_update, "run_staleness_gate", lambda out=None, patch=None: 0
+    )
+    monkeypatch.setattr(patch_update, "run_coverage_census", lambda output=None: 1)
+    monkeypatch.setattr(
+        patch_update, "run_gates", lambda: gate_calls.append("run_gates") or 0
+    )
+
+    assert patch_update.run_full() == 1
+    assert gate_calls == []
+
+
 def test_patch_update_run_green_path_invokes_all_gates_then_capture(monkeypatch):
     order = []
 
     monkeypatch.setattr(patch_update, "clear_wiki_caches", lambda: None)
     monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
+    monkeypatch.setattr(
+        patch_update, "refresh_economics", lambda: order.append("economics") or 0
+    )
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
     monkeypatch.setattr(
         patch_update, "rebuild_static_artifacts", lambda: order.append("rebuild") or 0
@@ -404,8 +450,21 @@ def test_patch_update_run_green_path_invokes_all_gates_then_capture(monkeypatch)
         "run_staleness_gate",
         lambda out=None, patch=None: order.append("staleness") or 0,
     )
+    monkeypatch.setattr(
+        patch_update,
+        "run_coverage_census",
+        lambda output=None: order.append("census") or 0,
+    )
     monkeypatch.setattr(patch_update, "run_gates", lambda: order.append("capture") or 0)
 
     rc = patch_update.run_full(patch="26.16")
     assert rc == 0
-    assert order == ["rebuild", "packets", "audit", "staleness", "capture"]
+    assert order == [
+        "economics",
+        "rebuild",
+        "packets",
+        "audit",
+        "staleness",
+        "census",
+        "capture",
+    ]

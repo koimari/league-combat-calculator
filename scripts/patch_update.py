@@ -5,17 +5,21 @@ update so the judgment part (deciding whether code must change, explaining
 golden diffs in the commit) starts from a focused report:
 
   1. Pull    — clear lolstaticdata's page caches (a stale cache silently
-               "re-pulls" the old patch) and run data_updater.update_data().
+               "re-pulls" the old patch) and run data_updater.update_data(),
+               then refresh data/economics-sourced.json from DDragon for the
+               release the new cache pins (refresh_economics_data).
   2. Audit   — diff the new data against the last committed data (git HEAD;
                data/ is tracked, so HEAD *is* the previous patch). Detail is
                limited to what the calculator implements: registered
                champions and items in the parse config, plus net-new /
                removed items shop-wide and a roster add/remove roll-call.
+               The economics file is audited for currency the same way.
   3. Gates   — reviewed-packet freshness, full-entry audit, staleness
-               (patch_regression), then pytest and golden compare. The
-               baseline is re-captured only when every gate is green: a
-               stale packet asset, a review-pending entry, or a stale wiki
-               cache aborts the run before capture (issue #134).
+               (patch_regression), the coverage census, then pytest and
+               golden compare. The baseline is re-captured only when every
+               gate is green: a stale packet asset, a review-pending entry,
+               a stale wiki cache, or an unacknowledged coverage frontier
+               entry aborts the run before capture (issue #134).
 
 Reviewed-packet gate (issue #134): the checked-in
 ``static/reviewed-packets.json`` must prove it was built from the current
@@ -65,6 +69,8 @@ ESCALATED_CACHED_DATA = (
 )
 DEFAULT_AUDIT_OUTPUT = REPO_ROOT / "docs" / "wiki-full-entry-audit.json"
 DEFAULT_STALENESS_OUT = REPO_ROOT / "data" / "staleness.json"
+DEFAULT_CENSUS_OUTPUT = REPO_ROOT / "docs" / "coverage-census.json"
+ECONOMICS_TABLES = REPO_ROOT / "data" / "economics-sourced.json"
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
 NOISE_SUBSTRINGS = ("icon", "releaseDate", "patchLastChanged", "price", "salePrice")
 # The two provenance keys every hand-authored ally record carries; the rest
@@ -77,6 +83,8 @@ try:
         resolve_axword_source,
         resolve_wiki_db,
     )
+    from patch_regression import extract_ddragon_version
+    from refresh_economics_data import stale_reasons
     from source_receipt import source_receipt
 except ImportError:  # imported as scripts.patch_update in tests
     from scripts.build_reviewed_modules import (
@@ -84,6 +92,8 @@ except ImportError:  # imported as scripts.patch_update in tests
         resolve_axword_source,
         resolve_wiki_db,
     )
+    from scripts.patch_regression import extract_ddragon_version
+    from scripts.refresh_economics_data import stale_reasons
     from scripts.source_receipt import source_receipt
 
 
@@ -402,12 +412,37 @@ def escalated_cached_data_lines(receipt_path=None):
     return lines
 
 
+def economics_lines(tables, new_items, ddragon_version):
+    """Audit section for the sourced gold table the purchase optimizer prices from.
+
+    ``data/economics-sourced.json`` is DDragon's item gold table pinned to one
+    release, written only by ``refresh_economics_data.py``.  A pull that moves
+    the cache without it leaves every purchase plan priced at the previous
+    patch, and the runtime fails closed on an item it does not carry, so any
+    reason the file is not current for the new cache blocks the run.
+    """
+    lines = ["== Item economics (data/economics-sourced.json) =="]
+    reasons = stale_reasons(tables, new_items, ddragon_version)
+    for reason in reasons:
+        lines.append(f"  BLOCKING: {reason}")
+    if reasons:
+        lines.append(
+            "  ** BLOCKING — run scripts/refresh_economics_data.py, or record a "
+            "reviewed total divergence in its ACKNOWLEDGED_TOTAL_DIVERGENCES. **"
+        )
+    else:
+        lines.append(
+            f"  (current for DDragon {ddragon_version}: every ordinary item priced)"
+        )
+    return lines, not reasons
+
+
 def print_audit():
     """Print the full audit report (champions, items, deltas).
 
-    Returns whether the source-completeness and hand-authored ally sections
-    are clear enough to proceed; the prose sections above them are
-    informational.
+    Returns whether the source-completeness, hand-authored ally, and item
+    economics sections are clear enough to proceed; the prose sections above
+    them are informational.
     """
     old_champs, new_champs, old_items, new_items = load_old_and_new()
     print()
@@ -424,10 +459,17 @@ def print_audit():
     ally_lines, ally_ok = ally_effect_lines(old_items, new_items)
     for line in ally_lines:
         print(line)
+    economics, economics_ok = economics_lines(
+        json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8")),
+        new_items,
+        extract_ddragon_version(new_champs),
+    )
+    for line in economics:
+        print(line)
     for line in escalated_cached_data_lines():
         print(line)
     print()
-    return source_ok and ally_ok
+    return source_ok and ally_ok and economics_ok
 
 
 def print_detail(names):
@@ -488,6 +530,24 @@ def run_pull():
         if phase == "error":
             raise RuntimeError(status)
     return patch
+
+
+def refresh_economics() -> int:
+    """Re-pull DDragon's gold table for the pulled cache; non-zero aborts the run."""
+    print("== Refreshing item economics (refresh_economics_data) ==", flush=True)
+    result = subprocess.run(
+        [sys.executable, "scripts/refresh_economics_data.py"],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(
+            "\nFAIL: data/economics-sourced.json was not refreshed — DDragon may not\n"
+            "have published the release the new cache pins yet. Re-run when it has;\n"
+            "the economy engine must not price the new patch from the old table.",
+            flush=True,
+        )
+    return result.returncode
 
 
 # ---------------------------------------------------------------------------
@@ -730,6 +790,31 @@ def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int
     return result.returncode
 
 
+def run_coverage_census(output: Path | None = None) -> int:
+    """Sweep every champion x mode/item/keystone cell and refresh its receipt.
+
+    The receipt legitimately moves on patch day (new items and champions
+    change the counts), so the gate is the sweep's own verdict: non-zero
+    means a frontier entry no residue row acknowledges, or an acknowledgement
+    that no longer reproduces, and it aborts the run.
+    """
+    output = output or DEFAULT_CENSUS_OUTPUT
+    print("== Gate: coverage census (full sweep, ~10 min) ==", flush=True)
+    result = subprocess.run(
+        [sys.executable, "scripts/coverage_census.py", "run", "--output", str(output)],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(
+            "\nFAIL: the coverage census reports a frontier entry nothing acknowledges\n"
+            "(or a docs/coverage-residue.json row that no longer reproduces) — close\n"
+            "it or record it before re-capturing golden.",
+            flush=True,
+        )
+    return result.returncode
+
+
 def run_gates():
     """pytest, golden compare, and (only on green tests) baseline re-capture.
 
@@ -781,19 +866,23 @@ def run_full(
 ):
     """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
 
-    Order (issue #134 — golden capture stays last and conditional):
-    source-completeness audit, catalogue rebuild, reviewed-packet freshness,
-    full parent-entry audit, staleness vs game files, then pytest + capture.
-    Any gate failure aborts before ``run_gates()`` so a stale packet asset or
-    a review-pending entry can never be re-blessed into the new baseline.
+    Order (issue #134 — golden capture stays last and conditional): wiki pull,
+    economics refresh, source-completeness audit, catalogue rebuild,
+    reviewed-packet freshness, full parent-entry audit, staleness vs game
+    files, coverage census, then pytest + capture.  Any gate failure aborts
+    before ``run_gates()`` so a stale packet asset or a review-pending entry
+    can never be re-blessed into the new baseline.
     """
     clear_wiki_caches()
     pulled_patch = run_pull()
     print(f"\nPulled patch: {pulled_patch}")
+    refresh_rc = refresh_economics()
+    if refresh_rc:
+        return refresh_rc
     if not print_audit():
         print(
-            "\nFAIL: the item cache lost source coverage. Resolve the BLOCKING\n"
-            "entries above before rebuilding artifacts or re-capturing golden."
+            "\nFAIL: the audit found BLOCKING entries. Resolve them above before\n"
+            "rebuilding artifacts or re-capturing golden."
         )
         return 1
     rebuild_failed = rebuild_static_artifacts()
@@ -823,6 +912,9 @@ def run_full(
     staleness_rc = run_staleness_gate(staleness_out, patch)
     if staleness_rc:
         return staleness_rc
+    census_rc = run_coverage_census()
+    if census_rc:
+        return census_rc
     return run_gates()
 
 

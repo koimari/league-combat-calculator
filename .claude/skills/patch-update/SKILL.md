@@ -15,10 +15,12 @@ python scripts/patch_update.py detail NAME...  # full leaf diff vs HEAD for ANY 
 ```
 
 `run` clears lolstaticdata's page caches (stale caches silently "re-pull"
-the old patch), fetches the new data, diffs it against the last committed
-patch (git HEAD — `data/` is tracked), rebuilds the static catalogues the web
-UI fetches, runs pytest and the golden compare, and re-captures the baseline
-**only if pytest is green**.
+the old patch), fetches the new data, refreshes `data/economics-sourced.json`
+from DDragon for the release the new cache pins (`economy.py` prices every
+purchase plan from it), diffs the data against the last committed patch (git
+HEAD — `data/` is tracked), rebuilds the static catalogues the web UI fetches,
+runs the patch-day gates, pytest and the golden compare, and re-captures the
+baseline **only if pytest is green**.
 
 The rebuild covers `static/ability-catalog.json` and `static/effect-catalog.json`.
 It deliberately skips `static/bis-profiles.json`, which merges an Axword Meraki
@@ -64,6 +66,13 @@ the champion AFTER the last `Processed` line).
 tested module and full-entry evidence exist — run `/add-champion`.
 `build_receipts.py` likewise refuses a cached champion without a registered
 module, so the roster addition and its module must land together.
+
+**Item economics:** `BLOCKING` means the DDragon refresh did not land for the
+cache's release, an ordinary item has no sourced sell row, or a shop total
+disagrees with the cache. Re-run `python scripts/refresh_economics_data.py`;
+for a disagreement, review it against the wiki page and record it in that
+script's `ACKNOWLEDGED_TOTAL_DIVERGENCES` (a row that stops reproducing is
+reported too).
 
 ## Packet-evidence re-pin (issue #161)
 
@@ -118,7 +127,13 @@ golden baseline when any of these are missing/stale:
   the Meraki axword kit; rebuild with `build_reviewed_modules.py` and commit
   the asset with its source receipts),
 - the full-entry audit tool (`--query-tool`/`LCC_WIKI_QUERY`/PATH/vendor),
-- the patch-regression staleness check (`CDTB_BIN` or `--patch`).
+- the patch-regression staleness check (`CDTB_BIN` or `--patch`),
+- the item economics refresh (DDragon must have published the release the
+  new cache pins) and its audit section,
+- the coverage census (`scripts/coverage_census.py run --output
+  docs/coverage-census.json`, ~10 min): a frontier entry no
+  `docs/coverage-residue.json` row acknowledges, or a row that no longer
+  reproduces, aborts. Commit the refreshed receipt with the data.
 
 Environment: set `LCC_WIKI_DB` (wiki sqlite), `LCC_AXWORD_SOURCE` (Meraki
 kit in the `lol-strength-analysis` sibling repo), `LCC_WIKI_QUERY` (the query

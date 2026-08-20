@@ -6597,5 +6597,10 @@
    3981316,
    "2026-01-05"
   ]
+ },
+ "provenance": {
+  "source_url": "https://ddragon.leagueoflegends.com/cdn/16.15.1/data/en_US/item.json",
+  "patch": "16.15.1",
+  "fetched_at": 1787217451.4029608
  }
 }

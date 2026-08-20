@@ -6,9 +6,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from src.calculator import item_effects
+from src.calculator.data_fetcher import fetch_item_data
 
 from patch_update import (
+    ECONOMICS_TABLES,
     ally_effect_lines,
+    economics_lines,
     item_source_lines,
     drop_noise,
     is_numeric_diff,
@@ -206,3 +209,26 @@ class TestAllyEffectLines:
             if "BLOCKING: " in line and " is no longer" in line
         }
         assert blocked == set(item_effects.ALLY_ITEM_EFFECTS)
+
+
+class TestEconomicsLines:
+    """The sourced gold table must be current for the cache it prices."""
+
+    def _tables(self):
+        import json  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+
+        return json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8"))
+
+    def test_a_current_table_says_so_and_does_not_block(self) -> None:
+        tables = self._tables()
+        lines, ok = economics_lines(
+            tables, fetch_item_data(), tables["patch"]["ddragon"]
+        )
+        assert ok
+        assert lines[-1].endswith("every ordinary item priced)")
+
+    def test_a_table_pinned_to_another_release_blocks(self) -> None:
+        lines, ok = economics_lines(self._tables(), fetch_item_data(), "99.1.1")
+        assert not ok
+        assert any(line.startswith("  BLOCKING: pinned to DDragon ") for line in lines)
+        assert lines[-1].startswith("  ** BLOCKING")

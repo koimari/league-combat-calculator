@@ -108,18 +108,29 @@ What `run` does:
      wiki; the run stops there until each entry is recorded in `item_source`
      (`APPROVED_BRANCH_REMOVALS` / `ACKNOWLEDGED_SOURCE_CONFLICTS` /
      `OPEN_SOURCE_CONFLICTS`).
+   - **Item economics** — `BLOCKING` when `data/economics-sourced.json` is
+     pinned to another DDragon release than the cache, an ordinary item has
+     no sourced sell row, or a shop total disagrees with the cache without a
+     reviewed entry in `refresh_economics_data.ACKNOWLEDGED_TOTAL_DIVERGENCES`.
+     (Between steps 2 and 3 the run already refreshed the file from DDragon
+     for the release the new cache pins — `scripts/refresh_economics_data.py`,
+     the file's only writer; `economy.py` prices every purchase plan from it.
+     DDragon lagging the patch fails the run: re-run once it has published.)
 4. **Rebuilds the static catalogues** the UI fetches at runtime
    (`scripts/build_ability_catalog.py`, `scripts/build_effect_catalog.py`,
    `scripts/build_receipts.py`).
    `static/bis-profiles.json` is NOT rebuilt by the script — it needs the
    Axword Meraki sibling repo (`lol-strength-analysis`); rebuild by hand
    (`python scripts/build_bis_profiles.py`) if its wiki inputs moved.
-5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, and
-   the staleness gate (`patch_regression check`) — each fails closed and
-   aborts the run — then pytest, golden compare (diffs printed — expected
-   after a real patch), and re-captures the golden baseline ONLY if pytest is
-   green. If pytest is red, hand-validated expectations drifted — fix them
-   first (Step 4).
+5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, the
+   staleness gate (`patch_regression check`), and the coverage census
+   (`coverage_census.py run --output docs/coverage-census.json`, ~10 min; it
+   refreshes its receipt and fails on a frontier entry no
+   `docs/coverage-residue.json` row acknowledges or a row that no longer
+   reproduces) — each fails closed and aborts the run — then pytest, golden
+   compare (diffs printed — expected after a real patch), and re-captures the
+   golden baseline ONLY if pytest is green. If pytest is red, hand-validated
+   expectations drifted — fix them first (Step 4).
 
 Notes:
 

@@ -84,8 +84,8 @@ endpoint — no withhold, refusal, or fail-closed path fires for any reachable s
 ## Success criteria
 
 1. `scripts/coverage_census.py` full sweep reports **zero** entries in every withhold
-   class; `docs/coverage-census.json` committed showing it, and a test pins the gate
-   green against the live pipeline.
+   class; `docs/coverage-census.json` committed showing it, and CI's `coverage-census`
+   job plus `patch_update.py run` hold the gate green against the live pipeline.
 2. `/api/champions` publishes all four `supported_fight_modes` for all 173 champions;
    comparison curves return populated for all 173.
 3. Each of the four champions: a timed-mode runtime probe shows the unlocked mechanic

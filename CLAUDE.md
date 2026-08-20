@@ -35,7 +35,8 @@ black src/ tests/ scripts/          # Format code
 black --check src/ tests/ scripts/  # Formatting gate (CI runs this)
 pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
-python scripts/patch_update.py run    # Patch day: re-pull wiki data, audit, gates (see /patch-update skill)
+python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, ~10 min)
+python scripts/patch_update.py run    # Patch day: re-pull wiki data + economics, audit, gates (see /patch-update skill)
 ```
 
 `pytest` gates every task; `pylint src/` and `black --check` gate any code change.
