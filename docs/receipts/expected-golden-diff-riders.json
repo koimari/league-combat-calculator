@@ -1,0 +1,1130 @@
+{
+  "slice": "fc/riders (coverage-frontier wave 2, unit W2-RIDERS)",
+  "decisions": [
+    "D-6 (coverage vocabulary)",
+    "plan decision 6",
+    "plan decision 10"
+  ],
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17 - no baseline is re-captured in this slice; the orchestrator re-captures once at integration close"
+  },
+  "what_moved": "Five damage riders and two attack-speed steroids that priced nothing before now price their cached rows: Warwick P (Eternal Hunger on-hit) and W (Blood Hunt attack speed), Miss Fortune P (Love Tap) and W (Strut attack speed), Shaco P (Backstab), Sylas P (Petricite Burst), Xin Zhao P (Determination).  Every moved leaf belongs to one of those five champions; the two attack-speed steroids also raise their champion's auto count, which is why auto_attacks and item on-hit rows move for Warwick and Miss Fortune.  No other champion, item or scenario moves.",
+  "coupled_golden_is_unchanged": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -> OK: snapshot identical.  The roster walk prices none of these rows.",
+  "measured": {
+    "golden": {
+      "differing_leaves": 157,
+      "qualifying_leaves": 154,
+      "numeric_leaves_before": 44217,
+      "champions_touched": [
+        "Miss Fortune",
+        "MissFortune",
+        "Shaco",
+        "Sylas",
+        "Warwick",
+        "Xin Zhao",
+        "XinZhao"
+      ]
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [
+      "/champion_baselines/MissFortune/abilities_level_11/W/cooldown",
+      "/champion_baselines/MissFortune/abilities_level_11/W/damage_type",
+      "/champion_baselines/MissFortune/abilities_level_11/W/detail",
+      "/champion_baselines/MissFortune/abilities_level_11/W/parts[0]",
+      "/champion_baselines/MissFortune/abilities_level_11/W/stat_buff",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/cooldown",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/damage_type",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/detail",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/on_hit",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/rank",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/MissFortune/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Shaco/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Shaco/abilities_level_11/passive/damage_type",
+      "/champion_baselines/Shaco/abilities_level_11/passive/detail",
+      "/champion_baselines/Shaco/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Shaco/abilities_level_11/passive/rank",
+      "/champion_baselines/Shaco/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Shaco/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Sylas/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Sylas/abilities_level_11/passive/detail",
+      "/champion_baselines/Sylas/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Sylas/abilities_level_11/passive/rank",
+      "/champion_baselines/Sylas/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Sylas/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Warwick/abilities_level_11/W/cooldown",
+      "/champion_baselines/Warwick/abilities_level_11/W/damage_type",
+      "/champion_baselines/Warwick/abilities_level_11/W/detail",
+      "/champion_baselines/Warwick/abilities_level_11/W/parts[0]",
+      "/champion_baselines/Warwick/abilities_level_11/W/stat_buff",
+      "/champion_baselines/Warwick/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Warwick/abilities_level_11/passive/detail",
+      "/champion_baselines/Warwick/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Warwick/abilities_level_11/passive/rank",
+      "/champion_baselines/Warwick/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Warwick/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Warwick/abilities_level_11/passive/self_heal_share_of_damage",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/cooldown",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/damage_type",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/detail",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/on_hit",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/rank",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/XinZhao/abilities_level_11/passive/resource_type",
+      "/registered_champion_fights/Miss Fortune/11/sustained/magic_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Miss Fortune/11/sustained/no_items/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Miss Fortune/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Miss Fortune/18/sustained/no_items/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Miss Fortune/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Miss Fortune/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Miss Fortune/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Shaco/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Shaco/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Shaco/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Shaco/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Shaco/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Shaco/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Shaco/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Shaco/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Shaco/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Shaco/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Shaco/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Sylas/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Sylas/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Sylas/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Sylas/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Sylas/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Sylas/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sylas/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Warwick/11/sustained/magic_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Warwick/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Warwick/11/sustained/no_items/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Warwick/11/sustained/physical_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Warwick/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Warwick/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Warwick/18/sustained/magic_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Warwick/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Warwick/18/sustained/no_items/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Warwick/18/sustained/physical_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Warwick/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Warwick/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Warwick/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Warwick/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Xin Zhao/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Xin Zhao/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Xin Zhao/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Xin Zhao/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Xin Zhao/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Xin Zhao/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Xin Zhao/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Xin Zhao/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Xin Zhao/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Xin Zhao/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Xin Zhao/18/sustained/spellblade_build/total_damage"
+    ],
+    "golden_shape_counters": [
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves"
+    ],
+    "golden_note": "The shape counters move because the new rows add leaves: the P entries gain on_hit/detail (and Warwick's gains self_heal_share_of_damage), the W entries gain stat_buff/parts, and each sustained fight gains an on_hit_ability_passive breakdown row.",
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": []
+  },
+  "measured_diffs": [
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/W/cooldown",
+      "old": 0.0,
+      "new": 12.0,
+      "transition": "zero_to_value"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/W/damage_type",
+      "old": "magic",
+      "new": "physical",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/W/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/W/parts[0]",
+      "old": null,
+      "new": "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/W/stat_buff",
+      "old": null,
+      "new": "{\"bonus_attack_speed\": 70.0}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/cooldown",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/damage_type",
+      "old": "magic",
+      "new": "physical",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": "1 Love Tap(s) of 68.40 physical damage (90% AD at level 11); the mark expires only on attacking a NEW enemy, so a duel eats one tap unless the player tags another target",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/on_hit",
+      "old": null,
+      "new": "{\"damage_per_hit\": 68.4, \"damage_type\": \"physical\", \"max_procs\": 1, \"name\": \"Love Tap (on-hit)\"}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/rank",
+      "old": 0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/resource_cost",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/MissFortune/abilities_level_11/passive/resource_type",
+      "old": "MANA",
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/cooldown",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/damage_type",
+      "old": "magic",
+      "new": "physical",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": "1 attack(s) from behind for 25.88 bonus physical (25.88 at level 11 + 20% bonus AD); the wiki's critical strike modifier on this damage is not priced",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/on_hit",
+      "old": null,
+      "new": "{\"damage_per_hit\": 25.88, \"damage_type\": \"physical\", \"max_procs\": 1, \"name\": \"Backstab (on-hit)\"}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/rank",
+      "old": 0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/resource_cost",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Shaco/abilities_level_11/passive/resource_type",
+      "old": "MANA",
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Sylas/abilities_level_11/passive/cooldown",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Sylas/abilities_level_11/passive/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": "3 Unshackled attack(s) of 113.10 magic damage (130% AD + 30% AP to the primary target); the empowered attack's 125% bonus attack speed, its 40% AD + 20% AP splash and its critical strike are not priced",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/Sylas/abilities_level_11/passive/on_hit",
+      "old": null,
+      "new": "{\"damage_per_hit\": 113.1, \"damage_type\": \"magic\", \"max_procs\": 3, \"name\": \"Petricite Burst (on-hit)\"}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/Sylas/abilities_level_11/passive/rank",
+      "old": 0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Sylas/abilities_level_11/passive/resource_cost",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Sylas/abilities_level_11/passive/resource_type",
+      "old": "MANA",
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/W/cooldown",
+      "old": 0.0,
+      "new": 60.0,
+      "transition": "zero_to_value"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/W/damage_type",
+      "old": "magic",
+      "new": "physical",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/W/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": "90% bonus attack speed (the sourced Bonus Attack Speed row; the active marks the target regardless of its health); Blood Hunt's movement speed has no engine channel",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/W/parts[0]",
+      "old": null,
+      "new": "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/W/stat_buff",
+      "old": null,
+      "new": "{\"bonus_attack_speed\": 90.0}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/cooldown",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": "34.82 bonus magic damage on-hit (6 : 60.76 based on level + 15% bonus AD + 10% AP); Warwick at 100% health heals for 0% of the post-mitigation damage it deals",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/on_hit",
+      "old": null,
+      "new": "{\"damage_per_hit\": 34.82, \"damage_type\": \"magic\", \"name\": \"Eternal Hunger (on-hit)\"}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/rank",
+      "old": 0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/resource_cost",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/resource_type",
+      "old": "MANA",
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/Warwick/abilities_level_11/passive/self_heal_share_of_damage",
+      "old": null,
+      "new": 0.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/cooldown",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/damage_type",
+      "old": "magic",
+      "new": "physical",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/detail",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+      "new": "every 3rd basic attack consumes the stacks for 40.05 bonus physical damage (45% AD + 15% AP at level 11) and the sourced maximum-health heal; Wind Becomes Lightning's two stacks are not counted",
+      "transition": "text_change"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/on_hit",
+      "old": null,
+      "new": "{\"damage_per_hit\": 13.35, \"damage_type\": \"physical\", \"name\": \"Determination\", \"stacks_required\": 3}",
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/rank",
+      "old": 0,
+      "new": 11,
+      "transition": "zero_to_value"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/resource_cost",
+      "old": 0.0,
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/champion_baselines/XinZhao/abilities_level_11/passive/resource_type",
+      "old": "MANA",
+      "new": null,
+      "transition": "value_to_absent"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/magic_build/breakdown_totals/auto_attacks",
+      "old": 202.67,
+      "new": 304.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 45.6,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/magic_build/total_damage",
+      "old": 3351.05,
+      "new": 3497.99,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/no_items/breakdown_totals/auto_attacks",
+      "old": 202.67,
+      "new": 304.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 45.6,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/no_items/total_damage",
+      "old": 1320.4,
+      "new": 1467.33,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/breakdown_totals/auto_attacks",
+      "old": 1270.5,
+      "new": 1778.7,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 104.77,
+      "new": 242.77,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 138.6,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/physical_build/total_damage",
+      "old": 3691.67,
+      "new": 4476.47,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "old": 825.92,
+      "new": 1321.47,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 112.2,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/11/sustained/spellblade_build/total_damage",
+      "old": 3004.72,
+      "new": 3612.47,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/breakdown_totals/auto_attacks",
+      "old": 256.0,
+      "new": 512.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 64.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "old": 72.04,
+      "new": 86.45,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/magic_build/total_damage",
+      "old": 4051.19,
+      "new": 4385.59,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/no_items/breakdown_totals/auto_attacks",
+      "old": 256.0,
+      "new": 512.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 64.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/no_items/total_damage",
+      "old": 1850.91,
+      "new": 2170.91,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/breakdown_totals/auto_attacks",
+      "old": 1656.6,
+      "new": 2484.9,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 295.79,
+      "new": 487.72,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 167.33,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/physical_build/total_damage",
+      "old": 4869.97,
+      "new": 6057.54,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "old": 1097.1,
+      "new": 1828.5,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 138.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Miss Fortune/18/sustained/spellblade_build/total_damage",
+      "old": 3895.21,
+      "new": 4764.61,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 17.25,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/magic_build/total_damage",
+      "old": 2358.89,
+      "new": 2376.15,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 17.25,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/no_items/total_damage",
+      "old": 884.24,
+      "new": 901.49,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 132.14,
+      "new": 132.77,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 37.92,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/physical_build/total_damage",
+      "old": 2271.62,
+      "new": 2310.16,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 32.05,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/11/sustained/spellblade_build/total_damage",
+      "old": 2052.07,
+      "new": 2084.12,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 20.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/magic_build/total_damage",
+      "old": 2941.49,
+      "new": 2961.49,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 20.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/no_items/total_damage",
+      "old": 1366.19,
+      "new": 1386.19,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 378.38,
+      "new": 380.78,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 40.67,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/physical_build/total_damage",
+      "old": 3290.54,
+      "new": 3333.61,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 34.8,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Shaco/18/sustained/spellblade_build/total_damage",
+      "old": 2789.27,
+      "new": 2824.07,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 589.68,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "old": 69.38,
+      "new": 148.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/magic_build/total_damage",
+      "old": 1876.1,
+      "new": 2544.4,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 242.36,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/no_items/total_damage",
+      "old": 678.43,
+      "new": 920.79,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 131.96,
+      "new": 143.08,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 674.14,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/physical_build/total_damage",
+      "old": 1909.39,
+      "new": 2594.66,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 551.57,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/11/sustained/spellblade_build/total_damage",
+      "old": 1552.93,
+      "new": 2104.5,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 667.68,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "old": 101.38,
+      "new": 190.4,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/magic_build/total_damage",
+      "old": 2265.43,
+      "new": 3022.13,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 312.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/no_items/total_damage",
+      "old": 1012.62,
+      "new": 1324.62,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 377.6,
+      "new": 408.43,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 743.79,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/physical_build/total_damage",
+      "old": 2779.08,
+      "new": 3553.7,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 621.21,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Sylas/18/sustained/spellblade_build/total_damage",
+      "old": 2119.85,
+      "new": 2741.07,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/magic_build/breakdown_totals/auto_attacks",
+      "old": 174.0,
+      "new": 348.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 379.3,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "old": null,
+      "new": 63.22,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/magic_build/total_damage",
+      "old": 1206.48,
+      "new": 1822.99,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/no_items/breakdown_totals/auto_attacks",
+      "old": 174.0,
+      "new": 348.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 149.23,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/no_items/total_damage",
+      "old": 641.43,
+      "new": 964.66,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/physical_build/breakdown_totals/auto_attacks",
+      "old": 1331.0,
+      "new": 1863.4,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 279.89,
+      "new": 288.52,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 290.35,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/physical_build/total_damage",
+      "old": 2396.07,
+      "new": 3227.45,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "old": 874.5,
+      "new": 1399.2,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 294.11,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/11/sustained/spellblade_build/total_damage",
+      "old": 1801.48,
+      "new": 2620.29,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/magic_build/breakdown_totals/auto_attacks",
+      "old": 288.0,
+      "new": 504.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 555.52,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "old": null,
+      "new": 95.23,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/magic_build/total_damage",
+      "old": 1480.64,
+      "new": 2347.39,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/no_items/breakdown_totals/auto_attacks",
+      "old": 288.0,
+      "new": 504.0,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 275.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/no_items/total_damage",
+      "old": 898.43,
+      "new": 1389.43,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/physical_build/breakdown_totals/auto_attacks",
+      "old": 1441.0,
+      "new": 2593.8,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 346.1,
+      "new": 593.55,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 503.04,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/physical_build/total_damage",
+      "old": 2714.43,
+      "new": 4617.71,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "old": 1155.4,
+      "new": 1733.1,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 460.61,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Warwick/18/sustained/spellblade_build/total_damage",
+      "old": 2280.52,
+      "new": 3318.83,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 94.53,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/magic_build/total_damage",
+      "old": 2059.84,
+      "new": 2154.37,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 35.6,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/no_items/total_damage",
+      "old": 1022.22,
+      "new": 1057.82,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 132.14,
+      "new": 134.16,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 122.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/physical_build/total_damage",
+      "old": 2697.17,
+      "new": 2821.18,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 100.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/11/sustained/spellblade_build/total_damage",
+      "old": 2219.32,
+      "new": 2319.32,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 174.22,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/magic_build/total_damage",
+      "old": 2413.17,
+      "new": 2587.4,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 76.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/no_items/total_damage",
+      "old": 1367.84,
+      "new": 1443.84,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "old": 378.38,
+      "new": 391.11,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 215.2,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/physical_build/total_damage",
+      "old": 3579.75,
+      "new": 3807.69,
+      "transition": "value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "old": null,
+      "new": 180.0,
+      "transition": "absent_to_value"
+    },
+    {
+      "path": "/registered_champion_fights/Xin Zhao/18/sustained/spellblade_build/total_damage",
+      "old": 2798.1,
+      "new": 2978.1,
+      "transition": "value"
+    }
+  ],
+  "note": "Numbers here are the pair engine's, at the harness's fixed target (2000 HP, 50 armour, 40 MR) and its four builds x two levels.  Each moved fight total is the old total plus the newly priced rider (and, for Warwick and Miss Fortune, the extra autos their steroid buys)."
+}

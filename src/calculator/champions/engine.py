@@ -121,6 +121,13 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # participant ledger turns into a timed self-shield event at that
         # event's timestamp (the Eclipse item authors the same payload shape).
         "self_shield_events",
+        # Module-owned share of THIS row's own post-mitigation damage that
+        # heals the caster, for a share the healing rule cannot derive from
+        # the cache because it is champion-option state (Warwick's Eternal
+        # Hunger heals 100% of its damage below 50% maximum health, 250%
+        # below 25%).  The champion's rule in ``healing_legacy`` reads it
+        # off the entry.
+        "self_heal_share_of_damage",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
