@@ -85,6 +85,22 @@ _E_SHIELD_DURATION = 3.0
 #     The burn is script-side and is not shipped in the CharacterRecords
 #     dump.  A SILENT source cannot break a tie, so the class stays open.
 #
+#     2026-08-20: that silence was re-tested against the CURRENT Community
+#     Dragon dump rather than assumed (the search is recorded verbatim in
+#     the ``searched`` row of ``burn_damage_class`` below).  The published
+#     ``renata.bin.json`` is byte-identical to the tracked local evidence,
+#     the champion bin holds no burn effect object at all (RenataWAbility's
+#     only child spell IS RenataW), and the one damage-class field the game
+#     schema even defines — ``mDamageType`` — occurs ZERO times across all
+#     203 local champion bins and ``items.bin.json``.  The class is not
+#     shipped as data for ANY champion, so no corroboration of an enum
+#     against an uncontested spell is possible; the only damage-ish enum in
+#     the dump is bot-AI metadata (``BotData.DamageTag``) that misses true
+#     damage on abilities whose class nobody disputes (Vayne W, Sett W and
+#     Smolder Q all tag 0) and that carries Renata's per-champion default
+#     on W — the same 1 her zero-damage R carries.  Evidence, not proof of
+#     absence by assertion: the field stays open.
+#
 # Why a settled cadence does not make the lethal half publishable:
 # the two candidate classes agree only on an UNMITIGATED target.  "True
 # damage" is absorbed by shields and scaled by damage reduction; "raw
@@ -233,6 +249,66 @@ BAILOUT_AUTHORITY = {
                 "wiki": ("true", "raw"),
                 "chosen": None,
                 "basis": "unresolved_wiki_self_conflict_binary_silent",
+                # What was searched before leaving this open, so the next
+                # implementer re-runs it only when the game data changes.
+                # Every path is a Community Dragon `latest` asset fetched on
+                # 2026-08-20 with its sha256 at that time.
+                "searched": {
+                    "date": "2026-08-20",
+                    "assets": (
+                        (
+                            "game/data/characters/renata/renata.bin.json",
+                            "d05e6d6eabc614f8821be6ec4c01e09018f6606c6b94ee"
+                            "e1712ca04f00e4211e",
+                            "byte-identical to the tracked local evidence; "
+                            "no burn effect object, no damage-class field",
+                        ),
+                        (
+                            "game/data/characters/renata/skins/root.bin.json",
+                            "e8e6fa554d10762b7508772e33a26c2f5cff540cf85847"
+                            "0663a0591c5d5c5e89",
+                            "skin/audio metadata only — RenataW appears as "
+                            "sfx event names, zero 'damage' substrings",
+                        ),
+                        (
+                            "game/data/characters/renata/skins/skin0.bin.json",
+                            "6600c7d42a6e6007275969098af072dc48ace98c27a865"
+                            "8cd896e7bc512e552c",
+                            "vfx bin — zero 'damage' substrings; excluded by "
+                            "the evidence bar in any case",
+                        ),
+                    ),
+                    # Directory listings, not guesses: the champion folder
+                    # ships renata.bin(.json), animations/ and skins/ only,
+                    # and there is no shared spell-script asset family.
+                    "directories": (
+                        "game/data/characters/renata/",
+                        "game/data/spells/",
+                        "game/data/shared/spells/",
+                    ),
+                    # Field names looked for by name across every local bin
+                    # dump (203 champion bins + items.bin.json), each 0 hits.
+                    # `mDamageType` is the ONLY damage-class field the hash
+                    # table `hashes.binfields.txt` defines at all.
+                    "keys_absent_everywhere": (
+                        "mDamageType",
+                        "mDamageDisplayTypes",
+                        "DamageResultType",
+                        "mPhysicalDamageRatio",
+                    ),
+                    # The one enum that does exist, and why it cannot settle
+                    # the field: it is BotsSpellData (bot targeting), it is
+                    # spell-level rather than effect-level, and it is wrong
+                    # on uncontested spells.  DamageTag 2 does line up with
+                    # true damage where a spell's damage IS true (Garen R,
+                    # Darius R, Fiora R, Cho'Gath R, Master Yi E, Olaf E,
+                    # Camille Q2, Vel'Koz R, Urgot R recast), but it misses
+                    # partial true damage (Vayne W = 0, Sett W = 0, Smolder
+                    # Q = 0, Aurelion Sol Q = 1) and defaults per champion
+                    # (every Renata spell = 1, including her zero-damage R).
+                    "rejected_field": "BotData.DamageTag (RenataW = 1)",
+                    "conclusion": "not_machine_decidable_from_shipped_data",
+                },
                 "blocker": (
                     "The class decides whether a shield or a damage-reduction "
                     "window absorbs a burn tick. Renata's own E shields the "
