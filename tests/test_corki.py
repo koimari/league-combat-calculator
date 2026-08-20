@@ -334,8 +334,7 @@ class TestGatlingGunShred:
         assert resists.base_mr == pytest.approx(-7.0)
 
         damage = [
-            apply_resistance(100.0, _ability_mr(resists, False, stacks))
-            for stacks in range(4)
+            apply_resistance(100.0, _ability_mr(resists, stacks)) for stacks in range(4)
         ]
         assert damage == sorted(damage), "more shred stacks must never deal less"
         assert damage[-1] == pytest.approx(damage[0])

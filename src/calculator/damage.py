@@ -249,8 +249,9 @@ class Resists:
     The ``effective_*`` fields hold the currently-resolved resistances
     that damage math applies. During the ability rotation they reflect
     ability pen; ``use_auto_pen`` switches them to auto pen once the
-    rotation is done. ``effective_mr`` pre/post ult variants exist because
-    Malignance's Hatefog MR reduction only activates once R is cast.
+    rotation is done. ``effective_mr`` follows ``ult_cast``: Malignance's
+    Hatefog MR reduction applies only once the rotation accepts an R cast,
+    so both the pre- and post-ult variants are kept and the outcome picks.
     """
 
     # Attacker penetration
@@ -284,6 +285,21 @@ class Resists:
     effective_mr_pre_ult: float = 0.0
     effective_mr_post_ult: float = 0.0
     effective_mr: float = 0.0
+    # The rotation's R outcome: set once an R cast is accepted.  An R the
+    # resource budget refused, a cast order without R, or an auto-only
+    # window never sets it, and ``effective_mr`` stays pre-ult.
+    ult_cast: bool = False
+
+    def mark_ult_cast(self) -> None:
+        """Record the rotation's accepted R cast; Hatefog's zone is open."""
+        self.ult_cast = True
+        self._select_mr()
+
+    def _select_mr(self) -> None:
+        """Serve the MR of the rotation's R outcome (see ``ult_cast``)."""
+        self.effective_mr = (
+            self.effective_mr_post_ult if self.ult_cast else self.effective_mr_pre_ult
+        )
 
     def resolve_magic(self) -> None:
         """Recompute magic pen variants and effective MR (ability pen)."""
@@ -303,7 +319,7 @@ class Resists:
         self.effective_mr_post_ult = apply_magic_penetration(
             self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
         )
-        self.effective_mr = self.effective_mr_post_ult
+        self._select_mr()
 
     def resolve_armor(self) -> None:
         """Recompute armor pen variants and effective armor (ability pen)."""
@@ -349,7 +365,7 @@ class Resists:
         self.effective_mr_post_ult = apply_magic_penetration(
             self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
         )
-        self.effective_mr = self.effective_mr_post_ult
+        self._select_mr()
 
     def shred_armor(
         self, reduction_percent: float = 0.0, reduction_flat: float = 0.0
@@ -397,7 +413,7 @@ class Resists:
         self.effective_mr_post_ult = apply_magic_penetration(
             self.reduced_mr, self.magic_pen_flat, self.auto_magic_pen_percent
         )
-        self.effective_mr = self.effective_mr_post_ult
+        self._select_mr()
 
 
 def _mitigate(
@@ -2463,14 +2479,13 @@ def _resolve_combat_state(
     magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
     magic_pen_percent = champion_stats.get("magic_penetration_percent", 0.0) / 100.0
 
-    # Malignance MR reduction only activates on R cast, so abilities before
-    # R in the cast_order use base MR.  Both effective values are resolved
-    # and the rotation tracks which one to use per-ability.  A window that
-    # schedules no R at all activates it for nothing.
-    malignance_mr_reduction = (
-        sum(effect.mr_reduction for effect in item_cast_procs.ultimate_procs)
-        if _ultimate_scheduled(config, ability_damages)
-        else 0.0
+    # Hatefog's flat reduction is the item's magnitude; whether it applies
+    # is the rotation's R outcome (``Resists.ult_cast``): abilities before
+    # the accepted R cast use base MR, and a window that never accepts one
+    # — auto-only, a cast order without R, an R the budget refused — keeps
+    # the pre-ult MR throughout.
+    malignance_mr_reduction = sum(
+        effect.mr_reduction for effect in item_cast_procs.ultimate_procs
     )
 
     base_mr = max(config.target_magic_resistance, 0)
@@ -2961,17 +2976,16 @@ def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
     return first, interval
 
 
-def _ability_mr(resists: Resists, ult_cast: bool, vile_decay_stacks: int) -> float:
+def _ability_mr(resists: Resists, vile_decay_stacks: int) -> float:
     """Effective MR one ability's magic damage is mitigated by.
 
-    Malignance's Hatefog only applies once R has been cast (``ult_cast``),
-    and Bloodletter's Curse deepens the reduction per Vile Decay stack.
+    Malignance's Hatefog only applies once the rotation has accepted an R
+    cast (``resists.ult_cast``), and Bloodletter's Curse deepens the
+    reduction per Vile Decay stack.
     """
     if resists.mr_shred is None or vile_decay_stacks <= 0:
-        return (
-            resists.effective_mr_post_ult if ult_cast else resists.effective_mr_pre_ult
-        )
-    base = resists.reduced_mr if ult_cast else resists.base_mr
+        return resists.effective_mr
+    base = resists.reduced_mr if resists.ult_cast else resists.base_mr
     reduced = reduce_resistance(
         base,
         resists.mr_shred.reduction_percent(vile_decay_stacks),
@@ -3125,7 +3139,6 @@ class _ThresholdShred:
 def _make_shred_ramp(
     resists: Resists,
     ability_info: dict[str, Any],
-    ult_cast: bool,
     vile_decay_stacks: int,
 ) -> _ShredRamp | _ThresholdShred | None:
     """Build the hit ramp/threshold for a target debuff, else None."""
@@ -3155,7 +3168,7 @@ def _make_shred_ramp(
         resists=resists,
         debuff=debuff,
         stacks=stacks,
-        ability_mr=lambda: _ability_mr(resists, ult_cast, vile_decay_stacks),
+        ability_mr=lambda: _ability_mr(resists, vile_decay_stacks),
     )
 
 
@@ -4327,7 +4340,6 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
 
     result = RotationResult()
     vile_decay_stacks = 0  # Bloodletter's Curse MR reduction stacks
-    ult_cast = False  # Tracks if R has been reached in cast_order
     mitigated_damage_dealt = 0.0  # Running total for missing-HP scaling
     first_ability_key: str | None = None
 
@@ -4417,9 +4429,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             else None
         )
 
-        # Malignance MR reduction activates when R is cast
-        if ability_key == "R":
-            ult_cast = True
+        # Hatefog's zone opens on an accepted R cast; an R the resource
+        # budget refused opens nothing, and the served MR says so.
+        if ability_key == "R" and num_casts > 0:
+            resists.mark_ult_cast()
 
         result.total_ability_casts += num_casts
         # Damaging hit instances: each damaging part is one hit per cast
@@ -4441,7 +4454,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 resists.mr_shred.max_stacks,
             )
             ability_stacks = vile_decay_stacks
-        ability_mr = _ability_mr(resists, ult_cast, ability_stacks)
+        ability_mr = _ability_mr(resists, ability_stacks)
 
         # All damage arithmetic is typed DamageParts — champion-specific
         # scaling lives in the champion module's closures, never here.
@@ -4530,7 +4543,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 parts = parts + (swing,)
         # A ramped shred (Corki E) stacks up across this ability's own
         # hits; an unramped one lands in full after it (below).
-        shred_ramp = _make_shred_ramp(resists, ability_info, ult_cast, ability_stacks)
+        shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
         (
             ability_total,
@@ -4825,14 +4838,15 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 _apply_target_shred(resists, target_debuff, coverage)
 
     # Update effective MR for non-ability damage using final Vile Decay stacks.
-    # Non-ability damage occurs during/after the full rotation, so use
-    # post-ult MR (Malignance reduction active).
+    # Non-ability damage occurs during/after the full rotation, so it sees
+    # Hatefog's reduction exactly when the rotation accepted an R cast.
     if resists.mr_shred is not None and vile_decay_stacks > 0:
+        base_mr = resists.reduced_mr if resists.ult_cast else resists.base_mr
         mr_with_stacks = reduce_resistance(
-            resists.reduced_mr,
+            base_mr,
             resists.mr_shred.reduction_percent(vile_decay_stacks),
         )
-        mr_with_stacks = max(mr_with_stacks, min(0.0, resists.reduced_mr))
+        mr_with_stacks = max(mr_with_stacks, min(0.0, base_mr))
         resists.effective_mr = apply_magic_penetration(
             mr_with_stacks, resists.magic_pen_flat, resists.auto_magic_pen_percent
         )
@@ -8369,23 +8383,6 @@ def _add_item_proc_damage(
             }
         ]
         state.total_damage += ult_proc_mitigated
-
-
-def _ultimate_scheduled(
-    config: FightConfig, ability_damages: Mapping[str, Any]
-) -> bool:
-    """Whether the window can cast R at all — the pre-rotation answer.
-
-    Once the accepted cast timeline exists it is the authority (the
-    ultimate-proc rows read it); resistance resolution runs before it and
-    asks the same question of the request: an R the kit prices, in a cast
-    order that holds it, in a window that casts.
-    """
-    return (
-        "R" in ability_damages
-        and not config.auto_attacks_only
-        and (config.cast_order is None or "R" in config.cast_order)
-    )
 
 
 def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[float]:

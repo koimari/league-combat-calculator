@@ -61,6 +61,59 @@ def test_a_cast_order_without_r_never_opens_hatefog():
     assert held["timeline_coverage"]["coarse_sources"] == []
 
 
+def test_a_mana_refused_r_never_opens_hatefog():
+    """R is priced, ordered first, in a casting window — and the budget refuses it.
+
+    Only the accepted cast timeline knows this, so the served MR must come from
+    the rotation's R outcome: the proc row is absent AND the MR is unshredded.
+    The engine is driven directly because no cached champion's pool is small
+    enough to refuse its own R at full mana; the pool is the fixture's knob.
+    """
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.damage import FightConfig, calculate_fight_damage
+    from src.calculator.data_fetcher import get_champion, get_item_by_name
+    from src.calculator.stats import calculate_total_stats
+
+    annie = get_champion("Annie")
+    malignance = get_item_by_name("Malignance")
+    stats = calculate_total_stats(annie, 18, [malignance])
+    abilities = parse_champion_abilities(
+        annie, 18, stats["ability_power"], champion_stats=stats
+    )
+
+    def fight(items, max_mana):
+        return calculate_fight_damage(
+            {**stats, "max_mana": max_mana, "resource_regen_per_second": 0.0},
+            abilities,
+            items,
+            FightConfig(
+                target_health=3000.0,
+                target_armor=60.0,
+                target_magic_resistance=60.0,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+                deterministic=True,
+                enforce_resource_limits=True,
+                cast_order=["R", "Q", "W", "E"],
+            ),
+        )
+
+    r_cost = float(abilities["R"]["resource_cost"])
+    assert r_cost > 0.0
+    bare = fight([], stats["max_mana"])
+    paid = fight([malignance], stats["max_mana"])
+    refused = fight([malignance], r_cost - 1.0)
+
+    # Control: the same build with the R paid for opens the zone and shreds.
+    assert any(cast["slot"] == "R" for cast in paid["cast_timeline"])
+    assert "ult_proc_Malignance" in paid["breakdown"]
+    assert paid["effective_mr"] < bare["effective_mr"]
+
+    assert not any(cast["slot"] == "R" for cast in refused["cast_timeline"])
+    assert "ult_proc_Malignance" not in refused["breakdown"]
+    assert refused["effective_mr"] == pytest.approx(bare["effective_mr"])
+
+
 @pytest.mark.parametrize(
     ("item", "row"),
     [
