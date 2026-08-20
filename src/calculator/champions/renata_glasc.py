@@ -13,8 +13,16 @@ E9-2 gap fixes:
   cached "Shield Strength" row (50-110 + 50% AP) and rides the E damage
   entry as a module-authored self-shield (E8c payload), so the 1v1 ledger
   grants it without needing a teammate.
-- Q/E damage remain modeled. W Bailout stays fail-closed because the local
-  Wiki cache and game binary disagree on the burn cadence and damage class.
+- Q/E damage remain modeled. W Bailout's lethal half stays fail-closed, but
+  the conflict behind that refusal has now been ADJUDICATED field by field
+  (see ``BAILOUT_AUTHORITY``): the burn CADENCE is settled in favour of the
+  game binary on the repo's Gnar precedent (0.25s, ten ticks, a 2.5s
+  window), while the burn's damage CLASS remains unresolved — the cached
+  description calls it true damage, the same entry's notes call it raw
+  damage, and the binary defines no damage class for it at all. A class
+  that cannot be resolved cannot decide whether a shield or a
+  damage-reduction window absorbs a tick, so the survival result is still
+  unpublishable and the named denial receipts stand.
   R berserk stays documented as an out-of-scope row.
 """
 
@@ -40,20 +48,78 @@ _P_AP_RATIO_PER_100 = 2.0
 # seconds").
 _E_SHIELD_DURATION = 3.0
 
-# Bailout cannot enter the survival kernel until its burn has one exact local
-# authority. The Wiki cache says one 10%-maximum-health tick every 0.264s and
-# describes true damage. Its notes call the same health loss raw damage. The
-# local 16.15 game binary instead carries TicksPerSecond=4 (0.25s). Publishing
-# either interpretation would overstate or understate survival, so this
-# source-status receipt is descriptive only and runtime availability is false.
+# --------------------------------------------------------------------------
+# W (Bailout) — burn-authority conflict: adjudication record + standing denial
+# --------------------------------------------------------------------------
+# Bailout's lethal half (restore to full health, then a maximum-health burn
+# that kills anyway unless a takedown lands) cannot enter the survival kernel
+# until every number it needs has ONE local authority.  Two local sources
+# speak to it — the cached Wiki W entry and the local Community Dragon
+# character binary — and they did not agree.
+#
+# ``BAILOUT_AUTHORITY["adjudication"]`` below is the per-field record of that
+# disagreement and how each field was settled.  The rule applied is the
+# repo's standing precedent (CLAUDE.md, the Gnar Mega-form entry): where the
+# game files and the Wiki disagree on a number, **the game files win** — the
+# Wiki's stat boxes have been provably stale before (Gnar Mega AD growth 5.7
+# on the Wiki against 5.5 in the game).
+#
+# The adjudication settled the CADENCE and left the DAMAGE CLASS open:
+#
+#   * cadence — SETTLED, binary.  The Wiki's lethal sentence says one tick
+#     every 0.264s (2.64s across the ten ticks it also states).  The binary's
+#     RenataW DataValues carry TicksPerSecond = 4.0 (0.25s) with
+#     TicksBeforeDeath = 10.0, and the spell's own {85d7d7f0} calculation is
+#     literally 0.25 x TicksBeforeDeath — the 2.5s burn window, encoded in
+#     the file.  The Wiki corroborates the 4/s clock against itself: the same
+#     sentence that says 0.264s also says "Bailout's duration is reset every
+#     0.25 seconds" while burning, which is TicksPerSecond = 4 surfacing.
+#     0.264s is the outlier; the binary wins on the Gnar precedent.
+#   * damage class — UNRESOLVED, fails closed.  The Wiki description calls it
+#     a "true damage burn"; the SAME entry's notes call it "raw damage".  The
+#     binary defines no damage-class field for the burn at all — the whole
+#     RenataW record carries neither a health-loss magnitude nor a damage
+#     type (verified: its DataValues are Duration, BonusAttackSpeed,
+#     BonusMoveSpeed, APToPercentRatio, TriumphPercent, TicksBeforeDeath,
+#     MaxStatMultiplier, TicksPerSecond, TagDuration — and nothing else).
+#     The burn is script-side and is not shipped in the CharacterRecords
+#     dump.  A SILENT source cannot break a tie, so the class stays open.
+#
+# Why a settled cadence does not make the lethal half publishable:
+# the two candidate classes agree only on an UNMITIGATED target.  "True
+# damage" is absorbed by shields and scaled by damage reduction; "raw
+# damage" is applied to health past both.  Renata's own E shields the very
+# participant Bailout covers, so the shielded branch is the common case, not
+# a corner — and in it the two readings give different survival answers.
+# Publishing the restore without a decidable burn would also overstate
+# survival outright: the restore is undone 2.5s later by design.  The
+# withheld set therefore stays the full lethal half, and the reason keeps
+# its committed name (``burn_authority_conflict``) because an authority
+# conflict is exactly what is still open — now narrowed to one field.
+#
+# Conflict history is kept, never deleted: a resolved conflict that loses its
+# record is one patch away from being re-litigated from scratch.
+#
+# ``tests/test_renata_w_bailout.py`` re-verifies the gamefile rows against
+# the digest below when the (gitignored) evidence is present locally.
 BAILOUT_AUTHORITY = {
+    # -- runtime contract: fail-closed --------------------------------------
+    # No survival contract implements Bailout's lethal half, and no number
+    # below may be read as one.  ``support_effects`` raises if this flag is
+    # flipped without an implementation behind it.
     "runtime_available": False,
     "reason": "burn_authority_conflict",
+    # -- the evidence the denial cites --------------------------------------
     "wiki_burn_interval_seconds": 0.264,
     "gamefile_ticks_per_second": 4.0,
     "wiki_description_damage_class": "true",
     "wiki_notes_damage_class": "raw",
     "gamefile_path": "data/bin/characters/renata.bin.json",
+    "gamefile_record": "Characters/Renata/Spells/RenataWAbility/RenataW",
+    # The client dump this record was read from, matching the other
+    # binary-backed receipts in this repo (Aurelion Sol Q, Gnar Mega,
+    # items.bin.json).
+    "gamefile_patch": "16.15.8024387",
     # sha256 of the RAW BYTES of the file named above, so a reader can
     # re-verify the conflicting evidence with `shasum -a 256`.  ``data/bin/``
     # is gitignored, so this digest is checkable locally only — the test that
@@ -73,6 +139,110 @@ BAILOUT_AUTHORITY = {
         "maximum_health_burn",
         "resurrection_precedence",
     ),
+    # -- per-field adjudication record: DESCRIPTIVE ONLY --------------------
+    # Nothing in this sub-mapping is a runtime input.  It exists so the next
+    # implementer inherits the settled fields instead of re-deriving them,
+    # and so the one open field cannot be quietly closed by guesswork.
+    # Each row is (binary value, wiki value, chosen value, basis); ``chosen``
+    # is ``None`` exactly where no local source can decide the field.
+    "adjudication": {
+        "precedent": "CLAUDE.md Gnar Mega-form game-file authority",
+        "rule": "gamefile_wins_over_wiki",
+        "fields": {
+            # ---- settled: both sources agree -----------------------------
+            "active_duration_seconds": {
+                "gamefile": 5.0,
+                "gamefile_field": "Duration",
+                "wiki": 5.0,
+                "chosen": 5.0,
+                "basis": "sources_agree",
+            },
+            "takedown_window_seconds": {
+                "gamefile": 6.0,
+                "gamefile_field": "TagDuration",
+                "wiki": 6.0,
+                "chosen": 6.0,
+                "basis": "sources_agree",
+            },
+            "takedown_health_ratio": {
+                "gamefile": 0.20,
+                "gamefile_field": "TriumphPercent",
+                "wiki": 0.20,
+                "chosen": 0.20,
+                "basis": "sources_agree",
+            },
+            "burn_ticks": {
+                "gamefile": 10,
+                "gamefile_field": "TicksBeforeDeath",
+                # The Wiki states no tick count directly; ten 10%-maximum-
+                # health ticks "until they reach 0 health" is the same 10.
+                "wiki": 10,
+                "chosen": 10,
+                "basis": "sources_agree",
+            },
+            # ---- settled: the binary won ---------------------------------
+            "burn_interval_seconds": {
+                "gamefile": 0.25,
+                "gamefile_field": "TicksPerSecond=4.0",
+                "wiki": 0.264,
+                "chosen": 0.25,
+                "basis": "gamefile_wins_over_wiki",
+                "corroboration": (
+                    "spell calculation {85d7d7f0} = 0.25 x TicksBeforeDeath, "
+                    "and the Wiki's own 'duration is reset every 0.25 "
+                    "seconds' clause in the same sentence"
+                ),
+            },
+            "burn_window_seconds": {
+                "gamefile": 2.5,
+                "gamefile_field": "TicksBeforeDeath/TicksPerSecond",
+                "wiki": 2.64,
+                "chosen": 2.5,
+                "basis": "follows_burn_interval_adjudication",
+            },
+            # ---- settled: wiki-only, but nothing contradicts it ----------
+            "lethal_restore_ratio": {
+                # The binary carries no restore magnitude at all.
+                "gamefile": None,
+                "wiki": 1.0,
+                "chosen": 1.0,
+                "basis": "wiki_single_source_unconflicted",
+            },
+            "burn_health_ratio_per_tick": {
+                # The binary carries no health-loss magnitude either.  Ten
+                # ticks emptying a 100% restore COHERES with 10% per tick,
+                # but that is a consistency check on the Wiki's own two
+                # numbers — it is NOT an independent second source, and this
+                # row must not be labelled double-sourced.
+                "gamefile": None,
+                "wiki": 0.10,
+                "chosen": 0.10,
+                "basis": "wiki_single_source_unconflicted",
+            },
+            "resurrection_precedence": {
+                "gamefile": None,
+                "wiki": "over_all_resurrection_and_zombie_state_effects",
+                "chosen": "over_all_resurrection_and_zombie_state_effects",
+                "basis": "wiki_notes_single_source_unconflicted",
+            },
+            # ---- OPEN: fails closed --------------------------------------
+            "burn_damage_class": {
+                # No damage-type field exists anywhere in the RenataW record.
+                "gamefile": None,
+                # One cached entry, two incompatible answers.
+                "wiki": ("true", "raw"),
+                "chosen": None,
+                "basis": "unresolved_wiki_self_conflict_binary_silent",
+                "blocker": (
+                    "The class decides whether a shield or a damage-reduction "
+                    "window absorbs a burn tick. Renata's own E shields the "
+                    "participant Bailout covers, so the branch where the two "
+                    "readings diverge is the common case. No local source "
+                    "can decide it, so the lethal half stays withheld."
+                ),
+            },
+        },
+    },
 }
 
 
@@ -187,12 +357,18 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "documented out-of-scope rows (no enemy damage).",
     "W (Bailout) is documented-only for ally support. The Wiki cache "
     "describes a fatal-damage restore to 100% maximum health followed by "
-    "10% maximum-health burn ticks every 0.264s. The local game binary "
-    "carries TicksPerSecond=4, while the Wiki description calls the loss "
-    "true damage and its notes call it raw damage. The survival result "
-    "fails closed until one source resolves both conflicts. The ramping "
-    "attack-speed and movement-speed buff has no survival impact on the "
-    "recipient in this model.",
+    "10% maximum-health burn ticks that kill the target anyway unless a "
+    "takedown lands within 6s. The burn CADENCE is adjudicated to the game "
+    "binary (TicksPerSecond 4 -> 0.25s, TicksBeforeDeath 10 -> a 2.5s "
+    "window) over the Wiki's 0.264s, on the repo's Gnar game-file "
+    "precedent. The burn's DAMAGE CLASS is not adjudicated: the Wiki "
+    "description calls it true damage, the same entry's notes call it raw "
+    "damage, and the binary defines no damage class for it. That field "
+    "decides whether a shield absorbs a tick, and Renata's own E shields "
+    "the covered participant, so the survival result fails closed until a "
+    "source resolves it — see BAILOUT_AUTHORITY for the per-field record. "
+    "The ramping attack-speed and movement-speed buff has no survival "
+    "impact on the recipient in this model.",
 ]
 
 SOURCES = list(_packet_sources)
