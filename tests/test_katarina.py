@@ -96,3 +96,12 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+def test_the_dagger_ult_authors_a_certified_order():
+    """R's blades ride an ordered schedule, not a coarse total."""
+    from tests import row_review
+
+    assert row_review.entry("Katarina", "R", p_daggers=2, r_daggers=15)[
+        "event_order_certified"
+    ]

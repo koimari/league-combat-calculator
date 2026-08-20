@@ -41,3 +41,11 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Fiora")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_fioras_single_on_hit_and_vital_procs():
+    """Q applies item on-hits once; the passive prices the armed vitals."""
+    from tests import row_review
+
+    assert row_review.entry("Fiora", "Q")["applies_item_on_hits"]["hits"] == 1
+    assert row_review.entry("Fiora", "passive", p_vitals=2)["proc_count"] == 2

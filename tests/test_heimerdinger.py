@@ -121,3 +121,15 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_turret_packet_carries_pet_damage_and_its_cadence():
+    """Q is two rows — the turret's attacks and its beam — on one schedule."""
+    from tests import row_review
+
+    turret = row_review.entry(
+        "Heimerdinger", "Q", q_turrets=3, q_turret_attacks=3, q_beams=1
+    )
+    assert turret["total_raw"] > 0
+    assert turret["event_order_certified"]
+    assert len(turret["parts"]) == 2

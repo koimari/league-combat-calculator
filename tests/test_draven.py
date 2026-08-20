@@ -1,7 +1,7 @@
 """Tests for the Draven champion module."""
 
 from src.calculator.champions import draven
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -31,3 +31,9 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Draven")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_dravens_axe_and_pass_counts():
+    """Q empowers the next auto; R's two passes are the option's own count."""
+    assert row_review.entry("Draven", "Q")["empowers_next_auto"]
+    assert row_review.parts("Draven", "R", r_passes=2)[0].count == 2

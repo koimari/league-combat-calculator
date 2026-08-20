@@ -6,7 +6,11 @@ recast, so that kind is authored per part.
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities, zaahen
+from src.calculator.champions import (
+    get_champion_options_meta,
+    parse_champion_abilities,
+    zaahen,
+)
 from tests import cc_review, row_review
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -81,3 +85,33 @@ class TestPricedRows:
         assert total == pytest.approx(initial + subsequent)
         assert row_review.priced("Zaahen", "W") == pytest.approx(total)
         assert row_review.packet_row("Zaahen", "W", zaahen)[4] == 120.0
+
+
+class TestQVariants:
+    """The Darkin Glaive publishes three sourced rows, and Q picks by option.
+
+    The cache carries a total, a per-hit and a bonus row for the same cast;
+    reading the wrong one is a 2x error that no other assertion would see.
+    """
+
+    def test_each_variant_selects_the_matching_sourced_damage_row(self):
+        assert [
+            option["key"] for option in get_champion_options_meta("Zaahen")["options"]
+        ] == ["q_variant"]
+        entries = [row_review.entry("Zaahen", "Q", q_variant=v) for v in range(3)]
+        assert [entry["detail"] for entry in entries] == [
+            "Q variant: Total Physical Damage.",
+            "Q variant: Physical Damage per Hit.",
+            "Q variant: Bonus Physical Damage.",
+        ]
+        assert [entry["parts"][0].count for entry in entries] == [2, 2, 1]
+        # Each variant prices the cached row its detail names — the per-hit
+        # row twice, the other two as they stand.
+        per_hit = row_review.cached_row("Zaahen", "Q", "Physical Damage per Hit")
+        assert [entry["total_raw"] for entry in entries] == pytest.approx(
+            [
+                row_review.cached_row("Zaahen", "Q", "Total Physical Damage"),
+                per_hit * 2,
+                row_review.cached_row("Zaahen", "Q", "Bonus Physical Damage"),
+            ]
+        )

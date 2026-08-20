@@ -123,3 +123,11 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_gragass_empowered_auto_and_fermented_q():
+    """W empowers the next auto; a fully fermented Q still prices."""
+    from tests import row_review
+
+    assert row_review.entry("Gragas", "W")["empowers_next_auto"]
+    assert row_review.priced("Gragas", "Q", q_fully_fermented=True) > 0

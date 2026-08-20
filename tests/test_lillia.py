@@ -99,3 +99,12 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+def test_the_dream_dust_passive_reads_the_targets_max_health():
+    """Lillia's burn is a max-health share, and the row says so."""
+    from tests import row_review
+
+    assert row_review.entry("Lillia", "passive", p_ticks=6)[
+        "target_max_health_sensitive"
+    ]

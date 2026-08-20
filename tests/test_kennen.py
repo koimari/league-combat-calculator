@@ -58,3 +58,8 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Kennen")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+def test_the_storm_authors_a_certified_order():
+    """R's bolts ride the ordered schedule the cadence test pins."""
+    assert row_review.entry("Kennen", "R", r_bolts=6)["event_order_certified"]

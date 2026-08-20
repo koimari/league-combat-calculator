@@ -38,4 +38,14 @@ class TestReviewedCrowdControl:
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         coverage = cc_review.fimbulwinter_coverage("Pantheon")
         assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+        # Every row is reviewed, so nothing at all stays coarse.
+        assert coverage["coarse_sources"] == []
+
+
+def test_the_w_stun_rides_a_certified_single_hit_event():
+    """A control-armed item can only see the stun if W's row is ordered."""
+    from tests import row_review
+
+    entry = row_review.entry("Pantheon", "W")
+    assert entry["parts"][0].cc_kind == "stun"
+    assert entry["event_order_certified"] == "single_hit"

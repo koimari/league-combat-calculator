@@ -1,7 +1,7 @@
 """Tests for the Elise champion module."""
 
 from src.calculator.champions import elise
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -31,3 +31,10 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Elise")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_elises_spider_form_reads():
+    """Spider form is an on-hit passive and a missing-health Q."""
+    spider = {"spider_form": True, "q_form": 1}
+    assert "on_hit" in row_review.entry("Elise", "passive", **spider)
+    assert "missing health" in row_review.entry("Elise", "Q", **spider)["detail"]

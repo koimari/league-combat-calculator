@@ -73,3 +73,11 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Gwen")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_gwens_typed_snips_and_three_ult_casts():
+    """Each snip is a magic half and a true half; R prices every cast."""
+    parts = row_review.parts("Gwen", "Q", q_snippy_stacks=4, q_center=True)
+    assert {part.damage_type for part in parts} == {"magic", "true"}
+    assert "on_hit" in row_review.entry("Gwen", "passive")
+    assert len(row_review.parts("Gwen", "R", r_casts=3)) == 3
