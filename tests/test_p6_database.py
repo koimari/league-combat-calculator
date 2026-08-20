@@ -175,22 +175,21 @@ def test_share_links_are_unique_per_build(sqlite_database):
 # ---------------------------------------------------------------------------
 
 
-def test_feedback_write_and_read(sqlite_database):
+def test_feedback_read_filters(sqlite_database):
+    """GET /api/feedback lists what the receipt writer stored, newest first.
+    The only HTTP writer is POST /api/receipts (tests/test_p7_validation.py);
+    rows are seeded through the persistence helper it calls."""
     client = _client()
-    created = client.post(
-        "/api/feedback",
-        json={
-            "champion": "Ahri",
-            "loadout": {"items": ["Liandry's Torment"]},
-            "expected": {"total_damage": 2500.0},
-            "actual": {"total_damage": 2487.5},
-            "source": "combat_log",
-            "matched": False,
-            "note": "slightly under expected",
-        },
+    feedback_id = db.add_feedback(
+        champion="Ahri",
+        loadout={"items": ["Liandry's Torment"]},
+        expected={"tdd": 2500.0},
+        actual={"tdd": 2487.5},
+        source="combat_log",
+        matched=False,
+        delta=-12.5,
+        note="slightly under expected",
     )
-    assert created.status_code == 201
-    feedback_id = created.get_json()["feedback_id"]
     assert isinstance(feedback_id, int)
 
     listed = client.get("/api/feedback?champion=Ahri").get_json()
@@ -199,29 +198,23 @@ def test_feedback_write_and_read(sqlite_database):
     assert row["feedback_id"] == feedback_id
     assert row["source"] == "combat_log"
     assert row["matched"] is False
-    assert row["actual"]["total_damage"] == 2487.5
+    assert row["actual"]["tdd"] == 2487.5
     assert "under expected" in row["note"]
 
     # Champion filter excludes other champions.
-    client.post(
-        "/api/feedback",
-        json={"champion": "Darius", "expected": {}, "actual": {}},
-    )
+    db.add_feedback(champion="Darius", loadout={}, expected={}, actual={})
     assert client.get("/api/feedback?champion=Ahri").get_json()["count"] == 1
     assert client.get("/api/feedback?champion=Darius").get_json()["count"] == 1
     assert client.get("/api/feedback").get_json()["count"] == 2
+    assert client.get("/api/feedback?source=combat_log").get_json()["count"] == 1
 
 
-def test_feedback_source_validation(sqlite_database):
+def test_feedback_has_no_client_supplied_writer(sqlite_database):
+    """A client may not write expected/actual/matched verbatim into the table
+    that drives the /api/validation bias flag; the receipt route derives them."""
     client = _client()
-    bad = client.post(
-        "/api/feedback", json={"champion": "Ahri", "source": "spreadsheet"}
-    )
-    assert bad.status_code == 400
-    missing = client.post("/api/feedback", json={"expected": {}, "actual": {}})
-    assert missing.status_code == 400
-    not_bool = client.post("/api/feedback", json={"champion": "Ahri", "matched": "yes"})
-    assert not_bool.status_code == 400
+    assert client.post("/api/feedback", json={"champion": "Ahri"}).status_code == 405
+    assert client.get("/api/feedback?source=spreadsheet").status_code == 400
 
 
 # ---------------------------------------------------------------------------

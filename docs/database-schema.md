@@ -76,11 +76,11 @@ app is not in `TESTING` (Redis holds the entries when `REDIS_URL` is set).
 | `actual` | JSON | |
 | `source` | varchar(20) | `manual` \| `combat_log` \| `practice_tool` |
 | `matched` | boolean | |
-| `delta` | float null | signed observed-minus-predicted total damage; NULL for manual P6-style rows without an engine prediction, always populated by the P7 receipt endpoints |
+| `delta` | float null | signed observed-minus-predicted total damage; `POST /api/receipts` (the only writer) always populates it, NULL only on legacy rows that predate the receipt endpoint |
 | `note` | text null | |
 | `created_at` | timestamp | |
 
-P7 receipt rows store the engine prediction in `expected` (`{"tdd": …,
+Receipt rows store the engine prediction in `expected` (`{"tdd": …,
 "sources": {…}}`) and the user's observation in `actual` (same shape), so
 `delta` can be re-derived and the signed percentage bias
 (`delta / expected.tdd * 100`, see `db.validation_summary`) aggregated per
@@ -129,6 +129,6 @@ step.
 | `GET /api/builds/<id>` | build payload or 404 |
 | `POST /api/share` | `{"build_id": …, "slug": …}` → `{"token": …, "url": "/api/share/<token>"}` (201) |
 | `GET /api/share/<token>` | build payload + `share` block; increments `views` |
-| `POST /api/feedback` | record validation feedback → `{"feedback_id": …}` (201) |
+| `POST /api/receipts` | record one game-receipt observation; the engine computes `expected`/`matched`/`delta` itself → `{"feedback_id": …, …}` (201) |
 | `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (limit ≤ 200, default 50) |
 | `GET /api/cache-status` | `{hits, misses, cached_entries, cache_enabled, cache_backend, database_configured, database}` |

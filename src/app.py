@@ -1630,49 +1630,6 @@ def api_get_share(token: str):
     return jsonify(payload)
 
 
-@app.route("/api/feedback", methods=["POST"])
-def api_add_feedback():
-    """Record one validation observation for the champion-module loop."""
-    try:
-        data = _json_object()
-        champion = _request_string(data, "champion", required=True)
-        source = _request_string(data, "source", "manual")
-        if source not in {"manual", "combat_log", "practice_tool"}:
-            raise ValueError("source must be manual, combat_log, or practice_tool")
-        for key in ("loadout", "expected", "actual"):
-            value = data.get(key, {})
-            if not isinstance(value, dict):
-                raise ValueError(f"{key} must be a JSON object")
-        matched = data.get("matched", False)
-        if not isinstance(matched, bool):
-            raise ValueError("matched must be true or false")
-        note = data.get("note")
-        if note is not None:
-            if not isinstance(note, str):
-                raise ValueError("note must be a string")
-            note = note.strip()
-            if len(note) > 2000:
-                raise ValueError("note must be at most 2000 characters")
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    try:
-        feedback_id = add_feedback(
-            champion=champion,
-            loadout=data.get("loadout", {}),
-            expected=data.get("expected", {}),
-            actual=data.get("actual", {}),
-            source=source,
-            matched=matched,
-            note=note,
-            session_id=_anon_session_id(),
-        )
-    except SQLAlchemyError as exc:  # surface DB failure to the client
-        app.logger.exception("Failed to record feedback")
-        return jsonify({"error": f"Database unavailable: {exc}"}), 503
-    return jsonify({"feedback_id": feedback_id}), 201
-
-
 @app.route("/api/feedback")
 def api_list_feedback():
     """Return recent validation feedback for the review loop."""

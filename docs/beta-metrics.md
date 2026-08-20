@@ -68,8 +68,8 @@ retention = sessions whose first observed activity is followed by another
 ### Validation receipts + bias scan
 
 - **Receipts** = `validation_feedback` rows with a signed `delta`
-  (exactly the population `POST /api/receipts` writes; plain P6 feedback
-  rows have `delta = NULL` and do not count).  Threshold: **≥ 20 per
+  (exactly the population `POST /api/receipts` writes; legacy rows with
+  `delta = NULL` do not count).  Threshold: **≥ 20 per
   week**.
 - **Bias scan** = the `db.validation_summary` semantics, re-derived by the
   scorecard at each week boundary: a champion is **flagged** when it has
