@@ -1103,8 +1103,6 @@ def api_items():
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
-                "into": item.get("into") or [],
-                "categories": item.get("categories") or [],
                 "tier": item["tier"],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
                 "model_coverage": item_model_coverage(
@@ -1131,8 +1129,6 @@ def api_boots():
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
-                "into": item.get("into") or [],
-                "categories": item.get("categories") or [],
                 "tier": item["tier"],
                 "upgrade_from": upgrade_from.get(item.get("name")),
                 "upgrade_to": next(

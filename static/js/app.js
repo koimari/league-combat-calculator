@@ -318,8 +318,6 @@ function mergeItemCoverage(catalog) {
       backendAvailable: true,
       modelCoverage: entry.model_coverage || null,
       targetModelCoverage: entry.target_model_coverage || null,
-      into: entry.into || [],
-      categories: entry.categories || [],
       supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
       upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
       upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
@@ -5122,7 +5120,7 @@ document.addEventListener("scryglass:engine-ready", () => {
 // feedback.js validates the number on screen: the hook hands it the exact
 // /api/calculate payload behind the displayed Build A result (null while
 // nothing is displayed), so a receipt's prediction is that same total.
-window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null };
+window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null, postJson };
 
 initShareControls();
 

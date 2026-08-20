@@ -54,6 +54,11 @@
    * Loadout capture
    * ------------------------------------------------------------------ */
 
+  // app.js owns the one JSON POST; the widget never hand-rolls a second.
+  function postReceiptJson(body) {
+    return window.scryglass.postJson("/api/receipts", body);
+  }
+
   function captureLoadout() {
     var hook = window.scryglass && window.scryglass.getCurrentLoadout;
     var loadout = typeof hook === "function" ? hook() : null;
@@ -201,11 +206,7 @@
     var payload = { champion: loadout.champion, loadout: loadout, source: "manual" };
     if (observed !== undefined) payload.observed = observed;
     setBusy(true);
-    fetch("/api/receipts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    postReceiptJson(payload)
       .then(function (response) {
         return response.json().then(function (body) {
           return { ok: response.ok, body: body };
@@ -303,15 +304,11 @@
         return;
       }
       setBusy(true);
-      fetch("/api/receipts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          champion: loadout2.champion,
-          loadout: loadout2,
-          observed: text,
-          source: "combat_log",
-        }),
+      postReceiptJson({
+        champion: loadout2.champion,
+        loadout: loadout2,
+        observed: text,
+        source: "combat_log",
       })
         .then(function (response) {
           return response.json().then(function (body) {

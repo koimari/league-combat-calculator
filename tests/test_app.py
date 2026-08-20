@@ -1998,10 +1998,11 @@ class TestIconUrlsAreHttps:
         items = client.get("/api/items").get_json()
         boots = client.get("/api/boots").get_json()
 
-        assert all(
-            item["id"] and "price" in item and "categories" in item
-            for item in items + boots
-        )
+        assert all(item["id"] and "price" in item for item in items + boots)
+        # C4: `into`/`categories` read cache keys that do not exist
+        # (`buildsInto` / `shop.tags`), so they were always [] and no
+        # consumer read them.
+        assert not any({"into", "categories"} & set(item) for item in items + boots)
         assert {item["id"] for item in items} & {2530, 3040, 3042, 3121, 3866}
         assert any(item["name"] == "Blade of the Ruined King" for item in items)
         bloodthirster = next(item for item in items if item["name"] == "Bloodthirster")

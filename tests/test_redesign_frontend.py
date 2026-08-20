@@ -492,9 +492,12 @@ def test_feedback_widget_validates_the_displayed_payload(source: str):
     assert "window.scryglass.getCurrentLoadout" in feedback
     assert 'addEventListener("scryglass:result", refreshContext)' in feedback
     assert (
-        "window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null }"
-        in source
+        "window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a"
+        " ?? null, postJson };" in source
     )
+    # C3: the widget posts through app.js's one JSON POST, not its own fetch.
+    assert "fetch(" not in feedback
+    assert 'window.scryglass.postJson("/api/receipts", body)' in feedback
     calculation = function_body(source, "function scheduleEngineCalculation()")
     assert "requests: { a: payloads[0], b: payloads[1] || null }" in calculation
     assert 'dispatchEvent(new Event("scryglass:result"))' in calculation
