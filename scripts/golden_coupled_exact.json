@@ -76,6 +76,13 @@
       "combat/2:enemy:Aatrox/outgoing": "3376.3",
       "fights/0:Aatrox": "377.2"
     },
+    "everlasting_forced_swing_roster": {
+      "combat/0:main/incoming": "2421.8",
+      "combat/0:main/outgoing": "1906.4",
+      "combat/1:enemy:Darius/incoming": "1906.4",
+      "combat/1:enemy:Darius/outgoing": "2421.7",
+      "fights/0:Darius": "1906.4"
+    },
     "hexoptics_basic_amp_carry": {
       "combat/0:main/incoming": "2629.0",
       "combat/0:main/outgoing": "3597.6",
@@ -227,16 +234,16 @@
     "champions_fetched_at": 1786113324.862417,
     "exact": true,
     "fingerprint": {
-      "entries": 24,
-      "leaves": 174,
+      "entries": 25,
+      "leaves": 179,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "e747e056f682b64b904f5d8bfb9949392dbbc6e7",
+    "git_head": "4e7e4de15c4ea0d4ef35101c9a9f0fa831a75aa7",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
-    "scenario_count": 24,
+    "scenario_count": 25,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "5d53c9484c4f90fa127068ff05b398e073078438"
+    "src_tree_sha": "e858157cff32b1815cd1a3341351cf6f1cb1c3d0"
   }
 }

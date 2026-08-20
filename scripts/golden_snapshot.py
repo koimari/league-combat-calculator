@@ -1274,6 +1274,23 @@ COUPLED_SCENARIOS = (
             auto_attack_uptime=1.0,
         ),
     ),
+    # Everlasting armed by a melee holder's own forced swing in a window with
+    # no auto stream.  Cho'Gath's E slows on the attack it forces, which the
+    # one-rotation ledger lands at the cast, before Q's knock-up at 1.127 s;
+    # the shield's timing is what an attacking enemy prices
+    # (docs/item-source-reconciliation.md, entry 3).
+    CoupledScenario(
+        "everlasting_forced_swing_roster",
+        _roster_request(
+            "Cho'Gath",
+            ("Fimbulwinter",),
+            enemies=("Darius",),
+            allies=(),
+            enemy_cards={"Darius": {"items": ("Stridebreaker",)}},
+            fight_mode="one_rotation",
+            enemies_attack=True,
+        ),
+    ),
     *_syndra_pin_scenarios(),
 )
 

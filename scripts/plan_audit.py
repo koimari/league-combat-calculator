@@ -449,6 +449,41 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
             "about sites and a bound and about no capture at all"
         ),
     ),
+    *(
+        Allowance(
+            doc=doc,
+            value=25,
+            context=context,
+            reason=(
+                f"{what}, which happens to equal coupled_golden_exact.entries "
+                "since the Everlasting forced-swing roster joined the coupled "
+                "scenario set on 2026-08-20 (docs/item-source-reconciliation.md, "
+                "entry 3); the sentence is about no capture at all"
+            ),
+        )
+        for doc, context, what in (
+            (
+                UMBRELLA_NAME,
+                "~25 new clean modules",
+                "an estimate of how many small modules lift a pylint average",
+            ),
+            (
+                "silent-failure-runbook.md",
+                "~25 small clean modules",
+                "the same pylint-average estimate, restated in the runbook",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                "25 at HEAD",
+                "the DefenseSource construction count under the stated counting rule",
+            ),
+            (
+                "phase-3-behavior-rules.md",
+                '"25 producers"',
+                "the producer count a naive packet-site reading would state",
+            ),
+        )
+    ),
 )
 
 
