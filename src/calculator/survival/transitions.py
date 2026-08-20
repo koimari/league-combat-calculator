@@ -878,6 +878,15 @@ def _actor_stasis_blocks(state: dict[str, Any], event_time: float) -> bool:
     if stasis_until <= event_time:
         return False
     revive_stasis_until = float(state["revive_stasis_until"])
+    # The ``- 1e-9`` tolerance exists only to absorb float round-trip noise
+    # (round() calls elsewhere on these same timestamps) when the revive
+    # window is the ONLY thing that ever set stasis_until, so the two
+    # values are the same timestamp computed twice.  It is not a grace
+    # period: an ordinary stasis (Zhonya's/Time Stop) that genuinely
+    # outlasts the revive window by more than 1e-9s must fail this
+    # comparison and fall through to ``return True`` so it blocks on its
+    # own terms, named "attacker_state_blocked" — not silently absorbed
+    # into the revive bypass and misattributed to "attacker_dead".
     if (
         state["death_time"] is not None
         and revive_stasis_until > event_time
@@ -1008,6 +1017,16 @@ def _apply_revive(
     )
     state["terminal_phase"] = "revived"
     if state["revive_stasis_windows"]:
+        # ``[-1]`` relies on the one-armed-window-at-a-time invariant: today
+        # only one revive_stasis_windows entry is ever unresolved at a given
+        # time, because a lethal packet arms a window (arm_revive_stasis)
+        # and the very next revive that resolves it targets that same
+        # window before any other lethal packet on this actor can arm a
+        # second one. A future multi-revive source (Zac/Zilean/Anivia
+        # stacked with GA, or any interface that can arm two windows
+        # concurrently) must NOT trust list position here — match the
+        # window being resolved by ``revive_stasis_death``/event_time
+        # against this action instead of indexing the tail.
         state["revive_stasis_windows"][-1]["resolved"] = True
         state["revive_stasis_windows"][-1]["ready_at"] = (
             round(state["revive_ready_at"], 3)

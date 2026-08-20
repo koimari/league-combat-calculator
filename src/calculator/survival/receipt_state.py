@@ -595,6 +595,12 @@ def assemble_survival_rows(
             # whether the restore resolved and when the re-arm opens).  The
             # key is emitted ONLY when a window was armed, so every row that
             # never entered stasis keeps its pinned shape byte-for-byte.
+            # Fail-closed convention (same as ``crowd_control_immunity``
+            # below): a conditionally-emitted key must be read with a
+            # membership check (``"revive_stasis" in row``) or indexed
+            # directly so a missing key raises ``KeyError`` — never
+            # ``row.get("revive_stasis", [])``, which would silently treat
+            # "never armed" the same as "armed with zero windows".
             **(
                 {"revive_stasis": [dict(row) for row in state["revive_stasis_windows"]]}
                 if state["revive_stasis_windows"]

@@ -679,6 +679,161 @@ def test_stasis_window_unresolved_at_the_fight_end_claims_nothing():
     assert survival["action_downtime_intervals"][0]["end"] == pytest.approx(2.0)
 
 
+def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_terms():
+    """Hardening pin for the tolerance comment on ``_actor_stasis_blocks``
+    (transitions.py, directly above its ``revive_stasis_until >= stasis_until
+    - 1e-9`` check): that ``- 1e-9`` only absorbs float round-trip noise
+    between two computations of the SAME timestamp when the revive window is
+    the sole thing that ever set ``stasis_until``.  It must NOT let a
+    genuinely longer ordinary stasis (Zhonya's/Time Stop) stacked on the same
+    actor get silently swallowed by the revive bypass.
+
+    No public request-level lever stacks an ordinary Stasis onto a holder
+    that is already dead — Zhonya's/Time Stop are self-cast abilities, and a
+    dead actor cannot cast (the same ``attacker_dead``/cast gates this file
+    exercises elsewhere block that path entirely).  So this drives the
+    kernel directly with hand-authored ``SurvivalAction`` rows, the same
+    pattern ``_rebirth_kernel_walk`` above uses to reach the 300s cooldown
+    gate: a lethal packet arms the REAL Guardian Angel revive stasis
+    (0 -> 4.0s, via the typed defenses resolved from the cached item), an
+    ordinary Stasis action is stacked on the SAME holder ending at 4.5s
+    (clearly beyond the revive window's 4.0s end — not a 1e-9 near-tie), and
+    a packet the holder tries to author at t=2.0 (still dead, inside BOTH
+    windows) is compared against the baseline (no ordinary stasis) at the
+    identical timestamp.
+
+    Baseline: the bypass fires (the revive window is the sole ceiling of
+    ``stasis_until``) and the dead-state gate names the skip
+    "attacker_dead".  With the longer ordinary stasis stacked on top: the
+    bypass condition is false (4.0 is not >= 4.5 - 1e-9), so
+    ``_actor_stasis_blocks`` blocks on the ordinary stasis's own terms and
+    the skip reason becomes "attacker_state_blocked" instead — proving the
+    longer stasis is never laundered through the revive bypass."""
+    from src.calculator.roster_composition import Combatant
+    from src.calculator.survival import (
+        ActionKind,
+        ReceiptLedger,
+        SurvivalAction,
+        TransitionContext,
+        build_states,
+        finalize_states,
+        run_survival_walk,
+    )
+
+    defenses = resolve_starting_defenses(
+        "Ashe", 18, {"health": 100.0, "base_health": 200.0}, [_ga_item()]
+    )
+
+    def _combatants() -> list:
+        holder = Combatant(
+            participant_id="holder",
+            team="enemy",
+            champion_data={"name": "Ashe"},
+            level=18,
+            items=(_ga_item(),),
+            stats={"health": 100.0, "is_melee": False},
+            defenses=defenses,
+        )
+        victim = Combatant(
+            participant_id="victim",
+            team="main",
+            champion_data={"name": "Ahri"},
+            level=18,
+            items=(),
+            stats={"health": 10000.0, "is_melee": False},
+            defenses=resolve_starting_defenses(
+                "Ahri", 18, {"health": 10000.0, "base_health": 10000.0}, []
+            ),
+        )
+        return [holder, victim]
+
+    def _lethal(time: float, seq: int) -> object:
+        return SurvivalAction(
+            sort_key=(time, time, 0, 0, seq, "holder", f"hit{seq}", "auto_attacks"),
+            time=time,
+            phase=time,
+            kind=ActionKind.PLAIN_DAMAGE,
+            subject=0,
+            attacker=0,
+            aidx=seq,
+            amount=150.0,
+            damage_type="physical",
+            source_key="auto_attacks",
+            source="auto_attacks",
+            event_id=f"hit{seq}",
+            sequence=seq,
+        )
+
+    def _ordinary_stasis(time: float, duration: float, seq: int) -> object:
+        return SurvivalAction(
+            sort_key=(time, time, 0, 0, seq, "holder", f"stasis{seq}", "stasis"),
+            time=time,
+            phase=time,
+            kind=ActionKind.STASIS,
+            subject=0,
+            attacker=0,
+            aidx=seq,
+            duration=duration,
+            source_key="ordinary_stasis",
+            source="Zhonya's Hourglass",
+            event_id=f"stasis{seq}",
+            sequence=seq,
+        )
+
+    def _probe(time: float, seq: int) -> object:
+        # A packet the dead holder tries to author against the (alive)
+        # victim: phase >= 0 so it runs the same attacker-side block-check
+        # gate the engine applies to every ordinary authored packet.
+        return SurvivalAction(
+            sort_key=(time, time, 1, 0, seq, "holder", f"probe{seq}", "auto_attacks"),
+            time=time,
+            phase=1.0,
+            kind=ActionKind.PLAIN_DAMAGE,
+            subject=1,
+            attacker=0,
+            aidx=seq,
+            amount=1.0,
+            damage_type="physical",
+            source_key="auto_attacks",
+            source="auto_attacks",
+            event_id=f"probe{seq}",
+            sequence=seq,
+        )
+
+    def _probe_skip_reason(*, with_ordinary_stasis: bool) -> str:
+        combatants = _combatants()
+        actions = [_lethal(0.0, 0)]
+        if with_ordinary_stasis:
+            actions.append(_ordinary_stasis(0.0, 4.5, 1))
+        actions.append(_probe(2.0, 2))
+        states = build_states(combatants)
+        index_of = {"holder": 0, "victim": 1}
+        walk_actions = [action._replace(event={}) for action in actions]
+        ledger = ReceiptLedger(
+            actions=walk_actions,
+            index_of=index_of,
+            annotating=False,
+        )
+        ctx = TransitionContext(
+            duration=10.0,
+            states=states,
+            combatants=combatants,
+            index_of=index_of,
+            ledger=ledger,
+        )
+        run_survival_walk(walk_actions, ctx)
+        finalize_states(states, 10.0)
+        probe_action = walk_actions[-1]
+        assert probe_action.event_id == "probe2"
+        return probe_action.event["skipped_reason"]
+
+    baseline_reason = _probe_skip_reason(with_ordinary_stasis=False)
+    stacked_reason = _probe_skip_reason(with_ordinary_stasis=True)
+    assert baseline_reason == "attacker_dead"
+    assert stacked_reason == "attacker_state_blocked"
+    assert stacked_reason != baseline_reason
+
+
 # ---------------------------------------------------------------------------
 # 6. One revive only + cooldown
 # ---------------------------------------------------------------------------
