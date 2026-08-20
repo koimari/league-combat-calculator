@@ -1383,11 +1383,9 @@ DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
 # and is asserted empty (D-92); the entry below is one both engines agree
 # on, so it has no second reading to put in ``walk_reading``.
 #
-# No measured figure is restated here.  Every exposure this campaign grades
-# itself by moves with the champion corpus, so the note names the gate that
-# prices it and the gate re-measures at run time — the discipline
-# ``docs/receipts/campaign-gap-ledger.json`` states as
-# ``why_snapshot_figures_are_not_restated_here``.
+# No measured figure is restated here.  Every exposure this note grades moves
+# with the champion corpus, so the note names the gate that prices it and the
+# gate re-measures at run time.
 ACKNOWLEDGED_READING_DIVERGENCES: Mapping[str, str] = {
     "imperial_mandate.command": (
         "Merge policy, ruled REFRESH against the Wiki's wording. The League "

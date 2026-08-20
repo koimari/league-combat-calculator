@@ -36,13 +36,6 @@ from tests.test_coupled_golden_allowlist import (  # noqa: E402
     unexplained,
 )
 
-# The supersession chain's one implementation: a receipt records what it
-# measured on its own tree, and a later capture that moves the reading declares
-# the move in a committed allowlist naming the claim it replaces.
-from tests.test_escalated_defects_p4_boundary import (  # noqa: E402
-    _superseding_value,
-)
-
 from src.calculator.ability_spec import AttackClass, DamageClass  # noqa: E402
 from src.calculator.survival.actions import SurvivalAction  # noqa: E402
 from src.calculator.survival.transitions import (  # noqa: E402
@@ -66,6 +59,55 @@ def _ledger():
 
 def _entries():
     return _ledger()["defects"]
+
+
+def _committed_allowlists():
+    """Every committed R-17 allowlist, as ``(filename, parsed block)``."""
+    return [
+        (receipt.name, json.loads(receipt.read_text(encoding="utf-8")))
+        for receipt in sorted(RECEIPTS.glob("expected-golden-diff-*.json"))
+    ]
+
+
+def _superseding_value(path, recorded, origin, origin_entry):
+    """The value a later capture declares for *path*, walking the supersession chain.
+
+    A receipt records what it measured on its own tree; an allowlist that moves
+    the leaf again carries a ``supersedes`` block naming the receipt and entry
+    it replaces (or the allowlist whose claim it replaces).  The chain is
+    walked from *origin*; two claimants on one predecessor raise rather than
+    pick, and an allowlist that merely mentions the path claims nothing.
+    """
+    claims: dict[str, tuple[str, dict]] = {}
+    for name, block in _committed_allowlists():
+        for claimed, row in (block.get("expected_diff_values") or {}).items():
+            if claimed != path or not isinstance(row, dict):
+                continue
+            supersedes = row.get("supersedes")
+            if not isinstance(supersedes, dict):
+                continue
+            target = supersedes.get("receipt")
+            if target == origin:
+                if supersedes.get("entry") != origin_entry:
+                    continue
+            elif not isinstance(target, str) or not target.startswith(
+                "expected-golden-diff-"
+            ):
+                continue
+            if target in claims:
+                raise AssertionError(
+                    f"{path}: {sorted((claims[target][0], name))} each claim to "
+                    f"supersede {target}; supersession is not a precedence question"
+                )
+            claims[target] = (name, row)
+    value, predecessor, walked = recorded, origin, {origin}
+    while predecessor in claims:
+        name, row = claims[predecessor]
+        assert "new" in row, f"{name} claims to supersede {path} without a new value"
+        assert name not in walked, f"{path}: the supersession chain revisits {name}"
+        value, predecessor = row["new"], name
+        walked.add(name)
+    return value
 
 
 def _ids():

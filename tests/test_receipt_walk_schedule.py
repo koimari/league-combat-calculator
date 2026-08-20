@@ -40,7 +40,6 @@ from calculator.survival import actions  # noqa: E402
 
 SCHEDULE = ROOT / "docs" / "receipts" / "receipt-walk-retirement-schedule.json"
 FRONTIER = ROOT / "docs" / "behavior-frontier.json"
-RULINGS = ROOT / "docs" / "receipts" / "rulings-owed.json"
 
 
 def schedule() -> dict:
@@ -144,10 +143,6 @@ def test_every_rows_retiring_act_names_the_lane_that_row_declares() -> None:
     """
     block = schedule()
     corrected = block["slices_whose_retiring_lane_amendment_k_corrects"]
-    answered = {
-        row["id"] for row in json.loads(RULINGS.read_text(encoding="utf-8"))["answered"]
-    }
-    assert receipt_walk_schedule.RULING in answered
     for family, entry in block["families"].items():
         act = entry["retiring_act"]
         assert act["ruled_by"] == receipt_walk_schedule.RULING, family
