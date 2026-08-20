@@ -189,10 +189,10 @@ class ReceiptScope(Enum):
         heals and refuses every other kind and every duration.
 
     ``SCORE_KERNEL_DAMAGE_MODIFIER``
-        D-101 — a timed, typed damage modifier, which the kernel has no
-        representation for at all.  It is its own member because it is the
-        exact population H5's post-S7 stage flips to ``Compilable``, and a
-        flip needs a set it can name.
+        D-101 — a timed, typed damage modifier.  The kernel stages these
+        now, so no live refusal carries this scope; it survives as the
+        scope of ``item_behavior_catalog.COMPILED_KERNEL_CANNOT_AMP``, the
+        one-symbol revert target for the compiled amp lane.
     """
 
     SURVIVAL_LEDGER_TRANSITION = "survival_ledger_transition"

@@ -1265,12 +1265,9 @@ COMPILED_KERNEL_CANNOT_SELF_SHIELD = ReceiptOnly(
 
 # ── the compiled-kernel refusal every amp carries (D-101) ─────────────────
 
-# The umbrella records H5 as **SCOPED**: the compiled kernel is to be taught
-# timed, typed damage modifiers, as its own stage after Phase 4's S7 with its
-# own equivalence fixture.  Scoping it adds that later stage; it does not
-# relax this one.  Until that stage's flip lands — a one-symbol commit under
-# D-98 — no ``delta_amp`` rule is compilable and every amp holder falls back
-# to the receipt walk with this reason printed.
+# The refusal ``AMP_COMPILABILITY`` is pointed back at to revert the compiled
+# amp lane in one symbol.  It carries no live rule today; it is declared
+# rather than deleted so the revert stays a one-line change.
 #
 # It is one constant because it is one fact about the kernel, not a per-item
 # judgement — and a per-item copy is how sixteen conservatism notes ended up
@@ -1279,39 +1276,27 @@ COMPILED_KERNEL_CANNOT_AMP = ReceiptOnly(
     "the compiled score kernel cannot represent a timed, typed damage "
     "modifier: unrepresentable_template_receipt returns support_kind=<kind> "
     "for anything but shield/heal and add_support_templates raises on it "
-    "(D-101; H5 is SCOPED and lands as its own stage after Phase 4's S7, so "
-    "this is the standing answer until that stage's flip)",
+    "(D-101)",
     scope=ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
 )
 
-# The answer that stage's kernel half makes true.  The compiled score kernel
-# stages an armed ``damage_modifier`` as an ``ActionKind.DAMAGE_MODIFIER``
-# through the one ``SurvivalAction`` constructor, and the compiled damage rows
-# it applies to carry the delivery flags and resistance baselines an
-# attack-class restriction and a resistance reduction read; the equivalence
-# fixture that proves the compiled lane reproduces the receipt walk over every
-# producer is ``tests/test_amp_kernel.py``.
-#
-# It lands **beside** the refusal rather than replacing it, and the flip is a
-# separate one-symbol commit (D-98/R-31): the revert unit is the flip, and a
-# stage that rewrote the refusal in place would make reverting the claim mean
-# rewriting the declaration a second time.
+# The live answer.  The compiled score kernel stages an armed
+# ``damage_modifier`` as an ``ActionKind.DAMAGE_MODIFIER`` through the one
+# ``SurvivalAction`` constructor, and the compiled damage rows it applies to
+# carry the delivery flags and resistance baselines an attack-class
+# restriction and a resistance reduction read; the equivalence fixture that
+# proves the compiled lane reproduces the receipt walk over every producer is
+# ``tests/test_amp_kernel.py``.
 COMPILED_KERNEL_CAN_AMP = Compilable()
 
-# The symbol every ``delta_amp`` rule declares, and the one the flip moves.
+# The one symbol every ``delta_amp`` rule declares its compiled-kernel answer
+# through, so moving the whole population is a change to this line and to
+# nothing else — holder-side amps the pair engine prices into its own damage
+# rows and the two that author a cross-participant packet (Bloodsong's Expose
+# Weakness and Imperial Mandate's Command) alike.
 #
-# One indirection, so the flip is a change to this line and to nothing else.
-# Fourteen rules carry it — twelve holder-side amps the pair engine prices
-# into its own damage rows, plus the two that author a cross-participant
-# packet (Bloodsong's Expose Weakness and Imperial Mandate's Command) — and
-# repointing them one by one at the new answer would make the flip fourteen
-# edits nobody can revert as a unit.
-#
-# ``COMPILED_KERNEL_CANNOT_AMP`` above is what this points at before the flip
-# and what a revert restores, which is why it survives the flip rather than
-# being deleted by it.  ``tests/test_interp_delta_amp.py`` asserts the delta
-# between the two: the exact population the flip moves, enumerated by
-# mechanic id, so the flip's blast radius is a committed set rather than a
+# ``tests/test_interp_delta_amp.py`` pins that population by mechanic id, so
+# the blast radius of moving this line is a committed set rather than a
 # consequence discovered afterwards.
 AMP_COMPILABILITY: Compilability = COMPILED_KERNEL_CAN_AMP
 
