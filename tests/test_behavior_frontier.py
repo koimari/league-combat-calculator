@@ -1121,8 +1121,8 @@ def test_the_two_committed_artifacts_are_each_read_once_per_process() -> None:
     """R-05's red for the two I/O leaves the overdue clause stands on.
 
     Both run per deferral row: fourteen rows asked ``declared_stages`` the
-    same question, and ``completed_stages`` spawned a ``git log`` over the
-    whole campaign range for each of them.  Importing this module alone parsed
+    same question, and ``completed_stages`` walked the whole campaign range in
+    a subprocess for each of them.  Importing this module alone parsed
     the ruled artifact fourteen times.  The cost is not the point — the point
     is that a reader cannot tell fourteen identical reads from one, and a
     derivation that re-reads its own inputs mid-run can answer two ways in one
