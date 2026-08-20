@@ -1,11 +1,12 @@
 """A trigger-gated item mechanic whose trigger never happens contributes nothing.
 
-Horizon Focus arms on an ability hit; Malignance's Hatefog and Zeke's
-Convergence open on an R cast.  A window with no such cast — ``auto_only``,
-or a custom cast order without R — must price the item at exactly zero and
-leave the fight's certification alone: a row that never fired cannot be a
-coarse source.  The same items in a window that casts still fire, and a
-mechanic that fires but cannot be placed on the ledger still reads coarse.
+Horizon Focus arms on an ability hit, as do the three item burns; Malignance's
+Hatefog and Zeke's Convergence open on an R cast.  A window with no such cast —
+``auto_only``, or a custom cast order without R — must price the item at exactly
+zero and leave the fight's certification alone: a row that never fired cannot be
+a coarse source.  The same items in a window that casts still fire, and an amp
+whose pool is empty prices nothing rather than pricing a number its own ledger
+cannot show (Bloodsong's Expose Weakness).
 """
 
 import pytest
@@ -132,21 +133,107 @@ def test_the_same_mechanic_fires_once_its_trigger_is_cast(item, row):
     assert row in held["timeline_coverage"]["exact_sources"]
 
 
-def test_a_mechanic_that_fires_but_cannot_be_placed_stays_coarse():
-    """The reverse trap: Expose Weakness arms on Vayne's forced attack, the
-    last event of a one-rotation ledger, so its amplified pool has no event
-    to ride.  It fired, it is priced, and it is honestly coarse."""
-    fight = calculate_payload(
+@pytest.mark.parametrize(
+    ("item", "row", "was"),
+    [
+        ("Fated Ashes", "burn_Fated Ashes", 10.9),
+        ("Liandry's Torment", "burn_Liandry's Torment", 43.8),
+        ("Blackfire Torch", "burn_Blackfire Torch", 47.4),
+    ],
+)
+def test_a_burn_needs_an_ability_hit_to_light_it(item, row, was):
+    """Autos light no burn; *was* is what the ungated window used to price."""
+    bare = _fight([], "auto_only")
+    held = _fight([item], "auto_only")
+
+    assert was > 0.0  # the ungated figure, kept as the regression's marker
+    assert row not in held["breakdown"]
+    assert held["timeline_coverage"]["coarse_sources"] == []
+    # Liandry's Suffering is an in-combat time ramp, not an ability trigger,
+    # so its amp row survives the autos-only window and its burn does not.
+    assert held["total_damage"] == pytest.approx(
+        bare["total_damage"]
+        + held["breakdown"].get(f"damage_amp_{item}", {}).get("total_damage", 0.0)
+    )
+
+
+@pytest.mark.parametrize(
+    "item", ["Fated Ashes", "Liandry's Torment", "Blackfire Torch"]
+)
+def test_the_same_burn_lights_once_an_ability_lands(item):
+    """Control: a casting window arms every burn, exactly on the ledger."""
+    held = _fight([item], "timed")
+
+    assert held["breakdown"][f"burn_{item}"]["total_damage"] > 0.0
+    assert held["timeline_coverage"]["coarse_sources"] == []
+
+
+def test_the_hatefog_burn_tail_keys_off_the_accepted_r_cast():
+    """Hatefog refreshes a burn only where the rotation accepted the R.
+
+    Ahri L18, one rotation, Liandry's + Malignance: a Q-only order used to
+    stretch the burn window by Hatefog's whole duration off the mere presence
+    of an ``R`` in the priced kit (75.0), which is the R's own tail with no R
+    cast.  It now prices 37.5 — exactly what the same window prices without
+    Malignance — while the full order casts R and the tail is real.
+    """
+    q_only = _fight(
+        ["Liandry's Torment", "Malignance"], "one_rotation", cast_order=["Q"]
+    )
+    q_only_bare = _fight(["Liandry's Torment"], "one_rotation", cast_order=["Q"])
+    full = _fight(["Liandry's Torment", "Malignance"], "one_rotation")
+    full_bare = _fight(["Liandry's Torment"], "one_rotation")
+
+    burn = "burn_Liandry's Torment"
+    assert q_only["breakdown"][burn]["total_damage"] == pytest.approx(37.5)
+    assert q_only["breakdown"][burn]["total_damage"] == pytest.approx(
+        q_only_bare["breakdown"][burn]["total_damage"]
+    )
+    assert full["breakdown"][burn]["total_damage"] == pytest.approx(100.0)
+    assert (
+        full["breakdown"][burn]["total_damage"]
+        > full_bare["breakdown"][burn]["total_damage"]
+    )
+
+
+def _vayne(fight_mode):
+    return calculate_payload(
         {
             "champion": "Vayne",
             "level": 18,
             "items": ["Bloodsong"],
             "role": "support",
             "role_quest_complete": True,
-            "fight_mode": "one_rotation",
+            "fight_mode": fight_mode,
             "include_auto_attacks": True,
         }
     )
 
-    assert fight["breakdown"]["expose_weakness_Bloodsong"]["total_damage"] > 0.0
-    assert fight["timeline_coverage"]["coarse_sources"] == ["expose_weakness_Bloodsong"]
+
+def test_expose_weakness_prices_its_own_pool_and_nothing_else():
+    """Expose Weakness arms on Vayne's forced attack, the last event of a
+    one-rotation ledger, so its amplified pool is empty: no pool, no row.
+    The ungated rule charged the rate against ``total_damage`` minus a
+    reconstructed arming sequence and priced 22.8 on that empty pool."""
+    fight = _vayne("one_rotation")
+
+    assert "expose_weakness_Bloodsong" not in fight["breakdown"]
+    assert fight["timeline_coverage"]["coarse_sources"] == []
+    assert fight["total_damage"] == pytest.approx(505.5)
+
+
+def test_expose_weakness_number_equals_the_rate_over_its_authored_events():
+    """A window with a pool prices it, and the row's events sum to the row.
+
+    Vayne timed: 14 ledger events land after the arming proc, 956.2 damage,
+    and the 5% rate over exactly those is 47.8 — the row, and the sum of the
+    deltas it authors onto them.  Pricing off ``total_damage`` instead swept
+    in the 756.2 that landed before the proc and charged 79.0.
+    """
+    fight = _vayne("timed")
+    row = fight["breakdown"]["expose_weakness_Bloodsong"]
+
+    assert row["total_damage"] == pytest.approx(47.8, abs=0.05)
+    # Priced off the pool it authors onto, so the row can never read coarse.
+    assert "expose_weakness_Bloodsong" in fight["timeline_coverage"]["exact_sources"]
+    assert fight["timeline_coverage"]["coarse_sources"] == []

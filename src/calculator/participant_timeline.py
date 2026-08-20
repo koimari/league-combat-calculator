@@ -178,7 +178,12 @@ _GATE_REFUSAL_RECEIPT = (
 
 
 def _pair_run_fight(
-    work_counters: WorkCounterSink | None, *args: Any, **kwargs: Any
+    work_counters: WorkCounterSink | None,
+    champion_data: Mapping[str, Any],
+    level: int,
+    items: list[dict[str, Any]],
+    params: FightParams,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """Run one composed pair fight, counted on the search's work counters.
 
@@ -186,11 +191,15 @@ def _pair_run_fight(
     attacker into one defender — and the campaign's residual instrument
     (runbook R-25) is defined over their count.  Routing all of them through
     one wrapper is what keeps that count a property of this module rather
-    than of whoever remembered to increment a counter beside their call.
+    than of whoever remembered to increment a counter beside their call, and
+    is also the one place that can tell the engine its result is about to be
+    composed (``FightConfig.roster_composed``).
     """
     if work_counters is not None:
         work_counters.pair_run_fight_calls += 1
-    return run_fight(*args, **kwargs)
+    return run_fight(
+        champion_data, level, items, replace(params, roster_composed=True), **kwargs
+    )
 
 
 # The compiled score lane prices no external resource ledger, so its cached

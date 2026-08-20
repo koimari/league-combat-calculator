@@ -169,6 +169,7 @@ from .item_behavior import (
     Resistance,
     SustainStat,
 )
+from .program.build import dropped_preview_mechanics
 from .ledger_projection import (
     ResultProjection,
     ShieldOutcomeInputs,
@@ -289,16 +290,46 @@ class Resists:
     # resource budget refused, a cast order without R, or an auto-only
     # window never sets it, and ``effective_mr`` stays pre-ult.
     ult_cast: bool = False
+    # The rotation's final Bloodletter's Curse stacks.  Set once the
+    # rotation is over, because the damage that outlives it (autos,
+    # on-hits, item procs, burns) meets the debuff at full depth; the
+    # rotation's own hits read their per-hit count through ``_ability_mr``.
+    shred_stacks: int = 0
 
     def mark_ult_cast(self) -> None:
         """Record the rotation's accepted R cast; Hatefog's zone is open."""
         self.ult_cast = True
         self._select_mr()
 
+    def apply_shred_stacks(self, stacks: int) -> None:
+        """Record the rotation's final Vile Decay stacks; the served MR follows."""
+        self.shred_stacks = stacks
+        self._select_mr()
+
     def _select_mr(self) -> None:
-        """Serve the MR of the rotation's R outcome (see ``ult_cast``)."""
-        self.effective_mr = (
-            self.effective_mr_post_ult if self.ult_cast else self.effective_mr_pre_ult
+        """Serve the MR the rotation's outcome leaves behind.
+
+        The one home for ``effective_mr``, so the order the outcome's two
+        halves land in cannot change it: ``ult_cast`` picks Hatefog's
+        reduction, ``shred_stacks`` deepens whichever it picked, and every
+        method that re-resolves a pen variant ends here.  The stacks are set
+        only after the rotation, which is also the only phase auto pen
+        applies to.
+        """
+        if self.mr_shred is None or self.shred_stacks <= 0:
+            self.effective_mr = (
+                self.effective_mr_post_ult
+                if self.ult_cast
+                else self.effective_mr_pre_ult
+            )
+            return
+        base = self.reduced_mr if self.ult_cast else self.base_mr
+        stacked = max(
+            reduce_resistance(base, self.mr_shred.reduction_percent(self.shred_stacks)),
+            min(0.0, base),
+        )
+        self.effective_mr = apply_magic_penetration(
+            stacked, self.magic_pen_flat, self.auto_magic_pen_percent
         )
 
     def resolve_magic(self) -> None:
@@ -481,6 +512,12 @@ class FightConfig:
     resource_restore_events: tuple[tuple[float, float], ...] = ()
     roster_target_index: int = 0
     roster_target_count: int = 1
+    # Whether a roster composition consumes this fight.  It drops the rows
+    # whose mechanic ``program.build.dropped_preview_mechanics`` names and
+    # prices those mechanics on the coupled walk instead, so the engine can
+    # skip computing them.  A one-pair caller is the surface where the
+    # preview is the answer, and leaves this False.
+    roster_composed: bool = False
     # Selected keystone rune by name ("" = none). Resolution fails closed
     # in rune_effects for unknown or unmodeled keystones.
     keystone: str = ""
@@ -4837,22 +4874,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             else:
                 _apply_target_shred(resists, target_debuff, coverage)
 
-    # Update effective MR for non-ability damage using final Vile Decay stacks.
-    # Non-ability damage occurs during/after the full rotation, so it sees
-    # Hatefog's reduction exactly when the rotation accepted an R cast.
-    if resists.mr_shred is not None and vile_decay_stacks > 0:
-        base_mr = resists.reduced_mr if resists.ult_cast else resists.base_mr
-        mr_with_stacks = reduce_resistance(
-            base_mr,
-            resists.mr_shred.reduction_percent(vile_decay_stacks),
-        )
-        mr_with_stacks = max(mr_with_stacks, min(0.0, base_mr))
-        resists.effective_mr = apply_magic_penetration(
-            mr_with_stacks, resists.magic_pen_flat, resists.auto_magic_pen_percent
-        )
-
-    # Abilities are done; remaining damage (autos, on-hit, item procs)
-    # switches to the auto-attack pen variants (Terminus average).
+    # The rotation's two outcomes for non-ability damage: the debuff it left
+    # on the target, and the pen variant the remaining damage (autos,
+    # on-hit, item procs) is mitigated by.  Either order serves the same MR —
+    # ``Resists._select_mr`` resolves it once from both.
+    resists.apply_shred_stacks(vile_decay_stacks)
     if resists.has_terminus and resists.terminus_avg_pen > 0:
         resists.use_auto_pen()
 
@@ -7083,23 +7109,32 @@ def _spellblade_proc_times(
 
     Each accepted cast arms one charge (the engine assumes charges
     persist through the item cooldown, as its proc pricing already
-    does).  A charge is consumed one weave delay after the later of its
-    arming cast and the cooldown's end, and the cooldown restarts at the
-    consuming attack — matching the ``cooldown + weave_delay`` spacing
-    the proc count was priced with. Returns ``[]`` when the accepted
-    casts cannot reproduce the engine's priced proc count — the row then
-    stays coarse rather than carrying an event list that contradicts its
-    total.
+    does).  A charge is consumed by the first attack that can take it and
+    the cooldown restarts there.  The weave delay is the walk-up to an
+    auto attack; an ability that applies on-hit effects *is* the attack
+    (Ezreal Q, Senna Q), so one landing at or after the charge is armed
+    takes it at that ability's own authored hit time and nothing is walked.
+    Returns ``[]`` when the accepted casts cannot reproduce the engine's
+    priced proc count — the row then stays coarse rather than carrying an
+    event list that contradicts its total.
     """
     if procs <= 0:
         return []
     cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
+    onhit_times = sorted(
+        float(application.time)
+        for application in rotation.ability_item_applications
+        if application.on_hit and application.time is not None
+    )
     times: list[float] = []
     cooldown_ends = float("-inf")
     for cast_time in cast_times:
         if len(times) == procs:
             break
-        proc_time = max(cast_time, cooldown_ends) + effect.weave_delay
+        armed = max(cast_time, cooldown_ends)
+        proc_time = next(
+            (hit for hit in onhit_times if hit >= armed), armed + effect.weave_delay
+        )
         times.append(proc_time)
         cooldown_ends = proc_time + effect.cooldown
     return times if len(times) == procs else []
@@ -7645,19 +7680,30 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
     spread, and the final application resolves fully past the fight's
     end (refresh EVENTS stop with the last cast/DoT tick; the burn they
     lit does not).
+
+    A burn is lit by a damaging ability hit and by nothing else, so a
+    window with no accepted damaging cast — ``auto_only``, a cast order
+    the kit prices at zero, a rotation the resource budget refused — has
+    no burn row at all rather than a coarse total.  Auras and
+    fixed-interval strikes below are clock-driven and keep firing.
     """
     resists = state.resists
     ability_damages = state.ability_damages
+    lit_burns = (
+        state.item_periodics.burns if _damaging_cast_times(state, rotation) else ()
+    )
 
-    for effect in state.item_periodics.burns:
+    for effect in lit_burns:
         source = effect.source
         raw_burn = source.raw_damage(_damage_inputs(state))
         burn_duration = effect.duration
         # Burn refreshes on each ability hit (including R dashes —
         # only multi-instance Rs declare cast_instances; default 1).
+        # The dashes belong to an R the rotation accepted (``ult_cast``),
+        # not to an R the kit merely prices.
         r_info = ability_damages.get("R")
         r_extra = 0
-        if r_info:
+        if r_info and resists.ult_cast:
             r_extra = r_info.get("cast_instances", 1) - 1
         # Estimate time from first to last ability hit.  In a fast
         # one-rotation combo, casts are ~0.5s apart (GCD-limited).
@@ -7673,15 +7719,17 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             default=0.0,
         )
         # Other item DoTs (e.g. Malignance Hatefog) deal ability
-        # damage that also refreshes burns.  Hatefog starts at R cast
-        # (not at fight start), so its refresh window begins partway
-        # through the cast_spread.
+        # damage that also refreshes burns.  Hatefog starts at the
+        # rotation's accepted R cast (``ult_cast`` — the same fact the
+        # proc row and the served MR read), so its refresh window begins
+        # partway through the cast_spread and a window that never accepts
+        # an R extends nothing.
         # In timed mode, abilities recast on cooldown across the whole
         # fight — the last recast (rotation.last_cast_time) refreshes
         # the burn far beyond the GCD combo spread.
         dot_refresh_end = max(cast_spread, rotation.last_cast_time) + champion_dot_tail
-        for ultimate_proc in state.item_cast_procs.ultimate_procs:
-            if "R" in ability_damages:
+        if resists.ult_cast:
+            for ultimate_proc in state.item_cast_procs.ultimate_procs:
                 # R1 lands r_extra dashes (x0.5s each) before the last hit
                 r_start = cast_spread - r_extra * inter_cast_delay
                 hatefog_end = r_start + ultimate_proc.duration
@@ -10670,8 +10718,19 @@ def _add_shadowflame_cinderbloom(
     Liandry reprice, which is the burn's own damage, and Cinderbloom, which
     is this function's.  They are applied by two named steps so a change to
     either has an attributable diff.
+
+    A fight a roster composition consumes runs the reprice half alone: the
+    composition drops the Cinderbloom row and the coupled walk prices the
+    mechanic itself, so computing it here is a number authored to be thrown
+    away.
     """
     cinderbloom = _amp_slot(state, AmpChainSlot.CINDERBLOOM)
+    if (
+        cinderbloom is not None
+        and config.roster_composed
+        and cinderbloom.rules[0].mechanic_id in dropped_preview_mechanics()
+    ):
+        cinderbloom = None
     has_threshold_health = config.target_threshold_health_bonus > 0
     if cinderbloom is None and not has_threshold_health:
         return
@@ -10729,19 +10788,15 @@ def _add_shadowflame_cinderbloom(
         state.total_damage += shadowflame_bonus
 
 
-def _expose_weakness_delta_events(
-    state: FightState,
-    rotation: RotationResult,
-    bonus: float,
-) -> list[dict[str, Any]]:
-    """Author Expose Weakness's amp onto every event after its arming proc.
+def _expose_weakness_pool(state: FightState, rotation: RotationResult) -> list[Any]:
+    """The ledger events Expose Weakness amplifies: everything after its arming proc.
 
     The arming sequence completes when the first spellblade proc lands
-    (``Isolation.TRIGGER_SEQUENCE``), so the bonus rides every later ledger
-    event pro-rata at that event's own time.  A true-conversion build's
-    first procs live on the ``_true`` sibling row (Camille), so the
-    boundary is the earliest event of either.  Without an authored proc
-    boundary no events are authored and the row stays explicitly coarse.
+    (``Isolation.TRIGGER_SEQUENCE``), so the buff rides every later ledger
+    event at that event's own time.  A true-conversion build's first procs
+    live on the ``_true`` sibling row (Camille), so the boundary is the
+    earliest event of either.  Without an authored proc boundary, or with
+    nothing behind it, the pool is empty.
     """
     assert state.item_spellblade is not None
     proc_key = state.item_spellblade.source.breakdown_key
@@ -10756,13 +10811,12 @@ def _expose_weakness_delta_events(
     boundary = min((row[0] for row in ledger if row[3] in proc_keys), default=None)
     if boundary is None:
         return []
-    return _amplifier_delta_events([row for row in ledger if row[0] > boundary], bonus)
+    return [row for row in ledger if row[0] > boundary]
 
 
 def _add_expose_weakness(
     state: FightState,
     rotation: RotationResult,
-    autos: AutoAttackResult,
     spellblade: SpellbladeResult,
 ) -> None:
     """Add Bloodsong's Expose Weakness amp on damage after the first proc.
@@ -10776,8 +10830,13 @@ def _add_expose_weakness(
     from everything the roster composes.  The row says which mechanic it
     previews and ``trigger_stream`` says that mechanic's pair number is
     ``THEORETICAL``; neither statement alone demotes it, which is why the
-    number here is unchanged and the ``DivergenceReceipt`` that froze the
-    disagreement is retired rather than re-worded.
+    ``DivergenceReceipt`` that froze the disagreement is retired rather than
+    re-worded.
+
+    The preview is priced from its own ledger: the bonus is the rate over
+    the events after the arming proc, so the row's number and the events it
+    authors are the one pool, and a window whose ledger holds nothing after
+    that proc has no row at all.
 
     What is declared here is the exclusion (the chain that armed the buff)
     and the rate, which used to be a comparison and a compiled field
@@ -10799,22 +10858,14 @@ def _add_expose_weakness(
 
     # The arming sequence — the first ability cast, the first auto that
     # consumed it and the first spellblade proc — lands before the buff is
-    # up, which is what ``Isolation.TRIGGER_SEQUENCE`` says.
-    breakdown = state.breakdown
-    first_ability_key = next((k for k in state.cast_order if k in breakdown), None)
-    damage_before_expose = 0.0
-    if first_ability_key:
-        entry = breakdown[first_ability_key]
-        casts = entry.get("casts", 1)
-        if casts > 0:
-            damage_before_expose += entry["total_damage"] / casts
-    damage_before_expose += autos.auto_damage_per_hit
-    damage_before_expose += spellblade.damage_per_proc
+    # up, which is what ``Isolation.TRIGGER_SEQUENCE`` says, so the pool
+    # starts after the proc that completed it.
+    amped = _expose_weakness_pool(state, rotation)
+    expose_bonus = sum(row[1] for row in amped) * expose_rate
+    if expose_bonus <= 0:
+        return
 
-    amped_damage = max(0, state.total_damage - damage_before_expose)
-    expose_bonus = amped_damage * expose_rate
-
-    breakdown[f"expose_weakness_{slot.owner}"] = {
+    state.breakdown[f"expose_weakness_{slot.owner}"] = {
         "name": f"{slot.owner} (Expose Weakness)",
         "amplifier": slot.multiplier,
         "total_damage": expose_bonus,
@@ -10824,12 +10875,9 @@ def _add_expose_weakness(
         # roster composition reads it; the pair receipt publishes the row
         # regardless.
         "pair_preview_of": slot.rules[0].mechanic_id,
+        "damage_events": _amplifier_delta_events(amped, expose_bonus),
+        "event_phase": "amplifier",
     }
-    delta_events = _expose_weakness_delta_events(state, rotation, expose_bonus)
-    if delta_events:
-        breakdown[f"expose_weakness_{slot.owner}"].update(
-            {"damage_events": delta_events, "event_phase": "amplifier"}
-        )
     state.total_damage += expose_bonus
 
 
@@ -11902,7 +11950,7 @@ def calculate_fight_damage(
     _add_on_hit_healing(state, autos, on_hits)
     _add_first_auto_healing(state)
     _add_shadowflame_cinderbloom(state, config, rotation)
-    _add_expose_weakness(state, rotation, autos, spellblade)
+    _add_expose_weakness(state, rotation, spellblade)
 
     # ── Keystone opening-window bonus (First Strike-class) ──────────────
     _add_keystone_window_amp_damage(state, rotation)

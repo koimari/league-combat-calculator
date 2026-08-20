@@ -35674,7 +35674,7 @@
           "expose_weakness_Bloodsong",
           "spellblade_Bloodsong"
         ],
-        "total_damage": 960.63
+        "total_damage": 927.89
       },
       "vayne": {
         "breakdown_keys": [
@@ -35687,7 +35687,7 @@
           "on_hit_ability_W",
           "spellblade_Bloodsong"
         ],
-        "total_damage": 933.84
+        "total_damage": 912.87
       },
       "ziggs_12s": {
         "breakdown_keys": [
@@ -35700,7 +35700,7 @@
           "passive",
           "spellblade_Bloodsong"
         ],
-        "total_damage": 2067.63
+        "total_damage": 2033.97
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -35713,7 +35713,7 @@
           "passive",
           "spellblade_Bloodsong"
         ],
-        "total_damage": 4000.13
+        "total_damage": 3966.47
       }
     },
     "Bloodthirster": {
@@ -49296,14 +49296,14 @@
       "numeric_leaves": 44217,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "b0f725236bf85b61808c950b084001da27f0dee9",
+    "git_head": "508f384fc192274877d52ae4545a9f4c367f98b4",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
     "patch_last_changed_max": "26.15",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "2fe2a31f2b0fac50931057a19ba67feb2948169a"
+    "src_tree_sha": "d89ce56a11cdb1d7e243837afd2477fdc4819b20"
   },
   "registered_champion_fights": {
     "Aatrox": {

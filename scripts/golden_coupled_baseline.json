@@ -16014,7 +16014,7 @@
             "attacker": "main",
             "damage": 0.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:60",
+            "event_id": "main:enemy:Aatrox:58",
             "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 157.8,
@@ -17996,7 +17996,7 @@
       },
       "fights": {
         "0:Aatrox": {
-          "ability_damage": 1387.8,
+          "ability_damage": 1333.4,
           "auto_attack_damage": 2546.0,
           "auto_attack_policy": {
             "assumptions": [
@@ -18095,7 +18095,7 @@
               "num_crits": null,
               "num_non_crits": null,
               "total_amount": null,
-              "total_damage": 268.7,
+              "total_damage": 214.4,
               "unit": null
             },
             "on_hit_ability_W": {
@@ -18260,8 +18260,8 @@
             "ultimate_haste": 0.0
           },
           "damage_by_type": {
-            "magic": 2491.1,
-            "physical": 1442.7,
+            "magic": 2456.7,
+            "physical": 1422.8,
             "true": 0.0
           },
           "damage_events": [
@@ -18336,7 +18336,7 @@
               "time": 1.5
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18357,14 +18357,14 @@
               "time": 1.82
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 1.82
             },
             {
-              "damage": 14.4,
+              "damage": 12.6,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18378,7 +18378,7 @@
               "time": 2.0
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18399,7 +18399,7 @@
               "time": 2.43
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18413,7 +18413,7 @@
               "time": 2.5
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18434,14 +18434,14 @@
               "time": 3.04
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 3.04
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18462,14 +18462,14 @@
               "time": 3.65
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 3.65
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18490,7 +18490,7 @@
               "time": 4.26
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18504,14 +18504,14 @@
               "time": 4.5
             },
             {
-              "damage": 6.7,
+              "damage": 5.9,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 4.5
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18532,7 +18532,7 @@
               "time": 4.86
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18546,7 +18546,7 @@
               "time": 5.0
             },
             {
-              "damage": 12.6,
+              "damage": 11.1,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18560,7 +18560,7 @@
               "time": 5.0
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18574,14 +18574,14 @@
               "time": 5.47
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 5.47
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18595,14 +18595,14 @@
               "time": 6.08
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 6.08
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18616,14 +18616,14 @@
               "time": 6.69
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 6.69
             },
             {
-              "damage": 8.6,
+              "damage": 7.5,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18637,7 +18637,7 @@
               "time": 7.3
             },
             {
-              "damage": 10.4,
+              "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18658,28 +18658,14 @@
               "time": 7.5
             },
             {
-              "damage": 6.7,
+              "damage": 5.9,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 7.5
             },
             {
-              "damage": 11.5,
-              "damage_type": "physical",
-              "phase": "amplifier",
-              "source": "expose_weakness_Bloodsong",
-              "time": 7.5
-            },
-            {
-              "damage": 13.0,
-              "damage_type": "magic",
-              "phase": "amplifier",
-              "source": "expose_weakness_Bloodsong",
-              "time": 7.5
-            },
-            {
-              "damage": 14.4,
+              "damage": 12.6,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
@@ -18696,10 +18682,10 @@
           "effective_armor": 91.2,
           "effective_mr": 67.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 3933.8,
+          "health_damage": 3879.4,
           "magic_shield_absorbed": 0.0,
           "notes": [],
-          "overkill": 1345.8,
+          "overkill": 1291.4,
           "physical_shield_absorbed": 0.0,
           "resource_remaining": 775.8,
           "resource_spent": 500.0,
@@ -18870,7 +18856,7 @@
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 3933.8
+          "total_damage": 3879.4
         }
       }
     },
@@ -105631,15 +105617,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 21,
-      "leaves": 66885,
-      "numeric_leaves": 21805,
+      "leaves": 66875,
+      "numeric_leaves": 21801,
       "sections": "coupled_scenarios"
     },
-    "git_head": "4e7e4de15c4ea0d4ef35101c9a9f0fa831a75aa7",
+    "git_head": "508f384fc192274877d52ae4545a9f4c367f98b4",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 21,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "e858157cff32b1815cd1a3341351cf6f1cb1c3d0"
+    "src_tree_sha": "d89ce56a11cdb1d7e243837afd2477fdc4819b20"
   }
 }
