@@ -13,6 +13,8 @@ Why each slot is non-generic:
   per-second attr is complete at every rank.
 - W (Astral Flight) is a damage-less dash, deliberately absent from the
   map; its only calc effect is Q's beam modifier, gated by ``w_active``.
+  The cached "Breath of Light Flat Damage Modifier" row (108-112%) is a
+  multiplier on Q, not a W damage row — hence ``no_damage``, not a gap.
 - E (Singularity) must read "Total Magic Damage" (full 5s zone) and
   carries the execute-threshold display line (5% + 2.6% per 100
   Stardust of max HP — wiki prose with no usable JSON home).
@@ -20,7 +22,18 @@ Why each slot is non-generic:
   the ``r_empowered`` option. The empowered shockwave (R[1] effect[1])
   is excluded: a target hit by the star is immune to the shockwave.
 - P (Cosmic Creator) is the Stardust stack mechanic — no damage row; it
-  exists as the ``stardust_stacks`` option feeding Q and E.
+  exists as the ``stardust_stacks`` option feeding Q and E.  Every
+  Stardust effect the cache states (Q burst %maxHP, W range, E radius and
+  execute threshold, R radius) augments another slot, so nothing about P
+  is unpriced.
+
+P and W therefore read ``out_of_scope`` only because the coverage
+contract reserves ``no_damage`` for slots that emit a row (a slot the
+module does not emit can only be out of scope,
+``tests/test_champion_module_contract.py``).  Neither is a damage gap:
+Cosmic Creator and Astral Flight deal nothing, and both of their calc
+effects are priced — through ``stardust_stacks`` and ``w_active``
+respectively.
 """
 
 from typing import Any

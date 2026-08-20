@@ -10,6 +10,7 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions import (
     get_champion_cast_order,
+    get_champion_module_contract,
     get_champion_options_meta,
     get_comparison_curve_unavailable_reason,
     get_supported_fight_modes,
@@ -568,3 +569,42 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """E and R price nothing, and P prices damage the map cannot say so.
+
+    Second Skin's Plasma is a real, published damage row — the breakdown
+    key ``passive_plasma`` — but it rides W's (one-rotation) or R's
+    (timed) ``post_hit_proc`` instead of a ``SLOTS`` entry of its own, and
+    the module contract reserves every status except ``out_of_scope`` for
+    slots that emit a row.  So P reads ``out_of_scope`` while being
+    modeled; this test pins the runtime row so the reading stays a
+    vocabulary limit and not a real gap.
+    """
+
+    _PROBE = {
+        "champion": "Kai'Sa",
+        "level": 18,
+        "items": ["Infinity Edge"],
+        "fight_mode": "timed",
+        "include_auto_attacks": False,
+    }
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Kai'Sa").coverage == {
+            "P": "out_of_scope",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "no_damage",
+            "R": "no_damage",
+        }
+
+    def test_the_passive_publishes_a_priced_row_of_its_own(self):
+        breakdown = calculate_payload(dict(self._PROBE))["breakdown"]
+        plasma = breakdown["passive_plasma"]
+        assert plasma["name"] == "Second Skin (Plasma)"
+        assert plasma["total_damage"] > 0.0
+        # The two slots that carry it deal no damage themselves.
+        assert breakdown["R"]["total_damage"] == 0.0
+        assert "E" not in breakdown
