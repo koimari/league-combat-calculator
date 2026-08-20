@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import math
+import re
+from dataclasses import dataclass
 from typing import Any
 
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
@@ -23,6 +25,60 @@ def _first_attribute(ability: dict[str, Any], names: tuple[str, ...]) -> str | N
         for leveling in effect.get("leveling", [])
     }
     return next((name for name in names if name in available), None)
+
+
+# One leveling row is declared by ONE effect sentence, but the scope and kind
+# below are read from every sentence of the ability joined together.  That
+# blob can only ever be over-broad about a single row — it sees an ally some
+# other sentence grants to, and a heal some other sentence performs — so the
+# declaring sentence is consulted to narrow it, never to widen it.
+_ALLY_PROSE = re.compile(r"\ball(?:y|ies|ied)\b|\bteammates?\b")
+_REFLEXIVE_PROSE = re.compile(r"\b(?:herself|himself|themselves|itself)\b")
+_HEAL_PROSE = re.compile(r"\bheal(?:s|ed|ing)?\b|\brestor(?:e|es|ing)\b|\bregenerat")
+
+
+def _row_prose(ability: dict[str, Any]) -> dict[str, str]:
+    """Each attribute mapped to the lowercased prose of the effect declaring it.
+
+    ``extract_named`` reads the FIRST matching leveling entry across effects,
+    so the first declaring effect is the sentence that row's number came from.
+    """
+    prose: dict[str, str] = {}
+    for effect in ability.get("effects", []):
+        description = str(effect.get("description", "")).lower()
+        for leveling in effect.get("leveling", []):
+            prose.setdefault(str(leveling.get("attribute", "")), description)
+    return prose
+
+
+def _row_target(
+    prose: str, *, scope: str, target_self: bool, override: str | None
+) -> tuple[str, bool]:
+    """Resolve one row's target scope from its own declaring sentence.
+
+    A row whose sentence names the caster and no ally is a self grant, in
+    whatever verb form the wiki wrote it — Rumble W's "Rumble generates 20
+    Heat to **grant himself** a shield" used to miss the inflected marker
+    list and publish 145 shielding to a teammate.  An explicit per-champion
+    override still wins (Yuumi E's attached anchor).
+    """
+    if override is not None:
+        return override, target_self
+    if _REFLEXIVE_PROSE.search(prose) and not _ALLY_PROSE.search(prose):
+        return "self", True
+    return scope, target_self
+
+
+def _declares_a_heal(prose: str) -> bool:
+    """Whether the sentence declaring a ``Heal``-named row states a heal.
+
+    The wiki's ability template names the last unlabelled row of a sentence
+    ``Heal`` whatever it measures: Mordekaiser W's is the Potential Shield
+    *decay rate* ("decays by 8 : 25 (based on level) every second") and Udyr
+    Q's is the lightning strikes' minimum-damage floor.  Neither sentence
+    heals anyone, so neither becomes a heal packet.
+    """
+    return bool(_HEAL_PROSE.search(prose))
 
 
 # Attribute names that make a kit a support-packet candidate — the union of
@@ -222,7 +278,7 @@ def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
 
 def _support_profile(
     ability: dict[str, Any],
-) -> tuple[str | None, str | None, bool, str]:
+) -> tuple[str | None, str | None, bool, str, dict[str, str]]:
     memo_key = (data_version(), id(ability))
     memo = _SUPPORT_PROFILE_MEMO.get(memo_key)
     if memo is not None and memo[0] is ability:
@@ -308,9 +364,101 @@ def _support_profile(
         target_scope = "all_teammates"
     else:
         target_scope = "one_teammate"
-    profile = (shield_attr, heal_attr, target_self, target_scope)
+    profile = (shield_attr, heal_attr, target_self, target_scope, _row_prose(ability))
     store_for_generation(_SUPPORT_PROFILE_MEMO, memo_key, (ability, profile))
     return profile
+
+
+@dataclass(frozen=True)
+class _Row:
+    """One resolved leveling row: what it grants, to whom, from which cast."""
+
+    attribute: str
+    kind: str
+    target_scope: str
+    target_self: bool
+
+
+def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
+    """The shield and heal rows one slot publishes, or none.
+
+    Every registry that can silence or redirect a row is applied here, in the
+    order a reviewer reads them: module-authored slots first, then the sourced
+    per-champion attribute and scope overrides, then the two fail-closed reads
+    of the row's own declaring sentence.
+    """
+    if (champion, slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
+        # E8c: a module-authored shield slot is the module's exact receipt
+        # (level-indexed bases, stat scalings, and sourced duration).  The
+        # scanner defers to it so the ledger never grants the same shield
+        # twice from two derivations of one ability (Shyvana W is in both
+        # registries — the shield set alone skips the whole slot).
+        return []
+    shield_attr, heal_attr, target_self, target_scope, row_prose = _support_profile(
+        ability
+    )
+    champion_key = (champion, slot)
+    # E8d follow-up / P1-3: a sourced per-champion attribute override wins
+    # over the generic lookup (Bard W's fully-charged shrine; Lux W's two
+    # stacked shields == Maximum Shield).
+    heal_attr = _CHAMPION_HEAL_ATTR.get(champion_key, heal_attr)
+    shield_attr = _CHAMPION_SHIELD_ATTR.get(champion_key, shield_attr)
+    if champion_key in _MODULE_AUTHORED_HEAL_SLOTS:
+        # Issue #143 (phase 2): a module/healing-rule-authored heal slot is
+        # the exact receipt (level-indexed bases, missing-health terms, a
+        # dragon-form gate and Wound/first-cast gates the scanner cannot
+        # see).  Only the HEAL row defers: a shield row on the same slot
+        # stays scanner-owned unless the shield registry claims the whole
+        # slot (Sona W's Melody shield has no module author).
+        heal_attr = None
+    if heal_attr == "Heal Per Tick":
+        # A per-tick entry is not a complete heal packet without its authored
+        # duration/tick cadence; fail closed rather than multiply a guess.
+        heal_attr = None
+    if heal_attr is not None and not _declares_a_heal(row_prose.get(heal_attr, "")):
+        heal_attr = None
+    # E8d follow-up: a sourced per-champion target-scope override wins over
+    # the description markers (Yuumi E's attached anchor).
+    override = _SCOPE_OVERRIDES.get(champion_key)
+    rows: list[_Row] = []
+    for attribute, kind in ((shield_attr, "shield"), (heal_attr, "heal")):
+        if attribute is None:
+            continue
+        scope, resolved_self = _row_target(
+            row_prose.get(attribute, ""),
+            scope=target_scope,
+            target_self=target_self,
+            override=override,
+        )
+        # Issue #142: fail closed at the emitter.  A typo or novel scope must
+        # name the champion+slot at the source instead of silently redirecting
+        # the packet to teammate zero in the coupled resolver.
+        if scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
+            raise ValueError(
+                "Unsupported support target_scope "
+                f"{scope!r} for {champion} {slot} "
+                f"from source {ability.get('name', slot)!r}; supported scopes: "
+                f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
+            )
+        # ``target_self`` is the resolver's fallback for a teammate-less
+        # roster and only a shield row carries it: a heal packet is always
+        # granted outward, and the caster's own copy rides its scope.
+        rows.append(_Row(attribute, kind, scope, kind == "shield" and resolved_self))
+    return rows
+
+
+def _slot_rank(
+    champion_data: dict[str, Any],
+    slot: str,
+    level: int,
+    requested_ranks: dict[str, int],
+) -> int:
+    """The rank this slot is cast at: the request's, else the skill order's."""
+    default_rank = get_ability_rank(slot, level, champion_data.get("name", ""))
+    try:
+        return max(0, int(requested_ranks.get(slot, default_rank)))
+    except (TypeError, ValueError):
+        return default_rank
 
 
 def derive_ally_effects(
@@ -335,96 +483,31 @@ def derive_ally_effects(
         ability = _ability(champion_data, slot)
         if not ability:
             continue
-        default_rank = get_ability_rank(slot, level, champion_data.get("name", ""))
-        requested_rank = requested_ranks.get(slot, default_rank)
-        try:
-            rank = max(0, int(requested_rank))
-        except (TypeError, ValueError):
-            rank = default_rank
+        rank = _slot_rank(champion_data, slot, level, requested_ranks)
         if rank < 1:
             continue
-        # E8c: a module-authored shield slot is the module's exact receipt
-        # (level-indexed bases, stat scalings, and sourced duration).  The
-        # scanner defers to it so the ledger never grants the same shield
-        # twice from two derivations of one ability (Shyvana W is in both
-        # registries — the shield set alone skips the whole slot).
-        if (champion_data.get("name", ""), slot) in _MODULE_AUTHORED_SHIELD_SLOTS:
-            continue
-        shield_attr, heal_attr, target_self, target_scope = _support_profile(ability)
-        champion_key = (champion_data.get("name", ""), slot)
-        # E8d follow-up: a sourced per-champion attribute override wins over
-        # the generic lookup (Bard W fully-charged shrine).
-        heal_attr = _CHAMPION_HEAL_ATTR.get(champion_key, heal_attr)
-        # P1-3: a sourced per-champion shield attribute override wins over
-        # the generic lookup (Lux W's two stacked shields == Maximum Shield).
-        shield_attr = _CHAMPION_SHIELD_ATTR.get(champion_key, shield_attr)
-        # E8d follow-up: a sourced per-champion target-scope override wins
-        # over the description markers (Yuumi E attached anchor).
-        target_scope = _SCOPE_OVERRIDES.get(champion_key, target_scope)
-        # Issue #143 (phase 2): a module/healing-rule-authored heal slot is
-        # the exact receipt (level-indexed bases, missing-health terms, a
-        # dragon-form gate and Wound/first-cast gates the scanner cannot
-        # see).  Only the HEAL branch defers: shield packets on the same
-        # slot stay scanner-owned unless the shield registry claims the
-        # whole slot (Sona W's Melody shield has no module author).
-        if champion_key in _MODULE_AUTHORED_HEAL_SLOTS:
-            heal_attr = None
-        # Issue #142: fail closed at the emitter.  A typo or novel scope must
-        # name the champion+slot at the source instead of silently redirecting
-        # the packet to teammate zero in the coupled resolver.
-        if target_scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
-            raise ValueError(
-                "Unsupported support target_scope "
-                f"{target_scope!r} for {champion_data.get('name', '')} {slot} "
-                f"from source {ability.get('name', slot)!r}; supported scopes: "
-                f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
-            )
-        if shield_attr is None and heal_attr is None:
-            continue
-        casts = [event for event in cast_timeline if event.get("slot") == slot]
-        for cast in casts:
-            # Validate every authored support cast, even when its resolved
-            # packet is zero or intentionally omitted (for example, a
-            # per-tick heal without a complete cadence).
+        # Validate every authored cast of the slot, even when its resolved
+        # packet is zero or intentionally omitted (a per-tick heal without a
+        # complete cadence, a module-authored shield, a silenced row).
+        times = [
             _sourced_cast_time(cast, slot=slot)
-            if shield_attr is not None:
-                amount = extract_named(ability, shield_attr, rank, stats, {})
+            for cast in cast_timeline
+            if cast.get("slot") == slot
+        ]
+        rows = _slot_rows(champion_data.get("name", ""), slot, ability)
+        for cast_time in times:
+            for row in rows:
+                amount = extract_named(ability, row.attribute, rank, stats, {})
                 if amount > 0:
                     effects.append(
                         {
-                            "time": _sourced_cast_time(cast, slot=slot),
-                            "kind": "shield",
+                            "time": cast_time,
+                            "kind": row.kind,
                             "amount": float(amount),
-                            "source": f"{ability.get('name', slot)} · {shield_attr}",
+                            "source": f"{ability.get('name', slot)} · {row.attribute}",
                             "slot": slot,
-                            "target_self": target_self,
-                            "target_scope": target_scope,
-                            "rank": rank,
-                        }
-                    )
-            # Issue #143: a module/healing-rule-authored heal slot is the
-            # exact receipt (level-indexed bases, missing-health terms, and a
-            # dragon-form gate the scanner cannot see).  Registry members
-            # reach this branch with ``heal_attr`` already nulled above (the
-            # E9-2-era per-slot null-out guard lives there now).
-            if heal_attr is not None:
-                amount = extract_named(ability, heal_attr, rank, stats, {})
-                source_label = f"{ability.get('name', slot)} · {heal_attr}"
-                # A per-tick entry is not a complete heal packet without its
-                # authored duration/tick cadence; fail closed here rather than
-                # multiplying a guessed number.
-                if heal_attr == "Heal Per Tick":
-                    continue
-                if amount > 0:
-                    effects.append(
-                        {
-                            "time": _sourced_cast_time(cast, slot=slot),
-                            "kind": "heal",
-                            "amount": float(amount),
-                            "source": source_label,
-                            "slot": slot,
-                            "target_self": False,
-                            "target_scope": target_scope,
+                            "target_self": row.target_self,
+                            "target_scope": row.target_scope,
                             "rank": rank,
                         }
                     )
