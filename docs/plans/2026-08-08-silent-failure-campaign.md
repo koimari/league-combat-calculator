@@ -1452,7 +1452,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > coupled scenario with the defender-state hand-off instrumented: exactly one,
    > `immolate_active_bruiser_roster`, arms a non-unit target-side swing term — plating 0.9 and
    > crit-damage 0.7, on its Darius main as **defender**, in two pair fights — because
-   > `target_overrides` (`roster_composition.py:187`) hands a defender's resolved
+   > `target_overrides` (`roster_composition.py:197`) hands a defender's resolved
    > state to every pair fight the walk runs, and that scenario is attacked as well as attacking.
    > **Rock Solid is armed by no committed coupled scenario and by no bench roster at all.** The
    > receipt's unqualified sentence is wrong and its own rulings-owed row's qualified one is right:
