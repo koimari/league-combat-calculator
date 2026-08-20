@@ -20,7 +20,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.build_ability_catalog import catalogue_champions, rank_count
-from scripts.source_receipt import source_receipt, source_sha256
+from scripts.source_receipt import cache_patch, source_receipt, source_sha256
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 
 _DAMAGE_ATTRIBUTE = re.compile(
@@ -381,11 +381,12 @@ def main() -> None:
         / "generated"
         / "merakiAbilityKits.ts",
     )
-    parser.add_argument("--patch", default="26.15")
+    # Default derived from the cache, so a rebuild cannot stamp a stale patch.
+    parser.add_argument("--patch", default=None)
     args = parser.parse_args()
     profiles = build_profiles(
         args.source.resolve(),
-        args.patch,
+        args.patch or cache_patch(),
         args.auxiliary_source.resolve() if args.auxiliary_source.exists() else None,
     )
     if not profiles["champions"]:

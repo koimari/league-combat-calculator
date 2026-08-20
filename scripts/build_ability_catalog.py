@@ -17,7 +17,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.source_receipt import source_receipt
+from scripts.source_receipt import cache_patch, source_receipt
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.champions import registered_champion_names
 
@@ -163,10 +163,11 @@ def main() -> None:
     parser.add_argument(
         "--output", type=Path, default=root / "static" / "ability-catalog.json"
     )
-    parser.add_argument("--patch", default="26.15")
+    # Default derived from the cache, so a rebuild cannot stamp a stale patch.
+    parser.add_argument("--patch", default=None)
     args = parser.parse_args()
 
-    catalog = build_catalog(args.source.resolve(), args.patch)
+    catalog = build_catalog(args.source.resolve(), args.patch or cache_patch())
     if not catalog["champions"]:
         raise SystemExit(
             "No champions in the cached source — refusing to write an empty "

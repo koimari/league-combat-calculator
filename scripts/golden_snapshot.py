@@ -54,6 +54,7 @@ from typing import Any, Literal
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+from scripts.source_receipt import cache_patch
 from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
@@ -401,14 +402,8 @@ def snapshot_metadata(champions, items, substitutions, sweep_error_count, sectio
     receipt figure and every consumer's figure are one number by
     construction.
     """
-    patches = {c.get("patchLastChanged") for c in champions.values()}
-    patch = max(
-        (p for p in patches if p),
-        key=lambda p: [int(x) if x.isdigit() else -1 for x in p.split(".")],
-        default=None,
-    )
     return {
-        "patch_last_changed_max": patch,
+        "patch_last_changed_max": cache_patch(champions),
         "snapshot_kind": PAIR_SNAPSHOT_KIND,
         **snapshot_provenance(),
         "champion_count": len(champions),

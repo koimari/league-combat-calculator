@@ -18,7 +18,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.source_receipt import source_receipt
+from scripts.source_receipt import cache_patch, source_receipt
 from src.calculator.item_source import effect_text
 
 NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?%?")
@@ -136,9 +136,10 @@ def main() -> None:
     parser.add_argument(
         "--output", type=Path, default=root / "static" / "effect-catalog.json"
     )
-    parser.add_argument("--patch", default="26.15")
+    # Default derived from the cache, so a rebuild cannot stamp a stale patch.
+    parser.add_argument("--patch", default=None)
     args = parser.parse_args()
-    catalog = build_catalog(args.source.resolve(), args.patch)
+    catalog = build_catalog(args.source.resolve(), args.patch or cache_patch())
     args.output.write_text(
         json.dumps(catalog, ensure_ascii=False, separators=(",", ":")) + "\n",
         encoding="utf-8",

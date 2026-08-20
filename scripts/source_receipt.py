@@ -17,7 +17,12 @@ machine whose checkout uses LF; compare against `source_sha256()` instead.
 from __future__ import annotations
 
 import hashlib
+import json
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
+
+CHAMPIONS_CACHE = Path(__file__).resolve().parents[1] / "data" / "champions.json"
 
 
 def source_sha256(source: Path) -> str:
@@ -33,3 +38,31 @@ def source_receipt(source: Path, kind: str = "local Wiki cache") -> dict[str, st
         "path": source.relative_to(source.parents[1]).as_posix(),
         "sha256": source_sha256(source),
     }
+
+
+def cache_patch(champions: Mapping[str, Any] | None = None) -> str:
+    """The Wiki patch ``data/`` pins: the newest ``patchLastChanged`` it carries.
+
+    Derived so no builder has to carry a patch number of its own. A literal
+    default stamps last patch's version onto this patch's artifact the first
+    time someone re-runs a builder without the flag.
+    """
+    if champions is None:
+        champions = json.loads(CHAMPIONS_CACHE.read_text(encoding="utf-8"))
+    patches = {
+        str(record.get("patchLastChanged") or "")
+        for record in champions.values()
+        if isinstance(record, Mapping)
+    }
+    patches.discard("")
+    if not patches:
+        raise ValueError(
+            "no champion in the cached table carries patchLastChanged — "
+            "cannot derive the patch the cache pins"
+        )
+    return max(
+        patches,
+        key=lambda patch: [
+            int(part) if part.isdigit() else -1 for part in patch.split(".")
+        ],
+    )

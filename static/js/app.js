@@ -288,41 +288,19 @@ function mergeAbilityCatalog(catalog) {
   });
 }
 
-// Backend receipts win for every key they carry (a backend 0 is a real 0);
-// the patch snapshot only fills keys /api/items and /api/boots do not serve.
-function mergeItemCoverage(catalog) {
-  if (!Array.isArray(catalog) || !catalog.length || !Array.isArray(DATA?.items)) return;
-  const byId = new Map(catalog.map((entry) => [Number(entry.id), entry]).filter(([id]) => id));
-  const existingIds = new Set(DATA.items.map((item) => Number(item.id)));
-  DATA.items = DATA.items.map((item) => {
-    const metadata = byId.get(Number(item.id));
-    if (!metadata) return { ...item, backendAvailable: false };
-    return {
-      ...item,
-      ...metadata,
-      backendName: metadata.name,
-      backendAvailable: true,
-      modelCoverage: metadata.model_coverage || null,
-      targetModelCoverage: metadata.target_model_coverage || null,
-      supportQuestStage: metadata.support_quest_stage || metadata.supportQuestStage || null,
-      upgradeFrom: metadata.upgrade_from || metadata.upgradeFrom || null,
-      upgradeTo: metadata.upgrade_to || metadata.upgradeTo || null,
-    };
-  });
-  catalog.forEach((entry) => {
-    const id = Number(entry.id);
-    if (!id || existingIds.has(id)) return;
-    DATA.items.push({
-      ...entry,
-      backendName: entry.name,
-      backendAvailable: true,
-      modelCoverage: entry.model_coverage || null,
-      targetModelCoverage: entry.target_model_coverage || null,
-      supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
-      upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
-      upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
-    });
-  });
+// /api/items and /api/boots own the item catalogue outright — the patch
+// snapshot carries champions only, so nothing can outrank a served 0.
+function buildItemCatalog(catalog) {
+  if (!Array.isArray(catalog) || !catalog.length) return;
+  DATA.items = catalog.map((entry) => ({
+    ...entry,
+    backendName: entry.name,
+    modelCoverage: entry.model_coverage || null,
+    targetModelCoverage: entry.target_model_coverage || null,
+    supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
+    upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
+    upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
+  }));
   engine.itemCatalogReady = true;
 }
 
@@ -761,10 +739,6 @@ function abilityImage(ability) {
 function itemName(id, fallback = "Empty slot") {
   const item = getItem(id);
   return item?.backendName || item?.name || fallback;
-}
-
-function backendItemReady(item) {
-  return !engine.itemCatalogReady || item?.backendAvailable !== false;
 }
 
 function roleQuestStateForPath(path) {
@@ -3514,7 +3488,6 @@ function renderPicker(query) {
   const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
-    if (!backendItemReady(entry)) return false;
     const dedicatedBoot = isRoleBoot(entry.id);
     if (pickerContext.path.includes("questBoot")) {
       return questBootIds().includes(Number(entry.id));
@@ -4673,8 +4646,9 @@ Promise.all([
   fetch("/static/effect-catalog.json").then((response) => { if (!response.ok) throw new Error("Wiki effect catalogue failed to load"); return response.json(); }),
 ])
   .then(([data, championAvailability, config, itemCoverage, bootCatalog, abilityCatalog, bisProfiles, effectCatalog]) => {
-    DATA = data;
-    mergeItemCoverage([...(itemCoverage || []), ...(bootCatalog || [])]);
+    // Champions are all the snapshot carries; items arrive served.
+    DATA = { champions: data.champions || [], items: [] };
+    buildItemCatalog([...(itemCoverage || []), ...(bootCatalog || [])]);
     mergeAbilityCatalog(abilityCatalog);
     mergeBisProfiles(bisProfiles);
     mergeEffectCatalog(effectCatalog);

@@ -1217,14 +1217,13 @@ def test_bis_frontend_sends_and_filters_by_the_selected_objective():
 def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert "mergeItemCoverage" in source
-    # Backend receipts win wherever present: no snapshot-preference helper
-    # may let static/data.json outrank a backend 0.
+    assert "buildItemCatalog" in source
+    # The served catalogues are the whole catalogue: no snapshot-preference
+    # helper may let static/data.json outrank a backend 0.
     assert "preferReportedNumbers" not in source
     assert "SNAPSHOT_NUMERIC_FIELDS" not in source
     assert 'fetch("/api/items")' in source
     assert 'fetch("/api/boots")' in source
-    assert "backendAvailable" in source
     assert "findItemByBackendName" in source
     assert "entry.targetModelCoverage" in source
     assert "itemCoverage?.calculation_eligible" in source
