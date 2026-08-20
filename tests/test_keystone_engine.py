@@ -384,7 +384,7 @@ class TestHailOfBlades:
         assert auto_row["count"] == 10
         assert row["count"] == 2
         assert [event["time"] for event in row["damage_events"]] == pytest.approx(
-            [0.0, 1.0 / 1.75]
+            [0.0, 0.64]
         )
         assert row["total_damage"] == pytest.approx(40.0)
 

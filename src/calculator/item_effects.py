@@ -1534,17 +1534,23 @@ def item_state_receipts(
                 "restore is a named boundary, never an invented mana gain."
             ),
             cooldown_boundary=(
-                "Rebirth's 300s cooldown starts after the resurrection ends; "
-                "modeled fights are <=30s and the one-use revive_used gate is "
-                "the operative rule, so the cooldown is typed metadata, never "
-                "a re-arm within a fight."
+                "Rebirth's 300s cooldown starts after the resurrection ends "
+                "and IS the survival kernel's re-arm gate: the applied revive "
+                "parks re-arm at revive_time + 300s, and only a lethal packet "
+                "at or after that timestamp arms a second resurrection. "
+                "Requested fights are bounded to <=30s, so no modeled fight "
+                "reaches the re-arm — inside a fight the observable rule stays "
+                "one use, and the re-arm is pinned at the kernel directly."
             ),
             stasis_boundary=(
                 "Rebirth's 4s resurrection stasis (invulnerable, untargetable, "
-                "unable to act) is modeled as the dead state anchored to the "
-                "lethal hit: incoming damage in the window is skipped as "
-                "overkill and the holder authors no outgoing actions until the "
-                "revive applies."
+                "unable to act) is authored explicitly at the lethal packet: "
+                "stasis_until/stasis_source carry the window and the survival "
+                "row's revive_stasis rows receipt each armed window. Blocking "
+                "stays owned by the coextensive dead state — incoming damage "
+                "in the window is skipped as target_dead and the holder's own "
+                "packets as attacker_dead — so the stasis authoring adds "
+                "state and receipts without double-counting a second gate."
             ),
             atom=("heal.flat", "83706c231e0d8fee"),
         )
@@ -2454,9 +2460,9 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "formula": "bonus_hp_dps",
         "damage_type": "magic",
         "event_interval": 1.0,
-        # 20 + 1% bonus HP per second
+        # 20 + 1.5% bonus HP per second
         "base_per_second": 20.0,
-        "bonus_hp_ratio_per_second": 0.01,
+        "bonus_hp_ratio_per_second": 0.015,
     },
     "Hollow Radiance": {
         "type": "immolate",
@@ -2624,7 +2630,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Runaan's Hurricane": {
         "type": "secondary_target",
-        "secondary_ad_ratio": 0.55,
+        "secondary_ad_ratio": 0.65,
         "max_secondary_targets": 2,
         "applies_on_hit": True,
     },
@@ -2770,9 +2776,9 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "display_name": "Eclipse (Ever Rising Moon)",
         "damage_type": "physical",
         # Ever Rising Moon: 2 stacks within 2s deals bonus physical damage
-        # Melee 6% / Ranged 4% of target's maximum health
-        "target_max_hp_ratio_melee": 0.06,
-        "target_max_hp_ratio_ranged": 0.04,
+        # Melee 8% / Ranged 5% of target's maximum health
+        "target_max_hp_ratio_melee": 0.08,
+        "target_max_hp_ratio_ranged": 0.05,
         # The passive arms on two separate champion hits within this window;
         # the completed pair starts the per-target cooldown.
         "stack_required": 2,
@@ -2780,8 +2786,8 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "cooldown": 6.0,
         # Ever Rising Moon's self-shield is attached to the exact completed
         # pair event and consumed by the coupled participant timeline.
-        "shield_melee_base": 160.0,
-        "shield_ranged_base": 80.0,
+        "shield_melee_base": 150.0,
+        "shield_ranged_base": 75.0,
         "shield_melee_bonus_ad_ratio": 0.40,
         "shield_ranged_bonus_ad_ratio": 0.20,
         "shield_duration": 2.0,
@@ -3160,9 +3166,11 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # packet is target-state dependent; the window is anchored to the
         # lethal hit (P3 package 3P).  The 100% max-mana restore is typed
         # but not yet applied by the survival kernel (no mana pool there
-        # — named boundary on the rebirth receipt); the 300s cooldown is
-        # typed metadata (fights are <=30s, the one-use revive_used gate
-        # is the operative rule).  Values: wiki branch + riotDescription +
+        # — named boundary on the rebirth receipt); the 300s cooldown IS
+        # the kernel's re-arm gate (revive_ready_at = revive_time + 300s)
+        # and, because requested fights are bounded to <=30s, no modeled
+        # fight reaches it — one use per fight stays the observable rule.
+        # Values: wiki branch + riotDescription +
         # binary Items/3026 mEffectAmount [0.5, 4.0, 300.0, 1.0]; source
         # revision 4046863 (2026-07-28) is newer than the audit JSON row
         # 4001358 (stale — recorded as a follow-up).
@@ -3281,7 +3289,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Sterak's Gage": {
         "type": "stat_conversion",
-        "base_ad_to_bonus_ad_ratio": 0.45,
+        "base_ad_to_bonus_ad_ratio": 0.5,
         "health_threshold": 0.30,
         "shield_bonus_health_ratio": 0.60,
         "duration": 4.5,

@@ -659,7 +659,7 @@ class TestResolveDamageEffects:
 
     def test_runaan_bolt_damage_uses_parser_owned_ad_ratio(self) -> None:
         assert runaan_secondary_target_damage(total_attack_damage=200) == pytest.approx(
-            110
+            130
         )
 
     def test_runaan_bolt_damage_fails_closed_when_ratio_is_missing(

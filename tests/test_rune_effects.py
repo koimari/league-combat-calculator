@@ -35,10 +35,10 @@ class TestResolveKeystone:
         assert effect.bonus_move_speed_percent(True) == pytest.approx(20.0)
         assert effect.bonus_move_speed_percent(False) == pytest.approx(15.0)
         stats = {"bonus_attack_damage": 100.0, "ability_power": 50.0}
-        assert effect.heal_amount(18, stats, False) == pytest.approx(85.5)
+        assert effect.heal_amount(18, stats, False) == pytest.approx(103.5)
         assert effect.heal_amount(
             18, stats, False, against_minion=True
-        ) == pytest.approx(12.825)
+        ) == pytest.approx(15.525)
 
     def test_conqueror_resolves_force_stack_timing_and_healing(self):
         effect = rune_effects.resolve_keystone("Conqueror")
@@ -163,11 +163,11 @@ class TestResolveKeystone:
         assert effect.stack_duration_seconds == pytest.approx(3.0)
         assert effect.reset_stack_limit == 2
         assert effect.cooldown_seconds == pytest.approx(10.0)
-        assert effect.bonus_attack_speed_percent(True) == pytest.approx(120.0)
+        assert effect.bonus_attack_speed_percent(True) == pytest.approx(90.0)
         assert effect.bonus_attack_speed_percent(False) == pytest.approx(60.0)
         assert effect.raw_damage(
             _inputs(level=18, bonus_ad=100.0, ap=50.0)
-        ) == pytest.approx(20.0 + 8.0 + 3.0)
+        ) == pytest.approx(20.0 + 12.0 + 5.0)
 
     def test_lethal_tempo_resolves_stack_speed_bolt_and_expiry_values(self):
         effect = rune_effects.resolve_keystone("Lethal Tempo")

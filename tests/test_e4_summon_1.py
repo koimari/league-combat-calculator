@@ -342,12 +342,12 @@ class TestAzirSandSoldiers:
         assert auto["count"] > 0
 
     def test_q_dash_damage_once_per_cast(self) -> None:
-        """Q rank 5: 140 magic per cast (2 casts in 10s) = 280; soldier
+        """Q rank 5: 155 magic per cast (2 casts in 10s) = 310; soldier
         count must never multiply Q."""
         data = _fight("Azir", include_autos=True)
         stats = data["champion_stats"]
         q_expected = _resolve("Azir", "Q", "Magic Damage", 5, stats)
-        assert q_expected == pytest.approx(140.0)
+        assert q_expected == pytest.approx(155.0)
         q_row = data["breakdown"]["Q"]
         assert q_row["total_damage"] == pytest.approx(q_expected * q_row["casts"])
         assert q_row["casts"] == 2
@@ -360,7 +360,7 @@ class TestAzirSandSoldiers:
 
     def test_one_rotation_q_and_soldier_override(self) -> None:
         data = _fight("Azir", one_rotation=True)
-        assert data["breakdown"]["Q"]["total_damage"] == pytest.approx(140.0)
+        assert data["breakdown"]["Q"]["total_damage"] == pytest.approx(155.0)
         assert data["breakdown"]["W"]["total_damage"] == 0.0
         assert (
             data["breakdown"]["W"]["detail"]

@@ -1978,7 +1978,7 @@ class TestIconUrlsAreHttps:
         )
         assert bloodmail["statConversions"]["bonus_health_to_ad_ratio"] == 0.025
         steraks = next(item for item in items if item["name"] == "Sterak's Gage")
-        assert steraks["statConversions"]["base_ad_to_bonus_ad_ratio"] == 0.45
+        assert steraks["statConversions"]["base_ad_to_bonus_ad_ratio"] == 0.5
         warmogs = next(item for item in items if item["name"] == "Warmog's Armor")
         assert warmogs["statConversions"]["item_bonus_health_ratio"] == 0.12
         dawncore = next(item for item in items if item["name"] == "Dawncore")
@@ -2101,7 +2101,7 @@ class TestIconUrlsAreHttps:
         )
 
         assert response.status_code == 200
-        assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 18.0
+        assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 20.0
 
     def test_ability_icons_are_https(self):
         abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()

@@ -107,16 +107,6 @@ ACKNOWLEDGED_SOURCE_CONFLICTS: dict[str, dict[str, str]] = {
             "Wiki calls it Stasis. Both are the same 2.5-second stasis."
         ),
     },
-    "Gunmetal Greaves": {
-        "Noxian Gait": (
-            "The Riot-only branch is retained as an explicit source conflict: "
-            "its movement-speed magnitude is absent from the current Wiki entry "
-            "and the supported fight model has no sourced movement/spacing input "
-            "that could price the on-hit utility. The movement sub-effect remains "
-            "explicitly out of scope while the boot's sourced attack-speed and "
-            "life-steal stats stay eligible."
-        ),
-    },
     "Radiant Virtue": {
         "Judgement": (
             "Radiant Virtue is a DISTRIBUTED Arena record, not an ordinary "
