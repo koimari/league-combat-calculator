@@ -1104,16 +1104,14 @@ class TestMissingKeyFailsLoudly:
 
 
 class TestItemEffectProvenance:
-    """Static schema, parsed values, and offline fallback stay separate."""
+    """Static schema and parsed values stay separate; nothing stands in for a parse."""
 
-    def test_successful_partial_parse_does_not_borrow_offline_values(
+    def test_successful_partial_parse_does_not_borrow_reference_values(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from src.calculator import data_fetcher, passive_parser
-
-        monkeypatch.setattr(data_fetcher, "fetch_item_data", lambda **_kwargs: {})
+        monkeypatch.setattr(item_effects, "fetch_item_data", lambda **_kwargs: {})
         monkeypatch.setattr(
-            passive_parser,
+            item_effects,
             "parse_all_item_effects",
             lambda _items: {"Lich Bane": {"base_ad_ratio": 0.75}},
         )
@@ -1129,49 +1127,45 @@ class TestItemEffectProvenance:
         with pytest.raises(KeyError, match="ap_ratio"):
             _spellblade_slot("Lich Bane")
 
-    @pytest.mark.parametrize("failure_stage", ["load", "parse", "empty"])
-    def test_whole_pipeline_failure_uses_complete_offline_snapshot(
+    @pytest.mark.parametrize(
+        ("failure_stage", "expected"),
+        [("load", OSError), ("parse", ValueError), ("empty", RuntimeError)],
+    )
+    def test_registry_build_fails_closed(
         self,
         monkeypatch: pytest.MonkeyPatch,
         failure_stage: str,
+        expected: type[Exception],
     ) -> None:
-        from src.calculator import data_fetcher, passive_parser
+        """A broken load or parse raises at build; no snapshot stands in."""
+
+        def fail_load(**_kwargs):
+            raise OSError("cache unavailable")
+
+        def fail_parse(_items):
+            raise ValueError("parser unavailable")
 
         if failure_stage == "load":
-
-            def fail_load(**_kwargs):
-                raise OSError("cache unavailable")
-
-            monkeypatch.setattr(data_fetcher, "fetch_item_data", fail_load)
+            monkeypatch.setattr(item_effects, "fetch_item_data", fail_load)
         else:
-            monkeypatch.setattr(data_fetcher, "fetch_item_data", lambda **_kwargs: {})
-            if failure_stage == "parse":
+            monkeypatch.setattr(item_effects, "fetch_item_data", lambda **_kwargs: {})
+            monkeypatch.setattr(
+                item_effects,
+                "parse_all_item_effects",
+                fail_parse if failure_stage == "parse" else (lambda _items: {}),
+            )
 
-                def fail_parse(_items):
-                    raise ValueError("parser unavailable")
+        with pytest.raises(expected):
+            item_effects._build_item_effects()
 
-                monkeypatch.setattr(
-                    passive_parser,
-                    "parse_all_item_effects",
-                    fail_parse,
-                )
-            else:
-                monkeypatch.setattr(
-                    passive_parser,
-                    "parse_all_item_effects",
-                    lambda _items: {},
-                )
-
-        assert item_effects._build_item_effects() == item_effects._OFFLINE_ITEM_EFFECTS
-
-    def test_every_offline_key_has_exactly_one_owner(self) -> None:
-        for item_name, offline_values in item_effects._OFFLINE_ITEM_EFFECTS.items():
+    def test_every_reference_key_has_exactly_one_owner(self) -> None:
+        for item_name, reference in item_effects._REFERENCE_ITEM_EFFECTS.items():
             static_keys = frozenset(item_effects._STATIC_ITEM_EFFECTS[item_name])
             parseable_keys = item_effects._PARSEABLE_ITEM_KEYS[item_name]
             assert static_keys.isdisjoint(parseable_keys)
-            assert static_keys | parseable_keys == frozenset(offline_values)
+            assert static_keys | parseable_keys == frozenset(reference)
 
-    def test_cached_parse_matches_offline_snapshot(self) -> None:
+    def test_cached_parse_matches_reference_values(self) -> None:
         from src.calculator.data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
         from src.calculator.passive_parser import parse_all_item_effects
 
@@ -1184,7 +1178,7 @@ class TestItemEffectProvenance:
             assert item_name in parsed
             for key in parseable_keys:
                 assert key in parsed[item_name], f"{item_name}.{key} was not parsed"
-                expected = item_effects._OFFLINE_ITEM_EFFECTS[item_name][key]
+                expected = item_effects._REFERENCE_ITEM_EFFECTS[item_name][key]
                 actual = parsed[item_name][key]
                 if isinstance(expected, (int, float)):
                     assert actual == pytest.approx(expected), f"{item_name}.{key}"
@@ -1252,6 +1246,66 @@ class TestRefreshItemEffects:
         item_effects.ITEM_EFFECTS["Removed Item"] = {"type": "on_hit"}
         refresh_item_effects()
         assert "Removed Item" not in ITEM_EFFECTS
+
+    def test_failed_rebuild_keeps_the_standing_registry(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A refresh that cannot build raises and leaves the registry as it was."""
+
+        def fail_build():
+            raise RuntimeError("parser unavailable")
+
+        monkeypatch.setattr(item_effects, "_build_item_effects", fail_build)
+        before = copy.deepcopy(item_effects.ITEM_EFFECTS)
+        with pytest.raises(RuntimeError):
+            refresh_item_effects()
+        assert item_effects.ITEM_EFFECTS == before
+
+
+class TestDeclaredSiblingReads:
+    """Uneven sibling keys are decided by the schema and read fail-closed."""
+
+    @pytest.mark.parametrize(
+        ("item_name", "key"),
+        [
+            ("Archangel's Staff", "bonus_mana_to_ap_ratio"),
+            ("Winter's Approach", "bonus_mana_to_health_ratio"),
+            ("Malignance", "ultimate_haste"),
+            ("Experimental Hexplate", "cooldown"),
+        ],
+    )
+    def test_dropped_declared_key_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch, item_name: str, key: str
+    ) -> None:
+        broken = dict(item_effects.ITEM_EFFECTS[item_name])
+        broken.pop(key)
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, item_name, broken)
+        with pytest.raises(KeyError) as excinfo:
+            item_state_receipts(
+                _build(item_name), {}, fight_duration_seconds=5.0, is_melee=True
+            )
+        assert item_name in excinfo.value.args[0]
+        assert key in excinfo.value.args[0]
+
+    def test_undeclared_sibling_is_an_absence_not_a_missing_key(self) -> None:
+        assert "cooldown" not in item_effects.entry_schema_keys("Malignance")
+        [receipt] = item_state_receipts(
+            _build("Malignance"), {}, fight_duration_seconds=5.0, is_melee=True
+        )
+        assert receipt["state"] == "ultimate_ready"
+        assert receipt["cooldown"] == 0.0
+
+    def test_dropped_energized_distance_names_item_and_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        broken = dict(item_effects.ITEM_EFFECTS["Rapid Firecannon"])
+        broken.pop("energized_distance_units_per_stack")
+        monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Rapid Firecannon", broken)
+        expected = "Rapid Firecannon.*energized_distance_units_per_stack"
+        with pytest.raises(KeyError, match=expected):
+            energized_schedule_receipt("Rapid Firecannon")
+        with pytest.raises(KeyError, match=expected):
+            energized_proc_indices("Rapid Firecannon", 3)
 
 
 class TestShieldReductionFraction:

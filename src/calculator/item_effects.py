@@ -3,12 +3,13 @@
 Each item with a damage-relevant passive/active is registered in ITEM_EFFECTS.
 Functions compute bonus damage based on fight context (stats, target, duration).
 
-**Data sourcing:** Values are loaded from the cached item JSON data via
-``passive_parser`` whenever the data is available. ``_STATIC_ITEM_EFFECTS``
-owns schema and values the parser cannot provide; ``_OFFLINE_ITEM_EFFECTS``
-is a complete last-known-good snapshot used only when loading or parsing fails
-as a whole. When JSON data is refreshed, ``refresh_item_effects()`` re-parses
-and updates ``ITEM_EFFECTS`` in place.
+**Data sourcing:** Values are parsed from the tracked item cache via
+``passive_parser``; a missing cache or a failed parse raises at import.
+``_REFERENCE_ITEM_EFFECTS`` is the reviewed shape of every registered entry:
+it supplies ``_STATIC_ITEM_EFFECTS`` (the keys the parser cannot provide),
+declares which keys the parser owns, and is the parity reference the cached
+parse must reproduce. When JSON data is refreshed, ``refresh_item_effects()``
+re-parses and updates ``ITEM_EFFECTS`` in place.
 """
 
 import logging
@@ -16,6 +17,9 @@ import math
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
+
+from .data_fetcher import fetch_item_data
+from .passive_parser import parse_all_item_effects
 
 logger = logging.getLogger(__name__)
 
@@ -1216,7 +1220,6 @@ def item_state_receipts(
         option_value = float(
             (item_options or {}).get(item_name, {}).get("manaflow_bonus_mana", 0)
         )
-        effect = ITEM_EFFECTS[item_name]
         cap = required_effect_value(item_name, "manaflow_bonus_mana_max")
         add(
             item_name,
@@ -1224,11 +1227,13 @@ def item_state_receipts(
             manaflow_bonus_mana=min(option_value, cap),
             manaflow_cap=cap,
             transformed=option_value >= cap,
-            awe_conversion=(
-                float(effect.get("bonus_mana_to_ap_ratio", 0.0)) * bonus_mana
-                + float(effect.get("bonus_mana_to_health_ratio", 0.0)) * bonus_mana
-                + float(effect.get("bonus_mana_to_heal_shield_power_ratio", 0.0))
-                * bonus_mana
+            awe_conversion=sum(
+                _declared_effect_value(item_name, key) * bonus_mana
+                for key in (
+                    "bonus_mana_to_ap_ratio",
+                    "bonus_mana_to_health_ratio",
+                    "bonus_mana_to_heal_shield_power_ratio",
+                )
             ),
             total_mana=max_mana,
         )
@@ -1453,14 +1458,13 @@ def item_state_receipts(
     ):
         if item_name not in names:
             continue
-        effect = ITEM_EFFECTS[item_name]
         add(
             item_name,
             "ultimate_ready",
-            ultimate_haste=float(effect.get("ultimate_haste", 0.0)),
+            ultimate_haste=float(required_effect_value(item_name, "ultimate_haste")),
             active_trigger="R",
-            duration=float(effect.get("duration", 0.0)),
-            cooldown=float(effect.get("cooldown", 0.0)),
+            duration=float(required_effect_value(item_name, "duration")),
+            cooldown=_declared_effect_value(item_name, "cooldown"),
         )
 
     if "Swiftmarch" in names:
@@ -1500,11 +1504,13 @@ def item_state_receipts(
 
 
 # ---------------------------------------------------------------------------
-# Complete offline item effect snapshot
+# Reference item effect entries
 # ---------------------------------------------------------------------------
-# Normal cached-data operation does not merge from this table. It is the
-# explicit whole-system fallback and the parity reference for parser updates.
-_OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
+# The reviewed shape of every registered entry.  The live registry never reads
+# a parser-owned value from this table: ``_STATIC_ITEM_EFFECTS`` takes the
+# code-owned keys, ``_PARSEABLE_ITEM_KEYS`` the rest, and the parity test
+# holds the cached parse to these values.
+_REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Ordered sustain packets ─────────────────────────────────────────
     # These values are intentionally registry-owned.  The cached item JSON
     # still supplies ordinary stats, but the current Wiki entries describe
@@ -2799,7 +2805,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
 }
 
 
-# Fields owned by code rather than wiki parsing. Every remaining offline field
+# Fields owned by code rather than wiki parsing. Every remaining reference field
 # is explicitly parser-owned through ``_PARSEABLE_ITEM_KEYS`` below.
 _STRUCTURAL_EFFECT_KEYS = frozenset(
     {
@@ -3181,12 +3187,12 @@ _STATIC_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     item_name: {
         key: value for key, value in values.items() if key in _static_keys(item_name)
     }
-    for item_name, values in _OFFLINE_ITEM_EFFECTS.items()
+    for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
 }
 
 _PARSEABLE_ITEM_KEYS: dict[str, frozenset[str]] = {
     item_name: frozenset(values) - _static_keys(item_name)
-    for item_name, values in _OFFLINE_ITEM_EFFECTS.items()
+    for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
 }
 
 
@@ -3198,35 +3204,22 @@ _PARSEABLE_ITEM_KEYS: dict[str, frozenset[str]] = {
 def _build_item_effects() -> dict[str, dict[str, Any]]:
     """Build live effects from code-owned schema plus parsed values.
 
-    A successful parse never borrows a missing parser-owned value from the
-    offline snapshot. Loading failure, parser failure, or an empty whole-parse
-    result uses the complete last-known-good snapshot instead.
+    The tracked cache is the only source: a missing cache, a parser failure,
+    or a parse that registered nothing raises here, at import.  A parse that
+    dropped one key borrows it from nowhere — the entry lacks it and
+    ``required_effect_value`` raises on the read, naming item and key.
 
     Returns:
         Merged dict suitable for use as ``ITEM_EFFECTS``.
     """
-    result = deepcopy(_STATIC_ITEM_EFFECTS)
-
-    try:
-        from .data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
-
-        items_data = fetch_item_data(data_directory=DEFAULT_DATA_DIR)
-    except Exception as exc:
-        logger.debug("Could not load item JSON for parsing: %s", exc)
-        return deepcopy(_OFFLINE_ITEM_EFFECTS)
-
-    try:
-        from .passive_parser import parse_all_item_effects
-
-        parsed = parse_all_item_effects(items_data)
-    except Exception as exc:
-        logger.warning("Item passive parsing failed: %s", exc)
-        return deepcopy(_OFFLINE_ITEM_EFFECTS)
-
+    parsed = parse_all_item_effects(fetch_item_data())
     if not parsed:
-        logger.warning("Item passive parsing produced no registered effects")
-        return deepcopy(_OFFLINE_ITEM_EFFECTS)
+        raise RuntimeError(
+            "Item passive parsing registered no effects — parser/cache bug; "
+            "check passive_parser and data/items.json"
+        )
 
+    result = deepcopy(_STATIC_ITEM_EFFECTS)
     for item_name, parsed_values in parsed.items():
         if item_name in result:
             parseable_keys = _PARSEABLE_ITEM_KEYS[item_name]
@@ -3252,10 +3245,12 @@ def refresh_item_effects() -> None:
     Mutates ``ITEM_EFFECTS`` in place (clear + update) rather than
     rebinding the module global, so modules that imported it via
     ``from .item_effects import ITEM_EFFECTS`` (e.g. ``calculator/__init__.py``)
-    keep seeing the refreshed values through their existing binding.
+    keep seeing the refreshed values through their existing binding.  A
+    rebuild that raises leaves the registry as it was.
     """
+    rebuilt = _build_item_effects()
     ITEM_EFFECTS.clear()
-    ITEM_EFFECTS.update(_build_item_effects())
+    ITEM_EFFECTS.update(rebuilt)
     # Compiled-build memo derives from this registry; drop it with the data.
     _RESOLVED_DAMAGE_EFFECTS.clear()
 
@@ -3269,7 +3264,7 @@ def required_effect_value(item_name: str, key: str) -> Any:
 
     A missing key means the parser omitted a required parser-owned value or
     code omitted a structural value. Raise with item and key context instead
-    of silently borrowing a potentially stale offline number.
+    of silently borrowing a stale literal.
     """
     effect = ITEM_EFFECTS.get(item_name, {})
     if key not in effect:
@@ -3279,6 +3274,20 @@ def required_effect_value(item_name: str, key: str) -> Any:
             "passive_parser"
         )
     return effect[key]
+
+
+def _declared_effect_value(item_name: str, key: str) -> float:
+    """Read a key an item's schema may or may not declare, failing closed.
+
+    Sibling keys a family carries unevenly (Awe converts mana to one stat per
+    item; two ultimate-haste items have no cooldown) are decided by
+    ``entry_schema_keys`` — the reviewed shape, never the live entry — so a
+    parse that dropped a declared key still raises naming item and key, while
+    an item whose schema never carried the key reads 0.0.
+    """
+    if key in entry_schema_keys(item_name):
+        return float(required_effect_value(item_name, key))
+    return 0.0
 
 
 def sustain_effect_value(item_name: str, key: str) -> float:
@@ -3339,23 +3348,14 @@ def sustain_stat_receipt(item_name: str, stat_key: str) -> dict[str, Any]:
     sourced from; a missing key raises, naming the item and key, instead of
     letting a parser break silently change sustain.
     """
-    effect = ITEM_EFFECTS.get(item_name, {})
-    if stat_key not in effect:
-        raise KeyError(
-            f"ITEM_EFFECTS[{item_name!r}] is missing {stat_key!r} — "
-            "no typed sustain stat is pinned for this item"
-        )
     return {
         "item": item_name,
         "stat_key": stat_key,
         "value": sustain_effect_value(item_name, stat_key),
-        "source_url": str(
-            effect.get(
-                "source_url",
-                "https://wiki.leagueoflegends.com/en-us/" + item_name.replace(" ", "_"),
-            )
+        "source_url": str(required_effect_value(item_name, "source_url")),
+        "source_revision_id": int(
+            required_effect_value(item_name, "source_revision_id")
         ),
-        "source_revision_id": int(effect.get("source_revision_id", 0) or 0),
     }
 
 
@@ -3884,12 +3884,12 @@ def entry_schema_keys(item_name: str) -> frozenset[str]:
     and raises naming the item and the key.  That is the fail-closed contract
     the registry's own compilers used to buy by comparing item names.
 
-    An item the last-known-good snapshot does not know has no schema but its
-    live entry, which is then the only shape there is.
+    An item the reference table does not know has no schema but its live
+    entry, which is then the only shape there is.
     """
-    snapshot = _OFFLINE_ITEM_EFFECTS.get(item_name)
-    if isinstance(snapshot, Mapping):
-        return frozenset(snapshot)
+    reference = _REFERENCE_ITEM_EFFECTS.get(item_name)
+    if isinstance(reference, Mapping):
+        return frozenset(reference)
     entry = ITEM_EFFECTS.get(item_name)
     return frozenset(entry) if isinstance(entry, Mapping) else frozenset()
 
@@ -4234,22 +4234,11 @@ def energized_proc_indices(
     """
     if num_attacks <= 0:
         return ()
-    values = ITEM_EFFECTS.get(item_name)
-    if not values or "energized_max_stacks" not in values:
-        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_max_stacks'")
     maximum = int(required_effect_value(item_name, "energized_max_stacks"))
     stacks = max(0.0, min(float(initial_stacks), float(maximum)))
-    if "energized_attack_stacks" not in values:
-        raise KeyError(
-            f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_attack_stacks' — "
-            "parser/schema bug; check passive_parser"
-        )
     gain = int(required_effect_value(item_name, "energized_attack_stacks"))
     distance_per_stack = float(
-        values.get(
-            "energized_distance_units_per_stack",
-            ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"],
-        )
+        required_effect_value(item_name, "energized_distance_units_per_stack")
     )
     if distance_per_stack <= 0.0:
         raise ValueError(f"{item_name} has invalid Energized distance cadence")
@@ -4280,12 +4269,8 @@ def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
     """Return the complete source receipt used by an Energized schedule."""
     maximum = int(required_effect_value(item_name, "energized_max_stacks"))
     attack_stacks = int(required_effect_value(item_name, "energized_attack_stacks"))
-    values = ITEM_EFFECTS.get(item_name, {})
     distance = float(
-        values.get(
-            "energized_distance_units_per_stack",
-            ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"],
-        )
+        required_effect_value(item_name, "energized_distance_units_per_stack")
     )
     if maximum <= 0 or attack_stacks <= 0 or distance <= 0.0:
         raise ValueError(f"{item_name} has invalid Energized schedule values")

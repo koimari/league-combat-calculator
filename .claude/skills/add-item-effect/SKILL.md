@@ -12,7 +12,7 @@ description: Guide for adding item passive/active effects to the LoL calculator.
 3. `_STATIC_ITEM_EFFECTS` supplies structural fields and values the parser cannot obtain
 4. `item_effects.py` compiles the build's live registry records into typed, immutable phase specs
 
-`_OFFLINE_ITEM_EFFECTS` is a complete last-known-good snapshot, but it is used only when cache loading or the whole parser fails. A successful partial parse never borrows a missing numeric value from it; missing required keys fail loudly.
+`_REFERENCE_ITEM_EFFECTS` is the reviewed shape of every registered entry; the live registry never reads a parser-owned value from it. A missing cache or a failed parse raises at import; a partial parse leaves the key absent and `required_effect_value()` raises on the read.
 
 When wiki data is re-pulled (the dev-only `/api/update-data` endpoint, or patch day), calling `refresh_item_effects()` re-parses and updates `ITEM_EFFECTS` in place.
 
@@ -54,9 +54,9 @@ def _parse_my_item(text: str) -> dict[str, Any]:
 - `_extract_ft_parts(text)` — extracts display/tooltip from `{{ft|D|T}}`
 - Use `cooldown_field` parameter + `"use_cooldown_field": True` in config to get the JSON cooldown field
 
-### Step 3: Add schema and offline values in `item_effects.py`
+### Step 3: Add schema and reference values in `item_effects.py`
 
-Add a complete last-known-good entry to `_OFFLINE_ITEM_EFFECTS`. Put schema fields in `_STRUCTURAL_EFFECT_KEYS`; add truly unparseable numeric keys to `_STATIC_VALUE_KEYS_BY_ITEM`:
+Add the complete reviewed entry to `_REFERENCE_ITEM_EFFECTS`. Put schema fields in `_STRUCTURAL_EFFECT_KEYS`; add truly unparseable numeric keys to `_STATIC_VALUE_KEYS_BY_ITEM`:
 
 ```python
 "My Item": {
@@ -67,7 +67,7 @@ Add a complete last-known-good entry to `_OFFLINE_ITEM_EFFECTS`. Put schema fiel
 },
 ```
 
-The module derives `_STATIC_ITEM_EFFECTS` and `_PARSEABLE_ITEM_KEYS`. Cached parsing must agree with the offline snapshot's parser-owned keys; the parity test tells you exactly what changed on a balance patch.
+The module derives `_STATIC_ITEM_EFFECTS` and `_PARSEABLE_ITEM_KEYS`. Cached parsing must agree with the reference table's parser-owned keys; the parity test tells you exactly what changed on a balance patch.
 
 ### Step 4: Compile the behavior and use an engine phase
 
@@ -126,7 +126,7 @@ Items that modify stats beyond their flat values (AP multipliers, mana→AP, hea
 
 **Data flow:** `passive_parser.py` → `ITEM_EFFECTS` registry → `stats.py` looks up values at calculation time.
 
-**Important:** `stats.py` must **never hardcode** numeric item values — and neither `stats.py` nor the accessors use literal fallbacks in `.get()` calls. A missing key is a parser/schema bug that must fail loudly (see `required_effect_value()`), not silently borrow a stale offline value.
+**Important:** `stats.py` must **never hardcode** numeric item values — and neither `stats.py` nor the accessors use literal fallbacks in `.get()` calls. A missing key is a parser/schema bug that must fail loudly (see `required_effect_value()`), not silently borrow a stale literal.
 
 ### Where stat passives live
 
@@ -193,12 +193,12 @@ Register in `_ITEM_PARSE_CONFIG` under the `# ── Stat Conversion ──` sec
 
 #### Step 3: Add defaults in `item_effects.py`
 
-Add the complete entry to `_OFFLINE_ITEM_EFFECTS`; classify its structural and unparseable keys through the same static-key policy:
+Add the complete entry to `_REFERENCE_ITEM_EFFECTS`; classify its structural and unparseable keys through the same static-key policy:
 
 ```python
 "My Item": {
     "type": "stat_conversion",
-    "bonus_mana_to_ap_ratio": 0.02,  # Offline parity value
+    "bonus_mana_to_ap_ratio": 0.02,  # Reference parity value
 },
 ```
 
@@ -224,7 +224,7 @@ For AP multipliers, extend `ap_multiplier()` instead.
 
 **Key rules:**
 - The accessor owns the `ITEM_EFFECTS` lookup and the numeric semantics; `stats.py` never touches `ITEM_EFFECTS` directly
-- **No literal fallbacks** — `required_effect_value()` raises a KeyError naming the item and key if live parsing or static schema is incomplete. `_OFFLINE_ITEM_EFFECTS` is whole-system recovery, not a per-key fallback
+- **No literal fallbacks** — `required_effect_value()` raises a KeyError naming the item and key if live parsing or static schema is incomplete. `_REFERENCE_ITEM_EFFECTS` is the parity reference, never a fallback
 - AP multipliers stack **additively** (Rabadon's 30% + Blackfire 4% = 34% total, not 1.30 × 1.04)
 
 #### Step 5: Test

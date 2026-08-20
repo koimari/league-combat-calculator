@@ -247,7 +247,7 @@ def item_audit_lines(old_items, new_items):
         if static_keys:
             lines.append(
                 f"    NOTE: code-owned values {sorted(static_keys)} — verify "
-                "against the new wiki text (item_effects._OFFLINE_ITEM_EFFECTS)"
+                "against the new wiki text (item_effects._REFERENCE_ITEM_EFFECTS)"
             )
     if len(lines) == 1:
         lines.append("  (no changes)")

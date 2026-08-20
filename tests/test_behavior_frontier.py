@@ -536,6 +536,29 @@ def test_the_conditional_holder_falls_back_only_while_its_ticks_are_live() -> No
     )
 
 
+def test_a_threshold_nobody_can_read_raises_instead_of_falling_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A dropped registry key names owner and key; it never means 'no threshold'."""
+    from src.calculator import item_effects
+
+    rule = next(
+        rule
+        for owner in sorted(catalog.rule_owners())
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.payload, ThresholdRegenRule)
+    )
+    key = rule.payload.bonus_health_threshold.key
+    broken = dict(item_effects.ITEM_EFFECTS[rule.owner])
+    broken.pop(key)
+    monkeypatch.setitem(item_effects.ITEM_EFFECTS, rule.owner, broken)
+
+    with pytest.raises(KeyError) as excinfo:
+        interpreters.uncompilable_item_receipt([{"name": rule.owner}])
+    assert rule.owner in excinfo.value.args[0]
+    assert key in excinfo.value.args[0]
+
+
 def test_the_committed_refusal_gate_fails_when_the_section_is_deleted() -> None:
     """R-05: the check reproduces its own red on demand."""
     report = behavior_frontier.scan()

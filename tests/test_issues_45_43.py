@@ -114,6 +114,15 @@ def test_missing_lifesteal_key_raises_naming_item_and_key(monkeypatch):
         grouped_sustain_stat_percent(_items("Vampiric Scepter"), "lifesteal_percent")
 
 
+def test_missing_lifesteal_source_raises_naming_item_and_key(monkeypatch):
+    """A receipt without its wiki revision is not synthesized; it raises."""
+    monkeypatch.setitem(
+        ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain", "lifesteal_percent": 7.0}
+    )
+    with pytest.raises(KeyError, match="Vampiric Scepter.*source_url"):
+        sustain_stat_receipt("Vampiric Scepter", "lifesteal_percent")
+
+
 def test_grouped_sustain_stat_sums_lifesteal_across_a_build():
     """The grouped receipt adds every typed lifesteal stat in the build."""
     assert grouped_sustain_stat_percent(

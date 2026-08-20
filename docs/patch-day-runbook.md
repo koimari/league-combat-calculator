@@ -97,7 +97,7 @@ What `run` does:
    - **Registered champions** — `NEEDS REVIEW` (numeric diff) vs
      `text-only`.
    - **Configured items** — same flags, plus `NOTE: code-owned values` when
-     `item_effects._OFFLINE_ITEM_EFFECTS` holds values the wiki does not
+     `item_effects._REFERENCE_ITEM_EFFECTS` holds values the wiki does not
      update (verify by hand against the new wiki text).
    - **Shop delta** — net-new / removed items; removed IMPLEMENTED items are
      flagged `** IMPLEMENTED — code must be updated **`.
@@ -185,7 +185,7 @@ For EVERY stale flag, pick exactly one of these outcomes:
   `data/gamefiles/` and the patch notes, then re-run the regression so the
   flag flips to false.
 - **Code-owned values** (`NOTE: code-owned values` in the audit): update
-  `item_effects._OFFLINE_ITEM_EFFECTS` by hand from the new wiki text
+  `item_effects._REFERENCE_ITEM_EFFECTS` by hand from the new wiki text
   (`Agents.md` rule 5 — no literal fallbacks at call sites; missing keys must
   raise).
 - **Champion modules with hand-validated expectations**: update
@@ -218,7 +218,7 @@ Triage rules of thumb:
   conversion mechanic worth modeling.
 - **Champion numeric changes**: update module + tests, re-pin.
 - **Removed item**: remove from `_ITEM_PARSE_CONFIG`,
-  `_OFFLINE_ITEM_EFFECTS`, and its tests.
+  `_REFERENCE_ITEM_EFFECTS`, and its tests.
 - **New item**: stats flow automatically; model passives via
   `/add-item-effect` (verify the exact name in `data/items.json` first —
   parser config and build scenarios use exact cached names).
@@ -311,7 +311,7 @@ A kit rework changes abilities, not just numbers. A number update is Step
 1. Treat as a full re-cert of that item family (all items sharing the
    mechanic — see `/add-item-effect` and
    `docs/item-source-reconciliation.md`).
-2. Update the `item_effects` typed accessors and `_OFFLINE_ITEM_EFFECTS`; no
+2. Update the `item_effects` typed accessors and `_REFERENCE_ITEM_EFFECTS`; no
    literal fallbacks at call sites (`Agents.md` rule 5).
 3. Update tests, re-run the regression, re-capture golden with explained
    diffs.

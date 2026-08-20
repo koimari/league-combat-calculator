@@ -725,7 +725,7 @@ def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
 
 def _threshold_regeneration_thresholds(
     names: Sequence[str],
-) -> dict[str, float | None]:
+) -> dict[str, float]:
     """Each declared threshold regeneration this build brings, by owner.
 
     The one *conditional* answer the build-level gate needs: a threshold
@@ -737,19 +737,15 @@ def _threshold_regeneration_thresholds(
     here, keyed by the declared shape rather than by the one item that
     happens to carry it today.
 
-    ``None`` for an owner that declares one whose number cannot be read: a
-    threshold nobody can resolve is a reason to fall back, not a threshold of
-    zero and not a crashed request.  Resolved per owner so one unreadable
-    declaration cannot decide the answer for the rest of the build.
+    A declaration whose number cannot be read raises, naming the owner and
+    the key; a broken declaration never becomes "no threshold".
     """
-    thresholds: dict[str, float | None] = {}
-    for name in sorted(frozenset(names)):
-        try:
-            for slot in declared_stat_derivations([name], ThresholdRegenRule):
-                thresholds[slot.owner] = slot.value("bonus_health_threshold")
-        except (KeyError, TypeError, ValueError):
-            thresholds[name] = None
-    return thresholds
+    return {
+        slot.owner: slot.value("bonus_health_threshold")
+        for slot in declared_stat_derivations(
+            sorted(frozenset(names)), ThresholdRegenRule
+        )
+    }
 
 
 def uncompilable_item_receipt(
@@ -788,7 +784,7 @@ def uncompilable_item_receipt(
             threshold = conditional[name]
             if threshold_ticks_compiled:
                 continue
-            if loadout_stats is None or threshold is None:
+            if loadout_stats is None:
                 return f"item_mechanic={name}"
             if float(loadout_stats.get("bonus_health", 0.0) or 0.0) >= threshold:
                 return f"item_mechanic={name}"

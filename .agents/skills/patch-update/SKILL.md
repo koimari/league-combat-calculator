@@ -51,12 +51,12 @@ the champion AFTER the last `Processed` line).
 - Passive/active *text* diffs feed the parser: verify the item's values in
   the golden item sweep still look right; a broken parse raises by design.
 - `NOTE: code-owned values [...]` — those keys live in
-  `item_effects._OFFLINE_ITEM_EFFECTS` and the wiki does NOT update them.
+  `item_effects._REFERENCE_ITEM_EFFECTS` and the wiki does NOT update them.
   Read the new wiki text for that item and update by hand if they moved.
 
 **Shop delta:**
 - Removed item that is IMPLEMENTED → remove it from `_ITEM_PARSE_CONFIG`,
-  `_OFFLINE_ITEM_EFFECTS`, and its tests.
+  `_REFERENCE_ITEM_EFFECTS`, and its tests.
 - New item → stats already flow automatically; if it has a damage/on-hit/
   stat-conversion passive worth modeling, use `/add-item-effect`.
 
