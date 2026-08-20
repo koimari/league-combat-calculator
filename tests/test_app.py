@@ -1822,14 +1822,23 @@ def test_config_exclusivity_groups_cover_frontend_optimizer_families():
     assert "Ravenous Hydra" in groups["Hydra"]
 
 
-def test_frontend_exposes_the_full_reviewed_module_contract():
+def test_frontend_reads_one_registry_field():
+    """One field in, one map out: no second always-equal registry set."""
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert 'entry.engine_registration === "reviewed_module"' in source
     assert (
-        "if (entry.availability?.ready) engine.reviewed.add(entry.name);" not in source
+        "engine.registration.set(entry.name, entry.engine_registration || null);"
+        in source
     )
-    assert "champion.engineRegistration = entry.engine_registration || null" in source
+    for retired in (
+        "engine.reviewed",
+        "engine.backend",
+        "engine.availability",
+        "engineRegistration",
+        "engine_backend_enabled",
+        "verified_attacker",
+    ):
+        assert retired not in source
     assert "generated packet · not reviewed" not in source
 
 
@@ -2199,9 +2208,9 @@ class TestIconUrlsAreHttps:
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert sum(champion["verified"] for champion in champions) == len(
-            registered_champion_names()
-        )
+        assert sum(
+            champion["engine_registration"] is not None for champion in champions
+        ) == len(registered_champion_names())
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
         assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
@@ -2215,40 +2224,51 @@ def test_champion_cache_fields_are_required_reads(key):
         app_module._cached_champion_field({"name": "Ahri"}, key)
 
 
-class TestChampionVerifiedFlags:
-    """/api/champions exposes the complete dedicated-module registry."""
+def test_loadout_summary_carries_the_registry_once():
+    """The summary emitted the same fact three times; one field now."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "enemies": [{"champion": "Garen", "level": 11}],
+        },
+    )
 
-    def test_flags_match_the_module_registry(self):
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]["target"]
+    assert target["engine_registration"] == "reviewed_module"
+    assert "verified_attacker" not in target
+    assert "engine_registered" not in target
+
+
+class TestChampionRegistrationField:
+    """``engine_registration`` is the one registry fact /api/champions serves."""
+
+    def test_registration_matches_the_module_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {c["name"]: c["verified"] for c in champs}
+        by_name = {c["name"]: c["engine_registration"] for c in champs}
 
-        assert by_name["Aatrox"] is True
-        assert by_name["Bel'Veth"] is True
-        assert by_name["Kled"] is True
-        assert by_name["Zoe"] is True
-        assert by_name["Zyra"] is True
+        assert by_name["Aatrox"] == "reviewed_module"
+        assert by_name["Bel'Veth"] == "reviewed_module"
+        assert by_name["Kled"] == "reviewed_module"
+        assert by_name["Soraka"] == "reviewed_module"
+        assert by_name["Zoe"] == "reviewed_module"
+        assert by_name["Zyra"] == "reviewed_module"
 
-    def test_availability_is_the_module_registry(self):
+    def test_no_second_field_repeats_the_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {champion["name"]: champion for champion in champs}
 
-        assert by_name["Soraka"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
+        assert set(champs[0]) == {
+            "name",
+            "icon",
+            "engine_registration",
+            "supported_fight_modes",
+            "unsupported_fight_mode_reason",
+            "patch_last_changed",
+            "abilities",
+            "ability_ingestion",
         }
-        assert by_name["Zoe"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
-        assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
-        assert by_name["Zyra"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
-        assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
     def test_every_champion_publishes_an_unrestricted_fight_window(self):
         """The published contract carries the restriction and its sourced
@@ -2266,16 +2286,20 @@ class TestChampionVerifiedFlags:
             champion["unsupported_fight_mode_reason"] is None for champion in champs
         )
 
-    def test_verified_champions_sort_first(self):
+    def test_registered_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        flags = [c["verified"] for c in champs]
+        flags = [c["engine_registration"] is not None for c in champs]
 
         assert flags == sorted(flags, reverse=True)
 
     def test_each_group_is_alphabetical(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        for group in (True, False):
-            names = [c["name"] for c in champs if c["verified"] is group]
+        for registered in (True, False):
+            names = [
+                c["name"]
+                for c in champs
+                if (c["engine_registration"] is not None) is registered
+            ]
             assert names == sorted(names)
 
 

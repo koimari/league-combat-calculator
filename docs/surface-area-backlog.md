@@ -36,7 +36,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| C1 | `/api/champions` entries; `app.js:41-42,2061,3766,4733`; `public_loadout_summary` | One registry fact in five fields (`verified`, `engine_registered`, `engine_backend_enabled`, `availability.ready`, `engine_registration`); app.js keeps two always-equal sets; the summary emits it thrice. | One field. UI-visible contract change — propose first. |
 | C2 | `app.js` (~1965, 2378, 3172, 3238) + `validation_receipts.displayed_prediction` | The "headline the main combat row" rule is spelled ≥3× in JS and once in Python; nothing ties them. | A `headline_total` leaf on the response, read by both. |
 | C3 | `static/js/feedback.js:200,302` | Hand-rolled `fetch("/api/receipts", {method:"POST"…})`; `postJson` exists. | Use it. |
 | C4 | `/api/items` `into`, `categories` | Always `[]` — reads `item.get("into")`/`("categories")` while the cache keys are `buildsInto` / `shop.tags`; no consumer beyond the merge (`app.js:313-314`). | Serve them or drop them. |

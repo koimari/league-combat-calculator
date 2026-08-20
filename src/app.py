@@ -1003,20 +1003,16 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified``, ``engine_registered`` and ``availability`` are the module
-    registry: a cached champion is an attacker exactly when a validated
-    module is registered for it. Source receipts and packet assumptions
-    remain available through the config metadata.
+    ``engine_registration`` is the module registry and the one field that
+    carries it: the validated module's kind, or ``null`` for a cached
+    champion no module registers -- which is exactly when it may not attack.
+    Source receipts and packet assumptions remain available through the
+    config metadata.
     """
     champions = fetch_champion_data()
     result = []
     for champ_data in champions.values():
         registration = engine_registration_kind(champ_data["name"])
-        availability = {
-            "ready": registration is not None,
-            "verification": registration,
-            "blockers": [],
-        }
         ability_slots = {}
         for slot in ("P", "Q", "W", "E", "R"):
             ability_slots[slot] = _public_ability_entry(
@@ -1031,17 +1027,13 @@ def api_champions():
             {
                 "name": champ_data["name"],
                 "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
-                "verified": availability["ready"],
-                "engine_registered": availability["ready"],
                 "engine_registration": registration,
-                "engine_backend_enabled": availability["ready"],
                 "supported_fight_modes": (
                     list(supported_modes) if supported_modes is not None else None
                 ),
                 "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
                     champ_data["name"]
                 ),
-                "availability": availability,
                 "patch_last_changed": _cached_champion_field(
                     champ_data, "patchLastChanged"
                 ),
@@ -1059,7 +1051,7 @@ def api_champions():
         )
     result = sorted(
         result,
-        key=lambda c: (not c["verified"], c["name"]),
+        key=lambda c: (c["engine_registration"] is None, c["name"]),
     )
     return jsonify(result)
 

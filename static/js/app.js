@@ -38,9 +38,9 @@ const PRACTICE_DUMMY_STAT_FIELDS = [
 ];
 const engine = {
   ready: false,
-  reviewed: new Set(),
-  backend: new Set(),
-  availability: new Map(),
+  // champion name -> /api/champions engine_registration: the validated
+  // module's kind, or null for a champion that may not attack.
+  registration: new Map(),
   itemOptions: {},
   championOptions: {},
   keystones: [],
@@ -566,10 +566,8 @@ function championOptionCapability(kind, championName) {
   const base = capabilityFor(kind, "champion_options");
   if (base.supported === false) return base;
   if (!championName) return { ...base, supported: false, reason: "Choose a champion before setting champion-specific options." };
-  const availability = engine.availability.get(championName);
-  if (availability && availability.ready === false) {
-    const reason = availability.blockers?.[0]?.label || "This champion has no certified public option contract.";
-    return { ...base, supported: false, reason };
+  if (!engine.registration.get(championName)) {
+    return { ...base, supported: false, reason: "This champion has no certified public option contract." };
   }
   return base;
 }
@@ -2040,7 +2038,7 @@ function syncPracticeDummyStatsFromResponse(result) {
 function scheduleEngineCalculation() {
   if (engine.pendingTimer) clearTimeout(engine.pendingTimer);
   if (!engine.ready || !state.attacker.champion || !state.targets.length || !state.targets.every((target) => target.champion)) return;
-  if (!engine.reviewed.has(state.attacker.champion) && !engine.backend.has(state.attacker.champion)) return;
+  if (!engine.registration.get(state.attacker.champion)) return;
   engine.pendingTimer = setTimeout(() => {
     const requestId = ++engine.requestId;
     engine.pending = true;
@@ -3734,8 +3732,8 @@ function optimizerDamagePackageReady() {
   // must not make the optimizer button appear dead; the sourced BIS profile
   // still supplies the selectable package while the engine remains the
   // authority for the final score.
-  const reviewedBackend = Boolean(champion && (engine.reviewed.has(champion.name) || engine.backend.has(champion.name)));
-  return reviewedBackend && (selectedAbilities || manualPackage || Boolean(bisChampionProfile(state.attacker)));
+  const registered = Boolean(champion && engine.registration.get(champion.name));
+  return registered && (selectedAbilities || manualPackage || Boolean(bisChampionProfile(state.attacker)));
 }
 
 
@@ -4684,13 +4682,10 @@ Promise.all([
     championAvailability.forEach((entry) => {
       const champion = DATA.champions.find((candidate) => candidate.name === entry.name);
       if (champion) {
-        champion.engineRegistration = entry.engine_registration || null;
         champion.supportedFightModes = entry.supported_fight_modes || null;
         champion.fightModeReason = entry.unsupported_fight_mode_reason || "";
       }
-      engine.availability.set(entry.name, entry.availability || {});
-      if (entry.availability?.ready && entry.engine_registration === "reviewed_module") engine.reviewed.add(entry.name);
-      if (entry.engine_backend_enabled) engine.backend.add(entry.name);
+      engine.registration.set(entry.name, entry.engine_registration || null);
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
