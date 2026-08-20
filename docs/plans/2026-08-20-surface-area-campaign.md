@@ -46,6 +46,7 @@ U11a/U11b above; category 1 (a deleted live reader/writer) came up empty after a
 - U05b: the "inert" items were adding damage (26.0 on an Ahri who cast nothing) — a numbers bug, not a label.
 - U10 item 4: `/api/items` stat values were all literal-zero fallbacks; the snapshot preference was masking it.
 
-## Left on the table (asides worth a unit)
+## Left on the table
 
-`/api/champions` publishes one registry fact in five fields · `feedback.js` still hand-rolls two POSTs · `economy.item_total` cache fallback is now dead for SR items and could raise · `static/data.json` has no generator and is one patch stale · `tests/test_migration_frontier.py` and `test_trigger_stream.py` still walk git history (the reason CI keeps a full-depth checkout) · Liandry's/Blackfire burns fire in `auto_only` without an ability hit (same family as U05b) · `pylint_ratchet.py` is a declared gate nothing runs.
+Every aside the units and the audit surfaced, de-duplicated and re-verified, lives in
+`docs/surface-area-backlog.md` — the one home for that list.
