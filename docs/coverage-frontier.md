@@ -59,14 +59,24 @@ and those kits have hits with no instant the cache states. Each is acknowledged 
 `docs/coverage-residue.json` with the sentence and what it omits; closing them would mean
 authoring cadence the source does not give.
 
-## Runes — 17 keystones, no minor runes
+## Runes — 62 cached, 21 compiled
 
-Everything in `data/runes.json` is a keystone (17 compiled, 0 unmodeled). Minor runes
-(Triumph, Coup de Grace, Last Stand, Cut Down, Gathering Storm, Cheap Shot, Eyeball
-Collection, Legend: Alacrity, Absolute Focus, Scorch, Transcendence, Celerity, …) are not
-cached, so they fail closed. For an ordinary build this is the largest number still missing
-per request (roughly 5–15% of damage) and the cheapest to add: most are flat or percent
-modifiers the `rune_effects.py` shape already carries.
+`data/runes.json` holds the whole roster: 17 keystones and 45 minor runes with the path and
+row Data Dragon states, plus the Rune page's stat-shard table. 21 compile — every keystone
+and four minor runes (Absolute Focus, Coup de Grace, Scorch, Cosmic Insight), one per shape
+the vocabulary carries. The remaining 41 minors and all 9 shards are cached, published
+greyed out by `rune_catalog()`, and refused at the request boundary; each needs a compiler
+in its path's `rune_paths/` module, and most are flat or percent modifiers the shape already
+carries. For an ordinary build the uncompiled remainder is the largest number still missing
+per request.
+
+Re-measure:
+
+```python
+from src.calculator.rune_effects import rune_catalog
+c = rune_catalog(); len(c), sum(e["implemented"] for e in c)
+[e["name"] for e in c if not e["implemented"]]
+```
 
 ## Order of attack
 

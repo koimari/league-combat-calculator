@@ -127,7 +127,7 @@ from collections import Counter
 from dataclasses import dataclass, field, replace
 from operator import itemgetter
 from types import MappingProxyType
-from typing import Any, Callable, NamedTuple
+from typing import Any, Callable, NamedTuple, TypeVar
 
 from . import item_effects
 from . import rune_effects
@@ -8513,7 +8513,12 @@ def _rune_trigger_times(
     return _rune_instance_times(state, rotation)
 
 
-def _page_effects(state: FightState, kind: type) -> list[Any]:
+_RuneEffectT = TypeVar("_RuneEffectT")
+
+
+def _page_effects(
+    state: FightState, kind: "type[_RuneEffectT]"
+) -> "list[_RuneEffectT]":
     """The selected runes of one effect kind, in page order (keystone first).
 
     Every rune walker below starts here: the page is a list and each of its
