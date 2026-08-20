@@ -119,7 +119,8 @@ class TestPageValidation:
             rune_effects.validate_rune_page("", ["Triumph"])
 
     def test_a_repeated_rune_is_refused(self):
-        with pytest.raises(ValueError, match="must not repeat"):
+        """The shared public-list policy owns this one, not the page rules."""
+        with pytest.raises(ValueError, match="must not contain duplicates"):
             rune_effects.validate_rune_page("", ["Scorch", "Scorch"])
 
     def test_two_runes_in_one_row_name_both_and_the_row(self):
@@ -187,8 +188,15 @@ class TestPageValidation:
             rune_effects.validate_rune_page("", None, ["Adaptive Force"])
 
     def test_too_many_shards_are_refused(self):
-        with pytest.raises(ValueError, match="stat_shards takes at most 3"):
+        with pytest.raises(ValueError, match="stat_shards may contain at most 3"):
             rune_effects.validate_rune_page("", None, ["", "", "", ""])
+
+    def test_the_same_shard_in_two_rows_is_legal(self):
+        """Adaptive Force is offered in rows 1 and 2; positions tell them apart."""
+        with pytest.raises(ValueError, match="not modeled yet"):
+            rune_effects.validate_rune_page(
+                "", None, ["Adaptive Force", "Adaptive Force", ""]
+            )
 
     def test_an_option_for_an_unselected_rune_is_refused(self):
         with pytest.raises(ValueError, match="this rune page does not select"):
@@ -414,7 +422,7 @@ class TestTheRunePageOverHttp:
             ({"minor_runes": ["Scorch", "Waterwalking"]}, "one rune per row"),
             ({"minor_runes": ["Fake Rune"]}, "Unknown rune"),
             ({"minor_runes": ["Triumph"]}, "not modeled yet"),
-            ({"minor_runes": ["Scorch", "Scorch"]}, "must not repeat"),
+            ({"minor_runes": ["Scorch", "Scorch"]}, "must not contain duplicates"),
             ({"keystone": "Scorch"}, "is a minor rune, not a keystone"),
             ({"stat_shards": ["Health"]}, "names shard row 1"),
         ],

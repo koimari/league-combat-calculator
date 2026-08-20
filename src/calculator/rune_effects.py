@@ -33,6 +33,7 @@ from typing import Any, Callable, Mapping, Sequence
 from .ability_spec import Disposition, ZeroPolicy
 from .data_fetcher import fetch_rune_data
 from .item_effects import DamageInputs
+from .request_parsing import request_positional_string_list, request_string_list
 from .rune_parser import ADAPTIVE_FORCE_KEY, RESERVED_CACHE_KEYS, SHARDS_KEY
 
 
@@ -1284,17 +1285,16 @@ def _shard_rows() -> tuple[int, ...]:
     return tuple(int(slot.get("row", 0)) for slot in RUNE_SHARDS.get("slots", ()))
 
 
-def _string_list(value: Any, field: str, limit: int) -> tuple[str, ...]:
-    """Coerce one request list of rune names, rejecting the wrong shape."""
-    if value is None:
-        return ()
-    if not isinstance(value, (list, tuple)) or any(
-        not isinstance(item, str) for item in value
-    ):
-        raise ValueError(f"{field} must be a list of strings")
-    if len(value) > limit:
-        raise ValueError(f"{field} takes at most {limit} entries; got {len(value)}")
-    return tuple(item.strip() for item in value)
+def _name_list(value: Any, field: str, limit: int, *, positional: bool) -> list[str]:
+    """Coerce one request list of rune names through the shared list policy.
+
+    ``request_parsing`` owns what a public list may be; the two shapes it
+    offers are exactly the two the page needs — a set of distinct names for
+    the minor runes, and a positional list for the shards, whose empty
+    entries are empty slots and whose repeats are legal.
+    """
+    reader = request_positional_string_list if positional else request_string_list
+    return reader({field: [] if value is None else value}, field, maximum=limit)
 
 
 def validate_rune_page(
@@ -1351,11 +1351,9 @@ def _rune_row(name: str) -> int:
 def _validated_minor_runes(value: Any) -> tuple[str, ...]:
     """Parse the minor-rune list: known, distinct, minor, one per row."""
     rows = _minor_rows()
-    requested = [
-        name for name in _string_list(value, "minor_runes", len(rows) + 2) if name
-    ]
-    if len(set(requested)) != len(requested):
-        raise ValueError("minor_runes must not repeat a rune")
+    requested = _name_list(
+        value, "minor_runes", len(rows) + SECONDARY_PATH_MINORS, positional=False
+    )
     claimed: dict[tuple[str, int], str] = {}
     for name in requested:
         row = _rune_row(name)
@@ -1416,7 +1414,7 @@ def _primary_path(keystone: str, counts: Mapping[str, int]) -> str:
 def _validated_stat_shards(value: Any) -> tuple[str, ...]:
     """Parse the positional shard list: one option per row, in row order."""
     rows = _shard_rows()
-    requested = _string_list(value, "stat_shards", len(rows) or 3)
+    requested = tuple(_name_list(value, "stat_shards", len(rows), positional=True))
     for index, name in enumerate(requested):
         if not name:
             continue
