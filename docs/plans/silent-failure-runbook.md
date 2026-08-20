@@ -22,7 +22,7 @@ Every commit in the campaign is judged by one named gate set whose baselines wer
 | 4 | `python scripts/acceptance_matrix.py --json` | exit 0 | exit 0 | a withheld/partial optimizer result sold as success |
 | 5 | `python scripts/champion_optimizer_matrix.py --json` | exit 0 | exit 0 | a new withholding reason across 173 champions |
 | 6 | `black --check src/ tests/ scripts/` | clean | clean | formatter drift (version pinned in `requirements.txt`) |
-| 7 | `pylint src/ --fail-under=9` + `python scripts/pylint_ratchet.py --check` | pass | pass | per-file rot hidden by a rising mean |
+| 7 | `pylint src/ --fail-under=9` | pass | pass | new lint warnings in a touched file |
 | 8 | `python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json` | counters, residual, winner, score identical | moves only as declared in advance | cache loss, fallback, search poisoning |
 | 9 | `python scripts/repin_corpus.py --check` | pass | pass | a corpus receipt pinned at a different engine |
 | 10 | `pytest tests/test_survival_kernel.py` (the compiled-vs-receipt equivalence suite) | green | green | compiled score path desyncing from the walk |
@@ -30,7 +30,7 @@ Every commit in the campaign is judged by one named gate set whose baselines wer
 
 **R-02 — Rows 4 and 5 are campaign gates, not CI trivia.** A commit that introduces a withholding reason extends `champion_optimizer_matrix.EXPECTED_WITHHOLDING_PREFIXES` in that same commit — otherwise `pytest` is green while CI is red, which is the campaign's own failure shape wearing a different hat (D-23, D-96).
 
-**R-03 — Pylint is two gates.** CI's real gate is `--fail-under=9` (verified in `.github/workflows/tests.yml`), so the 9.53 average is unenforced; the campaign adds a per-file non-decreasing ratchet over every file a slice touches, seeded in the fingerprints receipt (D-99). Why: ~25 small clean modules raise the mean while a hotspot degrades under it.
+**R-03 — Pylint is one gate, read per file.** CI's real gate is `--fail-under=9` over `src/` (`.github/workflows/tests.yml`), an average that ~25 small clean modules can lift while a hotspot degrades under it — so a slice reads the warnings on the files it touched and lands none new. The per-file *score* ratchet that once held that line is retired: pylint's score moves with a file's statement count, so a clean refactor reads as rot, and the pinned scores had drifted below the tree on 48 of 197 files without producing one red.
 
 **R-04 — Gate verdicts reuse `scripts/gate_receipt.build_receipt`.** `scripts/validate_receipt.py` checks both the acceptance and champion-optimizer envelopes at `.github/workflows/tests.yml:61` (`validate_receipt.py`), and `tests/test_gate_receipt.py::test_ci_validates_every_receipt_it_emits` holds every receipt that step's matrices write to that step's arguments. A second receipt shape is a second thing that can quietly stop being true.
 
@@ -314,7 +314,6 @@ The last sentence is the load-bearing one — it is the check that would have ca
 | `scripts/repin_corpus.py` | 0A (L0) | corpus anchor + `--check` gate (R-21, R-22) |
 | `tests/test_e9_corpus.py` | 0A (L0) | consumes the anchor for both the assert (`:443-452`) and `_PINNED` (`:412-416`) |
 | `scripts/bench_coupled_optimizer.py` | 0A (L0) | `WorkCounters`, residual, `--fixed-work`, `--isolate`, `--no-compiled`, `allocation_probe`, fourth scenario |
-| `scripts/pylint_ratchet.py` | 0A (L0) | per-file non-decreasing score check (R-03) |
 | `scripts/plan_audit.py` + `tests/test_plan_audit.py` | 0A (L0) | the plan documents gated like source (R-37): citation-fragment verification, both golden-figure prongs, decision-inventory equality — rides R-01 row 1 through its test |
 | `docs/receipts/decision-inventory.json` | 0A (L0); refreshed in a doc-only commit whenever a decision table changes | every declared decision id with its owning document and split halves — the machine-readable half of umbrella criterion 11 (R-37) |
 | `scripts/patch_update.py` | 0A (L0), edited | `ALLY_ITEM_EFFECTS` enters the audit (D-47) |
@@ -419,12 +418,9 @@ def routing_comparison(scenarios: Sequence[str], *, isolate: bool, repeats: int,
 def allocation_probe(scenario: str) -> int:
     """tracemalloc peak bytes for one isolated evaluation — Phase 4 S4's gate (R-28)."""
 
-# scripts/pylint_ratchet.py
-def check_ratchet(baseline: Mapping[str, float]) -> tuple[str, ...]:
-    """Files whose pylint --output-format=json score fell — empty tuple is the pass condition."""
 ```
 
-**`docs/receipts/campaign-fingerprints.json`** — `{schema_version, captured_at_src_tree, golden{…counts}, coupled_golden{…counts}, bench{scenario: {counter: {value, provenance, tolerance}}}, alloc{scenario: {peak_bytes, provenance, margin}}, wall{stage: {scenario, best_of_3_ms, provenance}}, tests{collected, skipped, xfailed}, corpus{non_legacy_count}, frontier{counter: {value, provenance}}, demonstrated_red{gate: {sha, output_sha256}}, pylint{path: score}}`. Every leaf value carries `provenance ∈ {VERIFIED, CARRIED, PRIOR}` (R-06) and, when it is a ratchet rather than an equality gate, its `tolerance` (R-08). **This file is the sole home of every golden shape count in the campaign** — no plan document states one.
+**`docs/receipts/campaign-fingerprints.json`** — `{schema_version, captured_at_src_tree, golden{…counts}, coupled_golden{…counts}, bench{scenario: {counter: {value, provenance, tolerance}}}, alloc{scenario: {peak_bytes, provenance, margin}}, wall{stage: {scenario, best_of_3_ms, provenance}}, tests{collected, skipped, xfailed}, corpus{non_legacy_count}, frontier{counter: {value, provenance}}, demonstrated_red{gate: {sha, output_sha256}}}`. Every leaf value carries `provenance ∈ {VERIFIED, CARRIED, PRIOR}` (R-06) and, when it is a ratchet rather than an equality gate, its `tolerance` (R-08). **This file is the sole home of every golden shape count in the campaign** — no plan document states one.
 
 **Worktree ownership map** — exclusive write per **(file, symbol)**; every lane may read everything. Three files are shared by symbol between lanes that are **live at the same time** — `pipeline.py`, `ability_spec.py`, `champions/syndra.py` — and each carries its carve-out here rather than in a phase doc. A symbol carve-out on a file whose earlier owner has already merged (`item_support_effects.py` after L1, `trigger_stream.py` after L2) is a sequential handoff, not one of those three, and is written into the receiving lane's row.
 
