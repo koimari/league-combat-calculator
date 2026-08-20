@@ -126,11 +126,11 @@ def _champion(name: str = "TestChamp", **slots: list) -> dict:
 class TestDedicatedDispatch:
     """Every cached champion routes to a dedicated packet module."""
 
-    def test_dispatcher_fallback_uses_engine(
+    def test_dispatch_runs_the_dedicated_packet_module(
         self,
         champions_data: dict,
     ) -> None:
-        """Garen's dedicated packet is used instead of the legacy fallback."""
+        """Garen's dedicated packet module prices his slots."""
         champ = next(c for c in champions_data.values() if c.get("name") == "Garen")
         stats = _default_stats()
         target = _default_target()
