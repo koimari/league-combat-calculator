@@ -196,7 +196,8 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
 
     def test_the_schema_version_moved_with_the_payload(self):
         # C4 took 2 for this phase list; 3.8's coverage flip took 3 for a
-        # different payload, so the seven names are still C4's and the
-        # version is one past it.
-        assert CAPABILITY_SCHEMA_VERSION == 4
+        # different payload and S9's dispositions took 4, so the seven names
+        # are still C4's and the version has moved twice past it (5 is the
+        # rune page's request fields and catalogs).
+        assert CAPABILITY_SCHEMA_VERSION == 5
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

@@ -34,16 +34,52 @@ def test_config_serves_the_whole_keystone_roster_as_implemented():
     assert by_name["Electrocute"]["path"] == "Domination"
     assert all(entry["implemented"] is True for entry in keystones)
     assert all(entry["icon"] for entry in keystones)
+    assert all(entry["row"] == 0 for entry in keystones)
     # Paths arrive grouped in wiki order for direct picker rendering.
     paths = [entry["path"] for entry in keystones]
     assert paths.index("Precision") < paths.index("Domination") < paths.index("Sorcery")
 
 
+def test_config_serves_the_whole_rune_page_beside_the_keystone_row():
+    config = app_module.app.test_client().get("/api/config").get_json()
+
+    runes = config["runes"]
+    assert len(runes) == 62
+    assert config["keystones"] == [entry for entry in runes if entry["row"] == 0]
+    # The keystone row leads each path, as the picker renders it.
+    paths = [entry["path"] for entry in runes]
+    assert paths.index("Precision") == 0
+    assert [entry["row"] for entry in runes if entry["path"] == "Precision"] == [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+    ]
+    shards = config["rune_shards"]
+    assert [row["row"] for row in shards] == [1, 2, 3]
+    assert [option["name"] for option in shards[0]["options"]] == [
+        "Adaptive Force",
+        "Attack Speed",
+        "Cooldown Reduction",
+    ]
+
+
 def test_every_keystone_computes_through_the_calculate_route():
-    """Criterion 5: no selection in the roster refuses."""
+    """Criterion 5: no keystone in the roster refuses."""
     client = app_module.app.test_client()
     keystones = [
-        entry["name"] for entry in client.get("/api/config").get_json()["keystones"]
+        entry["name"]
+        for entry in client.get("/api/config").get_json()["keystones"]
+        if entry["implemented"]
     ]
     for keystone in keystones:
         response = client.post(

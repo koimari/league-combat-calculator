@@ -53,7 +53,7 @@ from .request_parsing import (
     request_int as _request_int,
     request_number,
 )
-from .rune_effects import validate_keystone_request
+from .rune_effects import validate_rune_page
 from .stats import calculate_total_stats, get_item_stats
 from .data_registry import data_version
 from .cast_dependency import (
@@ -775,7 +775,12 @@ class FightParams(FightConfig):
         if champion_options is not None and not isinstance(champion_options, Mapping):
             raise ValueError("champion_options must be an object")
         item_options = validate_item_input_options(data.get("item_options"))
-        keystone = validate_keystone_request(data.get("keystone"))
+        rune_page = validate_rune_page(
+            data.get("keystone"),
+            data.get("minor_runes"),
+            data.get("stat_shards"),
+            data.get("rune_options"),
+        )
         role = validate_role(data.get("role", ""))
         role_quest_complete = _request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
@@ -810,7 +815,10 @@ class FightParams(FightConfig):
                 dict(champion_options) if champion_options is not None else None
             ),
             item_options=item_options or None,
-            keystone=keystone,
+            keystone=rune_page.keystone,
+            minor_runes=rune_page.minor_runes,
+            stat_shards=rune_page.stat_shards,
+            rune_options=dict(rune_page.options) or None,
             role=role,
             role_quest_complete=role_quest_complete,
             enemies_attack=_request_bool(data, "enemies_attack", True),
@@ -1057,6 +1065,7 @@ def run_fight(
             role=params.role,
             role_quest_complete=params.role_quest_complete,
             external_stat_bonuses=params.ally_stat_bonuses,
+            rune_page=params.rune_page,
         )
     )
 

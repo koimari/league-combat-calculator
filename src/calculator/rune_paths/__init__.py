@@ -1,0 +1,78 @@
+"""How a rune path registers the runes it compiles.
+
+One module per path — ``precision``, ``domination``, ``sorcery``, ``resolve``,
+``inspiration`` — plus ``shards`` for the three stat-shard rows, which belong
+to no path. Each module declares exactly two mappings and nothing else:
+
+``COMPILERS``
+    ``{rune name: compiler}``, where a compiler takes that rune's cached
+    ``data/runes.json`` record and returns one ``rune_effects`` effect. Every
+    number it reads comes out of the record through the typed accessors
+    ``rune_effects`` exports; a missing key raises, naming the rune and the
+    key (CLAUDE.md rule 5). A rune with no entry here is unmodeled and is
+    refused at the request boundary rather than priced at zero.
+
+``OPTIONS``
+    ``{rune name: (RuneOption, ...)}`` for the runes whose formula needs an
+    input the request does not otherwise carry — a stack count, a game
+    minute, whether the holder is above a health threshold. Decision 5: an
+    explicit option with a disclosed default, never an inferred constant.
+    A rune that needs no input declares nothing here.
+
+``rune_effects`` merges the six modules into one resolver and one catalog, so
+nothing downstream distinguishes a keystone from a minor rune except where
+the roster says its slot is.
+"""
+
+from typing import Any, Callable, Mapping
+
+from ..rune_effects import RuneEffect, RuneOption
+from . import domination, inspiration, precision, resolve, shards, sorcery
+
+#: What every entry of a path module's ``COMPILERS`` is.
+RuneCompiler = Callable[[Mapping[str, Any]], RuneEffect]
+
+#: The five paths, in the roster's own order.
+PATH_MODULES = (precision, domination, sorcery, resolve, inspiration)
+
+
+def path_compilers() -> dict[str, RuneCompiler]:
+    """Every minor-rune compiler the paths declare, merged into one mapping.
+
+    A name claimed by two paths raises: a rune belongs to one path, and two
+    compilers for one rune is a declaration bug, not a preference.
+    """
+    merged: dict[str, RuneCompiler] = {}
+    for module in PATH_MODULES:
+        for name, compiler in module.COMPILERS.items():
+            owner = _owner(merged, name)
+            if owner is not None:
+                raise ValueError(
+                    f"rune {name!r} is compiled by both {owner} and "
+                    f"{module.__name__.rsplit('.', 1)[-1]}"
+                )
+            merged[name] = compiler
+    return merged
+
+
+def path_options() -> dict[str, tuple[RuneOption, ...]]:
+    """Every declared rune option, merged the same way as the compilers."""
+    merged: dict[str, tuple[RuneOption, ...]] = {}
+    for module in PATH_MODULES:
+        merged.update(module.OPTIONS)
+    return merged
+
+
+def shard_compilers() -> dict[tuple[int, str], RuneCompiler]:
+    """Every stat-shard compiler, keyed by the ``(row, name)`` that selects it."""
+    return dict(shards.COMPILERS)
+
+
+def _owner(merged: Mapping[str, RuneCompiler], name: str) -> str | None:
+    """Which path already claimed ``name``, if any."""
+    if name not in merged:
+        return None
+    for module in PATH_MODULES:
+        if name in module.COMPILERS:
+            return module.__name__.rsplit(".", 1)[-1]
+    return "another path"

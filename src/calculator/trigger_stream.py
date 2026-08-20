@@ -1617,8 +1617,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- non-item owners (D-36) ---------------------------------------------
     *(
         MechanicCapability(
-            mechanic=f"{slug}.keystone",
-            owner=RuneOwner(keystone),
+            mechanic=f"{slug}.rune",
+            owner=RuneOwner(rune),
             engine=Engine.PAIR,
             reads=frozenset(),
             needs=frozenset(),
@@ -1626,17 +1626,18 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             pairing=Pairing.SOLO,
             pair_of=None,
             divergence_ref=None,
-            impl="rune_effects.resolve_keystone",
+            impl="rune_effects.resolve_rune",
             packet_source=None,
             view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
             holder_stacking=None,
         )
-        # Every keystone ``rune_effects._KEYSTONE_COMPILERS`` compiles, spelled
-        # here rather than derived from it: this module is a data-free leaf
-        # (D-35) and ``rune_effects`` reads ``data/runes.json`` at import. The
-        # two tables are pinned equal by test_trigger_stream, which is where a
+        # Every rune ``rune_effects`` compiles — the keystone table here and
+        # each path module's ``COMPILERS`` — spelled here rather than derived
+        # from them: this module is a data-free leaf (D-35) and
+        # ``rune_effects`` reads ``data/runes.json`` at import. The two
+        # tables are pinned equal by test_trigger_stream, which is where a
         # cache-reading join belongs.
-        for slug, keystone in (
+        for slug, rune in (
             ("electrocute", "Electrocute"),
             ("first_strike", "First Strike"),
             ("press_the_attack", "Press the Attack"),
@@ -1654,6 +1655,11 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             ("glacial_augment", "Glacial Augment"),
             ("stormraiders_surge", "Stormraider's Surge"),
             ("unsealed_spellbook", "Unsealed Spellbook"),
+            # -- minor runes, by path --
+            ("coup_de_grace", "Coup de Grace"),
+            ("absolute_focus", "Absolute Focus"),
+            ("scorch", "Scorch"),
+            ("cosmic_insight", "Cosmic Insight"),
         )
     ),
     *(

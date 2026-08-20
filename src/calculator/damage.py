@@ -518,9 +518,25 @@ class FightConfig:
     # skip computing them.  A one-pair caller is the surface where the
     # preview is the answer, and leaves this False.
     roster_composed: bool = False
-    # Selected keystone rune by name ("" = none). Resolution fails closed
-    # in rune_effects for unknown or unmodeled keystones.
+    # The rune page, by name — the keystone ("" = none), the minor runes,
+    # the positional stat shards (entry i is shard row i+1), and the explicit
+    # options a rune declares.  Resolution fails closed in rune_effects for
+    # anything unknown or unmodeled; the config holds names, not compiled
+    # effects, so it stays a value object.
     keystone: str = ""
+    minor_runes: tuple[str, ...] = ()
+    stat_shards: tuple[str, ...] = ()
+    rune_options: dict[str, dict[str, float]] | None = None
+
+    @property
+    def rune_page(self) -> "rune_effects.RunePage":
+        """The four rune fields as the one page object they describe."""
+        return rune_effects.RunePage(
+            keystone=self.keystone,
+            minor_runes=tuple(self.minor_runes),
+            stat_shards=tuple(self.stat_shards),
+            options=self.rune_options or {},
+        )
 
 
 @dataclass
@@ -608,8 +624,8 @@ class FightState:
     # prepared after the cast timeline exists and before autos are priced.
     spellblade_proc_times: tuple[float, ...] = ()
     spellblade_attack_speed_percent: float = 0.0
-    # ── Keystone rune (compiled proc; None when no keystone equipped) ─────
-    keystone_effect: "rune_effects.KeystoneEffect | None" = None
+    # ── The compiled rune page, keystone first (empty when none selected) ──
+    runes: "tuple[rune_effects.RuneEffect, ...]" = ()
     # ── Fight timeline (built by the rotation, read by later steps) ───────
     # When stacking-DoT stacks land and which mid-fight buff windows they
     # open — the ONE home every stack-aware step reads (Case 4 and 5).
@@ -2717,7 +2733,7 @@ def _resolve_combat_state(
         attack_speed_ratio=as_ratio,
         num_auto_attacks=num_auto_attacks,
         empowered_autos=empowered_autos,
-        keystone_effect=rune_effects.resolve_keystone(config.keystone),
+        runes=rune_effects.resolve_rune_page(config.rune_page),
     )
 
 
@@ -8431,7 +8447,7 @@ def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[fl
     )
 
 
-def _keystone_instance_times(
+def _rune_instance_times(
     state: FightState, rotation: RotationResult
 ) -> list[float]:
     """Chronological damage-instance times the keystone stack counter sees.
@@ -8444,12 +8460,12 @@ def _keystone_instance_times(
     return sorted(times)
 
 
-def _record_keystone_proc_row(
+def _record_rune_proc_row(
     state: FightState,
     effect: (
-        "rune_effects.KeystoneProcEffect"
-        " | rune_effects.KeystoneProcAmpEffect"
-        " | rune_effects.KeystoneAbilityProcEffect"
+        "rune_effects.RuneProcEffect"
+        " | rune_effects.RuneProcAmpEffect"
+        " | rune_effects.RuneAbilityProcEffect"
     ),
     proc_times: list[float],
 ) -> None:
@@ -8483,8 +8499,8 @@ def _record_keystone_proc_row(
     state.total_damage += total
 
 
-def _keystone_trigger_times(
-    state: FightState, rotation: RotationResult, trigger: "rune_effects.KeystoneTrigger"
+def _rune_trigger_times(
+    state: FightState, rotation: RotationResult, trigger: "rune_effects.RuneTrigger"
 ) -> list[float]:
     """The fight event stream one keystone declares it watches.
 
@@ -8492,63 +8508,72 @@ def _keystone_trigger_times(
     here interprets a rune — the three members are the three streams the
     fight already publishes.
     """
-    if trigger is rune_effects.KeystoneTrigger.BASIC_ATTACKS:
+    if trigger is rune_effects.RuneTrigger.BASIC_ATTACKS:
         return sorted(_auto_attack_timestamps(state))
-    if trigger is rune_effects.KeystoneTrigger.DAMAGING_CASTS:
+    if trigger is rune_effects.RuneTrigger.DAMAGING_CASTS:
         return _damaging_cast_times(state, rotation)
-    return _keystone_instance_times(state, rotation)
+    return _rune_instance_times(state, rotation)
 
 
-def _add_keystone_damage(state: FightState, rotation: RotationResult) -> None:
-    """Add keystone rune proc damage from the fight's real trigger stream.
+def _page_effects(state: FightState, kind: type) -> list[Any]:
+    """The selected runes of one effect kind, in page order (keystone first).
 
-    Walks the timestamped triggers the keystone declares with its sourced
+    Every rune walker below starts here: the page is a list and each of its
+    runes carries its own cooldown and stack state, so a keystone and a
+    minor rune of the same shape are walked by the same code and neither
+    can see the other's stacks.
+    """
+    return [effect for effect in state.runes if isinstance(effect, kind)]
+
+
+def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
+    """Add rune proc damage from the fight's real trigger stream.
+
+    Walks the timestamped triggers each rune declares with its sourced
     stack rule: a stack expires ``stack_window_seconds`` after it was
-    applied (a keystone whose cache states no expiry keeps its stacks), so
+    applied (a rune whose cache states no expiry keeps its stacks), so
     reaching ``stacks_required`` live stacks means that many triggers
     landed within one window. Procs start the cooldown and suppress new
-    stacks until the keystone is ready again (runes do not stack while on
-    cooldown); a keystone that consumes its stacks clears them, one that
+    stacks until the rune is ready again (runes do not stack while on
+    cooldown); a rune that consumes its stacks clears them, one that
     does not empowers every later trigger. Each proc is priced once and
     recorded as a timestamped damage event for the ledger and timeline
-    consumers, and the keystone's own disclosures reach the notes whether
+    consumers, and the rune's own disclosures reach the notes whether
     it procced or not — a withheld half that goes quiet at zero is the
     silent zero this campaign removes.
     """
-    effect = state.keystone_effect
-    if not isinstance(effect, rune_effects.KeystoneProcEffect):
-        return
-    proc_times: list[float] = []
-    live_stacks: list[float] = []
-    ready_at = 0.0
-    for instance_time in _keystone_trigger_times(state, rotation, effect.trigger):
-        if instance_time < ready_at:
+    for effect in _page_effects(state, rune_effects.RuneProcEffect):
+        proc_times: list[float] = []
+        live_stacks: list[float] = []
+        ready_at = 0.0
+        for instance_time in _rune_trigger_times(state, rotation, effect.trigger):
+            if instance_time < ready_at:
+                continue
+            if effect.stack_window_seconds is not None:
+                live_stacks = [
+                    applied
+                    for applied in live_stacks
+                    if instance_time - applied < effect.stack_window_seconds
+                ]
+            live_stacks.append(instance_time)
+            if len(live_stacks) >= effect.stacks_required:
+                proc_times.append(instance_time + effect.proc_delay_seconds)
+                ready_at = instance_time + effect.cooldown_seconds
+                if effect.consumes_stacks:
+                    live_stacks = []
+        state.notes.extend(effect.disclosures)
+        if not proc_times:
+            _note_rune_never_procced(state, effect)
             continue
-        if effect.stack_window_seconds is not None:
-            live_stacks = [
-                applied
-                for applied in live_stacks
-                if instance_time - applied < effect.stack_window_seconds
-            ]
-        live_stacks.append(instance_time)
-        if len(live_stacks) >= effect.stacks_required:
-            proc_times.append(instance_time + effect.proc_delay_seconds)
-            ready_at = instance_time + effect.cooldown_seconds
-            if effect.consumes_stacks:
-                live_stacks = []
-    state.notes.extend(effect.disclosures)
-    if not proc_times:
-        _note_keystone_never_procced(state, effect)
-        return
-    _record_keystone_proc_row(state, effect, proc_times)
+        _record_rune_proc_row(state, effect, proc_times)
 
 
-_KEYSTONE_TRIGGER_SHORTFALLS: Mapping["rune_effects.KeystoneTrigger", str] = (
+_RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = (
     MappingProxyType(
         {
-            rune_effects.KeystoneTrigger.BASIC_ATTACKS: "basic attacks",
-            rune_effects.KeystoneTrigger.DAMAGING_CASTS: "damaging ability casts",
-            rune_effects.KeystoneTrigger.DAMAGE_INSTANCES: (
+            rune_effects.RuneTrigger.BASIC_ATTACKS: "basic attacks",
+            rune_effects.RuneTrigger.DAMAGING_CASTS: "damaging ability casts",
+            rune_effects.RuneTrigger.DAMAGE_INSTANCES: (
                 "damage instances (damaging ability casts and basic attacks)"
             ),
         }
@@ -8556,8 +8581,8 @@ _KEYSTONE_TRIGGER_SHORTFALLS: Mapping["rune_effects.KeystoneTrigger", str] = (
 )
 
 
-def _note_keystone_never_procced(
-    state: FightState, effect: "rune_effects.KeystoneProcEffect"
+def _note_rune_never_procced(
+    state: FightState, effect: "rune_effects.RuneProcEffect"
 ) -> None:
     """Disclose a selected keystone whose trigger stream never armed it.
 
@@ -8565,35 +8590,34 @@ def _note_keystone_never_procced(
     it did not do was say so. Every proc-class keystone says it here, in
     the words of the stream it declared.
     """
-    stream = _KEYSTONE_TRIGGER_SHORTFALLS[effect.trigger]
+    stream = _RUNE_TRIGGER_SHORTFALLS[effect.trigger]
     shortfall = (
         f"produced no {stream}"
         if effect.stacks_required <= 1
         else f"never landed {effect.stacks_required} {stream} inside its stack rule"
     )
     state.notes.append(
-        f"{effect.keystone_name} never procced: the simulated fight {shortfall}."
+        f"{effect.rune_name} never procced: the simulated fight {shortfall}."
     )
 
 
-def _add_keystone_no_damage_receipts(state: FightState) -> None:
-    """Publish the receipts of a keystone that books no damage.
+def _add_rune_no_damage_receipts(state: FightState) -> None:
+    """Publish the receipts of every selected rune that books no damage.
 
-    Three keystones have no combat damage in any source and five have
-    halves this engine holds no channel for. Both are selectable, compiled and
+    Some runes have no combat damage in any source and others have halves
+    this engine holds no channel for. Both are selectable, compiled and
     receipted; the difference between "zero is the answer" and "the number
-    exists and is refused" is the declaration's disposition, and the
-    keystone owns the words.
+    exists and is refused" is the declaration's disposition, and the rune
+    owns the words.
     """
-    effect = state.keystone_effect
-    if isinstance(effect, rune_effects.KeystoneNoDamageEffect):
+    for effect in _page_effects(state, rune_effects.RuneNoDamageEffect):
         state.notes.extend(effect.receipts)
 
 
-def _add_keystone_ability_proc_damage(
+def _add_rune_ability_proc_damage(
     state: FightState, rotation: RotationResult
 ) -> None:
-    """Add ability-cast keystone proc damage (Arcane Comet-class).
+    """Add ability-cast rune proc damage (Arcane Comet-class).
 
     Every accepted damaging ability cast hurls the proc when the rune is
     off its leveled cooldown; the damage event lands after the sourced
@@ -8603,31 +8627,29 @@ def _add_keystone_ability_proc_damage(
     family). Each proc is priced at the compiled assumed travel distance
     and assumed to land; both assumptions are disclosed in the notes.
     """
-    effect = state.keystone_effect
-    if not isinstance(effect, rune_effects.KeystoneAbilityProcEffect):
-        return
-    cooldown = effect.cooldown_at(state.level)
-    proc_times: list[float] = []
-    ready_at = 0.0
-    for cast_time in _damaging_cast_times(state, rotation):
-        if cast_time < ready_at:
+    for effect in _page_effects(state, rune_effects.RuneAbilityProcEffect):
+        cooldown = effect.cooldown_at(state.level)
+        proc_times: list[float] = []
+        ready_at = 0.0
+        for cast_time in _damaging_cast_times(state, rotation):
+            if cast_time < ready_at:
+                continue
+            proc_times.append(cast_time + effect.proc_delay_seconds)
+            ready_at = cast_time + cooldown
+        if not proc_times:
+            # A selected rune that never fires must say so — only damaging
+            # ability casts trigger it, so autos-only fights get zero.
+            state.notes.append(
+                f"{effect.rune_name} never procced: the simulated fight "
+                "cast no damaging abilities."
+            )
             continue
-        proc_times.append(cast_time + effect.proc_delay_seconds)
-        ready_at = cast_time + cooldown
-    if not proc_times:
-        # A selected keystone that never fires must say so — only
-        # damaging ability casts trigger it, so autos-only fights get zero.
+        _record_rune_proc_row(state, effect, proc_times)
         state.notes.append(
-            f"{effect.keystone_name} never procced: the simulated fight "
-            "cast no damaging abilities."
+            f"{effect.rune_name} assumes every comet lands after a "
+            f"{effect.assumed_travel_distance:g}-unit flight "
+            f"(+{effect.distance_amp_ratio * 100:.0f}% distance damage), never dodged."
         )
-        return
-    _record_keystone_proc_row(state, effect, proc_times)
-    state.notes.append(
-        f"{effect.keystone_name} assumes every comet lands after a "
-        f"{effect.assumed_travel_distance:g}-unit flight "
-        f"(+{effect.distance_amp_ratio * 100:.0f}% distance damage), never dodged."
-    )
 
 
 def _certified_only_pool(
@@ -8659,10 +8681,20 @@ def _certified_only_pool(
     return events, set(coverage["exact_sources"]), coverage["coarse_sources"]
 
 
-def _add_keystone_window_amp_damage(
+def _add_rune_window_amp_damage(
     state: FightState, rotation: RotationResult
 ) -> None:
-    """Add opening-window keystone bonus damage (First Strike-class).
+    """Price every selected opening-window rune (First Strike-class)."""
+    for effect in _page_effects(state, rune_effects.RuneWindowAmpEffect):
+        _price_rune_window_amp(state, rotation, effect)
+
+
+def _price_rune_window_amp(
+    state: FightState,
+    rotation: RotationResult,
+    effect: "rune_effects.RuneWindowAmpEffect",
+) -> None:
+    """Add one opening-window rune's bonus damage (First Strike-class).
 
     The buff activates once at combat start — a continuous fight never
     re-enters combat, so the rune's out-of-combat cooldown is moot. Its
@@ -8676,9 +8708,6 @@ def _add_keystone_window_amp_damage(
     amp rows carry no event times, so the window is summed pre-amp — a
     conservative understatement whenever an amplifier is active.
     """
-    effect = state.keystone_effect
-    if not isinstance(effect, rune_effects.KeystoneWindowAmpEffect):
-        return
     window = _required_amp_slot(state, AmpChainSlot.OPENING_WINDOW, effect)
     # The pool, the window and the ratio are the rule's; the ledger is the
     # engine's. `Pool.CERTIFIED_ONLY` is why coarse-timed rows are excluded
@@ -8722,21 +8751,21 @@ def _add_keystone_window_amp_damage(
     # The activation itself (and its flat gold) does not depend on any
     # window damage being certified — the notes always surface.
     state.notes.append(
-        f"{effect.keystone_name} assumes you initiate combat; it generated "
+        f"{effect.rune_name} assumes you initiate combat; it generated "
         f"{gold:.0f} gold ({effect.activation_gold:.0f} on activation plus "
         f"{effect.gold_conversion(state.is_melee) * 100:.0f}% of "
         f"{bonus:.0f} bonus true damage)."
     )
     if coarse_sources:
         state.notes.append(
-            f"{effect.keystone_name} window excludes sources without "
+            f"{effect.rune_name} window excludes sources without "
             f"certified event times ({', '.join(sorted(coarse_sources))}); "
             "its bonus is a floor, not an estimate."
         )
 
 
 def _refreshing_stack_proc_times(
-    state: FightState, effect: "rune_effects.KeystoneProcAmpEffect"
+    state: FightState, effect: "rune_effects.RuneProcAmpEffect"
 ) -> tuple[list[float], bool]:
     """Walk the simulated auto swings with a refreshing stack rule.
 
@@ -8770,8 +8799,18 @@ def _refreshing_stack_proc_times(
     return proc_times, cooldown_gated
 
 
-def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -> None:
-    """Add Press the Attack-class proc damage and its lasting amplifier.
+def _add_rune_proc_amp_damage(state: FightState, rotation: RotationResult) -> None:
+    """Price every selected stacked-proc-plus-amp rune (Press the Attack-class)."""
+    for effect in _page_effects(state, rune_effects.RuneProcAmpEffect):
+        _price_rune_proc_amp(state, rotation, effect)
+
+
+def _price_rune_proc_amp(
+    state: FightState,
+    rotation: RotationResult,
+    effect: "rune_effects.RuneProcAmpEffect",
+) -> None:
+    """Add one Press the Attack-class proc's damage and its lasting amplifier.
 
     The stacked proc prices leveled adaptive damage per proc, exactly
     like an Electrocute-class row. From the first proc onward the buff
@@ -8782,24 +8821,21 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
     coarse-timed sources are excluded and disclosed, keeping the amp a
     floor, never an estimate.
     """
-    effect = state.keystone_effect
-    if not isinstance(effect, rune_effects.KeystoneProcAmpEffect):
-        return
     lasting = _required_amp_slot(state, AmpChainSlot.LASTING_PROC_AMP, effect)
     proc_times, cooldown_gated = _refreshing_stack_proc_times(state, effect)
     if not proc_times:
         # A selected keystone that never fires must say so — only basic
         # attacks stack it, so ability-only or slow-swing fights get zero.
         state.notes.append(
-            f"{effect.keystone_name} never procced: the simulated fight "
+            f"{effect.rune_name} never procced: the simulated fight "
             f"never landed {effect.stacks_required} basic attacks within "
             f"its {effect.stack_duration_seconds:g}s stack duration."
         )
         return
-    _record_keystone_proc_row(state, effect, proc_times)
+    _record_rune_proc_row(state, effect, proc_times)
     if cooldown_gated:
         state.notes.append(
-            f"{effect.keystone_name} stacks are assumed not to build during "
+            f"{effect.rune_name} stacks are assumed not to build during "
             f"its {effect.cooldown_seconds:g}s per-target cooldown (the wiki "
             "does not document this); re-procs may land late, so the proc "
             "count is a floor."
@@ -8847,7 +8883,7 @@ def _add_keystone_proc_amp_damage(state: FightState, rotation: RotationResult) -
         state.total_damage += amp_total
     if coarse_sources:
         state.notes.append(
-            f"{effect.keystone_name} amp excludes sources without "
+            f"{effect.rune_name} amp excludes sources without "
             f"certified event times ({', '.join(sorted(coarse_sources))}); "
             "its bonus is a floor, not an estimate."
         )
@@ -11003,7 +11039,7 @@ def _amp_slot_for(
 
 
 def _required_amp_slot(
-    state: FightState, slot: AmpChainSlot, effect: "rune_effects.KeystoneEffect"
+    state: FightState, slot: AmpChainSlot, effect: "rune_effects.RuneEffect"
 ) -> "delta_amp.AmpSlot":
     """The chain slot a compiled keystone effect *must* have a declaration for.
 
@@ -11013,10 +11049,10 @@ def _required_amp_slot(
     returning ``None``, because returning would price the mechanic at zero
     with nothing saying so, which is the failure this campaign exists to end.
     """
-    resolved = _amp_slot(state, slot, effect.keystone_name)
+    resolved = _amp_slot(state, slot, effect.rune_name)
     if resolved is None:
         raise delta_amp.DeltaAmpInterpretationError(
-            f"{effect.keystone_name} resolved to a {type(effect).__name__} and "
+            f"{effect.rune_name} resolved to a {type(effect).__name__} and "
             f"declares no rule in the {slot.value} chain slot; a keystone the "
             "engine prices needs a declaration to price it from"
         )
@@ -11140,6 +11176,82 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             row["event_phase"] = "amplifier"
         breakdown[f"damage_amp_{hypershot.owner}"] = row
         state.total_damage += hypershot_bonus
+
+    # Health-gated rune amps last: their gate reads the target's current
+    # health, so they want the whole fight's ledger behind them.
+    _add_rune_conditional_amp_damage(state, rotation)
+
+
+def _health_gated_events(
+    events: list, effect: "rune_effects.RuneConditionalAmpEffect", max_health: float
+) -> list:
+    """The ledger rows that land while a rune's target-health gate holds.
+
+    The gate reads the target's *current* health, so the ledger is walked in
+    its own order with health falling by everything already dealt; a row is
+    amplified when the health standing before it satisfies the gate. Damage
+    the ledger cannot timestamp never appears here, so the row is a floor.
+    """
+    threshold = effect.health_ratio * max_health
+    below = effect.condition is rune_effects.AmpCondition.TARGET_BELOW
+    amped = []
+    remaining = max_health
+    for row in events:
+        if (remaining < threshold) if below else (remaining > threshold):
+            amped.append(row)
+        remaining -= row[1]
+    return amped
+
+
+def _add_rune_conditional_amp_damage(
+    state: FightState, rotation: RotationResult
+) -> None:
+    """Apply every selected health-gated rune amplifier (Coup de Grace-class).
+
+    Runs last among the amplifiers so the ledger it reads is the whole
+    fight. A rune whose gate reads the *holder's* health is refused with a
+    receipt rather than guessed at: the pair engine prices outgoing damage
+    and carries no holder-health track.
+    """
+    effects = _page_effects(state, rune_effects.RuneConditionalAmpEffect)
+    if not effects:
+        return
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+        light=True,
+    )
+    max_health = max(0.0, state.target_health)
+    for effect in effects:
+        state.notes.extend(effect.disclosures)
+        if effect.condition is rune_effects.AmpCondition.SELF_BELOW:
+            state.notes.append(
+                f"{effect.rune_name} is not priced: its gate reads the "
+                "holder's own health share, and the pair engine prices "
+                "outgoing damage without tracking the holder's health."
+            )
+            continue
+        amped = _health_gated_events(events, effect, max_health)
+        bonus = sum(row[1] for row in amped) * effect.amp_ratio
+        if bonus <= 0.0:
+            state.notes.append(
+                f"{effect.rune_name} amplified nothing: no timestamped damage "
+                "landed while its health gate held."
+            )
+            continue
+        row = {
+            "name": effect.display_name,
+            "multiplier": 1.0 + effect.amp_ratio,
+            "total_damage": bonus,
+        }
+        delta_events = _amplifier_delta_events(amped, bonus)
+        if delta_events:
+            row["damage_events"] = delta_events
+            row["event_phase"] = "amplifier"
+        state.breakdown[effect.breakdown_key] = row
+        state.total_damage += bonus
 
 
 def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
@@ -11909,14 +12021,14 @@ def calculate_fight_damage(
     # ── Item procs (including ult-triggered Malignance) ─────────────────
     _add_item_proc_damage(state, rotation)
 
-    # ── Keystone rune proc (Electrocute-class stack triggers) ───────────
-    _add_keystone_damage(state, rotation)
+    # ── Rune procs (Electrocute-class stack triggers) ────────────────
+    _add_rune_proc_damage(state, rotation)
 
-    # ── Keystone ability-cast proc (Arcane Comet-class) ─────────────────
-    _add_keystone_ability_proc_damage(state, rotation)
+    # ── Rune ability-cast procs (Arcane Comet-class) ───────────────────
+    _add_rune_ability_proc_damage(state, rotation)
 
-    # ── Keystones that book no damage, and their receipts ───────────────
-    _add_keystone_no_damage_receipts(state)
+    # ── Runes that book no damage, and their receipts ───────────────────
+    _add_rune_no_damage_receipts(state)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state, rotation)
@@ -11928,11 +12040,11 @@ def calculate_fight_damage(
     _add_shadowflame_cinderbloom(state, config, rotation)
     _add_expose_weakness(state, rotation, spellblade)
 
-    # ── Keystone opening-window bonus (First Strike-class) ──────────────
-    _add_keystone_window_amp_damage(state, rotation)
+    # ── Rune opening-window bonus (First Strike-class) ────────────────
+    _add_rune_window_amp_damage(state, rotation)
 
-    # ── Keystone stacked proc plus lasting amp (Press the Attack-class) ─
-    _add_keystone_proc_amp_damage(state, rotation)
+    # ── Rune stacked proc plus lasting amp (Press the Attack-class) ───
+    _add_rune_proc_amp_damage(state, rotation)
 
     # ── Fight-wide damage amplifiers ────────────────────────────────────
     _apply_damage_amplifiers(state, rotation)

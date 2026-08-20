@@ -270,6 +270,7 @@ def _evaluate_build_uncached(
             role=base_params.role,
             role_quest_complete=base_params.role_quest_complete,
             external_stat_bonuses=base_params.ally_stat_bonuses,
+            rune_page=base_params.rune_page,
         )
         defenses = resolve_starting_defenses(
             champion_data["name"],

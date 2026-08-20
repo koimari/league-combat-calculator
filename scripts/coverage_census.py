@@ -37,7 +37,7 @@ from src.calculator.role_quests import (  # noqa: E402
     SUPPORT_QUEST_UPGRADED_STAGE,
     support_quest_item_stage,
 )
-from src.calculator.rune_effects import keystone_catalog, resolve_keystone  # noqa: E402
+from src.calculator.rune_effects import rune_catalog, resolve_rune  # noqa: E402
 
 LEVEL = 18
 MODES = ("one_rotation", "time_based", "timed", "auto_only")
@@ -133,12 +133,16 @@ def run_census():
         (item for item in raw_items.values() if item_source.is_ordinary_sr_item(item)),
         key=lambda item: str(item.get("name")),
     )
-    keystones = [k["name"] for k in keystone_catalog()]
+    # The keystone axis sweeps the keystone row of the rune catalog. Minor
+    # runes join it when the roster is compiled end to end; today most are
+    # unmodeled and refused at the request boundary, which this axis reads
+    # as a frontier entry rather than a coverage gap.
+    keystones = [k["name"] for k in rune_catalog() if k["row"] == 0]
     compiled = []
     unmodeled = []
     for name in keystones:
         try:
-            resolve_keystone(name)
+            resolve_rune(name)
             compiled.append(name)
         except ValueError:
             unmodeled.append(name)
