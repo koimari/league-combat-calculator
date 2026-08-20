@@ -176,7 +176,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "data/champions.json E) assuming the charged target collides with "
     "terrain; the charge, grab, and stun are state.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

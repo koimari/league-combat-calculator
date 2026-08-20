@@ -250,11 +250,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q's stun/MS, W's heal and R's bonus health remain utility/state " "only",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position

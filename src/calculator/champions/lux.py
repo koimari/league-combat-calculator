@@ -140,8 +140,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "shield at the cast (Lux gains the shield herself; the allied half "
     "needs a teammate roster).",
 ]
-
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R", "W"} else "out_of_scope")
-    for slot in "PQWER"
-}

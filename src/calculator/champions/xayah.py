@@ -167,8 +167,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W's bonus attack speed is the packet read; its extra 25%-damage "
     "feather to the primary target is not double-counted with Clean Cuts",
 ]
-
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

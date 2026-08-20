@@ -119,7 +119,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The second swing's exact in-cast delay is not cached; both swings "
     "are priced at the cast boundary.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

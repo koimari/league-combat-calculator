@@ -146,8 +146,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "state; the Doom fear/knock-down (CC) and the reduced non-champion "
     "damage are state/out of scope.",
 ]
-
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

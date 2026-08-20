@@ -136,7 +136,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "200-400 + 90% bonus AD == 2x) is option-gated via r_charged — the "
     "1-second charge time is state.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

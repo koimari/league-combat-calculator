@@ -23,6 +23,12 @@ REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 VALID_COVERAGE = frozenset({"modeled", "no_damage", "out_of_scope"})
 REVIEW_STATUS = "reviewed_module"
 
+# Facts with one home outside the module: the review status is this
+# contract's, and the packet spec rides the parser ``build_packet_module``
+# returns.  A module restating either is a second home that can disagree
+# with the first, so the restatement is refused rather than surveyed.
+_RESTATED_FACTS = ("REVIEW_STATUS", "PACKET_SPEC")
+
 
 def default_coverage(slots: dict[str, Any]) -> dict[str, str]:
     """The five-slot coverage a module's ``SLOTS`` map implies.
@@ -141,12 +147,12 @@ def _packet_declaration(
     ``build_packet_module`` verifies the module's ``PACKET_SHA256`` against
     the packet asset and stamps the accepted spec and digest on the parser
     it returns and on the slot map.  The parser is what runs, so its stamp
-    is what the contract publishes; the module's own ``PACKET_SHA256`` (and
-    a ``PACKET_SPEC`` it may restate) are surveyed against it, never chained
-    ahead of it.  A module that pins a digest its running parser does not
-    carry has rebound ``parse_abilities`` away from the compiled one — the
-    pin then guards nothing, so registration stops there (rule 7's
-    fail-closed guarantee rests on this pin).
+    is what the contract publishes; the module's own ``PACKET_SHA256`` is
+    surveyed against it, never chained ahead of it.  A module that pins a
+    digest its running parser does not carry has rebound
+    ``parse_abilities`` away from the compiled one — the pin then guards
+    nothing, so registration stops there (rule 7's fail-closed guarantee
+    rests on this pin).
 
     Raises:
         ChampionModuleContractError: The carriers disagree, the pin is not
@@ -155,7 +161,6 @@ def _packet_declaration(
     """
     spec_rows = _present(
         (
-            ("module PACKET_SPEC", module, "PACKET_SPEC"),
             ("parse_abilities.packet_spec", parser, "packet_spec"),
             ("SLOTS.packet_spec", slots, "packet_spec"),
         )
@@ -181,7 +186,7 @@ def _packet_declaration(
         )
     if packet_spec is not None and not isinstance(packet_spec, dict):
         raise ChampionModuleContractError(
-            f"{module.__name__} PACKET_SPEC must be a dict when declared"
+            f"{module.__name__} packet spec must be a dict when stamped"
         )
     if (packet_spec is None) != (packet_sha256 is None):
         raise ChampionModuleContractError(
@@ -252,18 +257,25 @@ def _module_cc(
     a kind outside the vocabulary is a typo that would author a no-op stun,
     so both stop registration here rather than at some later reader.
 
-    The engine applies the declaration through ``build_parser``'s
-    ``cc_kinds`` argument, which stamps it on the parser it returns.  That
-    is a second carrier of one fact, so — exactly as with
-    ``CAST_DEPENDENCIES`` — the two are surveyed rather than chained: a
-    module that declares one thing and wires another stops the import
-    instead of quietly running the wired one.
+    The engine applies the declaration through the ``cc_kinds`` argument
+    of ``build_parser`` — or of ``build_packet_module``, which hands it on
+    — and stamps it on the parser it returns.  That is a second carrier of
+    one fact, so — exactly as with ``CAST_DEPENDENCIES`` — the two are
+    surveyed rather than chained: a module that declares one thing and
+    wires another stops the import instead of quietly running the wired
+    one.  The error names the call the module actually compiles through,
+    since a packet module must never call ``build_parser`` itself.
 
     Raises:
         ChampionModuleContractError: The declaration is malformed, names a
             slot the module does not emit, uses an unknown kind, or
             disagrees with what the module wired into its parser.
     """
+    wiring = (
+        "build_packet_module"
+        if getattr(parser, "packet_sha256", None)
+        else "build_parser"
+    )
     declared = getattr(module, "MODULE_CC", None)
     if declared is None:
         declared = {}
@@ -291,15 +303,31 @@ def _module_cc(
     if declared and wired is None:
         raise ChampionModuleContractError(
             f"{module.__name__} declares MODULE_CC but never wired it into "
-            "build_parser(..., cc_kinds=MODULE_CC) — an unwired declaration "
+            f"{wiring}(..., cc_kinds=MODULE_CC) — an unwired declaration "
             "reviews nothing"
         )
     if wired is not None and dict(wired) != dict(declared):
         raise ChampionModuleContractError(
             f"{module.__name__} declares MODULE_CC {dict(declared)} but wired "
-            f"{dict(wired)} into build_parser — one declaration, one wiring"
+            f"{dict(wired)} into {wiring} — one declaration, one wiring"
         )
     return dict(declared)
+
+
+def _refuse_restatements(module: ModuleType) -> None:
+    """Stop a module that restates a fact whose home is elsewhere.
+
+    Raises:
+        ChampionModuleContractError: The module declares ``REVIEW_STATUS``
+            or ``PACKET_SPEC``.
+    """
+    restated = [name for name in _RESTATED_FACTS if hasattr(module, name)]
+    if restated:
+        raise ChampionModuleContractError(
+            f"{module.__name__} declares {restated}: the review status is the "
+            f"contract's ({REVIEW_STATUS!r}) and the packet spec rides the "
+            "parser build_packet_module returns, so a module restates neither"
+        )
 
 
 def _require_list(module: ModuleType, field_name: str) -> list[Any]:
@@ -316,6 +344,7 @@ def contract_from_module(
 ) -> ChampionModuleContract:
     """Validate *module* and return its immutable registry contract."""
 
+    _refuse_restatements(module)
     parser = getattr(module, "parse_abilities", None)
     if not callable(parser):
         raise ChampionModuleContractError(
@@ -348,9 +377,10 @@ def contract_from_module(
             f"{module.__name__} SOURCES must contain source dictionaries"
         )
 
+    derived_coverage = default_coverage(slots)
     coverage = getattr(module, "MODULE_COVERAGE", None)
     if coverage is None:
-        coverage = default_coverage(slots)
+        coverage = derived_coverage
     if not isinstance(coverage, dict) or set(coverage) != set(REQUIRED_CHAMPION_SLOTS):
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_COVERAGE must declare P/Q/W/E/R"
@@ -360,6 +390,11 @@ def contract_from_module(
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_COVERAGE has invalid values: "
             f"{sorted(invalid_coverage)}"
+        )
+    if coverage is not derived_coverage and coverage == derived_coverage:
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_COVERAGE restates what its SLOTS derive; "
+            "declare it only when an emitted slot is no_damage or partial"
         )
 
     packet_spec, packet_sha256 = _packet_declaration(module, parser, slots)

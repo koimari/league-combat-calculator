@@ -66,6 +66,32 @@ def test_jayce_runtime_and_published_review_metadata_share_one_module():
     assert contract.review_status == "reviewed_module"
 
 
+class TestOneHomePerFact:
+    """A fact the contract owns or derives is refused when a module restates it."""
+
+    @staticmethod
+    def _contract(**overrides):
+        module = TestModuleCcDeclaration._module(**overrides)
+        return contract_from_module("Fake", "fake_champion", module)
+
+    def test_a_declared_review_status_is_refused(self):
+        """Every registered module is reviewed; a module that says otherwise
+        must not register as reviewed, and one that says so is a second home."""
+        for status in ("draft", "reviewed_module"):
+            with pytest.raises(ChampionModuleContractError, match="REVIEW_STATUS"):
+                self._contract(REVIEW_STATUS=status)
+
+    def test_a_coverage_map_equal_to_the_derivation_is_refused(self):
+        slots = {"Q": lambda ctx: None, "W": lambda ctx: None}
+        with pytest.raises(ChampionModuleContractError, match="restates"):
+            self._contract(SLOTS=slots, MODULE_COVERAGE=default_coverage(slots))
+
+    def test_a_coverage_map_that_says_more_than_the_derivation_survives(self):
+        declared = {"P": "out_of_scope", "Q": "modeled", "W": "no_damage"}
+        declared.update(E="out_of_scope", R="out_of_scope")
+        assert self._contract(MODULE_COVERAGE=declared).coverage == declared
+
+
 def test_dispatcher_fails_closed_for_an_unregistered_name():
     fixture = {
         "name": "Synthetic Fixture",
@@ -163,8 +189,22 @@ class TestModuleCcDeclaration:
         """The silent no-op this whole shape exists to prevent: a module
         that states its kit's control and never hands it to the engine
         would review nothing while reading as reviewed."""
-        with pytest.raises(ChampionModuleContractError, match="never wired"):
+        with pytest.raises(
+            ChampionModuleContractError, match=r"build_parser\(\.\.\., cc_kinds"
+        ):
             self._contract(MODULE_CC={"Q": "none"})
+
+    def test_a_packet_module_is_told_to_wire_through_the_compiler(self):
+        """A packet module never calls ``build_parser`` itself, so the
+        instruction it gets names ``build_packet_module`` instead."""
+        with pytest.raises(
+            ChampionModuleContractError, match=r"build_packet_module\(\.\.\., cc_kinds"
+        ):
+            self._contract(
+                MODULE_CC={"Q": "none"},
+                parse_abilities=TestPacketPinCarriers._stamped_parser(),
+                PACKET_SHA256=TestPacketPinCarriers.DIGEST,
+            )
 
     def test_a_declaration_disagreeing_with_its_wiring_is_refused(self):
         """Two carriers of one fact must not silently diverge — the same
@@ -248,14 +288,28 @@ class TestPacketPinCarriers:
         assert contract.packet_sha256 == self.DIGEST
         assert contract.packet_spec == self.SPEC
 
-    def test_a_module_spec_disagreeing_with_its_parsers_stamp_fails_import(self):
+    def test_a_module_restating_the_packet_spec_fails_import(self):
+        """The spec rides the compiled parser; a module copy is a second
+        home that could disagree with it, so it is refused outright."""
+        with pytest.raises(ChampionModuleContractError, match="PACKET_SPEC"):
+            self._contract(
+                parse_abilities=self._stamped_parser(),
+                PACKET_SHA256=self.DIGEST,
+                PACKET_SPEC=self.SPEC,
+            )
+
+    def test_a_slot_map_spec_disagreeing_with_its_parsers_stamp_fails_import(self):
+        class Slots(dict):
+            packet_spec = {"slots": {}}
+            packet_sha256 = TestPacketPinCarriers.DIGEST
+
         with pytest.raises(
             ChampionModuleContractError, match="conflicting packet declarations"
         ):
             self._contract(
                 parse_abilities=self._stamped_parser(),
                 PACKET_SHA256=self.DIGEST,
-                PACKET_SPEC={"slots": {}},
+                SLOTS=Slots({"Q": lambda ctx: None}),
             )
 
     def test_a_module_digest_disagreeing_with_its_parsers_stamp_fails_import(self):
@@ -290,13 +344,12 @@ class TestPacketPinCarriers:
         assert contract.packet_spec == self.SPEC
 
     def test_every_packet_module_pins_what_its_parser_carries(self):
-        """Roster-wide: one pin, stamped on the parser and the slot map, no
-        restated ``PACKET_SPEC`` anywhere."""
+        """Roster-wide: one pin, stamped on the parser and the slot map (a
+        restated ``PACKET_SPEC`` cannot register at all)."""
         packet_modules = 0
         for name in _CHAMPION_MODULES:
             contract = get_champion_module_contract(name)
             module = contract.module
-            assert not hasattr(module, "PACKET_SPEC"), name
             pin = getattr(module, "PACKET_SHA256", None)
             if pin is None:
                 assert contract.packet_sha256 is None, name

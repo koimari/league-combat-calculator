@@ -372,11 +372,6 @@ ASSUMPTIONS = [
     "it for the whole ult); toggling it off also removes Snack Attack",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-
 SLOTS = {
     "W_frenzy": _blood_frenzy,
     "R": _certain_death,

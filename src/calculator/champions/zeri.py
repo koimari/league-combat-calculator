@@ -122,7 +122,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Damage' (80-100%) applies to enemies past the first and is outside "
     "this single-target model.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

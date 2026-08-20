@@ -293,8 +293,3 @@ ASSUMPTIONS = [
     "(self_shield_events). The outer physical ring is state",
     "E/R damage keep the reviewed CP10.7 packet pricing",
 ]
-
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

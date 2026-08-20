@@ -179,11 +179,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "convention); the post-execution fear is CC state",
     "E (Disdain) shield is authored by the E8c support scanner.",
 ]
-
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
