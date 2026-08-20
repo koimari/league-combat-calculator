@@ -35,7 +35,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| C6 | `app.py:261` `_DEV_UPDATE_TOKEN = secrets.token_urlsafe(32)` | Minted per import → per-worker cookie for `/api/update-data`. | Derive from config or accept single-worker. |
 | C7 | `docs/invite-flow.md:88` | Says the landing page calls `POST /api/auth/invite`; `templates/beta_landing.html` has no fetch (form posts to `/auth/login`). | Fix the doc or wire the check. |
 | C8 | `db.list_metric_events`, `data_updater.reparse_cached_rune_effects` | Test-only / REPL-only (the rune refresh is named in `data/README.md:31` but has no CLI). | Give the refresh a `scripts/` entry; cut the other if nothing will call it. |
 | C9 | `docs/deploy.md:42` | Post-deploy metrics smoke only checks for a non-503. | Assert the scorecard shape. |

@@ -2363,8 +2363,27 @@ class TestUpdateDataDevGate:
 
         assert response.status_code == 404
 
+    def test_update_data_is_404_without_a_configured_token(self, monkeypatch):
+        """The endpoint fails closed on an unset LOL_CALC_DEV_UPDATE_TOKEN."""
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.delenv("LOL_CALC_DEV_UPDATE_TOKEN", raising=False)
+        client = app_module.app.test_client()
+
+        config = client.get("/api/config")
+        response = client.get("/api/update-data")
+
+        assert "Set-Cookie" not in config.headers
+        assert response.status_code == 404
+
+    def test_dev_update_token_is_the_configured_value(self, monkeypatch):
+        """Every worker reads one token, so a minted-per-import one is gone."""
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "  shared-secret  ")
+
+        assert app_module._dev_update_token() == "shared-secret"
+
     def test_update_data_streams_events_in_dev_mode(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         monkeypatch.setattr(
             app_module, "_run_data_update", lambda: iter([{"phase": "done"}])
         )
@@ -2386,6 +2405,7 @@ class TestUpdateDataDevGate:
 
     def test_update_data_needs_same_site_bootstrap_cookie(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
 
         response = app_module.app.test_client().get("/api/update-data")
 
@@ -2393,6 +2413,7 @@ class TestUpdateDataDevGate:
 
     def test_dev_mode_rejects_non_local_host_even_from_loopback(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         client = app_module.app.test_client()
 
         config = client.get("/api/config", headers={"Host": "attacker.example"})
@@ -2405,6 +2426,7 @@ class TestUpdateDataDevGate:
         self, monkeypatch
     ):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         monkeypatch.setattr(
             app_module,
             "_run_data_update",

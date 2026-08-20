@@ -17,7 +17,7 @@ Run the full verification commands in `README.md`, verify the preview, then depl
 vercel deploy --prod
 ```
 
-The tracked `data/` cache is read-only at runtime. `/api/update-data` is available only in explicit local development mode; patch refreshes are committed before deployment.
+The tracked `data/` cache is read-only at runtime. `/api/update-data` is available only in explicit local development mode and only when `LOL_CALC_DEV_UPDATE_TOKEN` is set — unset, it 404s on every worker. Never set either variable on a deployment; patch refreshes are committed before deployment.
 
 ## Private access
 

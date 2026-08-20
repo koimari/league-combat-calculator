@@ -259,7 +259,6 @@ _OPERATION_POLICY = {
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
-_DEV_UPDATE_TOKEN = secrets.token_urlsafe(32)
 _ICON_SOURCES = " ".join(f"https://{host}" for host in sorted(_ICON_HOSTS))
 _SECURITY_HEADERS = {
     "Content-Security-Policy": "; ".join(
@@ -670,6 +669,17 @@ def _dev_mode() -> bool:
     (see docs/deploy.md).
     """
     return os.environ.get("LOL_CALC_DEV") == "1" and os.environ.get("RENDER") != "true"
+
+
+def _dev_update_token() -> str:
+    """The shared secret guarding /api/update-data; empty disables it.
+
+    The cookie is minted by one worker and presented to another, so a token
+    minted per import would only ever match inside the worker that made it.
+    It comes from ``LOL_CALC_DEV_UPDATE_TOKEN`` instead, and an unset value
+    fails closed: no cookie, and the endpoint stays 404.
+    """
+    return os.environ.get("LOL_CALC_DEV_UPDATE_TOKEN", "").strip()
 
 
 def _local_dev_request() -> bool:
@@ -1221,10 +1231,11 @@ def api_config():
             },
         }
     )
-    if local_dev:
+    dev_update_token = _dev_update_token()
+    if local_dev and dev_update_token:
         response.set_cookie(
             _DEV_UPDATE_COOKIE,
-            _DEV_UPDATE_TOKEN,
+            dev_update_token,
             max_age=3600,
             httponly=True,
             samesite="Strict",
@@ -1910,11 +1921,15 @@ def api_staleness():
 
 @app.route("/api/update-data")
 def api_update_data():
-    """Stream data update progress via Server-Sent Events. Dev-only:
-    404s unless LOL_CALC_DEV=1 (see _dev_mode)."""
+    """Stream data update progress via Server-Sent Events. Dev-only: 404s
+    unless LOL_CALC_DEV=1 (see _dev_mode) and LOL_CALC_DEV_UPDATE_TOKEN is
+    configured (see _dev_update_token)."""
+    token = _dev_update_token()
     supplied_token = request.cookies.get(_DEV_UPDATE_COOKIE, "")
-    if not _local_dev_request() or not hmac.compare_digest(
-        supplied_token, _DEV_UPDATE_TOKEN
+    if (
+        not token
+        or not _local_dev_request()
+        or not hmac.compare_digest(supplied_token, token)
     ):
         return jsonify({"error": "Data updates are disabled on this server"}), 404
 
