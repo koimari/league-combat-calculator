@@ -25,6 +25,31 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "DefensiveBallCurl",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 7.0,
+   "range": 300.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Rammus/Spells/DefensiveBallCurlAbility/DefensiveBallCurl"
+   ],
+   "evidence": "name:ball"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "PowerBall",
@@ -126,6 +151,31 @@
     "Characters/Rammus/Spells/PowerBallAbility/PowerBall"
    ],
    "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "PowerBall",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 6.0,
+   "range": 300.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Rammus/Spells/PowerBallAbility/PowerBall"
+   ],
+   "evidence": "name:ball"
   }
  },
  {
@@ -449,6 +499,31 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.pet",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RammusPowerBallBot",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 6.0,
+   "range": 300.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Rammus/Spells/RammusPowerBallBot"
+   ],
+   "evidence": "name:ball"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "RammusBasicAttack",
@@ -497,30 +572,6 @@
     "Characters/Rammus/Spells/RammusBasicAttack"
    ],
    "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.attack-damage",
-  "family": "damage",
-  "behavior": "RammusP",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Spiked Shell"
-   ],
-   "binary": [
-    "Characters/Rammus/Spells/RammusPAbility/RammusP"
-   ],
-   "evidence": "wiki: gains bonus attack damage equal to 15% total armor and 15% total magic resistance"
   }
  }
 ]

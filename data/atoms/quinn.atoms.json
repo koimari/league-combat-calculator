@@ -50,6 +50,33 @@
   }
  },
  {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "QuinnWVision",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Quinn/Spells/QuinnWAbility/QuinnWVision"
+   ],
+   "evidence": "name:vision"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "QuinnR",
@@ -506,201 +533,6 @@
     "Characters/Quinn/Spells/QuinnBasicAttack"
    ],
    "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "QuinnPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 525.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Harrier",
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnPassive/QuinnPassive"
-   ]
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "QuinnPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 525.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Harrier",
-    "Reveal"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnPassive/QuinnPassive"
-   ]
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "QuinnWInFlight",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 55.0,
-   "cooldown_rank_max": 30.0,
-   "range": 2500.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Heightened Senses",
-    "Reveal",
-    "Sight"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnWAbility/QuinnWInFlight"
-   ]
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "QuinnWTimingMissile",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 55.0,
-   "cooldown_rank_max": 30.0,
-   "range": 2500.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Heightened Senses",
-    "Reveal"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnWAbility/QuinnWTimingMissile"
-   ]
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "QuinnWVision",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 55.0,
-   "cooldown_rank_max": 30.0,
-   "range": 2500.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Heightened Senses",
-    "Reveal",
-    "Sight"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnWAbility/QuinnWVision"
-   ]
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "QuinnRFinale",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 3.0,
-   "cooldown_rank_max": 3.0,
-   "range": 650.0,
-   "damage_type": "physical",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Skystrike",
-    "Area of effect"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnRAbility/QuinnRFinale"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.transform",
-  "family": "stack-transform-summon-resource",
-  "behavior": "QuinnRReturnToQuinn",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 3.0,
-   "cooldown_rank_max": 3.0,
-   "range": 650.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Behind Enemy Lines",
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnRAbility/QuinnRReturnToQuinn"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "QuinnESecond",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 13.0,
-   "cooldown_rank_max": 8.0,
-   "range": 600.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Vault",
-    "Dash",
-    "Movement"
-   ],
-   "binary": [
-    "Characters/Quinn/Spells/QuinnEAbility/QuinnESecond"
-   ]
   }
  }
 ]

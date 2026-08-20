@@ -162,6 +162,33 @@
   }
  },
  {
+  "atom_id": "heal-shield.vamp",
+  "family": "heal-shield",
+  "behavior": "SylasWDamageAndHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Vamp",
+    "Vampirism",
+    "Life steal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasWDamageAndHeal"
+   ],
+   "evidence": "name:damageheal"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.slow",
   "family": "crowd-control-mobility",
   "behavior": "SylasW",
@@ -660,84 +687,6 @@
     "Characters/Sylas/Spells/SylasRBuff"
    ],
    "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SylasPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Petricite Burst",
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Sylas/Spells/SylasPassiveAbility/SylasPassive"
-   ],
-   "evidence": "wiki-map: passive grants Unshackled stacks on each ability cast, up to 3"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SylasPassiveAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Petricite Burst",
-    "Damage",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Sylas/Spells/SylasPassiveAttack",
-    "Characters/Sylas/Spells/SylasPassiveAttackNoAnim"
-   ],
-   "evidence": "wiki-map: empowered basic attacks deal bonus magic damage per Unshackled stack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SylasPassiveAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Petricite Burst",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Sylas/Spells/SylasPassiveAttack"
-   ],
-   "evidence": "wiki-map: passive empowers the next basic attack"
   }
  }
 ]

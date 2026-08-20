@@ -1,4 +1,7 @@
 {
-  "fetched_at": 1786113359.0537379,
-  "filename": "items.json"
+  "fetched_at": 1786665149.310242,
+  "filename": "items.json",
+  "source_url": "https://wiki.leagueoflegends.com/en-us/Item",
+  "source_version": "16.16.1",
+  "source_hash": null
 }

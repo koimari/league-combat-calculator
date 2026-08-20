@@ -301,6 +301,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "Miss_Fortune_Strut_Cooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneViciousStrikesAbility/Miss_Fortune_Strut_Cooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "MissFortuneBasicAttack",
@@ -533,150 +558,6 @@
     "Characters/MissFortune/Spells/MissFortuneCritAttack"
    ],
    "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "MissFortunePassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Miss Fortune Love Tap"
-   ],
-   "binary": [
-    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassive"
-   ],
-   "evidence": "wiki:P empowered basic attack applies mark; bonus physical on unmarked targets"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "MissFortunePassiveAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Miss Fortune Love Tap"
-   ],
-   "binary": [
-    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassiveAttack"
-   ],
-   "evidence": "wiki:P bonus damage instance on new target"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "MissFortunePassiveAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Miss Fortune Love Tap"
-   ],
-   "binary": [
-    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassiveAttack2"
-   ],
-   "evidence": "wiki:P secondary bonus damage instance"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "MissFortuneRShotExtra",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 130.0,
-   "cooldown_rank_max": 70.0,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Miss Fortune Bullet Time"
-   ],
-   "binary": [
-    "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneRShotExtra"
-   ],
-   "evidence": "wiki:R waves of 6 projectiles; extra per-wave damage instance"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "MissFortuneRicochetShotDud",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Miss Fortune Double Up"
-   ],
-   "binary": [
-    "Characters/MissFortune/Spells/MissFortuneRicochetShotAbility/MissFortuneRicochetShotDud"
-   ],
-   "evidence": "wiki:Q bounce applies on-hit effects to the second enemy"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "MissFortuneStrut",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 12.0,
-   "cooldown_rank_max": 12.0,
-   "range": 600.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Miss Fortune Strut"
-   ],
-   "binary": [
-    "Characters/MissFortune/Spells/MissFortuneViciousStrikesAbility/MissFortuneStrut"
-   ],
-   "evidence": "wiki:W passive bonus movement speed out of combat (mBuff)"
   }
  }
 ]

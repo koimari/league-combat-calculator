@@ -323,6 +323,30 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraCritAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraCritAttackMelee"
+   ],
+   "evidence": "name:melee"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.slow",
   "family": "crowd-control-mobility",
   "behavior": "SamiraEBuff",
@@ -453,6 +477,30 @@
     "Characters/Samira/Spells/SamiraBasicAttackMelee"
    ],
    "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraBasicAttackMelee",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee"
+   ],
+   "evidence": "name:melee"
   }
  },
  {
@@ -711,6 +759,30 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.ranged-melee-reclassification",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SamiraBasicAttackMelee2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 552.0999755859375,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Gnar"
+   ],
+   "binary": [
+    "Characters/Samira/Spells/SamiraBasicAttackMelee2"
+   ],
+   "evidence": "name:melee"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "SamiraRMissile",
@@ -782,210 +854,6 @@
    ],
    "inherited_from": "SamiraR",
    "evidence": "inherited:SamiraR"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraQSword",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 8193
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Flourish"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraQAbility/SamiraQSword"
-   ],
-   "evidence": "calc:DamageCalc (melee slash of Flourish)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraQGun",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Flourish"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraQAbility/SamiraQGun"
-   ],
-   "evidence": "calc:Damage (ranged shot of Flourish)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "SamiraPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Dash"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
-   ],
-   "evidence": "calc:QueenMaxDashRange (passive dash toward attack range)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraPassive",
-  "trigger": "passive",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPassiveAbility/SamiraPassive"
-   ],
-   "evidence": "calc:BonusMeleeDamage/EmpoweredMeleeDamageTooltip (bonus damage after movement)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SamiraPassiveAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Basic attack",
-    "Daredevil Impulse"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPassiveAttack"
-   ],
-   "evidence": "name:basicattack (passive-empowered attack)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraPJuggle",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPJuggle"
-   ],
-   "evidence": "calc:DamagePerBullet/TotalDamage (juggle hit)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraPSwordJuggle",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPSwordJuggle"
-   ],
-   "evidence": "calc:DamagePerBullet/TotalDamage (sword juggle)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraPMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPMissile"
-   ],
-   "evidence": "name:missile (juggled bullet)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SamiraPMissileOffhand",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPMissileOffhand"
-   ],
-   "evidence": "name:missile (off-hand juggled bullet)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SamiraPassiveCombo",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Daredevil Impulse",
-    "Stack"
-   ],
-   "binary": [
-    "Characters/Samira/Spells/SamiraPassiveCombo"
-   ],
-   "evidence": "name:combo + calc:QueenMaxDashRange (Style combo tracking)"
   }
  }
 ]

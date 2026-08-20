@@ -213,6 +213,30 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AkshanWWallPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Akshan/Spells/AkshanWAbility/AkshanWWallPassive"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.slow",
   "family": "crowd-control-mobility",
   "behavior": "AkshanE2",
@@ -791,60 +815,6 @@
    ],
    "inherited_from": "AkshanR",
    "evidence": "inherited:AkshanR"
-  }
- },
- {
-  "atom_id": "heal-shield.revive",
-  "family": "heal-shield",
-  "behavior": "AkshanWHuntPassive (Scoundrel takedown resurrection)",
-  "trigger": "on_takedown",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [
-   "stack-transform-summon-resource.mark"
-  ],
-  "provenance": {
-   "wiki": [
-    "Revive",
-    "Going Rogue"
-   ],
-   "binary": [
-    "Characters/Akshan/Spells/AkshanWAbility/AkshanWHuntPassive"
-   ],
-   "source": "review-refinement",
-   "evidence": "wiki W: takedown against a Scoundrel while alive and within 3s of damaging them resurrects all dead allied champions"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "AkshanEOrbitalClockwise (Heroic Swing grapple reposition)",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Heroic Swing"
-   ],
-   "binary": [
-    "Characters/Akshan/Spells/AkshanEAbility/AkshanEOrbitalClockwise"
-   ],
-   "source": "review-refinement",
-   "evidence": "wiki E: Akshan swings around the target (closest-match mobility atom for the grapple reposition); E damage/slow already classified"
   }
  }
 ]

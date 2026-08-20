@@ -1009,43 +1009,5 @@
    "inherited_from": "AmbessaQ",
    "evidence": "inherited:AmbessaQ"
   }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AmbessaPassiveAttackEmpower",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Passive (Drakehound's Step): after dashing, next basic attack within 4s is empowered, dealing bonus physical damage"
-   ],
-   "binary": [
-    "{14a1d4d5}"
-   ],
-   "evidence": "passive empowered attack (wiki P description + binary SpellObject)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AmbessaRPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "R (Public Execution) passive: gains armor penetration against enemies"
-   ],
-   "binary": [
-    "{99426203}"
-   ],
-   "evidence": "armor penetration buff (wiki R passive + binary SpellObject)"
-  }
  }
 ]

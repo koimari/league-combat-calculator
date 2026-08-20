@@ -731,48 +731,5 @@
    "inherited_from": "LucianW",
    "evidence": "inherited:LucianW"
   }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "LucianPassiveShot",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "physical",
-   "affects_type_flags": 15018
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Lightslinger"
-   ],
-   "binary": [
-    "Characters/Lucian/Spells/LucianPassiveAbility/LucianPassiveShot",
-    "Characters/Lucian/Spells/LucianPassiveAbility/LucianPassiveAttack"
-   ],
-   "evidence": "wiki: Lightslinger double shot (50/55/60% AD, second shot applies on-hit/lifesteal, crit-modifiable); binary alt=_BasicAttack"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "LucianRMissileOffhand",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "The Culling"
-   ],
-   "binary": [
-    "Characters/Lucian/Spells/LucianRAbility/LucianRMissileOffhand"
-   ],
-   "evidence": "binary alt=LucianR; offhand-gun bullet of The Culling (per-projectile, same damage class as LucianRMissile)"
-  }
  }
 ]

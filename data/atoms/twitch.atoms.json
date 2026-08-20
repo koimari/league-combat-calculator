@@ -554,32 +554,5 @@
    "inherited_from": "TwitchVenomCask",
    "evidence": "inherited:TwitchVenomCask"
   }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "Deadly Venom",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration": 6.0,
-   "damage_type": "true",
-   "stacks_cap": 6.0
-  },
-  "relations": [
-   "stack-transform-summon-resource.mark",
-   "stack-transform-summon-resource.damage-over-time"
-  ],
-  "provenance": {
-   "wiki": [
-    "Deadly Venom",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Twitch/Spells/TwitchDeadlyVenomMarkerAbility/TwitchDeadlyVenom",
-    "Characters/Twitch/Spells/Deadly_Venom"
-   ],
-   "evidence": "wiki: TRUE_DAMAGE per stack per second over 6s (up to 6 stacks); classifier damage_type map TRUE_DAMAGE->true"
-  }
  }
 ]

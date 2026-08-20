@@ -836,55 +836,5 @@
    "inherited_from": "IreliaW",
    "evidence": "inherited:IreliaW"
   }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "IreliaPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ionian Fervor",
-    "At maximum stacks Irelia's basic attacks are empowered to deal bonus magic damage on-hit (10-61 + 20% bonus AD), reduced to 50% against structures"
-   ],
-   "binary": [
-    "Characters/Irelia/Spells/IreliaPassiveAbility/IreliaPassive"
-   ],
-   "evidence": "name:IreliaPassive; datavalues MaxStacks=4 BuffDuration=6 OnHitStructureMod=0.5"
-  }
- },
- {
-  "atom_id": "damage.resistance-mitigation",
-  "family": "damage",
-  "behavior": "IreliaWDefense",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Defiant Dance",
-    "While channeling, reduces incoming physical damage by 40-70% and magic damage by 20-35% (level + AP scaled)"
-   ],
-   "binary": [
-    "Characters/Irelia/Spells/IreliaWAbility/IreliaWDefense"
-   ],
-   "evidence": "name:IreliaWDefense"
-  }
  }
 ]

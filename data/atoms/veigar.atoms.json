@@ -472,53 +472,5 @@
    "inherited_from": "VeigarBalefulStrike",
    "evidence": "inherited:VeigarBalefulStrike"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VeigarPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Phenomenal Evil Power"
-   ],
-   "binary": [
-    "Characters/Veigar/Spells/VeigarPassiveAbility/VeigarPassive"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VeigarPhenomenalEvilPower",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Phenomenal Evil Power"
-   ],
-   "binary": [
-    "Characters/Veigar/Spells/VeigarPhenomenalEvilPower"
-   ]
-  }
  }
 ]

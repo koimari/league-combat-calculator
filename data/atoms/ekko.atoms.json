@@ -1091,8 +1091,7 @@
    "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -1117,8 +1116,7 @@
    ],
    "inherited_from": "EkkoQ",
    "evidence": "inherited:EkkoQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1142,8 +1140,7 @@
    ],
    "inherited_from": "EkkoQ",
    "evidence": "inherited:EkkoQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -1168,8 +1165,7 @@
    ],
    "inherited_from": "EkkoQ",
    "evidence": "inherited:EkkoQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1193,8 +1189,7 @@
    ],
    "inherited_from": "EkkoQ",
    "evidence": "inherited:EkkoQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.dash",
@@ -1222,8 +1217,7 @@
    ],
    "inherited_from": "EkkoE",
    "evidence": "inherited:EkkoE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.slow",
@@ -1253,8 +1247,7 @@
    ],
    "inherited_from": "EkkoE",
    "evidence": "inherited:EkkoE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -1280,8 +1273,7 @@
    ],
    "inherited_from": "EkkoE",
    "evidence": "inherited:EkkoE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1305,8 +1297,7 @@
    ],
    "inherited_from": "EkkoE",
    "evidence": "inherited:EkkoE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "interaction.attack-reset",
@@ -1331,8 +1322,7 @@
    ],
    "inherited_from": "EkkoE",
    "evidence": "inherited:EkkoE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.immobilize",
@@ -1358,8 +1348,7 @@
    ],
    "inherited_from": "EkkoW",
    "evidence": "inherited:EkkoW"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -1384,8 +1373,7 @@
    ],
    "inherited_from": "EkkoW",
    "evidence": "inherited:EkkoW"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "heal-shield.shield",
@@ -1412,135 +1400,6 @@
    ],
    "inherited_from": "EkkoW",
    "evidence": "inherited:EkkoW"
-  },
-  "relations": []
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "EkkoPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Resonance",
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassive"
-   ],
-   "evidence": "Z-Drive Resonance: third stack consumed to deal bonus magic damage (wiki P, MAGIC_DAMAGE)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "EkkoPassiveSpeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed"
-   ],
-   "binary": [
-    "Characters/Ekko/Spells/EkkoPassiveAbility/EkkoPassiveSpeed"
-   ],
-   "evidence": "passive move-speed burst buff (binary buff object name EkkoPassiveSpeed)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.untargetable",
-  "family": "crowd-control-mobility",
-  "behavior": "EkkoRInvuln",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control"
-   ],
-   "binary": [
-    "Characters/Ekko/Spells/EkkoRAbility/EkkoRInvuln"
-   ],
-   "evidence": "Chronobreak: Ekko becomes untargetable/invulnerable while traveling (binary EkkoRInvuln)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.clone",
-  "family": "stack-transform-summon-resource",
-  "behavior": "EkkoRMinion",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Summon"
-   ],
-   "binary": [
-    "{71103854}"
-   ],
-   "evidence": "Chronobreak time-delayed afterimage (clone-like unit object {71103854})"
-  }
- },
- {
-  "atom_id": "damage.execute",
-  "family": "damage",
-  "behavior": "EkkoWPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Parallel Convergence",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Ekko/Spells/EkkoWAbility/EkkoWPassive"
-   ],
-   "evidence": "Parallel Convergence passive: bonus magic damage vs enemies below 30% HP scaling with missing health (wiki W)"
   }
  }
 ]

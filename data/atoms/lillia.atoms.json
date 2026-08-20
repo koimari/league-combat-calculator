@@ -750,56 +750,5 @@
    ],
    "evidence": "name:basicattack"
   }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "LilliaRSpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Lillia",
-    "Crowd control",
-    "Types of Crowd Control"
-   ],
-   "binary": [
-    "Characters/Lillia/Spells/LilliaRAbility/LilliaRSpellPassive"
-   ],
-   "evidence": "wiki:Lilting Lullaby renders dream-dusted enemies drowsy (10% slow) for 1.5s before sleep"
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "LilliaERollingMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Lillia",
-    "Sight (Vision / Fog of War)"
-   ],
-   "binary": [
-    "Characters/Lillia/Spells/LilliaEAbility/LilliaERollingMissile"
-   ],
-   "evidence": "wiki:Swirlseed reveals enemies hit for 2 seconds"
-  }
  }
 ]

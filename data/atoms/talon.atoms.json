@@ -301,6 +301,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "TalonPassiveCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Talon/Spells/TalonPassiveAbility/TalonPassiveCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.stack",
   "family": "stack-transform-summon-resource",
   "behavior": "TalonPassiveStack",
@@ -750,58 +775,6 @@
    ],
    "inherited_from": "TalonQ",
    "evidence": "inherited:TalonQ"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "TalonWMissileTwo",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Slow"
-   ],
-   "binary": [
-    "Characters/Talon/Spells/TalonWAbility/TalonWMissileTwo"
-   ],
-   "evidence": "wiki:Rake return pass deals physical damage and slows for 1s; binary:object TalonWMissileTwo"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "TalonRHaste",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed",
-    "Stealth",
-    "Invisibility"
-   ],
-   "binary": [
-    "Characters/Talon/Spells/TalonRAbility/TalonRHaste"
-   ],
-   "evidence": "wiki:Shadow Assault grants bonus movement speed while stealthed; binary:object TalonRHaste"
   }
  }
 ]

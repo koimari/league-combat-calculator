@@ -1,55 +1,5 @@
 [
  {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "Consecration",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "movement speed",
-    "health threshold"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/Consecration"
-   ],
-   "evidence": "manual review: wiki P - the passive Consecration buff (allies below 40% health grant 90% bonus movement speed)"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "Consecration_Self",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 2500.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "movement speed",
-    "health threshold"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/Consecration_SelfAbility/Consecration_Self"
-   ],
-   "evidence": "manual review: wiki P + binary DataValues MovementSpeed=0.9, HealthThreshold=0.4, castRange=2500 - the passive movement-speed self-buff"
-  }
- },
- {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "SorakaE",
@@ -76,28 +26,57 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.silence",
-  "family": "crowd-control-mobility",
-  "behavior": "SorakaEPacify",
-  "trigger": "on_effect",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaE",
+  "trigger": "on_cast",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 16.0,
+   "range": 875.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "silence",
-    "pacify"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "{0c424ff9}"
+    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
    ],
-   "evidence": "manual review: wiki E - Equinox zone persists 1.5s and silences enemies within (buff game_buff_tooltip_SorakaEPacify)"
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 16.0,
+   "range": 875.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -130,212 +109,6 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "SorakaPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "movement speed",
-    "health threshold"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaPassive"
-   ],
-   "evidence": "manual review: wiki P - Soraka gains 90% bonus movement speed while facing nearby allied champions below 40% maximum health"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SorakaBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "SorakaBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "SorakaBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "SorakaBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "SorakaCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "SorakaE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 16.0,
-   "range": 875.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7183
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SorakaE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 16.0,
-   "range": 875.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7183
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaEAbility/SorakaE"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "SorakaQ",
@@ -387,180 +160,6 @@
     "Characters/Soraka/Spells/SorakaQAbility/SorakaQ"
    ],
    "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "SorakaQMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 3.0,
-   "range": 800.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{37202a65}"
-   ],
-   "inherited_from": "SorakaQ",
-   "evidence": "inherited:SorakaQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SorakaQMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 3.0,
-   "range": 800.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{37202a65}"
-   ],
-   "inherited_from": "SorakaQ",
-   "evidence": "inherited:SorakaQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "SorakaQReturnMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 3.0,
-   "range": 800.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{0f15243f}"
-   ],
-   "inherited_from": "SorakaQ",
-   "evidence": "inherited:SorakaQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "SorakaQReturnMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 3.0,
-   "range": 800.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{0f15243f}"
-   ],
-   "inherited_from": "SorakaQ",
-   "evidence": "inherited:SorakaQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "SorakaR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 150.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 1029
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "Soraka_BasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 512
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/Soraka_BasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "Soraka_BasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 622.7000122070312,
-   "damage_type": null,
-   "affects_type_flags": 512
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/Soraka_BasicAttack"
-   ],
-   "evidence": "name:basicattack"
   }
  },
  {
@@ -592,32 +191,6 @@
     "Characters/Soraka/Spells/SorakaQAbility/SorakaQ"
    ],
    "evidence": "tag:Trait_ActiveHeal"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "SorakaQMissile",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 3.0,
-   "range": 800.0,
-   "damage_type": "magic",
-   "affects_type_flags": 1029
-  },
-  "provenance": {
-   "wiki": [
-    "Healing",
-    "Heal",
-    "Health"
-   ],
-   "binary": [
-    "{37202a65}"
-   ],
-   "inherited_from": "SorakaQ",
-   "evidence": "inherited:SorakaQ"
   }
  },
  {
@@ -647,6 +220,420 @@
   }
  },
  {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SorakaR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 150.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SorakaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 2.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SorakaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SorakaWCastTime",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 750.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaWCastTime"
+   ],
+   "evidence": "name:casttime"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "SorakaRCastTime",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 1000.0,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaRCastTime"
+   ],
+   "evidence": "name:casttime"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "Soraka_BasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/Soraka_BasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "Soraka_BasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 512
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/Soraka_BasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SorakaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 622.7000122070312,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Soraka/Spells/SorakaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 3.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{0f15243f}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 3.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{0f15243f}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
   "atom_id": "heal-shield.heal",
   "family": "heal-shield",
   "behavior": "SorakaQReturnMissile",
@@ -673,24 +660,67 @@
   }
  },
  {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "SorakaR",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SorakaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 150.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": null,
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 3.0,
+   "range": 800.0,
+   "damage_type": "magic",
    "affects_type_flags": 1029
   },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "heal-shield.heal-amplification",
-   "heal-shield.healing-negation",
-   "heal-shield.overheal"
-  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{37202a65}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SorakaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 3.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{37202a65}"
+   ],
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SorakaQMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 3.0,
+   "range": 800.0,
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
   "provenance": {
    "wiki": [
     "Healing",
@@ -698,88 +728,10 @@
     "Health"
    ],
    "binary": [
-    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
+    "{37202a65}"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "SorakaW",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 2.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 16385
-  },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "heal-shield.heal-amplification",
-   "heal-shield.healing-negation",
-   "heal-shield.overheal"
-  ],
-  "provenance": {
-   "wiki": [
-    "Healing",
-    "Heal",
-    "Health"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
-   ],
-   "evidence": "tag:Trait_ActiveHeal"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SorakaR",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 150.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 1029
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
-   ],
-   "evidence": "tag:PositiveEffect_Boon"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "SorakaW",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 2.0,
-   "range": 550.0,
-   "damage_type": null,
-   "affects_type_flags": 16385
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
-   ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "inherited_from": "SorakaQ",
+   "evidence": "inherited:SorakaQ"
   }
  }
 ]

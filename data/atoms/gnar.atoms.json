@@ -1271,47 +1271,5 @@
    "inherited_from": "GnarBigQ",
    "evidence": "inherited:GnarBigQ"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.fury-rage-resource",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GnarPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ability resource",
-    "Manaless",
-    "Transform"
-   ],
-   "binary": [
-    "Characters/Gnar/Spells/GnarPassiveAbility/GnarPassive"
-   ],
-   "evidence": "name:rage-gene"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GnarEAttackSpeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "attack_speed_percent": 60.0,
-   "duration_seconds": 6.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Attack speed",
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Gnar/Spells/GnarEAbility/GnarEAttackSpeed"
-   ],
-   "evidence": "name:attackspeed"
-  }
  }
 ]

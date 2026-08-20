@@ -211,6 +211,30 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "QiyanaRWallHitMis",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1050.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Qiyana/Spells/QiyanaRAbility/QiyanaRWallHitMis"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.stun",
   "family": "crowd-control-mobility",
   "behavior": "QiyanaRStun",
@@ -313,6 +337,54 @@
     "Characters/Qiyana/Spells/QiyanaRAbility/QiyanaRWallFollowMisShadow"
    ],
    "evidence": "name:shadow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "QiyanaRWallFollowMisShadow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Qiyana/Spells/QiyanaRAbility/QiyanaRWallFollowMisShadow"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "QiyanaRWallFollowMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1550.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Qiyana/Spells/QiyanaRAbility/QiyanaRWallFollowMis"
+   ],
+   "evidence": "name:wall"
   }
  },
  {
@@ -1194,179 +1266,6 @@
    ],
    "inherited_from": "QiyanaR",
    "evidence": "inherited:QiyanaR"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.gather",
-  "family": "stack-transform-summon-resource",
-  "behavior": "QiyanaWMis_Grass",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 7.0,
-   "range": 1100.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Terrashape",
-    "Buff",
-    "Element"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaWAbility/QiyanaWMis_Grass"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.gather",
-  "family": "stack-transform-summon-resource",
-  "behavior": "QiyanaWMis_Water",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 7.0,
-   "range": 1100.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Terrashape",
-    "Buff",
-    "Element"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaWAbility/QiyanaWMis_Water"
-   ]
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.gather",
-  "family": "stack-transform-summon-resource",
-  "behavior": "QiyanaWMis_Rock",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 7.0,
-   "range": 1100.0,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Terrashape",
-    "Buff",
-    "Element"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaWAbility/QiyanaWMis_Rock"
-   ]
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "QiyanaQ_ExplosionMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 7.0,
-   "range": 525.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Edge of Ixtal",
-    "Elemental Wrath",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaQAbility/QiyanaQ_ExplosionMissile"
-   ]
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "QiyanaQ_ExplosionMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 7.0,
-   "range": 525.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Edge of Ixtal",
-    "Elemental Wrath",
-    "Area of effect"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaQAbility/QiyanaQ_ExplosionMissile"
-   ]
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "QiyanaRWallHitMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 120.0,
-   "range": 950.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Supreme Display of Talent",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaRAbility/QiyanaRWallHitMis"
-   ]
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "QiyanaRWallFollowMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 120.0,
-   "range": 950.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Supreme Display of Talent",
-    "Area of effect"
-   ],
-   "binary": [
-    "Characters/Qiyana/Spells/QiyanaRAbility/QiyanaRWallFollowMis"
-   ]
   }
  }
 ]

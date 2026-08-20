@@ -126,6 +126,64 @@
   }
  },
  {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ZacRebirthActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRebirthActive"
+   ],
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ZacRebirth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRebirth"
+   ],
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "ZacW",
@@ -510,6 +568,89 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "ZacRebirthCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRebirthCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ZacRebirthCooldown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRebirthCooldown"
+   ],
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
+  }
+ },
+ {
+  "atom_id": "heal-shield.revive",
+  "family": "heal-shield",
+  "behavior": "ZacRebirthBlob",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.damage-instance",
+   "heal-shield.heal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Revive",
+    "Healing"
+   ],
+   "binary": [
+    "Characters/Zac/Spells/ZacRebirthBlob"
+   ],
+   "evidence": "name:rebirth",
+   "ghost": "removed-kit-leftover"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.airborne",
   "family": "crowd-control-mobility",
   "behavior": "ZacRKnockup",
@@ -656,8 +797,7 @@
    "source": "wiki-map",
    "evidence": "wiki-map",
    "ghost": "removed-kit-leftover"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.immobilize",
@@ -683,8 +823,7 @@
    ],
    "inherited_from": "ZacQ",
    "evidence": "inherited:ZacQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -709,8 +848,7 @@
    ],
    "inherited_from": "ZacQ",
    "evidence": "inherited:ZacQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -736,8 +874,7 @@
    ],
    "inherited_from": "ZacQ",
    "evidence": "inherited:ZacQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -761,8 +898,7 @@
    ],
    "inherited_from": "ZacQ",
    "evidence": "inherited:ZacQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "interaction.attack-reset",
@@ -787,118 +923,6 @@
    ],
    "inherited_from": "ZacQ",
    "evidence": "inherited:ZacQ"
-  },
-  "relations": []
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ZacPassiveSpawnChunk",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "duration_seconds": 6.0,
-   "chunks_per_hit": 1.0,
-   "range": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Cell Division"
-   ],
-   "binary": [
-    "Characters/Zac/Spells/ZacPassiveSpawnChunk"
-   ],
-   "evidence": "refined:wiki-goo"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ZacWCDRMath",
-  "trigger": "on_pickup",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_reduction_seconds": 1.0,
-   "range": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unstable Matter"
-   ],
-   "binary": [
-    "Characters/Zac/Spells/ZacWCDRMath"
-   ],
-   "evidence": "refined:wiki-w-cdr"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "ZacEMove",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "range": 1800.0,
-   "speed": 1350.0,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Elastic Slingshot"
-   ],
-   "binary": [
-    "Characters/Zac/Spells/ZacEMove"
-   ],
-   "evidence": "refined:wiki-e"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ZacSizeScale",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {
-   "size_percent_per_bonus_health": 1.5,
-   "max_increase_percent": 35.0,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Cell Division"
-   ],
-   "binary": [
-    "Characters/Zac/Spells/ZacSizeScale"
-   ],
-   "evidence": "refined:wiki-p"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "ZacPassiveChunkDrop",
-  "trigger": "on_pickup",
-  "target_policy": "self",
-  "parameters": {
-   "max_health_percent": 4.0,
-   "max_health_percent_max": 8.47,
-   "range": 50.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Cell Division"
-   ],
-   "binary": [
-    "Characters/Zac/Spells/ZacPassiveChunkDrop"
-   ],
-   "evidence": "refined:wiki-goo-heal"
   }
  }
 ]

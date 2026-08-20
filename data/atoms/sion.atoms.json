@@ -1046,8 +1046,7 @@
    ],
    "inherited_from": "SionE",
    "evidence": "inherited:SionE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1071,13 +1070,7 @@
    ],
    "inherited_from": "SionE",
    "evidence": "inherited:SionE"
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ]
+  }
  },
  {
   "atom_id": "crowd-control-mobility.channel",
@@ -1103,8 +1096,7 @@
    ],
    "inherited_from": "SionQ",
    "evidence": "inherited:SionQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.immobilize",
@@ -1130,8 +1122,7 @@
    ],
    "inherited_from": "SionQ",
    "evidence": "inherited:SionQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -1156,8 +1147,7 @@
    ],
    "inherited_from": "SionQ",
    "evidence": "inherited:SionQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1181,282 +1171,6 @@
    ],
    "inherited_from": "SionQ",
    "evidence": "inherited:SionQ"
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ]
- },
- {
-  "atom_id": "heal-shield.revive",
-  "family": "heal-shield",
-  "behavior": "SionPassiveZombie",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.damage-instance",
-   "heal-shield.heal"
-  ],
-  "provenance": {
-   "wiki": [
-    "Glory in Death"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionPassiveZombie"
-   ],
-   "evidence": "wiki: reanimates on fatal damage, restoring 100% max health"
-  }
- },
- {
-  "atom_id": "heal-shield.life-steal",
-  "family": "heal-shield",
-  "behavior": "SionPassiveZombie",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Glory in Death",
-    "100% life steal"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionPassiveZombie"
-   ]
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "SionPassiveZombie",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Glory in Death"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionPassiveZombie"
-   ],
-   "evidence": "wiki: bonus physical damage on-hit equal to 10% max health"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.ghost",
-  "family": "crowd-control-mobility",
-  "behavior": "SionPassiveZombie",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Glory in Death",
-    "Ghosting"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionPassiveZombie"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stasis",
-  "family": "crowd-control-mobility",
-  "behavior": "SionPassiveDelay",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Glory in Death"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionPassiveDelay"
-   ],
-   "evidence": "wiki: enters stasis for 1.5s before reanimating"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "SionPassiveSpeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Death Surge"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionPassiveSpeed"
-   ],
-   "evidence": "wiki: 67% bonus movement speed decaying over 2.376s"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.cc-immunity",
-  "family": "crowd-control-mobility",
-  "behavior": "SionRRun",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 60.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unstoppable Onslaught"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionRRun"
-   ],
-   "evidence": "wiki: immune to crowd control while charging"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.ghost",
-  "family": "crowd-control-mobility",
-  "behavior": "SionRRun",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 60.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unstoppable Onslaught"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionRRun"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "SionRRun",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 140.0,
-   "cooldown_rank_max": 60.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unstoppable Onslaught"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionRRun"
-   ],
-   "evidence": "wiki: ramps movement speed up to 950 total"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stun",
-  "family": "crowd-control-mobility",
-  "behavior": "SionEMinion",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 12.0,
-   "cooldown_rank_max": 8.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Roar of the Slayer"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionEMinion"
-   ],
-   "evidence": "wiki: minions/non-epic monsters stunned 0.75s and knocked back"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.knockback",
-  "family": "crowd-control-mobility",
-  "behavior": "SionEMinion",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 12.0,
-   "cooldown_rank_max": 8.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Roar of the Slayer"
-   ],
-   "binary": [
-    "Characters/Sion/Spells/SionEMinion"
-   ]
   }
  }
 ]

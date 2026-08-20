@@ -1,55 +1,158 @@
 [
  {
-  "atom_id": "crowd-control-mobility.blink",
+  "atom_id": "crowd-control-mobility.slow",
   "family": "crowd-control-mobility",
-  "behavior": "ShenR",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "behavior": "ShenQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 200.0,
-   "cooldown_rank_max": 160.0,
-   "range": 35000.0,
-   "damage_type": null,
-   "affects_type_flags": 16385
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Blink",
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenRAbility/ShenR"
-   ],
-   "evidence": "tag:PositiveEffect_Teleport"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.channel",
-  "family": "crowd-control-mobility",
-  "behavior": "ShenR",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 200.0,
-   "cooldown_rank_max": 160.0,
-   "range": 35000.0,
-   "damage_type": null,
-   "affects_type_flags": 16385
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
     "Crowd control",
-    "Interrupt",
-    "Types of Crowd Control/Summary"
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
    ],
    "binary": [
-    "Characters/Shen/Spells/ShenRAbility/ShenR"
+    "{33e7ee4f}"
    ],
-   "evidence": "tag:Trait_ChannelSpell"
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQBuffWeak",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{4de662af}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQBuffStrong",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{9ad2e70c}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenQBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f7d0d6b3}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.75,
+   "cooldown_rank_max": 5.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenQAbility/ShenQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.75,
+   "cooldown_rank_max": 5.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenQAbility/ShenQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -78,34 +181,6 @@
     "Characters/Shen/Spells/ShenEAbility/ShenE"
    ],
    "evidence": "tag:Trait_PlayerSelectedDashDirection"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "ShenEDash",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenEDash"
-   ],
-   "evidence": "name:dash"
   }
  },
  {
@@ -165,36 +240,6 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "ShenQSlow",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "{33e7ee4f}"
-   ],
-   "evidence": "name:slow"
-  }
- },
- {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "ShenE",
@@ -220,104 +265,60 @@
   }
  },
  {
-  "atom_id": "damage.aoe",
+  "atom_id": "damage.damage-instance",
   "family": "damage",
-  "behavior": "ShenQ",
-  "trigger": "threshold",
+  "behavior": "ShenE",
+  "trigger": "on_cast",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 8.75,
-   "cooldown_rank_max": 5.0,
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 35000.0,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenEAbility/ShenE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenEDash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
    "range": null,
-   "damage_type": "magic",
+   "damage_type": "physical",
    "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Damage over time"
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
    ],
    "binary": [
-    "Characters/Shen/Spells/ShenQAbility/ShenQ"
+    "Characters/Shen/Spells/ShenEDash"
    ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "ShenQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.75,
-   "cooldown_rank_max": 5.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{b779fb32}"
-   ],
-   "inherited_from": "ShenQ",
-   "evidence": "inherited:ShenQ"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "ShenQMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.75,
-   "cooldown_rank_max": 5.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "{5bcf3302}"
-   ],
-   "inherited_from": "ShenQ",
-   "evidence": "inherited:ShenQ"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "ShenBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenBasicAttack"
-   ],
-   "evidence": "name:basicattack"
+   "evidence": "name:dash"
   }
  },
  {
@@ -338,6 +339,31 @@
    "wiki": [
     "Damage",
     "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
     "Attack effects"
    ],
    "binary": [
@@ -372,165 +398,9 @@
   }
  },
  {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ShenE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 10.0,
-   "range": 35000.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenEAbility/ShenE"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ShenQ",
-  "trigger": "threshold",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.75,
-   "cooldown_rank_max": 5.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenQAbility/ShenQ"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ShenQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.75,
-   "cooldown_rank_max": 5.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{b779fb32}"
-   ],
-   "inherited_from": "ShenQ",
-   "evidence": "inherited:ShenQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ShenQMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.75,
-   "cooldown_rank_max": 5.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{5bcf3302}"
-   ],
-   "inherited_from": "ShenQ",
-   "evidence": "inherited:ShenQ"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "ShenBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "ShenBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "ShenPassiveShield",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenWBuff",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -540,22 +410,68 @@
    "damage_type": null,
    "affects_type_flags": null
   },
-  "relations": [
-   "heal-shield.shield-reduction",
-   "heal-shield.shield-destruction",
-   "heal-shield.heal-and-shield-power"
-  ],
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Shield",
-    "Heal and shield power",
-    "Grievous Wounds",
-    "Overheal"
+    "Buff"
    ],
    "binary": [
-    "Characters/Shen/Spells/ShenPassiveShield"
+    "Characters/Shen/Spells/ShenWBuff"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 200.0,
+   "cooldown_rank_max": 160.0,
+   "range": 35000.0,
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 200.0,
+   "cooldown_rank_max": 160.0,
+   "range": 35000.0,
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
   }
  },
  {
@@ -590,6 +506,55 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 200.0,
+   "cooldown_rank_max": 160.0,
+   "range": 35000.0,
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.clone",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ShenR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 200.0,
+   "cooldown_rank_max": 160.0,
+   "range": 35000.0,
+   "damage_type": null,
+   "affects_type_flags": 16385
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Pets",
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenRAbility/ShenR"
+   ],
+   "evidence": "tag:Trait_CreateClone"
+  }
+ },
+ {
   "atom_id": "heal-shield.shield",
   "family": "heal-shield",
   "behavior": "ShenRShield",
@@ -621,126 +586,6 @@
   }
  },
  {
-  "atom_id": "interaction.projectile-destruction",
-  "family": "interaction",
-  "behavior": "ShenWActive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenWActive"
-   ],
-   "evidence": "wiki W zone blocks all non-turret basic attacks for Shen and allies"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShenQBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{f7d0d6b3}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShenQBuffStrong",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{9ad2e70c}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShenQBuffWeak",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{4de662af}"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShenR",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 200.0,
-   "cooldown_rank_max": 160.0,
-   "range": 35000.0,
-   "damage_type": null,
-   "affects_type_flags": 16385
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenRAbility/ShenR"
-   ],
-   "evidence": "tag:PositiveEffect_Boon"
-  }
- },
- {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
   "behavior": "ShenW",
@@ -765,9 +610,91 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ShenPassiveShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenPassiveShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ShenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Shen/Spells/ShenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.pet",
   "family": "stack-transform-summon-resource",
-  "behavior": "ShenWBuff",
+  "behavior": "ShenSpiritShadowQuestLoss",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -780,61 +707,111 @@
   "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Shen/Spells/ShenWBuff"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.clone",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShenR",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 200.0,
-   "cooldown_rank_max": 160.0,
-   "range": 35000.0,
-   "damage_type": null,
-   "affects_type_flags": 16385
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
     "Pets",
     "Champion summoned units"
    ],
    "binary": [
-    "Characters/Shen/Spells/ShenRAbility/ShenR"
+    "{129fab5c}"
    ],
-   "evidence": "tag:Trait_CreateClone"
+   "evidence": "name:shadow"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ShenQTransmitter",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
+   "cooldown_rank1": 8.75,
+   "cooldown_rank_max": 5.0,
    "range": null,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": null
   },
-  "relations": [],
   "provenance": {
    "wiki": [
-    "Summon"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Shen/Spells/ShenQAbility/ShenQTransmitter"
+    "{5bcf3302}"
    ],
-   "evidence": "wiki Q recalls/summons Spirit Blade to Shen"
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.75,
+   "cooldown_rank_max": 5.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{5bcf3302}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ShenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.75,
+   "cooldown_rank_max": 5.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{b779fb32}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ShenQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.75,
+   "cooldown_rank_max": 5.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{b779fb32}"
+   ],
+   "inherited_from": "ShenQ",
+   "evidence": "inherited:ShenQ"
   }
  }
 ]

@@ -1,59 +1,5 @@
 [
  {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarPassiveBuffDash",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBuffDash"
-   ],
-   "evidence": "name:dash"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarEAbility/RengarE"
-   ],
-   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
-  }
- },
- {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "RengarEEmp",
@@ -80,9 +26,9 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarEEmpMis",
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarEEmp",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
@@ -92,49 +38,26 @@
    "damage_type": "physical",
    "affects_type_flags": 9221
   },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
+    "Damage"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarEEmpAbility/RengarEEmpMis"
+    "Characters/Rengar/Spells/RengarEEmpAbility/RengarEEmp"
    ],
-   "inherited_from": "RengarEEmp",
-   "evidence": "inherited:RengarEEmp"
+   "evidence": "tag:Trait_Low_Damage"
   }
  },
  {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarEMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarEAbility/RengarEMis"
-   ],
-   "inherited_from": "RengarE",
-   "evidence": "inherited:RengarE"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarPassiveEmpoweredMS",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuff5",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -147,119 +70,181 @@
   "relations": [],
   "provenance": {
    "wiki": [
-    "Movement speed",
-    "Ghost",
-    "Slow resist"
+    "Buff"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveEmpoweredMS"
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff5"
    ],
-   "evidence": "name:ms"
+   "evidence": "name:buff"
   }
  },
  {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarRSpeed",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thrill of the Hunt (R): Rengar prowls for a duration, gaining bonus movement speed"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarRSpeed"
-   ],
-   "evidence": "R movement-speed buff object"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarPassiveBuffDash",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuff4",
   "trigger": "on_effect",
-  "target_policy": "enemy",
+  "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
    "damage_type": null,
-   "affects_type_flags": 6826
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
+    "Buff"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBuffDash"
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff4"
    ],
-   "evidence": "tag:PositiveEffect_MoveBlock"
+   "evidence": "name:buff"
   }
  },
  {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarR",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuff3",
   "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 100.0,
-   "cooldown_rank_max": 80.0,
-   "range": 2500.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarRAbility/RengarR"
-   ],
-   "evidence": "tag:PositiveEffect_MoveBlock"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.stasis",
-  "family": "crowd-control-mobility",
-  "behavior": "RengarW",
-  "trigger": "on_cast",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 450.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Cleanse"
+    "Buff"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarWAbility/RengarW"
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff3"
    ],
-   "evidence": "tag:SpecialCase_StasisLocked"
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuff2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff2"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuff1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuff1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff1"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarRBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarRBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveBuff"
+   ],
+   "evidence": "name:buff"
   }
  },
  {
@@ -290,6 +275,33 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 450.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarWAbility/RengarW"
+   ],
+   "evidence": "tag:SpecialCase_StasisLocked"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "RengarW",
@@ -315,349 +327,6 @@
   }
  },
  {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "RengarBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "RengarBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "RengarBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "RengarQ",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQ"
-   ],
-   "evidence": "tag:Trait_Strike"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "RengarQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQAttack"
-   ],
-   "inherited_from": "RengarQ",
-   "evidence": "inherited:RengarQ"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "RengarCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarE",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarEAbility/RengarE"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarEEmp",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.4000000059604645,
-   "cooldown_rank_max": 0.4000000059604645,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarEEmpAbility/RengarEEmp"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarEEmpMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.4000000059604645,
-   "cooldown_rank_max": 0.4000000059604645,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarEEmpAbility/RengarEEmpMis"
-   ],
-   "inherited_from": "RengarEEmp",
-   "evidence": "inherited:RengarEEmp"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarEMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarEAbility/RengarEMis"
-   ],
-   "inherited_from": "RengarE",
-   "evidence": "inherited:RengarE"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarQ",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQ"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarQAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQAttack"
-   ],
-   "inherited_from": "RengarQ",
-   "evidence": "inherited:RengarQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "RengarRBonusDamage",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "{fdf22d51}"
-   ],
-   "evidence": "name:damage"
-  }
- },
- {
   "atom_id": "damage.damage-instance",
   "family": "damage",
   "behavior": "RengarW",
@@ -684,198 +353,6 @@
     "Characters/Rengar/Spells/RengarWAbility/RengarW"
    ],
    "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "RengarQEmp",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "stack-transform-summon-resource.stack",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQEmp"
-   ],
-   "evidence": "tag:PositiveEffect_EmpowerAttack"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "RengarQEmpAttack",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.25,
-   "cooldown_rank_max": 0.25,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQEmpAttack"
-   ],
-   "inherited_from": "RengarQEmp",
-   "evidence": "inherited:RengarQEmp"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "RengarQEmpowered",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.5,
-   "cooldown_rank_max": 0.5,
-   "range": 25000.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "stack-transform-summon-resource.stack",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarQEmpowered"
-   ],
-   "evidence": "tag:PositiveEffect_EmpowerAttack"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "RengarR",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 100.0,
-   "cooldown_rank_max": 80.0,
-   "range": 2500.0,
-   "damage_type": "physical",
-   "affects_type_flags": 9221
-  },
-  "relations": [
-   "stack-transform-summon-resource.stack",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarRAbility/RengarR"
-   ],
-   "evidence": "tag:PositiveEffect_EmpowerAttack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "RengarBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "RengarBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "RengarBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 100.0,
-   "damage_type": null,
-   "affects_type_flags": 7375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
   }
  },
  {
@@ -910,31 +387,82 @@
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
+  "atom_id": "interaction.parry",
   "family": "interaction",
-  "behavior": "RengarPassiveAttack",
-  "trigger": "on_effect",
+  "behavior": "RengarW",
+  "trigger": "on_cast",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 450.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarWAbility/RengarW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RengarQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
    "range": 25000.0,
-   "damage_type": null,
-   "affects_type_flags": 6826
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
   },
   "relations": [
-   "stats.attack-speed",
-   "damage.basic-attack"
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
   ],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Damage"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveAttack"
+    "Characters/Rengar/Spells/RengarQAbility/RengarQ"
    ],
-   "evidence": "tag:Trait_AttackReset"
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -966,9 +494,33 @@
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "RengarQAttack",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarQEmpASBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQEmpASBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "RengarQEmp",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -978,16 +530,21 @@
    "damage_type": "physical",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQAttack"
+    "Characters/Rengar/Spells/RengarQAbility/RengarQEmp"
    ],
-   "inherited_from": "RengarQ",
-   "evidence": "inherited:RengarQ"
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
   }
  },
  {
@@ -1019,269 +576,167 @@
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "RengarQEmpAttack",
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarE",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.25,
    "cooldown_rank_max": 0.25,
    "range": 25000.0,
    "damage_type": "physical",
-   "affects_type_flags": 6154
+   "affects_type_flags": 9221
   },
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQEmpAttack"
+    "Characters/Rengar/Spells/RengarEAbility/RengarE"
    ],
-   "inherited_from": "RengarQEmp",
-   "evidence": "inherited:RengarQEmp"
+   "evidence": "tag:Trait_SwapsIntoImmobilizingCCAbility"
   }
  },
  {
-  "atom_id": "interaction.parry",
-  "family": "interaction",
-  "behavior": "RengarW",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.25,
    "cooldown_rank_max": 0.25,
-   "range": 450.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
   },
-  "relations": [],
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
     "Damage"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarWAbility/RengarW"
+    "Characters/Rengar/Spells/RengarEAbility/RengarE"
    ],
-   "evidence": "tag:Trait_Parry"
+   "evidence": "tag:Trait_Low_Damage"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.additive-stacking",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff1",
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RengarBasicAttack",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 7375
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Stacking",
-    "Mana"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff1"
+    "Characters/Rengar/Spells/RengarBasicAttack"
    ],
-   "evidence": "name:11"
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff",
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RengarBasicAttack",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 7375
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff"
+    "Characters/Rengar/Spells/RengarBasicAttack"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff1",
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarPassiveBuffDash",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 6826
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff1"
+    "Characters/Rengar/Spells/RengarPassiveBuffDash"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:dash"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff2",
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarPassiveBuffDash",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 6826
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff2"
+    "Characters/Rengar/Spells/RengarPassiveBuffDash"
    ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff3",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff3"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff4",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff4"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuff5",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff5"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBonetoothBuffKhazix",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBonetoothBuffKhazix"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveBuff"
-   ],
-   "evidence": "name:buff"
+   "evidence": "tag:PositiveEffect_MoveBlock"
   }
  },
  {
@@ -1311,14 +766,14 @@
  {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
-  "behavior": "RengarQEmpASBuff",
+  "behavior": "RengarPassiveBonetoothBuff",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": "physical",
+   "damage_type": null,
    "affects_type_flags": null
   },
   "relations": [],
@@ -1327,9 +782,69 @@
     "Buff"
    ],
    "binary": [
-    "Characters/Rengar/Spells/RengarQAbility/RengarQEmpASBuff"
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuff"
    ],
    "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 80.0,
+   "range": 2500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarRAbility/RengarR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "RengarR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 80.0,
+   "range": 2500.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarRAbility/RengarR"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
   }
  },
  {
@@ -1354,124 +869,6 @@
     "Characters/Rengar/Spells/RengarRAbility/RengarR"
    ],
    "evidence": "tag:PositiveEffect_Boon"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarRBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarRBuff"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarRPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thrill of the Hunt (R) passive: Rengar also gains Unseen Predator while camouflaged from any source"
-   ],
-   "binary": [
-    "{a05f165c}"
-   ],
-   "evidence": "R passive grants Unseen Predator during camouflage"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarRShred",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "duration_seconds": 4.0,
-   "bonus_damage_percent": 100.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thrill of the Hunt (R): next basic attack deals 100% AD additional physical damage, then inflicts armor reduction for 4 seconds"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarRShred"
-   ],
-   "evidence": "R-empowered leap armor shred (wiki R)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ferocity",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarHatredGoTime",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "binary": [
-    "{77cee58a}"
-   ],
-   "evidence": "internal ferocity-full indicator (Hatred = ferocity system); same state as RengarPassiveEmpowered, kept as the distinct engine object (noted)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ferocity",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassive",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "max_stacks": 4.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unseen Predator (P): casting a basic ability generates a stack of Ferocity, stacking up to 4 times"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveAbility/RengarPassive"
-   ],
-   "evidence": "ferocity resource generation (4-stack cap)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.resource-gated-transform",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RengarPassiveEmpowered",
-  "trigger": "threshold",
-  "target_policy": "self",
-  "parameters": {
-   "required_stacks": 4.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Unseen Predator (P): at maximum stacks his next basic ability consumes them all to become empowered"
-   ],
-   "binary": [
-    "Characters/Rengar/Spells/RengarPassiveEmpowered"
-   ],
-   "evidence": "empowered form gated on 4 ferocity stacks"
   }
  },
  {
@@ -1501,6 +898,497 @@
     "Characters/Rengar/Spells/RengarRAbility/RengarR"
    ],
    "evidence": "tag:Trait_Camouflage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarPassiveEmpoweredMS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveEmpoweredMS"
+   ],
+   "evidence": "name:ms"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "RengarQEmpowered",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.5,
+   "cooldown_rank_max": 0.5,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQEmpowered"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RengarBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RengarBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RengarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "RengarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "RengarPassiveBonetoothBuffKhazix",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveBonetoothBuffKhazix"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "RengarCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 100.0,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "RengarPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarPassiveAttack"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarRBonusDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{fdf22d51}"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarEEmpMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.4000000059604645,
+   "cooldown_rank_max": 0.4000000059604645,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarEEmpAbility/RengarEEmpMis"
+   ],
+   "inherited_from": "RengarEEmp",
+   "evidence": "inherited:RengarEEmp"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarEEmpMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.4000000059604645,
+   "cooldown_rank_max": 0.4000000059604645,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarEEmpAbility/RengarEEmpMis"
+   ],
+   "inherited_from": "RengarEEmp",
+   "evidence": "inherited:RengarEEmp"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "RengarQEmpAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQEmpAttack"
+   ],
+   "inherited_from": "RengarQEmp",
+   "evidence": "inherited:RengarQEmp"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "RengarQEmpAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQEmpAttack"
+   ],
+   "inherited_from": "RengarQEmp",
+   "evidence": "inherited:RengarQEmp"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "RengarQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQAttack"
+   ],
+   "inherited_from": "RengarQ",
+   "evidence": "inherited:RengarQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQAttack"
+   ],
+   "inherited_from": "RengarQ",
+   "evidence": "inherited:RengarQ"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "RengarQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarQAbility/RengarQAttack"
+   ],
+   "inherited_from": "RengarQ",
+   "evidence": "inherited:RengarQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "RengarEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarEAbility/RengarEMis"
+   ],
+   "inherited_from": "RengarE",
+   "evidence": "inherited:RengarE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "RengarEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.25,
+   "cooldown_rank_max": 0.25,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 9221
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Rengar/Spells/RengarEAbility/RengarEMis"
+   ],
+   "inherited_from": "RengarE",
+   "evidence": "inherited:RengarE"
   }
  }
 ]

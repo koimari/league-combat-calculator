@@ -885,45 +885,5 @@
    "inherited_from": "BraumQ",
    "evidence": "inherited:BraumQ"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "BraumWPassiveStatsDoubler",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 13.0,
-   "cooldown_rank_max": 7.0,
-   "range": 0.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Braum/Spells/BraumWAbility/BraumWPassiveStatsDoubler"
-   ],
-   "evidence": "binary object name: W Stand Behind Me armor/MR stat buff (doubler component)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "BraumEMSBoost",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 18.0,
-   "cooldown_rank_max": 8.0,
-   "range": 0.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Braum/Spells/BraumEAbility/BraumEMSBoost"
-   ],
-   "evidence": "binary object name: E Unbreakable movement-speed boost"
-  }
  }
 ]

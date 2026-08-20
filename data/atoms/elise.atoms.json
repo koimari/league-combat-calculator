@@ -1185,35 +1185,5 @@
    ],
    "evidence": "rule:crit"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ElisePassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Spider Queen",
-    "Summon"
-   ],
-   "binary": [
-    "Characters/Elise/Spells/ElisePassiveAbility/ElisePassive",
-    "{48398322}",
-    "{8239de70}",
-    "{8339e003}",
-    "{8839e7e2}",
-    "{8939e975}"
-   ],
-   "evidence": "Spider Queen: stores dormant Spiderlings per ability hit (max 2-5); spiderling unit objects EliseSpider2-5 ({8239de70}..{8939e975})"
-  }
  }
 ]

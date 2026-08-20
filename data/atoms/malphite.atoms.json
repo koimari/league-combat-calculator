@@ -31,6 +31,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "Malphite_Shield_Cooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Malphite/Spells/MalphiteShieldAbility/Malphite_Shield_Cooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "heal-shield.shield",
   "family": "heal-shield",
   "behavior": "Malphite_Shield_Cooldown",
@@ -770,8 +795,7 @@
    ],
    "inherited_from": "Obduracy",
    "evidence": "inherited:Obduracy"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -797,8 +821,7 @@
    ],
    "inherited_from": "Obduracy",
    "evidence": "inherited:Obduracy"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -822,8 +845,7 @@
    ],
    "inherited_from": "Obduracy",
    "evidence": "inherited:Obduracy"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "interaction.attack-reset",
@@ -848,8 +870,7 @@
    ],
    "inherited_from": "Obduracy",
    "evidence": "inherited:Obduracy"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "stack-transform-summon-resource.buff",
@@ -873,85 +894,6 @@
    ],
    "inherited_from": "Obduracy",
    "evidence": "inherited:Obduracy"
-  },
-  "relations": []
- },
- {
-  "atom_id": "stack-transform-summon-resource.transform",
-  "family": "stack-transform-summon-resource",
-  "behavior": "MalphiteArmorSizeScale",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "size_per_armor_percent": 8,
-   "size_cap_percent": 35
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Granite Shield"
-   ],
-   "binary": [
-    "Characters/Malphite/Spells/MalphiteShieldAbility/MalphiteArmorSizeScale"
-   ],
-   "evidence": "wiki:Granite Shield - increased size equal to 8% of total armor, capped at 35% (437.5 armor)"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "MalphiteThunderclap",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "bonus_damage_rank": [
-    22,
-    30,
-    38,
-    46,
-    54,
-    62,
-    70
-   ],
-   "cleave_percent_total_ad_rank": [
-    15,
-    20,
-    25,
-    30,
-    35,
-    40,
-    45
-   ],
-   "duration_seconds": 6,
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thunderclap"
-   ],
-   "binary": [
-    "Characters/Malphite/Spells/ObduracyAbility/MalphiteThunderclap"
-   ],
-   "evidence": "binary:SpellEffectAmount 22-70 bonus damage + 15-45% total AD cleave, 6s pre-hit buff (buff_desc_MalphiteThunderclapPreHit)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "MalphiteObduracyEffect",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thunderclap"
-   ],
-   "binary": [
-    "Characters/Malphite/Spells/ObduracyAbility/MalphiteObduracyEffect"
-   ],
-   "evidence": "binary:buff_desc_MalphiteObduracyEffect; wiki note 'Thunderclap's bonus armor'"
   }
  }
 ]

@@ -985,6 +985,63 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.resource-duration-indicator",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KSanteW_AllOut",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 250.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Manaless",
+    "Ability resource"
+   ],
+   "binary": [
+    "{7ac3757c}"
+   ],
+   "evidence": "name:allout"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KSanteW_AllOut",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 14.0,
+   "cooldown_rank_max": 10.0,
+   "range": 250.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "{7ac3757c}"
+   ],
+   "evidence": "name:allout"
+  }
+ },
+ {
   "atom_id": "damage.damage-instance",
   "family": "damage",
   "behavior": "KSanteQ3",
@@ -1495,56 +1552,6 @@
    ],
    "inherited_from": "KSanteQ3",
    "evidence": "inherited:KSanteQ3"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "KSantePDoubleAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 5327
-  },
-  "relations": [
-   "stack-transform-summon-resource.mark"
-  ],
-  "provenance": {
-   "wiki": [
-    "Dauntless Instinct"
-   ],
-   "binary": [
-    "Characters/KSante/Spells/KSantePAbility/KSantePDoubleAttack"
-   ],
-   "evidence": "basic attacks on marked enemies consume the mark for bonus max-health physical damage (Attack_Passive_AllOut)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KSanteRConversionArmor",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": 22538
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "All Out"
-   ],
-   "binary": [
-    "Characters/KSante/Spells/KSanteRAbility/KSanteRConversionArmor"
-   ],
-   "evidence": "All Out converts a portion of bonus armor and magic resistance into attack damage (buff tooltip KSanteRConversionArmor)"
   }
  }
 ]

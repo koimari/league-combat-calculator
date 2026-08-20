@@ -248,6 +248,36 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KogMawCausticSpittleCharged",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/KogMaw/Spells/KogMawQAbility/KogMawCausticSpittleCharged"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "KogMawVoidOoze",
@@ -574,59 +604,6 @@
    ],
    "inherited_from": "KogMawVoidOoze",
    "evidence": "inherited:KogMawVoidOoze"
-  }
- },
- {
-  "atom_id": "interaction.resistance-reduction",
-  "family": "interaction",
-  "behavior": "KogMawCausticSpittle",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "interaction.armor-reduction",
-   "interaction.magic-resistance-reduction"
-  ],
-  "provenance": {
-   "wiki": [
-    "Caustic Spittle"
-   ],
-   "binary": [
-    "Characters/KogMaw/Spells/KogMawQAbility/KogMawCausticSpittle"
-   ],
-   "evidence": "Q active reduces the target's armor and magic resistance on hit (ability identity; binary object affects enemy champions, flags 6154)"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "KogMawIcathianSurprise",
-  "trigger": "threshold",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Icathian Surprise"
-   ],
-   "binary": [
-    "Characters/KogMaw/Spells/KogMawIcathianSurpriseReadyAbility/KogMawIcathianSurprise"
-   ],
-   "evidence": "on fatal damage, zombie state then explodes for 140-650 true damage to nearby enemies"
   }
  }
 ]

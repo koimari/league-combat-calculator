@@ -51,6 +51,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "DrMundoPCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/DrMundo/Spells/DrMundoPassiveAbility/DrMundoPCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "DrMundoE",
@@ -774,99 +799,6 @@
    ],
    "inherited_from": "DrMundoE",
    "evidence": "inherited:DrMundoE"
-  }
- },
- {
-  "atom_id": "heal-shield.health-regen",
-  "family": "heal-shield",
-  "behavior": "DrMundoP",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {
-   "regen_max_health_percent_per_5s_rank1": 0.004,
-   "regen_max_health_percent_per_5s_rank_max": 0.023
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "DrMundo/P",
-    "Goes Where He Pleases"
-   ],
-   "binary": [
-    "Characters/DrMundo/Spells/DrMundoP"
-   ],
-   "evidence": "wiki: regenerates 0.4%-2.3% of maximum health every 5 seconds"
-  }
- },
- {
-  "atom_id": "interaction.immobilize-immunity",
-  "family": "interaction",
-  "behavior": "DrMundoP",
-  "trigger": "on_hostile_immobilize",
-  "target_policy": "self",
-  "parameters": {
-   "health_cost_current_percent": 0.04,
-   "canister_heal_max_health_percent": 0.04,
-   "canister_cooldown_reduction_seconds": 15.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "DrMundo/P",
-    "Goes Where He Pleases"
-   ],
-   "binary": [
-    "Characters/DrMundo/Spells/DrMundoP",
-    "Characters/DrMundo/Spells/DrMundoPImmunity",
-    "Characters/DrMundo/Spells/DrMundoPObjectMissile",
-    "Characters/DrMundo/Spells/DrMundoPCooldown"
-   ],
-   "evidence": "wiki: immunity to next immobilizing effect; 4% current health cost; canister heals 4% max HP and reduces the cooldown by 15s"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "DrMundoWRecast",
-  "trigger": "on_recast",
-  "target_policy": "self",
-  "parameters": {
-   "damage_stored_percent_rank1": 0.8,
-   "damage_stored_percent_rank_max": 0.95,
-   "grey_health_heal_percent": 0.5,
-   "grey_health_heal_percent_with_hit": 1.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "DrMundo/W",
-    "Heart Zapper"
-   ],
-   "binary": [
-    "Characters/DrMundo/Spells/DrMundoWRecast"
-   ],
-   "evidence": "wiki: stores 80%-95% of damage taken as grey health; recast heals 50% of grey health, 100% if an enemy champion is hit"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.bonus-ad",
-  "family": "stack-transform-summon-resource",
-  "behavior": "DrMundoEPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {
-   "scale_from": "maximum_health"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "DrMundo/E",
-    "Blunt Force Trauma"
-   ],
-   "binary": [
-    "Characters/DrMundo/Spells/DrMundoEPassive"
-   ],
-   "evidence": "wiki: passive grants bonus attack damage scaling with maximum health"
   }
  }
 ]

@@ -890,29 +890,5 @@
    "inherited_from": "LeonaZenithBlade",
    "evidence": "inherited:LeonaZenithBlade"
   }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "LeonaSunlightPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [
-   "stack-transform-summon-resource.mark"
-  ],
-  "provenance": {
-   "wiki": [
-    "Sunlight",
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Leona/Spells/LeonaSunlightPassiveAbility/LeonaSunlightPassive"
-   ],
-   "evidence": "wiki P Sunlight: allied damaging attacks consume the mark for bonus magic damage; binary key verified: Characters/Leona/Spells/LeonaSunlightPassiveAbility/LeonaSunlightPassive"
-  }
  }
 ]

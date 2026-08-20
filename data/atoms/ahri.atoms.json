@@ -721,35 +721,5 @@
    "inherited_from": "AhriE",
    "evidence": "inherited:AhriE"
   }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AhriPassiveCounter (Essence Theft)",
-  "trigger": "on_takedown",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null,
-   "cap": 9.0
-  },
-  "relations": [
-   "stack-transform-summon-resource.stack-consumption"
-  ],
-  "provenance": {
-   "wiki": [
-    "Stack",
-    "Stacking",
-    "Essence Theft"
-   ],
-   "binary": [
-    "{112db766}"
-   ],
-   "source": "review-refinement",
-   "evidence": "wiki P Essence Theft: kills grant Essence Fragment stacks, consumed at 9 to heal; binary object AhriPassiveCounter"
-  }
  }
 ]

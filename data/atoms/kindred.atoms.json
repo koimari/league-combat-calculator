@@ -164,6 +164,36 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredWChargePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWChargePassive"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
   "behavior": "KindredWCloneBuffVisible",
@@ -312,6 +342,36 @@
     "Characters/Kindred/Spells/KindredWAbility/KindredWChargePassiveBuff"
    ],
    "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredWChargePassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredWAbility/KindredWChargePassiveBuff"
+   ],
+   "evidence": "name:charge"
   }
  },
  {
@@ -781,6 +841,36 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KindredECharge",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kindred/Spells/KindredEWrapperAbility/KindredECharge"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
   "behavior": "KindredEFinalAttackBuff",
@@ -1204,222 +1294,6 @@
    ],
    "inherited_from": "KindredQ",
    "evidence": "inherited:KindredQ"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KindredQMissileMinor",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dance of Arrows: fires an arrow at up to 3 nearby visible enemies"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredQAbility/KindredQMissileMinor"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.additive-stacking",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KindredWSpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Wolf's Frenzy passive: generates Hunter's Vigor stacks while travelling and on-attack, up to 100"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredWAbility/KindredWSpellPassive"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "KindredWMaim",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Wolf attacks maim enemies within the zone, slowing them"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredWAbility/KindredWMaim"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack-duration-refresh",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KindredERefresher",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mounting Dread: basic attacks against the marked target refresh the mark duration, stacking up to 3"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredEAbility/KindredERefresher"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KindredEWolfMissile",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mounting Dread: Wolf attacks the marked target, applying stacks"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredEAbility/KindredEWolfMissile"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KindredECharge",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mounting Dread: mark stacks accumulate on the target before the final attack"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredEAbility/KindredECharge"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "KindredE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mounting Dread: fires a shot at the target enemy"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredEAbility/KindredE"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.additive-stacking",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KindredLegendPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mark of the Kindred: takedowns against hunted targets collect stacks granting bonus range/attack speed"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredLegendPassive"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "KindredESpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Mounting Dread: fires a shot that slows the target and marks them for 4 seconds"
-   ],
-   "binary": [
-    "Characters/Kindred/Spells/KindredEAbility/KindredESpellPassive"
-   ],
-   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
   }
  }
 ]

@@ -195,6 +195,38 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NidaleeCougarTakedownAttack",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarTakedownAttack"
+   ],
+   "evidence": "name:cougar"
+  }
+ },
+ {
   "atom_id": "damage.damage-instance",
   "family": "damage",
   "behavior": "Bushwhack",
@@ -489,6 +521,70 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NidaleeCougarBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarBasicAttack"
+   ],
+   "evidence": "name:cougar"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NidaleeCougarScent",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarScent"
+   ],
+   "evidence": "name:cougar"
+  }
+ },
+ {
   "atom_id": "damage.critical-strike",
   "family": "damage",
   "behavior": "NidaleeCougarCritAttack",
@@ -511,6 +607,38 @@
     "Characters/Nidalee/Spells/NidaleeCougarCritAttack"
    ],
    "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NidaleeCougarCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarCritAttack"
+   ],
+   "evidence": "name:cougar"
   }
  },
  {
@@ -641,6 +769,38 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NidaleeCougarBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 125.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Nidalee/Spells/NidaleeCougarBasicAttack2"
+   ],
+   "evidence": "name:cougar"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.movement-speed",
   "family": "crowd-control-mobility",
   "behavior": "PounceMS",
@@ -681,126 +841,6 @@
    "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "Prowl",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed"
-   ],
-   "binary": [
-    "Characters/Nidalee/Spells/Prowl"
-   ],
-   "evidence": "wiki:P Prowl - 10% bonus movement speed in brush, 30% facing a visible enemy"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.ghost",
-  "family": "crowd-control-mobility",
-  "behavior": "Prowl",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ghosting"
-   ],
-   "binary": [
-    "Characters/Nidalee/Spells/Prowl"
-   ],
-   "evidence": "wiki:P Prowl - ghosting while in brush"
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "NidaleePassiveHunt",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Sight"
-   ],
-   "binary": [
-    "Characters/Nidalee/Spells/NidaleePassiveHuntAbility/NidaleePassiveHunt"
-   ],
-   "evidence": "wiki:P Hunt - marked targets are revealed and grant sight of a 300-unit radius"
-  }
- },
- {
-  "atom_id": "damage.execute",
-  "family": "damage",
-  "behavior": "NidaleeTakedownAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Execute"
-   ],
-   "binary": [
-    "Characters/Nidalee/Spells/NidaleeTakedownAttack"
-   ],
-   "evidence": "binary:TakedownDamageAmp calc; cougar Q bonus damage (missing-health amp) + melee attack replacement"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "Swipe",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Nidalee/Spells/Swipe"
-   ],
-   "evidence": "binary:SwipeDamage + SwipeADRatio/SwipeAPRatio calcs (cougar E damage ability)"
   }
  }
 ]

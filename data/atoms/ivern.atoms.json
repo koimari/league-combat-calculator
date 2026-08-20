@@ -78,6 +78,36 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "IvernRChargeGolem",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1200.0,
+   "damage_type": "physical",
+   "affects_type_flags": 4106
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Ivern/Spells/IvernRAbility/IvernRChargeGolem"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "IvernR",
@@ -816,83 +846,6 @@
    ],
    "inherited_from": "IvernR",
    "evidence": "inherited:IvernR"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "IvernQRecast",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Rootcaller",
-    "Ivern can recast Rootcaller to dash to the rooted target; allies can also dash to it"
-   ],
-   "binary": [
-    "Characters/Ivern/Spells/IvernQAbility/IvernQRecast"
-   ],
-   "evidence": "name:IvernQRecast"
-  }
- },
- {
-  "atom_id": "vision-economy.sight",
-  "family": "vision-economy",
-  "behavior": "IvernWPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Brushmaker",
-    "Active grows a patch of brush that grants sight of the area within and around it for 8 seconds"
-   ],
-   "binary": [
-    "Characters/Ivern/Spells/{9473e5ed}"
-   ],
-   "evidence": "name:IvernWPassive"
-  }
- },
- {
-  "atom_id": "vision-economy.jungle-experience",
-  "family": "vision-economy",
-  "behavior": "IvernP",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Friend of the Forest",
-    "The grove matures over 40-1 seconds; freeing the camp grants Ivern the full gold and full experience bounties (grove channel: cannot attack non-epic monsters)"
-   ],
-   "binary": [
-    "Characters/Ivern/Spells/IvernPAbility/IvernP",
-    "Characters/Ivern/Spells/IvernPAbility/IvernPCollection",
-    "Characters/Ivern/Spells/IvernPAbility/IvernPApplication"
-   ],
-   "evidence": "name:IvernP/IvernPCollection/IvernPApplication"
   }
  }
 ]

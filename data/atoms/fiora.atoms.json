@@ -1177,47 +1177,5 @@
    "inherited_from": "FioraE",
    "evidence": "inherited:FioraE"
   }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "FioraPassiveSpeed",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed",
-    "Duelist's Dance"
-   ],
-   "binary": [
-    "Characters/Fiora/Spells/FioraPassiveAbility/FioraPassiveSpeed"
-   ],
-   "evidence": "wiki-map",
-   "source": "wiki-map"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "fiora Passive (Duelist's Dance (vital proc))",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "true"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "True damage",
-    "Duelist's Dance (vital proc)"
-   ],
-   "binary": [
-    "Characters/Fiora/Spells/FioraPassiveAbility/FioraPassive"
-   ],
-   "evidence": "wiki-map",
-   "source": "wiki-map"
-  }
  }
 ]

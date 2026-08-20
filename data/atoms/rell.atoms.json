@@ -878,53 +878,5 @@
    ],
    "evidence": "rule:crit"
   }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "RellP",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Break the Mold"
-   ],
-   "binary": [
-    "Characters/Rell/Spells/RellPAbility/RellP"
-   ],
-   "evidence": "wiki: basic attacks deal bonus magic damage on-hit equal to 5% total armor and 5% total magic resistance"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "RellWEmpoweredAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ferromancy: Mount Up"
-   ],
-   "binary": [
-    "Characters/Rell/Spells/RellW_DismountAbility/RellWEmpoweredAttack"
-   ],
-   "evidence": "wiki: empowered basic attack deals bonus magic damage"
-  }
  }
 ]

@@ -257,6 +257,34 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "TahmKenchWKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "{cca5cdac}"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
   "atom_id": "heal-shield.shield",
   "family": "heal-shield",
   "behavior": "TahmKenchRShield",
@@ -601,231 +629,6 @@
    ],
    "inherited_from": "TahmKenchR",
    "evidence": "inherited:TahmKenchR"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "TahmKenchPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "An Acquired Taste",
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/TahmKench/Spells/TahmKenchPassiveAbility/TahmKenchPassive"
-   ],
-   "evidence": "wiki-map: basic attacks apply a stack of An Acquired Taste"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "TahmKenchPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "An Acquired Taste",
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/TahmKench/Spells/TahmKenchPassiveAbility/TahmKenchPassive"
-   ],
-   "evidence": "wiki-map: stacks up to 3; consumed by Q and W"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "TahmKenchPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "An Acquired Taste",
-    "Damage",
-    "Magic damage"
-   ],
-   "binary": [
-    "Characters/TahmKench/Spells/TahmKenchPassiveAbility/TahmKenchPassive"
-   ],
-   "evidence": "wiki-map: on-hit bonus magic damage based on level and bonus health"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "TahmKenchWKnockUp",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Abyssal Dive",
-    "Crowd control"
-   ],
-   "binary": [
-    "{cca5cdac}"
-   ],
-   "evidence": "binary name: TahmKenchWKnockUp; wiki: W emerges and knocks up enemies at target location"
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "TahmKenchRTargetAlly",
-  "trigger": "on_cast",
-  "target_policy": "ally",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Devour",
-    "Shield"
-   ],
-   "binary": [
-    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchRTargetAlly"
-   ],
-   "evidence": "wiki-map: ally Devour grants a shield"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "TahmKenchRTargetEnemy",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Devour",
-    "Crowd control"
-   ],
-   "binary": [
-    "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchRTargetEnemy"
-   ],
-   "evidence": "wiki-map: enemy Devour suppresses (target untargetable and displacement immune)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "TahmKenchRSpeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "{848936b1}"
-   ],
-   "evidence": "binary name: TahmKenchRSpeed; movement-speed buff while carrying a swallowed target"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "TahmKenchR2TargetSpit",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Regurgitate",
-    "Damage",
-    "Magic damage"
-   ],
-   "binary": [
-    "{c4984ac3}"
-   ],
-   "evidence": "binary name: TahmKenchR2TargetSpit; wiki: Regurgitate deals magic damage to spat-out enemy"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "TahmKenchNautical",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/TahmKench/Spells/TahmKenchNautical"
-   ],
-   "evidence": "binary: SpellObject with mBuff present; exact buff effect unverified"
   }
  }
 ]

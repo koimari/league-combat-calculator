@@ -105,6 +105,96 @@
   }
  },
  {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesChargeShot",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 60.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 13327
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShot"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesChargeShotShot",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1100.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShotShot"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GravesChargeShotXplode",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShotXplode"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "GravesQLineSpell",
@@ -671,285 +761,6 @@
     "Characters/Graves/Spells/GravesCritAttack"
    ],
    "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GravesChargeShotShot",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1100.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShotShot"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (Q End of the Line projectile hit)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GravesChargeShotXplode",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 6.0,
-   "cooldown_rank_max": 6.0,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesChargeShotAbility/GravesChargeShotXplode"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (Q explosion)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GravesQLineMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1200.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQLineMis"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (Q line missile)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GravesQZoneMis",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1200.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQZoneMis"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (Q zone missile)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GravesQReturn",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1200.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQReturn"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (Q return hit)"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "GravesQZoneSpell",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 9.0,
-   "cooldown_rank_max": 9.0,
-   "range": 700.0,
-   "damage_type": "physical",
-   "affects_type_flags": 23759
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Physical damage",
-    "Area of effect"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesQLineSpellAbility/GravesQZoneSpell"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (Q end-of-line explosion zone)"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "GravesSmokeGrenadeBoom",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1500.0,
-   "damage_type": "magic",
-   "affects_type_flags": 23567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Magic damage"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesSmokeGrenadeAbility/GravesSmokeGrenadeBoom"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (W Smoke Screen impact magic damage)"
-  }
- },
- {
-  "atom_id": "vision-economy.nearsight",
-  "family": "vision-economy",
-  "behavior": "GravesSmokeCloud",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Nearsight",
-    "Vision",
-    "Crowd control"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesSmokeGrenadeAbility/GravesSmokeCloud"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (W smoke cloud nearsight zone)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GravesPassive",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": 0.0,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Ammunition",
-    "Basic attack"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesPassiveAbility/GravesPassive"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (P New Destiny ammo driver)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "GravesPassiveShotAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "physical",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesPassiveAbility/GravesPassiveShotAttack"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (P passive shot attack)"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "GravesClusterShotAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 1200.0,
-   "damage_type": "physical",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Graves/Spells/GravesClusterShotAttack"
-   ],
-   "evidence": "manual:v2:unclassified-object-refinement (P pellet basic attack, alt VolleyAttack)"
   }
  }
 ]

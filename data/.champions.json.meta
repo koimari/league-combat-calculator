@@ -1,4 +1,7 @@
 {
-  "fetched_at": 1786113324.862417,
-  "filename": "champions.json"
+  "fetched_at": 1786665129.862626,
+  "filename": "champions.json",
+  "source_url": "https://wiki.leagueoflegends.com/en-us/List_of_champions",
+  "source_version": "16.16.1",
+  "source_hash": null
 }

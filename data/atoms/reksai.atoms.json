@@ -104,6 +104,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "RekSaiECooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/RekSai/Spells/RekSaiEAbility/RekSaiECooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "damage.damage-instance",
   "family": "damage",
   "behavior": "RekSaiE",
@@ -1460,126 +1485,6 @@
    ],
    "inherited_from": "RekSaiW",
    "evidence": "inherited:RekSaiW"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RekSaiPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Fury of the Xer'Sai"
-   ],
-   "binary": [
-    "Characters/RekSai/Spells/RekSaiPassiveAbility/RekSaiPassive"
-   ],
-   "evidence": "wiki: basic attacks and abilities generate Fury; Fury decays out of combat"
-  }
- },
- {
-  "atom_id": "heal-shield.heal",
-  "family": "heal-shield",
-  "behavior": "RekSaiPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Fury of the Xer'Sai"
-   ],
-   "binary": [
-    "Characters/RekSai/Spells/RekSaiPassiveAbility/RekSaiPassive"
-   ],
-   "evidence": "wiki: while Burrowed consumes Fury over 3 seconds to heal 0-100% (based on Fury) of 9%-21.29% max health"
-  }
- },
- {
-  "atom_id": "damage.true",
-  "family": "damage",
-  "behavior": "RekSaiESpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "true",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Furious Bite"
-   ],
-   "binary": [
-    "Characters/RekSai/Spells/RekSaiEAbility/RekSaiESpellPassive"
-   ],
-   "evidence": "wiki: at maximum Fury Furious Bite deals 120% damage and is converted to true damage"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.mark",
-  "family": "stack-transform-summon-resource",
-  "behavior": "RekSaiRPrey",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Void Rush"
-   ],
-   "binary": [
-    "{3e616bcb}"
-   ],
-   "evidence": "wiki: passive applies Marked as Prey to enemy champions she damages for 5 seconds; binary object ref {3e616bcb}"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "RekSaiR2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 1500.0,
-   "damage_type": "physical",
-   "affects_type_flags": 4106
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Void Rush"
-   ],
-   "binary": [
-    "{6a816c9f}"
-   ],
-   "evidence": "wiki: she blinks to the target and dashes 125 units through them after the slash"
   }
  }
 ]

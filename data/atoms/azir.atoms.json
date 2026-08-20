@@ -1,107 +1,132 @@
 [
  {
-  "atom_id": "crowd-control-mobility.channel",
-  "family": "crowd-control-mobility",
-  "behavior": "AzirTowerClickChannel",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 850.0,
-   "damage_type": null,
-   "affects_type_flags": 3093
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Interrupt",
-    "Types of Crowd Control/Summary"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirPassiveAbility/AzirTowerClickChannel"
-   ],
-   "evidence": "name:channel"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "AzirR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirRAbility/AzirR"
-   ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.knockback",
-  "family": "crowd-control-mobility",
-  "behavior": "AzirRBump",
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "AzirWProcBuff",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
    "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Emperor's Divide: enemies impacted by the charge are dealt magic damage and knocked away over 1 second"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirRAbility/AzirRBump"
-   ]
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "AzirE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 20.0,
-   "cooldown_rank_max": 15.0,
-   "range": 3000.0,
    "damage_type": "magic",
    "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
+    "Damage",
+    "On-damage effects"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirEWrapperAbility/AzirE"
+    "Characters/Azir/Spells/AzirWAbility/AzirWProcBuff"
    ],
-   "evidence": "tag:PositiveEffect_MoveBlock"
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirWProcBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirWProcBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AzirW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.5,
+   "cooldown_rank_max": 1.5,
+   "range": 2500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 16384
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.5,
+   "cooldown_rank_max": 1.5,
+   "range": 2500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 16384
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AzirW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.5,
+   "cooldown_rank_max": 1.5,
+   "range": 2500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 16384
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirWAbility/AzirW"
+   ],
+   "evidence": "tag:Trait_Pet"
   }
  },
  {
@@ -135,54 +160,6 @@
   }
  },
  {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AzirQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Conquering Sands: soldiers dash toward the target location, dealing magic damage to enemies passed through and in front on arrival"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirQWrapperAbility/AzirQ"
-   ]
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "AzirR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirRAbility/AzirR"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
   "atom_id": "damage.basic-attack",
   "family": "damage",
   "behavior": "AzirBasicAttack",
@@ -206,238 +183,6 @@
     "Characters/Azir/Spells/AzirBasicAttack"
    ],
    "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AzirBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AzirBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "AzirBasicAttackSoldier",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirBasicAttackSoldier"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.critical-strike",
-  "family": "damage",
-  "behavior": "AzirCritAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Critical strike",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirCritAttack"
-   ],
-   "evidence": "rule:crit"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AzirR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 90.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirRAbility/AzirR"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "AzirW",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 1.5,
-   "cooldown_rank_max": 1.5,
-   "range": 2500.0,
-   "damage_type": "magic",
-   "affects_type_flags": 16384
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirW"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.missile",
-  "family": "damage",
-  "behavior": "AzirSoldierMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Arise!: Sand Soldier spear-thrust attack missile"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirSoldierMissile"
-   ]
-  }
- },
- {
-  "atom_id": "damage.missile",
-  "family": "damage",
-  "behavior": "AzirWSelfMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Arise!: the Sand Soldier attacks in his stead, thrusting their spear to deal magic damage"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirWSelfMissile"
-   ]
-  }
- },
- {
-  "atom_id": "damage.proc",
-  "family": "damage",
-  "behavior": "AzirWProcBuff",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": "magic",
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "On-damage effects"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirWProcBuff"
-   ],
-   "evidence": "name:proc"
   }
  },
  {
@@ -466,78 +211,33 @@
   }
  },
  {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AzirBasicAttack2",
-  "trigger": "on_effect",
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirE",
+  "trigger": "on_cast",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 15.0,
+   "range": 3000.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Attack effects"
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirBasicAttack2"
+    "Characters/Azir/Spells/AzirEWrapperAbility/AzirE"
    ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AzirBasicAttack3",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirBasicAttack3"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "AzirBasicAttackSoldier",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 549.4000244140625,
-   "damage_type": null,
-   "affects_type_flags": 8143
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirBasicAttackSoldier"
-   ],
-   "evidence": "name:basicattack"
+   "evidence": "tag:PositiveEffect_MoveBlock"
   }
  },
  {
@@ -572,74 +272,83 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.ammo",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AzirW",
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 1.5,
-   "cooldown_rank_max": 1.5,
-   "range": 2500.0,
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
    "damage_type": "magic",
-   "affects_type_flags": 16384
+   "affects_type_flags": 15567
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Ability resource"
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirW"
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
    ],
-   "evidence": "tag:Trait_Ammo"
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AzirWProcBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AzirR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
    "damage_type": "magic",
-   "affects_type_flags": null
+   "affects_type_flags": 15567
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Buff"
+    "Damage",
+    "Damage over time"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirWProcBuff"
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
    ],
-   "evidence": "name:buff"
+   "evidence": "tag:Trait_AoE"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AzirPassive",
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AzirR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 90.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
   },
-  "relations": [],
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
   "provenance": {
    "wiki": [
-    "Shurima's Legacy: Azir constructs the Sun Disc above the ruins, a turret that deals magic damage (binary calcs TowerDamage, BonusResists)"
+    "Damage"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirPassiveAbility/AzirPassive"
-   ]
+    "Characters/Azir/Spells/AzirRAbility/AzirR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -671,77 +380,207 @@
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AzirW",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 1.5,
-   "cooldown_rank_max": 1.5,
-   "range": 2500.0,
-   "damage_type": "magic",
-   "affects_type_flags": 16384
-  },
-  "relations": [
-   "damage.damage-instance",
-   "damage.aoe"
-  ],
-  "provenance": {
-   "wiki": [
-    "Champion summoned units",
-    "Pets"
-   ],
-   "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirW"
-   ],
-   "evidence": "tag:Trait_Pet"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AzirWSpawnSoldier",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 8143
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Arise!: summons a Sand Soldier at the target location that is untargetable, lasts 10 seconds, grants sight"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirWAbility/AzirWSpawnSoldier"
-   ]
+    "Characters/Azir/Spells/AzirBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "stack-transform-summon-resource.summon",
-  "family": "stack-transform-summon-resource",
-  "behavior": "AzirW_URF",
-  "trigger": "on_cast",
-  "target_policy": "self",
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
    "damage_type": null,
-   "affects_type_flags": null
+   "affects_type_flags": 8143
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Arise! (URF mode variant): summons a Sand Soldier"
+    "Damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Azir/Spells/AzirW_URF"
-   ]
+    "Characters/Azir/Spells/AzirBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "AzirTowerClickChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 850.0,
+   "damage_type": null,
+   "affects_type_flags": 3093
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirPassiveAbility/AzirTowerClickChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AzirCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AzirBasicAttackSoldier",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttackSoldier"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AzirBasicAttackSoldier",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 549.4000244140625,
+   "damage_type": null,
+   "affects_type_flags": 8143
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Azir/Spells/AzirBasicAttackSoldier"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {

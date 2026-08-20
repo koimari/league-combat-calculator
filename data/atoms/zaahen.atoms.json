@@ -79,6 +79,31 @@
   }
  },
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "ZaahenPassiveReviveCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "{ec8aa7db}"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "heal-shield.revive",
   "family": "heal-shield",
   "behavior": "ZaahenPassiveReviveCooldown",
@@ -1052,26 +1077,6 @@
    ],
    "inherited_from": "ZaahenQ",
    "evidence": "inherited:ZaahenQ"
-  }
- },
- {
-  "atom_id": "damage.penetration",
-  "family": "damage",
-  "behavior": "ZaahenRSpellPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Grim Deliverance"
-   ],
-   "binary": [
-    "Characters/Zaahen/Spells/ZaahenRSpellPassive"
-   ],
-   "evidence": "R passive: Zaahen gains armor penetration"
   }
  }
 ]

@@ -51,6 +51,32 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "MaokaiRMoveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMoveSpeed"
+   ],
+   "evidence": "name:movespeed"
+  }
+ },
+ {
   "atom_id": "crowd-control-mobility.root",
   "family": "crowd-control-mobility",
   "behavior": "MaokaiRRoot",
@@ -454,6 +480,33 @@
   }
  },
  {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "MaokaiEMissileBrush",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissileBrush"
+   ],
+   "evidence": "name:brush"
+  }
+ },
+ {
   "atom_id": "stack-transform-summon-resource.trap",
   "family": "stack-transform-summon-resource",
   "behavior": "TrapLimiter_Maokai",
@@ -475,6 +528,60 @@
     "Characters/Maokai/Spells/MaokaiEAbility/TrapLimiter_Maokai"
    ],
    "evidence": "name:trap"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "MaokaiEMissileBrushTiny2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissileBrushTiny2"
+   ],
+   "evidence": "name:brush"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "MaokaiEMissileBrushTiny",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Maokai/Spells/MaokaiEAbility/MaokaiEMissileBrushTiny"
+   ],
+   "evidence": "name:brush"
   }
  },
  {
@@ -748,13 +855,10 @@
     "Pets",
     "Sapling"
    ],
-   "binary": [
-    "maokai Passive (Sapling)"
-   ],
+   "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "heal-shield.heal",
@@ -770,13 +874,10 @@
     "Health",
     "Sap Magic"
    ],
-   "binary": [
-    "maokai Passive (Sap Magic)"
-   ],
+   "binary": [],
    "source": "wiki-map",
    "evidence": "wiki-map"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.immobilize",
@@ -802,8 +903,7 @@
    ],
    "inherited_from": "MaokaiR",
    "evidence": "inherited:MaokaiR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -828,8 +928,7 @@
    ],
    "inherited_from": "MaokaiR",
    "evidence": "inherited:MaokaiR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -853,8 +952,7 @@
    ],
    "inherited_from": "MaokaiR",
    "evidence": "inherited:MaokaiR"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.immobilize",
@@ -880,8 +978,7 @@
    ],
    "inherited_from": "MaokaiQ",
    "evidence": "inherited:MaokaiQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "crowd-control-mobility.knockback",
@@ -905,8 +1002,7 @@
    ],
    "inherited_from": "MaokaiQ",
    "evidence": "inherited:MaokaiQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -931,8 +1027,7 @@
    ],
    "inherited_from": "MaokaiQ",
    "evidence": "inherited:MaokaiQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -956,8 +1051,7 @@
    ],
    "inherited_from": "MaokaiQ",
    "evidence": "inherited:MaokaiQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.aoe",
@@ -982,8 +1076,7 @@
    ],
    "inherited_from": "MaokaiE",
    "evidence": "inherited:MaokaiE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -1007,8 +1100,7 @@
    ],
    "inherited_from": "MaokaiE",
    "evidence": "inherited:MaokaiE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.dot",
@@ -1033,8 +1125,7 @@
    ],
    "inherited_from": "MaokaiE",
    "evidence": "inherited:MaokaiE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "stack-transform-summon-resource.summon",
@@ -1059,8 +1150,7 @@
    ],
    "inherited_from": "MaokaiE",
    "evidence": "inherited:MaokaiE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "stack-transform-summon-resource.trap",
@@ -1084,43 +1174,6 @@
    ],
    "inherited_from": "MaokaiE",
    "evidence": "inherited:MaokaiE"
-  },
-  "relations": []
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "MaokaiRMoveSpeed",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Nature's Grasp"
-   ],
-   "binary": [
-    "Characters/Maokai/Spells/MaokaiRAbility/MaokaiRMoveSpeed"
-   ],
-   "evidence": "binary:game_buff_tooltip_MaokaiRMoveSpeed - Nature's Grasp applies a decaying move-speed effect to enemies hit"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "MaokaiTrunkLine",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Twisted Advance"
-   ],
-   "binary": [
-    "Characters/Maokai/Spells/MaokaiTrunkLine"
-   ],
-   "evidence": "wiki:Twisted Advance - Maokai dashes to the target (dash collision line object)"
   }
  }
 ]

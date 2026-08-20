@@ -1,23 +1,60 @@
 [
  {
-  "atom_id": "crowd-control-mobility.airborne",
+  "atom_id": "crowd-control-mobility.dash",
   "family": "crowd-control-mobility",
-  "behavior": "FizzRHop",
-  "trigger": "on_erupt",
-  "target_policy": "enemy",
+  "behavior": "FizzETwo",
+  "trigger": "on_cast",
+  "target_policy": "self",
   "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
    "damage_type": "magic",
-   "affects_type_flags": 4106
+   "affects_type_flags": 7183
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Chum the Waters"
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzRHop"
+    "Characters/Fizz/Spells/FizzEAbility/FizzETwo"
    ],
-   "evidence": "wiki:R-shark-knockup; binary flags 4106"
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzETwo",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 10.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzETwo"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
   }
  },
  {
@@ -46,6 +83,114 @@
     "Characters/Fizz/Spells/FizzEAbility/FizzE"
    ],
    "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 16.0,
+   "cooldown_rank_max": 6.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 15567
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzEAbility/FizzE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
   }
  },
  {
@@ -77,448 +222,27 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzETwo",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7183
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Dash",
-    "Types of Crowd Control/Summary",
-    "Crowd control",
-    "Blink",
-    "Interrupt"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzETwo"
-   ],
-   "evidence": "tag:Trait_PlayerSelectedDashDirection"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 8192
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzR"
-   ],
-   "evidence": "tag:Trait_ImmobilizingCCSpell"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.immobilize",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzRMissile",
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzEBuffer",
   "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 8192
-  },
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control/Summary",
-    "Tenacity"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
-   ],
-   "inherited_from": "FizzR",
-   "evidence": "inherited:FizzR"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 6.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzE"
-   ],
-   "evidence": "tag:PositiveEffect_MoveBlock"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzETwo",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 10.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 7183
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzETwo"
-   ],
-   "evidence": "tag:PositiveEffect_MoveBlock"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.5,
-   "cooldown_rank_max": 6.0,
-   "range": 550.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control",
-    "Types of Crowd Control",
-    "Types of Crowd Control/Summary",
-    "Slow resist",
-    "Movement speed",
-    "Cleanse",
-    "Combat status"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
-   ],
-   "evidence": "tag:PositiveEffect_MoveBlock"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.slow",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzRCling",
-  "trigger": "on_attach",
-  "target_policy": "enemy",
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Chum the Waters"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzRCling"
-   ],
-   "evidence": "wiki:R-shark-cling-slow"
-  },
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.untargetable",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzE",
-  "trigger": "on_cast",
   "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 6.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Crowd control"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzE"
-   ],
-   "evidence": "tag:Trait_Untargetable"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.untargetable",
-  "family": "crowd-control-mobility",
-  "behavior": "FizzEOne",
-  "trigger": "on_cast",
-  "target_policy": "self",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Playful",
-    "Untargetable"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzEOne"
-   ],
-   "evidence": "wiki:E-vault-untargetable; binary flags 15567"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "FizzE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 6.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzE"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "FizzR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 8192
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzR"
-   ],
-   "evidence": "tag:Trait_AoE"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "FizzRMissile",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 8192
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Damage over time"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
-   ],
-   "inherited_from": "FizzR",
-   "evidence": "inherited:FizzR"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "FizzBasicAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzBasicAttack"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "FizzBasicAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
-   "damage_type": null,
-   "affects_type_flags": 5327
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzBasicAttack2"
-   ],
-   "evidence": "name:basicattack"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "FizzQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.5,
-   "cooldown_rank_max": 6.0,
-   "range": 550.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
-   ],
-   "evidence": "tag:Trait_Strike"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "FizzW",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 3.0,
-   "range": 600.0,
+   "range": 25000.0,
    "damage_type": "magic",
-   "affects_type_flags": 6154
+   "affects_type_flags": 15375
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
+    "Buff"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+    "Characters/Fizz/Spells/FizzEAbility/FizzEBuffer"
    ],
-   "evidence": "tag:Trait_Strike"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "FizzWAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 3.0,
-   "range": 600.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage",
-    "Attack damage",
-    "Attack effects"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
-   ],
-   "inherited_from": "FizzW",
-   "evidence": "inherited:FizzW"
+   "evidence": "name:buff"
   }
  },
  {
@@ -548,139 +272,54 @@
   }
  },
  {
-  "atom_id": "damage.critical-strike",
+  "atom_id": "damage.tag-basicattack",
   "family": "damage",
-  "behavior": "FizzCritAttack",
+  "behavior": "FizzWBasicAttack",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
    "range": 20.0,
-   "damage_type": null,
+   "damage_type": "magic",
    "affects_type_flags": 5327
   },
   "relations": [],
   "provenance": {
    "wiki": [
-    "Critical strike",
-    "Damage"
+    "Damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzCritAttack"
+    "Characters/Fizz/Spells/FizzWAbility/FizzWBasicAttack"
    ],
-   "evidence": "rule:crit"
+   "evidence": "name:basicattack"
   }
  },
  {
-  "atom_id": "damage.damage-instance",
+  "atom_id": "damage.basic-attack",
   "family": "damage",
-  "behavior": "FizzE",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 16.0,
-   "cooldown_rank_max": 6.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15567
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzE"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "FizzQ",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 8.5,
-   "cooldown_rank_max": 6.0,
-   "range": 550.0,
-   "damage_type": "other",
-   "affects_type_flags": 6154
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
-   ],
-   "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "FizzR",
-  "trigger": "on_cast",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 10000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 8192
-  },
-  "relations": [
-   "damage.resistance-mitigation",
-   "heal-shield.life-steal",
-   "heal-shield.omnivamp",
-   "heal-shield.grey-health"
-  ],
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzR"
-   ],
-   "evidence": "tag:Trait_DamageAbility"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "FizzRMissile",
+  "behavior": "FizzW",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 120.0,
-   "cooldown_rank_max": 80.0,
-   "range": 10000.0,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 600.0,
    "damage_type": "magic",
-   "affects_type_flags": 8192
+   "affects_type_flags": 6154
   },
+  "relations": [],
   "provenance": {
    "wiki": [
-    "Damage"
+    "Damage",
+    "Attack damage",
+    "Attack effects"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
    ],
-   "inherited_from": "FizzR",
-   "evidence": "inherited:FizzR"
+   "evidence": "tag:Trait_Strike"
   }
  },
  {
@@ -710,30 +349,6 @@
     "Characters/Fizz/Spells/FizzWAbility/FizzW"
    ],
    "evidence": "tag:Trait_Low_Damage"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "FizzWAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 3.0,
-   "range": 600.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
-   ],
-   "inherited_from": "FizzW",
-   "evidence": "inherited:FizzW"
   }
  },
  {
@@ -762,101 +377,6 @@
     "Characters/Fizz/Spells/FizzWAbility/FizzW"
    ],
    "evidence": "tag:Trait_DoT"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "FizzWAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 3.0,
-   "range": 600.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "provenance": {
-   "wiki": [
-    "Damage over time",
-    "Damage"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
-   ],
-   "inherited_from": "FizzW",
-   "evidence": "inherited:FizzW"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "FizzWDOT",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Seastone Trident"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWDOT"
-   ],
-   "evidence": "wiki:W-active-bleed; calc:DoTDamage"
-  }
- },
- {
-  "atom_id": "damage.dot",
-  "family": "damage",
-  "behavior": "FizzWPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Seastone Trident"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWPassive"
-   ],
-   "evidence": "wiki:W-passive-bleed-magic-damage"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "FizzOnHitBuff",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [
-   "stack-transform-summon-resource.stack",
-   "damage.damage-instance"
-  ],
-  "provenance": {
-   "wiki": [
-    "Attack effects",
-    "On-damage effects",
-    "Attack effects/Abilities",
-    "Ability damage"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzOnHitBuff"
-   ],
-   "evidence": "name:onhit"
   }
  },
  {
@@ -890,29 +410,9 @@
   }
  },
  {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "FizzWActive",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Seastone Trident"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWActive"
-   ],
-   "evidence": "wiki:W-active-on-hit-magic-damage"
-  }
- },
- {
-  "atom_id": "damage.on-hit",
-  "family": "damage",
-  "behavior": "FizzWAttack",
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "FizzW",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -922,6 +422,62 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "FizzOnHitBuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
   "provenance": {
    "wiki": [
     "Attack effects",
@@ -930,10 +486,139 @@
     "Ability damage"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+    "Characters/Fizz/Spells/FizzWAbility/FizzOnHitBuff"
    ],
-   "inherited_from": "FizzW",
-   "evidence": "inherited:FizzW"
+   "evidence": "name:onhit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "FizzOnHitBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzOnHitBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FizzR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzBasicAttack"
+   ],
+   "evidence": "name:basicattack"
   }
  },
  {
@@ -957,6 +642,142 @@
    ],
    "binary": [
     "Characters/Fizz/Spells/FizzBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "FizzCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.5,
+   "cooldown_rank_max": 6.0,
+   "range": 550.0,
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.5,
+   "cooldown_rank_max": 6.0,
+   "range": 550.0,
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.5,
+   "cooldown_rank_max": 6.0,
+   "range": 550.0,
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzQAbility/FizzQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "FizzBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 20.0,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzBasicAttack2"
    ],
    "evidence": "name:basicattack"
   }
@@ -987,34 +808,84 @@
   }
  },
  {
-  "atom_id": "damage.tag-basicattack",
+  "atom_id": "damage.basic-attack",
   "family": "damage",
-  "behavior": "FizzWBasicAttack",
+  "behavior": "FizzWAttack",
   "trigger": "on_effect",
   "target_policy": "enemy",
   "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 20.0,
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 600.0,
    "damage_type": "magic",
-   "affects_type_flags": 5327
+   "affects_type_flags": 6154
   },
-  "relations": [],
   "provenance": {
    "wiki": [
     "Damage",
+    "Attack damage",
     "Attack effects"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzWBasicAttack"
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
    ],
-   "evidence": "name:basicattack"
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
   }
  },
  {
-  "atom_id": "interaction.attack-reset",
-  "family": "interaction",
-  "behavior": "FizzW",
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "FizzWAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 7.0,
+   "cooldown_rank_max": 3.0,
+   "range": 600.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
+   ],
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "FizzWAttack",
   "trigger": "on_effect",
   "target_policy": "self",
   "parameters": {
@@ -1024,19 +895,18 @@
    "damage_type": "magic",
    "affects_type_flags": 6154
   },
-  "relations": [
-   "stats.attack-speed",
-   "damage.basic-attack"
-  ],
   "provenance": {
    "wiki": [
-    "Attack speed",
-    "Basic attack"
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
    ],
    "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzW"
+    "Characters/Fizz/Spells/FizzWAbility/FizzWAttack"
    ],
-   "evidence": "tag:Trait_AttackReset"
+   "inherited_from": "FizzW",
+   "evidence": "inherited:FizzW"
   }
  },
  {
@@ -1067,99 +937,6 @@
  {
   "atom_id": "stack-transform-summon-resource.buff",
   "family": "stack-transform-summon-resource",
-  "behavior": "FizzEBuffer",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 0.0,
-   "cooldown_rank_max": 0.0,
-   "range": 25000.0,
-   "damage_type": "magic",
-   "affects_type_flags": 15375
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzEAbility/FizzEBuffer"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "FizzOnHitBuff",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzOnHitBuff"
-   ],
-   "evidence": "name:buff"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "FizzPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Nimble Fighter"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzPassiveAbility/FizzPassive"
-   ],
-   "evidence": "wiki:P-reduced-damage-from-hits; calc:DamageReductionCalc"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "FizzW",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 7.0,
-   "cooldown_rank_max": 3.0,
-   "range": 600.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Buff"
-   ],
-   "binary": [
-    "Characters/Fizz/Spells/FizzWAbility/FizzW"
-   ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
   "behavior": "FizzWAttack",
   "trigger": "on_effect",
   "target_policy": "self",
@@ -1179,6 +956,81 @@
    ],
    "inherited_from": "FizzW",
    "evidence": "inherited:FizzW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "FizzRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+   ],
+   "inherited_from": "FizzR",
+   "evidence": "inherited:FizzR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FizzRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+   ],
+   "inherited_from": "FizzR",
+   "evidence": "inherited:FizzR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FizzRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 80.0,
+   "range": 10000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Fizz/Spells/FizzRAbility/FizzRMissile"
+   ],
+   "inherited_from": "FizzR",
+   "evidence": "inherited:FizzR"
   }
  }
 ]

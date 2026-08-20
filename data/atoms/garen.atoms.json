@@ -1,5 +1,30 @@
 [
  {
+  "atom_id": "damage.tag-activespell",
+  "family": "damage",
+  "behavior": "GarenPassiveCooldown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Garen/Spells/GarenPassiveAbility/GarenPassiveCooldown"
+   ],
+   "evidence": "name:cooldown"
+  }
+ },
+ {
   "atom_id": "heal-shield.heal",
   "family": "heal-shield",
   "behavior": "GarenPassiveHeal",
@@ -768,128 +793,6 @@
    ],
    "inherited_from": "GarenQ",
    "evidence": "inherited:GarenQ"
-  }
- },
- {
-  "atom_id": "heal-shield.health-regeneration",
-  "family": "heal-shield",
-  "behavior": "GarenPassive",
-  "trigger": "passive",
-  "target_policy": "self",
-  "parameters": {
-   "percent_max_health": 10.1,
-   "interval_seconds": 5.0
-  },
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "heal-shield.heal-amplification",
-   "heal-shield.healing-negation",
-   "heal-shield.overheal"
-  ],
-  "provenance": {
-   "wiki": [
-    "Health regeneration",
-    "Health",
-    "Perseverance",
-    "Grievous Wounds"
-   ],
-   "binary": [
-    "Characters/Garen/Spells/GarenPassiveAbility/GarenPassive"
-   ],
-   "evidence": "name:passive"
-  }
- },
- {
-  "atom_id": "heal-shield.health-regeneration",
-  "family": "heal-shield",
-  "behavior": "GarenPassiveCooldown",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {},
-  "relations": [
-   "heal-shield.grievous-wounds",
-   "heal-shield.heal-amplification",
-   "heal-shield.healing-negation",
-   "heal-shield.overheal"
-  ],
-  "provenance": {
-   "wiki": [
-    "Health regeneration",
-    "Health",
-    "Perseverance"
-   ],
-   "binary": [
-    "Characters/Garen/Spells/GarenPassiveAbility/GarenPassiveCooldown"
-   ],
-   "evidence": "name:passive-cooldown"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.stack",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GarenWPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "stack_cap": 150.0,
-   "armor_per_stack": 0.2,
-   "magic_resistance_per_stack": 0.2
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stacking",
-    "Buff",
-    "Armor",
-    "Magic resistance"
-   ],
-   "binary": [
-    "Characters/Garen/Spells/GarenWAbility/GarenWPassive"
-   ],
-   "evidence": "name:courage"
-  }
- },
- {
-  "atom_id": "crowd-control-mobility.movement-speed",
-  "family": "crowd-control-mobility",
-  "behavior": "GarenQHaste",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "movement_speed_percent": 35.0,
-   "duration_seconds": 3.6
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Movement speed"
-   ],
-   "binary": [
-    "Characters/Garen/Spells/GarenQAbility/GarenQHaste"
-   ],
-   "evidence": "name:haste"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "GarenEShred",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "armor_reduction_percent": 25.0,
-   "duration_seconds": 6.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Armor reduction",
-    "Debuff"
-   ],
-   "binary": [
-    "Characters/Garen/Spells/GarenEAbility/GarenEShred"
-   ],
-   "evidence": "name:shred"
   }
  }
 ]

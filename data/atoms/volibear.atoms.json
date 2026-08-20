@@ -674,6 +674,32 @@
   }
  },
  {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "VolibearQMoveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Ghost",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Volibear/Spells/VolibearQMoveSpeed"
+   ],
+   "evidence": "name:movespeed"
+  }
+ },
+ {
   "atom_id": "damage.aoe",
   "family": "damage",
   "behavior": "VolibearE",
@@ -786,201 +812,6 @@
     "Characters/Volibear/Spells/VolibearESlow"
    ],
    "evidence": "name:slow"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.additive-stacking",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VolibearP",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "PAttackSpeed": 0.05,
-   "BuffDuration": 6.0,
-   "BounceCounterMax": 5.0,
-   "PDamageRatio": 0.2,
-   "APRatio": 0.45
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "The Relentless Storm"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearPAbility/VolibearP"
-   ],
-   "evidence": "DataValues PAttackSpeed/PDamageRatio/APRatio/BounceCounterMax/BuffDuration; wiki: stacks up to 5 on damage, refreshed 6s"
-  }
- },
- {
-  "atom_id": "damage.aoe",
-  "family": "damage",
-  "behavior": "VolibearP",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "The Relentless Storm"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearPAbility/VolibearP"
-   ],
-   "evidence": "calc ChainLightningDamage; wiki: at 5 stacks next basic attack unleashes chain lightning"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "VolibearP",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "magic",
-   "ap_ratio": 0.45
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "The Relentless Storm"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearPAbility/VolibearP"
-   ],
-   "evidence": "chain lightning damage instance (APRatio 0.45)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "VolibearQMoveSpeed",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "MinSpeed": 5.0,
-   "MaxSpeed": 10.0,
-   "BurstSpeed": 20.0
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thundering Smash"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearQAbility/VolibearQMoveSpeed"
-   ],
-   "evidence": "Q DataValues MinSpeed/BurstSpeed/MaxSpeed; wiki: Q grants bonus movement speed, doubled toward enemies"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VolibearQPostAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thundering Smash"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearQAbility/VolibearQPostAttack"
-   ],
-   "evidence": "Q empowered post-attack object"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "VolibearQPostAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Thundering Smash"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearQAbility/VolibearQPostAttack"
-   ],
-   "evidence": "Q post-attack damage instance"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VolibearRTowerAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stormbringer"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearRTowerAttack2"
-   ],
-   "evidence": "R tower attack object"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "VolibearRTowerAttack2",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stormbringer"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearRTowerAttack2"
-   ],
-   "evidence": "R tower attack tag"
-  }
- },
- {
-  "atom_id": "damage.basic-attack",
-  "family": "damage",
-  "behavior": "VolibearRTransitionAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stormbringer"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearRTransitionAttack"
-   ],
-   "evidence": "R transition attack object during leap"
-  }
- },
- {
-  "atom_id": "damage.tag-basicattack",
-  "family": "damage",
-  "behavior": "VolibearRTransitionAttack",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {},
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Stormbringer"
-   ],
-   "binary": [
-    "Characters/Volibear/Spells/VolibearRTransitionAttack"
-   ],
-   "evidence": "R transition attack tag"
   }
  }
 ]

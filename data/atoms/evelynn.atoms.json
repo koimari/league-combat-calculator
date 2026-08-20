@@ -48,8 +48,7 @@
     "Damage"
    ],
    "binary": [
-    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQ",
-    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQLineMissile"
+    "Characters/Evelynn/Spells/EvelynnQAbility/EvelynnQ"
    ],
    "evidence": "tag:Trait_DamageAbility"
   }
@@ -127,7 +126,7 @@
   }
  },
  {
-  "atom_id": "crowd-control-mobility.charm",
+  "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "EvelynnW",
   "trigger": "on_effect",
@@ -149,7 +148,7 @@
    "binary": [
     "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnW"
    ],
-   "evidence": "Allure curse resolves into Charm on proc (wiki W; vocab crowd-control-mobility.charm)"
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
   }
  },
  {
@@ -364,10 +363,7 @@
     "Vision Ward"
    ],
    "binary": [
-    "Characters/Evelynn/Spells/EvelynnStealthRing",
-    "Characters/Evelynn/Spells/EvelynnPassiveAbility/EvelynnPassive",
-    "Characters/Evelynn/Spells/EvelynnPassiveAbility/EvelynnPassiveDelay",
-    "Characters/Evelynn/Spells/EvelynnPassiveAbility/EvelynnPassiveDemonCloak"
+    "Characters/Evelynn/Spells/EvelynnStealthRing"
    ],
    "evidence": "name:stealth"
   }
@@ -573,8 +569,7 @@
    ],
    "inherited_from": "EvelynnQ",
    "evidence": "inherited:EvelynnQ"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -598,11 +593,10 @@
    ],
    "inherited_from": "EvelynnQ",
    "evidence": "inherited:EvelynnQ"
-  },
-  "relations": []
+  }
  },
  {
-  "atom_id": "crowd-control-mobility.charm",
+  "atom_id": "crowd-control-mobility.immobilize",
   "family": "crowd-control-mobility",
   "behavior": "EvelynnWMissile",
   "trigger": "on_effect",
@@ -624,9 +618,8 @@
     "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnWMissile"
    ],
    "inherited_from": "EvelynnW",
-   "evidence": "Allure curse resolves into Charm on proc (wiki W; vocab crowd-control-mobility.charm)"
-  },
-  "relations": []
+   "evidence": "inherited:EvelynnW"
+  }
  },
  {
   "atom_id": "damage.basic-attack",
@@ -652,8 +645,7 @@
    ],
    "inherited_from": "EvelynnE",
    "evidence": "inherited:EvelynnE"
-  },
-  "relations": []
+  }
  },
  {
   "atom_id": "damage.damage-instance",
@@ -677,53 +669,6 @@
    ],
    "inherited_from": "EvelynnE",
    "evidence": "inherited:EvelynnE"
-  },
-  "relations": []
- },
- {
-  "atom_id": "stack-transform-summon-resource.damage-modification-debuff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "EvelynnWShred",
-  "trigger": "on_effect",
-  "target_policy": "enemy",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [],
-   "binary": [
-    "Characters/Evelynn/Spells/EvelynnWAbility/EvelynnWShred"
-   ],
-   "evidence": "Allure magic-resist shred after charm (binary buff object EvelynnWShred)"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "EvelynnEHaste",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": null,
-   "cooldown_rank_max": null,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Attack speed"
-   ],
-   "binary": [
-    "Characters/Evelynn/Spells/EvelynnEAbility/EvelynnEHaste"
-   ],
-   "evidence": "Whiplash attack-speed haste buff (binary buff object EvelynnEHaste)"
   }
  }
 ]

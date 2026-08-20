@@ -1067,53 +1067,5 @@
    "inherited_from": "RakanQ",
    "evidence": "inherited:RakanQ"
   }
- },
- {
-  "atom_id": "crowd-control-mobility.dash",
-  "family": "crowd-control-mobility",
-  "behavior": "RakanWCast",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 14.0,
-   "cooldown_rank_max": 10.0,
-   "range": 650.0,
-   "damage_type": "magic",
-   "affects_type_flags": 6154
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Grand Entrance",
-    "Dash"
-   ],
-   "binary": [
-    "Characters/Rakan/Spells/RakanWAbility/RakanWCast"
-   ]
-  }
- },
- {
-  "atom_id": "heal-shield.shield",
-  "family": "heal-shield",
-  "behavior": "RakanPassive",
-  "trigger": "on_effect",
-  "target_policy": "self",
-  "parameters": {
-   "cooldown_rank1": 40.0,
-   "cooldown_rank_max": 12.75,
-   "range": null,
-   "damage_type": null,
-   "affects_type_flags": null
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Fey Feathers",
-    "Shield"
-   ],
-   "binary": [
-    "Characters/Rakan/Spells/RakanPassive/RakanPassive"
-   ]
-  }
  }
 ]

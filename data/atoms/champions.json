@@ -1,7 +1,7 @@
 {
  "domain": "champions",
- "generated_at": 1786460569.046537,
- "source_ref": "data/champions.json@sha256:afea81a9976904c1;data/bin/characters",
+ "generated_at": 1787171598.95184,
+ "source_ref": "data/champions.json@sha256:77f8cce3fae087dc;data/bin/characters",
  "objects": {
   "Aatrox": [
    {
@@ -66118,32 +66118,6 @@
      "wiki:Thresh"
     ],
     "hash": "b4e3ec5ca7343d0e"
-   },
-   {
-    "atom_id": "crowd-control-mobility.immobilize",
-    "behavior": "MordekaiserR",
-    "source": "Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR",
-    "name": "MordekaiserR",
-    "values": [
-     140.0,
-     8.0,
-     650.0,
-     2.0
-    ],
-    "units": [
-     "s",
-     "s",
-     "flat",
-     "bitmask"
-    ],
-    "evidence": [
-     "binary:Characters/Mordekaiser/Spells/MordekaiserRAbility/MordekaiserR",
-     "tag:Trait_ImmobilizingCCSpell",
-     "wiki:Crowd control",
-     "wiki:Tenacity",
-     "wiki:Types of Crowd Control/Summary"
-    ],
-    "hash": "f01976eb00cfd458"
    },
    {
     "atom_id": "heal-shield.heal",

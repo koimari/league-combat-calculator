@@ -1,5 +1,53 @@
 [
  {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ViegoEWallFollowMisHead",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1550.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "{0547df52}"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ViegoEWallFollowMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 1550.0,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Viego/Spells/ViegoEAbility/ViegoEWallFollowMis"
+   ],
+   "evidence": "name:wall"
+  }
+ },
+ {
   "atom_id": "vision-economy.stealth",
   "family": "vision-economy",
   "behavior": "ViegoE",
@@ -1201,47 +1249,6 @@
    ],
    "inherited_from": "ViegoW",
    "evidence": "inherited:ViegoW"
-  }
- },
- {
-  "atom_id": "damage.damage-instance",
-  "family": "damage",
-  "behavior": "ViegoQPassive",
-  "trigger": "on_hit",
-  "target_policy": "enemy",
-  "parameters": {
-   "damage_type": "physical"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Blade of the Ruined King"
-   ],
-   "binary": [
-    "ViegoQPassive",
-    "ViegoQDoubleAttack"
-   ],
-   "evidence": "wiki Q passive: basic attacks deal bonus physical damage on-hit"
-  }
- },
- {
-  "atom_id": "stack-transform-summon-resource.buff",
-  "family": "stack-transform-summon-resource",
-  "behavior": "ViegoEHaste",
-  "trigger": "on_enter_mist",
-  "target_policy": "self",
-  "parameters": {
-   "attribute": "attack_speed"
-  },
-  "relations": [],
-  "provenance": {
-   "wiki": [
-    "Harrowed Path"
-   ],
-   "binary": [
-    "ViegoEHaste"
-   ],
-   "evidence": "wiki E: inside the mist Viego gains attack speed (haste)"
   }
  }
 ]
