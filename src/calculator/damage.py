@@ -451,6 +451,22 @@ class FightConfig:
     # Explicit state inputs for the selected keystone. The parser validates
     # this mapping before it reaches the fight engine.
     keystone_options: Mapping[str, int | float] = field(default_factory=dict)
+    # P3-3M: the target's actor CLASS.  "champion" is the historical 1v1
+    # model and the default for every existing caller; "minion" arms the
+    # sourced minion-only item branches (Doran's Helm's Helping Hand).
+    # The label gates class-restricted EFFECTS only — the target's stats
+    # (health, armor, MR, shields) stay caller-supplied, because no minion
+    # base-stat block is cached.  Unknown spellings fail closed.
+    target_class: str = item_effects.DEFAULT_TARGET_CLASS
+
+    def __post_init__(self) -> None:
+        """Reject a target class the fight model cannot represent."""
+        if self.target_class not in item_effects.TARGET_CLASSES:
+            raise ValueError(
+                "target_class must be one of "
+                f"{', '.join(item_effects.TARGET_CLASSES)}; "
+                f"got {self.target_class!r}"
+            )
 
 
 @dataclass
@@ -500,6 +516,9 @@ class FightState:
     target_critical_strike_damage_multiplier: float
     roster_target_index: int
     roster_target_count: int
+    # P3-3M: the target's actor class, mirrored from the fight config. The
+    # ONE home every class-restricted effect reads.
+    target_class: str
     # ── Resolved combat numbers ───────────────────────────────────────────
     resists: Resists
     magic_amp: float  # Abyssal Mask
@@ -2431,6 +2450,7 @@ def _resolve_combat_state(
         ),
         roster_target_index=max(0, int(config.roster_target_index)),
         roster_target_count=max(1, int(config.roster_target_count)),
+        target_class=config.target_class,
         resists=resists,
         magic_amp=damage_effects.magic_amp,
         ability_amp=(
@@ -7722,6 +7742,23 @@ class OnHitResult:
     phantom_ability_stack_positions: set[int] = field(default_factory=set)
 
 
+def _armed_class_restricted_per_hits(
+    state: FightState,
+) -> tuple[item_effects.PerHitEffect, ...]:
+    """The build's class-restricted on-hits this target class arms (P3-3M).
+
+    A champion-class fight (the default and the only class every existing
+    caller authors) arms nothing, so the auto stream is bit-identical to
+    the pre-P3-3M engine. A minion-class fight arms exactly the branches
+    whose sourced text names that class.
+    """
+    return tuple(
+        effect
+        for effect in state.damage_effects.class_restricted_per_hits
+        if effect.target_class == state.target_class
+    )
+
+
 def _layer_on_hit_effects(
     state: FightState,
     autos: AutoAttackResult,
@@ -7854,8 +7891,15 @@ def _layer_on_hit_effects(
 
     # Process fixed-formula per-hit effects. Current-health effects are
     # simulated below because each application changes the next one's input.
+    # Class-restricted branches (P3-3M) join the same stream only when the
+    # fight's target class arms them, so they ride the identical
+    # mitigation, phantom/double-shot counting, breakdown row, and
+    # per-swing event authoring as every other on-hit item.
     damage_inputs = _damage_inputs(state)
-    for effect in state.damage_effects.per_hits:
+    for effect in (
+        *state.damage_effects.per_hits,
+        *_armed_class_restricted_per_hits(state),
+    ):
         if effect.tracks_current_health:
             continue
 
@@ -14864,6 +14908,19 @@ def _collect_fight_notes(
     notes = state.notes
     notes.extend(state.damage_effects.conditional_notes)
 
+    if state.target_class != item_effects.DEFAULT_TARGET_CLASS:
+        armed = _armed_class_restricted_per_hits(state)
+        armed_names = ", ".join(sorted(effect.source.item_name for effect in armed))
+        notes.append(
+            f"Target class '{state.target_class}': the sourced class-restricted "
+            f"item branches are armed ({armed_names or 'none in this build'}). "
+            "Named boundary — champion ABILITY class clauses (Nasus Q stacks, "
+            "Cho'Gath Feast, Ezreal R's minion row) are not adjudicated, and "
+            "ability-carried on-hit applications do not carry the class-"
+            "restricted branch; the target's stats stay caller-supplied, not "
+            "a sourced minion stat block."
+        )
+
     timeline = state.stack_timeline
     if timeline is not None and timeline.buff_windows:
         uptime = sum(end - start for start, end in timeline.buff_windows)
@@ -15018,6 +15075,27 @@ def _apply_shield_reaver_venom(
     return reduced, [note]
 
 
+def _require_target_class_support(
+    config: FightConfig, items: list[dict[str, Any]]
+) -> None:
+    """Refuse a non-champion-class fight the item model cannot price.
+
+    ``FightConfig.__post_init__`` already rejected an unknown class. This
+    is the second, build-scoped gate: an item whose cached effect text
+    names a target class it is not adjudicated for would be priced with
+    the champion-class reading (Statikk Shiv's Electrospark is 60 magic
+    damage on a champion and a sourced 90 on a non-champion), so the
+    fight fails closed with every offending item and clause named rather
+    than silently under- or over-counting.
+    """
+    denials = item_effects.target_class_denials(items, config.target_class)
+    if denials:
+        raise ValueError(
+            f"target_class={config.target_class!r} is not supported by this "
+            "build: " + "; ".join(denials)
+        )
+
+
 def calculate_fight_damage(
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
@@ -15046,6 +15124,9 @@ def calculate_fight_damage(
     Returns:
         Dictionary with damage breakdown and total.
     """
+    # ── Target class admission (P3-3M) ──────────────────────────────────
+    _require_target_class_support(config, items)
+
     # ── Shield Reaver venom cuts the target's non-magic shields ─────────
     config, shield_reaver_notes = _apply_shield_reaver_venom(
         config, items, champion_stats

@@ -1109,10 +1109,13 @@ def _has_described_effect(item: dict[str, Any]) -> bool:
 # stats still flow through stats.py.
 _RECEIPT_ONLY_BOUNDARY_REASONS: dict[str, str] = {
     "Doran's Helm": (
-        "Helping Hand's 5 bonus physical damage is minion-only and "
-        "receipt-only (item_state_receipts.helping_hand_minion_only); "
-        "the champion fighter model has no minion targets, so the branch "
-        "is a named boundary, never an on-champion packet."
+        "Helping Hand's 5 bonus physical damage is minion-only "
+        "(item_state_receipts.helping_hand_minion_only); a champion-class "
+        "target never receives it, so the item contributes zero champion "
+        "damage and stays stats_only for the optimizer. Since P3-3M a "
+        "minion-class fight (FightConfig.target_class='minion') arms the "
+        "sourced on-hit packet, so the branch is no longer receipt-only — "
+        "but the champion-class coverage verdict is unchanged."
     ),
     "Ionian Boots of Lucidity": (
         "Ionian Insight grants summoner spell haste, which is receipt-only "

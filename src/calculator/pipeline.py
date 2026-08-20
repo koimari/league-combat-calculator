@@ -49,6 +49,7 @@ from .request_parsing import (
     request_bool as _request_bool,
     request_int as _request_int,
     request_number,
+    request_string,
 )
 from .rune_effects import (
     KeystoneConquerorEffect,
@@ -682,6 +683,26 @@ def _bounded_request_float(
     return request_number(data, key, default, minimum, maximum)
 
 
+def _request_target_class(data: Mapping[str, Any]) -> str:
+    """Read the public target-class selector (P3-3M), failing closed.
+
+    Omitting the key keeps the historical champion-class fight, so every
+    existing request stays byte-identical. A supplied value must match a
+    :data:`item_effects.TARGET_CLASSES` spelling EXACTLY — no case folding
+    and no plural forms, so the request layer and ``FightConfig``'s own
+    guard share one spelling contract rather than the request layer
+    quietly widening what the kernel accepts.
+    """
+    value = request_string(data, "target_class", item_effects.DEFAULT_TARGET_CLASS)
+    if value not in item_effects.TARGET_CLASSES:
+        raise ValueError(
+            "target_class must be "
+            + " or ".join(item_effects.TARGET_CLASSES)
+            + f"; got {value!r}"
+        )
+    return value
+
+
 @dataclass(frozen=True)
 class FightParams(FightConfig):
     """FightConfig plus the parse-layer inputs the engine never sees.
@@ -809,6 +830,7 @@ class FightParams(FightConfig):
             support_target_selections=support_target_selections or None,
             keystone=keystone,
             keystone_options=keystone_options,
+            target_class=_request_target_class(data),
             role=role,
             role_quest_complete=role_quest_complete,
             enemies_attack=_request_bool(data, "enemies_attack", True),

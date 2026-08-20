@@ -242,24 +242,50 @@ and the runtime gap are two different, only partly overlapping problems.
 
 | Extension | Owning tests | Prerequisite | Size |
 |---|---|---|---|
-| P3-3M — minion damage/target model | new `tests/test_minion_targets.py`; touches `damage.py`, `item_effects.py` (Cull, Doran's Helm/Tear Helping Hand), `champions/nasus.py`, `champions/chogath.py` | A typed minion actor (stats, "large minion" flag, kill-credit event) added to the roster/combatant layer | **XL** |
+| P3-3M — minion damage/target model | `tests/test_dorans_helm_minion_damage.py`; touches `damage.py`, `item_effects.py`, `pipeline.py`, `item_coverage.py` | — | **Done (target-class slice)** — see §3.1 for the half that remains **XL** |
 | Multi-target roster-allocation refinement | `tests/test_participant_timeline.py`, `tests/test_roster_composition.py` | Sourced per-target sequencing rule for target-limited procs (currently allocated once across the roster, `architecture.md` §Scenarios) | **L** |
 | Spell-shield rearm-within-fight | `tests/test_spell_shield_eligibility.py`, `tests/test_delivery_eligibility_kernel.py` | None — the sourced cooldowns are already receipted (`SPELL_SHIELD_NO_REARM_RULE`); needs a fight-window-relative rearm clock wired into `delivery_eligibility.py` | **M** |
 | Renata Glasc W (Bailout) lethal half | `tests/test_renata_w_bailout.py` | Damage-class corroboration for the burn (see below) — currently unresolvable from local sources | **S** once unblocked, **unschedulable** until then |
 
 ### 3.1 P3-3M — minion model
 
-Not started. The fight model has no minion targets or minion-kill events at
-all (`champions/nasus.py`, `champions/chogath.py`, and the Helping Hand
-passive on Doran's Helm/Tear all carry the same named boundary: *"the
-champion fighter model has no minion targets, so the branch is a named
-boundary, never an on-champion packet"* — `item_effects.py`,
-`item_coverage.py`). Concretely out of scope today: Nasus Q permanent
-stacking off minion kills, Cho'Gath Feast's minion/monster stack cap, Cull's
-minion-kill progression payout, Ezreal R's minion-damage row, and every
-Helping Hand branch (Doran's Helm, Tear of the Goddess family). XL because it
-is a new actor class, not a formula fix — it touches the combatant model,
-the event ledger, and every champion/item that references minions.
+**Done — target-class slice only.** The kernel now carries a target-class
+label, `FightConfig.target_class` (`"champion"` default, `"minion"`), plumbed
+through `pipeline.py`'s request parsing to the public `/api/calculate` body.
+It gates class-restricted item EFFECTS: `item_effects.CLASS_RESTRICTED_ON_HITS`
+compiles Doran's Helm's Helping Hand from its typed accessor
+(`dorans_helm_helping_hand_minion_damage`, sourced 5 bonus physical on-hit,
+wiki revision 4034679) into a `class_restricted_per_hits` stream that only a
+minion-class fight arms. Champion-class fights are unchanged and
+golden-identical; `item_coverage` still classifies the Helm `stats_only`
+because its champion-class contribution is still exactly zero.
+
+**Scope note — what did NOT land, and why it is still XL.**
+
+1. *No sourced minion stat block.* The label gates effects, not stats. A
+   minion-class target's health/armor/MR remain caller-supplied, because no
+   minion base-stat table is cached. So a "minion" fight is a
+   caller-shaped target wearing a minion label — it is not a sourced minion.
+2. *No minion actor, no kill events.* There is still no typed minion
+   combatant, no "large minion" flag, and no kill-credit event in the
+   roster/combatant layer or the event ledger.
+3. *Champion ability class clauses are not adjudicated.* Nasus Q permanent
+   stacking off minion kills, Cho'Gath Feast's minion/monster stack cap,
+   Cull's minion-kill progression payout, and Ezreal R's minion-damage row
+   are all untouched. Ability-carried on-hit applications do not carry the
+   class-restricted branch either.
+4. *Unadjudicated class clauses fail closed, they are not modeled.* Any build
+   item whose cached effect text names a target class without an entry in
+   `CLASS_RESTRICTED_ON_HITS` makes a minion-class fight raise, naming the
+   item and clause (`item_effects.target_class_denials`). Statikk Shiv's
+   "increased to 90 against non-champions" and Blade of the Ruined King's
+   minion/monster caps are therefore refusals, not results — a minion-class
+   fight today is only usable for narrow, deliberately-small builds.
+5. *Tear of the Goddess Helping Hand is not armed.* Only Doran's Helm is
+   adjudicated; the Tear family keeps its receipt-only boundary.
+
+Items 1–3 are the remaining XL: a new actor class touching the combatant
+model, the event ledger, and every champion/item that references minions.
 
 ### 3.2 Multi-target / roster refinement
 
