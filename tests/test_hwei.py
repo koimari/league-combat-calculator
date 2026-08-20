@@ -136,3 +136,12 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_signature_passive_is_not_silently_dropped():
+    """Hwei's Signature of the Visionary prices its armed triggers."""
+    from tests import row_review
+
+    passive = row_review.entry("Hwei", "passive", p_triggers=2)
+    assert passive["proc_count"] == 2
+    assert passive["damage_events"]

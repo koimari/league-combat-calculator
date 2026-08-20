@@ -2069,10 +2069,11 @@ def rebuild_for(baseline):
     metadata = baseline.get("metadata", {})
     if metadata.get("snapshot_kind") != COUPLED_SNAPSHOT_KIND:
         return build_snapshot()
+    exact = bool(metadata.get("exact", False))
     return capture_coupled(
-        COUPLED_SCENARIOS,
+        coupled_scenarios_for(exact=exact),
         producers=cross_participant_producers(),
-        exact=bool(metadata.get("exact", False)),
+        exact=exact,
     )
 
 

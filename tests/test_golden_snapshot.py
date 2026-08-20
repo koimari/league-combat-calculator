@@ -1590,6 +1590,17 @@ class TestExactBaseline:
         assert _load(COUPLED_EXACT)["metadata"]["exact"] is True
         assert _load(COUPLED_BASELINE)["metadata"]["exact"] is False
 
+    def test_rebuild_runs_the_scenario_set_the_baseline_captured(self):
+        """The two modes hold different sets, so `compare` must read the flag."""
+        exact = gs.rebuild_for(_load(COUPLED_EXACT))
+        rounded = gs.rebuild_for(_load(COUPLED_BASELINE))
+        assert exact["metadata"]["exact"] is True
+        assert rounded["metadata"]["exact"] is False
+        assert set(exact["coupled_scenarios"]) >= set(
+            _load(COUPLED_EXACT)["coupled_scenarios"]
+        )
+        assert set(rounded["coupled_scenarios"]) < set(exact["coupled_scenarios"])
+
 
 class TestFingerprintsReceipt:
     """The receipt is the sole home of every golden shape count (criterion 2)."""

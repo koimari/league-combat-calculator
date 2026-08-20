@@ -127,3 +127,14 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_gangplanks_proc_count_and_ult_upgrades():
+    """The passive prices ten proc legs; both R upgrades author a row."""
+    from tests import row_review
+
+    assert row_review.parts("Gangplank", "passive", p_procs=1)[0].count == 10
+    upgraded = row_review.parts(
+        "Gangplank", "R", r_fire_at_will=True, r_deaths_daughter=True
+    )
+    assert len(upgraded) == 2

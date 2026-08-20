@@ -36,3 +36,11 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Skarner")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_published_options_are_the_one_the_module_reads():
+    """Skarner's only choice is which Q he casts."""
+    from src.calculator.champions import get_champion_options_meta
+
+    keys = {option["key"] for option in get_champion_options_meta("Skarner")["options"]}
+    assert keys == {"q_variant"}

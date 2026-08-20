@@ -57,18 +57,9 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| E1 | `tests/test_cp10_batch_01..11.py` (11 files, ~1.1k lines) | One ~100-line template over 12-champion slices of a batch schedule that no longer exists. | One parametrized test over `registered_champion_names()`. |
-| E2 | `tests/test_f2_rotation.py` (1,024) vs `test_f3_rotation_all.py` (1,612) | F3's docstring says it replaces F2's hand-curated seeds; F2's unique cases are a handful of cadence checks. | Fold and delete. |
 | E3 | `tests/test_migration_frontier.py:150-170,305` (`REPORT_TIP="067c94c"`), `tests/test_trigger_stream.py` ~2711-2800 (`git archive <commit>` per test) | Closed-campaign git walks inside kept product tests; the reason CI keeps `fetch-depth: 0`. | Pin the artefacts, drop the history walk, shallow-fetch CI. |
-| E5 | `tests/test_p7_validation.py::_payload` | Still sends `one_rotation` with no `target_*` — not the UI's shape (`_ui_payload` is). | Switch. |
-| E6 | `tests/test_engine.py::TestDedicatedDispatch::test_dispatcher_fallback_uses_engine` | Name and docstring say "fallback"; nothing falls back. | Rename. |
-| E7 | `scripts/pylint_ratchet.py` + `tests/test_pylint_ratchet.py`; `docs/receipts/campaign-fingerprints.json["pylint"]` | A per-file ratchet no CI step runs and no test compares to the live receipt (197 pinned files drift silently). | Wire as a gate or cut. |
-| E8 | `scripts/golden_snapshot.py compare scripts/golden_coupled_exact.json` | Reports 7 spurious diffs (24 vs 20 scenarios) — `compare` ignores the file's `exact` flag; only the pytest path compares the exact set. | Honour the flag. |
 | E9 | `scripts/plan_audit.py` | No refresh mode for locator drift — five doc-only re-pin commits this campaign; `value=24` allowance stale (entries is 25); 7 more line pins into `participant_timeline.py` / `program/compile.py` / `transitions.py` will drift on the next edit. | `--refresh-drift` (difflib line map from the last-verified commit); staleness check on allowances. |
-| E10 | `.github/workflows/tests.yml:62` `TODO(issue #139)` | `champion_optimizer_matrix` receipt is not schema-validated. | Validate it like the others. |
-| E11 | `scripts/coverage_census.py check` | Exact dict equality with the receipt: any roster/shop/certified-item change must regenerate `docs/coverage-census.json` in the same PR. | One line in `add-champion` / `add-item-effect` skills. |
 | E12 | `tests/coverage_resolver.py` (1.8k) + `test_coverage_claims.py` (2.7k, subprocess pytest at `:654`) + `coverage_evidence.py` (1.1k) | 5.6k lines proving evidence strings name real symbols, run through `conftest.py` on every `pytest -k`. | Not deletable; worth knowing it is the largest non-domain cost per run. |
-| E13 | `scripts/issue_gate.py`, `scripts/rengar_pen_breakpoints.py` (597) | Nothing executes `issue_gate` (a test asserts the filename exists); the Rengar script is test-only with no doc. | Purpose test each; cut or document. |
 | E14 | `scripts/load_sanity.py` | Updated in 39d3794 for `checks.cache`; not run live (needs `DATABASE_URL`/`REDIS_URL`). | Run once against a deployed target. |
 
 ## F. Data and receipts

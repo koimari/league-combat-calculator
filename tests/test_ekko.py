@@ -1,7 +1,7 @@
 """Tests for the Ekko champion module."""
 
 from src.calculator.champions import ekko
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -33,3 +33,9 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Ekko")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_ekkos_delayed_return_and_stack_procs():
+    """Q's second leg is the 2s return; the passive prices the armed proc."""
+    assert row_review.parts("Ekko", "Q")[1].time_offset == 2.0
+    assert row_review.entry("Ekko", "passive", p_procs=1)["proc_count"] == 1

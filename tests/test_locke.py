@@ -100,3 +100,10 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+def test_the_soul_nail_casts_price():
+    """Q prices with the soul nails the option arms."""
+    from tests import row_review
+
+    assert row_review.priced("Locke", "Q", q_casts=3, soul_nails=3) > 0

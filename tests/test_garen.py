@@ -109,3 +109,12 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_judgments_spin_count_and_shred_threshold():
+    """E's spins are one counted row and its shred names the hits it needs."""
+    from tests import row_review
+
+    entry = row_review.entry("Garen", "E")
+    assert entry["parts"][0].count >= 7
+    assert entry["target_debuff"]["threshold_hits"] == 6

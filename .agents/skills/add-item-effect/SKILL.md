@@ -261,6 +261,7 @@ def test_my_item_reads_from_registry(self, champion_data: dict, monkeypatch) -> 
 
 ## Common Pitfalls
 
+- **The census receipt is exact**: modelling an item moves `docs/coverage-census.json`, and CI's `coverage-census` job compares it dict-for-dict — regenerate it (`python scripts/coverage_census.py run --output docs/coverage-census.json`, ~10 min) in the same commit.
 - **Parser first**: Always check if values can be parsed from JSON before hardcoding. Only hardcode values that truly aren't in the data.
 - **No hardcoded values in stats.py**: All item-specific numeric values come from `ITEM_EFFECTS` via the stat-passive accessors, with no literal fallbacks anywhere. This ensures values auto-update when wiki data is refreshed and that parser failures surface loudly instead of silently using stale numbers (the Statikk Shiv bug class).
 - **Penetration order**: Percent penetration applies before flat penetration

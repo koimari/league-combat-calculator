@@ -85,3 +85,11 @@ class TestPricedRows:
         }
         per_tick = row_review.cached_row("Swain", "R", "Magic Damage per Tick")
         assert row_review.priced("Swain", "R", r_variant=0) == pytest.approx(per_tick)
+
+
+def test_the_published_options_are_the_one_the_module_reads():
+    """Swain's only choice is which R cast the fight prices."""
+    from src.calculator.champions import get_champion_options_meta
+
+    keys = {option["key"] for option in get_champion_options_meta("Swain")["options"]}
+    assert keys == {"r_variant"}

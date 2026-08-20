@@ -86,3 +86,8 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("LeBlanc")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+def test_a_consumed_mark_leaves_one_q_row():
+    """Q's mark detonation is the same row, not a second one."""
+    assert len(row_review.parts("LeBlanc", "Q", q_consume=True, r_mimic="Q")) == 1

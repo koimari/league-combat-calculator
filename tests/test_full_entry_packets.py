@@ -1,0 +1,216 @@
+"""Every full-entry reviewed champion: its source receipts and its packet.
+
+A full-entry module is one whose first source is the League Wiki *parent
+entry* — the receipt that says the whole page was reviewed rather than one
+ability template (``docs/full-wiki-entry-review-requirement.md``).  The
+roster below is that population, written down so it cannot shrink in
+silence; the tests derive everything else from the modules themselves.
+
+Per-champion packet facts live in that champion's own test file.
+"""
+
+import importlib
+import urllib.parse
+
+import pytest
+
+from src.calculator.champions import (
+    _CHAMPION_MODULES,
+    engine_registration_kind,
+    get_champion_options_meta,
+    parse_champion_abilities,
+)
+from src.calculator.data_fetcher import get_champion
+from tests import row_review
+
+FULL_ENTRY = (
+    "Draven",
+    "Ekko",
+    "Elise",
+    "Evelynn",
+    "Fiddlesticks",
+    "Fiora",
+    "Fizz",
+    "Gangplank",
+    "Garen",
+    "Gragas",
+    "Graves",
+    "Gwen",
+    "Hecarim",
+    "Heimerdinger",
+    "Hwei",
+    "Illaoi",
+    "Irelia",
+    "Ivern",
+    "Janna",
+    "Jax",
+    "Jhin",
+    "K'Sante",
+    "Karma",
+    "Kassadin",
+    "Katarina",
+    "Kayle",
+    "Kayn",
+    "Kennen",
+    "Kha'Zix",
+    "Kindred",
+    "Kled",
+    "LeBlanc",
+    "Lee Sin",
+    "Leona",
+    "Lillia",
+    "Locke",
+    "Lucian",
+    "Lulu",
+    "Lux",
+    "Malphite",
+    "Malzahar",
+    "Maokai",
+    "Master Yi",
+    "Mel",
+    "Milio",
+    "Miss Fortune",
+    "Mordekaiser",
+    "Morgana",
+    "Naafiri",
+    "Nami",
+    "Nasus",
+    "Nautilus",
+    "Neeko",
+    "Nidalee",
+    "Nilah",
+    "Nocturne",
+    "Nunu & Willump",
+    "Olaf",
+    "Pantheon",
+    "Poppy",
+    "Pyke",
+    "Quinn",
+    "Rammus",
+    "Rek'Sai",
+    "Rell",
+    "Renata Glasc",
+    "Renekton",
+    "Rengar",
+    "Riven",
+    "Rumble",
+    "Ryze",
+    "Samira",
+    "Sejuani",
+    "Senna",
+    "Seraphine",
+    "Sett",
+    "Shaco",
+    "Singed",
+    "Sion",
+    "Sivir",
+    "Skarner",
+    "Smolder",
+    "Sona",
+    "Swain",
+    "Sylas",
+    "Talon",
+    "Taric",
+    "Teemo",
+    "Thresh",
+    "Tristana",
+    "Trundle",
+    "Tryndamere",
+    "Twisted Fate",
+    "Twitch",
+    "Udyr",
+    "Urgot",
+    "Varus",
+    "Veigar",
+    "Vel'Koz",
+    "Vex",
+    "Viego",
+    "Viktor",
+    "Vladimir",
+    "Volibear",
+    "Warwick",
+    "Xayah",
+    "Xerath",
+    "Xin Zhao",
+    "Yasuo",
+    "Yone",
+    "Yorick",
+    "Yunara",
+    "Yuumi",
+    "Zaahen",
+    "Zac",
+    "Zed",
+    "Zeri",
+    "Zilean",
+    "Zoe",
+    "Zyra",
+)
+
+_SLOTS = {"passive", "Q", "W", "E", "R"}
+
+
+def _module(name: str):
+    return importlib.import_module(
+        f"src.calculator.champions.{_CHAMPION_MODULES[name]}"
+    )
+
+
+def _armed_options(name: str) -> dict:
+    """Every declared option at the value that arms the row it gates.
+
+    A packet slot the module hides behind an option (Ekko's Resonance
+    stacks, Elise's spider form, Fiora's vitals) prices nothing at the
+    default, so a coverage sweep that never arms them proves nothing.
+    """
+    armed: dict[str, object] = {}
+    for option in get_champion_options_meta(name)["options"]:
+        kind, default = option["type"], option["default"]
+        if kind == "bool":
+            armed[option["key"]] = True
+        elif isinstance(default, (int, float)) and not isinstance(default, bool):
+            armed[option["key"]] = option.get("max", default)
+        else:
+            armed[option["key"]] = default
+    return armed
+
+
+def test_the_roster_is_the_population_the_modules_declare() -> None:
+    """The list above and the tree cannot disagree about who was reviewed."""
+    declared = tuple(
+        sorted(
+            name
+            for name in _CHAMPION_MODULES
+            if str(_module(name).SOURCES[0]["label"]).endswith("parent entry")
+        )
+    )
+    assert declared == FULL_ENTRY
+
+
+@pytest.mark.parametrize("name", FULL_ENTRY)
+def test_a_full_entry_module_cites_its_parent_page_and_every_ability(name) -> None:
+    """The parent entry leads, and an ability template follows for each slot."""
+    module = _module(name)
+    assert engine_registration_kind(name) == "reviewed_module"
+    parent = module.SOURCES[0]
+    assert parent["label"].endswith("parent entry")
+    page = urllib.parse.unquote(parent["url"].rsplit("/", 1)[-1]).replace("_", " ")
+    assert page == name, f"{name}'s parent entry cites {page!r}"
+    assert len(module.SOURCES) >= len(_SLOTS)
+
+
+@pytest.mark.parametrize("name", FULL_ENTRY)
+def test_a_full_entry_packet_prices_every_slot(name) -> None:
+    """With its own options armed, all five slots author a typed row."""
+    parsed = parse_champion_abilities(
+        get_champion(name),
+        18,
+        row_review.STATS["ability_power"],
+        ability_ranks=dict(row_review.RANKS),
+        champion_options=_armed_options(name),
+        champion_stats=dict(row_review.STATS),
+        target_stats=dict(row_review.TARGET),
+    )
+    assert _SLOTS <= set(parsed), f"{name} prices no {sorted(_SLOTS - set(parsed))}"
+    for slot, entry in parsed.items():
+        assert "parts" in entry, f"{name} {slot} authors no parts"
+        assert "damage_type" in entry, f"{name} {slot} has no damage type"

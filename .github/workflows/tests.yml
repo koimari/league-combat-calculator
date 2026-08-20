@@ -58,10 +58,7 @@ jobs:
         # receipt is valid and keeps its failure signal.
         if: ${{ !cancelled() }}
         run: |
-          python scripts/validate_receipt.py             artifacts/backend/acceptance_matrix.json
-          # TODO(issue #139): add champion_optimizer_matrix.json here once
-          # the #139 envelope lands in scripts/champion_optimizer_matrix.py
-          # (that file is owned by the #136/#145 fix batch this cycle).
+          python scripts/validate_receipt.py artifacts/backend/acceptance_matrix.json artifacts/backend/champion_optimizer_matrix.json
 
       - name: Upload backend acceptance evidence
         if: ${{ always() }}

@@ -1,7 +1,7 @@
 """Tests for the Evelynn champion module."""
 
 from src.calculator.champions import evelynn
-from tests import cc_review
+from tests import cc_review, row_review
 
 
 class TestReviewedCrowdControl:
@@ -32,3 +32,9 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Evelynn")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_evelynns_recasts_and_execute():
+    """Three Q recasts author four legs; the execute prices above the base."""
+    assert len(row_review.parts("Evelynn", "Q", q_recasts=3)) == 4
+    assert row_review.priced("Evelynn", "R", r_execute_ready=True) > 500

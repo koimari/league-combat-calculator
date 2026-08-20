@@ -258,3 +258,12 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_fizzs_typed_q_and_sized_ult():
+    """The trident's Q carries both damage types; R prices by fish size."""
+    from tests import row_review
+
+    parts = row_review.parts("Fizz", "Q", e_variant=1)
+    assert {part.damage_type for part in parts} == {"magic", "physical"}
+    assert row_review.priced("Fizz", "R", r_size=2) > 500

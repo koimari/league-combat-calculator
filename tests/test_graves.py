@@ -113,3 +113,14 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_states_the_shotgun_override_and_a_two_leg_q():
+    """The passive replaces the auto with all pellets; Q is smoke plus powder."""
+    from tests import row_review
+
+    override = row_review.entry("Graves", "passive", p_critical_pellets=True)[
+        "auto_attack_override"
+    ]
+    assert override["damage_ratio"] > 2.0
+    assert len(row_review.parts("Graves", "Q")) == 2

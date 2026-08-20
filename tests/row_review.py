@@ -59,6 +59,11 @@ def _slot_entry(champion, slot, options):
     return parsed[slot]
 
 
+def entry(champion, slot, **options):
+    """One slot's whole parsed row — the packet fields beside its damage."""
+    return _slot_entry(champion, slot, options)
+
+
 def priced(champion, slot, **options):
     """The raw total the champion's module prices for one slot."""
     return _slot_entry(champion, slot, options)["total_raw"]

@@ -154,6 +154,7 @@ class TestOptionsDeclarationValidity:
                     source,
                 )
                 assert isinstance(source["revision_id"], int), (name, source)
+                assert source["revision_id"] > 0, (name, source)
 
     def test_all_registered_modules_expose_manifest_or_inline_receipts(self) -> None:
         """The full registry has no provenance-empty champion metadata."""

@@ -40,3 +40,11 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Rell")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_published_options_are_the_one_the_module_reads():
+    """Rell's only choice is which W she casts."""
+    from src.calculator.champions import get_champion_options_meta
+
+    keys = {option["key"] for option in get_champion_options_meta("Rell")["options"]}
+    assert keys == {"w_variant"}

@@ -127,3 +127,11 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_packet_prices_every_drain_and_crowstorm_tick():
+    """Both channels are one row carrying the tick count the option asks for."""
+    from tests import row_review
+
+    assert row_review.parts("Fiddlesticks", "W", w_ticks=8)[0].count == 8
+    assert row_review.parts("Fiddlesticks", "R", r_ticks=20)[0].count == 20

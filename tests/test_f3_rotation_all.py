@@ -1,18 +1,15 @@
-"""F3 — algorithmic optimal-order derivation for every registered champion.
+"""Algorithmic optimal-order derivation, for every registered champion.
 
-The F2 combo layer hand-curated the ``CAST_ORDER_OVERRIDES`` seeds; every other
-champion fell back to the certified/default order with a generic
-rationale.  F3 replaces that with a fully algorithmic derivation
-(:func:`src.calculator.rotation_resolver.derive_champion_rule`): the
-order is computed on the fly from the atomized ability data — typed
+:func:`src.calculator.rotation_resolver.derive_champion_rule` computes a
+champion's cast order on the fly from the atomized ability data — typed
 parsed atoms (``dot_duration``, ``on_hit``, ``applies_dot_stack``,
 ``post_hit_proc``, ``target_debuff``, ``stat_buff``, ``cc_kind``),
 module OPTION rotation declarations (``target_poisoned``,
 ``blight_stacks``, ``p_illumination_procs``, ``moonlight_reset``, ...),
-and the structured wiki attribute rows.
+and the structured wiki attribute rows.  The hand seeds it defers to, and
+the receipt the resolver publishes, are ``tests/test_f2_rotation.py``'s.
 
-This suite asserts the combo invariants the product owner asked for, for
-EVERY champion:
+This suite asserts the combo invariants for EVERY champion:
 
 (a) a derived order never violates a detected setup/consume edge
     (setup before consume: E-before-poison, detonate-before-stack-
@@ -55,17 +52,6 @@ from src.calculator.rotation_resolver import (
     resolve_cast_order,
     resolved_edges,
 )
-
-# ── the verified seeds stay as documented overrides ──
-_OVERRIDE_CHAMPIONS = [
-    "Cassiopeia",
-    "Varus",
-    "Brand",
-    "Vladimir",
-    "Annie",
-    "Lux",
-    "Zed",
-]
 
 # Documented seed exceptions: the verified F2 seed deliberately deviates
 # from a data edge (the seed's judgment wins; each is justified in the
@@ -248,31 +234,9 @@ def _edge_kinds(edges):
 
 
 class TestOverrideSeeds:
-    def test_table_holds_exactly_the_verified_seeds(self) -> None:
-        assert set(CAST_ORDER_OVERRIDES) == set(_OVERRIDE_CHAMPIONS)
-
-    def test_the_suite_agrees_with_the_published_frontier(self) -> None:
-        """Criterion 13: the frontier is counted, and the counts agree.
-
-        ``docs/cast-dependency-audit.json`` publishes which seeds survive
-        and why.  A suite that listed a different set would let the
-        frontier be driven down in the receipt while the tests kept
-        passing against a set nobody had retired.
-        """
-        import json
-        from pathlib import Path
-
-        receipt = json.loads(
-            (
-                Path(__file__).resolve().parents[1]
-                / "docs"
-                / "cast-dependency-audit.json"
-            ).read_text(encoding="utf-8")
-        )
-        frontier = receipt["order_override_frontier"]
-        assert sorted(_OVERRIDE_CHAMPIONS) == frontier["champions"]
-        assert frontier["entries"] == len(_OVERRIDE_CHAMPIONS)
-        assert frontier["reasons"]["pending_primitive"] == 0
+    """Which champions seed, and why, is stated once in
+    ``tests/test_f2_rotation.py``; this suite asks only what the derivation
+    does when it meets one."""
 
     def test_seed_rules_are_not_marked_derived(self) -> None:
         for name, rule in CAST_ORDER_OVERRIDES.items():
@@ -281,7 +245,7 @@ class TestOverrideSeeds:
 
     def test_seed_orders_win_over_the_algorithm(self, champion_by_name) -> None:
         """The table is checked FIRST — the derived path never touches seeds."""
-        for name in _OVERRIDE_CHAMPIONS:
+        for name in CAST_ORDER_OVERRIDES:
             parsed = _parse(champion_by_name[name], 11, (), {})
             order, rule = _resolve(champion_by_name[name], parsed)
             assert rule is not None and rule.derived is False
@@ -333,7 +297,7 @@ class TestEdgeInvariants:
     ) -> None:
         """The verified seeds are truth; where a seed deviates from a data
         edge it is a DOCUMENTED exception with the seed's own judgment."""
-        for name in _OVERRIDE_CHAMPIONS:
+        for name in CAST_ORDER_OVERRIDES:
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
             order = list(CAST_ORDER_OVERRIDES[name].order)
