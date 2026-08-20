@@ -1,11 +1,7 @@
 """Tests for the slot-archetype engine (engine.py) and slotlib archetypes.
 
 Two layers:
-- Dispatch: unregistered champions route to the engine running
-  GENERIC_SLOTS. (The Phase 3a byte-for-byte equivalence tests against
-  the legacy generic parser retired with generic_parser.py itself —
-  the generic path's behavior is locked by tests/test_generic_path.py
-  and the golden snapshot.)
+- Dispatch: every cached champion routes to its registered module.
 - Engine unit tests on synthetic slot maps / champion JSON: phase
   ordering, insertion order within a phase, zero-damage entry emission,
   and the shared factory params (source / cooldown_from / casts / ranks).
@@ -16,7 +12,6 @@ import json
 import pytest
 
 from src.calculator.ability_spec import DamagePart, Disposition
-from src.calculator.champions import GENERIC_SLOTS
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     AMP,
@@ -80,12 +75,6 @@ def _default_target(**overrides: float) -> dict[str, float]:
     }
     stats.update(overrides)
     return stats
-
-
-def _engine_parse(champ: dict, *args, **kwargs) -> dict:
-    """Run a champion through the engine with the generic slot map."""
-    parse = build_parser(GENERIC_SLOTS, champ.get("name", ""))
-    return parse(champ, *args, **kwargs)
 
 
 def _leveling(attribute: str, values: list, units: list | None = None) -> dict:

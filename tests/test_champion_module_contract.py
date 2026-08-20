@@ -11,7 +11,6 @@ from src.calculator.champions import (
     _CUSTOM_CHAMPION_MODULES,
     get_champion_module_contract,
     parse_abilities,
-    parse_synthetic_champion_abilities,
 )
 from src.calculator.champions.module_contract import (
     ChampionModuleContractError,
@@ -68,7 +67,7 @@ def test_jayce_runtime_and_published_review_metadata_share_one_module():
     assert contract.review_status == jayce.REVIEW_STATUS == "reviewed_module"
 
 
-def test_synthetic_parser_is_explicit_and_dispatcher_fails_closed():
+def test_dispatcher_fails_closed_for_an_unregistered_name():
     fixture = {
         "name": "Synthetic Fixture",
         "abilities": {slot: [] for slot in REQUIRED_SLOTS},
@@ -76,8 +75,6 @@ def test_synthetic_parser_is_explicit_and_dispatcher_fails_closed():
 
     with pytest.raises(KeyError, match="no registered champion module"):
         parse_abilities("Synthetic Fixture", fixture, 1, 0.0)
-
-    assert parse_synthetic_champion_abilities(fixture, 1, 0.0) == {}
 
 
 def test_review_campaign_batch_modules_and_imports_are_gone():

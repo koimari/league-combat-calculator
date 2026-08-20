@@ -10,7 +10,6 @@ import importlib
 from typing import Any
 
 from ..cast_dependency import CastDependency
-from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
 from .module_contract import ChampionModuleContract, contract_from_module
 
 # Map display name -> module name within this package.  This is the single
@@ -255,9 +254,7 @@ def parse_abilities(
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion.
 
-    Dispatches to a dedicated reviewed module. Unknown names fail closed;
-    synthetic fixtures must call :func:`parse_synthetic_champion_abilities`
-    explicitly.
+    Dispatches to a dedicated reviewed module. Unknown names fail closed.
 
     Args:
         champion_name: Display name of the champion (e.g., "Ahri").
@@ -275,28 +272,6 @@ def parse_abilities(
     """
     contract = get_champion_module_contract(champion_name)
     return contract.parse_abilities(
-        champion_data,
-        level,
-        total_ability_power,
-        ability_ranks=ability_ranks,
-        champion_options=champion_options,
-        champion_stats=champion_stats,
-        target_stats=target_stats,
-    )
-
-
-def parse_synthetic_champion_abilities(
-    champion_data: dict[str, Any],
-    level: int,
-    total_ability_power: float,
-    ability_ranks: dict[str, int] | None = None,
-    champion_stats: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-    champion_options: dict[str, Any] | None = None,
-) -> dict[str, dict[str, Any]]:
-    """Run the explicitly synthetic/development Wiki parser."""
-
-    return parse_generic_abilities(
         champion_data,
         level,
         total_ability_power,
@@ -940,8 +915,6 @@ def engine_registration_kind(champion_name: str) -> str | None:
 def is_champion_supported(champion_name: str) -> bool:
     """Check whether a champion has ability damage implemented.
 
-    Returns True only for cached champions with a dedicated module. Explicit
-    synthetic/development fixtures use ``parse_synthetic_champion_abilities``
-    and are not advertised as supported.
+    Returns True only for cached champions with a dedicated module.
     """
     return champion_name in _CHAMPION_MODULES

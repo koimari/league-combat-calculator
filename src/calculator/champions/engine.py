@@ -270,11 +270,11 @@ def _stamp_cast_time(
 ) -> None:
     """Stamp a castable entry with its slot JSON's cast time.
 
-    One home instead of every slot parser (module or generic) plumbing
-    it. Only castable entries (they carry a cooldown) occupy the timed
-    fight's shared cast timeline; slot-fn-supplied values win; instant
-    casts (0.0) stay unstamped so entries stay lean and cast-time-less
-    data keeps legacy cast counts.
+    One home instead of every slot parser plumbing it. Only castable
+    entries (they carry a cooldown) occupy the timed fight's shared cast
+    timeline; slot-fn-supplied values win; instant casts (0.0) stay
+    unstamped so entries stay lean and cast-time-less data keeps legacy
+    cast counts.
     """
     if "cooldown" not in entry or "cast_time" in entry or ability_json is None:
         return

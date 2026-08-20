@@ -1,6 +1,5 @@
 """Tests for the shared stats -> abilities -> fight pipeline."""
 
-from copy import deepcopy
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -437,23 +436,16 @@ def test_starting_magic_shield_splits_tdd_from_health_damage(ahri_data):
 
 
 def test_timed_rotation_omits_casts_after_mana_is_exhausted():
+    # Twenty seconds of Karthus's certified W -> Q -> E -> R cadence costs
+    # more mana than he holds, so the tail of the window is omitted.
     params = FightParams.from_request(
-        {
-            "fight_mode": "timed",
-            "fight_duration": 10,
-            "cast_order": ["Q", "W", "E", "R"],
-        },
-        deterministic=True,
+        {"fight_mode": "timed", "fight_duration": 20}, deterministic=True
     )
-    # Keep this as an engine fixture rather than invoking Karthus's public
-    # module, whose sourced contract deliberately supports one rotation only.
-    champion = deepcopy(get_champion("Karthus"))
-    champion["name"] = "Resource Timeline Fixture"
 
-    result = run_fight(champion, 18, [], params, synthetic=True)
+    result = run_fight(get_champion("Karthus"), 18, [], params)
 
-    assert result["breakdown"]["Q"]["casts"] == 5
-    assert result["breakdown"]["E"]["casts"] == 9
+    assert result["breakdown"]["Q"]["casts"] == 9
+    assert result["breakdown"]["E"]["casts"] == 7
     assert any("insufficient resource" in note for note in result["notes"])
     timeline = result["cast_timeline"]
     assert [event["time"] for event in timeline] == sorted(
