@@ -5,9 +5,11 @@ Total Heal) via the heal rule in src/calculator/healing.py.
 
 E8d ally-support: W (Cozy Campfire, Total Heal 70-150 + 15% AP, scope
 one_teammate) and R (Breath of Life, Heal 150-350 + 50% AP, scope
-self_and_all_teammates) heal allies.  The events are authored by the engine's
-ally-support scanner from cached leveling at the cast times; the module
-declares W/R in SLOTS so the fight rotation casts them.
+self_and_all_teammates) heal allies, and E (Warm Hugs, Shield Strength
+45-165 + 45% AP, scope one_teammate) shields one.  The events are authored by
+the engine's ally-support scanner from cached leveling at the cast times (R's
+by the healing rule, fanned out to allies by the participant timeline); the
+module declares W/E/R in SLOTS so the fight rotation casts them.
 """
 
 from .healing_contract import declare_healing_rule
@@ -31,7 +33,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot == "Q" else "out_of_scope") for slot in "PQWER"
+    slot: ("out_of_scope" if slot == "P" else "modeled") for slot in "PQWER"
 }
 
 SELF_HEALING_RULE = declare_healing_rule("Milio")

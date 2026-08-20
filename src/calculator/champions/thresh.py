@@ -120,8 +120,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "in the participant ledger when a teammate is selected",
     "All other CC is utility only — no damage",
 ]
-
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

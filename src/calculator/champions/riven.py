@@ -133,7 +133,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "for 1.5s is a defensive shield on a no-damage dash, outside the "
     "packet's damage model.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

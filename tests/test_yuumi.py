@@ -26,10 +26,15 @@ class TestReviewedCrowdControl:
         assert "slowed by 10% for 1.25 seconds" in cc_review.slot_text(data, "R")
 
     def test_the_ally_slots_stay_absent(self):
-        """W attaches and E shields; neither damages an enemy."""
+        """W attaches and E shields; neither damages an enemy.
+
+        Coverage is about the row a slot publishes, not about damage: E is
+        ``modeled`` on its 165.0 shield to the anchor (test_e8_support.py),
+        while W's attachment has no axis at all.
+        """
         assert "W" not in yuumi.MODULE_CC and "E" not in yuumi.MODULE_CC
         assert get_champion_module_contract("Yuumi").coverage["W"] == "out_of_scope"
-        assert get_champion_module_contract("Yuumi").coverage["E"] == "out_of_scope"
+        assert get_champion_module_contract("Yuumi").coverage["E"] == "modeled"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Yuumi") == []

@@ -109,5 +109,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("out_of_scope" if slot == "P" else "modeled") for slot in "PQWER"
 }

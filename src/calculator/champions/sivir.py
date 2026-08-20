@@ -63,5 +63,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the cast boundary.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
 }
