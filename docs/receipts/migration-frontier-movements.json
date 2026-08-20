@@ -1,0 +1,24 @@
+{
+ "artifact": "migration_frontier_movements",
+ "since": "067c94c",
+ "how_derived": "For every commit after 067c94c that touches docs/migration-frontier.json, each counter value the commit records differently from its parent, with the sentence its own body states the move in. at_report_tip holds those counters as 067c94c left them -- the values the close report's section 5 states -- and applying every movement in order must land on the tree's committed receipt.",
+ "why_it_is_pinned": "The chain is checkable against the tree without reading history: a counter that moves without a row here leaves docs/migration-frontier.json away from this ledger's endpoint, which is red on the commit that lands it. That was the property the walk over 067c94c..HEAD bought, and it cost the suite the whole repository on every run.",
+ "read_by": "tests/test_migration_frontier.py",
+ "at_report_tip": {
+  "counter_5.value": 1,
+  "counter_6.kernel_value": 75,
+  "counter_6.program_value": 0,
+  "counter_7.value": 0
+ },
+ "movements": [
+  {
+   "sha": "b3a594b7",
+   "subject": "feat(survival): the walk prices a declared packet itself, instead of ratioing the pair engine's (campaign-close-declared-pricing)",
+   "counter": "counter_6",
+   "key": "kernel_value",
+   "from": 75,
+   "to": 78,
+   "cause": "`docs/migration-frontier.json` counter 6 moves 75 -> 78: the three `round(..., 6)` calls in the new receipt, spelled exactly as `reprice_dynamic_resistance`'s own receipt spells its. It is a non-increasing ratchet against a baseline of 118, so 78 holds it with headroom, and R-36 puts the regenerated receipt in this commit rather than in one it forbids."
+  }
+ ]
+}
