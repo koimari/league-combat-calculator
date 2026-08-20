@@ -53,22 +53,18 @@ def _item_by_id() -> dict[int, dict[str, Any]]:
 
 
 def item_total(item: dict[str, Any]) -> int:
-    """Return the sourced total shop price, failing closed on missing data.
+    """Return the sourced DDragon total shop price, failing closed.
 
-    Prefers the DDragon total from the atomized economics tables: the wiki
-    cache can carry stale buy prices (Redemption cached at 2250 while the
-    real total is 2300).  Falls back to the cache when no sourced row exists.
+    The atomized economics table is the only home: the wiki cache carries
+    stale buy prices (Redemption cached at 2250 while the real total is
+    2300), so an item with no sourced row is withheld, never priced from it.
     """
     name = str(item.get("name") or "Unknown item")
-    sourced = sourced_total(item)
-    if sourced is not None:
-        return sourced
-    prices = item.get("shop", {}).get("prices", {})
-    if "total" not in prices:
-        raise KeyError(f"{name}: shop.prices.total")
-    total = int(prices["total"])
+    total = sourced_total(item)
+    if total is None:
+        raise KeyError(f"{name}: economics-sourced per_item_sell.total")
     if total <= 0:
-        raise ValueError(f"{name}: shop.prices.total must be positive")
+        raise ValueError(f"{name}: economics-sourced total must be positive")
     return total
 
 
