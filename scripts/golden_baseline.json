@@ -12332,7 +12332,7 @@
             "name": "Starfire passive"
           },
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, time_offset=0.1)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, time_offset=0.1, cc_kind='none')"
           ],
           "rank": 1,
           "resource_cost": 0.0,
@@ -49296,14 +49296,14 @@
       "numeric_leaves": 44217,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "e747e056f682b64b904f5d8bfb9949392dbbc6e7",
+    "git_head": "b0f725236bf85b61808c950b084001da27f0dee9",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1786113359.0537379,
     "patch_last_changed_max": "26.15",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "5d53c9484c4f90fa127068ff05b398e073078438"
+    "src_tree_sha": "2fe2a31f2b0fac50931057a19ba67feb2948169a"
   },
   "registered_champion_fights": {
     "Aatrox": {
