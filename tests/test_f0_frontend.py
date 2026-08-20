@@ -369,6 +369,11 @@ def test_variant_flattening_pins_the_boolean_option_indices():
         "Epicenter Magic Damage",
         "Reduced Damage",
     ]
+    assert [variant["name"] for variant in _wiki_kit("Jayce")[1]["variants"]] == [
+        "Physical Damage",
+        "Physical Damage",
+        "Increased Damage",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -376,6 +381,8 @@ def test_variant_flattening_pins_the_boolean_option_indices():
     [
         ("Ziggs", {"R": 0}, "r_sweet_spot", True),
         ("Ziggs", {"R": 1}, "r_sweet_spot", False),
+        ("Jayce", {"Q": 2}, "accelerated_q", True),
+        ("Jayce", {"Q": 1}, "accelerated_q", False),
         ("Jayce", {"W": 0}, "hammer_stance", True),
         ("Jayce", {"W": 2}, "hammer_stance", False),
         ("Gnar", {"W": 1}, "mega", True),
@@ -387,8 +394,8 @@ def test_variant_buttons_send_booleans_not_variant_indices(
 ):
     """Variant-driven options the backend types as booleans must reach it as
     booleans: the raw index answered ``champion_options.<key> must be true or
-    false`` (Gnar's ``mega``, then Ziggs' ``r_sweet_spot``) and left the whole
-    champion uncalculable."""
+    false`` (Gnar's ``mega``, then Ziggs' ``r_sweet_spot``, then Jayce's
+    ``accelerated_q``) and left the whole champion uncalculable."""
     options = _champion_options_payload(champion, variants, tmp_path)
     assert options[key] is expected
 

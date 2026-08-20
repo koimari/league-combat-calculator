@@ -565,11 +565,18 @@ const SLOT_OPTION_BINDINGS = {
 
 // Champion options the Variant buttons write, mapped to the variant index
 // that means `true`.  The backend types these as booleans, so the payload
-// must never carry the raw variant index (Gnar's `mega: 0` and Ziggs'
-// `r_sweet_spot: 0` each answered "must be true or false").  Indices follow
-// the wiki's packet order: Gnar lists Mini first (mega = 1), while Jayce's
-// hammer kit and Ziggs' epicenter blast come first (0).
-const VARIANT_BOOLEAN_OPTIONS = { "mega": 1, "hammer_stance": 0, "r_sweet_spot": 0 };
+// must never carry the raw variant index (Gnar's `mega: 0`, Ziggs'
+// `r_sweet_spot: 0` and Jayce's `accelerated_q: 0` each answered "must be
+// true or false").  Indices follow the wiki's packet order: Gnar lists Mini
+// first (mega = 1), Jayce's hammer kit and Ziggs' epicenter blast come first
+// (0), and Jayce's Q flattens to To-the-Skies / Shock Blast / accelerated
+// Shock Blast (accelerated_q = 2).
+const VARIANT_BOOLEAN_OPTIONS = {
+  "mega": 1,
+  "hammer_stance": 0,
+  "r_sweet_spot": 0,
+  "accelerated_q": 2,
+};
 
 // The boolean options no single slot claims: global form toggles that
 // re-shape every Q/W/E entry rather than one slot's variant list.
