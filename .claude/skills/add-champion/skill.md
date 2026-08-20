@@ -26,11 +26,18 @@ The named module must publish the fields validated by
   partial row. There is no review-status field; a registered module is
   a reviewed module.
 
-If the module uses `build_packet_module()`, pass champion-specific tick
-counts, parser overrides, event certification, timings, and assumptions from
-that champion file. Pin the accepted packet declaration with the module's
-`PACKET_SHA256`; changed generated evidence must fail closed until the named
-module reviews and accepts the new digest. Print the digest a module must pin:
+If the module uses `build_packet_module()`, pass everything champion-specific
+into that one call: tick counts, event certification (`single_hit_slots`
+reaches packet and wiki_attribute rows), timings, assumptions, slot
+replacements (`slot_parsers`, any slot or a new one), parsers that build on
+the compiled row (`slot_wrappers`, a factory handed the compiled parser), the
+slot surface and its order when it differs (`slot_order`), and `MODULE_CC`
+(`cc_kinds`). Keep what it returns: never rebind `parse_abilities` or `SLOTS`
+afterwards and never restate `PACKET_SPEC` — the contract reads the pin off
+the compiled parser and refuses a module whose parser does not carry it.
+Pin the accepted packet declaration with the module's `PACKET_SHA256`;
+changed generated evidence must fail closed until the named module reviews
+and accepts the new digest. Print the digest a module must pin:
 
 ```bash
 python -c "from src.calculator.champions.packet_module import _packet_specs, packet_spec_sha256; print(packet_spec_sha256(_packet_specs()['Ahri']))"

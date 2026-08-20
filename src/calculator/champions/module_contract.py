@@ -61,41 +61,61 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     cc_kinds: dict[str, str] = field(default_factory=dict)
 
 
+def _present(carriers: tuple[tuple[str, Any, str], ...]) -> list[tuple[str, Any]]:
+    """The carriers that hold something, as ``(label, value)`` rows.
+
+    A packet champion carries its declarations on the artifacts
+    ``build_packet_module`` compiled as well as on the module itself, so
+    one fact can have three carriers.  A chain of ``getattr`` defaults is
+    the wrong way to read them: Python evaluates a default *eagerly*, so a
+    carrier that is present but empty wins over a non-empty one further
+    down the chain and the declaration is discarded with no error — the
+    silent shadowing this contract exists to kill.  So the carriers are
+    surveyed instead: an empty carrier declares nothing and shadows
+    nothing, and :func:`_agreeing` stops the import when two carriers that
+    both declare something disagree, rather than one quietly winning.
+    """
+    return [
+        (label, getattr(carrier, attribute))
+        for label, carrier, attribute in carriers
+        if getattr(carrier, attribute, None)
+    ]
+
+
+def _agreeing(module: ModuleType, declared: list[tuple[str, Any]], what: str) -> Any:
+    """The one value every present carrier holds.
+
+    Raises:
+        ChampionModuleContractError: Two carriers disagree.
+    """
+    first_label, first = declared[0]
+    for label, value in declared[1:]:
+        if value != first:
+            raise ChampionModuleContractError(
+                f"{module.__name__} declares conflicting {what}: "
+                f"{first_label} and {label} disagree"
+            )
+    return first
+
+
 def _declared_cast_dependencies(
     module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
 ) -> tuple[CastDependency, ...]:
     """The one declaration the module, its parser and its slot map agree on.
 
-    A packet champion may carry its declaration on the artifacts
-    ``build_packet_module`` compiled instead of restating it beside them,
-    so three carriers can hold it.  ``PACKET_SPEC`` reads its three places
-    as a chain of ``getattr`` defaults, and Python evaluates a default
-    *eagerly*: a carrier that is present but empty wins over a non-empty
-    one further down the chain and the declaration is discarded with no
-    error.  That is precisely the silent failure this campaign exists to
-    kill, so the lookup here is a survey rather than a chain — an empty
-    carrier declares nothing and therefore shadows nothing, and two
-    carriers that both declare something and disagree stop the import
-    instead of one of them quietly winning.
-
     Raises:
         ChampionModuleContractError: A carrier holds something other than
             a sequence of ``CastDependency``, or two carriers disagree.
     """
-    carriers = (
-        ("module CAST_DEPENDENCIES", module, "CAST_DEPENDENCIES"),
-        ("parse_abilities.cast_dependencies", parser, "cast_dependencies"),
-        ("SLOTS.cast_dependencies", slots, "cast_dependencies"),
+    declared = _present(
+        (
+            ("module CAST_DEPENDENCIES", module, "CAST_DEPENDENCIES"),
+            ("parse_abilities.cast_dependencies", parser, "cast_dependencies"),
+            ("SLOTS.cast_dependencies", slots, "cast_dependencies"),
+        )
     )
-    declared = [
-        (label, getattr(carrier, attribute))
-        for label, carrier, attribute in carriers
-        if getattr(carrier, attribute, None)
-    ]
     if not declared:
         return ()
-
-    rows: list[tuple[str, tuple[CastDependency, ...]]] = []
     for label, value in declared:
         if not isinstance(value, (tuple, list)) or any(
             not isinstance(row, CastDependency) for row in value
@@ -104,16 +124,78 @@ def _declared_cast_dependencies(
                 f"{module.__name__} {label} must be a sequence of "
                 "CastDependency declarations"
             )
-        rows.append((label, tuple(value)))
+    return tuple(
+        _agreeing(
+            module,
+            [(label, tuple(value)) for label, value in declared],
+            "cast dependencies",
+        )
+    )
 
-    first_label, first = rows[0]
-    for label, other in rows[1:]:
-        if other != first:
-            raise ChampionModuleContractError(
-                f"{module.__name__} declares conflicting cast dependencies: "
-                f"{first_label} and {label} disagree"
-            )
-    return first
+
+def _packet_declaration(
+    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
+) -> tuple[dict[str, Any] | None, str | None]:
+    """The reviewed packet evidence and the digest that pins it.
+
+    ``build_packet_module`` verifies the module's ``PACKET_SHA256`` against
+    the packet asset and stamps the accepted spec and digest on the parser
+    it returns and on the slot map.  The parser is what runs, so its stamp
+    is what the contract publishes; the module's own ``PACKET_SHA256`` (and
+    a ``PACKET_SPEC`` it may restate) are surveyed against it, never chained
+    ahead of it.  A module that pins a digest its running parser does not
+    carry has rebound ``parse_abilities`` away from the compiled one — the
+    pin then guards nothing, so registration stops there (rule 7's
+    fail-closed guarantee rests on this pin).
+
+    Raises:
+        ChampionModuleContractError: The carriers disagree, the pin is not
+            a SHA-256 hex digest, the spec is not a dict, the two are not
+            paired, or the module pins a digest its parser does not carry.
+    """
+    spec_rows = _present(
+        (
+            ("module PACKET_SPEC", module, "PACKET_SPEC"),
+            ("parse_abilities.packet_spec", parser, "packet_spec"),
+            ("SLOTS.packet_spec", slots, "packet_spec"),
+        )
+    )
+    digest_rows = _present(
+        (
+            ("module PACKET_SHA256", module, "PACKET_SHA256"),
+            ("parse_abilities.packet_sha256", parser, "packet_sha256"),
+            ("SLOTS.packet_sha256", slots, "packet_sha256"),
+        )
+    )
+    packet_spec = (
+        _agreeing(module, spec_rows, "packet declarations") if spec_rows else None
+    )
+    packet_sha256 = (
+        _agreeing(module, digest_rows, "packet digests") if digest_rows else None
+    )
+    if (spec_rows or digest_rows) and getattr(parser, "packet_sha256", None) is None:
+        raise ChampionModuleContractError(
+            f"{module.__name__} pins a packet digest its parse_abilities does "
+            "not carry: the parser was not the one build_packet_module "
+            "compiled, so the pin guards nothing"
+        )
+    if packet_spec is not None and not isinstance(packet_spec, dict):
+        raise ChampionModuleContractError(
+            f"{module.__name__} PACKET_SPEC must be a dict when declared"
+        )
+    if (packet_spec is None) != (packet_sha256 is None):
+        raise ChampionModuleContractError(
+            f"{module.__name__} packet declaration and digest must be paired"
+        )
+    if packet_sha256 is not None and (
+        not isinstance(packet_sha256, str)
+        or len(packet_sha256) != 64
+        or any(character not in hexdigits for character in packet_sha256)
+    ):
+        raise ChampionModuleContractError(
+            f"{module.__name__} PACKET_SHA256 must be a SHA-256 hex digest"
+        )
+    return packet_spec, packet_sha256
 
 
 def _cast_dependencies(
@@ -280,33 +362,7 @@ def contract_from_module(
             f"{sorted(invalid_coverage)}"
         )
 
-    packet_spec = getattr(
-        module,
-        "PACKET_SPEC",
-        getattr(parser, "packet_spec", getattr(slots, "packet_spec", None)),
-    )
-    if packet_spec is not None and not isinstance(packet_spec, dict):
-        raise ChampionModuleContractError(
-            f"{module.__name__} PACKET_SPEC must be a dict when declared"
-        )
-    packet_sha256 = getattr(
-        module,
-        "PACKET_SHA256",
-        getattr(parser, "packet_sha256", getattr(slots, "packet_sha256", None)),
-    )
-    if (packet_spec is None) != (packet_sha256 is None):
-        raise ChampionModuleContractError(
-            f"{module.__name__} packet declaration and digest must be paired"
-        )
-    if packet_sha256 is not None and (
-        not isinstance(packet_sha256, str)
-        or len(packet_sha256) != 64
-        or any(character not in hexdigits for character in packet_sha256)
-    ):
-        raise ChampionModuleContractError(
-            f"{module.__name__} PACKET_SHA256 must be a SHA-256 hex digest"
-        )
-
+    packet_spec, packet_sha256 = _packet_declaration(module, parser, slots)
     cast_dependencies = _cast_dependencies(module, parser, slots)
     cc_kinds = _module_cc(module, parser, slots)
 

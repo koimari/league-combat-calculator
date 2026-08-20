@@ -215,6 +215,115 @@ class TestModuleCcDeclaration:
             assert set(contract.cc_kinds.values()) <= CC_KIND_VOCABULARY, name
 
 
+class TestPacketPinCarriers:
+    """The packet pin is read off the compiled parser and surveyed, not chained.
+
+    ``build_packet_module`` stamps the accepted spec and digest on the parser
+    it returns; the module's own ``PACKET_SHA256`` is checked against that
+    stamp.  A module that rebinds ``parse_abilities`` after compiling loses
+    the stamp, and with it the only proof that the pin guards the parser
+    that runs — so that shape stops at registration.
+    """
+
+    SPEC = {"slots": {"Q": {"kind": "packet", "base": [1.0]}}}
+    DIGEST = "a" * 64
+
+    @classmethod
+    def _stamped_parser(cls, spec=None, digest=None):
+        def parse_abilities(*args, **kwargs):
+            return {}
+
+        parse_abilities.packet_spec = cls.SPEC if spec is None else spec
+        parse_abilities.packet_sha256 = cls.DIGEST if digest is None else digest
+        return parse_abilities
+
+    def _contract(self, **overrides):
+        module = TestModuleCcDeclaration._module(**overrides)
+        return contract_from_module("Fake", "fake_champion", module)
+
+    def test_the_compiled_parsers_stamp_reaches_the_contract(self):
+        contract = self._contract(
+            parse_abilities=self._stamped_parser(), PACKET_SHA256=self.DIGEST
+        )
+        assert contract.packet_sha256 == self.DIGEST
+        assert contract.packet_spec == self.SPEC
+
+    def test_a_module_spec_disagreeing_with_its_parsers_stamp_fails_import(self):
+        with pytest.raises(
+            ChampionModuleContractError, match="conflicting packet declarations"
+        ):
+            self._contract(
+                parse_abilities=self._stamped_parser(),
+                PACKET_SHA256=self.DIGEST,
+                PACKET_SPEC={"slots": {}},
+            )
+
+    def test_a_module_digest_disagreeing_with_its_parsers_stamp_fails_import(self):
+        with pytest.raises(
+            ChampionModuleContractError, match="conflicting packet digests"
+        ):
+            self._contract(
+                parse_abilities=self._stamped_parser(), PACKET_SHA256="b" * 64
+            )
+
+    def test_a_pin_the_running_parser_does_not_carry_fails_import(self):
+        """The retired shape: ``parse_abilities = build_parser(SLOTS, ...)``
+        after ``build_packet_module`` — the pin was checked against the
+        asset, but the parser it vouches for is not the one that runs."""
+        with pytest.raises(ChampionModuleContractError, match="does not carry"):
+            self._contract(PACKET_SHA256=self.DIGEST)
+
+    def test_an_empty_carrier_shadows_nothing(self):
+        """The eager-default failure the survey replaces: a present-but-empty
+        slot-map carrier must not win over the parser's stamp."""
+
+        class Slots(dict):
+            packet_spec = {}
+            packet_sha256 = ""
+
+        contract = self._contract(
+            parse_abilities=self._stamped_parser(),
+            PACKET_SHA256=self.DIGEST,
+            SLOTS=Slots({"Q": lambda ctx: None}),
+        )
+        assert contract.packet_sha256 == self.DIGEST
+        assert contract.packet_spec == self.SPEC
+
+    def test_every_packet_module_pins_what_its_parser_carries(self):
+        """Roster-wide: one pin, stamped on the parser and the slot map, no
+        restated ``PACKET_SPEC`` anywhere."""
+        packet_modules = 0
+        for name in _CHAMPION_MODULES:
+            contract = get_champion_module_contract(name)
+            module = contract.module
+            assert not hasattr(module, "PACKET_SPEC"), name
+            pin = getattr(module, "PACKET_SHA256", None)
+            if pin is None:
+                assert contract.packet_sha256 is None, name
+                continue
+            packet_modules += 1
+            assert contract.parse_abilities.packet_sha256 == pin, name
+            assert contract.slots.packet_sha256 == pin, name
+            assert contract.packet_sha256 == pin, name
+            assert contract.parse_abilities.packet_spec is contract.packet_spec, name
+        assert packet_modules >= 76
+
+    def test_no_packet_module_builds_a_parser_of_its_own(self):
+        """Source-level: a module that compiles through ``build_packet_module``
+        passes its overrides in and never calls ``build_parser`` itself."""
+        champions = Path("src/calculator/champions")
+        offenders = []
+        for path in sorted(champions.glob("*.py")):
+            if path.name in {"packet_module.py", "module_contract.py"}:
+                continue
+            source = path.read_text(encoding="utf-8")
+            if "build_packet_module(" not in source:
+                continue
+            if "build_parser" in source or "PACKET_SPEC" in source:
+                offenders.append(path.name)
+        assert offenders == []
+
+
 def test_add_champion_skills_describe_the_same_single_module_flow():
     agents = Path(".agents/skills/add-champion/skill.md").read_text(encoding="utf-8")
     claude = Path(".claude/skills/add-champion/skill.md").read_text(encoding="utf-8")

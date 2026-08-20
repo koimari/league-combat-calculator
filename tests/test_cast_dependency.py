@@ -666,7 +666,7 @@ class TestTheContractCarriesDeclarations:
         assert contract.cast_dependencies == ()
 
     def test_the_parser_carries_the_declaration_when_the_module_does_not(self) -> None:
-        """The PACKET_SPEC three-place lookup, for packet-compiled carriers."""
+        """A packet-compiled carrier: the parser stamp alone declares it."""
         module = _champion_module()
         module.parse_abilities.cast_dependencies = (_dep(),)
         contract = contract_from_module("Synthetic", "synthetic", module)
