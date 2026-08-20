@@ -1336,6 +1336,23 @@ class TestDeclaredSiblingReads:
         assert _stat_bonuses("Infinity Edge").ultimate_haste == 0.0
         assert _stat_bonuses("Malignance").ultimate_haste == pytest.approx(20.0)
 
+    def test_a_build_with_no_registry_item_sums_no_terms(self) -> None:
+        """The zero's *type* is public, so the term population is too.
+
+        ``views.publish`` gives a float leaf a disposition entry and an
+        int leaf none, so summing a 0.0 term for an item with no registry
+        entry publishes a stat leaf that was not there before (it moved
+        ``dream_maker_roster`` in the coupled golden).  An item with an
+        entry contributes a float term even when it declares no haste.
+        """
+        assert "Dream Maker" not in item_effects.ITEM_EFFECTS
+        empty = _stat_bonuses("Dream Maker").ultimate_haste
+        assert empty == 0 and isinstance(empty, int)
+
+        assert "Infinity Edge" in item_effects.ITEM_EFFECTS
+        declared = _stat_bonuses("Infinity Edge").ultimate_haste
+        assert declared == 0.0 and isinstance(declared, float)
+
     def test_dropped_energized_distance_names_item_and_key(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

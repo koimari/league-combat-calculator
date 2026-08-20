@@ -4784,8 +4784,17 @@ def resolve_stat_effects(
         bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad + hubris_ad,
         is_melee=is_melee,
     )
+    # The membership filter decides whether an item contributes a term at
+    # all; ``_declared_effect_value`` decides what that term is.  Keeping
+    # the two separate matters publicly: a build holding no registry item
+    # sums an empty generator to int 0, and ``views.publish`` gives a
+    # float leaf a disposition entry and an int leaf none.  An item that
+    # lost its whole entry cannot pass here silently -- a configured item
+    # that parses to nothing raises in ``parse_all_item_effects``.
     ultimate_haste = sum(
-        _declared_effect_value(name, "ultimate_haste") for name in _item_names(items)
+        _declared_effect_value(name, "ultimate_haste")
+        for name in _item_names(items)
+        if name in ITEM_EFFECTS
     )
     harmony_ratio = (
         required_effect_value(
