@@ -6,6 +6,9 @@ import pytest
 
 from src.calculator.champions import source_receipts
 
+# The one asset the isolated loader is told to expect.
+ASSET = "cp10_batch_99_sources.json"
+
 VALID_ROW = {
     "label": "Fixture parent entry",
     "url": "https://wiki.leagueoflegends.com/en-us/Fixture",
@@ -21,6 +24,7 @@ def fixture_receipt_root(tmp_path, monkeypatch):
     monkeypatch.setattr(
         source_receipts, "_PACKET_MANIFEST", tmp_path / "reviewed-packets.json"
     )
+    monkeypatch.setattr(source_receipts, "_SOURCE_ASSETS", (ASSET,))
     source_receipts._source_index.cache_clear()
     yield tmp_path
     source_receipts._source_index.cache_clear()
@@ -31,7 +35,7 @@ def _write(root, name, payload):
 
 
 def test_typed_receipt_rows_load(receipt_root):
-    _write(receipt_root, "cp10_batch_99_sources.json", {"Fixture": [VALID_ROW]})
+    _write(receipt_root, ASSET, {"Fixture": [VALID_ROW]})
     _write(receipt_root, "reviewed-packets.json", {"champions": {}})
 
     assert source_receipts.load_champion_sources("Fixture") == [VALID_ROW]
@@ -49,7 +53,7 @@ def test_typed_receipt_rows_load(receipt_root):
 )
 def test_malformed_receipt_rows_fail_closed(receipt_root, broken):
     """A regenerated asset with untyped rows must raise, not reach /api/config."""
-    _write(receipt_root, "cp10_batch_99_sources.json", {"Fixture": [broken]})
+    _write(receipt_root, ASSET, {"Fixture": [broken]})
     _write(receipt_root, "reviewed-packets.json", {"champions": {}})
 
     with pytest.raises(RuntimeError, match="incomplete"):
@@ -58,6 +62,7 @@ def test_malformed_receipt_rows_fail_closed(receipt_root, broken):
 
 def test_malformed_manifest_fallback_rows_are_skipped(receipt_root):
     """Manifest fallback rows are optional evidence: invalid rows never load."""
+    _write(receipt_root, ASSET, {})
     _write(
         receipt_root,
         "reviewed-packets.json",
@@ -65,4 +70,23 @@ def test_malformed_manifest_fallback_rows_are_skipped(receipt_root):
     )
 
     with pytest.raises(RuntimeError, match="No source receipts"):
+        source_receipts.load_champion_sources("Fixture")
+
+
+def test_an_unenumerated_asset_is_not_runtime_source_of_truth(receipt_root):
+    """A file dropped into ``static/`` the registry never named is ignored."""
+    _write(receipt_root, ASSET, {"Fixture": [VALID_ROW]})
+    _write(receipt_root, "cp10_batch_42_sources.json", {"Stray": [VALID_ROW]})
+    _write(receipt_root, "reviewed-packets.json", {"champions": {}})
+
+    assert source_receipts.load_champion_sources("Fixture") == [VALID_ROW]
+    with pytest.raises(RuntimeError, match="No source receipts"):
+        source_receipts.load_champion_sources("Stray")
+
+
+def test_a_missing_enumerated_asset_fails_closed(receipt_root):
+    """An asset the registry expects and cannot read stops the load."""
+    _write(receipt_root, "reviewed-packets.json", {"champions": {}})
+
+    with pytest.raises(RuntimeError, match="unavailable"):
         source_receipts.load_champion_sources("Fixture")

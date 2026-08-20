@@ -15,6 +15,23 @@ from typing import Any
 _STATIC_ROOT = Path(__file__).resolve().parents[3] / "static"
 _PACKET_MANIFEST = _STATIC_ROOT / "reviewed-packets.json"
 
+# The generated assets this loader reads, named rather than globbed: a file
+# dropped into ``static/`` must not become runtime source of truth, and a
+# missing one must stop the import instead of falling through to the packet
+# manifest.  Batches 01 and 02 published no asset; their champions carry
+# their rows in ``reviewed-packets.json``.
+_SOURCE_ASSETS: tuple[str, ...] = (
+    "cp10_batch_03_sources.json",
+    "cp10_batch_04_sources.json",
+    "cp10_batch_05_sources.json",
+    "cp10_batch_06_sources.json",
+    "cp10_batch_07_sources.json",
+    "cp10_batch_08_sources.json",
+    "cp10_batch_09_sources.json",
+    "cp10_batch_10_sources.json",
+    "cp10_batch_11_sources.json",
+)
+
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
@@ -60,10 +77,11 @@ def _valid_rows(rows: Any) -> list[dict[str, Any]] | None:
 
 @lru_cache(maxsize=1)
 def _source_index() -> dict[str, tuple[dict[str, Any], ...]]:
-    """Index generated receipts without preserving campaign membership."""
+    """Index the enumerated receipt assets, then the manifest's own rows."""
 
     index: dict[str, tuple[dict[str, Any], ...]] = {}
-    for path in sorted(_STATIC_ROOT.glob("cp10_batch_*_sources.json")):
+    for asset in _SOURCE_ASSETS:
+        path = _STATIC_ROOT / asset
         for name, rows in _read_json(path).items():
             valid = _valid_rows(rows)
             if valid is None:
