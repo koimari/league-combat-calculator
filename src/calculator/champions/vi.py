@@ -18,10 +18,10 @@ whenever the walk procs at least once.
 
 P (Blast Shield) is the kit's one defensive row: "Periodically, Vi's next
 ability hit grants her a shield equal to 12% of her maximum health for 3
-seconds."  The P slot is where that shield is priced, but a shield-only
-row has no damage event for the ledger to hang it on
-(``slotlib.attach_self_shield``), so the first ranked damage slot carries
-the same payload to the timeline.
+seconds."  It has no cast and no damage, so it reaches the ledger as a
+``self_shield_events`` payload on the first ranked damage slot — the
+ability hit the wiki says activates it — and the coverage map names that
+channel (``module_contract.COVERAGE_CHANNELS``).
 """
 
 import math
@@ -30,7 +30,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
     attach_self_shield,
@@ -97,70 +97,48 @@ _P_SHIELD_PROSE = re.compile(
 _SHIELD_CARRIERS = ("Q", "E", "R")
 
 
-def _blast_shield(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P (BUFF): price the sourced shield the next ability hit grants.
-
-    The row damages nothing, so the ledger cannot grant from it directly —
-    ``attach_self_shield`` aligns a payload to an ability's damage events
-    and this ability has none.  :func:`_carry_blast_shield` hands the same
-    payload to the first ranked damage slot, which is the ability hit the
-    wiki says activates it.
-    """
-    ability = ctx.ability("P")
-    if ability is None or not _is_primary_target(ctx):
-        return None
-    match = _P_SHIELD_PROSE.search(
-        " ".join(effect.get("description", "") for effect in ability.get("effects", []))
-    )
-    if match is None:
-        return None
-    percent = float(match.group(1))
-    duration = float(match.group(2))
-    amount = percent / 100.0 * ctx.stat("health")
-    if amount <= 0.0:
-        return None
-    entry = {
-        "name": ability.get("name", "Blast Shield"),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "physical",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
-            f"{percent:g}% of maximum health ({amount:.0f}) for "
-            f"{duration:g}s on the next ability hit"
-        ),
-    }
-    return attach_self_shield(
-        entry,
-        amount=amount,
-        duration=duration,
-        source="Blast Shield",
-        detail=entry["detail"],
-    )
-
-
-_blast_shield.phase = BUFF
-
-
 def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
-    """Hand P's shield payload to the first damage slot that can grant it.
+    """Ride P's sourced shield on the first damage slot that can grant it.
 
-    One activation, one shield: the earliest ranked carrier takes the
-    payload and the later ones leave it alone.  Secondary roster targets
-    never carry it — P priced nothing for them — so a roster grants Vi one
-    shield rather than one per enemy.
+    Blast Shield has no cast and no damage of its own, so it reaches the
+    ledger the way Mana Barrier and Adaptive Defenses do: as a
+    ``self_shield_events`` payload on an ability that emits damage events
+    (``slotlib.attach_self_shield``), which the participant ledger turns
+    into a timed self-shield at that event's timestamp.  One activation is
+    one shield, so the earliest ranked carrier takes the payload and the
+    later ones leave it alone; secondary roster targets never carry it, so
+    a roster grants Vi one shield rather than one per enemy.
     """
-    payload = (ctx.results.get("passive") or {}).get("self_shield_events")
-    if not payload:
+    if not _is_primary_target(ctx):
         return entry
     if any(
         (ctx.results.get(slot) or {}).get("self_shield_events")
         for slot in _SHIELD_CARRIERS
     ):
         return entry
-    entry["self_shield_events"] = payload
-    return entry
+    ability = ctx.ability("P")
+    if ability is None:
+        return entry
+    match = _P_SHIELD_PROSE.search(
+        " ".join(effect.get("description", "") for effect in ability.get("effects", []))
+    )
+    if match is None:
+        return entry
+    percent = float(match.group(1))
+    duration = float(match.group(2))
+    amount = percent / 100.0 * ctx.stat("health")
+    if amount <= 0.0:
+        return entry
+    return attach_self_shield(
+        entry,
+        amount=amount,
+        duration=duration,
+        source=ability.get("name", "Blast Shield"),
+        detail=(
+            f"{entry.get('detail', '')}; Blast Shield {percent:g}% of "
+            f"maximum health ({amount:.0f}) for {duration:g}s"
+        ).strip("; "),
+    )
 
 
 def _w_trigger_slot(ctx: SlotCtx) -> str | None:
@@ -633,8 +611,6 @@ SOURCES = load_champion_sources("Vi")
 # W runs first: Q/E read its presence in ctx.results to decide whether
 # the timed shred has a proc to anchor to.
 SLOTS = {
-    # BUFF phase: P prices Blast Shield before any damage slot asks for it.
-    "P": _blast_shield,
     "W": _denting_blows_timed,
     "Q": _vault_breaker,
     "E": _relentless_force,
@@ -652,3 +628,8 @@ SLOTS = {
 MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
+
+# P emits no row of its own — Blast Shield has no cast and no damage — so
+# the map names the channel that pays it instead.
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

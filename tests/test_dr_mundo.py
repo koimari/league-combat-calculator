@@ -492,15 +492,17 @@ class TestMissingHealthIsOneInput:
 class TestSlots:
     """What the module emits, and what it deliberately does not."""
 
-    def test_passive_emits_a_zero_damage_regeneration_row(self, dr_mundo_data) -> None:
-        """Goes Where He Pleases deals no damage; its row prices the regen."""
-        passive = _abilities(dr_mundo_data)["passive"]
-        assert passive["total_raw"] == 0.0
-        assert passive["parts"] == ()
-        assert passive["self_heal_state"]["per_half_second"] > 0.0
+    def test_passive_emits_no_row_and_names_its_channel(self, dr_mundo_data) -> None:
+        """Goes Where He Pleases deals no damage; the heal rule prices it."""
+        from src.calculator.champions import get_champion_module_contract
 
-    def test_all_five_slots_emit(self, dr_mundo_data) -> None:
-        assert set(_abilities(dr_mundo_data)) == {"passive", "Q", "W", "E", "R"}
+        assert "passive" not in _abilities(dr_mundo_data)
+        contract = get_champion_module_contract("Dr. Mundo")
+        assert contract.coverage["P"] == "modeled"
+        assert contract.coverage_channels["P"] == ("self_healing_rule",)
+
+    def test_all_four_castables_emit(self, dr_mundo_data) -> None:
+        assert set(_abilities(dr_mundo_data)) == {"Q", "W", "E", "R"}
 
     def test_skill_order_is_q_then_e_then_w(self, dr_mundo_data) -> None:
         """Q maxed at 9, E at 13, W at 18, R at 6/11/16."""

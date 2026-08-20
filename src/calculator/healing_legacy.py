@@ -23,7 +23,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Iterable
 
-from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
+from .champions.slotlib import (
+    extract_named,
+    extract_value,
+    find_named_leveling,
+    sum_modifiers,
+)
 
 
 def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
@@ -764,18 +769,27 @@ def _legacy_derive_self_healing(
                         }
                     )
                     tick += 0.5
-        # Goes Where He Pleases (P): the module priced the additional
-        # regeneration the cached P states per half second, against the
-        # maximum health R has already raised.  The stream has a cadence of
-        # its own and no cast to read, so it runs the whole fight window.
-        # Champion base regeneration stays outside the ledger (pipeline.py
-        # adds only the item contribution), so this is the passive's
-        # additional stream and nothing else.
-        regen = ability_damages.get("passive", {}).get("self_heal_state")
+        # Goes Where He Pleases (P): "Dr. Mundo regenerates an additional
+        # 0.04% : 0.23% (based on level) of his maximum health every 0.5
+        # seconds" — the cached P's SECOND "Max Health Damage" row (the
+        # cache mislabels both regeneration rows as damage and states the
+        # same stream twice, per five seconds and per half second; ten of
+        # the second row equal the first at every level).  The heal has a
+        # cadence of its own and no cast to read, so it runs the whole
+        # fight window on the half-second the row names, against the
+        # maximum health R has already raised.  Champion base regeneration
+        # stays outside the ledger (pipeline.py adds only the item
+        # contribution), so this is the passive's additional stream alone.
+        level = int(champion_stats.get("level", 0) or 0)
+        regen_percent = extract_value(
+            _ability(champion_data, "P"),
+            "Max Health Damage",
+            level,
+            level=level,
+            occurrence=1,
+        )
         per_half_second = (
-            float(regen.get("per_half_second", 0.0) or 0.0)
-            if isinstance(regen, dict)
-            else 0.0
+            regen_percent / 100.0 * float(champion_stats.get("health", 0.0) or 0.0)
         )
         if per_half_second > 0.0 and duration > 0.0:
             tick = 0.5
