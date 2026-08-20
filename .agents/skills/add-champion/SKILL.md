@@ -76,7 +76,11 @@ pytest
 pylint src/
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json
 python scripts/champion_optimizer_matrix.py
+python scripts/coverage_census.py run --output docs/coverage-census.json
 ```
+
+A new name moves the census roster and CI compares that receipt exactly, so
+the regenerated `docs/coverage-census.json` (~10 min) ships in the same commit.
 
 When evidence inputs are available, set `LCC_WIKI_DB`,
 `LCC_WIKI_QUERY`, and `LCC_AXWORD_SOURCE` to explicit local paths. Do not
