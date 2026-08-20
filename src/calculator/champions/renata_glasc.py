@@ -13,16 +13,37 @@ E9-2 gap fixes:
   cached "Shield Strength" row (50-110 + 50% AP) and rides the E damage
   entry as a module-authored self-shield (E8c payload), so the 1v1 ledger
   grants it without needing a teammate.
-- Q/E damage remain modeled; W bailout and R berserk stay documented
-  out-of-scope rows.
+- Q/E damage remain modeled.
+
+W (Bailout) grants "the target bonus attack speed and bonus movement
+speed ... with both of the bonuses increasing in effectiveness by
+0% : 100% (based on seconds elapsed)" across its 5 seconds, and the
+cache carries both ends of that ramp: "Bonus Attack Speed" (10-30% + 1%
+per 100 AP) at the start and "Maximum Bonus Attack Speed" (20-60% + 2%
+per 100 AP) at the end.  The self cast's mean of the two rides a
+BUFF-phase ``stat_buff``; an ally cast is the roster's and reaches it
+through the ally-support scanner.  The movement-speed rows and the
+fatal-damage revival (a 100%-health restore paid for with a
+10%-maximum-health true burn) have no engine channel, and R (Hostile
+Takeover) berserks its targets — control the engine records as a kind
+without a magnitude.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import attach_self_shield, extract_named, extract_value, proc_damage
+from .slotlib import (
+    STEROID_ZERO,
+    attach_self_shield,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    proc_damage,
+)
 
 PACKET_SHA256 = "384ce3a01847e53d1b8cdaaa0d444174ecfba6cfb31d913a020a45fab7d189fa"
 
@@ -34,6 +55,11 @@ _P_AP_RATIO_PER_100 = 2.0
 # E shield duration (cached E description: "granted a shield for 3
 # seconds").
 _E_SHIELD_DURATION = 3.0
+# Bailout's window is cached W prose ("infuses ... for 5 seconds"); both
+# ends of its ramp are JSON leveling rows.
+_W_DURATION_SECONDS = 5.0
+_W_SELF_CAST = "self"
+_W_ALLY_CAST = "ally"
 
 
 def _leverage_per_proc(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -53,6 +79,46 @@ _leverage = proc_damage(
     name="Leverage",
     phase_order_events=True,
 )
+
+
+def _bailout(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the self cast's ramping attack speed, at the ramp's mean."""
+    ability = ctx.ability("W")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+
+    on_self = str(ctx.option("w_bailout_target")) == _W_SELF_CAST
+    start = extract_named(ability, "Bonus Attack Speed", rank, ctx.stats, {})
+    end = extract_named(ability, "Maximum Bonus Attack Speed", rank, ctx.stats, {})
+    ramp_mean = (start + end) / 2.0
+    share = buff_window_share(ctx, _W_DURATION_SECONDS) if on_self else 0.0
+    bonus_as = ramp_mean * share
+    entry = damage_entry(
+        ability.get("name", "Bailout"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{start:g}% ramping to +{end:g}% bonus attack speed over "
+        f"{_W_DURATION_SECONDS:g}s — mean {ramp_mean:g}%, "
+        f"{bonus_as:g}% applied"
+        if on_self
+        else (
+            f"cast on an ally: the same +{start:g}% to +{end:g}% ramp is "
+            "the roster's and reaches it through the ally-support scanner"
+        )
+    )
+    return entry
+
+
+_bailout.phase = BUFF
 
 
 def _loyalty_program(packet_e):
@@ -125,6 +191,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q"}),
     slot_parsers={
         "P": _leverage,
+        "W": _bailout,
     },
     slot_wrappers={
         "E": _loyalty_program,
@@ -165,14 +232,46 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "sourced Shield Strength (50-110 + 50% AP) — the rockets strike "
     "'Renata and allies'; the ally half needs a roster teammate and is "
     "not priced in the 1v1",
-    "W (Bailout) revival and R (Hostile Takeover) berserk are "
-    "documented out-of-scope rows (no enemy damage).",
+    "W (Bailout) prices its SELF cast: the mean of the two cached "
+    "attack-speed rows (Bonus Attack Speed 10-30% + 1% per 100 AP and "
+    "Maximum Bonus Attack Speed 20-60% + 2% per 100 AP), which is what "
+    "the sourced 0%-to-100% linear ramp averages to over its 5 seconds, "
+    "time-weighted by the share of the fight window the buff covers.  "
+    "w_bailout_target names who the cast lands on; an ally cast is the "
+    "roster's and reaches it through the ally-support scanner.",
+    "W's movement-speed rows and its fatal-damage revival (100% health "
+    "restored, then a 10%-maximum-health true burn every 0.264s) have "
+    "no engine channel, and R (Hostile Takeover) berserks its targets — "
+    "control the engine records as a kind without a magnitude.",
 ]
 
+OPTIONS = list(OPTIONS) + [
+    {
+        "key": "w_bailout_target",
+        "type": "select",
+        "default": _W_SELF_CAST,
+        "label": "Bailout (W) cast on",
+        "rotation": {
+            "role": "self_state",
+            "slot": "W",
+            "note": (
+                "Names who W lands on; only the self branch reaches this "
+                "fighter's stats."
+            ),
+        },
+        "choices": [
+            {"value": _W_SELF_CAST, "label": "Renata herself"},
+            {"value": _W_ALLY_CAST, "label": "An allied champion"},
+        ],
+    },
+]
+
+# R is emitted and grants nothing the engine prices: berserk is a
+# crowd-control kind, and the engine has no magnitude field for it.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",
-    "W": "out_of_scope",
+    "W": "modeled",
     "E": "modeled",
-    "R": "out_of_scope",
+    "R": "no_damage",
 }

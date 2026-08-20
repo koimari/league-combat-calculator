@@ -18,14 +18,27 @@ channel, each tick interpolated between the Minimum Heal Per Tick and
 Maximum Heal Per Tick rows by the fighter's live missing health.  W's
 damage-reduction window is a defensive state the damage model does not
 stage.
+
+R (Highlander) is the attack-speed steroid: the cached "Bonus Attack
+Speed" row (25/45/65%) over the sourced 7-second window, emitted as a
+BUFF-phase ``stat_buff`` so the fight engine's auto count scales with
+it.  R's movement speed, its slow/cripple immunity and its takedown
+cooldown refund have no channel and stay named.
 """
 
 from typing import Any
 
-from .engine import ONHIT, SlotCtx
+from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
+from .slotlib import (
+    STEROID_ZERO,
+    ability_on_hit_entry,
+    damage_entry,
+    extract_cooldown,
+    extract_value,
+)
 
 PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb76783164"
 
@@ -46,6 +59,11 @@ _Q_REAPPEAR_SECONDS = 1.087
 # leveling for the passive.
 _DOUBLE_STRIKE_STACKS = 3
 _SECOND_STRIKE_AD_RATIO = 0.5
+
+# HARDCODED: verify on patch updates — Highlander's window is cached R
+# prose ("For the next 7 seconds, he gains ghosting, bonus attack speed,
+# ..."); the percentage is the JSON's "Bonus Attack Speed" row.
+_R_DURATION_SECONDS = 7.0
 
 
 def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -96,6 +114,39 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the 25/45/65% attack-speed steroid, priced onto the auto count."""
+    ability = ctx.ability("R")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    bonus_as = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
+    entry = damage_entry(
+        ability.get("name", "Highlander"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed for {_R_DURATION_SECONDS:g}s "
+        f"({bonus_as:g}% over the fight window); the row's "
+        f"+{movement:g}% movement speed, the crowd-control immunities and "
+        "the takedown cooldown refund have no channel"
+    )
+    return entry
+
+
+_highlander.phase = BUFF
+
+
 # Reviewed crowd control, read from the cached kit.  Alpha Strike marks
 # and detonates for damage and on-hit effects only — nothing in the entry
 # controls the enemies it strikes (Master Yi is the one made unable to
@@ -117,6 +168,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "P": _double_strike,
         "W": _meditate,
+        "R": _highlander,
     },
     cc_kinds=MODULE_CC,
 )
@@ -134,10 +186,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Maximum Heal Per Tick by the fighter's live missing health "
     "(healing.py 'Master Yi' rule); the channel's damage reduction is "
     "a defensive state not staged by the damage model.",
+    "R (Highlander) grants the cached Bonus Attack Speed row "
+    "(25/45/65%) for the sourced 7 seconds; the fight engine applies it "
+    "to the auto count, time-weighted by the share of the fight window "
+    "the buff covers.  R's bonus movement speed, slow/cripple immunity "
+    "and takedown cooldown refund are named rather than priced.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
-    for slot in "PQWER"
-}
+
+# No MODULE_COVERAGE: all five slots carry a priced row now — W's is the
+# healing rule's self-heal ledger, R's the attack-speed stat_buff — which
+# is exactly what the contract derives from SLOTS.
 
 SELF_HEALING_RULE = declare_healing_rule("Master Yi")

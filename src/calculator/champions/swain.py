@@ -16,17 +16,64 @@ for a whole channel on a 120-second cooldown.  The cache carries no total
 for it — the channel's length is a Demonic Energy economy (50 energy,
 -5 per 0.5s and -7.5 after five seconds, +10 per 0.5s while draining a
 champion) — so pricing it needs a modeled duration, not another row.
+
+P (Ravenous Flock) is the Soul Fragment stack buff: "for each stack,
+Swain gains 15 bonus health permanently".  The stack count is an
+explicit option defaulting to zero, because fragments come from enemy
+champion deaths and from the W / E-recast rips this rotation does not
+author.  The bonus health reaches the parse context before R, whose Heal
+per Tick row carries a "% of his bonus health" ratio.
 """
 
 from dataclasses import replace
 from typing import Any
 
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
+from .slotlib import STEROID_ZERO, damage_entry
 
 PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
+
+# HARDCODED: verify on patch updates — the per-fragment health is cached
+# P prose ("For each stack, Swain gains 15 bonus health permanently");
+# the passive carries no leveling row, and the cache states no cap, so
+# the option's ceiling is the module's declared input bound.
+_P_HEALTH_PER_FRAGMENT = 15.0
+_P_MAX_FRAGMENTS = 30
+
+
+def _ravenous_flock(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: 15 permanent bonus health for each Soul Fragment held."""
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+
+    fragments = min(max(int(ctx.option("p_soul_fragments")), 0), _P_MAX_FRAGMENTS)
+    bonus_health = _P_HEALTH_PER_FRAGMENT * fragments
+    # BUFF phase: R's Heal per Tick row carries a "% of his bonus health"
+    # ratio and parses after this slot.
+    ctx.stats["bonus_health"] = ctx.stat("bonus_health") + bonus_health
+    ctx.stats["health"] = ctx.stat("health") + bonus_health
+    entry = damage_entry(
+        ability.get("name", "Ravenous Flock"),
+        ctx.level,
+        0.0,
+        0.0,
+        "magic",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_health": bonus_health}
+    entry["detail"] = (
+        f"{fragments} Soul Fragment(s) x {_P_HEALTH_PER_FRAGMENT:g} = "
+        f"+{bonus_health:g} permanent bonus health; the 6%-maximum-health "
+        "heal on claiming one is a claim event this rotation does not author"
+    )
+    return entry
+
+
+_ravenous_flock.phase = BUFF
 
 
 def _deaths_hand(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -79,7 +126,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # the one Demonflare nova.  Q prices five bolts and declares their
     # aggregate at the cast instead.
     single_hit_slots=frozenset({"W", "E", "R"}),
-    slot_parsers={"Q": _deaths_hand},
+    slot_parsers={"Q": _deaths_hand, "P": _ravenous_flock},
     assumption_overrides=(
         "Q (Death's Hand) prices the single-target total of all five "
         "bolts — the cached Total Damage row (120/180/240/300/360 + 90% "
@@ -98,9 +145,35 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+OPTIONS = list(OPTIONS) + [
+    {
+        "key": "p_soul_fragments",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": _P_MAX_FRAGMENTS,
+        "label": "Soul Fragments held (15 permanent bonus health each)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Fragments carried into the fight; P's health buff is "
+                "self-state, not a consumed setup."
+            ),
+        },
+    },
+]
+
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Ravenous Flock) grants 15 permanent bonus health per Soul "
+    "Fragment (cached P prose; the passive has no leveling row).  "
+    "p_soul_fragments defaults to 0: fragments are dropped by enemy "
+    "champion deaths and ripped by Vision of Empire and Nevermove's "
+    "recast, none of which this rotation authors, so a damage package "
+    "implies no stack count.  The health reaches the parse context "
+    "before R, whose Heal per Tick row scales with bonus health.",
+]
+
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 SELF_HEALING_RULE = declare_healing_rule("Swain")

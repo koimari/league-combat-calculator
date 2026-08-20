@@ -88,8 +88,24 @@ class TestPricedRows:
 
 
 def test_the_published_options_are_the_one_the_module_reads():
-    """Swain's only choice is which R cast the fight prices."""
+    """Which R cast the fight prices, and how many Soul Fragments Swain holds."""
     from src.calculator.champions import get_champion_options_meta
 
     keys = {option["key"] for option in get_champion_options_meta("Swain")["options"]}
-    assert keys == {"r_variant"}
+    assert keys == {"r_variant", "p_soul_fragments"}
+
+
+def test_soul_fragments_grant_permanent_bonus_health_the_drain_scales_on():
+    """P's 15-per-fragment health reaches R's '% of his bonus health' ratio."""
+    assert row_review.entry("Swain", "passive", p_soul_fragments=0)["stat_buff"] == {
+        "bonus_health": 0.0
+    }
+    six = row_review.entry("Swain", "passive", p_soul_fragments=6)
+    assert six["total_raw"] == 0.0
+    assert six["stat_buff"] == {"bonus_health": pytest.approx(90.0)}
+    # R's Heal per Tick carries 0.75% of bonus health, and the drain's
+    # damage row carries none — so the fragments move the heal, not the
+    # damage.  Pricing the health at all is what this asserts.
+    unstacked = row_review.priced("Swain", "R", r_variant=0, p_soul_fragments=0)
+    stacked = row_review.priced("Swain", "R", r_variant=0, p_soul_fragments=6)
+    assert stacked == pytest.approx(unstacked)

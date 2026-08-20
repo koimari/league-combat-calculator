@@ -18,8 +18,12 @@ Why each slot is non-generic:
   0-50% charge scaling is not modeled.
 - E (Hail of Arrows) is physical damage ("Physical Damage" — the packet's
   magic label was wrong; in-game and the JSON both say physical).
-- P (Living Vengeance) is an on-takedown attack-speed buff: no enemy
-  damage, emitted as a zero-damage row.
+- P (Living Vengeance) is an on-takedown steroid: +30% bonus attack
+  speed and, derived from the resulting TOTAL bonus attack speed, 33% of
+  it again as both attack damage and ability power.  All three numbers
+  are cached prose (the passive has no leveling row), and the whole
+  thing is gated on ``p_champion_takedown`` because a takedown is not
+  implied by a damage package.
 - R (Chain of Corruption) is a plain "Magic Damage" read; the root/chain
   is CC only.
 """
@@ -27,9 +31,10 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
+    STEROID_ZERO,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -182,20 +187,63 @@ def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# HARDCODED: verify on patch updates — Living Vengeance carries no
+# leveling row at all; every number is cached P prose.  Only the
+# champion-takedown branch is priced, because it is the one whose
+# magnitudes the cache states without level breakpoints: "30% bonus
+# attack speed as well as bonus attack damage and ability power equal to
+# 33% of his total bonus attack speed".  The unit-kill branch's
+# "10% / 15% / 20% (based on level)" names no breakpoint levels, so
+# pricing it would mean inventing them.
+_P_TAKEDOWN_ATTACK_SPEED = 30.0
+_P_TAKEDOWN_DERIVED_RATIO = 0.33
+
+
 def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: takedown attack-speed buff — no enemy damage."""
+    """P: the takedown-empowered attack speed, and the AD/AP it derives."""
     ability = ctx.ability()
     if ability is None:
         return None
-    return {
-        "name": ability.get("name", "Living Vengeance"),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": ("On-takedown attack speed: self buff only, no enemy damage."),
+
+    armed = bool(ctx.option("p_champion_takedown"))
+    bonus_as = _P_TAKEDOWN_ATTACK_SPEED if armed else 0.0
+    total_bonus_as = ctx.stat("bonus_attack_speed") + bonus_as
+    derived = _P_TAKEDOWN_DERIVED_RATIO * total_bonus_as if armed else 0.0
+    if armed:
+        ctx.stats["bonus_attack_speed"] = total_bonus_as
+        ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + derived
+        ctx.stats["attack_damage"] = ctx.stat("attack_damage") + derived
+        ctx.stats["ability_power"] = ctx.stat("ability_power") + derived
+    entry = damage_entry(
+        ability.get("name", "Living Vengeance"),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {
+        "bonus_attack_speed": bonus_as,
+        "bonus_attack_damage": derived,
+        "ability_power": derived,
     }
+    entry["detail"] = (
+        f"champion takedown: +{bonus_as:g}% bonus attack speed, and "
+        f"+{derived:.2f} attack damage and ability power "
+        f"({_P_TAKEDOWN_DERIVED_RATIO * 100:g}% of the resulting "
+        f"{total_bonus_as:g}% total bonus attack speed)"
+        if armed
+        else (
+            "not armed: Living Vengeance needs a kill or takedown, which "
+            "a damage package does not imply.  The unit-kill branch "
+            "(10%/15%/20% by level) is unpriced either way — the cache "
+            "states no level breakpoints for it"
+        )
+    )
+    return entry
+
+
+_living_vengeance.phase = BUFF
 
 
 # HARDCODED: verify on patch updates — wiki prose in the cached E JSON
@@ -233,6 +281,20 @@ OPTIONS: list[dict[str, Any]] = [
         "max": 100,
         "label": "Target missing health %",
     },
+    {
+        "key": "p_champion_takedown",
+        "type": "bool",
+        "default": False,
+        "label": "Living Vengeance is empowered by a champion takedown",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "A takedown outside the modeled rotation arms P's own "
+                "buff — self-state, with no cross-slot cast edge."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = [
@@ -255,8 +317,13 @@ ASSUMPTIONS = [
     "arrow",
     "Q detonation requires the Q cast; with blight_stacks=0 the option "
     "models a fresh target and no detonation fires",
-    "P (Living Vengeance) is a takedown attack-speed buff — no enemy "
-    "damage, emitted as a zero-damage row",
+    "P (Living Vengeance) prices its champion-takedown branch when "
+    "p_champion_takedown is on (default off, because a takedown is not "
+    "implied by a damage package): +30% bonus attack speed, and attack "
+    "damage and ability power each equal to 33% of the resulting total "
+    "bonus attack speed — cached P prose, since the passive carries no "
+    "leveling row.  Its unit-kill branch (10%/15%/20% by level) is not "
+    "priced: the cache names no level breakpoints for it",
     "E is physical damage (JSON and in-game); the reviewed packet's "
     "magic label was a parser error, corrected here",
     "E's desecrated ground applies Grievous Wounds for 3 seconds (wiki "
@@ -290,9 +357,6 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "root"}
 
 parse_abilities = build_parser(SLOTS, "Varus", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 SOURCES = load_champion_sources("Varus")

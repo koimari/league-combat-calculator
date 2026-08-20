@@ -83,8 +83,38 @@ class TestPricedRows:
         initial = row_review.cached_row("Zaahen", "W", "Initial Physical Damage")
         subsequent = row_review.cached_row("Zaahen", "W", "Subsequent Physical Damage")
         assert total == pytest.approx(initial + subsequent)
-        assert row_review.priced("Zaahen", "W") == pytest.approx(total)
+        # Read against the unstacked passive: P's Determination buff is a
+        # BUFF-phase bonus-AD grant and W's row carries an 80% bonus-AD
+        # ratio, so a stacked parse is deliberately larger than the row.
+        assert row_review.priced(
+            "Zaahen", "W", p_determination_stacks=0
+        ) == pytest.approx(total)
         assert row_review.packet_row("Zaahen", "W", zaahen)[4] == 120.0
+
+
+class TestDetermination:
+    """P grants %AD, and the BUFF phase hands it to W/E/R before they parse."""
+
+    def test_the_filled_stack_row_replaces_the_per_stack_one(self):
+        filled = row_review.entry("Zaahen", "passive", p_determination_stacks=12)
+        assert filled["total_raw"] == 0.0
+        # 67.2% AD at level 18 (the filled row) on 200 total AD.
+        assert filled["stat_buff"] == {"bonus_attack_damage": pytest.approx(134.4)}
+        # One stack short of the cap reads the per-stack row instead:
+        # 11 x 2.8% of 200 AD.
+        near = row_review.entry("Zaahen", "passive", p_determination_stacks=11)
+        assert near["stat_buff"]["bonus_attack_damage"] == pytest.approx(
+            11 * 0.028 * 200.0
+        )
+        assert row_review.entry("Zaahen", "passive", p_determination_stacks=0)[
+            "stat_buff"
+        ] == {"bonus_attack_damage": 0.0}
+
+    def test_the_buff_reaches_the_bonus_ad_ratios_of_the_later_slots(self):
+        unstacked = row_review.priced("Zaahen", "W", p_determination_stacks=0)
+        filled = row_review.priced("Zaahen", "W", p_determination_stacks=12)
+        # W's 80% bonus-AD ratio applied to the 134.4 the passive granted.
+        assert filled - unstacked == pytest.approx(0.80 * 134.4)
 
 
 class TestQVariants:
@@ -97,8 +127,11 @@ class TestQVariants:
     def test_each_variant_selects_the_matching_sourced_damage_row(self):
         assert [
             option["key"] for option in get_champion_options_meta("Zaahen")["options"]
-        ] == ["q_variant"]
-        entries = [row_review.entry("Zaahen", "Q", q_variant=v) for v in range(3)]
+        ] == ["q_variant", "p_determination_stacks"]
+        entries = [
+            row_review.entry("Zaahen", "Q", q_variant=v, p_determination_stacks=0)
+            for v in range(3)
+        ]
         assert [entry["detail"] for entry in entries] == [
             "Q variant: Total Physical Damage.",
             "Q variant: Physical Damage per Hit.",

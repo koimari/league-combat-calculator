@@ -149,6 +149,25 @@ def missing_hp_fraction(ctx: SlotCtx) -> float:
     return clamp(float(ctx.option("target_missing_hp_pct")), 0.0, 100.0) / 100.0
 
 
+def buff_window_share(ctx: SlotCtx, duration: float) -> float:
+    """Share of the fight window a self-buff lasting *duration* covers.
+
+    A ``stat_buff`` is one scalar for the whole fight, but the steroids
+    champions cast expire.  Blitzcrank's Overdrive set the rule this
+    states once: a buff shorter than the window contributes its own
+    duration's share of the bonus (a 5-second steroid in a 10-second
+    fight is half of it), and a buff at least as long as the window
+    contributes all of it.  The reserved ``fight_duration_seconds``
+    option is zero in one-rotation mode and in a direct parse call —
+    no window, so the per-cast model applies and the whole bonus lands.
+    """
+
+    window = float(ctx.option("fight_duration_seconds"))
+    if window <= duration:
+        return 1.0
+    return duration / window
+
+
 def no_damage(
     ctx: SlotCtx,
     *,

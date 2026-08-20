@@ -9,8 +9,11 @@ Why each slot is non-generic:
   Physical Damage" (the 0-stack base) plus ``e_stacks`` x "Bonus Damage
   Per Stack" — at 4 stacks this equals the wiki's "Full Stack Physical
   Damage" row at every rank. The charge detonates once per cast.
-- Q (Rapid Fire) is an attack-speed buff and P (Draw a Bead) is a
-  ranged-AA bonus: zero-damage rows.
+- Q (Rapid Fire) is the attack-speed steroid, and for a marksman whose
+  output is basic attacks it is the biggest number in the kit: the
+  cached "Bonus Attack Speed" row (60-120%) rides a BUFF-phase
+  ``stat_buff`` so the fight engine's auto count scales with it.
+- P (Draw a Bead) is attack range only: an emitted zero-damage row.
 - W (Rocket Jump) and R (Buster Shot) are plain attribute reads; W's
   takedown/max-stack-detonation reset is CC/state only, and R's
   knockback/stun is CC only.
@@ -19,11 +22,14 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import buff_window_share
 from .slotlib import (
+    STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
     simple_damage,
 )
 from .source_receipts import load_champion_sources
@@ -32,6 +38,11 @@ from .source_receipts import load_champion_sources
 # ("stacking up to 4 times for a maximum 100% increase"); the damage
 # rows themselves are read from the JSON.
 _E_MAX_STACKS = 4
+
+# HARDCODED: verify on patch updates — Rapid Fire's window is cached Q
+# prose ("gaining bonus attack speed for 7 seconds"); the percentage is
+# the JSON's "Bonus Attack Speed" row.
+_Q_DURATION_SECONDS = 7.0
 
 
 def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -70,19 +81,34 @@ def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: attack-speed steroid — no enemy damage."""
+    """Q: the 60-120% attack-speed steroid, priced onto the auto count."""
     ability = ctx.ability()
     if ability is None:
         return None
-    return {
-        "name": ability.get("name", "Rapid Fire"),
-        "rank": ctx.rank_for(),
-        "cooldown": extract_cooldown(ability, ctx.rank_for()),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": ("Bonus attack speed for 7s: self buff only, no enemy damage."),
-    }
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    share = buff_window_share(ctx, _Q_DURATION_SECONDS)
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    bonus_as = granted * share
+    entry = damage_entry(
+        ability.get("name", "Rapid Fire"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed for {_Q_DURATION_SECONDS:g}s "
+        f"({bonus_as:g}% over the fight window); no enemy damage"
+    )
+    return entry
+
+
+_rapid_fire.phase = BUFF
 
 
 def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -127,8 +153,11 @@ ASSUMPTIONS = [
     "still deal their base AD damage",
     "The charge's 0-40% (+0-12%) crit-chance bonus to its total damage "
     "is not modeled (no crit in the no-items reference)",
-    "Q (Rapid Fire) attack speed and P (Draw a Bead) range are "
-    "zero-damage rows; the AS buff is not applied to the auto count",
+    "Q (Rapid Fire) grants the cached Bonus Attack Speed row (60-120%) "
+    "for 7 seconds; the fight engine applies it to the auto count, "
+    "time-weighted by the share of the fight window the 7-second buff "
+    "covers (the whole bonus in one-rotation mode, which has no window)",
+    "P (Draw a Bead) is attack range only — an emitted zero-damage row",
     "W's takedown/max-stack reset and R's knockback/stun are " "CC/state only",
 ]
 
@@ -157,8 +186,10 @@ MODULE_CC = {"W": "slow", "E": "none", "R": "immobilize"}
 
 parse_abilities = build_parser(SLOTS, "Tristana", cc_kinds=MODULE_CC)
 
+# P is emitted and grants nothing the engine prices (attack range), which
+# is what ``no_damage`` states; Q now carries a priced stat_buff row.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"W", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
 }
 
 SOURCES = load_champion_sources("Tristana")

@@ -15,16 +15,22 @@ bonus), dropping the sourced active damage:
   %missing-health bonus ("Physical Damage" row: 12/16/20% + 5% per 100
   bonus AD of the target's missing health) as a live hp-scaled part.
 
-W damage is unchanged; E/P stay documented out_of_scope, and the
-possession/transform mechanic is inherently out of scope (E8d note).
+W damage is unchanged.  E (Harrowed Path) prices the one grant the
+engine has a channel for: "while inside the mist, Viego gains bonus
+attack speed", the cached "Bonus Attack Speed" row (30-50%) scaled by
+the explicit ``e_mist_uptime`` share of the fight spent on his own
+trail.  Its movement speed and camouflage have no channel.  P stays an
+emitted zero row — possession assumes another champion's whole kit,
+which is inherently out of scope (E8d note).
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    STEROID_ZERO,
     with_item_on_hits,
     damage_entry,
     extract_cooldown,
@@ -157,11 +163,44 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 # both are out_of_scope and author no damage part.
 MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
 
+
+def _harrowed_path(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: the 30-50% attack speed Viego holds while inside his own mist."""
+    ability = ctx.ability("E")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("E")
+    if rank < 1:
+        return None
+
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0
+    bonus_as = granted * uptime
+    entry = damage_entry(
+        ability.get("name", "Harrowed Path"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed inside the mist at "
+        f"{uptime * 100:g}% uptime ({bonus_as:g}% applied); the trail's "
+        "movement speed and camouflage have no channel"
+    )
+    return entry
+
+
+_harrowed_path.phase = BUFF
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Viego",
     PACKET_SHA256,
     single_hit_slots=frozenset({"W"}),
     slot_parsers={
+        "E": _harrowed_path,
         "Q": with_item_on_hits(
             _blade_of_the_ruined_king, effectiveness=1.0, hits=1, triggers=("on_hit",)
         ),
@@ -189,6 +228,22 @@ OPTIONS = list(OPTIONS) + [
             ),
         },
     },
+    {
+        "key": "e_mist_uptime",
+        "type": "int",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "label": "Share of the fight Viego spends inside Harrowed Path (%)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "E",
+            "note": (
+                "Positional uptime of E's own mist — self-state, with no "
+                "cross-slot cast edge."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -204,9 +259,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the %missing-health bonus ('Physical Damage' row 12/16/20% + 5% per "
     "100 bonus AD) as a live hp-scaled part evaluated at the strike; "
     "total_raw is the static base bound.",
+    "E (Harrowed Path) grants the cached Bonus Attack Speed row "
+    "(30-50%) while Viego stands in his own mist; e_mist_uptime "
+    "(default 100%) is that share of the fight, since the trail lasts 8 "
+    "seconds and E's cooldown falls to 6 by rank 5.  The trail's bonus "
+    "movement speed and camouflage have no engine channel.",
     "The possession/transform mechanic is inherently out of scope (E8d "
-    "note); E/P remain documented out_of_scope.",
+    "note): P stays an emitted zero-damage row.",
 ]
+
+# P is emitted and grants nothing the engine prices — Possession assumes
+# another champion's whole kit, which no axis expresses.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
 }
