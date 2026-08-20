@@ -56,7 +56,6 @@ _ROUTE_DEPENDENCIES = [
     "src.calculator.defensive_effects",
     "src.calculator.participant_timeline",
     "src.calculator.champions",
-    "src.calculator.champion_coverage",
     "src.calculator.capabilities",
     "src.calculator.optimizer",
     "src.calculator.stats",

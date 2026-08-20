@@ -11,7 +11,6 @@ from dataclasses import dataclass, field as dataclass_field, replace
 from typing import Any
 
 from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from .champion_coverage import attacker_availability
 from .champions import (
     get_champion_options_meta,
     registered_engine_champion_names,
@@ -455,16 +454,11 @@ VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 
 
 def load_public_champion(name: str) -> dict[str, Any]:
-    """Load one champion that the public UI and engine both support."""
+    """Load one cached champion, translating a data miss into a public 404."""
     try:
-        champion = get_champion(name)
+        return get_champion(name)
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in ENGINE_CHAMPIONS:
-        availability = attacker_availability(champion, VERIFIED_CHAMPIONS)
-        reason = availability["blockers"][0]["label"]
-        raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
-    return champion
 
 
 def resolve_named_item(name: str, *, kind: str = "Item") -> dict[str, Any]:

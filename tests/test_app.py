@@ -2148,7 +2148,7 @@ class TestChampionVerifiedFlags:
         assert by_name["Zoe"] is True
         assert by_name["Zyra"] is True
 
-    def test_unverified_champions_expose_specific_fail_closed_reasons(self):
+    def test_availability_is_the_module_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
         by_name = {champion["name"]: champion for champion in champs}
 

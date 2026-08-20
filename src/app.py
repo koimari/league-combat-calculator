@@ -82,7 +82,6 @@ from src.calculator.champions import (
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
 )
-from src.calculator.champion_coverage import attacker_availability
 from src.calculator.capabilities import public_capability_contract
 from src.calculator.optimizer import (
     get_eligible_boots,
@@ -1007,14 +1006,20 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified`` and ``engine_registered`` are backed by the complete
-    dedicated-module registry. Source receipts and packet assumptions remain
-    available through the config metadata.
+    ``verified``, ``engine_registered`` and ``availability`` are the module
+    registry: a cached champion is an attacker exactly when a validated
+    module is registered for it. Source receipts and packet assumptions
+    remain available through the config metadata.
     """
     champions = fetch_champion_data()
     result = []
     for champ_data in champions.values():
-        availability = attacker_availability(champ_data, _VERIFIED_CHAMPIONS)
+        registration = engine_registration_kind(champ_data["name"])
+        availability = {
+            "ready": registration is not None,
+            "verification": registration,
+            "blockers": [],
+        }
         ability_slots = {}
         for slot in ("P", "Q", "W", "E", "R"):
             ability = _public_ability_entry(
@@ -1034,7 +1039,7 @@ def api_champions():
                 "icon": _https_icon(champ_data.get("icon", "")),
                 "verified": availability["ready"],
                 "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
-                "engine_registration": engine_registration_kind(champ_data["name"]),
+                "engine_registration": registration,
                 "engine_backend_enabled": (champ_data["name"] in _ENGINE_CHAMPIONS),
                 "supported_fight_modes": (
                     list(supported_modes) if supported_modes is not None else None
