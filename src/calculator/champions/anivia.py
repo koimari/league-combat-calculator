@@ -19,9 +19,19 @@ hardcoded.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage
+
+# Glacial Storm's own cadence: the blizzard "deal[s] magic damage every 0.5
+# seconds to enemies within and slow[s] them for 1 second, refreshing every
+# 0.5 seconds while they remain inside", and "increases in size over 1.5
+# seconds", after which it "is empowered to deal 300% damage" (data/
+# champions.json Anivia R).  Both numbers are cached, so the ticks are
+# authored rather than summed onto the cast boundary.
+_R_TICK_INTERVAL = 0.5
+_R_GROWTH_SECONDS = 1.5
 
 
 def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -44,9 +54,40 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Empowered Damage per Tick", rank, ctx.stats, ctx.target
     )
     total = initial_ticks * initial + empowered_ticks * empowered
-    return damage_entry(
+    entry = damage_entry(
         ability.get("name", "Glacial Storm"), rank, 999.0, total, "magic"
     )
+    # Every tick slows what it damages ("slowing them for 1 second,
+    # refreshing every 0.5 seconds while they remain inside"), growing phase
+    # and empowered alike — a fact this module does NOT declare, and not
+    # because the ledger cannot see it: with the ticks authored below, a
+    # ``cc_kind`` here (or a ``dot_duration``) makes Anivia the roster's
+    # first ``enhanced_consume`` producer, R's chill feeding E's "Enhanced
+    # Damage".  That empties the cast-dependency audit's dated
+    # acknowledged-gap list, which answers recorded ruling H6 / D-88 —
+    # reserved by docs/plans/phase-5-cast-dependency.md for its own slice
+    # with its own investigator receipt, not a side effect of this review.
+    parts = [
+        DamagePart(
+            "magic",
+            initial,
+            count=initial_ticks,
+            time_offset=0.0,
+            hit_interval=_R_TICK_INTERVAL,
+        )
+    ]
+    if empowered_ticks:
+        parts.append(
+            DamagePart(
+                "magic",
+                empowered,
+                count=empowered_ticks,
+                time_offset=_R_GROWTH_SECONDS,
+                hit_interval=_R_TICK_INTERVAL,
+            )
+        )
+    entry["parts"] = tuple(parts)
+    return entry
 
 
 OPTIONS = [
@@ -109,11 +150,15 @@ SLOTS = {
 
 # Cached kit review.  E "blasts a freezing wind at the target enemy that
 # deals magic damage" and applies nothing else (Chilled comes from Q and
-# R, and only doubles E's damage).  Q and R are left unreviewed: Q's row is
-# the cached "Total Magic Damage" of the pass-through (which slows) and the
-# recast shatter (which stuns), and R's is every 0.5s blizzard tick (each
-# slowing) summed into one cast-boundary part — neither has a hit the
-# ledger can attach one answer to.
+# R, and only doubles E's damage).  R's ticks now land on their cached
+# every-0.5-second beat, but their slow stays undeclared for a reason that
+# is not the ledger's (see ``_glacial_storm``).
+#
+# Q stays UNREVIEWED regardless, so this kit keeps the coarse control-armed
+# scan: its row is the cached "Total Magic Damage" of the pass-through
+# (which slows) and the recast shatter (which stuns), and the cache times
+# neither — the recast happens "while the ice is in flight after its cast
+# time", on a flight the cache gives a speed for and no distance.
 MODULE_CC = {"E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Anivia", cc_kinds=MODULE_CC)

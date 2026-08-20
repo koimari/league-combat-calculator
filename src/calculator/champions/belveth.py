@@ -52,6 +52,12 @@ Q_DIRECTION_COOLDOWNS = (16.0, 15.0, 14.0, 13.0, 12.0)  # per-direction dash CD
 Q_ON_HIT_EFFECTIVENESS = 1.0  # 26.15 removed the 75% Q on-hit reduction
 E_BASE_SLASHES = 6  # base slash count
 E_BONUS_AS_PER_EXTRA_SLASH = 40.0  # +1 slash per 40% bonus attack speed
+# The frenzy's own length, which is also the slashes' schedule: "Bel'Veth
+# enters a frenzy for 1.5 seconds" and "she rapidly slashes at the nearest
+# enemy ... up to 6 (+ 1 per 40% bonus attack speed) times over the
+# duration" (data/champions.json Bel'Veth E).  A count over a duration is a
+# whole schedule, so the slashes are spaced across it evenly.
+E_DURATION_SECONDS = 1.5
 E_ON_HIT_MIN_EFFECTIVENESS = 0.12  # per-slash on-hits at 0% missing HP
 E_ON_HIT_MAX_EFFECTIVENESS = 0.24  # per-slash on-hits at 100% missing HP
 R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
@@ -197,14 +203,19 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": per_slash * slashes,
         "parts": (
-            # Royal Maelstrom's slash sequence is ordered but the cached
-            # entry has no independent travel-time field.  Keep each slash
-            # on the authored cast boundary rather than inventing spacing.
+            # The slash count and the frenzy's duration are both cached, so
+            # the slashes spread evenly across it: the first on the cast
+            # boundary, the rest one share of the duration apart.  Royal
+            # Maelstrom only slashes — nothing in the cached text controls
+            # what it damages.
             DamagePart(
                 "physical",
                 per_slash,
                 count=slashes,
                 crit_effectiveness=1.0,
+                time_offset=0.0,
+                hit_interval=E_DURATION_SECONDS / slashes,
+                cc_kind="none",
             ),
         ),
         # Each slash applies item on-hits at 12-24%, interpolated by the
@@ -448,12 +459,16 @@ SLOTS = {
 # enemies by 25% : 96% (based on seconds elapsed) for the duration" before
 # its explosion.
 #
-# Q and E stay UNREVIEWED, so this kit keeps the coarse control-armed
-# scan.  Both are control-free in the cache — Void Surge "deal[s] physical
-# damage to enemies she passes through" and Royal Maelstrom only slashes —
-# but each row is one aggregated part of many hits (Q's cardinal dashes, E's
-# "up to 6 (+ 1 per 40% bonus attack speed)" slashes) with no sourced
-# cadence between them, so no event of theirs reaches the ledger.
+# E's slashes are control-free ("Royal Maelstrom" only slashes) and now
+# ride the cached schedule their own row states — a count "over the
+# duration" of a 1.5-second frenzy — so that review is authored on the part
+# in ``_royal_maelstrom``.
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.  It
+# too is control-free in the cache — Void Surge "deal[s] physical damage to
+# enemies she passes through" — but its row is the four cardinal dashes in
+# one part and the cache spaces them with nothing but "incurs a cooldown
+# between casts", a cooldown it never names.
 MODULE_CC = {"W": "knockup", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Bel'Veth", cc_kinds=MODULE_CC)

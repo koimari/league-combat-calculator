@@ -119,14 +119,31 @@ SLOTS = {
     "P": _deathbringer_stance,
 }
 
-# No MODULE_CC: neither damaging row can carry one true answer.  Q (The
-# Darkin Blade) knocks up only "enemies hit within a Sweetspot of the
-# area", which is this module's ``sweetspot`` option, and its row sums all
-# three casts into one part with no cadence between them.  W (Infernal
-# Chains) slows on the first hit ("slowing them for 1.5 seconds") and
-# pulls on the second ("the target is dealt the same physical damage again
-# and pulled to the center of the area"), and its row is the cached Total
-# of both — two hits that do not control alike (the Annie Pyromania rule).
+# No MODULE_CC, and for neither row is the reason a missing cadence — both
+# cadences are cached, and both are refused downstream.
+#
+# Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of
+# the area", which is this module's ``sweetspot`` option, and the cache
+# spaces its three casts ("with a 1-second static cooldown between casts")
+# while naming each strike's damage separately, so the triad reads as three
+# strikes at 0/1/2 seconds.  Two things refuse it: a hit authored past the
+# end of a roster fight leaves the whole incoming packet unusable
+# (``roster_composition.resource_restores`` rejects any event later than
+# the fight duration, and Aatrox's last Q in an eight-second roster fight
+# would land its third strike at 8.85s), and
+# docs/receipts/oracle-P5-resolver-leaf0.json records the ruling that this
+# kit's events are per-ability, not per-activation.
+#
+# W (Infernal Chains) slows on the first hit ("slowing them for 1.5
+# seconds") and pulls on the second, which the cache times exactly ("a
+# tether is formed ... for 1.5 seconds", and at its end "the target is
+# dealt the same physical damage again and pulled to the center of the
+# area").  Splitting the cached Total into those two hits keeps every
+# total, including self-healing, but it splits Umbral Dash's heal from one
+# payment into two — and docs/receipts/oracle-P4B-leaf29.json pins that
+# single payment ("W 157.5 x 0.16 x 2.0 = 50.4") as corpus evidence.
+# Re-pinning an oracle receipt is not this review's to do.
+#
 # R fears "nearby enemy minions and monsters" only and authors no damage
 # part; P is the on-hit stance row.
 parse_abilities = build_parser(SLOTS, "Aatrox")

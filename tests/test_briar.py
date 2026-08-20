@@ -392,8 +392,9 @@ class TestFightIntegration:
 class TestReviewedCrowdControl:
     """Briar's crowd-control review, and the slot that still withholds.
 
-    E's scream lands on the recast after the sourced charge (up to one
-    second), which the row does not author.
+    E's scream lands on the recast at the end of the cached charge, which
+    this module always prices in full - and which the E heal rule times
+    its own ticks off, so the landing stays unauthored.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -411,7 +412,31 @@ class TestReviewedCrowdControl:
         # its explosion damages, and it is not feared.
         assert "fears all non-marked targets" in cc_review.slot_text(data, "R")
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+    def test_chilling_screams_charge_is_cached_but_the_heal_rule_owns_it(
+        self, briar_data, parse_at
+    ):
+        """The delay is sourced; authoring it would move an applied heal.
+
+        The E self-heal pays its four charge ticks at ``event.time + n *
+        0.25`` off the scream's OWN damage event (healing_legacy), so
+        putting the scream at the end of the charge puts the charge's
+        healing after it.
+        """
+        text = cc_review.slot_text(cc_review.kit("Briar"), "E")
+        assert (
+            "briar prepares to unleash a scream in the target direction, "
+            "charging for up to 1 second" in text
+        )
+        assert (
+            "if chilling scream was charged for its full duration, enemies hit "
+            "are also knocked back 575 units" in text
+        )
+        _, abilities = parse_at(briar_data, 18)
+        (part,) = abilities["E"]["parts"]
+        assert part.time_offset is None
+        assert part.cc_kind is None
+
+    def test_the_scream_keeps_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Briar") == ["E"]
         coverage = cc_review.fimbulwinter_coverage("Briar")
         assert coverage["complete"] is False

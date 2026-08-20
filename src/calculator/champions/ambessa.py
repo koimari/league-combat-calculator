@@ -25,6 +25,7 @@ AD ratio from its description text); nothing is hardcoded.
 """
 
 import re
+from dataclasses import replace
 from typing import Any
 
 from .inputs import champion_stat
@@ -261,12 +262,42 @@ ASSUMPTIONS = [
     "Q2 (Sundering Slam) shown separately from Q1 (Cunning Sweep)",
 ]
 
+# Public Execution's damage is the landing, and the landing is on the far
+# side of the suppression: Ambessa "blinks behind the farthest enemy
+# champion within the area and seizes them ... and suppresses them for 0.75
+# seconds.  While the target is suppressed, they are revealed and Ambessa
+# picks them up off the ground before crashing them back down, afterwards
+# dealing physical damage and stunning them for 0.4 seconds" (data/
+# champions.json Ambessa R).  The seize happens at the end of the cast
+# ("Ambessa is displacement immune and unable to act during the cast time
+# and while the target is suppressed" names the two as consecutive), so the
+# offset from cast start is the cached castTime plus the cached suppression.
+_R_CAST_TIME_S = 0.7
+_R_SUPPRESSION_S = 0.75
+_R_IMPACT_FROM_CAST_START_S = _R_CAST_TIME_S + _R_SUPPRESSION_S
+
+
+def _public_execution(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the stat-buff row, with its strike timed to the cached landing."""
+    entry = _r_stat_buff(ctx)
+    if entry is None:
+        return None
+    entry["parts"] = tuple(
+        replace(part, time_offset=_R_IMPACT_FROM_CAST_START_S)
+        for part in entry.get("parts", ())
+    )
+    return entry
+
+
+_r_stat_buff = stat_buff(
+    "Armor Penetration",
+    "armor_penetration_percent",
+    damage_attr="Physical Damage",
+)
+_public_execution.phase = getattr(_r_stat_buff, "phase", None)
+
 SLOTS = {
-    "R": stat_buff(
-        "Armor Penetration",
-        "armor_penetration_percent",
-        damage_attr="Physical Damage",
-    ),
+    "R": _public_execution,
     "Q": _q_cast(0),
     "Q2": _sundering_slam,
     "W": simple_damage(attr="Increased Physical Damage", dmg_type="physical"),
@@ -280,11 +311,17 @@ SLOTS["W"] = _repudiation
 # Cached kit review.  Q ("slashes ... in a cone"), Q2 ("slams ... in a
 # line") and W ("smashes the ground beneath her") each deal damage and
 # apply nothing else — the outer-edge and first-enemy clauses only double
-# the damage.  E is absent because its row is the cached "Total Physical
-# Damage" of both spins, each of which "slow[s] them by 99% decaying over 1
-# second"; R's suppress-then-stun rides a stat-buff row with no certified
-# boundary; P is an empowered-auto rider with no boundary of its own.
-MODULE_CC = {"Q": "none", "Q2": "none", "W": "none"}
+# the damage.  R's strike lands "afterwards" — after the cached 0.75-second
+# suppression — "dealing physical damage and stunning them for 0.4
+# seconds", so the stun is what the damaged target is taking as the damage
+# arrives, and that landing is now authored (see ``_public_execution``).
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan: its
+# row is the cached "Total Physical Damage" of both spins, each of which
+# "slow[s] them by 99% decaying over 1 second", and the cache times the
+# second spin only as "at the end of the dash" — a dash whose length it
+# never gives.  P is an empowered-auto rider with no boundary of its own.
+MODULE_CC = {"Q": "none", "Q2": "none", "W": "none", "R": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Ambessa", cc_kinds=MODULE_CC)
 

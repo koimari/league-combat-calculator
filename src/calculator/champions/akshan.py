@@ -54,6 +54,11 @@ from .slotlib import (
 _R_CRIT_EFFECTIVENESS = 0.3
 _R_MISSING_HP_MAX_BONUS = 2.0
 
+# Heroic Swing's shots are on a cached beat, not on Akshan's attack speed:
+# "While swinging, he fires at the nearest visible enemy every 0.231
+# seconds" (data/champions.json Akshan E).
+_E_SHOT_INTERVAL_S = 0.231
+
 
 def _extract_e_per_shot(
     ability: dict[str, Any],
@@ -175,7 +180,7 @@ def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
 
 
 def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: per-shot damage x ``e_shots`` option (default 5)."""
+    """E: per-shot damage x ``e_shots`` option (default 5), on its cadence."""
     ability = ctx.ability()
     if ability is None:
         return None
@@ -191,6 +196,20 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
     name = ability.get("name", "Heroic Swing")
     cooldown = extract_cooldown(ability, rank)
     entry = damage_entry(name, rank, cooldown, per_shot * shots, "physical")
+    # The swing's shots have a cached beat: "While swinging, he fires at the
+    # nearest visible enemy every 0.231 seconds to deal them physical damage
+    # and apply on-hit effects for each shot" (data/champions.json Akshan E).
+    # "Akshan immediately fires one shot at the beginning of his swing", so
+    # the first shot sits on the cast start and the rest follow on the beat.
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            per_shot,
+            count=shots,
+            time_offset=0.0,
+            hit_interval=_E_SHOT_INTERVAL_S,
+        ),
+    )
     # Wiki: every Heroic Swing shot applies on-hit effects at 25% effectiveness.
     entry["applies_item_on_hits"] = {
         "effectiveness": 0.25,
@@ -364,13 +383,18 @@ SLOTS = {
     "P": _dirty_fighting,
 }
 
-# Cached kit review.  R's bullets and P's 3-stack detonation only damage —
-# nothing in the cached text controls the target they hit (Q's and W's
-# reveals and camouflage are vision, not control).  Q and E are left
-# unreviewed because each row is an aggregate the ledger cannot split: Q is
-# the cached "Total Physical Damage" of both boomerang passes, E is
-# ``e_shots`` swing shots summed into one part.
-MODULE_CC = {"R": "none", "P": "none"}
+# Cached kit review.  R's bullets, P's 3-stack detonation and E's swing
+# shots only damage — nothing in the cached text controls the target they
+# hit (Q's and W's reveals and camouflage are vision, not control).  E's
+# shots now land on their cached 0.231-second beat, which is what lets that
+# review reach the event ledger.
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan: its
+# row is the cached "Total Physical Damage" of both boomerang passes, and
+# the return pass has no cached arrival time — the cache gives the two
+# speeds ("1500 • 2400") but no distance to fly, and a speed without a
+# distance is half a schedule.
+MODULE_CC = {"R": "none", "P": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 

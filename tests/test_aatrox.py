@@ -256,11 +256,13 @@ class TestEUmbralDash:
 
 
 class TestReviewedCrowdControl:
-    """Aatrox declares nothing: neither damaging row has one true answer.
+    """Aatrox declares nothing, and not for want of a cached cadence.
 
-    Q knocks up only in the Sweetspot - this module's own option - and its
-    row sums all three casts; W slows on the chain hit and pulls on the
-    tether hit, and its row is the cached Total of both.
+    Q knocks up only in the Sweetspot - this module's own option - and the
+    cache spaces its three casts by a second; W slows on the chain hit and
+    pulls on the tether hit 1.5 cached seconds later.  Both are refused
+    downstream, not by the source: see the module comment above
+    ``parse_abilities``.
     """
 
     def test_the_kit_declares_nothing(self):
@@ -276,6 +278,23 @@ class TestReviewedCrowdControl:
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")
         assert "slowing them for 1.5 seconds" in text
         assert "pulled to the center of the area" in text
+
+    def test_the_darkin_blade_states_its_own_cadence(self):
+        """The spacing is cached; what refuses it is downstream."""
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
+        assert "with a 1-second static cooldown between casts" in text
+
+    def test_infernal_chains_states_when_its_second_hit_lands(self):
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")
+        assert (
+            "a tether is formed between the target and the ground beneath them "
+            "for 1.5 seconds" in text
+        )
+        assert (
+            "if the tether is not broken by the end of its duration, the target "
+            "is dealt the same physical damage again and pulled to the center of "
+            "the area" in text
+        )
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Aatrox") == ["Q", "W"]

@@ -397,19 +397,47 @@ class TestPassiveEventCertification:
 class TestReviewedCrowdControl:
     """Ambessa's crowd-control review, and the slot that still withholds.
 
-    E's row is the cached 'Total Physical Damage' of both spins, each of
-    which slows, and R's suppress-then-stun rides a stat-buff row with
-    no certified boundary.
+    R's strike lands on the far side of its cached suppression, stunning
+    what it damages.  E's row is the cached 'Total Physical Damage' of
+    both spins, and the cache never times the second one.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Ambessa")
-        assert ambessa.MODULE_CC == {"Q": "none", "Q2": "none", "W": "none"}
+        assert ambessa.MODULE_CC == {
+            "Q": "none",
+            "Q2": "none",
+            "W": "none",
+            "R": "stun",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert (
+            "afterwards dealing physical damage and stunning them for 0.4 seconds"
+            in cc_review.slot_text(data, "R")
+        )
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Ambessa") == ["E", "R"]
+    def test_public_execution_lands_after_the_cached_suppression(
+        self, ambessa_data, parse_at
+    ):
+        text = cc_review.slot_text(cc_review.kit("Ambessa"), "R")
+        assert "suppresses them for 0.75 seconds" in text
+        _, abilities = parse_at(ambessa_data, 18)
+        (part,) = abilities["R"]["parts"]
+        # 0.7 cached cast time, then the 0.75-second suppression.
+        assert part.time_offset == pytest.approx(1.45)
+        assert part.cc_kind == "stun"
+
+    def test_lacerates_second_spin_has_no_cached_time(self):
+        """The one slot that still withholds, and the sentence that proves it."""
+        text = cc_review.slot_text(cc_review.kit("Ambessa"), "E")
+        assert (
+            "drakehound's step's dash may be buffered during the lockout or "
+            "initiated within 0.275 seconds of the lockout ending; in either "
+            "case, she will spin a second time at the end of the dash to apply "
+            "the same effects at no additional cost." in text
+        )
+        assert cc_review.unreviewed_ability_slots("Ambessa") == ["E"]
         coverage = cc_review.fimbulwinter_coverage("Ambessa")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

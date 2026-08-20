@@ -239,9 +239,9 @@ class TestFullCombo:
 class TestReviewedCrowdControl:
     """Anivia's crowd-control review, and the slot that still withholds.
 
-    Q's row is the cached 'Total Magic Damage' of the slowing pass-
-    through and the stunning shatter, and R's is every 0.5s blizzard
-    tick summed into one cast-boundary part.
+    R's blizzard ticks ride their cached 0.5-second beat and each slows.
+    Q's row is the cached 'Total Magic Damage' of the slowing pass-through
+    and the stunning shatter, with no cached time for the shatter.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -249,7 +249,41 @@ class TestReviewedCrowdControl:
         assert anivia.MODULE_CC == {"E": "none"}
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+    def test_glacial_storms_ticks_ride_their_cached_beat(
+        self, anivia_data, parse_at
+    ) -> None:
+        text = cc_review.slot_text(cc_review.kit("Anivia"), "R")
+        assert (
+            "dealing magic damage every 0.5 seconds to enemies within and "
+            "slowing them for 1 second" in text
+        )
+        assert "the blizzard increases in size over 1.5 seconds" in text
+        _, abilities = parse_at(anivia_data, 18)
+        growing, empowered = abilities["R"]["parts"]
+        assert (growing.time_offset, growing.hit_interval) == (0.0, 0.5)
+        assert growing.count == 3
+        assert (empowered.time_offset, empowered.hit_interval) == (1.5, 0.5)
+
+    def test_the_blizzards_slow_stays_undeclared_by_decision_not_by_source(
+        self, anivia_data, parse_at
+    ):
+        """R's slow is cached and unambiguous; declaring it answers H6.
+
+        A ``cc_kind`` on these ticks makes Anivia the roster's first
+        ``enhanced_consume`` producer (R's chill feeding E's "Enhanced
+        Damage"), which empties the cast-dependency audit's dated
+        acknowledged-gap list - a ruling reserved for its own slice.
+        """
+        _, abilities = parse_at(anivia_data, 18)
+        assert all(part.cc_kind is None for part in abilities["R"]["parts"])
+
+    def test_flash_frosts_shatter_has_no_cached_time(self):
+        """The one slot that still withholds, and the sentence that proves it."""
+        text = cc_review.slot_text(cc_review.kit("Anivia"), "Q")
+        assert (
+            "flash frost can be recast while the ice is in flight after its "
+            "cast time, and does so automatically at maximum range." in text
+        )
         assert cc_review.unreviewed_ability_slots("Anivia") == ["Q", "R"]
         coverage = cc_review.fimbulwinter_coverage("Anivia")
         assert coverage["complete"] is False

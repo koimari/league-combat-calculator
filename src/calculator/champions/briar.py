@@ -58,6 +58,19 @@ R_RESIST_PER_TOTAL_AD = 0.20  # armor AND MR gained, as % of total AD
 # Head Rush shreds "for 5 seconds" — not the rest of the fight.
 Q_SHRED_DURATION = 5.0
 
+# This module always prices the fully-charged scream ("Maximum Magic
+# Damage"), and the cache says how long that charge takes: Briar "prepares
+# to unleash a scream in the target direction, charging for up to 1 second"
+# and "Chilling Scream can be recast within the duration, and does so
+# automatically afterwards" (data/champions.json Briar E).  A full charge
+# is therefore the whole cached second, and the scream lands at its end —
+# a sourced delay this module does NOT author, because the E self-heal rule
+# hangs its four charge ticks off the scream's damage event
+# (healing_legacy.py "Briar": ``event.time + index * 0.25``).  Moving the
+# scream to the end of the charge moves the charge's own healing to AFTER
+# the scream, which is a heal change, not a review.
+E_FULL_CHARGE_SECONDS_UNAUTHORED = 1.0
+
 
 def _missing_hp_fraction(ctx: SlotCtx) -> float:
     """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
@@ -369,9 +382,12 @@ SLOTS = {
 # Cached kit review.  Q "stuns them for 0.85 seconds"; W's Snack Attack
 # bite and R's explosion apply nothing to the target they damage (R "fears
 # all non-marked targets", and the marked one is the target it damages).
-# E is left unreviewed: its scream lands on the recast after the sourced
-# charge (up to 1 second), which the row does not author, so its knock-back
-# has no hit in the ledger to ride.  W_frenzy and P emit no ability damage.
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.  Its
+# scream lands at the end of the cached charge this module always prices in
+# full, and a full charge always knocks back ("enemies hit are also knocked
+# back 575 units") — but authoring that landing moves the charge's own heal
+# ticks past the scream (see ``E_FULL_CHARGE_SECONDS_UNAUTHORED``).
+# W_frenzy and P emit no ability damage.
 MODULE_CC = {"Q": "stun", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)

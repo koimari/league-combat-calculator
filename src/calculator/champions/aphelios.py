@@ -5,8 +5,13 @@ archetype.  Q's Onslaught is represented as an attack event whose count is
 the Wiki's ``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q
 forms use the pinned packet variants.  R's initial blast and the basic-attack
 follow-up are kept separate so resistance and event ordering remain visible.
+
+Reviewed crowd control rides the parts rather than a ``MODULE_CC`` map:
+both Q and R are one slot per weapon, and the weapons do not control alike
+(``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
 """
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -35,6 +40,42 @@ _WEAPON_LABELS = {
     "infernum": "Infernum",
     "crescendum": "Crescendum",
 }
+
+# Q's reviewed crowd control is per weapon, because Q is five spells.  Read
+# off data/champions.json Aphelios Q, in the cache's own order:
+#   Moonshot     "fires a bolt of energy ... that deals ... damage to the
+#                 first enemy hit" — nothing else.
+#   Onslaught    "automatically performing up to 6 (+ 2 per 100% bonus
+#                 attack speed) attacks over the duration" — attacks only.
+#                 Absent from the map: see _Q_ONSLAUGHT_SECONDS_UNAUTHORED.
+#   Binding Eclipse
+#                "dealing ... magic damage and rooting them for 1 second".
+#   Duskwave     "dealing ... physical damage to all enemies hit and
+#                 locking onto each of them" — the lock-on is targeting.
+#   Sentry       "autonomously attacks the nearest visible enemy in range
+#                 ... dealing ... physical damage per hit".
+_Q_CC_BY_WEAPON = {
+    "calibrum": "none",
+    "gravitum": "root",
+    "infernum": "none",
+    "crescendum": "none",
+}
+
+# Onslaught's whole schedule is in one cached sentence: "Aphelios enters an
+# onslaught for 1.75 seconds ... automatically performing up to 6 (+ 2 per
+# 100% bonus attack speed) attacks over the duration".  It is deliberately
+# NOT authored: spreading the attacks over that duration splits Severum's
+# self-heal from one payment into one per attack, and the rule pays a full
+# share for attacks that dealt nothing (healing_legacy pays off the row, not
+# off each event's own damage), so the fight gains healing it never earned.
+# That is a defect in the heal rule, not a reason to ship a heal change, so
+# Severum's Q stays the one weapon form this review leaves unreviewed.
+_Q_ONSLAUGHT_SECONDS_UNAUTHORED = 1.75
+
+# R's blast controls only under Gravitum, which "Increases the initial slow
+# to 99%"; every other weapon's follow-up is a mark, a heal, bonus damage
+# or extra chakrams.
+_R_CC_BY_WEAPON = dict.fromkeys(_WEAPON_INDEX, "none") | {"gravitum": "slow"}
 
 
 def _main_weapon(ctx: SlotCtx) -> str:
@@ -104,6 +145,14 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
                     "hits": 1,
                     "triggers": ("on_hit",),
                 }
+            if result is not None:
+                # Each of these four weapon forms prices one hit, so the
+                # cast boundary IS the hit and the reviewed kind rides it.
+                result["parts"] = tuple(
+                    replace(part, cc_kind=_Q_CC_BY_WEAPON[weapon])
+                    for part in result.get("parts", ())
+                )
+                result["event_order_certified"] = "single_hit"
             return result
         finally:
             if original is None:
@@ -154,7 +203,15 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         base + 0.20 * ad + ap,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", amount=base + 0.20 * ad + ap),)
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            amount=base + 0.20 * ad + ap,
+            cc_kind=_R_CC_BY_WEAPON[_main_weapon(ctx)],
+        ),
+    )
+    # One blast, priced once: the cast boundary is the hit.
+    entry["event_order_certified"] = "single_hit"
     detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
     # The healing rule reads this marker to gate Severum's overheal-to-
     # shield conversion (the Shyvana dragon-form convention).

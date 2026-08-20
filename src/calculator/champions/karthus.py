@@ -115,9 +115,10 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
     (each "cast" is one second of the toggle being on) and its ordered
     resource timeline charges each pulse the sourced drain against the
     real pool, regen, and the mana Q/W/R spend — so Defile shuts off at
-    mana exhaustion instead of ticking for free.  ``dot_duration`` +
-    ``dot_tick_interval`` let the engine author the four exact 0.25s
-    ticks each accepted pulse spreads over its second.
+    mana exhaustion instead of ticking for free.  The part authors the
+    four exact 0.25s ticks each accepted pulse spreads over its second;
+    ``dot_duration`` + ``dot_tick_interval`` say the same schedule to the
+    item burns that refresh across it.
     """
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -146,12 +147,20 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
         "magic",
     )
     drain = _defile_mana_per_second(ability, rank)
-    # No cc marker rides this part: the pulse's four ticks are authored by
-    # the engine from ``dot_duration``/``dot_tick_interval`` below, not by
-    # the part, so a kind here would never reach the event ledger.  (Giving
-    # the part its own timing to carry one moves Shadowflame's proc, which
-    # is a re-pricing, not a review.)
-    entry["parts"] = (DamagePart("magic", per_tick, count=ticks_per_pulse),)
+    # The pulse's ticks carry their own cached beat — the aura "deals magic
+    # damage every 0.25 seconds to all nearby enemies" — so the part states
+    # the schedule the engine would otherwise have to infer, and the
+    # reviewed "the aura only damages" rides it into the event ledger.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            per_tick,
+            count=ticks_per_pulse,
+            time_offset=0.0,
+            hit_interval=_E_TICK_INTERVAL,
+            cc_kind="none",
+        ),
+    )
     entry["resource_type"] = "MANA"
     entry["resource_cost"] = drain * _E_PULSE_SECONDS
     entry["dot_duration"] = _E_PULSE_SECONDS
@@ -178,10 +187,9 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
-    # The selected-tick branch authors its own hit times, so its reviewed
-    # "the aura only damages" rides the parts here; the timed toggle branch
-    # cannot carry it (see _defile_timed), which is why E is not in
-    # MODULE_CC.
+    # Both branches author their own hit times, so the reviewed "the aura
+    # only damages" rides the parts in each — which is why E declares its
+    # kind here and in _defile_timed rather than in MODULE_CC.
     parts = tuple(
         DamagePart(
             "magic",

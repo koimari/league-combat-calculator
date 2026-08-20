@@ -288,15 +288,37 @@ class TestReviewedCrowdControl:
         assert "become slowed for 5 seconds" in cc_review.slot_text(data, "W")
         assert "W" not in karthus.MODULE_CC
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        """Defile's aura controls nothing, and the selected-tick branch
-        authors that answer on its parts.  The timed toggle branch cannot:
-        the engine builds its four ticks from ``dot_duration`` and
-        ``dot_tick_interval``, so the row has no part to carry a marker."""
+    def test_defiles_timed_pulse_authors_the_cached_tick_beat(self):
+        """Defile's aura controls nothing, and both branches say so on their
+        own parts: the pulse ticks on the cache's own 0.25-second beat."""
         data = cc_review.kit("Karthus")
+        assert (
+            "karthus surrounds himself in a necrotic aura that deals magic "
+            "damage every 0.25 seconds to all nearby enemies"
+            in cc_review.slot_text(data, "E")
+        )
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         assert "E" not in karthus.MODULE_CC
-        assert cc_review.unreviewed_ability_slots("Karthus") == ["E"]
+
+        entry = parse_champion_abilities(
+            data,
+            18,
+            200.0,
+            champion_stats=calculate_total_stats(data, 18, []),
+            ability_ranks=RANKS,
+            champion_options={
+                "fight_duration_seconds": 10.0,
+                "auto_attack_uptime": 0.0,
+            },
+        )["E"]
+        (part,) = entry["parts"]
+        assert part.count == 4
+        assert part.time_offset == 0.0
+        assert part.hit_interval == pytest.approx(0.25)
+        assert part.cc_kind == "none"
+
+    def test_every_ability_event_is_now_reviewed(self):
+        assert cc_review.unreviewed_ability_slots("Karthus") == []
         coverage = cc_review.fimbulwinter_coverage("Karthus")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

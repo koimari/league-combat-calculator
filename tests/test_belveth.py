@@ -817,13 +817,37 @@ class TestReviewedCrowdControl:
         assert "slows them by 30% for 2 seconds" in w_text
         assert "slowing nearby enemies by 25%" in cc_review.slot_text(data, "R")
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        """Q's cardinal dashes and E's slashes are each one aggregated part
-        of many hits with no sourced cadence, so no event of theirs is
-        timed - even though both are control-free in the cache."""
+    def test_royal_maelstroms_slashes_spread_over_the_cached_duration(
+        self, belveth_data, parse_at
+    ):
+        text = cc_review.slot_text(cc_review.kit("Bel'Veth"), "E")
+        assert "bel'veth enters a frenzy for 1.5 seconds" in text
+        assert (
+            "she rapidly slashes at the nearest enemy with the lowest current "
+            "health percentage for up to 6 (+ 1 per 40% bonus attack speed) "
+            "times over the duration" in text
+        )
+        _, abilities = parse_at(belveth_data, 18)
+        (part,) = abilities["E"]["parts"]
+        assert part.hit_interval == pytest.approx(1.5 / part.count)
+        assert part.time_offset == 0.0
+        assert part.cc_kind == "none"
+
+    def test_void_surge_has_no_cached_spacing(self):
+        """The one slot that still withholds, and the sentence that proves it.
+
+        Q is control-free in the cache, but its row is the four cardinal
+        dashes in one part and the only spacing the cache offers is a
+        cooldown it never names.
+        """
         data = cc_review.kit("Bel'Veth")
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
-        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["E", "Q"]
+        assert (
+            "void surge can be cast only within a cardinal direction that is "
+            "off cooldown, and incurs a cooldown between casts."
+            in cc_review.slot_text(data, "Q")
+        )
+        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["Q"]
         coverage = cc_review.fimbulwinter_coverage("Bel'Veth")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
