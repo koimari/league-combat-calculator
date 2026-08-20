@@ -47,12 +47,12 @@
       "sample_author": "Briar"
     },
     "stat_buff": {
-      "authors": 35,
+      "authors": 50,
       "negative_test": "test_withholding_stat_buff_drops_the_buff_edge",
       "sample_author": "Aatrox"
     },
     "target_debuff": {
-      "authors": 10,
+      "authors": 11,
       "negative_test": "test_withholding_target_debuff_drops_the_shred_edge",
       "sample_author": "Briar"
     }
@@ -203,6 +203,9 @@
       "Annie",
       "Darius",
       "Dr. Mundo",
+      "Naafiri",
+      "Olaf",
+      "Singed",
       "Twitch",
       "Vayne"
     ],
@@ -255,6 +258,7 @@
       "Jayce",
       "Karthus",
       "Kog'Maw",
+      "Rengar",
       "Sion",
       "Wukong"
     ],
@@ -279,7 +283,7 @@
       11,
       18
     ],
-    "states_walked": 4056
+    "states_walked": 4160
   },
   "order_override_frontier": {
     "champions": [

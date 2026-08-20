@@ -32,6 +32,10 @@ def test_level_14_rengar_ldr_against_ambessa_target_context() -> None:
         fight_duration_seconds=6.0,
         one_rotation=True,
         role="top",
+        # Thrill of the Hunt's flat armour shred is off: this test's
+        # claim is what Lord Dominik's BONUS armour penetration leaves,
+        # and a champion shred on top would move the same number.
+        champion_options={"r_thrill_attack": False},
     )
 
     result = run_fight(rengar, 14, rengar_items, params)
