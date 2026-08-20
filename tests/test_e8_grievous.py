@@ -18,10 +18,10 @@ and the venom values come from the ``item_effects`` typed accessors.
 """
 
 from dataclasses import replace
-from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -65,7 +65,7 @@ def _dummy_combatant(
     items=(),
     is_melee: bool = True,
 ) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,

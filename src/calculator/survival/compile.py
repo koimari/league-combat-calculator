@@ -226,13 +226,8 @@ def thorns_return_damage(profile: Any, wearer: Any, striker: Any) -> float:
             f"{profile.item_name} thorns damage type "
             f"{profile.damage_type!r} is not supported"
         )
-    # Bramble's fixed packet keeps a zero ratio.  Thornmail supplies an
-    # authored bonus-armor ratio through ``ThornsEffect``; read it through a
-    # compatibility default so cached Bramble packets remain unchanged while
-    # the item layer rolls out the typed field.
-    bonus_armor_ratio = max(
-        0.0, float(getattr(profile, "bonus_armor_ratio", 0.0) or 0.0)
-    )
+    # Bramble's fixed packet keeps a zero ratio; Thornmail authors one.
+    bonus_armor_ratio = max(0.0, float(profile.bonus_armor_ratio))
     bonus_armor = max(0.0, float(wearer.stats.get("bonus_armor", 0.0) or 0.0))
     raw_damage = float(profile.damage) + bonus_armor_ratio * bonus_armor
     resistance = apply_magic_penetration(

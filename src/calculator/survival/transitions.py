@@ -122,30 +122,16 @@ def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
         magic_shield=float(defenses.magic_shield),
         physical_shield=float(defenses.physical_shield),
         general_shield=float(defenses.general_shield),
-        threshold_shield_amount=max(
-            0.0, float(getattr(defenses, "threshold_shield_amount", 0.0) or 0.0)
-        ),
+        threshold_shield_amount=max(0.0, float(defenses.threshold_shield_amount)),
         threshold_shield_health_ratio=max(
-            0.0, float(getattr(defenses, "threshold_shield_health_ratio", 0.0) or 0.0)
+            0.0, float(defenses.threshold_shield_health_ratio)
         ),
-        threshold_shield_duration=max(
-            0.0, float(getattr(defenses, "threshold_shield_duration", 0.0) or 0.0)
-        ),
-        threshold_shield_damage_type=str(
-            getattr(defenses, "threshold_shield_damage_type", "all") or "all"
-        ),
-        threshold_health_bonus=max(
-            0.0, float(getattr(defenses, "threshold_health_bonus", 0.0) or 0.0)
-        ),
-        threshold_health_heal=max(
-            0.0, float(getattr(defenses, "threshold_health_heal", 0.0) or 0.0)
-        ),
-        threshold_health_ratio=max(
-            0.0, float(getattr(defenses, "threshold_health_ratio", 0.0) or 0.0)
-        ),
-        threshold_health_duration=max(
-            0.0, float(getattr(defenses, "threshold_health_duration", 0.0) or 0.0)
-        ),
+        threshold_shield_duration=max(0.0, float(defenses.threshold_shield_duration)),
+        threshold_shield_damage_type=str(defenses.threshold_shield_damage_type),
+        threshold_health_bonus=max(0.0, float(defenses.threshold_health_bonus)),
+        threshold_health_heal=max(0.0, float(defenses.threshold_health_heal)),
+        threshold_health_ratio=max(0.0, float(defenses.threshold_health_ratio)),
+        threshold_health_duration=max(0.0, float(defenses.threshold_health_duration)),
     )
 
 
@@ -176,8 +162,8 @@ class SubjectDefenseProfile(NamedTuple):
     """Per-event defense constants for one participant (issue #171).
 
     The kernel consults these on every damage packet; they are fixed for a
-    walk, so the context caches one profile per subject instead of walking
-    a ``getattr`` chain and an item scan ~100 times per participant.
+    walk, so the context caches one profile per subject instead of re-reading
+    the defense record and scanning items ~100 times per participant.
     """
 
     jak_interval: float
@@ -197,32 +183,20 @@ def _subject_defense_profile(
 ) -> SubjectDefenseProfile:
     """Extract one participant's fixed combat-state defense constants."""
     defenses = combatant.defenses
-    jak_interval = max(
-        0.0, float(getattr(defenses, "jaksho_stack_interval", 0.0) or 0.0)
-    )
-    jak_max = max(0, int(getattr(defenses, "jaksho_max_stacks", 0) or 0))
-    force_interval = max(
-        0.0, float(getattr(defenses, "force_stack_interval", 0.0) or 0.0)
-    )
-    force_duration = max(
-        0.0, float(getattr(defenses, "force_stack_duration", 0.0) or 0.0)
-    )
-    force_max = max(0, int(getattr(defenses, "force_max_stacks", 0) or 0))
+    jak_interval = max(0.0, float(defenses.jaksho_stack_interval))
+    jak_max = max(0, int(defenses.jaksho_max_stacks))
+    force_interval = max(0.0, float(defenses.force_stack_interval))
+    force_duration = max(0.0, float(defenses.force_stack_duration))
+    force_max = max(0, int(defenses.force_max_stacks))
     return SubjectDefenseProfile(
         jak_interval=jak_interval,
         jak_max=jak_max,
-        jak_bonus_multiplier=float(
-            getattr(defenses, "jaksho_bonus_resistance_multiplier", 0.0) or 0.0
-        ),
+        jak_bonus_multiplier=float(defenses.jaksho_bonus_resistance_multiplier),
         force_interval=force_interval,
         force_duration=force_duration,
         force_max=force_max,
-        force_immobilize_stacks=int(
-            getattr(defenses, "force_immobilize_stacks", 0) or 0
-        ),
-        force_bonus_magic_resistance=float(
-            getattr(defenses, "force_bonus_magic_resistance", 0.0) or 0.0
-        ),
+        force_immobilize_stacks=int(defenses.force_immobilize_stacks),
+        force_bonus_magic_resistance=float(defenses.force_bonus_magic_resistance),
         has_stack_items=bool(
             (jak_interval > 0.0 and jak_max > 0)
             or (force_interval > 0.0 and force_max > 0)
@@ -293,8 +267,7 @@ class TransitionContext:
         # attribution; with no defy holder in the fight the per-event
         # record append is dead weight and is skipped entirely.
         self.record_defy_damage = any(
-            float(getattr(combatant.defenses, "defy_window", 0.0) or 0.0) > 0.0
-            for combatant in self.combatants
+            float(combatant.defenses.defy_window) > 0.0 for combatant in self.combatants
         )
         # Per-event gates read these plain lists directly (a method call per
         # damage packet is measurable at ~100k packets per request).
@@ -806,7 +779,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
         if holder.participant_id == target_id or holder.team == target.team:
             continue
         defenses = holder.defenses
-        window = max(0.0, float(getattr(defenses, "defy_window", 0.0) or 0.0))
+        window = max(0.0, float(defenses.defy_window))
         if window <= 0.0 or holder_state["death_time"] is not None:
             continue
         matching = [
@@ -830,13 +803,9 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
             holder_state["deferred_batches"]
         )
         holder_state["deferred_batches"].clear()
-        duration_value = max(
-            0.0, float(getattr(defenses, "defy_heal_duration", 0.0) or 0.0)
-        )
-        ticks = int(getattr(defenses, "defy_heal_ticks", 0) or 0)
-        heal_ratio = max(
-            0.0, float(getattr(defenses, "defy_heal_bonus_ad_ratio", 0.0) or 0.0)
-        )
+        duration_value = max(0.0, float(defenses.defy_heal_duration))
+        ticks = int(defenses.defy_heal_ticks)
+        heal_ratio = max(0.0, float(defenses.defy_heal_bonus_ad_ratio))
         bonus_ad = max(0.0, float(holder.stats.get("bonus_attack_damage", 0.0)))
         if duration_value <= 0.0 or ticks <= 0 or heal_ratio <= 0.0 or bonus_ad <= 0.0:
             continue

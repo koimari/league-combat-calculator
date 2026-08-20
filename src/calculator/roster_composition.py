@@ -7,6 +7,7 @@ from dataclasses import dataclass, replace
 import math
 from typing import TYPE_CHECKING, Any
 
+from .defensive_effects import StartingDefenses
 from .interpreters.stat_derivation import declared_stat_derivations
 from .interpreters.sustain import SustainSlot, declared_sustain
 from .item_behavior import DerivedStat, ManaSpentHealRule, StatAuraRule
@@ -26,9 +27,18 @@ class Combatant:  # pylint: disable=too-many-instance-attributes
     level: int
     items: tuple[dict[str, Any], ...]
     stats: dict[str, float]
-    defenses: Any
+    defenses: StartingDefenses
     request: Any = None
     is_practice_dummy: bool = False
+
+    def __post_init__(self) -> None:
+        # Every walk-side consumer reads ``defenses`` by direct attribute, so
+        # a stand-in object is refused here, by name, not on its first read.
+        if not isinstance(self.defenses, StartingDefenses):
+            raise TypeError(
+                f"{self.participant_id}: defenses must be a StartingDefenses, "
+                f"not {type(self.defenses).__name__}"
+            )
 
 
 def require_roster_fight_window_support(
@@ -108,7 +118,7 @@ def main_combatant(  # pylint: disable=too-many-arguments,too-many-positional-ar
     items: list[dict[str, Any]],
     *,
     stats: dict[str, float],
-    defenses: Any,
+    defenses: StartingDefenses,
     params: FightParams,
 ) -> Combatant:
     """Create the selected main champion's roster participant."""

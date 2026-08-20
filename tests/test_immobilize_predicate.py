@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator import survival
@@ -83,7 +84,6 @@ def _force_of_nature_target() -> Combatant:
 
 
 def _attacker() -> Combatant:
-    from types import SimpleNamespace
 
     return Combatant(
         participant_id="source",
@@ -92,7 +92,7 @@ def _attacker() -> Combatant:
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,

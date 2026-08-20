@@ -15,6 +15,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program import rung, walk as walk_module
 from src.calculator.survival import (
     ScoreLedger,
@@ -32,7 +33,7 @@ def one_participant_context() -> tuple[TransitionContext, ScoreLedger]:
         SimpleNamespace(
             participant_id="target",
             stats={"health": 100.0, "is_melee": True},
-            defenses=SimpleNamespace(
+            defenses=StartingDefenses(
                 magic_shield=0.0,
                 physical_shield=0.0,
                 general_shield=0.0,

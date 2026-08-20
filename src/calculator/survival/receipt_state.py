@@ -65,15 +65,13 @@ _PER_CALL_FIELDS = ("pools", "starting_shield")
 
 def _state_proto_key(
     combatant: Any, below_half_healing_bonus: float
-) -> tuple[Any, ...] | None:
-    """The prototype's value key, or ``None`` when this combatant has none.
+) -> tuple[Any, ...]:
+    """The prototype's value key.
 
     ``defenses`` carries the key's weight and enters it whole, which is legal
-    only because it is a frozen dataclass: those hash and compare by field,
-    which is what makes an object a value.  Anything else — a namespace a
-    unit fixture built, a stub — hashes by identity, and keying on that would
-    be ``id()`` wearing a better name, so such a combatant is not memoized at
-    all rather than filed under an address.
+    because it is a frozen ``StartingDefenses`` — ``Combatant`` admits nothing
+    else — and those hash and compare by field, which is what makes an object
+    a value rather than an address.
 
     **What that costs, stated rather than discovered.**  ``id(combatant)``
     was one machine word; this key hashes a frozen ``StartingDefenses`` —
@@ -84,14 +82,10 @@ def _state_proto_key(
     bench, but "it hits more" is only half the trade and the other half
     belongs in the docstring rather than in a profile.
     """
-    defenses = combatant.defenses
-    params = getattr(type(defenses), "__dataclass_params__", None)
-    if params is None or not params.frozen:
-        return None
     stats = combatant.stats
     return (
         data_version(),
-        defenses,
+        combatant.defenses,
         below_half_healing_bonus,
         *(stats.get(field) for field in _STATE_KEY_STATS),
     )
@@ -114,16 +108,15 @@ def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, An
     the same number and the same answer.
     """
     memo_key = _state_proto_key(combatant, below_half_healing_bonus)
-    memo = None if memo_key is None else _STATE_PROTO_MEMO.get(memo_key)
+    memo = _STATE_PROTO_MEMO.get(memo_key)
     if memo is None:
         proto = _build_state_uncached(combatant, below_half_healing_bonus)
         container_keys = [
             key for key, value in proto.items() if value.__class__ in (list, set, dict)
         ]
-        if memo_key is not None:
-            if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
-                _STATE_PROTO_MEMO.clear()
-            _STATE_PROTO_MEMO[memo_key] = (proto, container_keys)
+        if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
+            _STATE_PROTO_MEMO.clear()
+        _STATE_PROTO_MEMO[memo_key] = (proto, container_keys)
     else:
         proto, container_keys = memo
     # The prototype itself is never handed out: the walk mutates its state,
@@ -162,9 +155,7 @@ def _build_state_uncached(
     simulator never guesses an item's trigger from a name alone.
     """
     defenses = combatant.defenses
-    starting_stasis_duration = max(
-        0.0, float(getattr(defenses, "starting_stasis_duration", 0.0) or 0.0)
-    )
+    starting_stasis_duration = max(0.0, float(defenses.starting_stasis_duration))
     base_armor = max(0.0, float(combatant.stats.get("armor", 0.0) or 0.0))
     base_magic_resistance = max(
         0.0, float(combatant.stats.get("magic_resistance", 0.0) or 0.0)
@@ -218,66 +209,46 @@ def _build_state_uncached(
         # an item's trigger or timing from a name alone.
         "stasis_until": starting_stasis_duration,
         "stasis_started_at": 0.0 if starting_stasis_duration > 0.0 else None,
-        "stasis_source": str(getattr(defenses, "starting_stasis_source", "") or ""),
+        "stasis_source": str(defenses.starting_stasis_source),
         "invulnerable_until": 0.0,
         "untargetable_until": 0.0,
         "spell_shield_until": (
-            float("inf")
-            if bool(getattr(defenses, "spell_shield_ready", False))
-            else 0.0
+            float("inf") if bool(defenses.spell_shield_ready) else 0.0
         ),
-        "spell_shield_source": str(getattr(defenses, "spell_shield_source", "") or ""),
+        "spell_shield_source": str(defenses.spell_shield_source),
         "spell_shield_used": False,
         "spell_shield_blocked_cast": None,
         "ichorshield_cap": max(
             0.0,
-            float(getattr(defenses, "bloodthirster_shield_cap", 0.0) or 0.0),
+            float(defenses.bloodthirster_shield_cap),
         ),
         "ichorshield_current": max(
             0.0,
-            float(getattr(defenses, "bloodthirster_starting_shield", 0.0) or 0.0),
+            float(defenses.bloodthirster_starting_shield),
         ),
-        "reactive_shield_amount": max(
-            0.0, float(getattr(defenses, "reactive_shield_amount", 0.0) or 0.0)
-        ),
-        "reactive_shield_damage_type": str(
-            getattr(defenses, "reactive_shield_damage_type", "") or ""
-        ),
-        "reactive_shield_duration": max(
-            0.0, float(getattr(defenses, "reactive_shield_duration", 0.0) or 0.0)
-        ),
-        "reactive_shield_cooldown": max(
-            0.0, float(getattr(defenses, "reactive_shield_cooldown", 0.0) or 0.0)
-        ),
-        "reactive_shield_source": str(
-            getattr(defenses, "reactive_shield_source", "") or ""
-        ),
+        "reactive_shield_amount": max(0.0, float(defenses.reactive_shield_amount)),
+        "reactive_shield_damage_type": str(defenses.reactive_shield_damage_type),
+        "reactive_shield_duration": max(0.0, float(defenses.reactive_shield_duration)),
+        "reactive_shield_cooldown": max(0.0, float(defenses.reactive_shield_cooldown)),
+        "reactive_shield_source": str(defenses.reactive_shield_source),
         "reactive_shield_cooldown_until": 0.0,
         "incoming_damage_multiplier": max(
-            0.0, float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0)
+            0.0, float(defenses.incoming_damage_multiplier)
         ),
-        "incoming_damage_linger": max(
-            0.0, float(getattr(defenses, "incoming_damage_linger", 0.0) or 0.0)
-        ),
-        "incoming_damage_cooldown": max(
-            0.0, float(getattr(defenses, "incoming_damage_cooldown", 0.0) or 0.0)
-        ),
-        "incoming_damage_source": str(
-            getattr(defenses, "incoming_damage_source", "") or ""
-        ),
+        "incoming_damage_linger": max(0.0, float(defenses.incoming_damage_linger)),
+        "incoming_damage_cooldown": max(0.0, float(defenses.incoming_damage_cooldown)),
+        "incoming_damage_source": str(defenses.incoming_damage_source),
         "incoming_damage_until": (
-            float("inf")
-            if float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0) < 1.0
-            else 0.0
+            float("inf") if float(defenses.incoming_damage_multiplier) < 1.0 else 0.0
         ),
         "incoming_damage_cooldown_until": 0.0,
         "healing_received_multiplier": max(
             1.0,
-            float(getattr(defenses, "healing_received_multiplier", 1.0) or 1.0),
+            float(defenses.healing_received_multiplier),
         ),
         "maw_lifeline_omnivamp_percent": max(
             0.0,
-            float(getattr(defenses, "maw_lifeline_omnivamp_percent", 0.0) or 0.0),
+            float(defenses.maw_lifeline_omnivamp_percent),
         ),
         "maw_lifeline_omnivamp_active": False,
         "below_half_healing_bonus": below_half_healing_bonus,

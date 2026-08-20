@@ -16,6 +16,7 @@ import math
 from operator import itemgetter
 from typing import Any
 
+from .defensive_effects import StartingDefenses
 from .pipeline import FightParams, run_fight
 from .roster_composition import (
     Combatant,
@@ -2047,10 +2048,7 @@ def _simulate_survival(
     # declaration produces is a stop rather than an unstamped packet.
     deferral_riders: dict[str, Any] = {}
     for participant_id, combatant in combatant_by_id.items():
-        if (
-            float(getattr(combatant.defenses, "damage_deferral_fraction", 0.0) or 0.0)
-            <= 0.0
-        ):
+        if float(combatant.defenses.damage_deferral_fraction) <= 0.0:
             continue
         owners, facts = _routing_build(combatant, duration)
         rider = _walk_deferral(owners, **facts)
@@ -2221,30 +2219,15 @@ def _simulate_survival(
                             defenses = target.defenses
                             factor *= max(
                                 0.0,
-                                float(
-                                    getattr(defenses, "basic_damage_multiplier", 1.0)
-                                    or 1.0
-                                ),
+                                float(defenses.basic_damage_multiplier),
                             )
                             flat = max(
                                 0.0,
-                                float(
-                                    getattr(
-                                        defenses, "basic_damage_flat_reduction", 0.0
-                                    )
-                                    or 0.0
-                                ),
+                                float(defenses.basic_damage_flat_reduction),
                             )
                             cap = max(
                                 0.0,
-                                float(
-                                    getattr(
-                                        defenses,
-                                        "basic_damage_flat_reduction_cap",
-                                        0.0,
-                                    )
-                                    or 0.0
-                                ),
+                                float(defenses.basic_damage_flat_reduction_cap),
                             )
                             if flat > 0.0 and cap > 0.0:
                                 mitigated = raw_amount * factor
@@ -2415,19 +2398,14 @@ def _simulate_survival(
     # packet becomes lethal before shields, overkill, or prior healing resolve.
     for participant_id, events in list(expanded_incoming.items()):
         defenses = combatant_by_id[participant_id].defenses
-        revive_amount = max(
-            0.0, float(getattr(defenses, "revive_health_amount", 0.0) or 0.0)
-        )
-        revive_delay = max(0.0, float(getattr(defenses, "revive_delay", 0.0) or 0.0))
+        revive_amount = max(0.0, float(defenses.revive_health_amount))
+        revive_delay = max(0.0, float(defenses.revive_delay))
         if revive_amount <= 0.0 or revive_delay <= 0.0:
             continue
         # E8d follow-up: the revive source is the champion's own passive when
         # the module declares one (Anivia Rebirth, Zac Cell Division, Zilean
         # Chronoshift); Guardian Angel remains the item-source label.
-        revive_source = (
-            str(getattr(defenses, "revive_source", "") or "")
-            or "Guardian Angel (Rebirth)"
-        )
+        revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
         revive_key = (
             f"revive_{revive_source.replace(' ', '_')}"
             if revive_source != "Guardian Angel (Rebirth)"
@@ -2786,7 +2764,7 @@ def _context_setup(
             level=0,
             items=(),
             stats={},
-            defenses=None,
+            defenses=StartingDefenses(),
             request=context.main_request,
         ),
     )

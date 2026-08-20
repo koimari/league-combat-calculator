@@ -1,9 +1,8 @@
 """Full-entry sustain receipts for starter and defensive items."""
 
-from types import SimpleNamespace
-
 import pytest
 
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -197,7 +196,7 @@ def test_dorans_blade_no_longer_reports_stale_omnivamp(ahri_data):
 
 def test_spirit_visage_does_not_amplify_lifesteal_or_omnivamp():
     """Boundless Vitality amplifies direct heals, not vamp stat packets."""
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,

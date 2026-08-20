@@ -606,20 +606,6 @@ def test_two_combatants_sharing_a_prototype_keep_their_own_health() -> None:
     assert states[0]["base_armor"] == states[1]["base_armor"]
 
 
-def test_a_combatant_whose_defences_are_only_an_address_is_not_memoized() -> None:
-    """``id()`` may not come back wearing a namespace.
-
-    A frozen dataclass hashes by field; a ``SimpleNamespace`` hashes by
-    address.  Keying on the second would put an identity key back in the
-    memo under a better name, so such a combatant is refused a key.
-    """
-    from src.calculator.survival import receipt_state
-
-    stub = _combatant_stub()
-    stub.defenses = SimpleNamespace(magic_shield=0.0)
-    assert receipt_state._state_proto_key(stub, 0.0) is None  # pylint: disable=W0212
-
-
 def test_cast_order_params_memo_key_carries_the_version() -> None:
     """The derived cast-order params memo keys on the generation as well."""
     source = (SRC_ROOT / "calculator" / "pipeline.py").read_text(encoding="utf-8")

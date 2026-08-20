@@ -15,8 +15,8 @@ the fix is a property rather than a one-line agreement between two branches.
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program.compile import action_from_event
 from src.calculator.survival import (
     EVENT_SLOTS,
@@ -40,7 +40,7 @@ def _target() -> Combatant:
         level=1,
         items=(),
         stats={"health": 1000.0, "is_melee": True},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,

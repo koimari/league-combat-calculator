@@ -23,6 +23,7 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.amp import LiveAmpRider, live_amp_for, live_amp_riders
 from src.calculator.program.compile import action_from_event
@@ -56,7 +57,7 @@ def _target(max_health: float, *, general_shield: float = 0.0) -> Combatant:
         level=1,
         items=(),
         stats={"health": max_health, "is_melee": True},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=general_shield,

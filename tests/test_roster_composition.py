@@ -11,6 +11,7 @@ import pytest
 
 from src.calculator import item_effects
 from src.calculator import roster_composition
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters.stat_derivation import StatSlot
 from src.calculator.item_behavior import KernelField, EngineLane
 from src.calculator.pipeline import FightParams
@@ -25,6 +26,30 @@ from src.calculator.roster_composition import (
 )
 
 
+@pytest.mark.parametrize(
+    "defenses", [SimpleNamespace(magic_shield=0.0), None], ids=["namespace", "none"]
+)
+def test_a_combatant_refuses_defenses_that_are_not_starting_defenses(defenses):
+    """The typed field is enforced where the participant is built.
+
+    Every walk-side consumer reads ``defenses`` by direct attribute, so a
+    stand-in would fail deep in the kernel on the first field it lacks; the
+    constructor names the participant and the wrong type instead.
+    """
+    with pytest.raises(
+        TypeError, match="ally:Lux: defenses must be a StartingDefenses"
+    ):
+        Combatant(
+            participant_id="ally:Lux",
+            team="ally",
+            champion_data={"name": "Lux"},
+            level=12,
+            items=(),
+            stats={},
+            defenses=defenses,
+        )
+
+
 def test_from_loadout_preserves_the_resolved_roster_fields():
     request = SimpleNamespace(level=12)
     loadout = SimpleNamespace(
@@ -32,7 +57,7 @@ def test_from_loadout_preserves_the_resolved_roster_fields():
         request=request,
         item_data=({"name": "Ruby Crystal"},),
         stats={"health": 1200.0},
-        defenses=SimpleNamespace(),
+        defenses=StartingDefenses(),
     )
 
     actor = from_loadout("enemy:Aatrox", "enemy", loadout)
@@ -60,7 +85,7 @@ def test_main_and_actor_params_keep_their_own_request_controls():
         18,
         [],
         stats={},
-        defenses=SimpleNamespace(),
+        defenses=StartingDefenses(),
         params=params,
     )
     roster = Combatant(
@@ -70,7 +95,7 @@ def test_main_and_actor_params_keep_their_own_request_controls():
         level=12,
         items=(),
         stats={},
-        defenses=SimpleNamespace(),
+        defenses=StartingDefenses(),
         request=SimpleNamespace(
             role="support",
             role_quest_complete=True,
@@ -118,7 +143,7 @@ def _catalyst_actor() -> Combatant:
         level=18,
         items=[{"name": "Catalyst of Aeons"}],
         stats={},
-        defenses=None,
+        defenses=StartingDefenses(),
     )
 
 
@@ -174,7 +199,7 @@ def _defender(*item_names: str) -> Combatant:
         level=13,
         items=tuple({"name": name} for name in item_names),
         stats={"health": 2000.0, "armor": 100.0, "magic_resistance": 50.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,

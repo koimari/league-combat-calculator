@@ -35,7 +35,6 @@ import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any, Mapping
 
 import pytest
@@ -49,6 +48,7 @@ import bench_coupled_optimizer as bench  # noqa: E402  (path is set above)
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.ability_spec import AttackClass
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters import (
     INTERPRETERS,
     active_cast,
@@ -759,7 +759,6 @@ def test_knights_vow_redirect_poisons_context_and_falls_back():
 def test_receipt_and_score_adapters_share_one_kernel():
     """Unit-level pin: the same typed action applied through the receipt
     ledger and the score ledger produces identical survival rows."""
-    from types import SimpleNamespace
 
     from src.calculator.participant_timeline import Combatant
     from src.calculator.program.compile import action_from_event
@@ -786,7 +785,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
         level=1,
         items=(),
         stats={"health": 100.0, "is_melee": True},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -1723,7 +1722,7 @@ def _pricing_target():
         level=1,
         items=(),
         stats={"health": 100000.0, "magic_resistance": DECLARED_SUBJECT_MR},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,

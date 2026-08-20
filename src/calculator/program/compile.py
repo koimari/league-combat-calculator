@@ -430,16 +430,11 @@ def revive_candidate_actions(
     aidx = next_aidx
     for actor_index, actor in enumerate(combatant_list):
         defenses = actor.defenses
-        revive_amount = max(
-            0.0, float(getattr(defenses, "revive_health_amount", 0.0) or 0.0)
-        )
-        revive_delay = max(0.0, float(getattr(defenses, "revive_delay", 0.0) or 0.0))
+        revive_amount = max(0.0, float(defenses.revive_health_amount))
+        revive_delay = max(0.0, float(defenses.revive_delay))
         if revive_amount <= 0.0 or revive_delay <= 0.0:
             continue
-        revive_source = (
-            str(getattr(defenses, "revive_source", "") or "")
-            or "Guardian Angel (Rebirth)"
-        )
+        revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
         revive_key = (
             f"revive_{revive_source.replace(' ', '_')}"
             if revive_source != "Guardian Angel (Rebirth)"

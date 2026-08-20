@@ -1,7 +1,6 @@
 """Regression coverage for coupled participant combat receipts."""
 
 from dataclasses import replace
-from types import SimpleNamespace
 
 import pytest
 
@@ -10,7 +9,10 @@ from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.program.views import LeafWriter, name_every_number
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.defensive_effects import (
+    StartingDefenses,
+    resolve_starting_defenses,
+)
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.app import app
@@ -75,7 +77,7 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
         level=18,
         items=(),
         stats={},
-        defenses=None,
+        defenses=StartingDefenses(),
         request=type(
             "RosterRequest",
             (),
@@ -100,7 +102,7 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
         level=18,
         items=(),
         stats={},
-        defenses=None,
+        defenses=StartingDefenses(),
         request=type(
             "RosterRequestWithoutOptions",
             (),
@@ -2470,7 +2472,7 @@ def _dummy_combatant(
     healing_received_multiplier: float = 1.0,
     items: tuple[dict, ...] = (),
 ) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -2795,7 +2797,7 @@ def _thorns_combatant(
     bonus_armor: float = 0.0,
     items: tuple = (),
 ) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -3022,8 +3024,6 @@ def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
 
 
 def test_maw_lifeline_enables_post_trigger_omnivamp():
-    from src.calculator.defensive_effects import StartingDefenses
-
     holder = Combatant(
         participant_id="main",
         team="main",
@@ -3079,7 +3079,7 @@ def test_immortal_path_below_half_amplifies_non_vamp_recovery():
         level=18,
         items=(get_item_by_name("Immortal Path"),),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -3645,7 +3645,7 @@ def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():
         level=target.level,
         items=target.items,
         stats=target.stats,
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -3691,7 +3691,7 @@ def test_threshold_shield_stays_armed_past_duration_until_matching_type_hit():
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -3734,7 +3734,7 @@ def test_threshold_shield_triggers_on_late_matching_type_hit_and_expires_after_d
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -3776,7 +3776,7 @@ def test_threshold_shield_trigger_is_preserved_on_damage_receipt():
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -4385,7 +4385,6 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
     """The score adapter (parallel-array ledger) and the receipt adapter
     share one kernel: an overheal-to-temporary-health heal arms the window
     in the score walk exactly like the annotated walk."""
-    from types import SimpleNamespace
 
     combatants = [
         Combatant(
@@ -4395,7 +4394,7 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
             level=1,
             items=(),
             stats={"health": 100.0, "is_melee": True},
-            defenses=SimpleNamespace(
+            defenses=StartingDefenses(
                 magic_shield=0.0,
                 physical_shield=0.0,
                 general_shield=0.0,
@@ -4685,7 +4684,7 @@ def test_noxian_reactive_shield_is_granted_after_matching_damage_only():
         level=18,
         items=(),
         stats={"health": 1000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -4742,7 +4741,7 @@ def test_celestial_opposition_reduction_lingers_two_seconds():
         level=1,
         items=(),
         stats={"health": 1000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -4785,7 +4784,7 @@ def test_bloodthirster_converts_explicit_lifesteal_excess_to_uncapped_duration_s
         level=18,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -5082,7 +5081,7 @@ def _regen_combatant(*item_names: str) -> Combatant:
         level=9,
         items=tuple({"name": name} for name in item_names),
         stats={"health": 1500.0},
-        defenses=SimpleNamespace(),
+        defenses=StartingDefenses(),
     )
 
 
