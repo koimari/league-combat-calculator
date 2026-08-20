@@ -210,7 +210,6 @@ MODULE_CC = {"Q": "knockup", "W": "silence", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -219,7 +218,3 @@ SOURCES = [
         "revision_timestamp": "2025-05-02T11:23:54Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

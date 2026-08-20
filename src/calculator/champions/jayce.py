@@ -134,55 +134,42 @@ def _level_tier(level: int) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _certified(parser):
-    """Certify a single-hit parser's cast boundary as the authored hit."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
-
 # Every kind below rides its own construction rather than MODULE_CC: each
 # Jayce slot is a stance dispatcher, and the two stances' abilities are
 # different spells with different control.
-_q_hammer = _certified(
-    simple_damage(
-        attr="Physical Damage",
-        dmg_type="physical",
-        source=("Q", _HAMMER),
-        # "smashes his hammer to the ground to deal physical damage ...
-        # and slow them for 2 seconds"
-        cc_kind="slow",
-    )
+_q_hammer = simple_damage(
+    attr="Physical Damage",
+    dmg_type="physical",
+    source=("Q", _HAMMER),
+    # "smashes his hammer to the ground to deal physical damage ...
+    # and slow them for 2 seconds"
+    cc_kind="slow",
+    event_order_certified="single_hit",
 )
 
 # Cannon's two cases DO share one entry shape, so the gate is a plain
 # ``by_option``: gated Shock Blast reads the "Increased Damage" TOTAL,
 # ungated reads the base line.
-_q_cannon = _certified(
-    by_option(
-        "accelerated_q",
-        {
-            # Shock Blast only detonates and grants sight — no control.
-            True: simple_damage(
-                attr="Increased Damage",
-                dmg_type="physical",
-                source=("Q", _CANNON),
-                cc_kind="none",
-            ),
-            False: simple_damage(
-                attr="Physical Damage",
-                dmg_type="physical",
-                source=("Q", _CANNON),
-                cc_kind="none",
-            ),
-        },
-        default=True,
-    )
+_q_cannon = by_option(
+    "accelerated_q",
+    {
+        # Shock Blast only detonates and grants sight — no control.
+        True: simple_damage(
+            attr="Increased Damage",
+            dmg_type="physical",
+            source=("Q", _CANNON),
+            cc_kind="none",
+            event_order_certified="single_hit",
+        ),
+        False: simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            source=("Q", _CANNON),
+            cc_kind="none",
+            event_order_certified="single_hit",
+        ),
+    },
+    default=True,
 )
 
 
@@ -321,15 +308,14 @@ def _w(ctx: SlotCtx) -> dict[str, Any] | None:
 # E: Thundering Blow (Hammer) / Acceleration Gate (Cannon — no damage)
 # ---------------------------------------------------------------------------
 
-_e_hammer = _certified(
-    simple_damage(
-        attr="Magic Damage",
-        dmg_type="magic",
-        source=("E", _HAMMER),
-        # The root lands over the cast time; what arrives with the damage
-        # is the "knock them back 600 units".
-        cc_kind="knockback",
-    )
+_e_hammer = simple_damage(
+    attr="Magic Damage",
+    dmg_type="magic",
+    source=("E", _HAMMER),
+    # The root lands over the cast time; what arrives with the damage
+    # is the "knock them back 600 units".
+    cc_kind="knockback",
+    event_order_certified="single_hit",
 )
 
 
@@ -503,7 +489,6 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Jayce")
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -512,7 +497,3 @@ SOURCES = [
         "revision_timestamp": "2026-04-13T19:03:09Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

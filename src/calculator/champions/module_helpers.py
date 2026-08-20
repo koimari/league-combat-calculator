@@ -137,6 +137,18 @@ def rank(ctx: SlotCtx) -> int:
     return ctx.rank_for() if ctx.slot != "P" else ctx.level
 
 
+def clamp(value: float, lower: float, upper: float) -> float:
+    """Clamp *value* into ``[lower, upper]``."""
+
+    return min(upper, max(lower, value))
+
+
+def missing_hp_fraction(ctx: SlotCtx) -> float:
+    """The shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
+
+    return clamp(float(ctx.option("target_missing_hp_pct")), 0.0, 100.0) / 100.0
+
+
 def no_damage(
     ctx: SlotCtx,
     *,

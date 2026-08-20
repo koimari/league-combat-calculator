@@ -28,6 +28,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import missing_hp_fraction
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -44,12 +45,6 @@ from .source_receipts import load_champion_sources
 # Blight stacks to 3 on basic attacks; abilities detonate all stacks.
 _BLIGHT_MAX_STACKS = 3
 _BLIGHT_DETONATION_ATTR = "Bonus Magic Damage per Stack"
-
-
-def _missing_hp_fraction(ctx: SlotCtx) -> float:
-    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.option("target_missing_hp_pct"))
-    return min(max(pct, 0.0), 100.0) / 100.0
 
 
 def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
@@ -74,7 +69,7 @@ def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
     # against the shared target_missing_hp_pct option.
     percent = extract_value(ability, "Active Maximum Magic Damage", rank)
     missing_health = float(ctx.target_stat("target_max_health") or 0.0) * (
-        _missing_hp_fraction(ctx)
+        missing_hp_fraction(ctx)
     )
     return percent / 100.0 * missing_health
 
@@ -142,7 +137,7 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
             parts.append(DamagePart("magic", empower, time_offset=0.0))
             empower_detail = (
                 f"W-active empower: {empower:g} magic "
-                f"({_missing_hp_fraction(ctx) * 100:g}% missing health "
+                f"({missing_hp_fraction(ctx) * 100:g}% missing health "
                 f"x Active Maximum Magic Damage {rank} points in W)"
             )
             detail.append(empower_detail)
@@ -271,25 +266,15 @@ ASSUMPTIONS = [
 ]
 
 
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
-
 SLOTS = {
     "Q": _piercing_arrow,
     "W": _blighted_quiver,
-    "E": _certified_single_hit(
-        simple_damage(attr="Physical Damage", dmg_type="physical")
+    "E": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
     ),
-    "R": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "P": _living_vengeance,
 }
 
@@ -309,6 +294,5 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 SOURCES = load_champion_sources("Varus")

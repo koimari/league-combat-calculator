@@ -149,6 +149,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "constants; the ledger's shield events cannot express pre-mitigation "
     "reduction or resistance buffs, so no flat shield amount is invented",
 ]
-
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

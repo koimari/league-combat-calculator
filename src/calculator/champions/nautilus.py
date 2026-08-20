@@ -150,5 +150,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "in the charge's wake hit enemies around the path, not the single "
     "target, and are not priced.",
 ]
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

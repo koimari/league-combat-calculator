@@ -71,7 +71,6 @@ def test_cp10_5_modules_are_reviewed_and_have_full_entry_receipts():
         module_name = {"Nunu & Willump": "nunu_willump"}.get(name, name.lower())
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
         assert engine_registration_kind(name) == "reviewed_module"
-        assert module.REVIEW_STATUS == "reviewed_module"
         assert len(module.SLOTS) == 5
         assert len(module.SOURCES) >= 1
     assert all(

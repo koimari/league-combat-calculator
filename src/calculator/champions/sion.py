@@ -175,4 +175,3 @@ OPTIONS = [
 ]
 
 parse_abilities = build_parser(SLOTS, "Sion", cc_kinds=MODULE_CC)
-REVIEW_STATUS = "reviewed_module"

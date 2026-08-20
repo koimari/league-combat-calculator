@@ -174,4 +174,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "out_of_scope",
 }
-REVIEW_STATUS = "reviewed_module"

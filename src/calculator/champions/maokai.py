@@ -165,5 +165,3 @@ MODULE_CC = {"Q": "slow", "W": "root", "E": "slow", "R": "root"}
 
 parse_abilities = build_parser(SLOTS, "Maokai", cc_kinds=MODULE_CC)
 SOURCES = _BATCH_SOURCES
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

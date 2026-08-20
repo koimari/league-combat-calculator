@@ -188,12 +188,10 @@ MODULE_COVERAGE = {
 # are schedules with unsourced cadence, which ``single_hit`` refuses.
 MODULE_CC = {"E": "immobilize", "Q": "none"}
 
-REVIEW_STATUS = "reviewed_module"
 
 parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",

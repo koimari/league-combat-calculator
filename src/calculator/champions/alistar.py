@@ -172,7 +172,6 @@ MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
 parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -181,10 +180,6 @@ SOURCES = [
         "revision_timestamp": "2025-05-02T10:24:06Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

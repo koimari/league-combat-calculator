@@ -79,7 +79,6 @@ OPTIONS: list[dict[str, Any]] = []
 MODULE_CC = {"E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

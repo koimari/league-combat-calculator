@@ -23,6 +23,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
+from .module_helpers import clamp
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -54,13 +55,9 @@ _R_GRAB_RANGE = 300.0
 _R_INITIAL_SPEED = 800.0
 
 
-def _clamp(value: float, lower: float, upper: float) -> float:
-    return min(upper, max(lower, value))
-
-
 def _q_geometry(ctx: SlotCtx) -> tuple[float, float, float, float]:
     """Return charge fraction, clamped distance, speed, and hit time."""
-    charge = _clamp(
+    charge = clamp(
         float(ctx.options.get("q_charge_seconds", _Q_MAX_CHARGE_SECONDS)),
         0.0,
         _Q_MAX_CHARGE_SECONDS,
@@ -82,7 +79,7 @@ def _w_trigger_slot(ctx: SlotCtx) -> str | None:
     if ctx.rank_for("W") < 1:
         return None
     stacks = int(
-        _clamp(
+        clamp(
             float(ctx.option("denting_blows_starting_stacks")),
             0.0,
             2.0,
@@ -183,7 +180,7 @@ def _timed_cast_starts(ctx: SlotCtx, duration: float) -> dict[str, list[float]]:
     q_ability = ctx.ability("Q")
     if q_ability is not None and ctx.rank_for("Q") >= 1:
         keys.append("Q")
-        cast_times["Q"] = _clamp(
+        cast_times["Q"] = clamp(
             float(ctx.option("q_charge_seconds")), 0.0, _Q_MAX_CHARGE_SECONDS
         )
         cooldowns["Q"] = effective_cooldown(
@@ -265,7 +262,7 @@ def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
     if duration is None or ctx.rank_for("W") < 1:
         return None
 
-    stacks = int(_clamp(float(ctx.option("denting_blows_starting_stacks")), 0.0, 2.0))
+    stacks = int(clamp(float(ctx.option("denting_blows_starting_stacks")), 0.0, 2.0))
     last_application = 0.0 if stacks else None
     proc_times: list[float] = []
     for time, _kind in _denting_stream(ctx, duration):
@@ -351,7 +348,7 @@ def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _e_hit_time(ctx: SlotCtx) -> float:
     q_time = _q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0
-    delay = _clamp(
+    delay = clamp(
         float(ctx.option("e_attack_delay")),
         0.0,
         2.0,
@@ -435,7 +432,7 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
         if ctx.rank_for("E") > 0
         else (_q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0)
     )
-    distance = _clamp(
+    distance = clamp(
         float(ctx.option("r_start_distance")),
         _R_GRAB_RANGE,
         800.0,
@@ -591,10 +588,3 @@ SLOTS = {
 MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

@@ -131,4 +131,3 @@ OPTIONS: list[dict[str, Any]] = []
 MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Veigar", cc_kinds=MODULE_CC)
-REVIEW_STATUS = "reviewed_module"

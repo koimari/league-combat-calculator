@@ -201,4 +201,3 @@ CAST_DEPENDENCIES = (
 MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Zed", cc_kinds=MODULE_CC)
-REVIEW_STATUS = "reviewed_module"

@@ -32,6 +32,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .module_helpers import missing_hp_fraction
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -61,12 +62,6 @@ E_DURATION_SECONDS = 1.5
 E_ON_HIT_MIN_EFFECTIVENESS = 0.12  # per-slash on-hits at 0% missing HP
 E_ON_HIT_MAX_EFFECTIVENESS = 0.24  # per-slash on-hits at 100% missing HP
 R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
-
-
-def _missing_hp_fraction(ctx: SlotCtx) -> float:
-    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.option("target_missing_hp_pct"))
-    return min(max(pct, 0.0), 100.0) / 100.0
 
 
 def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> float:
@@ -182,7 +177,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    missing = _missing_hp_fraction(ctx)
+    missing = missing_hp_fraction(ctx)
     min_hit = extract_named(
         ability, "Minimum Physical Damage per hit", rank, ctx.stats, ctx.target
     )
@@ -245,7 +240,7 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    missing = _missing_hp_fraction(ctx)
+    missing = missing_hp_fraction(ctx)
     max_hp = ctx.target_stat("target_max_health")
 
     def missing_health_override(unit: str, value: float) -> float | None:
@@ -472,10 +467,3 @@ SLOTS = {
 MODULE_CC = {"W": "knockup", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Bel'Veth", cc_kinds=MODULE_CC)
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

@@ -4,7 +4,7 @@ Cyclone knocks up; Crushing Blow's armor reduction is a shred, not
 control.
 """
 
-from src.calculator.champions import wukong
+from src.calculator.champions import get_champion_module_contract, wukong
 from tests import cc_review
 
 
@@ -33,7 +33,7 @@ class TestReviewedCrowdControl:
     def test_the_unmodelled_slots_stay_absent(self):
         """W is the clone's pet timeline; P is the armor buff."""
         assert "W" not in wukong.MODULE_CC and "P" not in wukong.MODULE_CC
-        assert wukong.MODULE_COVERAGE["W"] == "out_of_scope"
+        assert get_champion_module_contract("Wukong").coverage["W"] == "out_of_scope"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Wukong") == []

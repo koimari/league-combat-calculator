@@ -17,6 +17,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
+from .module_helpers import clamp
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 _W_MR_REDUCTION_PERCENT = 25.0
@@ -34,10 +35,6 @@ _E_PULSE_SECONDS = 1.0
 _R_CAST_START = _E_FIRST_TICK_TIME
 _R_CHANNEL_DURATION = 3.0
 _R_CAST_TIME = 0.25
-
-
-def _clamp(value: float, lower: float, upper: float) -> float:
-    return min(upper, max(lower, value))
 
 
 def _wall_of_pain(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -183,7 +180,7 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
         return _defile_timed(ctx, ability, rank)
 
     requested = int(ctx.option("e_ticks"))
-    ticks = int(_clamp(float(requested), 0.0, float(_E_MAX_SELECTED_TICKS)))
+    ticks = int(clamp(float(requested), 0.0, float(_E_MAX_SELECTED_TICKS)))
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
@@ -376,10 +373,3 @@ SLOTS = {
 MODULE_CC = {"Q": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Karthus", cc_kinds=MODULE_CC)
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

@@ -65,4 +65,3 @@ parse_abilities = build_parser(SLOTS, "Mordekaiser", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

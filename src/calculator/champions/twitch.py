@@ -240,6 +240,5 @@ parse_abilities = build_parser(SLOTS, "Twitch", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 SOURCES = load_champion_sources("Twitch")

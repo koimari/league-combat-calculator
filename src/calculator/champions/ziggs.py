@@ -125,19 +125,6 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _single_hit_certified(parser: Any) -> Any:
-    """Attach the reviewed one-hit boundary to a slot parser result."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    parse.phase = getattr(parser, "phase", "damage")
-    return parse
-
-
 OPTIONS = [
     {
         "key": "passive_procs",
@@ -181,18 +168,28 @@ SLOTS = {
     # passives (Eclipse/Muramana/Bastionbreaker): it is not a guessed
     # multi-tick schedule, and E's mine count remains a single aggregate
     # packet under the selected ``mines_hit`` option.
-    "Q": _single_hit_certified(simple_damage(attr="Magic Damage", dmg_type="magic")),
-    "W": _single_hit_certified(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _hexplosive_minefield,
-    "R": _single_hit_certified(
-        by_option(
-            "r_sweet_spot",
-            {
-                True: simple_damage(attr="Epicenter Magic Damage", dmg_type="magic"),
-                False: simple_damage(attr="Reduced Damage", dmg_type="magic"),
-            },
-            default=True,
-        )
+    "R": by_option(
+        "r_sweet_spot",
+        {
+            True: simple_damage(
+                attr="Epicenter Magic Damage",
+                dmg_type="magic",
+                event_order_certified="single_hit",
+            ),
+            False: simple_damage(
+                attr="Reduced Damage",
+                dmg_type="magic",
+                event_order_certified="single_hit",
+            ),
+        },
+        default=True,
     ),
     "P": _short_fuse,
 }
@@ -207,7 +204,6 @@ MODULE_CC = {"Q": "none", "W": "knockback", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Ziggs", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -216,7 +212,3 @@ SOURCES = [
         "revision_timestamp": "2025-10-22T22:15:37Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

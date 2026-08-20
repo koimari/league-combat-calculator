@@ -206,4 +206,3 @@ parse_abilities = build_parser(SLOTS, "LeBlanc", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "P" else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

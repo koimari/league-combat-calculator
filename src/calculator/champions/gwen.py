@@ -279,8 +279,6 @@ SOURCES = [
         "2021-03-30T16:43:26Z",
     ),
 ]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

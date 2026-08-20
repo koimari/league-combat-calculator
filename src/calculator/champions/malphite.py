@@ -181,6 +181,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "full-window Granite Shield assumption; the shield-break revert to "
     "the un-tripled value is part of that documented boundary",
 ]
-
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

@@ -36,18 +36,6 @@ _P_BLEED_DURATION = 2.0  # 16 x 0.125s
 _P_BLEED_TICK_INTERVAL = 0.125
 
 
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
-
 def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: one 3-stack consume bleed per fight (``passive_procs`` option).
 
@@ -116,13 +104,10 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
 PACKET_SHA256 = "7a3d30a61866ada61c6491cf4aecec11630184dd05c83eba0b177309e54647fb"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Talon", PACKET_SHA256
+    "Talon", PACKET_SHA256, single_hit_slots=frozenset({"Q", "W", "R"})
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["P"] = _blades_end
-SLOTS["Q"] = _certified_single_hit(SLOTS["Q"])
-SLOTS["W"] = _certified_single_hit(SLOTS["W"])
-SLOTS["R"] = _certified_single_hit(SLOTS["R"])
 
 # Reviewed crowd control, read from the cached kit.  Q (Noxian Diplomacy)
 # "dashes toward the target enemy, stabbing the target upon arrival to
@@ -170,7 +155,6 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

@@ -62,4 +62,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(+ 200% AP) restored after a 3s resurrection on a 120 / 90 / 60s cooldown "
     "by rank (cached R Heal row).",
 ]
-REVIEW_STATUS = "reviewed_module"

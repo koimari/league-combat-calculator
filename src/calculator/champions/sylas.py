@@ -75,7 +75,6 @@ parse_abilities = build_parser(SLOTS, "Sylas", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

@@ -150,7 +150,6 @@ MODULE_CC = {"Q": "slow"}
 parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -159,7 +158,3 @@ SOURCES = [
         "revision_timestamp": "2026-03-25T15:16:50Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

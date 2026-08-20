@@ -113,4 +113,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

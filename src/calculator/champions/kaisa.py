@@ -30,6 +30,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import clamp
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -74,10 +75,6 @@ _W_HIT = 0
 _AUTO_HIT = 1
 
 
-def _clamp(value: float, lower: float, upper: float) -> float:
-    return min(upper, max(lower, value))
-
-
 def _timed_window(ctx: SlotCtx) -> tuple[float, float] | None:
     """(duration, auto uptime) for a timed parse; None in one-rotation.
 
@@ -110,7 +107,7 @@ def _plasma_values(ctx: SlotCtx) -> tuple[float, float]:
 
 def _w_hit_time(ctx: SlotCtx) -> tuple[float, float]:
     """Return clamped W distance and time from cast start to impact."""
-    distance = _clamp(
+    distance = clamp(
         float(ctx.option("w_target_distance")),
         0.0,
         _W_MAX_RANGE,
@@ -169,7 +166,7 @@ def _rupture_ratio(ctx: SlotCtx) -> float:
 def _seeded_stacks(ctx: SlotCtx) -> int:
     """The user's pre-fight Plasma stacks, clamped below the rupture count."""
     return int(
-        _clamp(
+        clamp(
             float(ctx.option("plasma_starting_stacks")),
             0.0,
             float(_PLASMA_STACKS_TO_RUPTURE - 1),
@@ -694,10 +691,3 @@ SLOTS = {
 MODULE_CC = {"Q": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kai'Sa", cc_kinds=MODULE_CC)
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

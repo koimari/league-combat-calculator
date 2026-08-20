@@ -21,7 +21,11 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import (
+    _CHAMPION_MODULES,
+    get_champion_module_contract,
+    parse_champion_abilities,
+)
 from src.calculator.champions.slotlib import extract_named
 from src.calculator.healing import derive_self_healing
 from src.calculator.stats import calculate_total_stats
@@ -561,7 +565,11 @@ class TestCoverageFlags:
             "shaco": {"Q": "modeled", "W": "modeled", "E": "modeled", "R": "modeled"},
         }
         for module_name, flagged in expectations.items():
-            module = importlib.import_module(f"src.calculator.champions.{module_name}")
-            coverage = module.MODULE_COVERAGE
+            name = next(
+                display
+                for display, candidate in _CHAMPION_MODULES.items()
+                if candidate == module_name
+            )
+            coverage = get_champion_module_contract(name).coverage
             for slot, status in flagged.items():
                 assert coverage[slot] == status, f"{module_name} {slot}"

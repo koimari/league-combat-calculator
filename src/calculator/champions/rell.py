@@ -111,5 +111,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "target's maximum health + 3% per 100 AP on the empowered basic "
     "attack or Shattering Strike.",
 ]
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

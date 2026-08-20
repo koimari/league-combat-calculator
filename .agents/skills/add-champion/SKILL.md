@@ -19,9 +19,12 @@ The named module must publish the fields validated by
 - `OPTIONS` and `ASSUMPTIONS`, including every scenario boundary.
 - `SOURCES`, loaded through `source_receipts.load_champion_sources()` when
   they come from generated full-entry evidence.
-- `MODULE_COVERAGE` with exactly P/Q/W/E/R, each classified as
-  `modeled`, `no_damage`, or `out_of_scope`.
-- `REVIEW_STATUS = "reviewed_module"`.
+- `MODULE_COVERAGE` only when the derivation is wrong for the kit: the
+  contract classifies every slot in `SLOTS` as `modeled` and the rest as
+  `out_of_scope`; declare the full P/Q/W/E/R map (values `modeled`,
+  `no_damage`, `out_of_scope`) when an emitted slot is a zero-damage or
+  partial row. There is no review-status field; a registered module is
+  a reviewed module.
 
 If the module uses `build_packet_module()`, pass champion-specific tick
 counts, parser overrides, event certification, timings, and assumptions from

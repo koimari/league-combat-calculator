@@ -95,7 +95,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

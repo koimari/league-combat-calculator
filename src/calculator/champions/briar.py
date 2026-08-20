@@ -41,6 +41,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .inputs import target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
+from .module_helpers import missing_hp_fraction
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 # HARDCODED: verify on patch updates — wiki values with no clean JSON
@@ -69,12 +70,6 @@ Q_SHRED_DURATION = 5.0
 # ``HealAnchor.CAST_SCHEDULE`` and counts its four 0.25-second ticks from
 # the cast, not from the damage the scream eventually deals.
 E_FULL_CHARGE_SECONDS = 1.0
-
-
-def _missing_hp_fraction(ctx: SlotCtx) -> float:
-    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.option("target_missing_hp_pct"))
-    return min(max(pct, 0.0), 100.0) / 100.0
 
 
 def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -213,7 +208,7 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     target = dict(ctx.target or {})
     target["target_missing_health"] = target_stat(
         target, "target_max_health"
-    ) * _missing_hp_fraction(ctx)
+    ) * missing_hp_fraction(ctx)
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, target)
 
     entry = damage_entry(
@@ -381,7 +376,6 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 SLOTS = {
     "W_frenzy": _blood_frenzy,
@@ -404,7 +398,6 @@ MODULE_CC = {"Q": "stun", "W": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",

@@ -21,6 +21,20 @@ from ..cast_dependency import (
 
 REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 VALID_COVERAGE = frozenset({"modeled", "no_damage", "out_of_scope"})
+REVIEW_STATUS = "reviewed_module"
+
+
+def default_coverage(slots: dict[str, Any]) -> dict[str, str]:
+    """The five-slot coverage a module's ``SLOTS`` map implies.
+
+    A slot the module emits is ``modeled``; one it does not is
+    ``out_of_scope``.  A module whose emitted slots include a declared
+    zero-damage or partial slot states that itself with ``MODULE_COVERAGE``.
+    """
+    return {
+        slot: ("modeled" if slot in slots else "out_of_scope")
+        for slot in REQUIRED_CHAMPION_SLOTS
+    }
 
 
 class ChampionModuleContractError(ValueError):
@@ -40,7 +54,7 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     assumptions: tuple[str, ...]
     sources: tuple[dict[str, Any], ...]
     coverage: dict[str, str]
-    review_status: str
+    review_status: str = REVIEW_STATUS
     packet_spec: dict[str, Any] | None = None
     packet_sha256: str | None = None
     cast_dependencies: tuple[CastDependency, ...] = ()
@@ -253,6 +267,8 @@ def contract_from_module(
         )
 
     coverage = getattr(module, "MODULE_COVERAGE", None)
+    if coverage is None:
+        coverage = default_coverage(slots)
     if not isinstance(coverage, dict) or set(coverage) != set(REQUIRED_CHAMPION_SLOTS):
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_COVERAGE must declare P/Q/W/E/R"
@@ -262,12 +278,6 @@ def contract_from_module(
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_COVERAGE has invalid values: "
             f"{sorted(invalid_coverage)}"
-        )
-
-    review_status = getattr(module, "REVIEW_STATUS", None)
-    if review_status != "reviewed_module":
-        raise ChampionModuleContractError(
-            f"{module.__name__} REVIEW_STATUS must be 'reviewed_module'"
         )
 
     packet_spec = getattr(
@@ -310,7 +320,6 @@ def contract_from_module(
         assumptions=tuple(assumptions),
         sources=tuple(sources),
         coverage=dict(coverage),
-        review_status=review_status,
         packet_spec=packet_spec,
         packet_sha256=packet_sha256,
         cast_dependencies=cast_dependencies,

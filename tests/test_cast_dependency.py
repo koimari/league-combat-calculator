@@ -648,8 +648,6 @@ def _champion_module(**attributes) -> ModuleType:
     module.OPTIONS = []
     module.ASSUMPTIONS = ["A synthetic module for the contract gate."]
     module.SOURCES = [{"label": "synthetic", "url": SOURCE}]
-    module.MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-    module.REVIEW_STATUS = "reviewed_module"
     for name, value in attributes.items():
         setattr(module, name, value)
     return module

@@ -191,4 +191,3 @@ SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "W" else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

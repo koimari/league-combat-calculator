@@ -152,4 +152,3 @@ OPTIONS = [
 MODULE_CC = {"Q": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Twisted Fate", cc_kinds=MODULE_CC)
-REVIEW_STATUS = "reviewed_module"

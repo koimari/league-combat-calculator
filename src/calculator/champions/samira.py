@@ -155,4 +155,3 @@ SOURCES = load_champion_sources("Samira")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

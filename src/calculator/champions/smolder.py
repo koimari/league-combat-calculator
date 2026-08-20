@@ -50,7 +50,7 @@ from .slotlib import with_item_on_hits
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Smolder", PACKET_SHA256)
+    build_packet_module("Smolder", PACKET_SHA256, single_hit_slots=frozenset({"R"}))
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -64,18 +64,6 @@ _BURN_BONUS_AD_PER_100 = 2.5
 _BURN_STACKS_PER_100 = 0.5
 _TIER3_STACKS = 225
 _BURN_DURATION = 3.0
-
-
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
 
 
 def _dragon_practice(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -181,7 +169,6 @@ SLOTS["P"] = _dragon_practice
 SLOTS["Q"] = _super_scorcher_breath
 SLOTS["W"] = _achooo
 SLOTS["E"] = _flap_flap_flap
-SLOTS["R"] = _certified_single_hit(SLOTS["R"])
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
 )
@@ -248,7 +235,6 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

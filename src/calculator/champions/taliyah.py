@@ -23,6 +23,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
+from .module_helpers import clamp
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -46,10 +47,6 @@ _Q_MAX_RANGE = 1000.0
 _Q_WORKED_COST = 10.0
 _Q_WORKED_COOLDOWN_MULTIPLIER = 0.5
 _Q_WORKED_MINIMUM_COOLDOWN = 0.75
-
-
-def _clamp(value: float, lower: float, upper: float) -> float:
-    return min(upper, max(lower, value))
 
 
 def _normal_projectile_time(distance: float) -> float:
@@ -193,7 +190,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     ground = str(ctx.options.get("q_ground", "normal"))
     if ground not in {"normal", "worked"}:
         raise ValueError("Taliyah q_ground must be normal or worked")
-    distance = _clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)
+    distance = clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)
 
     # A timed fight window derives the terrain sequence itself; the
     # q_ground select prices the two states in one-rotation mode only.
@@ -269,7 +266,7 @@ def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     requested = int(ctx.option("e_detonations"))
-    detonations = int(_clamp(float(requested), 0.0, 4.0))
+    detonations = int(clamp(float(requested), 0.0, 4.0))
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     detonation = extract_named(
         ability, "Detonation Magic Damage", rank, ctx.stats, ctx.target
@@ -397,10 +394,3 @@ SOURCES = [
 SLOTS = {"E": _unraveled_earth, "W": _seismic_shove, "Q": _threaded_volley}
 
 parse_abilities = build_parser(SLOTS, "Taliyah")
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

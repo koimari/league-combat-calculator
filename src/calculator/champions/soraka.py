@@ -139,12 +139,6 @@ MODULE_CC = {"Q": "slow", "E": "root"}
 parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position

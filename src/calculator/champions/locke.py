@@ -185,7 +185,6 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 ASSUMPTIONS += [
     "W (Soul Ignition) recast heal is authored by the grey-health "

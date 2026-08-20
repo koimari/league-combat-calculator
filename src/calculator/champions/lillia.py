@@ -149,6 +149,3 @@ SOURCES = load_champion_sources("Lillia")
 MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "sleep"}
 
 parse_abilities = build_parser(SLOTS, "Lillia", cc_kinds=MODULE_CC)
-
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

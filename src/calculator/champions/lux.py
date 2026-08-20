@@ -146,4 +146,3 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R", "W"} else "out_of_scope")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

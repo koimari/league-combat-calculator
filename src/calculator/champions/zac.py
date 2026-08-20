@@ -172,7 +172,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "
     "(cached passive prose; all four bloblets assumed to survive).",
 ]
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

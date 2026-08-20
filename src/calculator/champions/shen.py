@@ -269,10 +269,3 @@ SLOTS = {"E": _shadow_dash, "Q": _twilight_assault}
 MODULE_CC = {"E": "taunt", "Q": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

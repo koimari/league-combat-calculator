@@ -455,7 +455,6 @@ CAST_DEPENDENCIES = (
 parse_abilities = build_parser(SLOTS, "Syndra", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -464,7 +463,3 @@ SOURCES = [
         "revision_timestamp": "2026-06-02T13:31:37Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

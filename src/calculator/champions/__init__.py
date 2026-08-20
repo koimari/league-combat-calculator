@@ -774,12 +774,12 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
     """Return the module-level trust metadata used by the validation layer.
 
     Extends :func:`get_champion_options_meta` with the structural facts a
-    trust label needs: the slot map keys, the module's own coverage
-    declaration, and its review status.  ``coverage`` values are the
-    module's ``MODULE_COVERAGE`` dict (``"modeled"`` / ``"no_damage"`` /
-    ``"out_of_scope"`` per slot) when declared, else an empty dict;
-    ``slots`` is the ordered list of SLOTS-map keys the module actually
-    implements.  Unknown champions return an empty metadata dict.
+    trust label needs: the slot map keys, the contract's five-slot coverage
+    (the module's ``MODULE_COVERAGE`` when declared, else derived from its
+    ``SLOTS``; ``"modeled"`` / ``"no_damage"`` / ``"out_of_scope"`` per
+    slot), and its review status.  ``slots`` is the ordered list of
+    SLOTS-map keys the module actually implements.  Unknown champions
+    return an empty metadata dict.
 
     Returns:
         ``{"options": [...], "assumptions": [...], "sources": [...],

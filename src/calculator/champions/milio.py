@@ -33,7 +33,6 @@ PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
     slot: ("modeled" if slot == "Q" else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

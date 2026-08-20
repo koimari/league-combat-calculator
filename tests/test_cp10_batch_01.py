@@ -5,7 +5,11 @@ import json
 
 import pytest
 
-from src.calculator.champions import engine_registration_kind, parse_champion_abilities
+from src.calculator.champions import (
+    engine_registration_kind,
+    get_champion_module_contract,
+    parse_champion_abilities,
+)
 
 BATCH = (
     "Draven",
@@ -60,10 +64,9 @@ def test_batch_modules_are_reviewed_and_carry_parent_plus_slot_receipts():
         module_name = name.lower().replace(" ", "_").replace("'", "")
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
         assert engine_registration_kind(name) == "reviewed_module"
-        assert module.REVIEW_STATUS == "reviewed_module"
         assert len(module.SOURCES) == 5
         assert module.SOURCES[0]["url"].endswith(f"/{name.replace(' ', '_')}")
-        assert {slot: module.MODULE_COVERAGE[slot] for slot in "PQWER"} == {
+        assert get_champion_module_contract(name).coverage == {
             slot: "modeled" for slot in "PQWER"
         }
 

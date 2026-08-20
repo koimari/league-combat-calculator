@@ -261,5 +261,3 @@ ASSUMPTIONS = [
 ]
 
 SOURCES = load_champion_sources("Yone")
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

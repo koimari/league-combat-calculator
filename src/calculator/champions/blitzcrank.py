@@ -230,7 +230,6 @@ MODULE_CC = {"Q": "immobilize", "E": "knockup", "R": "silence"}
 parse_abilities = build_parser(SLOTS, "Blitzcrank", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -239,7 +238,3 @@ SOURCES = [
         "revision_timestamp": "2026-07-29T20:05:52Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

@@ -190,7 +190,6 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "knockback"}
 parse_abilities = build_parser(SLOTS, "Jarvan IV", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -199,7 +198,3 @@ SOURCES = [
         "revision_timestamp": "2025-12-18T18:39:02Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

@@ -331,7 +331,6 @@ MODULE_CC = {"Q": "none", "Q2": "none", "W": "slow", "E": "immobilize"}
 parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
 SOURCES = [
     {
         "label": "Local League Wiki cache",
@@ -340,10 +339,6 @@ SOURCES = [
         "revision_timestamp": "2026-03-27T01:51:45Z",
     }
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
 
 from .healing_contract import (
     declare_healing_rule,

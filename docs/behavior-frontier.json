@@ -575,7 +575,7 @@
     "issue": "issue #213",
     "produced_fallbacks_by_receiver": {
       "chained": 1,
-      "entry": 21,
+      "entry": 15,
       "event": 4,
       "fix": 2,
       "part_timing": 1,
@@ -585,7 +585,7 @@
     "totals": {
       "forbidden_input_fallbacks": 0,
       "hand_built_entries": 93,
-      "produced_fallbacks": 33
+      "produced_fallbacks": 27
     }
   }
 }

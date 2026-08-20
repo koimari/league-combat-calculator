@@ -15,6 +15,7 @@ from src.calculator.champions import (
 from src.calculator.champions.module_contract import (
     ChampionModuleContractError,
     contract_from_module,
+    default_coverage,
 )
 from src.calculator.champions.packet_module import (
     build_packet_module,
@@ -37,9 +38,11 @@ def test_every_registered_champion_satisfies_the_module_contract():
         assert contract.options == tuple(module.OPTIONS)
         assert contract.assumptions == tuple(module.ASSUMPTIONS)
         assert contract.sources == tuple(module.SOURCES)
-        assert contract.coverage == module.MODULE_COVERAGE
+        assert contract.coverage == getattr(
+            module, "MODULE_COVERAGE", default_coverage(module.SLOTS)
+        )
         assert set(contract.coverage) == REQUIRED_SLOTS
-        assert contract.review_status == module.REVIEW_STATUS == "reviewed_module"
+        assert contract.review_status == "reviewed_module"
         if contract.packet_spec is not None:
             assert contract.packet_sha256 == packet_spec_sha256(contract.packet_spec)
 
@@ -53,18 +56,14 @@ def test_jayce_runtime_and_published_review_metadata_share_one_module():
     assert contract.parse_abilities is jayce.parse_abilities
     assert set(contract.slots) == set(jayce.SLOTS) == {"Q", "W", "E", "R"}
     assert contract.sources == tuple(jayce.SOURCES)
-    assert (
-        contract.coverage
-        == jayce.MODULE_COVERAGE
-        == {
-            "P": "out_of_scope",
-            "Q": "modeled",
-            "W": "modeled",
-            "E": "modeled",
-            "R": "modeled",
-        }
-    )
-    assert contract.review_status == jayce.REVIEW_STATUS == "reviewed_module"
+    assert contract.coverage == {
+        "P": "out_of_scope",
+        "Q": "modeled",
+        "W": "modeled",
+        "E": "modeled",
+        "R": "modeled",
+    }
+    assert contract.review_status == "reviewed_module"
 
 
 def test_dispatcher_fails_closed_for_an_unregistered_name():
@@ -131,7 +130,6 @@ class TestModuleCcDeclaration:
         module.ASSUMPTIONS = ["one"]
         module.SOURCES = [{"label": "cache"}]
         module.MODULE_COVERAGE = dict.fromkeys("PQWER", "out_of_scope")
-        module.REVIEW_STATUS = "reviewed_module"
         for key, value in overrides.items():
             setattr(module, key, value)
         return module

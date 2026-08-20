@@ -146,9 +146,6 @@ def parse_abilities(*args, **kwargs):
 parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
 
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"
-
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position

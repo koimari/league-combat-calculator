@@ -329,5 +329,3 @@ SOURCES = [
         "2023-11-19T16:03:40Z",
     ),
 ]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"

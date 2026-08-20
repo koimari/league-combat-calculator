@@ -64,7 +64,6 @@ def test_cp10_7_modules_are_reviewed_and_have_full_entry_receipts():
     for name in NEW_BATCH:
         module = importlib.import_module(f"src.calculator.champions.{name.lower()}")
         assert engine_registration_kind(name) == "reviewed_module"
-        assert module.REVIEW_STATUS == "reviewed_module"
         assert len(module.SLOTS) == 5
         assert len(module.SOURCES) == 6
 

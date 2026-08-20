@@ -7,6 +7,7 @@ import pytest
 
 from src.calculator.champions import (
     engine_registration_kind,
+    get_champion_module_contract,
     get_champion_options_meta,
     parse_champion_abilities,
 )
@@ -68,10 +69,9 @@ def test_batch_modules_are_reviewed_and_carry_full_parent_slot_receipts():
         }.get(name, name.lower())
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
         assert engine_registration_kind(name) == "reviewed_module"
-        assert module.REVIEW_STATUS == "reviewed_module"
         assert len(module.SOURCES) == 6
         assert module.SOURCES[0]["revision_id"] > 0
-        assert {slot: module.MODULE_COVERAGE[slot] for slot in "PQWER"}
+        assert set(get_champion_module_contract(name).coverage) == set("PQWER")
 
 
 @pytest.mark.parametrize("name", BATCH)

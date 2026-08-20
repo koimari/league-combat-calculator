@@ -40,18 +40,6 @@ _PROC_STACKS = 3
 _PROC_LEVELING_ATTR = "Per-Level Scaling"
 
 
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
-
 def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: one 3-stack true-damage consume per fight, when 3+ abilities land."""
     ability = ctx.ability()
@@ -174,11 +162,15 @@ def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 SLOTS = {
-    "Q": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
-    "W": _certified_single_hit(
-        simple_damage(attr="Total Magic Damage", dmg_type="magic")
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
-    "E": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "W": simple_damage(
+        attr="Total Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _disintegration_ray,  # already authors its 13-tick channel timing
     "P": _organic_deconstruction,  # after the damage slots: reads their emissions
 }
@@ -194,7 +186,5 @@ MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Vel'Koz", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"
 
 SOURCES = load_champion_sources("Vel'Koz")

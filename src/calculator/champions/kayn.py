@@ -136,4 +136,3 @@ parse_abilities = build_parser(SLOTS, "Kayn", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "R"} else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

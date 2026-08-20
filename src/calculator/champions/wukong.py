@@ -184,10 +184,3 @@ SOURCES = [
         "revision_timestamp": "2026-05-21T19:27:04Z",
     }
 ]
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

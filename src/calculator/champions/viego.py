@@ -43,21 +43,9 @@ _R_BASE_AD_RATIO = 1.20
 PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756b"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Viego", PACKET_SHA256
+    "Viego", PACKET_SHA256, single_hit_slots=frozenset({"W"})
 )
 PACKET_SPEC = SLOTS.packet_spec
-
-
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
 
 
 def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -167,7 +155,6 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(SLOTS)
 SLOTS["Q"] = _blade_of_the_ruined_king
 SLOTS["R"] = _heartbreaker
-SLOTS["W"] = _certified_single_hit(SLOTS["W"])
 SLOTS["Q"] = with_item_on_hits(
     SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit",)
 )
@@ -224,4 +211,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "R"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

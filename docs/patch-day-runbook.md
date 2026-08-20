@@ -210,7 +210,8 @@ For EVERY stale flag, pick exactly one of these outcomes:
 - The flagged value is deliberately out of scope (e.g. a known-degraded wiki
   parse listed in `Agents.md`, or a mechanic the module declares out of
   scope). Record the boundary where it lives:
-  - Champion module: `MODULE_COVERAGE` entry + `ASSUMPTIONS` line.
+  - Champion module: the slot left out of `SLOTS` (the contract derives
+    `out_of_scope`) or a declared `MODULE_COVERAGE` entry, + `ASSUMPTIONS` line.
   - Item: worklist entry or `docs/item-source-reconciliation.md` note.
 - The boundary must name the value, the patch that moved it, and why it is
   not modeled.
