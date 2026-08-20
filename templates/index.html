@@ -464,12 +464,10 @@
           </div>
         </details>
 
-        <!-- P7 feedback widget mount. feedback.js renders into this hook; if it
-             is removed, the widget falls back to .canvas and stays silent when
-             neither exists. P5: optionally expose
-             window.scryglass.getCurrentLoadout() (returns the current
-             /api/calculate payload) for a more faithful loadout snapshot;
-             feedback.js falls back to DOM capture without it. -->
+        <!-- P7 feedback widget mount. feedback.js renders into this hook (or
+             .canvas without it) and reads the scenario through
+             window.scryglass.getCurrentLoadout(): the exact /api/calculate
+             payload behind the displayed result, published by app.js. -->
         <div id="feedbackWidget"></div>
 
         <p id="scenarioSentence" class="visually-hidden" aria-live="polite"></p>

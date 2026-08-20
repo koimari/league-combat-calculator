@@ -130,6 +130,85 @@ def test_receipt_prediction_matches_calculate_output(sqlite_database):
     assert set(body["predicted"]["sources"]) >= {"Q", "W", "E", "R"}
 
 
+def _ui_payload():
+    """The shape app.js's engineFightPayload sends: the timed window, the
+    level-20 cap, a champion roster that fights back, every field filled."""
+    enemy = {
+        "kind": "champion",
+        "champion": "Garen",
+        "level": 18,
+        "items": ["Sunfire Aegis"],
+        "boots": "Plated Steelcaps",
+        "include_boots": True,
+        "item_options": {},
+        "role": "",
+        "role_quest_complete": False,
+        "champion_options": {},
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+    }
+    return {
+        "champion": "Ahri",
+        "level": 20,
+        "boots": "Sorcerer's Shoes",
+        "include_boots": True,
+        "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+        "item_options": {},
+        "keystone": "",
+        "target_health": 1000,
+        "target_bonus_health": 0,
+        "target_armor": 100,
+        "target_mr": 100,
+        "enemies": [enemy],
+        "allies": [],
+        "role": "top",
+        "role_quest_complete": True,
+        "include_actives": True,
+        "include_crossover": True,
+        "champion_options": {},
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "rotations": 2,
+        "auto_attack_uptime_mode": "calculated",
+        "enemies_attack": True,
+        "fight_mode": "time_based",
+        "fight_duration": 10,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 0,
+    }
+
+
+def test_receipt_predicts_the_total_the_ui_displays_for_a_roster_fight(
+    sqlite_database,
+):
+    """feedback.js posts the exact payload behind the displayed result, and
+    the receipt must predict the number that was on screen: in a roster
+    fight app.js headlines the attacker's combat row, not the rotation
+    ``total_damage`` — so the /api/validation bias flag measures what the
+    user actually compared against their game."""
+    client = _client()
+    payload = _ui_payload()
+    result = client.post("/api/calculate", json=payload).get_json()
+    main = next(
+        row for row in result["combat"]["breakdown"] if row["participant_id"] == "main"
+    )
+    assert main["total_damage"] != result["total_damage"]
+
+    receipt = client.post(
+        "/api/receipts",
+        json={"champion": "Ahri", "loadout": payload, "source": "manual"},
+    )
+    assert receipt.status_code == 201, receipt.get_json()
+    body = receipt.get_json()
+    assert body["predicted"]["tdd"] == main["total_damage"]
+    assert body["predicted"]["sources"] == {
+        source["name"]: source["total_damage"] for source in main["sources"]
+    }
+    assert body["matched"] is True  # a bare receipt confirms the prediction
+
+    row = client.get("/api/validation?champion=Ahri").get_json()["feedback"][0]
+    assert row["loadout"] == payload
+    assert row["expected"]["tdd"] == main["total_damage"]
+
+
 def test_receipt_confirmation_when_observed_omitted(sqlite_database):
     """Omitted observed = positive confirmation receipt (observed := predicted)."""
     client = _client()

@@ -56,6 +56,8 @@ const engine = {
   fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
   requestId: 0,
+  // { a, b, requests: { a, b } }: the displayed /api/calculate results and
+  // the exact payloads that produced them; null while nothing is displayed.
   responses: null,
   pending: false,
   loadoutStats: null,
@@ -2067,10 +2069,11 @@ function scheduleEngineCalculation() {
     }
     hideEngineError();
     const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
-    Promise.all(builds.map((side) => fetch("/api/calculate", {
+    const payloads = builds.map((side) => engineFightPayload(side));
+    Promise.all(payloads.map((payload) => fetch("/api/calculate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(engineFightPayload(side)),
+      body: JSON.stringify(payload),
     }).then((response) => response.json())))
       .then((results) => {
         if (requestId !== engine.requestId) return;
@@ -2089,11 +2092,17 @@ function scheduleEngineCalculation() {
         // Clear the in-flight flag before rendering: the verdict strip reads
         // it to decide between RECALCULATING and the settled delta.
         engine.pending = false;
-        engine.responses = { a: results[0], b: results[1] || null };
+        engine.responses = {
+          a: results[0],
+          b: results[1] || null,
+          requests: { a: payloads[0], b: payloads[1] || null },
+        };
         syncPracticeDummyStatsFromResponse(engine.responses.a);
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
         renderScenarioRail();
+        // feedback.js re-reads the displayed payload off this signal.
+        document.dispatchEvent(new Event("scryglass:result"));
       })
       .catch((error) => {
         if (requestId === engine.requestId) {
@@ -5182,6 +5191,11 @@ function dismissShareBanner() {
 document.addEventListener("scryglass:engine-ready", () => {
   loadTrustLabels(state.attacker.champion || "");
 });
+
+// feedback.js validates the number on screen: the hook hands it the exact
+// /api/calculate payload behind the displayed Build A result (null while
+// nothing is displayed), so a receipt's prediction is that same total.
+window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null };
 
 initShareControls();
 

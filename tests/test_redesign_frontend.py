@@ -487,6 +487,25 @@ def test_feedback_widget_is_a_collapsed_disclosure_that_waits_for_a_scenario():
     assert "statusMarkup().match(" not in feedback
 
 
+def test_feedback_widget_validates_the_displayed_payload(source: str):
+    """A receipt's loadout is the exact /api/calculate payload behind the
+    number on screen, published by app.js. The widget's old DOM re-capture
+    (a different fight mode, an 18 cap, an empty roster) is gone, so the
+    /api/validation bias flag is measured against what the UI displayed."""
+    feedback = (ROOT / "static" / "js" / "feedback.js").read_text(encoding="utf-8")
+    for gone in ("captureFromDom", "_snapshot", 'byId("championName")', "Math.min(18"):
+        assert gone not in feedback, gone
+    assert "window.scryglass.getCurrentLoadout" in feedback
+    assert 'addEventListener("scryglass:result", refreshContext)' in feedback
+    assert (
+        "window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null }"
+        in source
+    )
+    calculation = function_body(source, "function scheduleEngineCalculation()")
+    assert "requests: { a: payloads[0], b: payloads[1] || null }" in calculation
+    assert 'dispatchEvent(new Event("scryglass:result"))' in calculation
+
+
 def test_the_dead_quick_mode_layer_is_gone(source: str):
     """Quick mode's DOM left in 2026-08; its render/wiring layer survived as
     dead code addressing elements that do not exist. It is removed, while the
