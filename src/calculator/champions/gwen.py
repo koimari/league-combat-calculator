@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -247,38 +248,7 @@ ASSUMPTIONS = [
     "R's first, second and third casts remain separate ordered events, each carrying the sourced passive rider.",
 ]
 
-SOURCES = [
-    source_row(
-        "Gwen parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Gwen",
-        4047585,
-        "2026-07-29T22:50:16Z",
-    ),
-    source_row(
-        "Gwen Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/Q",
-        3256220,
-        "2021-03-30T16:42:34Z",
-    ),
-    source_row(
-        "Gwen W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/W",
-        3256221,
-        "2021-03-30T16:42:50Z",
-    ),
-    source_row(
-        "Gwen E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/E",
-        3256222,
-        "2021-03-30T16:43:07Z",
-    ),
-    source_row(
-        "Gwen R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gwen/R",
-        3256223,
-        "2021-03-30T16:43:26Z",
-    ),
-]
+SOURCES = load_champion_sources("Gwen")
 
 from .healing_contract import (
     declare_healing_rule,

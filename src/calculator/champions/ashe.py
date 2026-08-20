@@ -24,6 +24,7 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import extract_cooldown, extract_value, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -152,11 +153,4 @@ MODULE_CC = {"W": "slow", "R": "stun"}
 parse_abilities = build_parser(SLOTS, "Ashe", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ashe",
-        "revision_id": 4015971,
-        "revision_timestamp": "2026-05-08T04:11:38Z",
-    }
-]
+SOURCES = load_champion_sources("Ashe")

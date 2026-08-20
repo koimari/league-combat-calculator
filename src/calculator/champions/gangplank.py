@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -180,38 +181,7 @@ ASSUMPTIONS = [
     "Cannon Barrage exposes the 12/18-wave and Death's Daughter branches with ordered tick events.",
 ]
 
-SOURCES = [
-    source_row(
-        "Gangplank parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Gangplank",
-        4002542,
-        "2026-03-26T01:37:40Z",
-    ),
-    source_row(
-        "Gangplank Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/Q",
-        2863942,
-        "2019-11-03T19:57:00Z",
-    ),
-    source_row(
-        "Gangplank W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/W",
-        2864237,
-        "2019-11-03T20:09:46Z",
-    ),
-    source_row(
-        "Gangplank E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/E",
-        2864383,
-        "2019-11-03T20:12:16Z",
-    ),
-    source_row(
-        "Gangplank R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/R",
-        2864529,
-        "2019-11-03T20:15:41Z",
-    ),
-]
+SOURCES = load_champion_sources("Gangplank")
 
 from .healing_contract import (
     declare_healing_rule,

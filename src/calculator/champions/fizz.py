@@ -7,8 +7,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _nimble_fighter(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -228,35 +229,4 @@ ASSUMPTIONS = [
     "Chum the Waters exposes all three sourced distance branches rather than treating the largest shark as a default.",
 ]
 
-SOURCES = [
-    source_row(
-        "Fizz parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Fizz",
-        3892616,
-        "2025-05-02T11:24:31Z",
-    ),
-    source_row(
-        "Fizz Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fizz/Q",
-        2863940,
-        "2019-11-03T19:56:57Z",
-    ),
-    source_row(
-        "Fizz W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fizz/W",
-        2864236,
-        "2019-11-03T20:09:45Z",
-    ),
-    source_row(
-        "Fizz E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fizz/E",
-        2864381,
-        "2019-11-03T20:12:14Z",
-    ),
-    source_row(
-        "Fizz R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fizz/R",
-        2864527,
-        "2019-11-03T20:15:39Z",
-    ),
-]
+SOURCES = load_champion_sources("Fizz")

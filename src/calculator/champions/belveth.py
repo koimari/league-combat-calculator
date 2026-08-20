@@ -43,6 +43,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
@@ -395,44 +396,7 @@ ASSUMPTIONS = [
     "extend past level 18); a shorter array would clamp at its last entry",
 ]
 
-SOURCES = [
-    {
-        "label": "Bel'Veth — patch history (26.15 rework)",
-        "url": "https://wiki.leagueoflegends.com/en-us/Bel%27Veth/Patch_history",
-        "revision_id": 4047656,
-        "revision_timestamp": "2026-07-30T08:49:41Z",
-    },
-    {
-        "label": "Bel'Veth — Death in Lavender",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Death_in_Lavender",
-        "revision_id": 4047658,
-        "revision_timestamp": "2026-07-30T08:50:50Z",
-    },
-    {
-        "label": "Bel'Veth — Void Surge",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Void_Surge",
-        "revision_id": 4046597,
-        "revision_timestamp": "2026-07-28T20:14:01Z",
-    },
-    {
-        "label": "Bel'Veth — Above and Below",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Above_and_Below",
-        "revision_id": 4046855,
-        "revision_timestamp": "2026-07-28T22:27:32Z",
-    },
-    {
-        "label": "Bel'Veth — Royal Maelstrom",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Royal_Maelstrom",
-        "revision_id": 4046605,
-        "revision_timestamp": "2026-07-28T20:21:57Z",
-    },
-    {
-        "label": "Bel'Veth — Endless Banquet",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Endless_Banquet",
-        "revision_id": 4047545,
-        "revision_timestamp": "2026-07-29T20:25:46Z",
-    },
-]
+SOURCES = load_champion_sources("Bel'Veth")
 
 SLOTS = {
     "P": _death_in_lavender,

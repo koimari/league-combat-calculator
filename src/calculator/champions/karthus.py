@@ -19,6 +19,7 @@ from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 _W_MR_REDUCTION_PERCENT = 25.0
 _W_DEBUFF_DURATION = 5.0
@@ -294,38 +295,7 @@ ASSUMPTIONS = [
     "post-death window stays a documented zero-damage boundary.",
 ]
 
-SOURCES = [
-    {
-        "label": "Karthus — Death Defied",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Karthus/Death_Defied",
-        "revision_id": 3985387,
-        "revision_timestamp": "2026-01-20T00:27:21Z",
-    },
-    {
-        "label": "Karthus — Lay Waste",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Karthus/Lay_Waste",
-        "revision_id": 4011136,
-        "revision_timestamp": "2026-04-21T03:50:49Z",
-    },
-    {
-        "label": "Karthus — Wall of Pain",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Karthus/Wall_of_Pain",
-        "revision_id": 3990033,
-        "revision_timestamp": "2026-02-04T22:12:43Z",
-    },
-    {
-        "label": "Karthus — Defile",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Karthus/Defile",
-        "revision_id": 4006733,
-        "revision_timestamp": "2026-04-07T16:32:02Z",
-    },
-    {
-        "label": "Karthus — Requiem",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Karthus/Requiem",
-        "revision_id": 4015394,
-        "revision_timestamp": "2026-05-04T13:24:38Z",
-    },
-]
+SOURCES = load_champion_sources("Karthus")
 
 
 def _death_defied(ctx: SlotCtx) -> dict[str, Any] | None:

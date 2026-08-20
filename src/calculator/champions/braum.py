@@ -46,6 +46,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Concussive Blows' trigger damage,
 # stack count, stack duration, and immunity period exist only in
@@ -348,11 +349,4 @@ MODULE_CC = {"Q": "slow", "R": "knockup"}
 parse_abilities = build_parser(SLOTS, "Braum", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Braum",
-        "revision_id": 4022592,
-        "revision_timestamp": "2026-05-27T00:32:44Z",
-    }
-]
+SOURCES = load_champion_sources("Braum")

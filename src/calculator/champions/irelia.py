@@ -6,7 +6,6 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import source_row
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -15,6 +14,7 @@ from .slotlib import (
     on_hit_entry,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
@@ -198,38 +198,7 @@ ASSUMPTIONS = [
     "Bladesurge is one full-effectiveness basic attack; Defiant Dance exposes the sourced charge interval.",
     "Vanguard's Edge models the initial barrage and one perimeter pass; marks, stun and slow are utility.",
 ]
-SOURCES = [
-    source_row(
-        "Irelia parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Irelia",
-        3892607,
-        "2025-05-02T11:24:10Z",
-    ),
-    source_row(
-        "Irelia Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/Q",
-        2863950,
-        "2019-11-03T19:57:08Z",
-    ),
-    source_row(
-        "Irelia W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/W",
-        2864245,
-        "2019-11-03T20:09:54Z",
-    ),
-    source_row(
-        "Irelia E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/E",
-        2864391,
-        "2019-11-03T20:12:25Z",
-    ),
-    source_row(
-        "Irelia R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/R",
-        2864537,
-        "2019-11-03T20:15:49Z",
-    ),
-]
+SOURCES = load_champion_sources("Irelia")
 
 from .healing_contract import (
     declare_healing_rule,

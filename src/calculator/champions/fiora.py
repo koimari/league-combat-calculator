@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .source_receipts import load_champion_sources
 
 
 def _vital(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -150,38 +151,7 @@ ASSUMPTIONS = [
     "Grand Challenge's Victory Zone heals are not TDD and are not converted into damage.",
 ]
 
-SOURCES = [
-    source_row(
-        "Fiora parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Fiora",
-        3892617,
-        "2025-05-02T11:24:34Z",
-    ),
-    source_row(
-        "Fiora Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/Q",
-        2863939,
-        "2019-11-03T19:56:56Z",
-    ),
-    source_row(
-        "Fiora W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/W",
-        2864234,
-        "2019-11-03T20:09:43Z",
-    ),
-    source_row(
-        "Fiora E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/E",
-        2864380,
-        "2019-11-03T20:12:13Z",
-    ),
-    source_row(
-        "Fiora R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/R",
-        2864526,
-        "2019-11-03T20:15:38Z",
-    ),
-]
+SOURCES = load_champion_sources("Fiora")
 
 from .healing_contract import (
     declare_healing_rule,

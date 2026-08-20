@@ -55,6 +55,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Corki
@@ -424,11 +425,4 @@ MODULE_CC = {slot: "none" for slot in SLOTS if slot != "P"}
 parse_abilities = build_parser(SLOTS, "Corki", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Corki",
-        "revision_id": 4047300,
-        "revision_timestamp": "2026-07-29T13:12:25Z",
-    }
-]
+SOURCES = load_champion_sources("Corki")

@@ -38,6 +38,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -171,11 +172,4 @@ MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "immobilize"}
 parse_abilities = build_parser(SLOTS, "Orianna", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Orianna",
-        "revision_id": 3892665,
-        "revision_timestamp": "2025-05-02T11:28:16Z",
-    }
-]
+SOURCES = load_champion_sources("Orianna")

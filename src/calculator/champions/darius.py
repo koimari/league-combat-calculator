@@ -43,6 +43,7 @@ from .slotlib import (
     stat_buff,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the passive's bonus-AD ratios
 # exist ONLY in the description prose; its modifier ``units`` are all
@@ -414,14 +415,7 @@ MODULE_CC = {"Q": "none", "W": "slow"}
 parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Darius",
-        "revision_id": 4022598,
-        "revision_timestamp": "2026-05-27T00:45:14Z",
-    }
-]
+SOURCES = load_champion_sources("Darius")
 
 from .healing_contract import (
     declare_healing_rule,

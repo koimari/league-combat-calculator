@@ -37,6 +37,7 @@ from .slotlib import (
     pct_health_per_hit,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # Caustic Spittle's shred lasts 4s ("reduces their armor and magic
 # resistance for 4 seconds") — it is not permanent.
@@ -192,11 +193,4 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Kog'Maw", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Kog%27Maw",
-        "revision_id": 3937121,
-        "revision_timestamp": "2025-07-28T11:17:12Z",
-    }
-]
+SOURCES = load_champion_sources("Kog'Maw")

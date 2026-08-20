@@ -41,6 +41,7 @@ from ..healing_legacy import (
     _payments,
     _trigger_fields,
 )
+from .source_receipts import load_champion_sources
 
 _Q_SWEETSPOT_ATTRS = [
     "First Sweetspot Damage",
@@ -241,14 +242,7 @@ def derive_self_healing(
     return healing
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aatrox",
-        "revision_id": 4013021,
-        "revision_timestamp": "2026-04-28T12:46:19Z",
-    }
-]
+SOURCES = load_champion_sources("Aatrox")
 
 from .healing_contract import (
     declare_healing_rule,

@@ -27,6 +27,7 @@ from .slotlib import (
     proc_damage,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -145,11 +146,4 @@ MODULE_CC = {"R": "none", "P": "none"}
 parse_abilities = build_parser(SLOTS, "Akali", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Akali",
-        "revision_id": 4008175,
-        "revision_timestamp": "2026-04-14T00:45:37Z",
-    }
-]
+SOURCES = load_champion_sources("Akali")

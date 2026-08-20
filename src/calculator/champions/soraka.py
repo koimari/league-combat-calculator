@@ -18,6 +18,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _astral_infusion(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -103,20 +104,7 @@ ASSUMPTIONS = [
     "cost per cast is documented, not modeled as mana.",
 ]
 
-SOURCES = [
-    {
-        "label": "Starcall",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Soraka/Starcall",
-        "revision_id": 3953362,
-        "revision_timestamp": "2025-09-11T19:22:43Z",
-    },
-    {
-        "label": "Equinox",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Soraka/Equinox",
-        "revision_id": 3907153,
-        "revision_timestamp": "2025-06-06T18:23:34Z",
-    },
-]
+SOURCES = load_champion_sources("Soraka")
 
 SLOTS = {
     # One star, one landing ("dealing magic damage to enemies hit and

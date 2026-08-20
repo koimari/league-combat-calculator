@@ -39,6 +39,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
@@ -643,38 +644,7 @@ ASSUMPTIONS = [
     "invisibility and needs no combat model",
 ]
 
-SOURCES = [
-    {
-        "label": "Kai'Sa — Second Skin",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Kai'Sa/Second_Skin",
-        "revision_id": 4046579,
-        "revision_timestamp": "2026-07-28T19:58:33Z",
-    },
-    {
-        "label": "Kai'Sa — Icathian Rain",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Kai'Sa/Icathian_Rain",
-        "revision_id": 4038389,
-        "revision_timestamp": "2026-06-30T09:21:59Z",
-    },
-    {
-        "label": "Kai'Sa — Void Seeker",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Kai'Sa/Void_Seeker",
-        "revision_id": 4034696,
-        "revision_timestamp": "2026-06-23T21:14:14Z",
-    },
-    {
-        "label": "Kai'Sa — Supercharge",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Kai'Sa/Supercharge",
-        "revision_id": 4038391,
-        "revision_timestamp": "2026-06-30T09:23:49Z",
-    },
-    {
-        "label": "Kai'Sa — Killer Instinct",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Kai'Sa/Killer_Instinct",
-        "revision_id": 4034697,
-        "revision_timestamp": "2026-06-23T21:14:22Z",
-    },
-]
+SOURCES = load_champion_sources("Kai'Sa")
 
 SLOTS = {
     "W": _void_seeker,

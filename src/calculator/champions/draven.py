@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -173,35 +174,4 @@ ASSUMPTIONS = [
     "Adoration is an explicit economy state and never silently contributes to TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Draven parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Draven",
-        4022602,
-        "2026-05-27T00:56:11Z",
-    ),
-    source_row(
-        "Draven Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/Q",
-        2863933,
-        "2019-11-03T19:56:50Z",
-    ),
-    source_row(
-        "Draven W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/W",
-        2864228,
-        "2019-11-03T20:09:37Z",
-    ),
-    source_row(
-        "Draven E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/E",
-        2864374,
-        "2019-11-03T20:12:07Z",
-    ),
-    source_row(
-        "Draven R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/R",
-        2864520,
-        "2019-11-03T20:15:32Z",
-    ),
-]
+SOURCES = load_champion_sources("Draven")

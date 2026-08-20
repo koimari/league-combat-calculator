@@ -25,6 +25,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the shield window and the recast
 # window are prose in the cached W description ("shields herself for 2.5
@@ -296,14 +297,7 @@ ASSUMPTIONS = [
     "options, never inferred from a cast count.",
 ]
 
-SOURCES = [
-    {
-        "label": "Shyvana — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Shyvana",
-        "revision_id": 4043672,
-        "revision_timestamp": "2026-07-15T18:06:00Z",
-    }
-]
+SOURCES = load_champion_sources("Shyvana")
 
 
 from .healing_contract import (

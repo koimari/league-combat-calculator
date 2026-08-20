@@ -38,6 +38,7 @@ from typing import Any
 
 from .engine import SlotCtx, build_parser
 from .slotlib import extract_cooldown, extract_value, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: wiki-prose soldier mechanics with no JSON home — verify on
 # patch updates. https://wiki.leagueoflegends.com/en-us/Azir
@@ -169,11 +170,4 @@ MODULE_CC = {"Q": "slow", "E": "none", "R": "knockback"}
 parse_abilities = build_parser(SLOTS, "Azir", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Azir",
-        "revision_id": 4023792,
-        "revision_timestamp": "2026-05-29T16:53:08Z",
-    }
-]
+SOURCES = load_champion_sources("Azir")

@@ -46,6 +46,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Akshan
@@ -399,11 +400,4 @@ MODULE_CC = {"R": "none", "P": "none", "E": "none"}
 parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Akshan",
-        "revision_id": 4007947,
-        "revision_timestamp": "2026-04-12T23:55:44Z",
-    }
-]
+SOURCES = load_champion_sources("Akshan")

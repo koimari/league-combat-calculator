@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -191,38 +192,7 @@ ASSUMPTIONS = [
     "Fear, silence, reveal, healing and Effigy behavior are recorded as state/utility, not invented TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Fiddlesticks parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Fiddlesticks",
-        3969000,
-        "2025-11-22T11:05:32Z",
-    ),
-    source_row(
-        "Fiddlesticks Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/Q",
-        2863938,
-        "2019-11-03T19:56:56Z",
-    ),
-    source_row(
-        "Fiddlesticks W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/W",
-        2953918,
-        "2020-03-31T18:45:28Z",
-    ),
-    source_row(
-        "Fiddlesticks E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/E",
-        2953919,
-        "2020-03-31T18:45:42Z",
-    ),
-    source_row(
-        "Fiddlesticks R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/R",
-        2864525,
-        "2019-11-03T20:15:37Z",
-    ),
-]
+SOURCES = load_champion_sources("Fiddlesticks")
 
 from .healing_contract import (
     declare_healing_rule,

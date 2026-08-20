@@ -74,6 +74,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — against the GAME FILES, not the
 # wiki (a stale wiki transform box is exactly what burned Gnar):
@@ -489,11 +490,4 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Jayce")
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Jayce",
-        "revision_id": 4008136,
-        "revision_timestamp": "2026-04-13T19:03:09Z",
-    }
-]
+SOURCES = load_champion_sources("Jayce")

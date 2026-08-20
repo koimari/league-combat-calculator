@@ -16,13 +16,14 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     on_hit_entry,
 )
+from .source_receipts import load_champion_sources
 
 
 def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -132,38 +133,7 @@ ASSUMPTIONS = [
     "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive movement speed is not double-counted as damage.",
     "Eye of the Storm and Monsoon are visible ally/defensive utility, not TDD.",
 ]
-SOURCES = [
-    source_row(
-        "Janna parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Janna",
-        3892602,
-        "2025-05-02T11:23:59Z",
-    ),
-    source_row(
-        "Janna Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/Q",
-        2863952,
-        "2019-11-03T19:57:09Z",
-    ),
-    source_row(
-        "Janna W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/W",
-        2864247,
-        "2019-11-03T20:09:56Z",
-    ),
-    source_row(
-        "Janna E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/E",
-        2864393,
-        "2019-11-03T20:12:27Z",
-    ),
-    source_row(
-        "Janna R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/R",
-        2864539,
-        "2019-11-03T20:15:51Z",
-    ),
-]
+SOURCES = load_champion_sources("Janna")
 
 from .healing_contract import (
     declare_healing_rule,

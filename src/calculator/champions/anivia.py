@@ -23,6 +23,7 @@ from ..ability_spec import DamagePart
 from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 # Glacial Storm's own cadence: the blizzard "deal[s] magic damage every 0.5
 # seconds to enemies within and slow[s] them for 1 second, refreshing every
@@ -164,11 +165,4 @@ MODULE_CC = {"E": "none"}
 parse_abilities = build_parser(SLOTS, "Anivia", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Anivia",
-        "revision_id": 3891994,
-        "revision_timestamp": "2025-05-01T05:31:01Z",
-    }
-]
+SOURCES = load_champion_sources("Anivia")

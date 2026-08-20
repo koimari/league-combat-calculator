@@ -10,6 +10,7 @@ from typing import Any
 
 from .engine import build_parser
 from .slotlib import simple_damage
+from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -19,32 +20,7 @@ ASSUMPTIONS = [
     "Frozen Tomb counts one ice-field hit, whether cast on Lissandra or an enemy.",
 ]
 
-SOURCES = [
-    {
-        "label": "Ice Shard",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Ice_Shard",
-        "revision_id": 4007664,
-        "revision_timestamp": "2026-04-12T10:26:56Z",
-    },
-    {
-        "label": "Ring of Frost",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Ring_of_Frost",
-        "revision_id": 3936419,
-        "revision_timestamp": "2025-07-24T17:33:52Z",
-    },
-    {
-        "label": "Glacial Path",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Glacial_Path",
-        "revision_id": 4007666,
-        "revision_timestamp": "2026-04-12T10:34:41Z",
-    },
-    {
-        "label": "Frozen Tomb",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Frozen_Tomb",
-        "revision_id": 4017996,
-        "revision_timestamp": "2026-05-14T13:55:57Z",
-    },
-]
+SOURCES = load_champion_sources("Lissandra")
 
 # Each slot deals its one sourced instance at the cast (the module
 # docstring's own claim), so each certifies that boundary — which is what

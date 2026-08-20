@@ -125,7 +125,7 @@ ASSUMPTIONS = [
     "own damage, so all later physical damage (autos, Q, R) benefits.",
 ]
 
-SOURCES = list(load_champion_sources("Sion"))
+SOURCES = load_champion_sources("Sion")
 
 SLOTS = {
     "P": no_damage_parser(

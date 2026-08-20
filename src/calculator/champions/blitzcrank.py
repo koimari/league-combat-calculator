@@ -37,6 +37,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Blitzcrank
@@ -230,11 +231,4 @@ MODULE_CC = {"Q": "immobilize", "E": "knockup", "R": "silence"}
 parse_abilities = build_parser(SLOTS, "Blitzcrank", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
-        "revision_id": 4047544,
-        "revision_timestamp": "2026-07-29T20:05:52Z",
-    }
-]
+SOURCES = load_champion_sources("Blitzcrank")

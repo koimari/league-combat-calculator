@@ -34,6 +34,7 @@ from .slotlib import (
     proc_damage,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores
 # Short Fuse's per-level base but drops its AP modifier entirely.
@@ -204,11 +205,4 @@ MODULE_CC = {"Q": "none", "W": "knockback", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Ziggs", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ziggs",
-        "revision_id": 3960732,
-        "revision_timestamp": "2025-10-22T22:15:37Z",
-    }
-]
+SOURCES = load_champion_sources("Ziggs")

@@ -94,7 +94,6 @@ _packet_slots = {
     "R": _death_lotus,
 }
 _packet_assumptions = list(REVIEWED_MODULE_ASSUMPTIONS)
-_packet_sources = load_champion_sources("Katarina")
 _packet_options = [
     {
         "key": "p_daggers",
@@ -187,7 +186,7 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "hit (wiki prose); the coupled timeline refreshes the patch-wide "
     "40% window per hit",
 ]
-SOURCES = list(_packet_sources)
+SOURCES = load_champion_sources("Katarina")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "W" else "no_damage") for slot in "PQWER"
 }

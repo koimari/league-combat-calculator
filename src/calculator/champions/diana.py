@@ -52,6 +52,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # Mechanic constants anchored in the ability descriptions (not leveling
 # data): the cleave's 2-stack cycle empowers every 3rd basic attack, and
@@ -297,11 +298,4 @@ MODULE_CC = {"Q": "none", "R": "pull"}
 parse_abilities = build_parser(SLOTS, "Diana", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Diana",
-        "revision_id": 3892621,
-        "revision_timestamp": "2025-05-02T11:24:50Z",
-    }
-]
+SOURCES = load_champion_sources("Diana")

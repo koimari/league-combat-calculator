@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -17,6 +17,7 @@ from .slotlib import (
     sum_modifiers,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -185,35 +186,4 @@ ASSUMPTIONS = [
     "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% dodge-damage range.",
     "Grandmaster-at-Arms includes the active swing and defensive resistances; its passive hit is opt-in to avoid inventing prior stacks.",
 ]
-SOURCES = [
-    source_row(
-        "Jax parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Jax",
-        3979077,
-        "2025-12-25T10:27:57Z",
-    ),
-    source_row(
-        "Jax Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jax/Q",
-        2863954,
-        "2019-11-03T19:57:11Z",
-    ),
-    source_row(
-        "Jax W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jax/W",
-        2864249,
-        "2019-11-03T20:09:58Z",
-    ),
-    source_row(
-        "Jax E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jax/E",
-        2864395,
-        "2019-11-03T20:12:29Z",
-    ),
-    source_row(
-        "Jax R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jax/R",
-        3909966,
-        "2025-06-11T21:00:25Z",
-    ),
-]
+SOURCES = load_champion_sources("Jax")

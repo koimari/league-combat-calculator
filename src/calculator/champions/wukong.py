@@ -26,6 +26,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
 # seconds", wiki prose below) — it is not permanent.
@@ -176,11 +177,4 @@ ASSUMPTIONS = [
     "Cyclone uses eight sourced 0.25-second ticks per cast; the second cast is explicit.",
 ]
 
-SOURCES = [
-    {
-        "label": "Wukong — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Wukong",
-        "revision_id": 4021883,
-        "revision_timestamp": "2026-05-21T19:27:04Z",
-    }
-]
+SOURCES = load_champion_sources("Wukong")

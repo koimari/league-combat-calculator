@@ -51,6 +51,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Transcendent's 120-splinter
 # upgrade multiplies TOTAL ability power by 15% (stacks multiplicatively
@@ -455,11 +456,4 @@ CAST_DEPENDENCIES = (
 parse_abilities = build_parser(SLOTS, "Syndra", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Syndra",
-        "revision_id": 4024662,
-        "revision_timestamp": "2026-06-02T13:31:37Z",
-    }
-]
+SOURCES = load_champion_sources("Syndra")

@@ -25,6 +25,7 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON
 # home (P has no leveling data; the refund is prose on Q).
@@ -229,11 +230,4 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Ezreal", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ezreal",
-        "revision_id": 4041697,
-        "revision_timestamp": "2026-07-10T18:11:03Z",
-    }
-]
+SOURCES = load_champion_sources("Ezreal")

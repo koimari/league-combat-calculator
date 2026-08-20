@@ -34,6 +34,7 @@ from .slotlib import (
     pct_health_per_hit,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the Ablaze DoT is prose-only in
 # the JSON (P effect[1] has no leveling entry): each stack deals 2% of
@@ -245,11 +246,4 @@ CAST_DEPENDENCIES = (
 parse_abilities = build_parser(SLOTS, "Brand", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Brand",
-        "revision_id": 4023911,
-        "revision_timestamp": "2026-05-30T00:40:25Z",
-    }
-]
+SOURCES = load_champion_sources("Brand")

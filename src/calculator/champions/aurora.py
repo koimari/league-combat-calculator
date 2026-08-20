@@ -37,6 +37,7 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the
 # passive's monster damage cap (attribute "Bonus Damage", 100-270 by
@@ -170,11 +171,4 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "slow"}
 parse_abilities = build_parser(SLOTS, "Aurora", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aurora",
-        "revision_id": 3959795,
-        "revision_timestamp": "2025-10-17T02:11:19Z",
-    }
-]
+SOURCES = load_champion_sources("Aurora")

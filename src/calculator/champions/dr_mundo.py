@@ -38,6 +38,7 @@ from .slotlib import (
     extract_value,
     stat_buff,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — W's charge lasts 3.0s and ticks 4
 # times a second, so the charge total is per-tick x 12.
@@ -393,14 +394,7 @@ MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
 parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Dr._Mundo",
-        "revision_id": 4007950,
-        "revision_timestamp": "2026-04-12T23:57:05Z",
-    }
-]
+SOURCES = load_champion_sources("Dr. Mundo")
 
 from .healing_contract import (
     declare_healing_rule,

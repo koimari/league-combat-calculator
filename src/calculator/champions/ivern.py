@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -14,6 +14,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -197,35 +198,4 @@ ASSUMPTIONS = [
     "Daisy Smash!'s 3-second lockout, knockup/stun CC, spawn damage "
     "reduction and leash range are state, not modeled",
 ]
-SOURCES = [
-    source_row(
-        "Ivern parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Ivern",
-        4015438,
-        "2026-05-04T18:32:23Z",
-    ),
-    source_row(
-        "Ivern Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/Q",
-        2863951,
-        "2019-11-03T19:57:08Z",
-    ),
-    source_row(
-        "Ivern W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/W",
-        2864246,
-        "2019-11-03T20:09:55Z",
-    ),
-    source_row(
-        "Ivern E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/E",
-        2864392,
-        "2019-11-03T20:12:26Z",
-    ),
-    source_row(
-        "Ivern R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/R",
-        2864538,
-        "2019-11-03T20:15:50Z",
-    ),
-]
+SOURCES = load_champion_sources("Ivern")

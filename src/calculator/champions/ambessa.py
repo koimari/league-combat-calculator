@@ -40,6 +40,7 @@ from .slotlib import (
     stat_buff,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Repudiation's shield duration (1.5s)
 # is prose in the cached ability description ("shields herself ... for 1.5
@@ -332,14 +333,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ambessa",
-        "revision_id": 4043663,
-        "revision_timestamp": "2026-07-15T17:40:27Z",
-    }
-]
+SOURCES = load_champion_sources("Ambessa")
 
 from .healing_contract import (
     declare_healing_rule,

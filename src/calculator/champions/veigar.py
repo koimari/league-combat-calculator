@@ -89,7 +89,7 @@ ASSUMPTIONS = [
     "P and E deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Veigar"))
+SOURCES = load_champion_sources("Veigar")
 
 SLOTS = {
     "P": no_damage_parser(

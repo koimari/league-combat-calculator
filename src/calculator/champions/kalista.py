@@ -11,6 +11,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -124,11 +125,4 @@ ASSUMPTIONS = [
     "Fate's Call and Martial Poise are utility/state effects with no direct enemy damage.",
 ]
 
-SOURCES = [
-    {
-        "label": "Kalista — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Kalista",
-        "revision_id": 4002537,
-        "revision_timestamp": "2026-03-26T01:14:44Z",
-    }
-]
+SOURCES = load_champion_sources("Kalista")

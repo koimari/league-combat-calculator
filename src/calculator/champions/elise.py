@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
 _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
@@ -159,35 +160,4 @@ ASSUMPTIONS = [
     "Spiderlings, Rappel untargetability and the Spider Form heal are explicit state/utility rows; only Spider Form's on-hit damage enters TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Elise parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Elise",
-        4008134,
-        "2026-04-13T19:00:09Z",
-    ),
-    source_row(
-        "Elise Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/Q",
-        2863935,
-        "2019-11-03T19:56:52Z",
-    ),
-    source_row(
-        "Elise W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/W",
-        2864230,
-        "2019-11-03T20:09:39Z",
-    ),
-    source_row(
-        "Elise E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/E",
-        2864376,
-        "2019-11-03T20:12:09Z",
-    ),
-    source_row(
-        "Elise R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/R",
-        2864522,
-        "2019-11-03T20:15:34Z",
-    ),
-]
+SOURCES = load_champion_sources("Elise")

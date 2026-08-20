@@ -25,6 +25,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _extract_e_on_hit_damage(
@@ -172,14 +173,7 @@ MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
 parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Alistar",
-        "revision_id": 3892578,
-        "revision_timestamp": "2025-05-02T10:24:06Z",
-    }
-]
+SOURCES = load_champion_sources("Alistar")
 
 from .healing_contract import (
     declare_healing_rule,

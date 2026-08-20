@@ -26,6 +26,7 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import ability_on_hit_entry, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
 # no effects/leveling in the wiki JSON at all (known-degraded parse), so
@@ -150,11 +151,4 @@ MODULE_CC = {"Q": "slow"}
 parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Bard",
-        "revision_id": 4002472,
-        "revision_timestamp": "2026-03-25T15:16:50Z",
-    }
-]
+SOURCES = load_champion_sources("Bard")

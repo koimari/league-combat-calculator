@@ -101,7 +101,7 @@ ASSUMPTIONS = [
     "P and R deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Twisted Fate"))
+SOURCES = load_champion_sources("Twisted Fate")
 
 SLOTS = {
     "P": no_damage_parser(

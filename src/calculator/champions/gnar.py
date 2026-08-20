@@ -49,6 +49,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — against the GAME FILES, not the
 # wiki: https://raw.communitydragon.org/latest/game/data/characters/
@@ -365,11 +366,4 @@ MODULE_CC = {"Q": "slow", "E": "slow", "R": "knockback"}
 parse_abilities = build_parser(SLOTS, "Gnar", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Gnar",
-        "revision_id": 4008132,
-        "revision_timestamp": "2026-04-13T18:59:15Z",
-    }
-]
+SOURCES = load_champion_sources("Gnar")

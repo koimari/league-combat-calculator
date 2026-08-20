@@ -39,6 +39,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
 # attribute of its own; the JSON's "Total Magic Damage" entry is exactly
@@ -210,11 +211,4 @@ MODULE_CC = {"Q": "knockup", "W": "silence", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Cho%27Gath",
-        "revision_id": 3892600,
-        "revision_timestamp": "2025-05-02T11:23:54Z",
-    }
-]
+SOURCES = load_champion_sources("Cho'Gath")

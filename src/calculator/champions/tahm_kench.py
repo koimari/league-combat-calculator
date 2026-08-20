@@ -11,6 +11,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -145,14 +146,7 @@ ASSUMPTIONS = [
     "R defaults to the enemy Regurgitate branch; ally Devour is a separate support/shield scenario.",
 ]
 
-SOURCES = [
-    {
-        "label": "Tahm Kench — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Tahm_Kench",
-        "revision_id": 4047230,
-        "revision_timestamp": "2026-07-29T12:04:53Z",
-    }
-]
+SOURCES = load_champion_sources("Tahm Kench")
 
 
 from .healing_contract import (

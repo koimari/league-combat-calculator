@@ -35,6 +35,7 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .source_receipts import load_champion_sources
 
 # One full Q channel: 3.25 s of beam, with a burst on the primary target
 # at each full second of channel (3 bursts).
@@ -298,11 +299,4 @@ MODULE_CC = {"Q": "none", "E": "none"}
 parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aurelion_Sol",
-        "revision_id": 3952788,
-        "revision_timestamp": "2025-09-10T01:55:29Z",
-    }
-]
+SOURCES = load_champion_sources("Aurelion Sol")

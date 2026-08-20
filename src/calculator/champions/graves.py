@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -14,6 +14,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _level_scaling(
@@ -197,35 +198,4 @@ ASSUMPTIONS = [
     "True Grit armor/MR is a selected defensive state and cannot inflate outgoing damage.",
 ]
 
-SOURCES = [
-    source_row(
-        "Graves parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Graves",
-        3892615,
-        "2025-05-02T11:24:28Z",
-    ),
-    source_row(
-        "Graves Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/Q",
-        2863946,
-        "2019-11-03T19:57:03Z",
-    ),
-    source_row(
-        "Graves W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/W",
-        2864241,
-        "2019-11-03T20:09:50Z",
-    ),
-    source_row(
-        "Graves E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/E",
-        2864387,
-        "2019-11-03T20:12:20Z",
-    ),
-    source_row(
-        "Graves R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/R",
-        2864533,
-        "2019-11-03T20:15:45Z",
-    ),
-]
+SOURCES = load_champion_sources("Graves")

@@ -23,6 +23,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 _Q_ATTACKS = 3
 _Q_ENHANCED_BONUS_ATTACK_SPEED = 50.0
@@ -240,20 +241,7 @@ ASSUMPTIONS = [
     "excluded from outgoing TDD.",
 ]
 
-SOURCES = [
-    {
-        "label": "Shen — Twilight Assault",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Twilight_Assault",
-        "revision_id": 4008038,
-        "revision_timestamp": "2026-04-13T04:23:20Z",
-    },
-    {
-        "label": "Shen — Shadow Dash",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Shadow_Dash",
-        "revision_id": 4007754,
-        "revision_timestamp": "2026-04-12T14:09:29Z",
-    },
-]
+SOURCES = load_champion_sources("Shen")
 
 CAST_ORDER = ["E", "Q"]
 SLOTS = {"E": _shadow_dash, "Q": _twilight_assault}

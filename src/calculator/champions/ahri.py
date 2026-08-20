@@ -27,6 +27,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import extract_auto, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -192,14 +193,7 @@ MODULE_CC = {"E": "immobilize", "Q": "none"}
 parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ahri",
-        "revision_id": 4047800,
-        "revision_timestamp": "2026-07-31T01:16:52Z",
-    }
-]
+SOURCES = load_champion_sources("Ahri")
 
 from .healing_contract import (
     declare_healing_rule,

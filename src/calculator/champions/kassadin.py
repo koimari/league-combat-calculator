@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -14,6 +14,7 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 PASSIVE_W_BASE = 25.0  # Full parent entry: Nether Blade passive, not a leveling row.
 PASSIVE_W_AP_RATIO = 0.10
@@ -151,35 +152,4 @@ ASSUMPTIONS = [
     "Nether Blade uses the full parent passive on-hit plus the selected active rider on one empowered basic attack.",
     "Riftwalk reads the target's max-mana scaling and an explicit 0–4 stack state.",
 ]
-SOURCES = [
-    source_row(
-        "Kassadin parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Kassadin",
-        4008773,
-        "2026-04-15T14:58:16Z",
-    ),
-    source_row(
-        "Kassadin Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Kassadin/Q",
-        2863962,
-        "2019-11-03T19:57:19Z",
-    ),
-    source_row(
-        "Kassadin W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Kassadin/W",
-        2864257,
-        "2019-11-03T20:10:06Z",
-    ),
-    source_row(
-        "Kassadin E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Kassadin/E",
-        2864403,
-        "2019-11-03T20:12:37Z",
-    ),
-    source_row(
-        "Kassadin R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Kassadin/R",
-        2864549,
-        "2019-11-03T20:16:01Z",
-    ),
-]
+SOURCES = load_champion_sources("Kassadin")

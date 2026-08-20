@@ -6,12 +6,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
 )
+from .source_receipts import load_champion_sources
 
 
 def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -105,38 +106,7 @@ ASSUMPTIONS = [
     "Focused Resolve emits one or two sourced magic hits depending on the tether-completion input.",
     "Inspire/Defiance shields and Gathering Fire cooldown refunds remain ally/state utility.",
 ]
-SOURCES = [
-    source_row(
-        "Karma parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Karma",
-        4001401,
-        "2026-03-20T15:07:52Z",
-    ),
-    source_row(
-        "Karma Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/Q",
-        2863960,
-        "2019-11-03T19:57:17Z",
-    ),
-    source_row(
-        "Karma W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/W",
-        2864255,
-        "2019-11-03T20:10:04Z",
-    ),
-    source_row(
-        "Karma E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/E",
-        2864401,
-        "2019-11-03T20:12:35Z",
-    ),
-    source_row(
-        "Karma R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/R",
-        2864547,
-        "2019-11-03T20:16:00Z",
-    ),
-]
+SOURCES = load_champion_sources("Karma")
 
 from .healing_contract import (
     declare_healing_rule,

@@ -39,6 +39,7 @@ from .slotlib import (
     simple_damage,
     stat_buff,
 )
+from .source_receipts import load_champion_sources
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3
@@ -151,11 +152,4 @@ MODULE_CC = {"Q": "none", "E": "knockback"}
 parse_abilities = build_parser(SLOTS, "Vayne", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Vayne",
-        "revision_id": 3979075,
-        "revision_timestamp": "2025-12-25T10:25:25Z",
-    }
-]
+SOURCES = load_champion_sources("Vayne")

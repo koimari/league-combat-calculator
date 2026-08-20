@@ -6,8 +6,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import source_row
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -199,38 +199,7 @@ ASSUMPTIONS = [
     "Rampage stacks and Spirit of Dread ticks are explicit ordered state; ally healing, fear and displacement are utility.",
     "Devastating Charge is one empowered basic attack and therefore shares the item/on-hit timeline.",
 ]
-SOURCES = [
-    source_row(
-        "Hecarim parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Hecarim",
-        3957268,
-        "2025-10-04T15:12:42Z",
-    ),
-    source_row(
-        "Hecarim Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/Q",
-        2863947,
-        "2019-11-03T19:57:04Z",
-    ),
-    source_row(
-        "Hecarim W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/W",
-        2864242,
-        "2019-11-03T20:09:51Z",
-    ),
-    source_row(
-        "Hecarim E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/E",
-        2864388,
-        "2019-11-03T20:12:22Z",
-    ),
-    source_row(
-        "Hecarim R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/R",
-        2864534,
-        "2019-11-03T20:15:46Z",
-    ),
-]
+SOURCES = load_champion_sources("Hecarim")
 
 from .healing_contract import (
     declare_healing_rule,

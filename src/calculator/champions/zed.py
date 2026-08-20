@@ -111,7 +111,7 @@ ASSUMPTIONS = [
     "P and W deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Zed"))
+SOURCES = load_champion_sources("Zed")
 
 SLOTS = {
     "P": no_damage_parser(

@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_recharge
+from .source_receipts import load_champion_sources
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -219,35 +220,4 @@ ASSUMPTIONS = [
     "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one champion hit is counted for the upgraded grenade.",
     "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not extra direct champion damage.",
 ]
-SOURCES = [
-    source_row(
-        "Heimerdinger parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Heimerdinger",
-        4025016,
-        "2026-06-04T11:15:04Z",
-    ),
-    source_row(
-        "Heimerdinger Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/Q",
-        2863948,
-        "2019-11-03T19:57:05Z",
-    ),
-    source_row(
-        "Heimerdinger W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/W",
-        2864243,
-        "2019-11-03T20:09:52Z",
-    ),
-    source_row(
-        "Heimerdinger E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/E",
-        2864389,
-        "2019-11-03T20:12:23Z",
-    ),
-    source_row(
-        "Heimerdinger R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/R",
-        2864535,
-        "2019-11-03T20:15:47Z",
-    ),
-]
+SOURCES = load_champion_sources("Heimerdinger")

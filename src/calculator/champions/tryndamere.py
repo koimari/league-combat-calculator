@@ -33,7 +33,7 @@ ASSUMPTIONS = [
     "P, W, and R deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Tryndamere"))
+SOURCES = load_champion_sources("Tryndamere")
 
 SLOTS = {
     "P": no_damage_parser(

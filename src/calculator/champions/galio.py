@@ -13,6 +13,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 _Q_CAST_TIME = 0.25
 _Q_TORNADO_FIRST_TICK = 0.75
@@ -235,38 +236,7 @@ ASSUMPTIONS = [
     "control or defense rather than Galio's damage and are not added to TDD",
 ]
 
-SOURCES = [
-    {
-        "label": "Galio — Colossal Smash",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Colossal_Smash",
-        "revision_id": 4038336,
-        "revision_timestamp": "2026-06-30T08:53:44Z",
-    },
-    {
-        "label": "Galio — Winds of War",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Winds_of_War",
-        "revision_id": 4016962,
-        "revision_timestamp": "2026-05-13T14:26:32Z",
-    },
-    {
-        "label": "Galio — Shield of Durand",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Shield_of_Durand",
-        "revision_id": 3990299,
-        "revision_timestamp": "2026-02-07T07:08:21Z",
-    },
-    {
-        "label": "Galio — Justice Punch",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Justice_Punch",
-        "revision_id": 4016963,
-        "revision_timestamp": "2026-05-13T14:26:54Z",
-    },
-    {
-        "label": "Galio — Hero's Entrance",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Hero%27s_Entrance",
-        "revision_id": 4017997,
-        "revision_timestamp": "2026-05-14T13:57:45Z",
-    },
-]
+SOURCES = load_champion_sources("Galio")
 
 SLOTS = {
     "Q": _winds_of_war,

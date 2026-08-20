@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -14,6 +14,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — All Out's omnivamp is prose in the
 # cached R fourth effect: "he gains bonus attack speed, 50% bonus-armor
@@ -229,35 +230,4 @@ ASSUMPTIONS = [
     "Path Maker uses its physical packet and optionally the authored All Out true-damage range; charge duration is explicit.",
     "All Out terrain routing and the health threshold / resistance conversion remain visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the fight's explicitly single-target attack/on-hit packets (the engine's full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is a documented boundary",
 ]
-SOURCES = [
-    source_row(
-        "K'Sante parent entry",
-        "https://wiki.leagueoflegends.com/en-us/K%27Sante",
-        4011715,
-        "2026-04-22T20:20:34Z",
-    ),
-    source_row(
-        "K'Sante Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/Q",
-        3471718,
-        "2022-10-16T16:23:55Z",
-    ),
-    source_row(
-        "K'Sante W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/W",
-        3471720,
-        "2022-10-16T16:25:10Z",
-    ),
-    source_row(
-        "K'Sante E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/E",
-        3471722,
-        "2022-10-16T16:25:47Z",
-    ),
-    source_row(
-        "K'Sante R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/R",
-        3471724,
-        "2022-10-16T16:26:26Z",
-    ),
-]
+SOURCES = load_champion_sources("K'Sante")

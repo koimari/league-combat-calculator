@@ -153,11 +153,3 @@ ASSUMPTIONS = [
     "Get Excited! is opt-in because takedowns are not implied by a damage package.",
     "W, E, and R use the pinned Wiki rank packets; R's missing-health term is evaluated after prior damage events.",
 ]
-SOURCES = list(SOURCES) + [
-    {
-        "label": "Jinx Switcheroo!",
-        "url": "https://wiki.leagueoflegends.com/en-us/Jinx",
-        "revision_id": 4027661,
-        "revision_timestamp": "2026-06-12T16:55:08Z",
-    },
-]

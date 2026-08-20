@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -148,38 +149,7 @@ ASSUMPTIONS = [
     "missing health (cached P description prose); the E1 self-heal rule "
     "authors one live missing-health heal per tentacle hit event.",
 ]
-SOURCES = [
-    source_row(
-        "Illaoi parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Illaoi",
-        4033192,
-        "2026-06-21T14:50:24Z",
-    ),
-    source_row(
-        "Illaoi Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/Q",
-        2863949,
-        "2019-11-03T19:57:06Z",
-    ),
-    source_row(
-        "Illaoi W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/W",
-        2864244,
-        "2019-11-03T20:09:53Z",
-    ),
-    source_row(
-        "Illaoi E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/E",
-        2864390,
-        "2019-11-03T20:12:24Z",
-    ),
-    source_row(
-        "Illaoi R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/R",
-        2864536,
-        "2019-11-03T20:15:49Z",
-    ),
-]
+SOURCES = load_champion_sources("Illaoi")
 
 from .healing_contract import (
     declare_healing_rule,

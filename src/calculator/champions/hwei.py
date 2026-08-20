@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .source_receipts import load_champion_sources
 
 
 def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -297,35 +298,4 @@ ASSUMPTIONS = [
     "Severing Bolt exposes the source maximum-damage branch without assuming the immobilized/isolated target gate.",
     "Signature marks and Stirring Lights charges are visible state; no same-cast mark consumption is inferred.",
 ]
-SOURCES = [
-    source_row(
-        "Hwei parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Hwei",
-        4044079,
-        "2026-07-17T19:49:12Z",
-    ),
-    source_row(
-        "Hwei Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/Q",
-        3634053,
-        "2023-11-21T03:28:28Z",
-    ),
-    source_row(
-        "Hwei W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/W",
-        3632882,
-        "2023-11-19T16:01:01Z",
-    ),
-    source_row(
-        "Hwei E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/E",
-        3632883,
-        "2023-11-19T16:01:08Z",
-    ),
-    source_row(
-        "Hwei R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hwei/R",
-        3632890,
-        "2023-11-19T16:03:40Z",
-    ),
-]
+SOURCES = load_champion_sources("Hwei")

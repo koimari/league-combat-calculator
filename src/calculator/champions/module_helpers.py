@@ -209,19 +209,3 @@ def no_damage_parser(
 
     parse.phase = "damage"
     return parse
-
-
-def source_row(
-    label: str,
-    url: str,
-    revision_id: int,
-    revision_timestamp: str,
-) -> dict[str, Any]:
-    """Create the canonical revision receipt shape used by /api/config."""
-
-    return {
-        "label": label,
-        "url": url,
-        "revision_id": revision_id,
-        "revision_timestamp": revision_timestamp,
-    }

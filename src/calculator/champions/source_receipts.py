@@ -1,8 +1,12 @@
 """Public loader for champion full-entry source receipts.
 
-Historical CP10 assets remain generated evidence, not runtime architecture.
-This module is their one reader: named champion modules ask for their own
-rows without importing batch membership or private cross-module helpers.
+``static/champion-source-receipts.json`` is the one home for the revision a
+champion module was reviewed against; this module is its only reader, so a
+re-review bumps a revision in one place.  A champion the asset does not pin
+falls back to the receipt ``reviewed-packets.json`` carries for the cached
+page, which ``build_reviewed_modules.py`` regenerates: a different fact
+(what the cache holds now), and the reason ``full_entry_audit`` can report a
+module's pin as behind the manifest.
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 _STATIC_ROOT = Path(__file__).resolve().parents[3] / "static"
+_RECEIPT_ASSET = _STATIC_ROOT / "champion-source-receipts.json"
 _PACKET_MANIFEST = _STATIC_ROOT / "reviewed-packets.json"
 
 
@@ -60,23 +65,17 @@ def _valid_rows(rows: Any) -> list[dict[str, Any]] | None:
 
 @lru_cache(maxsize=1)
 def _source_index() -> dict[str, tuple[dict[str, Any], ...]]:
-    """Index generated receipts without preserving campaign membership."""
+    """Index the reviewed pins, then the manifest receipts nothing pins."""
 
     index: dict[str, tuple[dict[str, Any], ...]] = {}
-    for path in sorted(_STATIC_ROOT.glob("cp10_batch_*_sources.json")):
-        for name, rows in _read_json(path).items():
-            valid = _valid_rows(rows)
-            if valid is None:
-                raise RuntimeError(
-                    f"Champion source receipts for {name!r} are incomplete in {path}"
-                )
-            source_rows = tuple(valid)
-            prior = index.get(str(name))
-            if prior is not None and prior != source_rows:
-                raise RuntimeError(
-                    f"Champion source receipts for {name!r} conflict across assets"
-                )
-            index[str(name)] = source_rows
+    for name, rows in _read_json(_RECEIPT_ASSET).items():
+        valid = _valid_rows(rows)
+        if valid is None:
+            raise RuntimeError(
+                f"Champion source receipts for {name!r} are incomplete in "
+                f"{_RECEIPT_ASSET}"
+            )
+        index[str(name)] = tuple(valid)
 
     manifest = _read_json(_PACKET_MANIFEST)
     champions = manifest.get("champions")

@@ -31,6 +31,7 @@ from .slotlib import (
     extract_recharge,
     extract_value,
 )
+from .source_receipts import load_champion_sources
 
 _Q_MAX_CHARGE_SECONDS = 1.25
 _Q_MIN_RANGE = 250.0
@@ -535,38 +536,7 @@ ASSUMPTIONS = [
     "but it does not change outgoing TDD",
 ]
 
-SOURCES = [
-    {
-        "label": "Vi — Blast Shield",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Blast_Shield",
-        "revision_id": 3986701,
-        "revision_timestamp": "2026-01-23T00:03:48Z",
-    },
-    {
-        "label": "Vi — Vault Breaker",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Vault_Breaker",
-        "revision_id": 3921391,
-        "revision_timestamp": "2025-06-29T22:47:26Z",
-    },
-    {
-        "label": "Vi — Denting Blows",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Denting_Blows",
-        "revision_id": 3932548,
-        "revision_timestamp": "2025-07-19T01:58:33Z",
-    },
-    {
-        "label": "Vi — Relentless Force",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Relentless_Force",
-        "revision_id": 3986710,
-        "revision_timestamp": "2026-01-23T00:42:37Z",
-    },
-    {
-        "label": "Vi — Cease and Desist",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Cease_and_Desist",
-        "revision_id": 4004943,
-        "revision_timestamp": "2026-04-02T19:30:57Z",
-    },
-]
+SOURCES = load_champion_sources("Vi")
 
 # W runs first: Q/E read its presence in ctx.results to decide whether
 # the timed shred has a proc to anchor to.

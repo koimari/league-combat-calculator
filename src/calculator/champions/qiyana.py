@@ -12,6 +12,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -166,11 +167,4 @@ ASSUMPTIONS = [
     "Element control and per-target passive cooldowns remain explicit scenario state.",
 ]
 
-SOURCES = [
-    {
-        "label": "Qiyana — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Qiyana",
-        "revision_id": 4007961,
-        "revision_timestamp": "2026-04-12T23:59:09Z",
-    }
-]
+SOURCES = load_champion_sources("Qiyana")

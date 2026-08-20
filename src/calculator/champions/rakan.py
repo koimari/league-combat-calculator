@@ -17,6 +17,7 @@ from typing import Any
 
 from .engine import build_parser
 from .slotlib import attach_self_shield, simple_damage
+from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -31,38 +32,7 @@ ASSUMPTIONS = [
     "the periodic/out-of-combat refresh cadence is state.",
 ]
 
-SOURCES = [
-    {
-        "label": "Fey Feathers",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Fey_Feathers",
-        "revision_id": 4016025,
-        "revision_timestamp": "2026-05-08T17:35:55Z",
-    },
-    {
-        "label": "Gleaming Quill",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Gleaming_Quill",
-        "revision_id": 3996425,
-        "revision_timestamp": "2026-03-04T16:52:28Z",
-    },
-    {
-        "label": "Grand Entrance",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Grand_Entrance",
-        "revision_id": 4007760,
-        "revision_timestamp": "2026-04-12T14:15:53Z",
-    },
-    {
-        "label": "Battle Dance",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Battle_Dance",
-        "revision_id": 4008001,
-        "revision_timestamp": "2026-04-13T02:59:27Z",
-    },
-    {
-        "label": "The Quickness",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/The_Quickness",
-        "revision_id": 3971183,
-        "revision_timestamp": "2025-12-02T06:20:48Z",
-    },
-]
+SOURCES = load_champion_sources("Rakan")
 
 # HARDCODED: verify on patch updates — Fey Feathers' shield is the cached
 # "Shield" per-level row (30 : 247.94 based on level) + 95% AP; the

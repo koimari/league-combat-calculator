@@ -304,16 +304,6 @@ ASSUMPTIONS = [
     "timeline converts heal-in-excess-of-maximum-health into a timed "
     "shield at the heal's timestamp.",
 ]
-SOURCES = list(SOURCES) + [
-    {
-        "label": "Aphelios weapon system",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aphelios",
-        "revision_id": 4022591,
-        "revision_timestamp": "2026-05-27T00:28:15Z",
-    },
-]
-
-
 from .healing_contract import (
     declare_healing_rule,
 )  # pylint: disable=wrong-import-position

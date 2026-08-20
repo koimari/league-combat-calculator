@@ -43,6 +43,7 @@ from .inputs import target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no clean JSON
 # home (the P parse is degraded; R's resist buff is prose only).
@@ -393,14 +394,7 @@ MODULE_CC = {"Q": "stun", "W": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Briar",
-        "revision_id": 4046069,
-        "revision_timestamp": "2026-07-27T13:03:08Z",
-    }
-]
+SOURCES = load_champion_sources("Briar")
 
 from .healing_contract import (
     declare_healing_rule,

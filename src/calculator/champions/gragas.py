@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -140,38 +141,7 @@ ASSUMPTIONS = [
     "Body Slam's cooldown refund requires a collision state and is not applied to every cast by default.",
 ]
 
-SOURCES = [
-    source_row(
-        "Gragas parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Gragas",
-        4007952,
-        "2026-04-12T23:57:29Z",
-    ),
-    source_row(
-        "Gragas Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/Q",
-        2863945,
-        "2019-11-03T19:57:02Z",
-    ),
-    source_row(
-        "Gragas W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/W",
-        2864240,
-        "2019-11-03T20:09:49Z",
-    ),
-    source_row(
-        "Gragas E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/E",
-        2864386,
-        "2019-11-03T20:12:20Z",
-    ),
-    source_row(
-        "Gragas R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/R",
-        2864532,
-        "2019-11-03T20:15:44Z",
-    ),
-]
+SOURCES = load_champion_sources("Gragas")
 
 from .healing_contract import (
     declare_healing_rule,

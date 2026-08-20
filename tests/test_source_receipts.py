@@ -19,6 +19,9 @@ def fixture_receipt_root(tmp_path, monkeypatch):
     """Point the loader at a temporary static root, isolating its cache."""
     monkeypatch.setattr(source_receipts, "_STATIC_ROOT", tmp_path)
     monkeypatch.setattr(
+        source_receipts, "_RECEIPT_ASSET", tmp_path / "champion-source-receipts.json"
+    )
+    monkeypatch.setattr(
         source_receipts, "_PACKET_MANIFEST", tmp_path / "reviewed-packets.json"
     )
     source_receipts._source_index.cache_clear()
@@ -31,7 +34,7 @@ def _write(root, name, payload):
 
 
 def test_typed_receipt_rows_load(receipt_root):
-    _write(receipt_root, "cp10_batch_99_sources.json", {"Fixture": [VALID_ROW]})
+    _write(receipt_root, "champion-source-receipts.json", {"Fixture": [VALID_ROW]})
     _write(receipt_root, "reviewed-packets.json", {"champions": {}})
 
     assert source_receipts.load_champion_sources("Fixture") == [VALID_ROW]
@@ -49,7 +52,7 @@ def test_typed_receipt_rows_load(receipt_root):
 )
 def test_malformed_receipt_rows_fail_closed(receipt_root, broken):
     """A regenerated asset with untyped rows must raise, not reach /api/config."""
-    _write(receipt_root, "cp10_batch_99_sources.json", {"Fixture": [broken]})
+    _write(receipt_root, "champion-source-receipts.json", {"Fixture": [broken]})
     _write(receipt_root, "reviewed-packets.json", {"champions": {}})
 
     with pytest.raises(RuntimeError, match="incomplete"):
@@ -58,6 +61,7 @@ def test_malformed_receipt_rows_fail_closed(receipt_root, broken):
 
 def test_malformed_manifest_fallback_rows_are_skipped(receipt_root):
     """Manifest fallback rows are optional evidence: invalid rows never load."""
+    _write(receipt_root, "champion-source-receipts.json", {})
     _write(
         receipt_root,
         "reviewed-packets.json",
@@ -66,3 +70,15 @@ def test_malformed_manifest_fallback_rows_are_skipped(receipt_root):
 
     with pytest.raises(RuntimeError, match="No source receipts"):
         source_receipts.load_champion_sources("Fixture")
+
+
+def test_every_registered_champion_reads_its_receipt_from_the_asset():
+    """One home: no module spells its own rows, whatever shape it compiles in."""
+    from src.calculator.champions import (
+        _CHAMPION_MODULES,
+        get_champion_module_contract,
+    )
+
+    for name in _CHAMPION_MODULES:
+        contract = get_champion_module_contract(name)
+        assert list(contract.sources) == source_receipts.load_champion_sources(name)

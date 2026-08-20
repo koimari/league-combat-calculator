@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _perseverance(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -144,38 +145,7 @@ ASSUMPTIONS = [
     "Perseverance and Courage are defensive/self-state rows and do not enter TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Garen parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Garen",
-        3892614,
-        "2025-05-02T11:24:26Z",
-    ),
-    source_row(
-        "Garen Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/Q",
-        2863943,
-        "2019-11-03T19:57:00Z",
-    ),
-    source_row(
-        "Garen W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/W",
-        2864238,
-        "2019-11-03T20:09:47Z",
-    ),
-    source_row(
-        "Garen E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/E",
-        2864384,
-        "2019-11-03T20:12:17Z",
-    ),
-    source_row(
-        "Garen R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/R",
-        2864530,
-        "2019-11-03T20:15:42Z",
-    ),
-]
+SOURCES = load_champion_sources("Garen")
 
 from .healing_contract import (
     declare_healing_rule,

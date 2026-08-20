@@ -31,6 +31,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 _CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
 _W_TICK_SECONDS = 0.5  # Despair "deal[s] magic damage every 0.5 seconds"
@@ -185,11 +186,4 @@ MODULE_CC = {"Q": "stun", "W": "none", "E": "none", "R": "stun"}
 parse_abilities = build_parser(SLOTS, "Amumu", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Amumu",
-        "revision_id": 4007948,
-        "revision_timestamp": "2026-04-12T23:56:01Z",
-    }
-]
+SOURCES = load_champion_sources("Amumu")

@@ -32,6 +32,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _bonus_magic_damage_levelings(
@@ -215,11 +216,4 @@ MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun"}
 parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Cassiopeia",
-        "revision_id": 4022596,
-        "revision_timestamp": "2026-05-27T00:42:10Z",
-    }
-]
+SOURCES = load_champion_sources("Cassiopeia")

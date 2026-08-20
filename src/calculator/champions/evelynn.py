@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -194,35 +195,4 @@ ASSUMPTIONS = [
     "Last Caress uses the 240% branch only below the sourced 30% target-health threshold.",
 ]
 
-SOURCES = [
-    source_row(
-        "Evelynn parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Evelynn",
-        4034409,
-        "2026-06-22T16:08:34Z",
-    ),
-    source_row(
-        "Evelynn Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/Q",
-        2863936,
-        "2019-11-03T19:56:53Z",
-    ),
-    source_row(
-        "Evelynn W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/W",
-        2864231,
-        "2019-11-03T20:09:40Z",
-    ),
-    source_row(
-        "Evelynn E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/E",
-        2864377,
-        "2019-11-03T20:12:10Z",
-    ),
-    source_row(
-        "Evelynn R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/R",
-        2864523,
-        "2019-11-03T20:15:35Z",
-    ),
-]
+SOURCES = load_champion_sources("Evelynn")

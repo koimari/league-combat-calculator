@@ -40,6 +40,7 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .source_receipts import load_champion_sources
 
 
 def _true_split_parts(
@@ -331,14 +332,7 @@ MODULE_CC = {"Q": "none", "Q2": "none", "W": "slow", "E": "immobilize"}
 parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Camille",
-        "revision_id": 4002624,
-        "revision_timestamp": "2026-03-27T01:51:45Z",
-    }
-]
+SOURCES = load_champion_sources("Camille")
 
 from .healing_contract import (
     declare_healing_rule,

@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .source_receipts import load_champion_sources
 
 
 def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -193,38 +194,7 @@ ASSUMPTIONS = [
     "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the arrival explosion enters damage.",
 ]
 
-SOURCES = [
-    source_row(
-        "Ekko parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Ekko",
-        4007951,
-        "2026-04-12T23:57:12Z",
-    ),
-    source_row(
-        "Ekko Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/Q",
-        2863934,
-        "2019-11-03T19:56:51Z",
-    ),
-    source_row(
-        "Ekko W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/W",
-        2864229,
-        "2019-11-03T20:09:38Z",
-    ),
-    source_row(
-        "Ekko E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/E",
-        2864375,
-        "2019-11-03T20:12:09Z",
-    ),
-    source_row(
-        "Ekko R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/R",
-        2864521,
-        "2019-11-03T20:15:33Z",
-    ),
-]
+SOURCES = load_champion_sources("Ekko")
 
 from .healing_contract import (
     declare_healing_rule,

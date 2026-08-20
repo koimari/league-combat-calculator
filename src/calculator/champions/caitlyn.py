@@ -51,6 +51,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home
 # (the P entry has no leveling data; R's crit scaling is prose).
@@ -356,11 +357,4 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Caitlyn", cc_kinds=MODULE_CC)
 
 
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Caitlyn",
-        "revision_id": 4022594,
-        "revision_timestamp": "2026-05-27T00:34:15Z",
-    }
-]
+SOURCES = load_champion_sources("Caitlyn")

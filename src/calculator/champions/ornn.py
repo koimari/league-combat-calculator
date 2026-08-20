@@ -5,6 +5,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -125,11 +126,4 @@ ASSUMPTIONS = [
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
 ]
 
-SOURCES = [
-    {
-        "label": "Ornn — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ornn",
-        "revision_id": 4012186,
-        "revision_timestamp": "2026-04-25T08:28:03Z",
-    }
-]
+SOURCES = load_champion_sources("Ornn")

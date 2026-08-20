@@ -7,7 +7,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -15,6 +15,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Whisper's final round "always critically strikes ... and deals bonus
@@ -364,35 +365,4 @@ ASSUMPTIONS = [
     "Curtain Call interpolates each bullet's missing-health range and "
     "keeps the fourth bullet's sourced critical packet separate.",
 ]
-SOURCES = [
-    source_row(
-        "Jhin parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Jhin",
-        4022310,
-        "2026-05-24T11:33:51Z",
-    ),
-    source_row(
-        "Jhin Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/Q",
-        2863956,
-        "2019-11-03T19:57:13Z",
-    ),
-    source_row(
-        "Jhin W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/W",
-        2864251,
-        "2019-11-03T20:10:00Z",
-    ),
-    source_row(
-        "Jhin E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/E",
-        2864397,
-        "2019-11-03T20:12:31Z",
-    ),
-    source_row(
-        "Jhin R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/R",
-        2864543,
-        "2019-11-03T20:15:55Z",
-    ),
-]
+SOURCES = load_champion_sources("Jhin")

@@ -30,6 +30,7 @@ from .slotlib import (
     extract_named,
     extract_resource_cost,
 )
+from .source_receipts import load_champion_sources
 
 _E_CAST_START = 0.0
 _W_CAST_START = 0.25
@@ -358,38 +359,7 @@ ASSUMPTIONS = [
     "Passive and R are excluded because they deal no enemy damage.",
 ]
 
-SOURCES = [
-    {
-        "label": "Taliyah — Threaded Volley",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Taliyah/Threaded_Volley",
-        "revision_id": 4013247,
-        "revision_timestamp": "2026-04-28T21:36:23Z",
-    },
-    {
-        "label": "Taliyah — Seismic Shove",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Taliyah/Seismic_Shove",
-        "revision_id": 4028078,
-        "revision_timestamp": "2026-06-13T15:07:57Z",
-    },
-    {
-        "label": "Taliyah — Unraveled Earth",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Taliyah/Unraveled_Earth",
-        "revision_id": 3985881,
-        "revision_timestamp": "2026-01-21T21:34:03Z",
-    },
-    {
-        "label": "Taliyah — Rock Surfing",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Taliyah/Rock_Surfing",
-        "revision_id": 3986175,
-        "revision_timestamp": "2026-01-22T03:05:54Z",
-    },
-    {
-        "label": "Taliyah — Weaver's Wall",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Taliyah/Weaver's_Wall",
-        "revision_id": 4008075,
-        "revision_timestamp": "2026-04-13T05:20:02Z",
-    },
-]
+SOURCES = load_champion_sources("Taliyah")
 
 SLOTS = {"E": _unraveled_earth, "W": _seismic_shove, "Q": _threaded_volley}
 
