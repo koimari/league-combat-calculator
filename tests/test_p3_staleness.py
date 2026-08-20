@@ -502,31 +502,3 @@ def test_api_staleness_404_without_report(monkeypatch, tmp_path):
     response = app_module.app.test_client().get("/api/staleness")
     assert response.status_code == 404
     assert "error" in response.get_json()
-
-
-def test_api_staleness_regenerate_requires_dev_mode(monkeypatch, tmp_path):
-    path, _fixture = _staleness_fixture(tmp_path)
-    monkeypatch.setattr(app_module, "_staleness_path", lambda: path)
-    monkeypatch.setattr(app_module, "_local_dev_request", lambda: False)
-    response = app_module.app.test_client().post("/api/staleness/regenerate")
-    assert response.status_code == 404
-
-
-def test_api_staleness_regenerate_runs_pipeline(monkeypatch, tmp_path):
-    path, fixture = _staleness_fixture(tmp_path)
-    monkeypatch.setattr(app_module, "_staleness_path", lambda: path)
-    monkeypatch.setattr(app_module, "_local_dev_request", lambda: True)
-
-    def fake_run(*_args, **_kwargs):
-        class FakeResult:
-            returncode = 0
-            stderr = ""
-
-        return FakeResult()
-
-    monkeypatch.setattr(app_module.subprocess, "run", fake_run)
-    client = app_module.app.test_client()
-    client.set_cookie("lol_calc_dev_update", app_module._DEV_UPDATE_TOKEN)
-    response = client.post("/api/staleness/regenerate")
-    assert response.status_code == 200
-    assert response.get_json() == fixture

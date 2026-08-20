@@ -12,7 +12,6 @@ import os
 import re
 import secrets
 import sqlite3
-import subprocess
 import sys
 import tempfile
 import time
@@ -1958,59 +1957,6 @@ def api_staleness():
     report = _read_staleness()
     if report is None:
         return jsonify({"error": "No staleness report; run patch regression"}), 404
-    return jsonify(report)
-
-
-@app.route("/api/staleness/regenerate", methods=["POST"])
-def api_staleness_regenerate():
-    """Re-run the patch regression against the game files. Dev-only, guarded
-    exactly like /api/update-data (local dev mode + update cookie)."""
-    supplied_token = request.cookies.get(_DEV_UPDATE_COOKIE, "")
-    if not _local_dev_request() or not hmac.compare_digest(
-        supplied_token, _DEV_UPDATE_TOKEN
-    ):
-        return (
-            jsonify({"error": "Staleness regeneration is disabled on this server"}),
-            404,
-        )
-
-    repo_root = Path(__file__).resolve().parent.parent
-    script = repo_root / "scripts" / "patch_regression.py"
-    if not script.exists():
-        return jsonify({"error": "patch_regression.py not found"}), 500
-    try:
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(script),
-                "check",
-                "--data-dir",
-                str(repo_root / "data"),
-                "--cache-dir",
-                str(repo_root / "data" / "gamefiles"),
-                "--out",
-                str(_staleness_path()),
-            ],
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            timeout=1800,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "patch regression timed out"}), 504
-    report = _read_staleness()
-    if result.returncode != 0 or report is None:
-        return (
-            jsonify(
-                {
-                    "error": "patch regression failed",
-                    "exit": result.returncode,
-                    "stderr": result.stderr[-2000:],
-                }
-            ),
-            500,
-        )
     return jsonify(report)
 
 
