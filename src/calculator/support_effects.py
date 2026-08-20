@@ -215,7 +215,20 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
 # State-transition modules can own a conditional recovery packet without
 # joining the self-heal registry. Sivir E creates its heal only after a
 # spell-shield block, so the generic scanner must omit its cached Heal row.
-_STATE_AUTHORED_HEAL_SLOTS = frozenset({("Sivir", "E")})
+# Roadmap session 1: Zilean R (Chronoshift) carries a "Heal" leveling row
+# (600/850/1100 + 200% AP) that only pays out on resurrection after the
+# protected champion takes fatal damage within the rune's 5s window — it is
+# not a heal that fires on cast. Before this entry existed the generic scan
+# matched "Heal" and emitted an unconditional "Chronoshift · Heal" packet at
+# cast time (verified live: derive_ally_effects on a bare R cast returned a
+# full-amount heal event with no fatal-damage gate at all), double-counting
+# against the correct, already-implemented revive heal that
+# ``zilean.starting_revive_defense`` feeds through
+# ``StartingDefenses.revive_health_amount`` / the survival kernel (see
+# tests/test_ally_support_wave2.py's ``zilr`` cases and
+# tests/test_e8_followup_hooks.py's revive_source assertion). R is excluded
+# here so the scanner defers entirely to the revive-conditional path.
+_STATE_AUTHORED_HEAL_SLOTS = frozenset({("Sivir", "E"), ("Zilean", "R")})
 
 # These cached descriptions state a shield lifetime. The typed duration atom
 # points at the sentence that names the shield, so a preceding slow, channel,

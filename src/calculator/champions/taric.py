@@ -7,6 +7,40 @@ row).  The engine's ally-support scanner cannot author the heal from the
 cached leveling, so the Q heal is NOT emitted as a support packet — see E8d
 reply for the missing hook.  R (Cosmic Radiance) is invulnerability state
 (2.5s), documented as such, not a heal/shield.
+
+Roadmap session 1 (2026-08-20): Q, W, and R are reclassified from
+out_of_scope to modeled. Each already carried a real, sourced, tested
+numeric effect via the ally-support/self-heal side channels before this
+session — the label was simply stale:
+  - Q (Starlight's Touch): self/ally heal authored below via
+    ``derive_self_healing`` (25 + 15% AP + 1% max health per stocked
+    charge, self_and_all_teammates fan-out via the E1 rule); Taric is in
+    support_effects.py's ``_MODULE_AUTHORED_HEAL_SLOTS`` so the generic
+    scanner correctly defers (pinned in tests/test_issue_143.py,
+    tests/test_e1_healing_b5.py, tests/test_survival_kernel.py).
+  - W (Bastion): ally/self shield via the support scanner's "Shield
+    Strength" packet, an amount_formula keyed off the PROTECTED target's
+    max health, 2.5s duration (support_effects.py; pinned in
+    tests/test_survival_kernel.py's compiled/receipt-walk parity cases).
+  - R (Cosmic Radiance): self_and_all_teammates invulnerability state,
+    carried by the support scanner's ``_SUPPORT_STATE_SLOTS`` entry
+    (support_effects.py; pinned in tests/test_e8_support.py's
+    ``test_taric_cosmic_radiance_targets_the_caster_and_selected_ally``
+    and tests/test_survival_kernel.py's delayed-ally-state cases).
+P (Bravado) stays out_of_scope and is NOT closed this session: the
+passive is a real, sourced number ("deal 25 : 101 (based on level) (+ 15%
+bonus armor) bonus magic damage on-attack" on Taric's next two basic
+attacks within 5 seconds of an ability cast, refreshing the window and
+regranting an attack on a further cast), but correctly attributing it
+needs the same live event-ordering/dedup decision as Milio P (Fired
+Up!): which of Taric's own casts consumes/refreshes the window, and
+whether back-to-back Q/W/E/R casts double/triple-count under the
+engine's existing ``empowers_next_auto`` mechanism (flat multiply by
+num_casts, no concept of a proc window being refreshed rather than
+stacked). That decision belongs to the rotation/cast-scheduling engine
+(damage.py), out of this session's ownership boundary; a static per-slot
+approximation here risked an overcounted number rather than a sourced
+one.
 """
 
 from .engine import build_parser
@@ -43,7 +77,11 @@ ASSUMPTIONS.extend(
     ]
 )
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"E"} else "out_of_scope") for slot in "PQWER"
+    "P": "out_of_scope",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 

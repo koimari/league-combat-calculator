@@ -15,6 +15,39 @@ Total Heal delivered as one lump packet at the cast — the per-tick cadence
 seconds") is priced only for Milio's own self-heal stream by the E1 rule.
 The scanner fails closed on "Heal per Tick" packets without an authored
 cadence, so the lump Total Heal is the deterministic ally packet.
+
+Roadmap session 1 (2026-08-20): W, E, and R are reclassified from
+out_of_scope to modeled. Every one of the three already carried a real,
+sourced, tested numeric effect before this session — the label was simply
+stale relative to the engine's ally-support/self-heal side channels:
+  - W (Cozy Campfire): self heal via ``derive_self_healing`` below (tick
+    stream) AND ally heal via the support scanner's "Total Heal" lump
+    packet (support_effects.py; pinned in tests/test_e8_support.py,
+    tests/test_ally_support_wave2.py).
+  - E (Warm Hugs): ally/self shield via the support scanner's "Shield
+    Strength" packet (Shield Strength 45-165 + 45% AP; pinned in
+    tests/test_support_effects.py and tests/test_milio_r_cleanse.py's
+    "Warm Hugs · Shield Strength" check).
+  - R (Breath of Life): self_and_all_teammates heal authored below via
+    ``derive_self_healing`` (Milio is in support_effects.py's
+    ``_MODULE_AUTHORED_HEAL_SLOTS`` so the scanner correctly defers).
+P (Fired Up!) stays out_of_scope and is NOT closed this session: the
+enchant it grants ("Milio's ability hits on himself and allied champions
+grant an enchantment for 4 seconds, which causes the NEXT basic attack OR
+ability hit against enemies to deal bonus magic damage") is a real,
+sourced number (7/11/15% of the enchanted target's bonus AD + a 10-101
+per-level burn), but correctly attributing it needs to know, at the
+moment each of Milio's W/E/R casts lands on himself, which action (an
+auto attack or one of his OWN next ability casts) consumes the window —
+and whether overlapping windows from back-to-back W/E/R casts refresh a
+single consumable proc or would double/triple-count under the engine's
+existing ``empowers_next_auto`` mechanism (which multiplies flatly by
+num_casts and has no concept of one proc window being refreshed rather
+than stacked by a second trigger inside the same fight). That live
+event-ordering/dedup decision belongs to the rotation/cast-scheduling
+engine (damage.py), which is out of this session's ownership boundary;
+attempting a static per-slot approximation here risked inventing an
+overcounted number rather than sourcing a correct one.
 """
 
 from .packet_module import _rank_gated_no_damage, build_packet_module
@@ -50,7 +83,11 @@ ASSUMPTIONS = [
 ]
 PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot == "Q" else "out_of_scope") for slot in "PQWER"
+    "P": "out_of_scope",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 
