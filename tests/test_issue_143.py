@@ -15,10 +15,8 @@ import inspect
 import pytest
 
 from src.calculator.data_fetcher import get_champion
-from src.calculator.healing import (
-    _taric_starlights_touch,
-    derive_self_healing,
-)
+from src.calculator.healing import derive_self_healing
+from src.calculator.healing_legacy import _taric_starlights_touch
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats

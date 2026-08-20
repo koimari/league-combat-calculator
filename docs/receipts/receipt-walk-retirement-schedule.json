@@ -421,10 +421,11 @@
       "guardian_angel.rebirth": {
        "consumed_at": [
         "participant_timeline._simulate_survival",
-        "program.compile.revive_candidate_actions",
-        "roster_composition.target_overrides"
+        "program.compile.revive_candidate_actions"
        ],
-       "fields_no_engine_reads": [],
+       "fields_no_engine_reads": [
+        "revive_cooldown"
+       ],
        "resolved_fields": [
         "revive_cooldown",
         "revive_delay",

@@ -133,8 +133,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "boundary; the attacks' spacing across the 3-second window and the "
     "primary target's critical-strike modifiers are not priced.",
 ]
-
-VARIANT_OPTION_KEYS = ("q_variant", "e_fury")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"

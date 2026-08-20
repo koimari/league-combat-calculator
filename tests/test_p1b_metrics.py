@@ -628,7 +628,6 @@ def test_metrics_schema_backfills_preexisting_tables(
         )
         conn.execute(sa.text("CREATE TABLE cached_results (id INTEGER PRIMARY KEY)"))
         conn.execute(sa.text("CREATE TABLE cache_counters (id INTEGER PRIMARY KEY)"))
-        conn.execute(sa.text("CREATE TABLE staleness_state (id INTEGER PRIMARY KEY)"))
 
     engine = db.get_engine()
     inspector = sa.inspect(engine)

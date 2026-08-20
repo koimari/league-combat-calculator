@@ -219,9 +219,6 @@ def target_overrides(defender: Combatant) -> dict[str, float | str]:
         "target_threshold_health_heal": float(defenses.threshold_health_heal),
         "target_threshold_health_ratio": float(defenses.threshold_health_ratio),
         "target_threshold_health_duration": float(defenses.threshold_health_duration),
-        "target_revive_health_amount": float(defenses.revive_health_amount),
-        "target_revive_delay": float(defenses.revive_delay),
-        "target_revive_cooldown": float(defenses.revive_cooldown),
     }
 
 

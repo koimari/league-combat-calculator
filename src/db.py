@@ -200,19 +200,6 @@ class ValidationFeedback(Base):
     )
 
 
-class StalenessState(Base):
-    """One row per patch holding staleness/coverage bookkeeping payloads."""
-
-    __tablename__ = "staleness_state"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    patch: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
-    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
-    checked_at: Mapped[datetime] = mapped_column(
-        DateTime(), nullable=False, default=_utcnow
-    )
-
-
 class CacheCounter(Base):
     """Single-row hit/miss counters for /api/cache-status.
 

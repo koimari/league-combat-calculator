@@ -20,18 +20,11 @@ from src.calculator.interpreters import (
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
-    _ap_multiplier,
     ap_multiplier,
     basic_ability_haste,
-    _basic_ability_haste,
     bloodmail_bonus_ad,
     bloodmail_retribution_bonus_ad,
-    _dawncore_bonus_ap,
-    _flowing_water_bonus_ap,
-    _mana_to_ap_bonus,
     mana_to_health_bonus,
-    _muramana_bonus_ad,
-    _passive_attack_speed_bonus,
     energized_proc_indices,
     energized_schedule_receipt,
     hydra_cleave_secondary_ad_damage,
@@ -53,7 +46,6 @@ from src.calculator.item_effects import (
     statikk_chain_target_count,
     steraks_bonus_ad,
     terminus_max_stack_bonuses,
-    _terminus_max_stack_bonuses,
     refresh_item_effects,
     resolve_damage_effects,
     resolve_stat_effects,
@@ -925,29 +917,29 @@ class TestApMultiplier:
     """Rabadon's / Blackfire Torch additive %AP increase."""
 
     def test_no_items_returns_1(self) -> None:
-        assert _ap_multiplier([]) == 1.0
+        assert ap_multiplier([]) == 1.0
 
     def test_rabadons(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Rabadon's Deathcap", ap_percent_increase=0.30)
-        assert _ap_multiplier(_build("Rabadon's Deathcap")) == 1.30
+        assert ap_multiplier(_build("Rabadon's Deathcap")) == 1.30
 
     def test_stacks_additively(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # 30% + 4% = 34%, NOT 1.30 x 1.04
         _patch_effect(monkeypatch, "Rabadon's Deathcap", ap_percent_increase=0.30)
         _patch_effect(monkeypatch, "Blackfire Torch", ap_amp_per_target=0.04)
         build = _build("Rabadon's Deathcap", "Blackfire Torch")
-        assert abs(_ap_multiplier(build) - 1.34) < 1e-9
+        assert abs(ap_multiplier(build) - 1.34) < 1e-9
 
 
 class TestManaToApBonus:
     """Awe passives: Archangel's Staff and Seraph's Embrace."""
 
     def test_absent_returns_zero(self) -> None:
-        assert _mana_to_ap_bonus(_build("Liandry's Torment"), 1000) == 0.0
+        assert mana_to_ap_bonus(_build("Liandry's Torment"), 1000) == 0.0
 
     def test_archangels(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Archangel's Staff", bonus_mana_to_ap_ratio=0.01)
-        assert _mana_to_ap_bonus(_build("Archangel's Staff"), 600) == 6.0
+        assert mana_to_ap_bonus(_build("Archangel's Staff"), 600) == 6.0
 
 
 class TestManaToHealthBonus:
@@ -964,12 +956,12 @@ class TestManaToHealthBonus:
         _patch_effect(monkeypatch, "Archangel's Staff", bonus_mana_to_ap_ratio=0.01)
         _patch_effect(monkeypatch, "Seraph's Embrace", bonus_mana_to_ap_ratio=0.02)
         build = _build("Archangel's Staff", "Seraph's Embrace")
-        assert _mana_to_ap_bonus(build, 1000) == 30.0
+        assert mana_to_ap_bonus(build, 1000) == 30.0
 
 
 class TestDawncoreBonusAp:
     def test_absent_returns_zero(self) -> None:
-        assert _dawncore_bonus_ap([], 150.0) == 0.0
+        assert dawncore_bonus_ap([], 150.0) == 0.0
 
     def test_ap_per_regen_unit(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(
@@ -978,21 +970,21 @@ class TestDawncoreBonusAp:
             ap_per_mana_regen_unit=10.0,
             mana_regen_threshold_percent=100.0,
         )
-        assert _dawncore_bonus_ap(_build("Dawncore"), 150.0) == 15.0
+        assert dawncore_bonus_ap(_build("Dawncore"), 150.0) == 15.0
 
 
 class TestFlowingWaterBonusAp:
     def test_absent_returns_zero(self) -> None:
-        assert _flowing_water_bonus_ap([]) == 0.0
+        assert flowing_water_bonus_ap([]) == 0.0
 
     def test_reads_registry_value(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Staff of Flowing Water", rapids_bonus_ap=40.0)
-        assert _flowing_water_bonus_ap(_build("Staff of Flowing Water")) == 40.0
+        assert flowing_water_bonus_ap(_build("Staff of Flowing Water")) == 40.0
 
 
 class TestPassiveAttackSpeedBonus:
     def test_no_items_returns_zero(self) -> None:
-        assert _passive_attack_speed_bonus([], is_melee=False) == 0.0
+        assert passive_attack_speed_bonus([], is_melee=False) == 0.0
 
     def test_bandlepipes_melee_ranged_split(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1004,8 +996,8 @@ class TestPassiveAttackSpeedBonus:
             bonus_attack_speed_ranged=20.0,
         )
         build = _build("Bandlepipes")
-        assert _passive_attack_speed_bonus(build, is_melee=True) == 30.0
-        assert _passive_attack_speed_bonus(build, is_melee=False) == 20.0
+        assert passive_attack_speed_bonus(build, is_melee=True) == 30.0
+        assert passive_attack_speed_bonus(build, is_melee=False) == 20.0
 
     def test_hexplate_and_yun_tal_sum(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(
@@ -1018,8 +1010,8 @@ class TestPassiveAttackSpeedBonus:
             monkeypatch, "Yun Tal Wildarrows", bonus_attack_speed_percent=30.0
         )
         build = _build("Experimental Hexplate", "Yun Tal Wildarrows")
-        assert _passive_attack_speed_bonus(build, is_melee=True) == 80.0
-        assert _passive_attack_speed_bonus(build, is_melee=False) == 65.0
+        assert passive_attack_speed_bonus(build, is_melee=True) == 80.0
+        assert passive_attack_speed_bonus(build, is_melee=False) == 65.0
 
 
 class TestBonusAdConversions:
@@ -1027,10 +1019,10 @@ class TestBonusAdConversions:
 
     def test_muramana(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Muramana", max_mana_to_ad_ratio=0.02)
-        assert _muramana_bonus_ad(_build("Muramana"), 1500) == 30.0
+        assert muramana_bonus_ad(_build("Muramana"), 1500) == 30.0
 
     def test_muramana_absent(self) -> None:
-        assert _muramana_bonus_ad([], 1500) == 0.0
+        assert muramana_bonus_ad([], 1500) == 0.0
 
     def test_bloodmail(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(
@@ -1064,7 +1056,7 @@ class TestBonusAdConversions:
 
 class TestTerminusMaxStackBonuses:
     def test_absent_returns_zeros(self) -> None:
-        assert _terminus_max_stack_bonuses([], 18) == (0.0, 0.0)
+        assert terminus_max_stack_bonuses([], 18) == (0.0, 0.0)
 
     def test_level_18_max_stacks(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(
@@ -1075,7 +1067,7 @@ class TestTerminusMaxStackBonuses:
             light_resist_min=6.0,
             light_resist_max=8.0,
         )
-        resist, pen = _terminus_max_stack_bonuses(_build("Terminus"), 18)
+        resist, pen = terminus_max_stack_bonuses(_build("Terminus"), 18)
         assert resist == 24.0  # 8 per stack at 18 x 3 stacks
         assert abs(pen - 30.0) < 1e-9  # 10% x 3 stacks, as percentage
 
@@ -1087,17 +1079,17 @@ class TestTerminusMaxStackBonuses:
             light_resist_min=6.0,
             light_resist_max=8.0,
         )
-        resist, _ = _terminus_max_stack_bonuses(_build("Terminus"), 1)
+        resist, _ = terminus_max_stack_bonuses(_build("Terminus"), 1)
         assert resist == 18.0  # 6 per stack at level 1 x 3 stacks
 
 
 class TestBasicAbilityHaste:
     def test_absent_returns_zero(self) -> None:
-        assert _basic_ability_haste([]) == 0.0
+        assert basic_ability_haste([]) == 0.0
 
     def test_shojin(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_effect(monkeypatch, "Spear of Shojin", basic_ability_haste=25.0)
-        assert _basic_ability_haste(_build("Spear of Shojin")) == 25.0
+        assert basic_ability_haste(_build("Spear of Shojin")) == 25.0
 
 
 class TestMissingKeyFailsLoudly:

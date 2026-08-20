@@ -181,11 +181,20 @@ class TestOptionsDeclarationValidity:
         or archetype params (``by_option(key, ...)``,
         ``count_option=key``), so a
         declared key that never appears in the module source is a stale
-        declaration or a rename that missed the parse path.
+        declaration or a rename that missed the parse path.  The one generic
+        consumer is ``packet_module.select_variant``: it both declares a
+        ``<slot>_variant`` option (labelled ``"<SLOT> packet variant"``) and
+        reads it, so those keys need no literal in the champion module.
         """
         for name in _CHAMPION_MODULES:
             source = inspect.getsource(_module(name))
             for opt in get_champion_options_meta(name)["options"]:
+                key = opt["key"]
+                if (
+                    key == f"{key[0]}_variant"
+                    and opt["label"] == f"{key[0].upper()} packet variant"
+                ):
+                    continue
                 assert f'"{opt["key"]}"' in source, (
                     f"{name}: OPTIONS key {opt['key']!r} is not referenced "
                     f"anywhere in its module — stale declaration or rename?"

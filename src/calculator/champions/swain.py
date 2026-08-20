@@ -56,7 +56,6 @@ _packet_parse, _packet_slots, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_modul
     ),
 )
 PACKET_SPEC = _packet_slots.packet_spec
-VARIANT_OPTION_KEYS = ("r_variant",)
 
 # Reviewed crowd control, read from the cached kit.  Q (Death's Hand)
 # "deal[s] magic damage to enemies hit" with no control clause.  W (Vision

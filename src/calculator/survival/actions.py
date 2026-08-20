@@ -397,9 +397,7 @@ class SurvivalAction(NamedTuple):
     damage_type: str = ""
     # The price this packet's family declared, for the walk to mitigate
     # itself (``transitions.apply_declared_price``).  ``None`` means "no
-    # family declared one for this packet", which is every packet the tree
-    # produces today: the from-declaration path is inert until a family's
-    # retirement slice hands it one.  It is a value and not a float
+    # family declared one for this packet".  It is a value and not a float
     # defaulting to zero for the same reason ``live_amp`` is not a 1.0 — a
     # declaration nobody made and a declaration of nothing are different
     # answers, and only one of them may be paid.

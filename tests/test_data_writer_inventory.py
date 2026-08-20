@@ -112,7 +112,7 @@ def test_runtime_cache_writes_only_via_registry():
                 func_name = node.func.id
             elif isinstance(node.func, ast.Attribute):
                 func_name = node.func.attr
-            if func_name not in {"write_runtime_cache", "_write_cache"}:
+            if func_name != "write_runtime_cache":
                 continue
             if not any(
                 isinstance(a, ast.Constant)

@@ -89,12 +89,10 @@ routing itself is recorded as :class:`RoutingProvenance`, which is where a
 fact about *how* a packet reached a subject belongs and is not a second
 number.  Umbrella Amendment R, Ruling 3 (2026-08-16).
 
-**Nothing declares a price yet.**  Every family still reaches the walk as the
-pair engine's timed rows, and this path stays inert until a family's
-retirement slice hands it a :class:`DeclaredPacket` — which is what keeps
-this stage a re-spelling rather than a re-pricing.  Every term is armed on
-the same terms: they reach whatever the first retiring family hands them,
-and nothing before that.
+**Who declares a price.**  Every family in
+``program.build.walk_repriced_mechanics()`` hands the walk a
+:class:`DeclaredPacket`; the pair engine's timed rows are re-spelled here,
+not re-priced.
 """
 
 from __future__ import annotations

@@ -24,10 +24,6 @@ _EXCLUDE_KEYWORDS: set[str] = {
     "bounce",  # Bounced damage is secondary
 }
 
-# Attribute names that should always be treated as primary damage
-# even though they might be excluded by the general rules above.
-_FORCE_INCLUDE: set[str] = set()
-
 # Map attribute substrings to damage types
 _DAMAGE_TYPE_HINTS: list[tuple[str, str]] = [
     ("magic damage", "magic"),
@@ -47,9 +43,6 @@ def is_damage_attribute(attribute: str) -> bool:
         True if this attribute is primary damage for the calculator.
     """
     lower = attribute.lower()
-
-    if attribute in _FORCE_INCLUDE:
-        return True
 
     # Must contain "damage"
     if not any(kw in lower for kw in _DAMAGE_KEYWORDS):

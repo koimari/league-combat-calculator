@@ -492,8 +492,8 @@ def apply_declared_price(
     reader would see a source mechanic's magnitude paid twice under one name
     at two subjects and have nothing telling them the second was routed.
 
-    Inert today.  No packet the tree produces carries a declaration, so this
-    is reached only by a family whose retirement slice opted it in.
+    Reached by every action whose packet carries a declaration
+    (``action.declared``).
     """
     packet = action.declared
     price = pricing.price_declared_packet(
@@ -1355,8 +1355,7 @@ def _apply_live_packet_chain(
         # mitigated.  It reads the armed delta the line above may just have
         # written, and it replaces the reprice rather than preceding it: a
         # declaration priced at the live resistance has nothing left to
-        # re-price.  No live family declares one, so this branch is inert
-        # until a retirement slice opts one in.
+        # re-price.  Every family in ``walk_repriced_mechanics()`` declares one.
         priced = apply_declared_price(ctx, action, state)
         if priced is not None:
             amount = priced

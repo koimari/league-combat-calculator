@@ -42,7 +42,6 @@ from src.calculator.cast_dependency import (
     CastDependencyError,
     ConflictingInferenceError,
     CustomOrderViolatesDependencyError,
-    DeadSuppressionError,
     DeclaredCycleError,
     DuplicateDependencyError,
     MissingLatentReasonError,
@@ -53,7 +52,6 @@ from src.calculator.cast_dependency import (
     UnknownDependencyKindError,
     UnknownInferredKindError,
     UnknownSlotError,
-    UnreachableDependencyError,
     UnsourcedDependencyError,
     active_dependencies,
     check_order_satisfies_dependencies,
@@ -283,8 +281,6 @@ class TestVocabularies:
             DeclaredCycleError,
             ConflictingInferenceError,
             ResolvedCycleError,
-            UnreachableDependencyError,
-            DeadSuppressionError,
             CustomOrderViolatesDependencyError,
         ):
             assert issubclass(error, CastDependencyError)

@@ -65,7 +65,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
 )
 PACKET_SPEC = SLOTS.packet_spec
-VARIANT_OPTION_KEYS = ("q_variant",)
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON
 # leveling rows.  Seismic Bastion's shield: "shielding himself equal to

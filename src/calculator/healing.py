@@ -15,12 +15,10 @@ from .champions.healing_contract import ChampionHealingRule
 from .healing_legacy import (
     GREY_HEALTH_RULE_CHAMPIONS as _GREY_HEALTH_RULE_CHAMPIONS,
     HEALING_RULE_CHAMPIONS as _DECLARED_HEALING_CHAMPIONS,
-    _taric_starlights_touch as _LEGACY_TARIC_STARLIGHTS_TOUCH,
 )
 from .trigger_stream import ChampionSlotOwner
 
 GREY_HEALTH_RULE_CHAMPIONS = _GREY_HEALTH_RULE_CHAMPIONS
-_taric_starlights_touch = _LEGACY_TARIC_STARLIGHTS_TOUCH
 
 # The declaration site a self-heal rule occupies in its champion module.
 # ``ChampionSlotOwner`` names a champion and the slot that declares a

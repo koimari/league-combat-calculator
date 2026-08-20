@@ -2,10 +2,9 @@
 
 Absorption order and state mutation live here and nowhere else.  Every walk
 in the calculator drives :func:`absorb`: the two ordered damage walks in
-``damage.py``, the authoritative receipt walk in ``participant_timeline.py``,
-and both damage branches of its compiled score walk.  They differ only in
-where the :class:`ShieldPools` they mutate is stored -- a fight-local, a key
-in the participant state dict, or one slot of a per-participant list.
+``damage.py`` and the one survival kernel in ``survival/transitions.py``
+that both the receipt and compiled-score compositions run.  They differ
+only in where the :class:`ShieldPools` they mutate is stored.
 
 Adding a shield mechanic or changing absorption order is one edit here.
 """

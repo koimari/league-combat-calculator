@@ -12,7 +12,6 @@ from src.calculator.economy import (
     is_transformation_item,
     item_sell_value,
     item_total,
-    validate_economy_loadout,
 )
 
 
@@ -216,27 +215,6 @@ def test_stackability_review():
     assert is_stackable(_item("Serrated Dirk"))  # multi-demand EPIC
     assert not is_stackable(_item("Infinity Edge"))  # LEGENDARY
     assert not is_stackable(_item("Sorcerer's Shoes"))  # BOOTS
-
-
-def test_duplicate_legendary_final_loadout_rejected():
-    plan = apply_purchase_plan(
-        [],
-        None,
-        [_item("Infinity Edge"), _item("Infinity Edge")],
-        gold_on_hand=8000,
-    )
-    with pytest.raises(ValueError, match="Infinity Edge"):
-        validate_economy_loadout(plan)
-
-
-def test_duplicate_stackable_final_loadout_accepted():
-    plan = apply_purchase_plan(
-        [],
-        None,
-        [_item("Long Sword"), _item("Long Sword")],
-        gold_on_hand=700,
-    )
-    validate_economy_loadout(plan)
 
 
 def test_missing_price_fails_closed():

@@ -43,8 +43,7 @@ Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
 
 ## Item domain (unified Atomizer, issue #140)
 
-`python scripts/atomize.py items` (or the retired
-`scripts/extract_item_atoms.py`, which delegates to the same domain) writes
+`python scripts/atomize.py items` writes
 `items.json` in this directory: every item atomized with per-effect
 provenance.
 

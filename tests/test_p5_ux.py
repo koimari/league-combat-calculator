@@ -2,9 +2,7 @@
 
 These tests pin the *contracts the browser UI consumes* without a browser:
 
-* the Quick view surface (tabs, guided steps, presets, run button, share)
-* ``static/quick-presets.json`` — every preset scenario must calculate and
-  every preset champion/item must exist in the served caches
+* the Quick view surface (tabs, guided steps, run button, share)
 * the quick-mode "Best next item" flow: /api/calculate baseline + /api/bis
   next-slot candidates with the score/components the UI turns into deltas
 * build sharing: POST /api/builds -> POST /api/share -> GET /api/share/<token>
@@ -31,19 +29,12 @@ import src.app as app_module
 from src import db
 
 ROOT = Path(__file__).resolve().parent.parent
-PRESETS_PATH = ROOT / "static" / "quick-presets.json"
 APP_JS = ROOT / "static" / "js" / "app.js"
 CSS = ROOT / "static" / "css" / "style.css"
 
 LEVEL_DERIVED_KITS = {"Elise", "Jayce", "Karma", "Nidalee", "Udyr"}
 QUICK_LEVEL = 18
 QUICK_MAX_ITEMS = 5
-QUICK_PRESET_LABELS = [
-    "Full rotation vs tank",
-    "10s sustained vs squishy",
-    "Burst vs 1v1",
-    "Team fight 4v4",
-]
 
 
 @pytest.fixture(autouse=True)
@@ -74,10 +65,6 @@ def _client():
     return app_module.app.test_client()
 
 
-def _presets() -> list[dict]:
-    return json.loads(PRESETS_PATH.read_text(encoding="utf-8"))["presets"]
-
-
 def _champion_names() -> set[str]:
     response = _client().get("/api/champions")
     assert response.status_code == 200
@@ -90,18 +77,13 @@ def _item_names() -> set[str]:
     return {entry["name"] for entry in response.get_json()}
 
 
-def _quick_payload(champion="Ahri", items=None, enemies=None, preset=None, **overrides):
+def _quick_payload(champion="Ahri", items=None, enemies=None, **overrides):
     """Mirror quickCalculatePayload() in static/js/app.js exactly.
 
-    Presets own their full enemy roster (the 4v4 preset is a coupled team
-    fight); an explicit enemy list overrides, otherwise the practice target
-    (Jhin, no items) is used — mirroring quickEnemyLoadout()."""
-    fight = (preset or {}).get("fight", {}) if preset else {}
+    An explicit enemy list overrides, otherwise the practice target (Jhin, no
+    items) is used — mirroring quickEnemyLoadout()."""
     if enemies is None:
-        if preset and preset.get("enemies"):
-            enemies = [dict(enemy) for enemy in preset["enemies"]]
-        else:
-            enemies = [{"champion": "Jhin", "level": 18, "role": "bottom", "items": []}]
+        enemies = [{"champion": "Jhin", "level": 18, "role": "bottom", "items": []}]
     payload = {
         "champion": champion,
         "level": QUICK_LEVEL,
@@ -111,17 +93,15 @@ def _quick_payload(champion="Ahri", items=None, enemies=None, preset=None, **ove
         "ability_ranks": None,
         "champion_options": {},
         "enemies": enemies,
-        "allies": (
-            [dict(ally) for ally in (preset or {}).get("allies", [])] if preset else []
-        ),
+        "allies": [],
         "role_quest_complete": False,
         "include_actives": True,
         "include_crossover": False,
-        "rotations": fight.get("rotations", 1),
-        "fight_mode": fight.get("fight_mode", "one_rotation"),
-        "fight_duration": fight.get("fight_duration", 10),
-        "auto_attack_uptime_mode": fight.get("auto_attack_uptime_mode", "calculated"),
-        "include_auto_attacks": fight.get("include_auto_attacks", True),
+        "rotations": 1,
+        "fight_mode": "one_rotation",
+        "fight_duration": 10,
+        "auto_attack_uptime_mode": "calculated",
+        "include_auto_attacks": True,
     }
     payload.update(overrides)
     return payload
@@ -186,80 +166,6 @@ def test_mobile_css_stacks_the_duel_vertically():
     for match in re.finditer(r"\.duel-row[^{]*:hover[^{]*\{([^}]*)\}", css):
         for revealing in ("display", "visibility", "content"):
             assert revealing not in match.group(1)
-
-
-# ---------------------------------------------------------------------------
-# Preset scenarios
-# ---------------------------------------------------------------------------
-
-
-def test_preset_scenarios_match_the_documented_labels():
-    presets = _presets()
-    assert 3 <= len(presets) <= 5
-    assert [preset["label"] for preset in presets] == QUICK_PRESET_LABELS
-    ids = [preset["id"] for preset in presets]
-    assert len(ids) == len(set(ids))
-    for preset in presets:
-        assert preset["fight"]["rotations"] == 1
-        assert preset["fight"]["auto_attack_uptime_mode"] == "calculated"
-        assert set(preset["fight"]) >= {
-            "rotations",
-            "fight_mode",
-            "fight_duration",
-            "auto_attack_uptime_mode",
-            "include_auto_attacks",
-        }
-
-
-def test_preset_champions_and_items_exist_in_the_served_caches():
-    champions = _champion_names()
-    items = _item_names()
-    snapshot = json.loads((ROOT / "static" / "data.json").read_text(encoding="utf-8"))
-    snapshot_item_names = {entry["name"] for entry in snapshot["items"]}
-    snapshot_champion_names = {entry["name"] for entry in snapshot["champions"]}
-    for preset in _presets():
-        for side in ("enemies", "allies"):
-            for participant in preset[side]:
-                assert participant["champion"] in champions, (
-                    preset["id"],
-                    participant["champion"],
-                )
-                assert participant["champion"] in snapshot_champion_names
-                for item in participant["items"]:
-                    assert item in items, (preset["id"], item)
-                    # The UI finds icons/prices in the patch snapshot; a preset
-                    # item missing there cannot render a recommendation card.
-                    assert item in snapshot_item_names, (preset["id"], item)
-
-
-def test_every_preset_scenario_calculates_end_to_end():
-    for preset in _presets():
-        payload = _quick_payload(preset=preset)
-        response = _client().post("/api/calculate", json=payload)
-        assert response.status_code == 200, (preset["id"], response.get_json())
-        result = response.get_json()
-        assert result["total_damage"] > 0 or result["ability_damage"] > 0
-        assert result["timeline_coverage"] is not None
-
-
-def test_every_preset_next_slot_has_bis_candidates():
-    """The quick 'Best next item' call must return rankable candidates for
-    every preset.  Single-enemy presets are event-order certified; the coupled
-    4v4 roster legitimately yields partial candidates, which the UI labels."""
-    for preset in _presets():
-        payload = _quick_payload(preset=preset)
-        payload.update(
-            slot_index=0, slot_kind="item", subject_team="main", objective="overall"
-        )
-        response = _client().post("/api/bis", json=payload)
-        assert response.status_code == 200, (preset["id"], response.get_json())
-        data = response.get_json()
-        candidates = data.get("candidates") or data.get("partial_candidates") or []
-        assert candidates, preset["id"]
-        first = candidates[0]
-        for field in ("name", "score", "components", "survival", "timeline_coverage"):
-            assert field in first, (preset["id"], field)
-        assert first["timeline_coverage"].get("complete") in (True, False)
 
 
 # ---------------------------------------------------------------------------

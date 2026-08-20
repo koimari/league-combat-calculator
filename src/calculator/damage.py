@@ -457,9 +457,6 @@ class FightConfig:
     target_threshold_health_heal: float = 0.0
     target_threshold_health_ratio: float = 0.0
     target_threshold_health_duration: float = 0.0
-    target_revive_health_amount: float = 0.0
-    target_revive_delay: float = 0.0
-    target_revive_cooldown: float = 0.0
     enforce_resource_limits: bool = False
     # Ordered external resource restores (time, amount) are supplied by the
     # coupled participant ledger for items such as Catalyst of Aeons.  The

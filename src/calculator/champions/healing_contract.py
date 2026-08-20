@@ -34,10 +34,9 @@ class ChampionHealingRule:
                 fight_duration_seconds,
             )
 
-        from .healing_rules import derive_rule
+        from ..healing_legacy import _legacy_derive_self_healing
 
-        return derive_rule(
-            self.champion_name,
+        return _legacy_derive_self_healing(
             champion_data,
             champion_stats,
             ability_damages,

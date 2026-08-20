@@ -51,7 +51,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "W"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
-VARIANT_OPTION_KEYS = ("w_variant",)
 
 
 def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:

@@ -75,7 +75,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 PACKET_SPEC = SLOTS.packet_spec
 # The packet builder consumes these two explicit form selectors at parse time.
-VARIANT_OPTION_KEYS = ("q_variant", "w_variant")
 _W_SLOT = SLOTS["W"]
 SLOTS["W"] = _bushwhack_traps
 

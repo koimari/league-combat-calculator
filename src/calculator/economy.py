@@ -15,12 +15,7 @@ from typing import Any, Iterable
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
 from .economics_data import sourced_combine_cost, sourced_sell_value, sourced_total
-from .loadout_rules import (
-    ITEM_TO_EXCLUSIVITY_GROUPS,
-    inventory_capacity,
-    required_boots_tier,
-    support_quest_item_stage,
-)
+from .loadout_rules import ITEM_TO_EXCLUSIVITY_GROUPS, inventory_capacity
 
 BASIC = "BASIC"
 EPIC = "EPIC"
@@ -455,65 +450,6 @@ def plan_incomplete_combine(plan: PurchasePlan) -> bool:
     """Recompute the incomplete_combine receipt for a priced plan's inventory."""
     inventory = collections.Counter(int(item["id"]) for item in plan.final_items)
     return bool(combine_candidates(inventory, _item_by_id()))
-
-
-def validate_economy_loadout(
-    plan: PurchasePlan,
-    *,
-    role: str = "",
-    role_quest_complete: bool = False,
-) -> None:
-    """Validate the resolved final loadout with stackability-aware duplicates.
-
-    Reuses the strict loadout rules when no duplicates survive (the common
-    shop_combine case); duplicate stackable components are allowed only for
-    items whose stackability is reviewed.
-    """
-    names = [item["name"] for item in plan.final_items]
-    if len(names) == len(set(names)):
-        from .loadout_rules import validate_resolved_loadout
-
-        validate_resolved_loadout(
-            plan.final_items,
-            boots=plan.final_boots,
-            role=role,
-            role_quest_complete=role_quest_complete,
-        )
-        return
-    counts = collections.Counter(names)
-    for name, count in counts.items():
-        if count > 1 and not is_stackable(_find_by_name(plan.final_items, name)):
-            raise ValueError(f"{name} cannot appear {count} times in one inventory")
-    equipped = ([plan.final_boots] if plan.final_boots else []) + plan.final_items
-    if len(equipped) > inventory_capacity(role, role_quest_complete):
-        raise ValueError("Selected items exceed the available inventory slots")
-    boot_items = [
-        item
-        for item in plan.final_items
-        if BOOTS in {str(r).upper() for r in item.get("rank", []) or []}
-    ]
-    if boot_items:
-        raise ValueError("Boots must use the dedicated boots slot")
-    if plan.final_boots is not None:
-        expected_tier = required_boots_tier(role, role_quest_complete)
-        if int(plan.final_boots.get("tier", 0)) != expected_tier:
-            raise ValueError(
-                f"{plan.final_boots['name']} is tier {plan.final_boots.get('tier')}; "
-                f"this role state requires tier-{expected_tier} boots"
-            )
-    support_items = [
-        name for name in names if support_quest_item_stage(name) is not None
-    ]
-    if support_items:
-        raise ValueError("Support quest items require the support role and stage rules")
-    seen_groups: dict[str, str] = {}
-    for name in names:
-        for group in ITEM_TO_EXCLUSIVITY_GROUPS.get(name, ()):
-            if group in seen_groups and seen_groups[group] != name:
-                raise ValueError(
-                    f"{seen_groups[group]} and {name} cannot be equipped together ({group} group)"
-                )
-            seen_groups[group] = name
 
 
 def _find_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any]:

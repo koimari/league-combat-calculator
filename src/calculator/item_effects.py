@@ -965,38 +965,6 @@ def input_option_value(
     return int(options.get(option_name, 0) or 0)
 
 
-def input_option_float_value(
-    items: list[dict[str, Any]],
-    item_options: Mapping[str, Mapping[str, int | float]] | None,
-    item_name: str,
-    option_name: str,
-) -> float:
-    """Return one validated numeric item-state value without truncation."""
-    if not item_options or item_name not in _item_names(items):
-        return 0.0
-    options = item_options.get(item_name) or {}
-    value = options.get(option_name, 0.0)
-    if isinstance(value, bool):
-        raise ValueError(f"item_options.{item_name}.{option_name} must be numeric")
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(
-            f"item_options.{item_name}.{option_name} must be numeric"
-        ) from exc
-    if not math.isfinite(parsed):
-        raise ValueError(f"item_options.{item_name}.{option_name} must be finite")
-    schema = _item_option_schemas(ITEM_INPUT_OPTIONS[item_name]).get(option_name)
-    if schema is None:
-        raise ValueError(f"Unknown option for {item_name}: {option_name}")
-    if not float(schema["min"]) <= parsed <= float(schema["max"]):
-        raise ValueError(
-            f"item_options.{item_name}.{option_name} must be between "
-            f"{schema['min']} and {schema['max']}"
-        )
-    return parsed
-
-
 _READY_FIRST_AUTO_ITEMS = frozenset({"Umbral Glaive"})
 
 
@@ -4119,11 +4087,6 @@ def _resolve_damage_effects_uncached(
 # duplicate copies (legendary items are unique).
 
 
-def _ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`ap_multiplier`."""
-    return ap_multiplier(items)
-
-
 def ap_multiplier(items: list[dict[str, Any]]) -> float:
     """Return parser-owned additive AP multiplier from item passives.
 
@@ -4145,11 +4108,6 @@ def ap_multiplier(items: list[dict[str, Any]]) -> float:
     return 1.0 + bonus
 
 
-def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`permanent_ap_multiplier`."""
-    return permanent_ap_multiplier(items)
-
-
 def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
     """Return parser-backed AP multiplier eligible as a permanent stat.
 
@@ -4159,11 +4117,6 @@ def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
     if "Rabadon's Deathcap" not in _item_names(items):
         return 1.0
     return 1.0 + required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
-
-
-def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
-    """Backward-compatible private alias for :func:`mana_to_ap_bonus`."""
-    return mana_to_ap_bonus(items, bonus_mana)
 
 
 def mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
@@ -4196,14 +4149,6 @@ def mana_to_health_bonus(items: list[dict[str, Any]], bonus_mana: float) -> floa
     return total
 
 
-def _dawncore_bonus_ap(
-    items: list[dict[str, Any]],
-    bonus_mana_regen_percent: float,
-) -> float:
-    """Backward-compatible private alias for :func:`dawncore_bonus_ap`."""
-    return dawncore_bonus_ap(items, bonus_mana_regen_percent)
-
-
 def dawncore_bonus_ap(
     items: list[dict[str, Any]],
     bonus_mana_regen_percent: float,
@@ -4224,11 +4169,6 @@ def dawncore_bonus_ap(
     return (bonus_mana_regen_percent / threshold) * ap_per_unit
 
 
-def _flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`flowing_water_bonus_ap`."""
-    return flowing_water_bonus_ap(items)
-
-
 def flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     """Return parser-owned Staff of Flowing Water Rapids AP.
 
@@ -4241,14 +4181,6 @@ def flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     if "Staff of Flowing Water" not in _item_names(items):
         return 0.0
     return required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
-
-
-def _passive_attack_speed_bonus(
-    items: list[dict[str, Any]],
-    is_melee: bool,
-) -> float:
-    """Backward-compatible private alias for :func:`passive_attack_speed_bonus`."""
-    return passive_attack_speed_bonus(items, is_melee)
 
 
 def passive_attack_speed_bonus(
@@ -4465,11 +4397,6 @@ def item_bonus_health_multiplier(items: list[dict[str, Any]]) -> float:
     if "Warmog's Armor" not in _item_names(items):
         return 1.0
     return 1.0 + required_effect_value("Warmog's Armor", "item_bonus_health_ratio")
-
-
-def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
-    """Backward-compatible private alias for :func:`muramana_bonus_ad`."""
-    return muramana_bonus_ad(items, max_mana)
 
 
 def muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
@@ -4747,14 +4674,6 @@ def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     return required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
 
 
-def _terminus_max_stack_bonuses(
-    items: list[dict[str, Any]],
-    level: int,
-) -> tuple[float, float]:
-    """Backward-compatible private alias for :func:`terminus_max_stack_bonuses`."""
-    return terminus_max_stack_bonuses(items, level)
-
-
 def terminus_max_stack_bonuses(
     items: list[dict[str, Any]],
     level: int,
@@ -4788,11 +4707,6 @@ def terminus_max_stack_bonuses(
         required_effect_value("Terminus", "dark_pen_per_stack") * max_stacks * 100.0
     )
     return bonus_resist, pen_percent
-
-
-def _basic_ability_haste(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`basic_ability_haste`."""
-    return basic_ability_haste(items)
 
 
 def basic_ability_haste(items: list[dict[str, Any]]) -> float:

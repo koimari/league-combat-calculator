@@ -160,17 +160,6 @@ class ResolvedCycleError(CastDependencyError):
     """The merged declared-plus-inferred graph is cyclic for a declaring champion."""
 
 
-# ── audit-time: a declaration exists but nothing exercises it ─────────────
-
-
-class UnreachableDependencyError(CastDependencyError):
-    """A declaration is active in no certified option state."""
-
-
-class DeadSuppressionError(CastDependencyError):
-    """A suppression is neither matched nor declared latent."""
-
-
 # ── request-time: a caller asked for an impossible order ──────────────────
 
 

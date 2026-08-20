@@ -86,15 +86,6 @@ P7 receipt rows store the engine prediction in `expected` (`{"tdd": …,
 (`delta / expected.tdd * 100`, see `db.validation_summary`) aggregated per
 champion.
 
-### `staleness_state` — per-patch staleness bookkeeping
-
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | integer PK | |
-| `patch` | varchar(20) | **unique** |
-| `payload` | JSON | |
-| `checked_at` | timestamp | |
-
 ### `cache_counters` — shared cache hit/miss counters
 
 Single row (`id = 1`) updated atomically (`INSERT … ON CONFLICT DO UPDATE`)

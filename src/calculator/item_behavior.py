@@ -291,7 +291,6 @@ class Isolation(Enum):
     have seen is a wrong number nobody could read off the declaration.
     """
 
-    TRIGGER_ABILITY_ONLY = "trigger_ability_only"
     TRIGGER_EVENT_ONLY = "trigger_event_only"
     TRIGGER_SEQUENCE = "trigger_sequence"
 
@@ -567,14 +566,12 @@ class Pool(Enum):
     ALL_EVENTS = "all_events"
     CERTIFIED_ONLY = "certified_only"
     COARSE_ROW = "coarse_row"
-    OWN_CAST_ONLY = "own_cast_only"
 
 
 class Attribution(Enum):
     """Who the rule's contribution is credited to in the receipt."""
 
     HOLDER = "holder"
-    DAMAGE_SOURCE = "damage_source"
 
 
 class BonusTyping(Enum):
