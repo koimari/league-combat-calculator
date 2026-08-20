@@ -1,0 +1,40 @@
+{
+  "receipt": "expected_golden_diff",
+  "slice": "surface-area A2: Expose Weakness prices the pool it amplifies",
+  "campaign": "surface-area",
+  "date": "2026-08-20",
+  "decisions": [
+    "R-17"
+  ],
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17 -- this receipt declares no standing diff. Both baselines were re-captured in the slice's own commit, so the compare is clean; what it carries is the reading one closed receipt still pins, which the re-capture moved."
+  },
+  "what_landed": "The pair engine's Bloodsong preview is priced from the ledger it authors onto: the rate over the events after the arming proc, instead of total_damage minus a reconstructed arming sequence. The row also stopped amplifying itself -- it was inserted into the breakdown before the ledger was built, so the ordered walk synthesized an event for it. One event leaves the cleaver_bloodsong_roster pair fight's ledger, which renumbers the pair walk's own per-pair index for the record after it.",
+  "why_each_moved": "The identity's last field is the pair walk's per-pair index. The preview no longer authors the delta that rode its own synthesized event, so the index of every later record in that pair falls by two. The record itself is field-for-field unmoved -- attacker, source, sequence, times and every number are byte-identical -- and it still stands last in the list at ordinal 82.",
+  "how_to_reproduce": "Read coupled_scenarios/cleaver_bloodsong_roster/combat/events[82] out of scripts/golden_coupled_baseline.json; tests/test_untriggered_item_mechanics.py::test_expose_weakness_number_equals_the_rate_over_its_authored_events pins the number the row now prices.",
+  "expected_diff_paths": {
+    "coupled_exact": {
+      "cleaver_bloodsong_roster": {
+        "fights/0:Aatrox": {
+          "old": "3933.8",
+          "new": "3879.4",
+          "why": "The pair fight's own receipt publishes the preview, and the preview fell from 268.7 to 214.4: the pool it is charged against is now the ledger after the arming proc rather than total_damage minus a reconstructed arming sequence, and it no longer amplifies the event the ordered walk synthesized for its own row. The composed roster totals are unmoved -- the composition drops this row."
+        }
+      }
+    }
+  },
+  "expected_diff_values": {
+    "/classification-P4D-C3/the_instrument_fix/measured_after/the_record_the_ordinal_used_to_substitute/identity": {
+      "old": "main:enemy:Aatrox:60",
+      "new": "main:enemy:Aatrox:58",
+      "supersedes": {
+        "receipt": "expected-golden-diff-full-coverage-recapture-pins.json",
+        "entry": "the_record_the_ordinal_used_to_substitute",
+        "why": "That allowlist declared the index the full-coverage re-capture left. This slice removes one preview event ahead of the record and the self-amplifying one beside it, so the same unmoved record is now counted 58 rather than 60. The two identities the classification records as removed (main:enemy:Aatrox:56 and :34) are still absent from the published list, so neither is re-declared here."
+      }
+    }
+  }
+}

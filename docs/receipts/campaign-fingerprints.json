@@ -51,14 +51,14 @@
   "entries": 670,
   "leaves": 56609,
   "numeric_leaves": 44217,
-  "src_tree_sha": "2fe2a31f2b0fac50931057a19ba67feb2948169a"
+  "src_tree_sha": "d89ce56a11cdb1d7e243837afd2477fdc4819b20"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 21,
-  "leaves": 66885,
-  "numeric_leaves": 21805,
-  "src_tree_sha": "e858157cff32b1815cd1a3341351cf6f1cb1c3d0"
+  "leaves": 66875,
+  "numeric_leaves": 21801,
+  "src_tree_sha": "d89ce56a11cdb1d7e243837afd2477fdc4819b20"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
