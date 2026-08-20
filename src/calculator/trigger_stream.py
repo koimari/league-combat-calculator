@@ -1199,9 +1199,9 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # attacker's damage inside a live window, which is a roster input, so the
     # walk owns the mechanic outright and prices the holder's own packets
     # too — there is no longer a pair-local half to skip, which is why this
-    # row carries no ``owner``.  The pair engine's coarse row survives as a
-    # declared ``THEORETICAL`` preview: correct as a one-attacker figure,
-    # excluded from every roster total.
+    # row carries no ``owner``.  The pair engine's row survives as a declared
+    # ``THEORETICAL`` preview: correct as a one-attacker figure, excluded from
+    # every roster total.
     _walk_item(
         "bloodsong.expose_weakness",
         "Bloodsong",

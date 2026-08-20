@@ -9,7 +9,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| A2 | `damage.py` `_add_expose_weakness` | Prices (total − arming sequence) × rate even when its own ledger holds nothing after the arming proc (Vayne one_rotation: 22.8 on an empty pool). Standing ruling Phase 4 S7. | Re-rule: the coarse label is honest but the number disagrees with the ledger. |
 | A3 | spellblade weave (`damage.py`) | Arming proc placed at a fixed 1.5 s even when the on-hit-applying ability lands at 0.0 (Ezreal Q, Senna Q). | Take the proc time from the ability's hit time. |
 | A4 | `damage.py` ~4830 | Post-rotation Vile Decay MR is overwritten by `use_auto_pen()` when Terminus is held — ordering quirk. | Resolve MR once, after both. |
 | A5 | `damage.py` `_simulate_ordered_damage` + `program/build.py:410-443` | In coupled fights with Shadowflame the second shield walk runs in full and its Cinderbloom row is dropped and re-priced (`pair_preview_of`); only the Liandry `adjustments` half survives. | Skip the Cinderbloom half when the caller is coupled. Golden-relevant. |

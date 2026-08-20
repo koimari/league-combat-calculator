@@ -10742,19 +10742,15 @@ def _add_shadowflame_cinderbloom(
         state.total_damage += shadowflame_bonus
 
 
-def _expose_weakness_delta_events(
-    state: FightState,
-    rotation: RotationResult,
-    bonus: float,
-) -> list[dict[str, Any]]:
-    """Author Expose Weakness's amp onto every event after its arming proc.
+def _expose_weakness_pool(state: FightState, rotation: RotationResult) -> list[Any]:
+    """The ledger events Expose Weakness amplifies: everything after its arming proc.
 
     The arming sequence completes when the first spellblade proc lands
-    (``Isolation.TRIGGER_SEQUENCE``), so the bonus rides every later ledger
-    event pro-rata at that event's own time.  A true-conversion build's
-    first procs live on the ``_true`` sibling row (Camille), so the
-    boundary is the earliest event of either.  Without an authored proc
-    boundary no events are authored and the row stays explicitly coarse.
+    (``Isolation.TRIGGER_SEQUENCE``), so the buff rides every later ledger
+    event at that event's own time.  A true-conversion build's first procs
+    live on the ``_true`` sibling row (Camille), so the boundary is the
+    earliest event of either.  Without an authored proc boundary, or with
+    nothing behind it, the pool is empty.
     """
     assert state.item_spellblade is not None
     proc_key = state.item_spellblade.source.breakdown_key
@@ -10769,13 +10765,12 @@ def _expose_weakness_delta_events(
     boundary = min((row[0] for row in ledger if row[3] in proc_keys), default=None)
     if boundary is None:
         return []
-    return _amplifier_delta_events([row for row in ledger if row[0] > boundary], bonus)
+    return [row for row in ledger if row[0] > boundary]
 
 
 def _add_expose_weakness(
     state: FightState,
     rotation: RotationResult,
-    autos: AutoAttackResult,
     spellblade: SpellbladeResult,
 ) -> None:
     """Add Bloodsong's Expose Weakness amp on damage after the first proc.
@@ -10789,8 +10784,13 @@ def _add_expose_weakness(
     from everything the roster composes.  The row says which mechanic it
     previews and ``trigger_stream`` says that mechanic's pair number is
     ``THEORETICAL``; neither statement alone demotes it, which is why the
-    number here is unchanged and the ``DivergenceReceipt`` that froze the
-    disagreement is retired rather than re-worded.
+    ``DivergenceReceipt`` that froze the disagreement is retired rather than
+    re-worded.
+
+    The preview is priced from its own ledger: the bonus is the rate over
+    the events after the arming proc, so the row's number and the events it
+    authors are the one pool, and a window whose ledger holds nothing after
+    that proc has no row at all.
 
     What is declared here is the exclusion (the chain that armed the buff)
     and the rate, which used to be a comparison and a compiled field
@@ -10812,22 +10812,14 @@ def _add_expose_weakness(
 
     # The arming sequence — the first ability cast, the first auto that
     # consumed it and the first spellblade proc — lands before the buff is
-    # up, which is what ``Isolation.TRIGGER_SEQUENCE`` says.
-    breakdown = state.breakdown
-    first_ability_key = next((k for k in state.cast_order if k in breakdown), None)
-    damage_before_expose = 0.0
-    if first_ability_key:
-        entry = breakdown[first_ability_key]
-        casts = entry.get("casts", 1)
-        if casts > 0:
-            damage_before_expose += entry["total_damage"] / casts
-    damage_before_expose += autos.auto_damage_per_hit
-    damage_before_expose += spellblade.damage_per_proc
+    # up, which is what ``Isolation.TRIGGER_SEQUENCE`` says, so the pool
+    # starts after the proc that completed it.
+    amped = _expose_weakness_pool(state, rotation)
+    expose_bonus = sum(row[1] for row in amped) * expose_rate
+    if expose_bonus <= 0:
+        return
 
-    amped_damage = max(0, state.total_damage - damage_before_expose)
-    expose_bonus = amped_damage * expose_rate
-
-    breakdown[f"expose_weakness_{slot.owner}"] = {
+    state.breakdown[f"expose_weakness_{slot.owner}"] = {
         "name": f"{slot.owner} (Expose Weakness)",
         "amplifier": slot.multiplier,
         "total_damage": expose_bonus,
@@ -10837,12 +10829,9 @@ def _add_expose_weakness(
         # roster composition reads it; the pair receipt publishes the row
         # regardless.
         "pair_preview_of": slot.rules[0].mechanic_id,
+        "damage_events": _amplifier_delta_events(amped, expose_bonus),
+        "event_phase": "amplifier",
     }
-    delta_events = _expose_weakness_delta_events(state, rotation, expose_bonus)
-    if delta_events:
-        breakdown[f"expose_weakness_{slot.owner}"].update(
-            {"damage_events": delta_events, "event_phase": "amplifier"}
-        )
     state.total_damage += expose_bonus
 
 
@@ -11915,7 +11904,7 @@ def calculate_fight_damage(
     _add_on_hit_healing(state, autos, on_hits)
     _add_first_auto_healing(state)
     _add_shadowflame_cinderbloom(state, config, rotation)
-    _add_expose_weakness(state, rotation, autos, spellblade)
+    _add_expose_weakness(state, rotation, spellblade)
 
     # ── Keystone opening-window bonus (First Strike-class) ──────────────
     _add_keystone_window_amp_damage(state, rotation)

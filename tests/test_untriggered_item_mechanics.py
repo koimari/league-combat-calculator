@@ -4,8 +4,9 @@ Horizon Focus arms on an ability hit, as do the three item burns; Malignance's
 Hatefog and Zeke's Convergence open on an R cast.  A window with no such cast —
 ``auto_only``, or a custom cast order without R — must price the item at exactly
 zero and leave the fight's certification alone: a row that never fired cannot be
-a coarse source.  The same items in a window that casts still fire, and a
-mechanic that fires but cannot be placed on the ledger still reads coarse.
+a coarse source.  The same items in a window that casts still fire, and an amp
+whose pool is empty prices nothing rather than pricing a number its own ledger
+cannot show (Bloodsong's Expose Weakness).
 """
 
 import pytest
@@ -195,21 +196,44 @@ def test_the_hatefog_burn_tail_keys_off_the_accepted_r_cast():
     )
 
 
-def test_a_mechanic_that_fires_but_cannot_be_placed_stays_coarse():
-    """The reverse trap: Expose Weakness arms on Vayne's forced attack, the
-    last event of a one-rotation ledger, so its amplified pool has no event
-    to ride.  It fired, it is priced, and it is honestly coarse."""
-    fight = calculate_payload(
+def _vayne(fight_mode):
+    return calculate_payload(
         {
             "champion": "Vayne",
             "level": 18,
             "items": ["Bloodsong"],
             "role": "support",
             "role_quest_complete": True,
-            "fight_mode": "one_rotation",
+            "fight_mode": fight_mode,
             "include_auto_attacks": True,
         }
     )
 
-    assert fight["breakdown"]["expose_weakness_Bloodsong"]["total_damage"] > 0.0
-    assert fight["timeline_coverage"]["coarse_sources"] == ["expose_weakness_Bloodsong"]
+
+def test_expose_weakness_prices_its_own_pool_and_nothing_else():
+    """Expose Weakness arms on Vayne's forced attack, the last event of a
+    one-rotation ledger, so its amplified pool is empty: no pool, no row.
+    The ungated rule charged the rate against ``total_damage`` minus a
+    reconstructed arming sequence and priced 22.8 on that empty pool."""
+    fight = _vayne("one_rotation")
+
+    assert "expose_weakness_Bloodsong" not in fight["breakdown"]
+    assert fight["timeline_coverage"]["coarse_sources"] == []
+    assert fight["total_damage"] == pytest.approx(505.5)
+
+
+def test_expose_weakness_number_equals_the_rate_over_its_authored_events():
+    """A window with a pool prices it, and the row's events sum to the row.
+
+    Vayne timed: 14 ledger events land after the arming proc, 956.2 damage,
+    and the 5% rate over exactly those is 47.8 — the row, and the sum of the
+    deltas it authors onto them.  Pricing off ``total_damage`` instead swept
+    in the 756.2 that landed before the proc and charged 79.0.
+    """
+    fight = _vayne("timed")
+    row = fight["breakdown"]["expose_weakness_Bloodsong"]
+
+    assert row["total_damage"] == pytest.approx(47.8, abs=0.05)
+    # Priced off the pool it authors onto, so the row can never read coarse.
+    assert "expose_weakness_Bloodsong" in fight["timeline_coverage"]["exact_sources"]
+    assert fight["timeline_coverage"]["coarse_sources"] == []
