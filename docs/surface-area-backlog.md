@@ -22,11 +22,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| B1 | `src/calculator/economy.py:55-73` `item_total()` | Falls back to the wiki-cache total when no sourced row exists. `refresh_economics_data.stale_reasons` now guarantees a row for every ordinary SR item, so the fallback is dead for them and silent for anything else. | Raise. |
-| B2 | `item_effects.py` ~4811 `ITEM_EFFECTS[name].get("ultimate_haste", 0.0)` | Same uneven-sibling read the U03 sites had. | `_declared_effect_value`. |
-| B3 | `item_effects.py` ~32 `ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"]` | No src reader (only `tests/test_issues_45_43.py:388`); a second home for the per-item static key's 24.0. | Delete; the static key is the owner. |
-| B4 | `passive_parser.py:2742-2745` `parse_all_item_effects` | Silently drops an item whose `parse_item_effect` returns None/empty; surfaces only on read or via the parity test. | Raise naming the item. |
-| B5 | `roster_composition.py:101,150-155`, `participant_timeline.py:965/975` (`Combatant.request: Any`); `survival/transitions.py:261,264` `getattr(self.ledger, "records_*", True)`; `program/compile.py:1569-1575` `getattr(payload, …)`; `item_coverage.py:~635-660`, `interpreters/stat_derivation.StatSlot.granted`, `gated_state_reason` `getattr(payload, name, None)` | The U09 family on other subjects: declared-absence reads across typed objects. | Type the field (Protocol/Union) and read directly, as 5a260de did for `defenses`. |
 | B6 | `app.py api_champions` `champ_data.get("icon","")` / `get("patchLastChanged")`; `optimizer.item_gold` `.get(...).get("total", 0)` | Literal defaults on cache-owned fields. | Required reads. |
 | B7 | `src/calculator/champions/*.py` — 75 modules `SOURCES = [ {literal row} ]`; 24 `load_champion_sources(...)`; the rest via `build_packet_module` | Three ways to populate one receipt; the 75 inline literals bypass `source_receipts._source_index()`, so a patch-day revision bump lands in two unrelated places. | Codemod the literals onto `load_champion_sources` once the batch assets carry every name. |
 | B8 | `healing_legacy.HEALING_RULE_CHAMPIONS` ↔ 57 × `SELF_HEALING_RULE`; 57 × 3-line late import `# pylint: disable=wrong-import-position` | Membership validated one direction only (a module that declares but is absent from the set is silently ignored); the late import is a circular-import workaround copy-pasted 57 times; `_legacy_derive_self_healing` is 1,741 lines of `if name ==` for 56/57 "unmigrated" rules. | Two-line reverse assertion now; the import restructure and the real migration are their own campaign. |
@@ -92,7 +87,6 @@ when its fix lands; this file is the one home for the list.
 | F2 | `champions/source_receipts.py:66` | `static/cp10_batch_*_sources.json` glob: a stray file dropped into `static/` silently becomes runtime source of truth; batches 01/02 have no file and fall through to `reviewed-packets.json`. | Enumerate the files the registry expects. |
 | F3 | `docs/receipts/standing-dissent-adjudications.json` (61 KB) | Survives for one assertion in `tests/test_escalated_defects_s6s7_oracle.py:380`. | Trim the assertion; delete the file. |
 | F4 | `scripts/build_receipts.py` | Writes gitignored `docs/receipts/champions/`, `items/` plus a tracked `summary.json`; still reads the legacy per-item atoms tree (`extract_item_atoms` is gone). | Read `data/atoms/items.json`; decide whether the summary is read. |
-| F5 | `item_effects.py:2417` `everlasting_trigger_kind: "crowd_control"` | Not what the consumer keys on (it reads `CcClass` from the bus). | Delete the key. |
 
 ## G. Traps (informational — not fixes)
 
