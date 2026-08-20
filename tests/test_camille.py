@@ -495,3 +495,27 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Camille")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_p_is_modeled_through_the_466_6_adaptive_defenses_shield() -> None:
+    """P has no cast; the shield it grants rides W's damage event.
+
+    Adaptive Defenses grants 20% of Camille's maximum health for 2
+    seconds — 466.6 at level 18 with no items, the receipt behind P's
+    ``modeled`` label.
+    """
+    from src.calculator.champions import get_champion_module_contract
+    from src.calculator.stats import calculate_total_stats
+
+    contract = get_champion_module_contract("Camille")
+    assert "P" not in contract.slots
+    assert contract.coverage["P"] == "modeled"
+    assert contract.coverage_channels["P"] == ("self_shield_events",)
+
+    data = cc_review.kit("Camille")
+    stats = calculate_total_stats(data, 18, [])
+    parsed = parse_abilities(data, 18, stats["ability_power"], champion_stats=stats)
+    (payload,) = parsed["W"]["self_shield_events"]
+    assert payload["source"] == "Adaptive Defenses"
+    assert payload["amount"] == pytest.approx(466.6, abs=0.01)
+    assert payload["duration"] == pytest.approx(2.0)

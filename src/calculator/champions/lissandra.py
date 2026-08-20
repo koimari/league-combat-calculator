@@ -2,8 +2,12 @@
 
 Q, W, E, and R each deal one sourced magic-damage instance. E's recast only
 moves Lissandra, while R's ice field deals the same damage whether she targets
-herself or an enemy. Iceborn Subjugation is excluded because it requires a
-champion death; the selected fight does not invent one.
+herself or an enemy.
+
+Coverage: P (Iceborn Subjugation) is out of scope twice over. It needs a
+nearby champion death, which the selected fight does not invent, and what
+it raises is a Frozen Thrall — a summoned pet on its own timeline, an
+axis the engine does not have.
 """
 
 from typing import Any

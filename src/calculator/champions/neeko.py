@@ -17,6 +17,10 @@ P1-3 closures:
   fight's own target is the one nearby enemy champion, so the shield =
   ShieldAmount + ShieldPerChampion + (75% + 40%) AP for 2 seconds
   (ShieldDuration), riding the R damage event via self_shield_events.
+
+Coverage: P (Inherent Glamour) disguises Neeko as an allied champion or
+unit. Vision and stealth are axes the engine does not have, so the slot
+is out of scope.
 """
 
 from ..ability_spec import DamagePart

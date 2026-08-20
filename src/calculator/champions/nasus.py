@@ -17,7 +17,11 @@ Why each slot is non-generic:
   Damage Per Tick" x30 == "Total Magic Damage"); the bonus health /
   resistances are self-stats and the Siphoning Strike cooldown halving
   is not modeled.
-- P (Soul Eater) and W (Wither) deal no enemy damage: zero-damage rows.
+- P (Soul Eater) and W (Wither) both emit rows that deal no enemy
+  damage, but they are not the same claim. P is modeled: the Soul Eater
+  heal rule prices its lifesteal off every physical hit. W is out of
+  scope — its ramping slow and attack-speed cripple are CC magnitude,
+  an axis the engine does not have.
 """
 
 from typing import Any
@@ -245,10 +249,19 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
 
+# P emits a row that prices no enemy damage; what the engine prices for
+# the slot is Soul Eater's lifesteal, authored by the healing rule below
+# (48.6 over a level-18 itemless timed fight with autos).  W stays out of
+# scope: Wither is a ramping slow and attack-speed cripple, and CC
+# magnitude is an axis the engine does not have.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "out_of_scope",
+    "E": "modeled",
+    "R": "modeled",
 }
+COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 SELF_HEALING_RULE = declare_healing_rule("Nasus")
 

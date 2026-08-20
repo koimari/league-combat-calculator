@@ -49,7 +49,8 @@ class TestTheRealPlans:
         assert "silent-failure-runbook.md" in names
         assert set(plan_audit.FULL_COVERAGE_DOCS) <= names
         assert "2026-08-20-surface-area-campaign.md" in names
-        assert len(names) == 12
+        assert "2026-08-20-coverage-frontier-campaign.md" in names
+        assert "utility-axis-census.md" in names
 
     def test_the_umbrella_carries_citations_worth_checking(self):
         """A citation check over a document with no citations proves nothing."""

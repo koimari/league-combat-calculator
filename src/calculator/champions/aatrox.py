@@ -12,8 +12,11 @@ Why each slot is non-generic:
   "Physical Damage" the classifier would find.
 - P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL
   percentage of target max health — champion-local ``_deathbringer_stance``.
-- E (Umbral Dash) is a dash with healing amp only — no damage, absent
-  from the slot map.
+- E (Umbral Dash) deals no damage and so is absent from the slot map,
+  but it is not unmodelled: ``derive_self_healing`` prices its heal
+  share of every damaging hit, so the coverage map calls E ``modeled``
+  through the ``self_healing_rule`` channel. Only the dash itself —
+  mobility, an axis the engine lacks — is unpriced.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -246,3 +249,9 @@ def derive_self_healing(
 SOURCES = load_champion_sources("Aatrox")
 
 SELF_HEALING_RULE = declare_healing_rule("Aatrox", derive_self_healing)
+
+# E emits no cast row, so the derivation would call it out_of_scope; the
+# rule above pays Umbral Dash's heal off every damaging hit (821.5 over a
+# level-18 timed fight with autos), which is the row the engine prices.
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"E": ("self_healing_rule",)}

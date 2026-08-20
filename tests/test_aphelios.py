@@ -138,3 +138,20 @@ class TestReviewedCrowdControl:
         coverage = payload["timeline_coverage"]
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_the_weapon_queue_slot_is_no_damage_not_a_missing_axis() -> None:
+    """E is the one slot with no row, because it has nothing to price.
+
+    The Weapon Queue System reorders the next weapons and has no gameplay
+    effect of its own, so E is ``no_damage`` rather than an engine axis
+    Aphelios is waiting on.
+    """
+    from src.calculator.champions import get_champion_module_contract
+
+    contract = get_champion_module_contract("Aphelios")
+    assert "E" not in contract.slots
+    assert contract.coverage["E"] == "no_damage"
+    assert contract.coverage_channels == {}
+    for weapon in WEAPONS:
+        assert "E" not in _parse(weapon), weapon
