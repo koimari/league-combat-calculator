@@ -1,6 +1,6 @@
 """E8b: Grievous Wounds application and Serpent's Fang shield-reduction.
 
-Covers three sourced mechanics end to end:
+Covers four sourced mechanics end to end:
 
 1. ITEM Grievous Wounds — the coupled survival walk reduces a target's
    self-healing by the patch-wide 40% (factor 0.60) for 3 seconds after a
@@ -11,6 +11,9 @@ Covers three sourced mechanics end to end:
 3. Serpent's Fang venom — shields the target gains while the venom window
    is active are cut by the sourced melee/ranged fraction (50%/35%) at
    shield-grant time.
+4. The four anti-heal items through the public payload boundary — each one
+   bites only on its own trigger damage type, and the compiled search walk
+   the optimizer runs prices the wound identically to the receipt walk.
 
 No number in this file is invented: the wound strength/duration are the
 engine's ``GRIEVOUS_WOUNDS_FACTOR``/``GRIEVOUS_WOUNDS_DURATION`` constants
@@ -21,6 +24,7 @@ from dataclasses import replace
 
 import pytest
 
+from src.calculator.calculate import calculate_payload
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
@@ -30,7 +34,9 @@ from src.calculator.healing_reduction import (
     GRIEVOUS_WOUNDS_DURATION,
     GRIEVOUS_WOUNDS_FACTOR,
     champion_grievous_wound_sources,
+    healing_reduction_profiles,
 )
+from src.calculator.survival import resolve_grievous
 from src.calculator.item_effects import serpents_fang_venom
 from src.calculator.participant_timeline import (
     Combatant,
@@ -575,3 +581,261 @@ def test_serpents_fang_venom_end_to_end_cuts_fimbulwinter_shield():
     for event in shields:
         assert event["venom"]["factor"] == pytest.approx(0.5)
         assert event["applied_amount"] == pytest.approx(event["amount"] * 0.5, abs=0.1)
+
+
+# ---------------------------------------------------------------------------
+# 4) The four anti-heal items, through the public payload boundary
+# ---------------------------------------------------------------------------
+
+#: Every ordinary-purchase item whose cached text inflicts outgoing Grievous
+#: Wounds, mapped to the damage type that text gates on.
+GRIEVOUS_ITEMS = {
+    "Morellonomicon": "magic",
+    "Oblivion Orb": "magic",
+    "Chempunk Chainsword": "physical",
+    "Executioner's Calling": "physical",
+}
+#: One attacker per trigger type, each dealing that type and nothing else:
+#: Ziggs with the auto stream off is pure magic, Vayne is physical and true.
+#: Their pairing is what exercises the gate in both directions.
+TRIGGER_ATTACKERS = {"magic": ("Ziggs", False), "physical": ("Vayne", True)}
+#: Dr. Mundo's Maximum Dosage regenerates on a fixed half-second cadence, so
+#: the enemy is healing for the whole window whichever attacker faces him.
+HEALING_ENEMY = "Dr. Mundo"
+HEALING_ENEMY_ID = f"enemy:{HEALING_ENEMY}"
+WINDOW = 10.0
+
+
+def _grievous_payload(champion, items, *, include_auto_attacks):
+    """One timed coupled request against the healing enemy."""
+    return calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": list(items),
+            "fight_mode": "timed",
+            "fight_duration": WINDOW,
+            "include_auto_attacks": include_auto_attacks,
+            "enemies": [{"champion": HEALING_ENEMY, "level": 18, "items": []}],
+        }
+    )
+
+
+def _healing_enemy_survival(response):
+    return next(
+        participant
+        for participant in response["combat"]["participants"]
+        if participant["participant_id"] == HEALING_ENEMY_ID
+    )["survival"]
+
+
+def _enemy_heals(response):
+    return [
+        event
+        for event in response["combat"]["healing_events"]
+        if event["attacker"] == HEALING_ENEMY_ID
+    ]
+
+
+def _sourced_labels(item_name, damage_type):
+    """The wound labels the engine composes from this item's cached text."""
+    pack = resolve_grievous(
+        healing_reduction_profiles([get_item_by_name(item_name)]), damage_type
+    )
+    assert pack is not None, f"{item_name} declares no {damage_type} wound"
+    return list(pack[2])
+
+
+@pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
+def test_grievous_item_reduces_enemy_healing_through_the_payload(
+    item_name, damage_type
+):
+    """Each anti-heal item cuts the enemy's healing by the patch factor."""
+    champion, autos = TRIGGER_ATTACKERS[damage_type]
+    baseline = _healing_enemy_survival(
+        _grievous_payload(champion, [], include_auto_attacks=autos)
+    )
+    response = _grievous_payload(champion, [item_name], include_auto_attacks=autos)
+    wounded = _healing_enemy_survival(response)
+
+    assert baseline["healing_received"] > 0.0
+    assert baseline["healing_reduced"] == 0.0
+    assert baseline["healing_reduction_events"] == []
+
+    assert wounded["healing_reduced"] > 0.0
+    labels = _sourced_labels(item_name, damage_type)
+    for event in wounded["healing_reduction_events"]:
+        assert event["recipient"] == HEALING_ENEMY_ID
+        assert event["sources"] == labels
+        assert event["factor"] == pytest.approx(GRIEVOUS_WOUNDS_FACTOR)
+        assert event["until"] - event["time"] == pytest.approx(
+            GRIEVOUS_WOUNDS_DURATION, abs=1e-3
+        )
+
+    cut = [
+        event
+        for event in _enemy_heals(response)
+        if event["healing_reduction_factor"] == pytest.approx(GRIEVOUS_WOUNDS_FACTOR)
+    ]
+    assert cut, "no heal landed inside the wound window"
+    for event in cut:
+        assert event["reduced_amount"] == pytest.approx(
+            event["raw_amount"] * GRIEVOUS_WOUNDS_FACTOR, abs=0.1
+        )
+
+
+@pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
+def test_grievous_item_without_its_trigger_damage_type_reduces_nothing(
+    item_name, damage_type
+):
+    """Morello on an attacker who deals no magic wounds nobody, and the
+    physical pair is equally inert on a magic-only kit."""
+    other = "physical" if damage_type == "magic" else "magic"
+    champion, autos = TRIGGER_ATTACKERS[other]
+    response = _grievous_payload(champion, [item_name], include_auto_attacks=autos)
+
+    assert response["damage_by_type"][damage_type] == 0.0
+    survival = _healing_enemy_survival(response)
+    assert survival["healing_received"] > 0.0
+    assert survival["healing_reduced"] == 0.0
+    assert survival["healing_reduction_events"] == []
+    assert all(
+        event["healing_reduction_factor"] == pytest.approx(1.0)
+        for event in _enemy_heals(response)
+    )
+
+
+def test_grievous_window_expires_between_triggers_in_a_timed_walk():
+    """A heal that lands after the 3s window and before the next qualifying
+    hit is not reduced at all — the wound is timed, not a fight-long flag."""
+    champion, autos = TRIGGER_ATTACKERS["magic"]
+    response = _grievous_payload(
+        champion, ["Morellonomicon"], include_auto_attacks=autos
+    )
+    survival = _healing_enemy_survival(response)
+    windows = [
+        (event["time"], event["until"])
+        for event in survival["healing_reduction_events"]
+    ]
+    assert windows
+
+    lapsed = []
+    for event in _enemy_heals(response):
+        live = any(start <= event["time"] < until for start, until in windows)
+        assert event["healing_reduction_factor"] == pytest.approx(
+            GRIEVOUS_WOUNDS_FACTOR if live else 1.0
+        )
+        if not live and event["time"] > windows[0][1]:
+            lapsed.append(event)
+
+    assert lapsed, "the walk never let a wound window lapse"
+    for event in lapsed:
+        assert event["reduced_amount"] == pytest.approx(event["raw_amount"])
+
+
+def test_a_wounded_lifeline_heal_is_cut_like_any_authored_heal():
+    """Protoplasm Harness fires its heal as the Lifeline arms.
+
+    That heal never reaches the walk's heal author — ``shield_ledger``
+    delivers it inside the arming instant — so it needs its own receipt
+    that the wound reached it.  Two arms, identical but for the wound.
+    """
+    protoplasm = get_item_by_name("Protoplasm Harness")
+    shen = get_champion("Shen")
+    sourced_heal = resolve_starting_defenses(
+        "Shen", 18, calculate_total_stats(shen, 18, [protoplasm]), [protoplasm]
+    ).threshold_health_heal
+    assert sourced_heal > 0.0
+
+    def lifeline_arm(items):
+        payload = calculate_payload(
+            {
+                "champion": "Ziggs",
+                "level": 18,
+                "items": list(items),
+                "fight_mode": "timed",
+                "fight_duration": 15.0,
+                "include_auto_attacks": False,
+                "enemies": [
+                    {
+                        "champion": "Shen",
+                        "level": 18,
+                        "items": ["Protoplasm Harness"],
+                    }
+                ],
+            }
+        )
+        survival = next(
+            participant
+            for participant in payload["combat"]["participants"]
+            if participant["participant_id"] == "enemy:Shen"
+        )
+        assert survival["survival"]["threshold_health_triggered"] is True
+        return survival["survival"]
+
+    burst = ["Rabadon's Deathcap", "Void Staff", "Shadowflame"]
+    unwounded = lifeline_arm(burst)
+    wounded = lifeline_arm(burst + ["Morellonomicon"])
+
+    assert unwounded["healing_received"] == pytest.approx(sourced_heal)
+    assert unwounded["healing_reduced"] == 0.0
+    assert wounded["healing_reduction_until"] > 0.0
+    assert wounded["healing_received"] == pytest.approx(
+        sourced_heal * GRIEVOUS_WOUNDS_FACTOR
+    )
+    assert wounded["healing_reduced"] == pytest.approx(
+        sourced_heal * (1.0 - GRIEVOUS_WOUNDS_FACTOR)
+    )
+
+
+@pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
+def test_compiled_search_walk_prices_the_wound_like_the_receipt_walk(
+    item_name, damage_type
+):
+    """The optimizer's compiled walk resolves the pre-built Grievous pack to
+    the same numbers the per-event receipt walk derives."""
+    champion, _ = TRIGGER_ATTACKERS[damage_type]
+    main = get_champion(champion)
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": WINDOW,
+            "include_auto_attacks": True,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+    enemy = ChampionLoadout(champion=HEALING_ENEMY, level=18, items=[]).resolve()
+    items = [get_item_by_name(item_name)]
+
+    def timeline(**kwargs):
+        stats = calculate_total_stats(main, 18, items)
+        return build_participant_timeline(
+            main,
+            18,
+            items,
+            params,
+            main_stats=stats,
+            main_defenses=resolve_starting_defenses(champion, 18, stats, items),
+            enemies=[enemy],
+            allies=[],
+            **kwargs,
+        )
+
+    receipt = timeline()
+    compiled = timeline(
+        pair_result_cache={},
+        search_context=CoupledSearchContext(),
+        include_receipt=False,
+    )
+    receipt_survival = {
+        participant["participant_id"]: participant["survival"]
+        for participant in receipt["participants"]
+    }
+    compiled_survival = {
+        participant["participant_id"]: participant["survival"]
+        for participant in compiled["participants"]
+    }
+    assert receipt_survival[HEALING_ENEMY_ID]["healing_reduced"] > 0.0
+    assert compiled_survival == receipt_survival
