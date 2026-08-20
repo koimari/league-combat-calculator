@@ -645,9 +645,20 @@ class TestReviewedCrowdControl:
         assert "darius fears nearby minions and monsters for 3 seconds" in text
         assert "R" not in darius.MODULE_CC
 
+    def test_r_withholds_because_its_stack_term_repeats(self, darius_data):
+        """A two-part row is certifiable now; a repeated part is not.
+
+        R's second part hits once per Hemorrhage stack, and a part that
+        repeats is a schedule the cache gives no cadence for - the stacks
+        land together, which no ``count``-based part can state.
+        """
+        base, per_stack = _abilities(darius_data)["R"]["parts"]
+
+        assert base.count == 1
+        assert per_stack.dot_stack_scaled is True
+        assert per_stack.count == P_BLEED_MAX_STACKS
+
     def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        """R's row is two parts - the True Damage term and the per-stack
-        term of the one strike - and single-hit certification takes one."""
         assert cc_review.unreviewed_ability_slots("Darius") == ["R"]
         coverage = cc_review.fimbulwinter_coverage("Darius")
         assert coverage["complete"] is False

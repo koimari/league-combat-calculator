@@ -1,4 +1,4 @@
-"""Malphite's reviewed crowd control (``MODULE_CC``), and the slot that withholds.
+"""Malphite's reviewed crowd control (``MODULE_CC``).
 
 A control-armed holder shield (Fimbulwinter's Everlasting) has to know
 whether an ability event was a control event; an ability packet that never
@@ -14,7 +14,12 @@ class TestReviewedCrowdControl:
     """Ground Slam's cripple is the kind the vocabulary added for it."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert malphite.MODULE_CC == {"Q": "slow", "E": "cripple", "R": "knockup"}
+        assert malphite.MODULE_CC == {
+            "Q": "slow",
+            "W": "none",
+            "E": "cripple",
+            "R": "knockup",
+        }
         assert malphite.parse_abilities.cc_kinds == malphite.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -27,14 +32,25 @@ class TestReviewedCrowdControl:
         assert "cripple" in NON_IMMOBILIZING_CC_KINDS
         assert "cripple" not in IMMOBILIZING_CC_KINDS
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        """Thunderclap controls nothing, but its row is two parts - the
-        empowered attack's on-hit bonus and the cone every attack triggers
-        "for the next 5 seconds" - and those are different hits."""
+    def test_thunderclaps_two_halves_are_one_landing_and_say_so(self):
+        """W is one empowered swing priced as its on-hit bonus plus its
+        cone, so the shared-instant certification carries its review."""
         data = cc_review.kit("Malphite")
-        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
-        assert "W" not in malphite.MODULE_CC
-        assert cc_review.unreviewed_ability_slots("Malphite") == ["W"]
+        text = cc_review.slot_text(data, "W")
+        assert (
+            "empowers his next basic attack within 6 seconds to have an "
+            "uncancellable windup, gain 50 bonus range, and deal additional "
+            "physical damage on-hit" in text
+        )
+        assert (
+            "basic attacks on-hit for the next 5 seconds are empowered to "
+            "trigger a cone in the direction of the target that deals "
+            "physical damage to enemies hit" in text
+        )
+        assert cc_review.control_words(text) == []
+
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Malphite") == []
         coverage = cc_review.fimbulwinter_coverage("Malphite")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

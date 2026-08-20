@@ -294,6 +294,11 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=1.0,
                 basic_damage=True,
                 bonus_ad_ratio=delta_ratio,
+                # Hyper Charge only "empowers his next 3 basic attacks
+                # ... to deal modified physical damage and gain 360%
+                # bonus attack speed" — no control on the swings it
+                # forces, which is what this row's events are.
+                cc_kind="none",
             ),
         ),
         "empowers_next_auto": {

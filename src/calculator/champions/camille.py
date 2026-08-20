@@ -125,6 +125,10 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "true" if ratio >= 1.0 else "mixed",
         "total_raw": bonus,
         "parts": _true_split_parts(bonus, ratio),
+        # One empowered swing, whose bonus below level 16 is split into a
+        # true and a physical half: one landing in two damage types, which
+        # is what the shared-instant certification states.
+        "event_order_certified": "single_hit",
         "empowers_next_auto": {
             "swing_parts": _true_split_parts(total_ad, ratio, basic_damage=True)
         },
@@ -320,10 +324,9 @@ SLOTS["W"] = _tactical_sweep_with_shield
 # ... as well as stunning them for 0.75 seconds" — two immobilizes at once,
 # which is what the un-narrowed kind states.  R deals its damage through
 # basic attacks inside the zone and has no ability damage row of its own.
-# Q2 is reviewed control-free too, but cannot say so: below level 16 its one
-# empowered swing is split into a true and a physical part, and the engine's
-# certified single-hit export carries only a one-part cast.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "immobilize"}
+# Q2 is control-free by the same text: it "mimics the first cast's
+# effects", adding doubled bonus damage and a true conversion.
+MODULE_CC = {"Q": "none", "Q2": "none", "W": "slow", "E": "immobilize"}
 
 parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 

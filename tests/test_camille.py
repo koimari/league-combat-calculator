@@ -457,16 +457,21 @@ class TestPassiveAndMeta:
 
 
 class TestReviewedCrowdControl:
-    """Camille's crowd-control review, and the slot that still withholds.
+    """Camille's crowd-control review, Q2 included.
 
-    Q2 is reviewed control-free too but cannot say so: below level 16
-    its one empowered swing is split into a true and a physical part,
-    and the certified single-hit export carries only a one-part cast.
+    Q2's one empowered swing is split into a true and a physical part
+    below level 16; a shared instant is what certifies that as one
+    landing, so the reviewed absence of control reaches the ledger.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Camille")
-        assert camille.MODULE_CC == {"Q": "none", "W": "slow", "E": "immobilize"}
+        assert camille.MODULE_CC == {
+            "Q": "none",
+            "Q2": "none",
+            "W": "slow",
+            "E": "immobilize",
+        }
         assert "slowed by 80% decaying over 2 seconds" in " ".join(
             cc_review.slot_text(data, "W").split()
         )
@@ -475,8 +480,18 @@ class TestReviewedCrowdControl:
         )
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Camille") == ["Q2"]
+    def test_the_recast_mimics_a_control_free_cast(self):
+        """Q2 has no cached slot of its own — both casts live under Q."""
+        text = " ".join(cc_review.slot_text(cc_review.kit("Camille"), "Q").split())
+        assert (
+            "recast: camille mimics the first cast's effects. if precision "
+            "protocol is recast after 1.5 seconds of the first attack, then "
+            "the bonus damage is doubled" in text
+        )
+        assert cc_review.control_words(text) == []
+
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Camille") == []
         coverage = cc_review.fimbulwinter_coverage("Camille")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

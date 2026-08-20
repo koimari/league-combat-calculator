@@ -401,11 +401,14 @@ SLOTS = {
 #
 # R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
 # Noxian Guillotine is control-free against the champion it damages — it
-# fears only on a kill and only "nearby minions and monsters" — but its
-# row is two parts (the True Damage term and the per-Hemorrhage-stack
-# term, both of the one strike), so ``single_hit`` certification, which
-# requires one part, cannot state it and the stack term has no cadence to
-# author.
+# "attempts to execute the target enemy champion ... to deal true damage",
+# and fears only on a kill and only "nearby minions and monsters".  Its
+# row being two parts is no longer the obstacle (a shared instant is
+# certifiable since the engine's wave-6 rule); the per-Hemorrhage-stack
+# term is, because it hits once per stack and a repeated part is a
+# schedule, which ``single_hit`` refuses and which has no cadence to
+# author — the stacks land together, not in sequence.  Stating that would
+# take a "scale the amount by stacks" part the spec does not have.
 MODULE_CC = {"Q": "none", "W": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)

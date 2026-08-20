@@ -156,12 +156,13 @@ SLOTS["W"] = _thunderclap
 # damage to nearby enemies and knocks them up for 1.5 seconds".  P is the
 # shield row with no damage part.
 #
-# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Thunderclap controls nothing, but its row is two parts — the empowered
-# attack's on-hit bonus and the cone every attack triggers "for the next
-# 5 seconds" — which are different hits, so ``single_hit`` certification
-# (one part, one hit) cannot state it and neither hit has a sourced offset.
-MODULE_CC = {"Q": "slow", "E": "cripple", "R": "knockup"}
+# W (Thunderclap) controls nothing: it "empowers his next basic attack
+# ... to deal additional physical damage on-hit" and triggers "a cone in
+# the direction of the target that deals physical damage to enemies hit"
+# — damage clauses only, in a kit whose control all sits on Q/E/R.  Its
+# row is the two halves of that one swing, which ``single_hit`` now
+# certifies as one shared landing.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "cripple", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Malphite", cc_kinds=MODULE_CC)
 

@@ -32,6 +32,7 @@ from src.calculator.champions.slotlib import extract_value
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.stats import ATTACK_SPEED_CAP
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -839,44 +840,13 @@ class TestCannonShredDuration:
 # Reviewed crowd control (MODULE_CC, wave 4B)
 # ---------------------------------------------------------------------------
 
-# The Wiki's crowd-control vocabulary, as this module's review read it:
-# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
-_CC_CONTROL_WORDS = (
-    "airborne",
-    "charm",
-    "fear",
-    "flee",
-    "immobiliz",
-    "knock",
-    "pull",
-    "root",
-    "sleep",
-    "slow",
-    "snare",
-    "stasis",
-    "stun",
-    "suppress",
-    "taunt",
-)
 _CC_CHAMPION = "Jayce"
 _CC_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 
 def _cc_slot_text(slot):
     """Every cached description of one slot, lowercased."""
-    from src.calculator.data_fetcher import get_champion
-
-    return " ".join(
-        effect.get("description") or ""
-        for ability in get_champion(_CC_CHAMPION)["abilities"].get(slot, [])
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
-def _cc_control_hits(slot):
-    """The control vocabulary one slot's cached text actually uses."""
-    text = _cc_slot_text(slot)
-    return [word for word in _CC_CONTROL_WORDS if word in text]
+    return cc_review.slot_text(cc_review.kit(_CC_CHAMPION), slot)
 
 
 def _cc_kinds(**options):
@@ -896,21 +866,6 @@ def _cc_kinds(**options):
         for key, entry in parsed.items()
     }
     return {key: kinds for key, kinds in carried.items() if kinds}
-
-
-def _cc_timeline_coverage():
-    """The campaign's control-token probe, through the public entry."""
-    from src.calculator.calculate import calculate_payload
-
-    return calculate_payload(
-        {
-            "champion": _CC_CHAMPION,
-            "level": 18,
-            "items": ["Fimbulwinter"],
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-        }
-    )["timeline_coverage"]
 
 
 class TestReviewedCrowdControl:
@@ -937,8 +892,21 @@ class TestReviewedCrowdControl:
         for slot, word in [["Q", "slow"], ["E", "knock"]]:
             assert word in _cc_slot_text(slot), slot
 
+    def test_hyper_charge_only_empowers_the_swings_it_forces(self):
+        """Cannon's W is the reviewed-control-free half of the W slot."""
+        text = " ".join(_cc_slot_text("W").split())
+        assert (
+            "active: jayce empowers his next 3 basic attacks within 4 seconds "
+            "to deal modified physical damage and gain 360% bonus attack speed" in text
+        )
+        assert (
+            "active: jayce surrounds himself with an electric field for 4 "
+            "seconds that deals magic damage every second to nearby enemies" in text
+        )
+        assert cc_review.control_words(text) == []
+
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _cc_kinds() == {"Q": ["none"]}
+        assert _cc_kinds() == {"Q": ["none"], "W": ["none"]}
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """Hammer's To the Skies! slows and Thundering Blow knocks back."""
@@ -949,9 +917,9 @@ class TestReviewedCrowdControl:
             "R": ["none"],
         }
 
-    def test_a_timed_fimbulwinter_fight_is_still_coarse_on_w(self):
-        """Cannon's Hyper Charge is a three-swing delta row with no sourced per-attack hit timing — so W reaches the ledger unreviewed and the kit stays coarse."""
-        coverage = _cc_timeline_coverage()
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots(_CC_CHAMPION) == []
+        coverage = cc_review.fimbulwinter_coverage(_CC_CHAMPION)
 
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
