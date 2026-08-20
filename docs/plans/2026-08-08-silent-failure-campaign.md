@@ -815,7 +815,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > active's raw value against the holder's magic amplifier —
    > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:8868`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
-   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8268`);
+   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8282`);
    > `survival.pricing.price_declared_packet` (`pricing.py:483`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
@@ -1321,7 +1321,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > swing.* Every family retired so far reaches its target through `_mitigate`
    > (`damage.py:395`) and nothing else — a resistance and the holder's own amps, which is exactly
    > what `survival.pricing.price_declared_packet` (`pricing.py:483`) carries. A Runaan's bolt is
-   > priced by `_mitigate_basic_attack_swing` (`damage.py:631`), which applies three further
+   > priced by `_mitigate_basic_attack_swing` (`damage.py:648`), which applies three further
    > target-side terms, and the family's *other* authored row is the attack's on-hit effects copied
    > onto a second subject by `_copied_on_hit_packet` (`damage.py:9426`), for which
    > `runaans_hurricane.secondary_target` declares no magnitude at all. The lane refused four moves,
@@ -1337,7 +1337,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > (Amendment M, Ruling 1, already carried), and then met by the target-side terms. Two of those
    > three **fold**, because a pure factor on a linear mitigation composes into the declared
    > magnitude and prices to the same real number — the target's critical-strike damage multiplier,
-   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:597`) applies —
+   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:614`) applies —
    > which is the argument the `on_hit_strike` retirement already used for on-hit effectiveness and
    > is used here for the last time on these two terms. Warden's Mail's Rock Solid is **never
    > folded**. `min(flat, per_hit × cap)` is a **capped flat subtraction**, not a factor on a
@@ -1398,7 +1398,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > gains a scenario that **arms the enemy-held swing terms**: a defender holding **Warden's Mail**,
    > with the plating multiplier and the crit-damage reduction in reach, met by an attacker whose
    > delivery is a basic-attack swing. The coverage derivation **reads the term mapping**, the way
-   > `repricing_window_declarations` (`golden_snapshot.py:1488`) already reads the window mapping
+   > `repricing_window_declarations` (`golden_snapshot.py:1505`) already reads the window mapping
    > and `holder_amp_declarations` the amp-kind mapping, so a further target-side swing term that no
    > scenario arms fails the capture on the commit that declares it rather than being discovered by
    > whoever next prices a swing. **Armed means met**: a defender holding the item in a fight nobody
