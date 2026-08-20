@@ -43,7 +43,7 @@ from .ability_spec import (
     Disposition,
     ZeroPolicy,
 )
-from .value_ref import AnyValueRef, SourceReceipt, VALUE_REF_TYPES
+from .value_ref import AnyValueRef, LevelValueRef, SourceReceipt, VALUE_REF_TYPES
 
 
 class BehaviorRuleError(ValueError):
@@ -2403,6 +2403,57 @@ class PacketSpec:
     recipients: Recipients
 
 
+class LevelSubject(Enum):
+    """Whose level a support packet's level ramp is read at.
+
+    The cached Wiki sentence *states* this and the emitters used to guess it:
+    every ramp was read at the recipient's level, so the four producers the
+    source scales on the holder were priced at whatever level the ally
+    happened to be.  Members are spelled the way the source spells them —
+    ``{{pp|150 to 350|type=target's level}}`` against an unqualified
+    ``{{pp|80 to 250}}``, whose bare "based on level" is the item owner's —
+    so a declaration and the sentence it was read from compare without a
+    translation table.
+    """
+
+    HOLDER = "your level"
+    RECIPIENT = "target's level"
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaredRamp:
+    """A level ramp as an owner-free catalog table declares it.
+
+    Two shapes for one fact, because the catalog's producer tables are
+    owner-free by construction — two items carry the support quest and share
+    one declaration — so a table entry can only name the registry *keys*.
+    :class:`LevelRamp` is the same ramp once an owner binds it.
+    """
+
+    min_key: str
+    max_key: str
+    subject: LevelSubject
+
+
+@dataclass(frozen=True, slots=True)
+class LevelRamp:
+    """One compiled level ramp: the reference that reads it, and whose level.
+
+    The reference is the very object the rule's ``values`` carries, so the
+    ramp and the number it scales cannot come apart, and the registry keys
+    stay behind a value reference rather than becoming open strings on a
+    policy axis.
+    """
+
+    reference: LevelValueRef
+    subject: LevelSubject
+
+    @property
+    def min_key(self) -> str:
+        """The ramp's low key — how every declaration and emitter names it."""
+        return self.reference.min_key
+
+
 @dataclass(frozen=True, slots=True)
 class AllyPacketRule:
     """One cross-participant producer, declared.
@@ -2420,6 +2471,12 @@ class AllyPacketRule:
     emitter resolves them through the rule, so a key the declaration does not
     carry is a stop rather than a silent registry read — which is what makes
     the declaration load-bearing instead of descriptive.
+
+    ``ramps`` is the same list's level-scaled half, restated with the one fact
+    a :class:`~.value_ref.LevelValueRef` cannot carry: whose level reads it
+    (:class:`LevelSubject`).  Every ramp in ``values`` appears here exactly
+    once, which :func:`validate_rule` checks, so a producer cannot grow a
+    ramp whose subject nothing states.
     """
 
     producer: AllyProducer
@@ -2429,6 +2486,7 @@ class AllyPacketRule:
     persistence: Persistence
     redirects_incoming_damage: bool
     values: tuple[AnyValueRef, ...]
+    ramps: tuple[LevelRamp, ...]
 
 
 RulePayload = Union[
@@ -3021,6 +3079,38 @@ def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
                 f"{rule.mechanic_id}: values holds sourced references, never "
                 "numbers in the declaration"
             )
+    _validate_ramp_subjects(rule, payload)
+
+
+def _validate_ramp_subjects(rule: BehaviorRule, payload: AllyPacketRule) -> None:
+    """Every level-scaled number says whose level reads it, and only those do.
+
+    Both directions, because a ramp the emitter resolves and no declaration
+    names would fall back to whichever level the call site happened to hold —
+    the guess this axis replaces.
+    """
+    for ramp in payload.ramps:
+        if not isinstance(ramp, LevelRamp) or not isinstance(
+            ramp.subject, LevelSubject
+        ):
+            raise BehaviorRuleError(
+                f"{rule.mechanic_id}: a level ramp names its two ends and "
+                "whose level reads it"
+            )
+    declared = sorted(
+        (ramp.reference.min_key, ramp.reference.max_key) for ramp in payload.ramps
+    )
+    scaled = sorted(
+        (reference.min_key, reference.max_key)
+        for reference in payload.values
+        if isinstance(reference, LevelValueRef)
+    )
+    if declared != scaled:
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: level ramps {declared} and level-scaled "
+            f"values {scaled} disagree; a ramp with no declared subject is a "
+            "number read at a guessed level"
+        )
 
 
 def _validate_secondary_recipients(rule: BehaviorRule, payload: AllyPacketRule) -> None:
@@ -3600,6 +3690,7 @@ __all__ = [
     "DamageFormula",
     "DamageThreshold",
     "DecayingAttackStacks",
+    "DeclaredRamp",
     "DefenseCombine",
     "DefenseExclusivity",
     "DefenseField",
@@ -3624,7 +3715,9 @@ __all__ = [
     "HolderStat",
     "Isolation",
     "KernelField",
+    "LevelRamp",
     "LevelSteppedRate",
+    "LevelSubject",
     "LivePredicate",
     "MAGNITUDE_TYPES",
     "Magnitude",

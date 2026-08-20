@@ -6,6 +6,10 @@ the Wiki's ``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q
 forms use the pinned packet variants.  R's initial blast and the basic-attack
 follow-up are kept separate so resistance and event ordering remain visible.
 
+E (Weapon Queue System) is the one slot with no row: it is a text prompt
+that reorders the next weapons and has no gameplay effect, so it is a
+``no_damage`` slot rather than a missing axis.
+
 Reviewed crowd control rides the parts rather than a ``MODULE_CC`` map:
 both Q and R are one slot per weapon, and the weapons do not control alike
 (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
@@ -306,3 +310,15 @@ OPTIONS = [
 ]
 
 SELF_HEALING_RULE = declare_healing_rule("Aphelios")
+
+# E has no packet and no slot because the Weapon Queue System has nothing
+# to price — it is the prompt that reorders the next weapons, with no
+# gameplay effect of its own — so it is no_damage rather than an axis the
+# engine is missing.
+MODULE_COVERAGE = {
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
+}

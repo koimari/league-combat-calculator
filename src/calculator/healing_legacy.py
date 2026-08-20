@@ -645,6 +645,29 @@ def _legacy_derive_self_healing(
                 _heal_from_damage(
                     healing, event, float(event.get("damage", 0.0)), "Infinite Duress"
                 )
+        # Eternal Hunger (P): "While below 50% maximum health, Warwick also
+        # heals for 100% of the post-mitigation damage dealt by Eternal
+        # Hunger, increased to 250% while below 25% maximum health" (cached
+        # P description).  Warwick's own health is module state, so the
+        # module owns the threshold and publishes the resulting share on
+        # its P entry; this rule pays that share of every on-hit event the
+        # passive authored.  A healthy Warwick publishes 0 and heals none.
+        hunger_share = float(
+            ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
+        )
+        if hunger_share > 0.0:
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT,
+                "on_hit_ability_passive",
+                damage_events,
+            ):
+                event = payment.event
+                _heal_from_damage(
+                    healing,
+                    event,
+                    float(event.get("damage", 0.0)) * hunger_share,
+                    "Eternal Hunger",
+                )
 
     elif name == "Dr. Mundo":
         # Maximum Dosage is an actor-wide regeneration stream, independent of
@@ -1707,6 +1730,34 @@ def _legacy_derive_self_healing(
                 )
                 _heal_from_damage(
                     healing, payment.event, amount, "Wind Becomes Lightning"
+                )
+        # Determination (P): the third stack "consume[s] them all to deal
+        # ... bonus physical damage and heal Xin Zhao for 2% / 3.5% / 5%
+        # (based on level) of his maximum health (+ 40% / 50% / 70% (based
+        # on level) AP)" (cached P description; the level breakpoints
+        # 1/6/11 are the wiki template's).  The module prices the proc as
+        # a per-attack share (partial stacks included), so the heal pays
+        # the same share on the same on-hit events — three of them are one
+        # proc's heal.
+        determination = (ability_damages.get("passive") or {}).get("on_hit") or {}
+        if determination:
+            xin_level = max(1, int(champion_stats.get("level", 18) or 18))
+            health_share, heal_ap_ratio = (
+                (0.05, 0.70)
+                if xin_level >= 11
+                else ((0.035, 0.50) if xin_level >= 6 else (0.02, 0.40))
+            )
+            per_proc_heal = health_share * float(
+                champion_stats.get("health", 0.0) or 0.0
+            ) + heal_ap_ratio * float(champion_stats.get("ability_power", 0.0) or 0.0)
+            # The module declares the cadence; dividing by it here is what
+            # keeps the heal and the damage on one grouping.
+            stacks = max(1, int(determination.get("stacks_required") or 1))
+            for payment in _payments(
+                HealAnchor.DAMAGING_HIT, "on_hit_ability_passive", damage_events
+            ):
+                _heal_from_damage(
+                    healing, payment.event, per_proc_heal / stacks, "Determination"
                 )
 
     if name == "Nasus":

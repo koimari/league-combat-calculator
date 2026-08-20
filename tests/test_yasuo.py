@@ -4,8 +4,12 @@ Last Breath knocks up; Steel Tempest does so only on the Gathering Storm
 cast, so its kind is authored per part rather than per slot.
 """
 
-from src.calculator.champions import parse_champion_abilities, yasuo
-from tests import cc_review
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
+    yasuo,
+)
+from tests import cc_review, coverage_truth
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -57,3 +61,45 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Yasuo")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """R prices a row and W prices nothing; the map had both backwards.
+
+    ``b03bbad9`` rewrote the set as ``{P, Q, E}`` while adding P, dropping
+    Last Breath from it.  P and W are ``no_damage`` rather than
+    ``out_of_scope``: Way of the Wanderer grants the Flow shield and the
+    crit conversion the fight engine already applies, and Wind Wall only
+    destroys projectiles — neither slot damages anybody.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Yasuo").coverage == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert coverage_truth.emitted("Yasuo") == {
+            "P": coverage_truth.ZERO,
+            "Q": coverage_truth.PRICED,
+            "W": coverage_truth.ZERO,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.PRICED,
+        }
+
+    def test_the_two_no_damage_slots_have_no_cached_damage_row(self):
+        kit = cc_review.kit("Yasuo")["abilities"]
+        for slot in ("P", "W"):
+            attributes = {
+                level["attribute"]
+                for ability in kit[slot]
+                for effect in ability["effects"]
+                for level in effect["leveling"] or []
+            }
+            assert not any("Damage" in name for name in attributes - {"Bonus Damage"})
+        # P's one "Bonus Damage" row is the Flow shield, not enemy damage.
+        assert "grant himself a shield" in cc_review.slot_text(
+            cc_review.kit("Yasuo"), "P"
+        )

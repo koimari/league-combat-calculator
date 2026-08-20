@@ -20,6 +20,7 @@ from src.calculator.item_behavior import (
     AllyProducer,
     Compilable,
     EngineLane,
+    LevelSubject,
     PacketKind,
     PacketTrigger,
     Recipients,
@@ -130,11 +131,26 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
         with pytest.raises(AllyPacketInterpretationError, match="declares no"):
             _slot(AllyProducer.CONSONANCE).value("harmony_bonus_mana_ratio")
 
-    def test_a_level_ramp_is_read_at_the_recipients_level(self) -> None:
+    def test_a_level_ramp_rises_with_the_level_it_is_read_at(self) -> None:
         slot = _slot(AllyProducer.SOUL_SIPHON)
         assert slot.level_value("charge_cap_min", 1) < slot.level_value(
             "charge_cap_min", 18
         )
+
+    def test_a_ramp_says_whose_level_reads_it(self) -> None:
+        """Soul Siphon's cap is the *holder's*: the charges are the holder's."""
+        assert (
+            _slot(AllyProducer.SOUL_SIPHON).level_subject("charge_cap_min")
+            is LevelSubject.HOLDER
+        )
+        assert (
+            _slot(AllyProducer.PURIFY).level_subject("heal_min")
+            is LevelSubject.RECIPIENT
+        )
+
+    def test_an_undeclared_ramp_has_no_subject_to_read(self) -> None:
+        with pytest.raises(AllyPacketInterpretationError, match="declares no"):
+            _slot(AllyProducer.SOUL_SIPHON).level_subject("charge_damage_ratio")
 
     def test_an_undeclared_packet_kind_is_a_stop(self) -> None:
         """The emitter cannot build a packet the producer never declared."""

@@ -13,8 +13,10 @@ Why each slot is non-generic:
   keeps its castable row and prices ``maiden_attacks`` basic attacks
   over the fight window (AS 1.0 -> 5 attacks in the 5-second
   one-rotation window by default).
-- Q/W/E keep the reviewed CP10.10 packet pricing (W is a zero-damage
-  wall, E keeps its sourced % max-health magic damage).
+- Q/W/E keep the reviewed CP10.10 packet pricing (E keeps its sourced
+  % max-health magic damage).  W (Dark Procession) stays out of scope:
+  its ring is impassable terrain with its own wall health, an axis the
+  engine does not have, and it deals nothing.
 
 Pet damage boundaries: the fight model does not price pet HP, leash
 ranges, or AI; the walkers and the Maiden are assumed to reach and keep

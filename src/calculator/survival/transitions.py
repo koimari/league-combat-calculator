@@ -686,6 +686,18 @@ def recovery_is_gated(
     return event_time - float(last_damage) < action.requires_damage_free_seconds - 1e-9
 
 
+def live_healing_factor(state: Mapping[str, Any], event_time: float) -> float:
+    """The defender's Grievous multiplier at *event_time*.
+
+    Every recovery this instant delivers reads it here — an authored heal and
+    the heal a Lifeline fires as it arms alike — so one wound window cannot
+    bite on one of them and miss the other.
+    """
+    if event_time >= state["healing_reduction_until"]:
+        return 1.0
+    return float(state["healing_reduction_factor"])
+
+
 def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> float:
     """Apply received-healing modifiers except to vamp stat packets.
 
@@ -1258,11 +1270,7 @@ def _apply_heal(
         # With no received-healing modifier armed, the multiplier is exactly
         # 1.0 for every category and the multiply is skipped bit-for-bit.
         amount *= recovery_multiplier(state, action)
-    reduction_factor = (
-        1.0
-        if event_time >= state["healing_reduction_until"]
-        else state["healing_reduction_factor"]
-    )
+    reduction_factor = live_healing_factor(state, event_time)
     reduced_amount = amount * reduction_factor
     state["healing_reduced"] += max(0.0, amount - reduced_amount)
     received = min(
@@ -1727,7 +1735,13 @@ def _apply_damage(
     # Absorption order, Lifeline arming, and the health transition are owned
     # by ``shield_ledger`` (issue #159); this kernel supplies the storage and
     # the ledger annotations, never a second copy of the semantics.
-    outcome = shield_ledger.absorb(pools, amount, damage_type, event_time)
+    outcome = shield_ledger.absorb(
+        pools,
+        amount,
+        damage_type,
+        event_time,
+        live_healing_factor(state, event_time),
+    )
     event_absorbed = outcome.absorbed
     applied_to_health = outcome.applied_to_health
     if outcome.threshold_shield_triggered:
@@ -1746,8 +1760,10 @@ def _apply_damage(
     if outcome.threshold_health_triggered:
         # The kernel granted the temporary maximum health and delivered
         # whatever of the sourced heal the arming instant could take; this
-        # walk has no over-time author for the remainder.
+        # walk has no over-time author for the remainder.  A wound live at
+        # the arming instant already cut that heal inside the kernel.
         state["healing_received"] += outcome.threshold_health_healed
+        state["healing_reduced"] += outcome.threshold_health_reduced
         ctx.ledger.write(action, threshold_health_triggered=True)
     if ctx.records_annotations:
         ctx.ledger.annotate(action, overkill=round(outcome.overkill, 6))

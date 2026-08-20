@@ -21,17 +21,92 @@ hit.  W declares its one aggregate hit at the cast so its reviewed slow
 still reaches the event ledger; the slashes' sourced cadence ("over the
 first 0.15 seconds of the cast time") and the thrust's offset behind the
 remaining cast time are left for the timing wave.
+
+Coverage-frontier rider: P (Determination) is the every-third-attack
+bonus — "Xin Zhao's basic attacks on-hit ... generate a stack of
+Determination, stacking up to 3 times.  The third stack consumes them
+all to deal 15% / 30% / 45% / 60% (based on level) AD (+ 5% / 10% / 15%
+/ 20% (based on level) AP) bonus physical damage and heal Xin Zhao for
+2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% / 70%
+(based on level) AP)."  The cached P entry carries no leveling row at
+all, so the bands are module constants.  W's first slash and thrust also
+generate a stack; the engine's ability-hit counter is kit-wide (it would
+count E and R too), so the stack counter here runs on the auto stream
+alone and the two W stacks are unpriced.  The heal is paid by the Xin
+Zhao healing rule off the same on-hit events.
 """
 
 from typing import Any
 
-from .engine import SlotCtx
+from .engine import ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import simple_damage
+from .slotlib import ability_on_hit_entry, simple_damage
 
 PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf64"
+
+# HARDCODED: verify on patch updates — the cached Determination entry
+# has no leveling rows; every number is wiki prose, and the level
+# breakpoints come from Template:Data Xin Zhao/Determination
+# ("15 to 60 for 4|1 to 16" and "5 to 20 for 4|1;6;11;16" — levels
+# 1/6/11/16 for both damage terms).  The heal's bands live in the
+# healing rule that pays it (healing_legacy, "Xin Zhao").
+DETERMINATION_STACKS = 3
+_DAMAGE_BANDS: tuple[tuple[int, float, float], ...] = (
+    (16, 0.60, 0.20),
+    (11, 0.45, 0.15),
+    (6, 0.30, 0.10),
+    (1, 0.15, 0.05),
+)
+
+
+def _determination_ratios(level: int) -> tuple[float, float]:
+    """The third-stack AD and AP ratios at a champion level."""
+    for min_level, ad_ratio, ap_ratio in _DAMAGE_BANDS:
+        if level >= min_level:
+            return ad_ratio, ap_ratio
+    return _DAMAGE_BANDS[-1][1], _DAMAGE_BANDS[-1][2]
+
+
+def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the third-stack bonus, as a per-attack share of the proc."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    ad_ratio, ap_ratio = _determination_ratios(ctx.level)
+    per_proc = ad_ratio * ctx.stat("attack_damage") + ap_ratio * ctx.stat(
+        "ability_power"
+    )
+    if per_proc <= 0:
+        return None
+
+    name = ability.get("name", "Determination")
+    entry = ability_on_hit_entry(
+        name,
+        ctx.level,
+        "physical",
+        {
+            "name": name,
+            # The engine multiplies the per-hit share by every attack and
+            # displays procs, so partial stacks are priced smoothly (the
+            # Vayne W / Aurora P shape).
+            "damage_per_hit": per_proc / DETERMINATION_STACKS,
+            "damage_type": "physical",
+            "stacks_required": DETERMINATION_STACKS,
+        },
+    )
+    entry["detail"] = (
+        f"every {DETERMINATION_STACKS}rd basic attack consumes the stacks "
+        f"for {per_proc:.2f} bonus physical damage ({ad_ratio:.0%} AD + "
+        f"{ap_ratio:.0%} AP at level {ctx.level}) and the sourced "
+        "maximum-health heal; Wind Becomes Lightning's two stacks are not "
+        "counted"
+    )
+    return entry
+
+
+_determination.phase = ONHIT
 
 
 def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -64,6 +139,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # at the cast boundary by ``_wind_becomes_lightning``.
     single_hit_slots=frozenset({"E", "R"}),
     slot_parsers={
+        "P": _determination,
         "Q": simple_damage(
             attr="Total Bonus Physical Damage",
             dmg_type="physical",
@@ -83,12 +159,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "no thrust.  The row is declared as one aggregate hit at the cast "
         "boundary; the thrust's crit-chance increase (0% : 33.3%) and the "
         "slash cadence remain unpriced.",
+        "P (Determination) prices the third-stack bonus at the wiki's "
+        "15% / 30% / 45% / 60% (based on level) AD + 5% / 10% / 15% / "
+        "20% AP (level breakpoints 1/6/11/16) — module constants, "
+        "because the cached P entry carries no leveling row.  Stacks "
+        "come from basic attacks only: Wind Becomes Lightning's first "
+        "slash and thrust also generate one each, but the engine's "
+        "ability-hit stack counter is kit-wide and would also count E "
+        "and R, which generate none.  The Challenged mark is state.",
     ),
     cc_kinds=MODULE_CC,
 )
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
 
 SELF_HEALING_RULE = declare_healing_rule("Xin Zhao")

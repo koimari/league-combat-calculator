@@ -28,6 +28,16 @@ P1-2 fixes:
   ``r_clone_attacks`` (default 0) prices that many clone basic attacks
   (75% of Shaco's total AD physical damage each, wiki Pets prose); the
   death-explosion Magic Damage row remains the R packet's cast damage.
+
+Coverage-frontier rider: P (Backstab) is the positional auto modifier —
+"Shaco's basic attacks are empowered to deal 20 : 31.18 (based on level)
+(+ 20% bonus AD) bonus physical damage when hitting an enemy from
+behind".  Position is not something a request states, so ``p_procs`` is
+the number of attacks that land from behind; it defaults to the one
+Deceive blinks him into, and the target's facing is otherwise the
+player's problem, not the model's.  Backstab modifies the attack
+(``spelleffects = basic``) rather than applying on-hit, so item on-hit
+effects do not proc from it.
 """
 
 from __future__ import annotations
@@ -35,9 +45,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 # Sourced box attack pattern (wiki Shaco W + "Champion summoned units"
 # page): the sprung box fires every 0.5 seconds for its 5-second
@@ -50,6 +60,38 @@ _BOX_MAX_ATTACKS = int(_BOX_SPRUNG_SECONDS / _BOX_ATTACK_INTERVAL)  # 10
 # 75% of Shaco's total attack damage (wiki "Pets" page prose for
 # Hallucination; the cached R JSON carries no leveling row for it).
 _CLONE_ATTACK_AD_RATIO = 0.75
+
+# HARDCODED: verify on patch updates — the cached Backstab row carries
+# only the per-level flat term (20 : 31.18); the wiki sentence's
+# "(+ 20% bonus AD)" has no modifier in the cache at all.
+_BACKSTAB_BONUS_AD_RATIO = 0.20
+
+
+def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the from-behind bonus on however many attacks land there."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    flat = extract_named(
+        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target, level=ctx.level
+    )
+    per_hit = flat + _BACKSTAB_BONUS_AD_RATIO * ctx.stat("bonus_attack_damage")
+    if per_hit <= 0:
+        return None
+
+    attacks = max(0, int(ctx.option("p_procs")))
+    entry = on_hit_entry(ability.get("name", "Backstab"), per_hit, "physical")
+    entry["on_hit"]["max_procs"] = attacks
+    entry["detail"] = (
+        f"{attacks} attack(s) from behind for {per_hit:.2f} bonus physical "
+        f"({flat:.2f} at level {ctx.level} + "
+        f"{_BACKSTAB_BONUS_AD_RATIO:.0%} bonus AD); the wiki's critical "
+        "strike modifier on this damage is not priced"
+    )
+    return entry
+
+
+_backstab.phase = ONHIT
 
 
 def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -182,6 +224,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     PACKET_SHA256,
     single_hit_slots=frozenset({"Q"}),
     slot_parsers={
+        "P": _backstab,
         "W": _jack_in_the_box,
         "E": _two_shiv_poison,
         "R": _hallucinate,
@@ -210,7 +253,25 @@ ASSUMPTIONS.extend(
         "(default 0 = the player does not command the clone to attack), "
         "each dealing 75% of Shaco's total AD physical damage (wiki Pets "
         "prose, module constant).",
+        "P (Backstab) adds 20 : 31.18 (based on level) + 20% bonus AD "
+        "physical damage to a basic attack that lands from behind.  "
+        "Position is not a request input, so p_procs is the number of "
+        "attacks that land there and defaults to 1 — the attack Deceive "
+        "blinks Shaco behind the target for.  The bonus modifies the "
+        "attack rather than applying on-hit (spelleffects = basic), so "
+        "item on-hit effects do not proc from it, and the wiki's "
+        "critical-strike modifier on the bonus is not priced.",
     ]
+)
+OPTIONS.append(
+    {
+        "key": "p_procs",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 20,
+        "label": "Backstab attacks (basic attacks landing from behind)",
+    }
 )
 OPTIONS.append(
     {
@@ -240,7 +301,3 @@ OPTIONS.append(
         "label": "R clone basic attacks commanded",
     }
 )
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}

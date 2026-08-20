@@ -1,4 +1,12 @@
-"""Zilean — CP10.10 full-entry-reviewed packet module."""
+"""Zilean — CP10.10 full-entry-reviewed packet module.
+
+Only Q deals damage.  R is priced as the Chronoshift revive below, so it
+is ``modeled`` through that channel rather than through its own row.  The
+other three slots need axes the engine does not have: P (Time in a
+Bottle) is experience generation, W (Rewind) is a resource/cooldown
+refund on Q and E, and E (Time Warp) is a movement-speed grant or an
+enemy slow whose CC magnitude no cast row carries.
+"""
 
 from .inputs import champion_stat
 from .packet_module import build_packet_module
@@ -53,9 +61,18 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     }
 
 
+# R's own packet row prices nothing; the revive above is what the engine
+# prices for the slot (1100.0 at rank 3 with no AP).  P/W/E stay out of
+# scope: experience generation, a cooldown refund on Q and E, and an ally
+# speed-up or enemy slow whose magnitude no CC axis carries.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q"} else "out_of_scope") for slot in "PQWER"
+    "P": "out_of_scope",
+    "Q": "modeled",
+    "W": "out_of_scope",
+    "E": "out_of_scope",
+    "R": "modeled",
 }
+COVERAGE_CHANNELS = {"R": ("starting_revive_defense",)}
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (Chronoshift) is modeled as the sourced revive state: 600 / 850 / 1100 "
     "(+ 200% AP) restored after a 3s resurrection on a 120 / 90 / 60s cooldown "

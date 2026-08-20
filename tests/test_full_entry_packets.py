@@ -203,11 +203,17 @@ def test_a_full_entry_module_cites_its_parent_page_and_every_ability(name) -> No
 
 @pytest.mark.parametrize("name", FULL_ENTRY)
 def test_a_full_entry_packet_prices_every_slot(name) -> None:
-    """With its own options armed, every slot the contract models authors a typed row."""
+    """With its own options armed, every slot the contract models authors a typed row.
+
+    A slot the contract prices through a ``COVERAGE_CHANNELS`` channel is
+    modeled without a packet row of its own — the revive, shield or heal
+    receipt is the row — so the packet is not asked for one.
+    """
+    contract = get_champion_module_contract(name)
     modeled = {
         "passive" if slot == "P" else slot
-        for slot, state in get_champion_module_contract(name).coverage.items()
-        if state == "modeled"
+        for slot, state in contract.coverage.items()
+        if state == "modeled" and slot not in contract.coverage_channels
     }
     parsed = parse_champion_abilities(
         get_champion(name),

@@ -12,16 +12,39 @@ as a stale receipt, not a missing mechanic.
 E1-b2: Sylas is in HEALING_RULE_CHAMPIONS — W Kingslayer's
 missing-health-scaled heal (Minimum/Maximum Heal rows) is authored by
 ``derive_self_healing`` (test_sylas_kingslayer_heals_scaled_by_missing).
+
+Coverage-frontier rider: P (Petricite Burst) is the empowered attack
+every cast stocks — "Whenever Sylas casts an ability, he generates a
+stack of Unshackled ... stacking up to 3 times.  Unshackled: Sylas' next
+basic attack ... consume[s] a stack to whirl his chains around him,
+dealing 130% AD (+ 30% AP) magic damage to the primary target".  The
+cached P entry carries no leveling row at all, so both ratios are module
+constants read from that sentence.  ``p_procs`` is how many stocked
+attacks the fight spends and defaults to the sourced 3-stack cap.
+
+R (Hijack) stays ``out_of_scope``: it casts a copy of another champion's
+ultimate, an axis the engine has no surface for — no second champion's
+kit is in the request, and the "0.6% AP per 1% total AD" ratio
+conversion has nothing to convert.
 """
 
 from dataclasses import replace
 from typing import Any
 
-from .engine import SlotCtx
+from .engine import ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
+from .slotlib import on_hit_entry
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
+
+# HARDCODED: verify on patch updates — the cached Petricite Burst entry
+# has no leveling rows whatsoever; every number is wiki prose:
+# "dealing 130% AD (+ 30% AP) magic damage to the primary target",
+# "stacking up to 3 times".
+_PETRICITE_AD_RATIO = 1.30
+_PETRICITE_AP_RATIO = 0.30
+_UNSHACKLED_MAX_STACKS = 3
 
 
 def _chain_lash(packet_q):
@@ -47,6 +70,33 @@ def _chain_lash(packet_q):
     return parse
 
 
+def _petricite_burst(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the Unshackled empowered attack's chain whirl, once per stack."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    per_hit = _PETRICITE_AD_RATIO * ctx.stat("attack_damage") + (
+        _PETRICITE_AP_RATIO * ctx.stat("ability_power")
+    )
+    if per_hit <= 0:
+        return None
+
+    bursts = min(max(int(ctx.option("p_procs")), 0), _UNSHACKLED_MAX_STACKS)
+    entry = on_hit_entry(ability.get("name", "Petricite Burst"), per_hit, "magic")
+    entry["on_hit"]["max_procs"] = bursts
+    entry["detail"] = (
+        f"{bursts} Unshackled attack(s) of {per_hit:.2f} magic damage "
+        f"({_PETRICITE_AD_RATIO:.0%} AD + {_PETRICITE_AP_RATIO:.0%} AP to "
+        "the primary target); the empowered attack's 125% bonus attack "
+        "speed, its 40% AD + 20% AP splash and its critical strike are "
+        "not priced"
+    )
+    return entry
+
+
+_petricite_burst.phase = ONHIT
+
+
 # Reviewed crowd control, read from the cached kit.  W (Kingslayer)
 # applies no control.  E (Abduct) deals its damage and "reveal[s] and
 # stun[s] them for 0.5 seconds", then "knocks them up for 0.5 seconds upon
@@ -68,14 +118,29 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # hit the ledger can time — which is what carries their MODULE_CC
     # answer to the control-armed readers.
     single_hit_slots=frozenset({"W", "E"}),
+    slot_parsers={
+        "P": _petricite_burst,
+    },
     slot_wrappers={
         "Q": _chain_lash,
     },
     cc_kinds=MODULE_CC,
 )
 
+OPTIONS.append(
+    {
+        "key": "p_procs",
+        "type": "int",
+        "default": _UNSHACKLED_MAX_STACKS,
+        "min": 0,
+        "max": _UNSHACKLED_MAX_STACKS,
+        "label": "Petricite Burst attacks (Unshackled stacks spent)",
+    }
+)
+
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
+    for slot in "PQWER"
 }
 
 SELF_HEALING_RULE = declare_healing_rule("Sylas")
@@ -87,4 +152,12 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "shields ... for 2 seconds upon dashing'); the pinned cached data "
     "has no shield row on either E entry, so the E magic-damage packet "
     "is complete",
+    "P (Petricite Burst) prices the Unshackled empowered attack at the "
+    "wiki's 130% AD + 30% AP magic against the primary target — module "
+    "constants, because the cached P entry carries no leveling row.  "
+    "Each ability cast stocks one stack (cap 3) and each empowered "
+    "attack spends one, so p_procs defaults to the 3-stack cap; the "
+    "empowered attack's 125% bonus attack speed, the 40% AD + 20% AP "
+    "secondary-target whirl, its minion execute and its (175% + 30%) "
+    "critical strike are not priced.",
 ]

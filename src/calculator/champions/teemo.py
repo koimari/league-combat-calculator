@@ -26,6 +26,11 @@ adds the player-controlled trap state:
 Boundary: shroom/trap placement, arm time, trigger radius and the 6-HP
 trap health bar are state the fight model does not price — the damage
 is the detonation DoT above.
+
+Coverage: P (Guerrilla Warfare) is idle stealth with an attack-speed
+burst on breaking it, and W (Move Quick) is movement speed. Neither
+vision/stealth nor movement speed is an axis the engine has, so both
+slots are out of scope.
 """
 
 from __future__ import annotations

@@ -10,6 +10,10 @@ and "Increased Damage per Stack" 20/25/30 + 5% AP) is modeled through
 the ``r_arcane_perfection`` option — each barrage beyond the first
 carries the accumulated per-stack bonus (capped at the sourced Maximum
 Stacks), 0 by default so the unoptioned price is the sourced Total row.
+
+Coverage: P (Mana Surge) restores mana on his basic attacks. A resource
+refund is an axis the engine does not have, so the slot is out of
+scope.
 """
 
 from typing import Any

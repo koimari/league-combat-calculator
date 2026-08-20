@@ -22,6 +22,20 @@ Timed mode runs the kit on the engine's shared cast timeline instead:
 The one-rotation W-impact wait (``cast_time`` = travel-inclusive hit time,
 Q offsets shifted behind it) is deliberately confined to the one-rotation
 branch — timed casts occupy their real cast times.
+
+Coverage, which the ``SLOTS`` map alone reads wrong, so the module
+declares it:
+
+- E (Supercharge) and R (Killer Instinct) are ``no_damage``: the first is
+  an attack-speed grant, the second a shield plus a dash whose row exists
+  only to anchor the Plasma ledger.  Q and W price their own damage.
+- P (Second Skin) is the one slot the coverage vocabulary cannot state.
+  Plasma **is** priced — it publishes its own breakdown row,
+  ``passive_plasma``, carried by W's ``post_hit_proc`` in one-rotation
+  and by R's in timed — but P has no ``SLOTS`` entry, and the contract
+  reserves every status except ``out_of_scope`` for slots that emit one
+  (``tests/test_champion_module_contract.py``).  So P reads
+  ``out_of_scope`` while being modeled; do not read it as a damage gap.
 """
 
 import math
@@ -661,3 +675,14 @@ SLOTS = {
 MODULE_CC = {"Q": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kai'Sa", cc_kinds=MODULE_CC)
+
+# E and R emit rows and neither deals damage, so both are ``no_damage``;
+# P has no slot of its own and can therefore only read ``out_of_scope``,
+# which under-reports it — see the module docstring.
+MODULE_COVERAGE = {
+    "P": "out_of_scope",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "no_damage",
+}

@@ -4,6 +4,11 @@ The generated packet used Soul-Marked damage without an Oathsworn state and
 treated Rend as a one-stack constant.  This module keeps those states
 explicit, while every numeric value still comes from the pinned champion
 cache and its full-entry Wiki receipt.
+
+Coverage: P (Martial Poise) is the dash Kalista takes during every attack
+windup and R (Fate's Call) throws the Oathsworn ally into a knock-up.
+Mobility and CC magnitude are axes the engine does not have, so neither
+slot is priced.
 """
 
 from typing import Any
