@@ -82,6 +82,8 @@ FULL_ENTRY = (
     "Nocturne",
     "Nunu & Willump",
     "Olaf",
+    "Orianna",
+    "Ornn",
     "Pantheon",
     "Poppy",
     "Pyke",
