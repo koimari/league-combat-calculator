@@ -289,6 +289,7 @@ def test_metrics_scorecard_is_auth_gated(invite_env, sqlite_database):
     scorecard = client.get("/api/metrics")
     assert scorecard.status_code == 200
     body = scorecard.get_json()
+    # The exact shape the post-deploy smoke in docs/deploy.md asserts.
     assert set(body) >= {"generated_at", "beta", "criteria", "gate"}
     assert set(body["criteria"]) == {
         "retention",
@@ -297,6 +298,7 @@ def test_metrics_scorecard_is_auth_gated(invite_env, sqlite_database):
         "staleness",
     }
     assert body["gate"]["status"] in {"pass", "pending", "fail"}
+    assert body["gate"]["verdict"] in {"PASS", "PENDING", "FAIL"}
 
 
 # ---------------------------------------------------------------------------

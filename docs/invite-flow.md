@@ -96,9 +96,12 @@ Rotation procedure (per `docs/deploy-runbook.md`):
 - **Sessions are signed cookies** (`SCRYGLASS_AUTH_SECRET`), TTL-bounded, and
   record `username` + `invite`. Logging out deletes the cookie; rotating the
   secret invalidates all sessions (planned maintenance only).
-- **The validation API** (`POST /api/auth/invite`) lets the landing page (or
-  a client) check a code before login: `200 {"valid": true, "invite": ...}`
-  for a configured code, `401` unknown, `503` when no codes are configured.
+- **The validation API** (`POST /api/auth/invite`) checks a code without
+  logging in: `200 {"valid": true, "invite": ...}` for a configured code,
+  `401` unknown, `503` when no codes are configured. It is for operators and
+  API clients — the landing page ships no JavaScript (`script-src 'self'`),
+  so its form posts the code with the credentials to `/auth/login`, which
+  validates the code first.
 - **Audit trail:** `/auth/status` exposes the current session's invite code;
   use it (or app logs) to attribute a session to a cohort.
 
