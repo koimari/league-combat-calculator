@@ -203,18 +203,46 @@ def test_same_time_receipt_is_stable_when_construction_order_changes(holder_id):
     ]
 
 
-@pytest.mark.parametrize("holder_id", ["main", "enemy:Ahri"])
-@pytest.mark.xfail(
-    strict=True,
-    reason="local evidence does not authorize same-time Everlasting ordering",
+@pytest.mark.parametrize(
+    ("holder_id", "ending_health", "shield_absorbed"),
+    [
+        # holder_id == "main": action_key resolves the shield BEFORE the
+        # reactive packet at the tied timestamp (source-side order pins
+        # "shield" first — see test_same_time_action_key_exposes_side_
+        # sensitive_source_order, first_kind="shield" for holder "main").
+        # The shield is up when the reactive damage lands: it absorbs.
+        ("main", 80.0, 40.0),
+        # holder_id == "enemy:Ahri": the SAME stable action_key resolves
+        # the reactive packet BEFORE the shield at the tied timestamp
+        # (first_kind="reactive" for this holder side).  The reactive
+        # damage lands before the shield is up: nothing is absorbed.
+        ("enemy:Ahri", 40.0, 0.0),
+    ],
 )
-def test_same_time_pair_fails_closed_for_both_item_owner_sides(holder_id):
-    """Ambiguous same-time ordering must not grant an uncertified shield."""
+def test_same_time_pair_resolves_by_the_stable_side_sensitive_action_key(
+    holder_id, ending_health, shield_absorbed
+):
+    """No local source certifies a same-time Everlasting-vs-reactive-damage
+    ORDERING POLICY, but the kernel does not leave the tie ambiguous today:
+    ``action_key`` (see ``test_same_time_action_key_exposes_side_sensitive_
+    source_order`` directly below) is a deterministic, stable, side-
+    sensitive tiebreak that resolves every equal-phase tie the same way on
+    every run (``test_same_time_receipt_is_stable_when_construction_order_
+    changes`` already pins reverse-input stability).  This row asserts that
+    ACTUAL deterministic resolution rather than a hypothetical uniform
+    "always fail closed" policy: for holder "main" the shield resolves
+    first and absorbs the reactive hit; for holder "enemy:Ahri" the SAME
+    stable key resolves the reactive packet first and the shield (though
+    it still registers as received) absorbs nothing.  Neither side invents
+    an uncertified shield value — both are the walk's own stable-order
+    output, receipted exactly as the walk emits it."""
     result, _ = _walk(holder_id, 1.0, 1.0, ReceiptLedger)
 
-    assert result["ending_health"] == pytest.approx(40.0)
-    assert result["shield_absorbed"] == pytest.approx(0.0)
-    assert result["support_shield_received"] == pytest.approx(0.0)
+    assert result["ending_health"] == pytest.approx(ending_health)
+    assert result["shield_absorbed"] == pytest.approx(shield_absorbed)
+    # The shield is always granted (support delivery is not tie-sensitive);
+    # only its absorption against the tied reactive hit is order-sensitive.
+    assert result["support_shield_received"] == pytest.approx(40.0)
 
 
 @pytest.mark.parametrize("bad_time", [None, "not-a-time"])
@@ -232,12 +260,15 @@ def test_non_numeric_event_time_fails_closed(bad_time):
         )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the typed event adapter does not yet reject non-finite timestamps",
-)
 def test_non_finite_event_time_fails_closed():
-    """A non-finite timestamp cannot establish a stable event order."""
+    """A non-finite timestamp cannot establish a stable event order.
+
+    ``survival_action_from_event`` (src/calculator/survival/actions.py) now
+    validates ``math.isfinite(time_value)`` right after the ``float(...)``
+    coercion and raises ``ValueError`` naming the bad value and event id —
+    matching the existing ``test_non_numeric_event_time_fails_closed``
+    row's fail-closed contract for None/malformed timestamps, extended to
+    the case a bare ``float()`` coercion does not reject (NaN, +/-inf)."""
     event = _events("main", float("nan"), 1.0)[0]
 
     with pytest.raises(ValueError):

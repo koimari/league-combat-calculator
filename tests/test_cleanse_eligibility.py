@@ -1079,42 +1079,19 @@ def test_r7_qss_and_mercurial_self_cast_denied_while_suppressed(item, source):
     assert ce.ITEM_CLEANSE_DECLARATIONS[item]["excluded_control_kinds"] == ("airborne",)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "alternate suppression-removal variant not pinned: the binary "
-        "cannotBeSuppressed flag means the self-only cast cannot fire while "
-        "the caster is suppressed, so the wording-based removal set is "
-        "unreachable at walk level (the castability denial of the primary "
-        "fires first); the removal set stays pinned in R4/R5"
-    )
-)
-@pytest.mark.parametrize(
-    "source",
-    [QUICKSILVER_SOURCE, MERCURIAL_SOURCE],
-)
-def test_r7_alt_qss_and_mercurial_cleanse_suppression_if_reachable(source):
-    """Alternate (NOT pinned): the self-cast removes the suppression per the
-    item wording.  Would be pinned only if a self-cast could fire while the
-    caster is suppressed."""
-    combatants = [
-        _dummy_combatant("enemy", "enemy"),
-        _dummy_combatant("target", "main"),
-    ]
-    incoming = {
-        "target": [_control_packet(1.0, duration=2.0, source="R", kind="suppression")]
-    }
-    support_effects = {
-        "target": [
-            _cleanse_packet(1.5, source=source, target="target", attacker="target")
-        ]
-    }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
-    ce = _require_contract()
-    receipt = result["target"]["cleanse"]
-    assert receipt["decision"]["reason"] == ""
-    assert receipt["removed_controls"][0]["control_kind"] == "suppression"
-    assert result["target"]["crowd_control_intervals"][0]["end"] == pytest.approx(1.5)
-    assert result["target"]["action_downtime"] == pytest.approx(0.5)
+# NOTE: the alternate suppression-removal variant (self-cast removes
+# suppression per the raw item wording) was removed here — it is not a
+# reachable branch, not just an unpinned one.  The binary evidence
+# (QuicksilverSash.mSpell / ItemMercurial.mSpell cannotBeSuppressed=true)
+# means a self-only QSS/Mercurial cast can never fire while its own caster
+# is suppressed, so the wording-based removal path above is contradicted by
+# the sourced castability rule, not merely untested.  The PRIMARY variant
+# directly above (test_r7_qss_and_mercurial_self_cast_denied_while_suppressed)
+# already pins the chosen branch: decision.reason ==
+# "caster_control_blocks_cleanse", the suppression interval survives
+# untouched, the use is not consumed, and excluded_control_kinds ==
+# ("airborne",) is asserted from the same declaration the alt row would
+# have re-read. Nothing about the primary/removal-set claim is lost.
 
 
 # ---------------------------------------------------------------------------
@@ -1974,30 +1951,16 @@ def test_r19_compiled_walk_contract_owned_gate():
     )
 
 
-@pytest.mark.xfail(
-    reason=(
-        "alternate score-path variant not pinned; the primary contract "
-        "requires a named fail-closed receipt (support_cleanse) while the "
-        "compiled kernel cannot reproduce the truncation — if the owner "
-        "stages the truncation instead, this variant is pinned and the "
-        "primary flips"
-    )
-)
-def test_r19_alt_compiled_walk_represents_the_cleanse():
-    """Alternate (NOT pinned): the compiled score kernel stages the cleanse
-    marker (representable) so the gate returns None and the compiled walk
-    reproduces the truncation."""
-    ce = _require_contract()
-    template = {
-        "kind": "heal",
-        "amount": 100.0,
-        "cleanse": True,
-        "source": MIKAELS_SOURCE,
-        "attacker": "caster",
-        "target": "main",
-        "time": 2.5,
-    }
-    assert ce.compiled_support_receipt(template) is None
+# NOTE: the alternate score-path variant (the compiled kernel stages the
+# cleanse marker so compiled_support_receipt returns None and the compiled
+# walk reproduces the truncation) was removed here — the owner landed the
+# fail-closed gate, not the staged truncation.  The PRIMARY variant directly
+# above (test_r19_compiled_walk_contract_owned_gate) already pins the chosen
+# branch: compiled_support_receipt(cleanse-marked heal template) ==
+# "support_cleanse", and a plain heal template (no cleanse marker) stays
+# representable (returns None).  Nothing about the removed alternate's claim
+# is lost — it is the unchosen, now-unreachable branch of the same decision
+# the primary settles.
 
 
 # ---------------------------------------------------------------------------
@@ -2250,51 +2213,22 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
     assert result["caster"]["action_downtime"] == pytest.approx(2.0)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Mikael's caster-CC exemption not pinned: the binary audit shows "
-        "3222Active has NO canCastWhileDisabled (and no cannotBeSuppressed), "
-        "so exempting Mikael's Purify from the attacker crowd-control gate "
-        "would contradict the sourced evidence; the gated variant (primary) "
-        "is the pin"
-    )
-)
-def test_r22_alt_mikaels_exemption_contradicts_binary_evidence():
-    """Alternate (NOT pinned): the Mikael's heal + cleanse fires while the
-    caster is crowd-controlled.  Contradicted by the binary evidence — kept
-    only to document the rejected variant."""
-    combatants = [
-        _dummy_combatant("enemy", "enemy"),
-        _dummy_combatant("target", "main"),
-        _dummy_combatant("caster", "main"),
-    ]
-    incoming = {
-        "target": [
-            _damage_packet(0.5, 500.0, target="target"),
-            _control_packet(
-                1.0, duration=2.0, source="E", kind="stun", target="target"
-            ),
-        ],
-        "caster": [
-            _control_packet(0.5, duration=2.0, source="W", kind="stun", target="caster")
-        ],
-    }
-    support_effects = {
-        "target": [
-            _purify_packet(1.5, target="target", attacker="caster", amount=100.0)
-        ]
-    }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
-    ce = _require_contract()
-    assert result["target"]["healing_received"] == pytest.approx(100.0)
-    receipt = result["target"]["cleanse"]
-    assert receipt["decision"]["reason"] == ""
-    assert receipt["removed_controls"][0]["control_kind"] == "stun"
-    assert [
-        (i["kind"], i["start"], i["end"])
-        for i in result["target"]["crowd_control_intervals"]
-    ] == [("stun", 1.0, 1.5)]
-    assert result["caster"]["cleanse_use"]["fired_while_crowd_controlled"] is True
+# NOTE: the alternate Mikael's caster-CC exemption variant (Purify fires
+# while the caster is crowd-controlled, truncating the target's stun and
+# marking fired_while_crowd_controlled=True on the caster's use receipt) was
+# removed here — it is not a reachable branch, not just an unpinned one.
+# The binary audit (3222Active carries NEITHER canCastWhileDisabled NOR
+# cannotBeSuppressed, unlike QuicksilverSash.mSpell / ItemMercurial.mSpell)
+# means Mikael's Purify can never fire while its own caster is
+# crowd-controlled, so the exemption variant above is contradicted by the
+# sourced castability evidence, not merely untested.  The PRIMARY variant
+# directly above (test_r22_mikaels_heal_stays_gated_while_caster_is_ccd)
+# already pins the chosen branch: the heal is blocked (healing_received ==
+# 0.0), the target's stun interval is untouched ([1.0, 3.0]), and the
+# caster's cleanse_use receipt names fired_while_crowd_controlled=False with
+# the use NOT consumed.  Nothing about the removed alternate's claim is
+# lost — it is the unchosen, now-unreachable branch of the same decision the
+# primary settles.
 
 
 # ---------------------------------------------------------------------------
@@ -2302,29 +2236,20 @@ def test_r22_alt_mikaels_exemption_contradicts_binary_evidence():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "item_options added by P2 Slice 4: after the owner lands the active "
-        "options for Quicksilver Sash / Mercurial Scimitar, the named-400 "
-        "rejection disappears and these CURRENT rows are superseded by the "
-        "R23-new acceptance rows"
-    )
-)
-@pytest.mark.parametrize("item", ["Quicksilver Sash", "Mercurial Scimitar"])
-def test_r23_item_options_rejected_with_named_validation_error_today(item):
-    """App level, CURRENT: neither self item declares an active option in
-    ITEM_INPUT_OPTIONS today, so an explicit active is rejected with the
-    named 400 'Unknown item option target' — the fail-closed surface the
-    slice's option addition replaces."""
-    status, body = _calculate_status(
-        {
-            **_main(items=[item]),
-            "item_options": {item: {"active_seconds": 1.0}},
-            "enemies": [_ahri_e()],
-        }
-    )
-    assert status == 400
-    assert body.get("error") == f"Unknown item option target: {item}"
+# NOTE: the CURRENT "rejected with a named 400" variant (neither self item
+# declared an active option in ITEM_INPUT_OPTIONS, so an explicit active
+# option was rejected with "Unknown item option target: <item>") was removed
+# here — it no longer describes the tree.  The owner landed the P2 Slice 4
+# active option for both Quicksilver Sash and Mercurial Scimitar, so the
+# named-400 rejection this row asserted is not reachable anymore; it is
+# superseded, not merely unpinned.  The PRIMARY variant directly below
+# (test_r23_new_self_cleanse_option_accepted_and_applied, both items) already
+# pins the current branch: POST /api/calculate returns 200 for both items
+# with the active armed, the cleanse receipt names the item/target/
+# activation_time, the holder's charm interval is truncated at the
+# self-cast, and (Mercurial only) the separate movement utility fires.
+# Nothing about the removed row's claim is lost — it is the now-unreachable
+# branch of the same decision the primary settles.
 
 
 @pytest.mark.parametrize(

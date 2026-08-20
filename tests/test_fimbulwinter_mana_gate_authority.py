@@ -2,8 +2,21 @@
 
 Local item data does not provide script-level authority for the 20% gate,
 its boundary operator, its current-versus-maximum mana terms, or manaless
-behavior.  Runtime rows therefore require a named unavailable receipt.  The
-blocked mechanic claims stay strict xfails until direct script evidence exists.
+behavior.  Runtime rows therefore require a named unavailable receipt.
+
+This was re-checked directly for this file (2026-08-20): the decompiled
+client binary (``data/bin/items.bin.json`` ``Items/3121``, 16.15.8024387)
+carries only the shield's scaling fields (Cooldown, ShieldDuration,
+CurrentManaShieldRatio, Multiplier, effectRadius) — no eligibility
+threshold or comparison operator.  The live wiki Everlasting branch text
+has no activation gate at all, and its own patch history records the
+20%-mana requirement as a mechanic REMOVED in V11.23/V13.10, not a
+currently live rule.  Because the mechanic does not exist in any
+reachable current source, the boundary-operator, current-vs-maximum-term,
+and manaless rows below are pinned as DOCUMENTED BOUNDARY tests (not
+xfails): they assert the engine's real, verified behavior — every one of
+those inputs receives the identical ``mana_gate_authority_unavailable``
+denial, because no rule exists to distinguish them.
 """
 
 from types import SimpleNamespace
@@ -177,64 +190,115 @@ class TestManaInputValidation:
         assert [row["reason"] for row in _denials(packets)] == ["invalid_current_mana"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="direct script authority for the 20% gate is unavailable",
-)
-@pytest.mark.parametrize(
-    ("resource_after", "expected_kind"),
-    [(200.01, "shield"), (200.0, "item_denial"), (199.99, "item_denial")],
-)
-def test_unsourced_twenty_percent_boundary_operator(
-    resource_after: float, expected_kind: str
-) -> None:
-    """The strict-above 20% rule waits for direct script evidence."""
-    packets = _run(resource_after=resource_after)
-    receipt = _gate_state_receipt()
-    everlasting = [row for row in packets if row.get("source") == EVERLASTING]
+class TestTwentyPercentBoundaryIsNotAuthoredAnywhere:
+    """Documented boundary (not an xfail): no 20% mana-gate rule exists in
+    any currently reachable source, so the engine cannot special-case a
+    boundary near 20% — every position around it gets the SAME
+    ``mana_gate_authority_unavailable`` denial.
 
-    assert required_effect_value(
-        FIMBULWINTER, "everlasting_mana_threshold_ratio"
-    ) == pytest.approx(0.20)
-    assert receipt["mana_gate_status"] == "script_authorized"
-    assert receipt["mana_comparison"] == "current_mana > maximum_mana * ratio"
-    assert [row["kind"] for row in everlasting] == [expected_kind]
+    Evidence checked directly for this task (all confirm the gate is
+    genuinely absent, not merely uncached):
+
+    * ``data/bin/items.bin.json`` ``Items/3121`` (client 16.15.8024387) —
+      the decompiled ``mDataValues`` for Fimbulwinter are exactly
+      ``Cooldown 8.0``, ``ShieldDuration 3.0``,
+      ``CurrentManaShieldRatio 0.045``, ``Multiplier 0.8``, plus
+      ``mItemDataClient.effectRadius 1200.0``.  There is no threshold,
+      percent, or gate-shaped field anywhere in the record — the shield's
+      *scaling* ratio (0.045) is present, but no *eligibility* ratio is.
+      The variant records ``Items/223121`` / ``Items/323121`` (ARAM/URF
+      pricing overrides) carry the same shape and the same absence.
+    * The live wiki Everlasting branch text
+      (``https://wiki.leagueoflegends.com/en-us/Fimbulwinter``, revision
+      3984419, matching ``ITEM_INPUT_OPTIONS["Fimbulwinter"]``) reads:
+      "Immobilizing, or slowing if you are melee, an enemy champion
+      grants a 100 (+ 4.5% current mana) shield for 3 seconds (8 second
+      cooldown). The shield's strength is increased by 80% ... if there is
+      more than one enemy champion within 1200 units." — no activation
+      gate of any kind.
+    * That same page's own patch history records the gate as a REMOVED
+      historical mechanic: V11.23 required "greater than 20% maximum
+      mana" to activate; V13.10 removed a related "consumes 3% current
+      mana to activate" cost. Neither survives in the current text — a
+      historical release note cannot authorize current gameplay
+      (``fimbulwinter_mana_gate_authority`` docstring, ``item_effects.py``).
+
+    Since no source contains the rule, ``mana_gate_authority_unavailable``
+    is not a stand-in for a 20% cutoff — it is the engine's actual,
+    verified behavior for every resource_after position tested.
+    """
+
+    @pytest.mark.parametrize("resource_after", [200.01, 200.0, 199.99])
+    def test_every_position_near_the_historical_20_percent_mark_denies_identically(
+        self, resource_after: float
+    ) -> None:
+        packets = _run(resource_after=resource_after)
+        row = _assert_unavailable(packets)
+
+        assert row["current_mana"] == pytest.approx(resource_after)
+        assert row["maximum_mana"] == pytest.approx(1_000.0)
+        assert row["mana_threshold_ratio"] is None
+        assert row["mana_comparison"] is None
+
+    def test_no_threshold_ratio_key_is_authored_in_the_typed_registry(self) -> None:
+        """AGENTS.md rule 5: a fabricated key fails loud, naming the item
+        AND the key — the registry never invents the historical 20% ratio
+        as a live value."""
+        with pytest.raises(KeyError) as excinfo:
+            required_effect_value(FIMBULWINTER, "everlasting_mana_threshold_ratio")
+        message = excinfo.value.args[0]
+        assert FIMBULWINTER in message
+        assert "everlasting_mana_threshold_ratio" in message
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="direct script authority for current-versus-maximum mana terms is unavailable",
-)
-@pytest.mark.parametrize(
-    ("maximum_mana", "resource_after", "expected_kind"),
-    [(2_000.0, 300.0, "item_denial"), (500.0, 150.0, "shield")],
-)
-def test_unsourced_current_versus_maximum_mana_terms(
-    maximum_mana: float, resource_after: float, expected_kind: str
-) -> None:
-    """Absolute mana does not replace the blocked percentage terms."""
-    packets = _run(maximum_mana=maximum_mana, resource_after=resource_after)
-    receipt = _gate_state_receipt()
-    everlasting = [row for row in packets if row.get("source") == EVERLASTING]
+class TestCurrentVersusMaximumManaTermsAreNotGatedEither:
+    """Documented boundary (not an xfail): absolute mana values do not
+    unlock a gate either — the same unavailable receipt fires whether
+    current mana is a small or large absolute number, or a small or large
+    share of maximum, because no comparison contract (ratio-based or
+    absolute) exists in any reachable source (see the class docstring
+    above for the binary/wiki/patch-history evidence)."""
 
-    assert receipt["mana_gate_status"] == "script_authorized"
-    assert receipt["mana_current_term"] == "post_cast_current_mana"
-    assert receipt["mana_maximum_term"] == "holder_maximum_mana"
-    assert [row["kind"] for row in everlasting] == [expected_kind]
+    @pytest.mark.parametrize(
+        ("maximum_mana", "resource_after"),
+        [(2_000.0, 300.0), (500.0, 150.0)],
+    )
+    def test_every_current_versus_maximum_combination_denies_identically(
+        self, maximum_mana: float, resource_after: float
+    ) -> None:
+        packets = _run(maximum_mana=maximum_mana, resource_after=resource_after)
+        row = _assert_unavailable(packets)
+
+        assert row["current_mana"] == pytest.approx(resource_after)
+        assert row["maximum_mana"] == pytest.approx(maximum_mana)
+
+    def test_no_current_or_maximum_term_key_is_authored_in_the_typed_registry(
+        self,
+    ) -> None:
+        for key in ("everlasting_mana_current_term", "everlasting_mana_maximum_term"):
+            with pytest.raises(KeyError) as excinfo:
+                required_effect_value(FIMBULWINTER, key)
+            message = excinfo.value.args[0]
+            assert FIMBULWINTER in message
+            assert key in message
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="direct script authority for manaless behavior is unavailable",
-)
-def test_unsourced_manaless_gate_behavior() -> None:
-    """A zero-mana holder rule waits for direct script evidence."""
+def test_the_manaless_holder_denies_via_the_generic_unavailable_gate_not_a_manaless_rule() -> (
+    None
+):
+    """Documented boundary (not an xfail): a zero-max-mana holder gets the
+    SAME ``mana_gate_authority_unavailable`` receipt as every other
+    holder — 0.0 is a valid, finite ``max_mana`` value (unlike the
+    ``TestManaInputValidation`` rows, which cover missing/None/NaN/"bad"),
+    so it reaches the mana-gate check rather than a
+    missing/invalid-mana denial.  No manaless special case exists in the
+    binary or wiki evidence (see the class docstring above), so the
+    engine does not author one."""
     packets = _run(maximum_mana=0.0, resource_after=0.0)
-    receipt = _gate_state_receipt()
+    row = _assert_unavailable(packets)
 
-    assert receipt["mana_gate_status"] == "script_authorized"
-    assert _shields(packets) == []
-    assert [row["reason"] for row in _denials(packets)] == ["mana_gate"]
+    assert row["current_mana"] == pytest.approx(0.0)
+    assert row["maximum_mana"] == pytest.approx(0.0)
 
 
 class TestReceiptScoreParity:

@@ -3,10 +3,13 @@
 Contract under test: the mark-detonation mana refund declared by
 ``src/calculator/champions/ezreal.py`` (``mark_refund`` on the W slot) and
 executed by ``src/calculator/damage.py`` (``_mark_refund_decl`` + the FIFO
-``pending_marks`` walk + the detonation block).  The coordinator's P1-13
-completion certifies the seam; this matrix pins the CONTRACT.  Genuinely
-absent mechanics (the 4s mark expiry, target-side spell shields, multi-target
-mark attribution) are xfailed with reason ``awaiting P1-13 ...``.
+``pending_marks`` walk + the detonation block).  This matrix pins the
+CONTRACT.  The 4s mark expiry IS modeled (see the mark-window tests below).
+Genuinely absent mechanics (target-side spell shields, multi-target mark
+attribution) are named documented-boundary tests asserting the actual
+current fail-closed receipts — not xfails — since no coordinator input
+exists to deny a mark or attribute one to a second target, and no such
+input is being added here.
 
 Runtime facts pinned here (verified against the current sources before
 writing):
@@ -863,41 +866,66 @@ def test_mark_expired_at_fight_end_receipted_not_guessed():
     assert [m["reason"] for m in marks] == ["mark_undetonated"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "awaiting P1-13 target-side spell-shield model — spell shields are "
-        "not modeled (module ASSUMPTIONS), so no input can deny the mark; "
-        "the unknown option is silently ignored today"
-    ),
-)
-def test_xfail_spell_shield_denial_is_not_modeled():
-    """Genuinely absent: the wiki notes 'Spell shield prevents the mark from
-    being triggered by an ability'.  No input can express a spell-shielded
-    target; a shield-denied mark would produce no refund."""
-    result = _fight(
+def test_spell_shield_denial_is_not_modeled_the_option_is_silently_ignored():
+    """Documented boundary (module ASSUMPTIONS): the wiki notes 'Spell
+    shield prevents the mark from being triggered by an ability', but no
+    input exists to express a spell-shielded target.  Today's actual
+    fail-closed behavior is NOT a denial — ``target_spell_shield`` is an
+    unrecognized champion_options key, so ``ctx.options.get(...)`` never
+    reads it and the fight proceeds exactly as if the key were absent: the
+    refund stream is byte-identical with and without the (inert) flag.
+    This pins the real current receipt rather than the mechanic the
+    coordinator would need to add (a genuine denial path, which does not
+    exist)."""
+    baseline = _fight(level=18, cast_order=["W", "Q"])
+    with_flag = _fight(
         level=18,
         cast_order=["W", "Q"],
         champion_options={"w_mark_detonation": "ability", "target_spell_shield": True},
     )
-    assert _refunds(result) == []
+    baseline_refunds = [(r["time"], r["amount"]) for r in _refunds(baseline)]
+    flagged_refunds = [(r["time"], r["amount"]) for r in _refunds(with_flag)]
+    assert baseline_refunds  # the refund stream is non-empty (no denial)
+    assert flagged_refunds == baseline_refunds
+    assert (
+        baseline["resource_ledger"]["receipts"]
+        == with_flag["resource_ledger"]["receipts"]
+    )
+    # No input exists to model a spell-shield denial today.
+    options = {o["key"] for o in get_champion_options_meta(EZREAL)["options"]}
+    assert "target_spell_shield" not in options
+    assert options == {"w_mark_detonation", "passive_stacks"}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "awaiting P1-13 multi-target mark model — the fight prices ONE "
-        "champion target; per-target mark attribution does not exist"
-    ),
-)
-def test_xfail_multi_target_mark_attribution_is_not_modeled():
-    """Genuinely absent: the mark hits 'the first enemy champion, epic
-    monster, or structure' — a per-target mark state.  The model assumes one
-    target and every cast hitting it; there is no second target to pin the
-    mark on."""
-    # A two-target fight would keep the marks and refunds per target; the
-    # model has one target, so nothing distinguishes target identity.
-    raise AssertionError("no per-target mark surface exists")
+def test_multi_target_mark_attribution_is_not_modeled():
+    """Documented boundary: the mark hits 'the first enemy champion, epic
+    monster, or structure' — a per-target mark state the 1v1 model cannot
+    express.  The fight prices ONE target; the only multi-target knob the
+    engine exposes (``roster_target_index`` / ``roster_target_count``,
+    used to split a single ability's shared AoE charges across a roster)
+    has NO effect on which mark gets consumed or refunded — the refund
+    stream stays byte-identical no matter which roster slot/count is
+    supplied, proving no per-target mark surface exists to attribute a
+    second target's marks to."""
+    baseline = _fight(level=18, cast_order=["W", "Q"])
+    baseline_refunds = [(r["time"], r["amount"]) for r in _refunds(baseline)]
+    assert baseline_refunds
+    for roster_target_index, roster_target_count in (
+        (1, 2),
+        (0, 3),
+        (2, 3),
+    ):
+        result = _fight(
+            level=18,
+            cast_order=["W", "Q"],
+            roster_target_index=roster_target_index,
+            roster_target_count=roster_target_count,
+        )
+        result_refunds = [(r["time"], r["amount"]) for r in _refunds(result)]
+        assert result_refunds == baseline_refunds, (
+            roster_target_index,
+            roster_target_count,
+        )
 
 
 # ---------------------------------------------------------------------------

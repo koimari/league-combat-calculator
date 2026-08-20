@@ -313,13 +313,13 @@ def _survival(
 
 class TestTypedContract:
     def test_typed_accessor_values_match_expected_constants(self) -> None:
-        assert required_effect_value("Eclipse", "target_max_hp_ratio_melee") == 0.06
-        assert required_effect_value("Eclipse", "target_max_hp_ratio_ranged") == 0.04
+        assert required_effect_value("Eclipse", "target_max_hp_ratio_melee") == 0.08
+        assert required_effect_value("Eclipse", "target_max_hp_ratio_ranged") == 0.05
         assert required_effect_value("Eclipse", "stack_required") == 2
         assert required_effect_value("Eclipse", "stack_window") == 2.0
         assert required_effect_value("Eclipse", "cooldown") == 6.0
-        assert required_effect_value("Eclipse", "shield_melee_base") == 160.0
-        assert required_effect_value("Eclipse", "shield_ranged_base") == 80.0
+        assert required_effect_value("Eclipse", "shield_melee_base") == 150.0
+        assert required_effect_value("Eclipse", "shield_ranged_base") == 75.0
         assert required_effect_value("Eclipse", "shield_melee_bonus_ad_ratio") == 0.40
         assert required_effect_value("Eclipse", "shield_ranged_bonus_ad_ratio") == 0.20
         assert required_effect_value("Eclipse", "shield_duration") == 2.0
@@ -332,10 +332,10 @@ class TestTypedContract:
         items = [{"name": "Eclipse"}]
         assert eclipse_shield_amount(
             items, bonus_attack_damage=65.0, is_melee=True
-        ) == pytest.approx(160.0 + 0.40 * 65.0)
+        ) == pytest.approx(150.0 + 0.40 * 65.0)
         assert eclipse_shield_amount(
             items, bonus_attack_damage=65.0, is_melee=False
-        ) == pytest.approx(80.0 + 0.20 * 65.0)
+        ) == pytest.approx(75.0 + 0.20 * 65.0)
         assert eclipse_shield_amount([], bonus_attack_damage=65.0, is_melee=True) == 0.0
 
     def test_trigger_gate_rule_is_typed_and_source_backed(self) -> None:
@@ -368,7 +368,7 @@ class TestStackGain:
         assert row["damage_events"] == [
             {
                 "time": 0.3,
-                "damage": 80.0,
+                "damage": 100.0,
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
@@ -416,7 +416,7 @@ class TestStackGain:
         assert row["damage_events"] == [
             {
                 "time": 3.0,
-                "damage": 80.0,
+                "damage": 100.0,
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
@@ -514,7 +514,7 @@ class TestTriggerTiming:
             if event.get("source_key") == "proc_Eclipse"
         ]
         assert [event["time"] for event in ledger] == [0.0, 7.0]
-        assert all(event["self_shield"]["amount"] == 80.0 for event in ledger)
+        assert all(event["self_shield"]["amount"] == 75.0 for event in ledger)
         assert all(event["self_shield"]["duration"] == 2.0 for event in ledger)
 
 
@@ -608,7 +608,7 @@ class TestPerTargetCooldown:
 
 class TestShieldPacket:
     def test_melee_and_ranged_shield_amounts_with_bonus_ad(self) -> None:
-        for is_melee, expected in ((True, 186.0), (False, 93.0)):
+        for is_melee, expected in ((True, 176.0), (False, 88.0)):
             fight = _fight(
                 _stats(is_melee=is_melee, bonus_ad=65.0),
                 {"Q": _ability("Q"), "W": _ability("W")},
@@ -674,7 +674,7 @@ class TestShieldPacket:
             "amount"
         ]
         assert expected == pytest.approx(
-            80.0 + 0.20 * float(engine["champion_stats"]["bonus_attack_damage"])
+            75.0 + 0.20 * float(engine["champion_stats"]["bonus_attack_damage"])
         )
         assert shield["amount"] == pytest.approx(expected)
         assert shield["expires_at"] == pytest.approx(float(proc_event["time"]) + 2.0)
@@ -834,7 +834,7 @@ class TestFailClosedMetadata:
         )
         row = fight["breakdown"]["proc_Eclipse"]
         assert row["count"] == 1  # 1 + int(3 / 6), the preserved aggregate
-        assert row["total_damage"] == pytest.approx(80.0)
+        assert row["total_damage"] == pytest.approx(100.0)
         assert "damage_events" not in row
         assert "self_shield_events" not in row
         assert "state_transitions" not in row

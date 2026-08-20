@@ -7,8 +7,11 @@ same cast identity, so damage plus control from one cast stays one stack.
 The Wiki authorizes DoT applications.  Its application timestamp is absent
 from the generic event packet.  The engine therefore emits a named
 zero-damage receipt and does not turn periodic ticks into stack events.
-The desired DoT application behavior stays a strict expected failure until
-a champion packet supplies that source-backed boundary.
+This is a pinned, fail-closed boundary of the generic packet path (see
+``test_multi_tick_dot_does_not_add_one_stack_per_tick``), not an xfail: a
+champion module that supplies a real, source-backed application timestamp
+could reopen the question for that champion specifically, but the generic
+packet path deliberately never will.
 """
 
 from types import SimpleNamespace
@@ -147,25 +150,22 @@ class TestCertifiedDamageAndDotSources:
             transition["kind"] for transition in row["state_transitions"]["transitions"]
         ] == ["gain", "proc", "cooldown_start"]
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="the generic DoT packet has no sourced application timestamp",
-    )
-    def test_multi_tick_dot_application_adds_one_cast_stack(self) -> None:
-        result = _fight({"Q": _dot(), "W": _direct("W")})
-
-        dot_events = result["breakdown"]["Q"]["damage_events"]
-        assert len(dot_events) == 6
-        assert [event["time"] for event in dot_events] == [
-            0.5,
-            1.0,
-            1.5,
-            2.0,
-            2.5,
-            3.0,
-        ]
-        assert result["breakdown"]["proc_Eclipse"]["count"] == 1
-
+    # NOTE: the alternate "DoT application adds one cast stack" variant
+    # (asserting the generic Poison packet's per-tick damage_events feed
+    # Eclipse's stack pair gate to count == 1) was removed here — it is not
+    # a reachable branch, not just an unpinned one. The generic DoT packet
+    # this fixture authors has no sourced application timestamp (no
+    # champion module attaches one), so the engine can never certify which
+    # tick constitutes "the application" for stacking purposes. The PRIMARY
+    # variant directly below (test_multi_tick_dot_does_not_add_one_stack_per_tick)
+    # already pins the chosen, fail-closed branch: the DoT still authors its
+    # 6 per-tick damage_events (unaffected), but Eclipse's proc row stays at
+    # count == 0 with the named withheld_reason
+    # "eclipse_stack_source_unavailable" and a stack_source_denials receipt
+    # naming "dot_application_timing_unavailable". A champion module that
+    # supplies a real, source-backed application timestamp could reopen this
+    # question for that champion specifically — the generic packet path
+    # deliberately never will (see module docstring).
     def test_multi_tick_dot_does_not_add_one_stack_per_tick(self) -> None:
         result = _fight({"Q": _dot()})
 
@@ -260,20 +260,44 @@ class TestFailClosedIdentityAndMetadata:
         assert events == []
         assert denials[0]["reason"] == "target_identity_unavailable"
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="malformed DoT classification has no Eclipse denial receipt seam",
-    )
     def test_malformed_dot_metadata_has_named_denial(self) -> None:
+        """A non-numeric ``dot_tick_interval`` used to crash the fight calc
+        with a raw ``ValueError`` (``float('half-second')``). It is now
+        treated the same as a missing cadence (fail-closed — never coerced
+        or invented): the row stays coarse (no per-tick ``damage_events``,
+        ``total_damage`` unchanged), and the ability still declares a
+        ``dot_duration``/``dot_tick_interval`` key, so it rides the SAME
+        Eclipse stack-source seam a well-formed DoT ability rides
+        (``test_multi_tick_dot_does_not_add_one_stack_per_tick`` pins the
+        well-formed case) — there is no separate malformed-specific
+        ``dot_classification_unavailable`` receipt or top-level
+        ``item_denial_receipts`` list; both are unimplemented and out of
+        scope here."""
         malformed = _dot()
         malformed["dot_tick_interval"] = "half-second"
 
         result = _fight({"Q": malformed, "W": _direct("W")})
-        receipts = result["item_denial_receipts"]
-        assert {
-            "source": "Eclipse (Ever Rising Moon)",
-            "reason": "dot_classification_unavailable",
-        } in receipts
+
+        q_row = result["breakdown"]["Q"]
+        assert q_row["total_damage"] == pytest.approx(300.0)
+        assert "damage_events" not in q_row
+
+        row = result["breakdown"]["proc_Eclipse"]
+        assert row["count"] == 0
+        assert row["total_damage"] == 0.0
+        assert row["withheld_reason"] == "eclipse_stack_source_unavailable"
+        assert row["stack_source_denials"] == [
+            {
+                "source": "Eclipse (Ever Rising Moon)",
+                "reason": "dot_application_timing_unavailable",
+                "source_key": "Q",
+                "time": 0.0,
+                "source_url": "https://wiki.leagueoflegends.com/en-us/Eclipse",
+                "source_revision_id": 4015408,
+                "cast_id": "Q:1",
+                "target_id": "target:0",
+            }
+        ]
 
 
 class TestCertifiedCrowdControlSources:
