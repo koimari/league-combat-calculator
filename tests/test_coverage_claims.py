@@ -1622,9 +1622,16 @@ def _cached_with_no_described_effect() -> tuple[str, ...]:
     )
 
 
-def _cached_withheld_on_the_attacker_lane() -> tuple[str, ...]:
-    """Every cached item the attacker ladder refuses."""
-    return tuple(sorted(name for name in CACHE if _attacker(name).status == "withheld"))
+def _cached_with_a_described_effect_nothing_declares() -> tuple[str, ...]:
+    """Every cached item whose Wiki record describes an effect no family declares."""
+    return tuple(
+        sorted(
+            name
+            for name, record in CACHE.items()
+            if item_coverage._has_described_effect(record)
+            and not item_coverage._declared_families(name)
+        )
+    )
 
 
 # ── one parametrized node per hand-listed entry ───────────────────────────
@@ -1727,21 +1734,29 @@ def test_an_item_with_no_described_effect_is_priced_only_by_what_it_declares(
         assert "no separate passive or active" in coverage.reason
 
 
-@pytest.mark.parametrize("item", _cached_withheld_on_the_attacker_lane())
+@pytest.mark.parametrize("item", _cached_with_a_described_effect_nothing_declares())
 def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> None:
     """A cached record with an unreviewed effect is withheld, not scored as zero.
 
-    The campaign's own invariant at item scale: the answer is a named refusal
-    carrying the issue that tracks it, never a number — and the only thing the
-    ladder withholds is a shop record whose described passive nothing declares.
+    The population is selected by the premise — a described passive or active
+    that no rule and no registry entry declares — never by the ladder's answer,
+    so the property runs forward: the campaign's own invariant at item scale is
+    that such a record gets a named refusal carrying the issue that tracks it,
+    never a number.  The two reviewed registries that may still admit one are
+    each asserted by their own membership: a bounded scenario control prices as
+    ``modeled_state`` and a reviewed absence as ``stats_only``.
     """
     record = CACHE[item]
     coverage = _attacker(item)
     assert record.get("id") is not None or record.get("icon")
-    assert item_coverage._has_described_effect(record)
-    assert not item_coverage._declared_families(item)
-    assert not coverage.optimizer_eligible
-    assert coverage.review_issue_refs
+    if item in ITEM_INPUT_OPTIONS:
+        assert coverage.status == "modeled_state"
+    elif item in item_coverage.NO_RUNTIME_BEHAVIOR:
+        assert coverage.status == "stats_only"
+    else:
+        assert coverage.status == "withheld"
+        assert not coverage.optimizer_eligible
+        assert coverage.review_issue_refs
 
 
 @pytest.mark.parametrize("item", sorted(item_coverage._TARGET_MODELED_IMPLS))
