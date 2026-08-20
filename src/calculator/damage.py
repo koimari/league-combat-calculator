@@ -169,6 +169,7 @@ from .item_behavior import (
     Resistance,
     SustainStat,
 )
+from .program.build import dropped_preview_mechanics
 from .ledger_projection import (
     ResultProjection,
     ShieldOutcomeInputs,
@@ -511,6 +512,12 @@ class FightConfig:
     resource_restore_events: tuple[tuple[float, float], ...] = ()
     roster_target_index: int = 0
     roster_target_count: int = 1
+    # Whether a roster composition consumes this fight.  It drops the rows
+    # whose mechanic ``program.build.dropped_preview_mechanics`` names and
+    # prices those mechanics on the coupled walk instead, so the engine can
+    # skip computing them.  A one-pair caller is the surface where the
+    # preview is the answer, and leaves this False.
+    roster_composed: bool = False
     # Selected keystone rune by name ("" = none). Resolution fails closed
     # in rune_effects for unknown or unmodeled keystones.
     keystone: str = ""
@@ -10711,8 +10718,19 @@ def _add_shadowflame_cinderbloom(
     Liandry reprice, which is the burn's own damage, and Cinderbloom, which
     is this function's.  They are applied by two named steps so a change to
     either has an attributable diff.
+
+    A fight a roster composition consumes runs the reprice half alone: the
+    composition drops the Cinderbloom row and the coupled walk prices the
+    mechanic itself, so computing it here is a number authored to be thrown
+    away.
     """
     cinderbloom = _amp_slot(state, AmpChainSlot.CINDERBLOOM)
+    if (
+        cinderbloom is not None
+        and config.roster_composed
+        and cinderbloom.rules[0].mechanic_id in dropped_preview_mechanics()
+    ):
+        cinderbloom = None
     has_threshold_health = config.target_threshold_health_bonus > 0
     if cinderbloom is None and not has_threshold_health:
         return

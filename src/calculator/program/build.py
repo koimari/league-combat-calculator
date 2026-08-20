@@ -428,19 +428,34 @@ def pair_repriced_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]
     )
 
 
-def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """The preview rows a roster composition leaves out entirely.
+@cache
+def dropped_preview_mechanics() -> frozenset[str]:
+    """The previewed mechanics a roster composition leaves out entirely.
 
-    The one subtraction, with one home: every preview row minus the ones the
-    walk re-prices.  Call sites ask this rather than differencing the two
-    sets themselves, because a site that forgot the subtraction would drop a
-    packet the walk was about to price and delete a family's damage with no
-    symptom.
+    The one subtraction, with one home: every previewed mechanic minus the
+    ones the walk re-prices.  Call sites ask this rather than differencing
+    the two sets themselves, because a site that forgot the subtraction would
+    drop a packet the walk was about to price and delete a family's damage
+    with no symptom.
+
+    Asked of the mechanic and not only of a finished row, because a pair
+    fight the engine already knows is being composed can skip *computing* a
+    number this set names (``damage._add_shadowflame_cinderbloom``) as well
+    as leaving it out afterwards.
     """
-    previewed = pair_preview_sources(result_breakdown)
-    if not previewed:
+    return pair_preview_mechanics() - walk_repriced_mechanics()
+
+
+def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """The preview rows of one pair fight a roster composition leaves out."""
+    dropped = dropped_preview_mechanics()
+    if not dropped:
         return frozenset()
-    return previewed - pair_repriced_sources(result_breakdown)
+    return frozenset(
+        source
+        for source, entry in result_breakdown.items()
+        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in dropped
+    )
 
 
 @cache
@@ -778,6 +793,7 @@ __all__ = [
     "build_program",
     "derivation_order",
     "dropped_pair_previews",
+    "dropped_preview_mechanics",
     "pair_preview_mechanics",
     "pair_preview_sources",
     "pair_program",

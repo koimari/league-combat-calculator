@@ -21,10 +21,15 @@ from __future__ import annotations
 from functools import lru_cache
 
 from src import app as app_module
+from src.calculator.champions import parse_champion_abilities
+from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.program.build import (
+    dropped_preview_mechanics,
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
+from src.calculator.stats import calculate_total_stats
 from src.calculator.program.compile import WalkCompiler
 from src.calculator.survival.actions import EVENT_SLOTS
 from src.calculator.trigger_stream import CAPABILITIES, Authority, Engine
@@ -356,3 +361,75 @@ def test_the_retired_shred_family_has_no_preview_to_double_count() -> None:
         assert walk.view_tags[Engine.WALK] is ViewTag.APPLIED, partner
         assert walk.pair_of == mechanic, partner
         assert isinstance(walk.packet_source, str) and walk.packet_source, partner
+
+
+# ---------------------------------------------------------------------------
+# A preview a composition drops is not computed in the first place
+# ---------------------------------------------------------------------------
+
+CINDERBLOOM = "shadowflame.cinderbloom"
+SHADOWFLAME_ROW = "shadowflame_Shadowflame"
+BURN_ROW = "burn_Liandry's Torment"
+
+
+def _engine_fight(*, roster_composed: bool):
+    """Ahri holding Shadowflame and Liandry's, against a lifelined target.
+
+    The lifeline is what makes the ordered shield walk do its other job: the
+    Liandry max-health reprice, which is the burn's own damage and survives a
+    composition. One build exercises both halves of the one walk.
+    """
+    champion = get_champion("Ahri")
+    items = [get_item_by_name("Shadowflame"), get_item_by_name("Liandry's Torment")]
+    stats = calculate_total_stats(champion, 18, items)
+    abilities = parse_champion_abilities(
+        champion, 18, stats["ability_power"], champion_stats=stats
+    )
+    return calculate_fight_damage(
+        dict(stats),
+        abilities,
+        items,
+        FightConfig(
+            target_health=2000.0,
+            target_armor=60.0,
+            target_magic_resistance=60.0,
+            fight_duration_seconds=8.0,
+            deterministic=True,
+            auto_attack_uptime=1.0,
+            target_threshold_health_bonus=800.0,
+            target_threshold_health_heal=600.0,
+            target_threshold_health_ratio=0.35,
+            target_threshold_health_duration=4.0,
+            roster_composed=roster_composed,
+        ),
+    )
+
+
+def test_cinderbloom_is_a_preview_the_composition_drops():
+    """The declaration the skip below reads, rather than an item name."""
+    assert CINDERBLOOM in dropped_preview_mechanics()
+    assert CINDERBLOOM not in walk_repriced_mechanics()
+
+
+def test_a_composed_fight_runs_the_reprice_half_of_the_walk_alone():
+    """No Cinderbloom row, and the Liandry reprice unchanged to the cent."""
+    solo = _engine_fight(roster_composed=False)
+    composed = _engine_fight(roster_composed=True)
+
+    assert solo["breakdown"][SHADOWFLAME_ROW]["total_damage"] > 0.0
+    assert SHADOWFLAME_ROW not in composed["breakdown"]
+    assert (
+        composed["breakdown"][BURN_ROW]["total_damage"]
+        == solo["breakdown"][BURN_ROW]["total_damage"]
+    )
+    # More than the row leaves: the holder's own whole-total amp no longer
+    # levies a share on a number the composition throws away.
+    dropped = solo["breakdown"][SHADOWFLAME_ROW]["total_damage"]
+    assert solo["total_damage"] - composed["total_damage"] > dropped
+
+
+def test_the_single_attacker_surface_still_publishes_the_preview():
+    """A roster response's own main fight is the question the preview answers."""
+    body = _roster(("Shadowflame", "Liandry's Torment"))
+
+    assert body["breakdown"][SHADOWFLAME_ROW]["total_damage"] > 0.0
