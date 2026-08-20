@@ -20,7 +20,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import (
-    _CUSTOM_CHAMPION_MODULES,
+    _CHAMPION_MODULES,
     get_champion_cast_dependencies,
     get_champion_module_contract,
     get_champion_option_rotation,
@@ -258,7 +258,7 @@ class TestVocabularies:
         assert set(_DIRECT_EDGE_KIND.values()) <= INFERRED_EDGE_KINDS
         assert "mark_consume" in INFERRED_EDGE_KINDS
         outside = {}
-        for name in _CUSTOM_CHAMPION_MODULES:
+        for name in _CHAMPION_MODULES:
             for key, decl in get_champion_option_rotation(name).items():
                 if not decl or not decl.get("setup_slot"):
                     continue
@@ -819,8 +819,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         contract lazily would itself reach the validator and count twice.
         """
         registry = [
-            (name, get_champion_module_contract(name))
-            for name in _CUSTOM_CHAMPION_MODULES
+            (name, get_champion_module_contract(name)) for name in _CHAMPION_MODULES
         ]
         seen: list[tuple[str, str]] = []
 
@@ -925,7 +924,7 @@ class TestAnEmptyCarrierShadowsNothing:
     def test_no_registered_champion_carries_a_shadowing_carrier(self) -> None:
         """The population this correction was measured against (R-20)."""
         shadowed = []
-        for name in _CUSTOM_CHAMPION_MODULES:
+        for name in _CHAMPION_MODULES:
             contract = get_champion_module_contract(name)
             carriers = (
                 (contract.module, "CAST_DEPENDENCIES"),
@@ -954,7 +953,7 @@ class TestTheRegistryAccessor:
             )
 
     def test_every_registered_champion_answers_the_accessor(self) -> None:
-        for name in _CUSTOM_CHAMPION_MODULES:
+        for name in _CHAMPION_MODULES:
             assert isinstance(get_champion_cast_dependencies(name), tuple)
 
 
@@ -1154,9 +1153,7 @@ class TestHeadOnlyDeclarations:
     def test_exactly_three_champions_declare_anything(self) -> None:
         """The migration is provably diff-free because 170 modules do not."""
         declaring = {
-            name
-            for name in _CUSTOM_CHAMPION_MODULES
-            if get_champion_cast_dependencies(name)
+            name for name in _CHAMPION_MODULES if get_champion_cast_dependencies(name)
         }
         assert declaring == {"Syndra", "Zed", "Brand"}
 

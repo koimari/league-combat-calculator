@@ -8,7 +8,7 @@ import pytest
 
 from src.calculator.ability_spec import CC_KIND_VOCABULARY
 from src.calculator.champions import (
-    _CUSTOM_CHAMPION_MODULES,
+    _CHAMPION_MODULES,
     get_champion_module_contract,
     parse_abilities,
 )
@@ -26,7 +26,7 @@ REQUIRED_SLOTS = {"P", "Q", "W", "E", "R"}
 
 def test_every_registered_champion_satisfies_the_module_contract():
     """Every registry entry publishes one complete, internally consistent view."""
-    for name, module_name in _CUSTOM_CHAMPION_MODULES.items():
+    for name, module_name in _CHAMPION_MODULES.items():
         module = importlib.import_module(f"src.calculator.champions.{module_name}")
         contract = get_champion_module_contract(name)
 
@@ -211,7 +211,7 @@ class TestModuleCcDeclaration:
 
     def test_every_declared_kind_is_in_the_vocabulary(self):
         """Roster-wide: no module may reach the registry with a typo."""
-        for name in _CUSTOM_CHAMPION_MODULES:
+        for name in _CHAMPION_MODULES:
             contract = get_champion_module_contract(name)
             assert set(contract.cc_kinds) <= set(contract.slots), name
             assert set(contract.cc_kinds.values()) <= CC_KIND_VOCABULARY, name

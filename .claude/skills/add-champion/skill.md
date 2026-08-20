@@ -35,7 +35,7 @@ python -c "from src.calculator.champions.packet_module import _packet_specs, pac
 
 Never add a champion-name exception table to the shared packet compiler.
 
-Register the module once in `_CUSTOM_CHAMPION_MODULES`. The registry,
+Register the module once in `_CHAMPION_MODULES`. The registry,
 `/api/config`, receipts, and audits derive their public view from the
 validated module contract.
 

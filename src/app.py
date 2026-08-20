@@ -81,6 +81,7 @@ from src.calculator.champions import (
     get_champion_module_meta,
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
+    registered_champion_names,
 )
 from src.calculator.capabilities import public_capability_contract
 from src.calculator.optimizer import (
@@ -101,8 +102,6 @@ from src.calculator.public_response import (
     public_loadout_summary,
 )
 from src.calculator.scenario import (
-    ENGINE_CHAMPIONS as _ENGINE_CHAMPIONS,
-    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ChampionLoadout,
     load_public_champion as _load_public_champion,
     parse_scenario_request,
@@ -660,11 +659,6 @@ def _json_object() -> dict:
     return data
 
 
-def _public_loadout_summary(loadout) -> dict:
-    """Sanitize one resolved loadout for the browser."""
-    return public_loadout_summary(loadout, _VERIFIED_CHAMPIONS)
-
-
 def _dev_mode() -> bool:
     """True when LOL_CALC_DEV=1 (run_web.bat sets it; deployments don't).
 
@@ -939,11 +933,11 @@ def _health_golden_check() -> dict:
 
 
 def _health_engine_check() -> dict:
-    """Engine registration counts; an empty registry means broken data."""
+    """Engine registration count; an empty registry means broken data."""
+    registered = len(registered_champion_names())
     return {
-        "status": "ok" if _ENGINE_CHAMPIONS else "degraded",
-        "registered": len(_ENGINE_CHAMPIONS),
-        "reviewed": len(_VERIFIED_CHAMPIONS),
+        "status": "ok" if registered else "degraded",
+        "registered": registered,
         "module_contract": "champion_module_v1",
     }
 
@@ -1038,9 +1032,9 @@ def api_champions():
                 "name": champ_data["name"],
                 "icon": _https_icon(champ_data.get("icon", "")),
                 "verified": availability["ready"],
-                "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
+                "engine_registered": availability["ready"],
                 "engine_registration": registration,
-                "engine_backend_enabled": (champ_data["name"] in _ENGINE_CHAMPIONS),
+                "engine_backend_enabled": availability["ready"],
                 "supported_fight_modes": (
                     list(supported_modes) if supported_modes is not None else None
                 ),
@@ -1226,8 +1220,7 @@ def api_config():
                 item_option_count=len(item_input_options_meta()),
             ),
             "champion_engine": {
-                "registered_count": len(_ENGINE_CHAMPIONS),
-                "reviewed_count": len(_VERIFIED_CHAMPIONS),
+                "registered_count": len(registered_champion_names()),
                 "module_contract": "champion_module_v1",
             },
             "keystones": keystone_catalog(),
@@ -1277,7 +1270,7 @@ def api_loadout_stats():
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"'{missing}' not found"}), 404
-    return jsonify(_public_loadout_summary(loadout))
+    return jsonify(public_loadout_summary(loadout))
 
 
 @app.route("/api/calculate", methods=["POST"])

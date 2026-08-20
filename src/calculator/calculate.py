@@ -25,18 +25,12 @@ from .public_response import (
 )
 from .role_quests import role_quest_meta
 from .scenario import (
-    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ResolvedScenario,
     ScenarioRequest,
     parse_scenario_request,
     resolve_scenario,
 )
 from .stats import calculate_total_stats
-
-
-def _loadout_summary(loadout) -> dict:
-    """Render one resolved loadout through the public certification boundary."""
-    return public_loadout_summary(loadout, _VERIFIED_CHAMPIONS)
 
 
 def _comparison_curve(
@@ -115,9 +109,10 @@ def _add_comparison_curve(
 
 def _engine_receipt(champion_name: str) -> dict:
     """Return the stable engine registration and certification receipt."""
+    registration = engine_registration_kind(champion_name)
     return {
-        "registration": engine_registration_kind(champion_name),
-        "certified": champion_name in _VERIFIED_CHAMPIONS,
+        "registration": registration,
+        "certified": registration is not None,
         "mode": public_engine_mode(champion_name),
     }
 
@@ -197,7 +192,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
         if allies:
             response.update(
                 {
-                    "allies": [_loadout_summary(ally) for ally in allies],
+                    "allies": [public_loadout_summary(ally) for ally in allies],
                     "scenario": {
                         "target_count": 1,
                         "aggregation": "Manual target",
@@ -220,7 +215,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
             )
         target_rows.append(
             {
-                "target": _loadout_summary(enemy),
+                "target": public_loadout_summary(enemy),
                 "result": serialize_fight_result(result),
             }
         )
@@ -228,7 +223,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     response.update(
         {
             "targets": target_rows,
-            "allies": [_loadout_summary(ally) for ally in allies],
+            "allies": [public_loadout_summary(ally) for ally in allies],
             "scenario": {
                 "target_count": len(target_rows),
                 "aggregation": "Same selected damage package landed on every target",

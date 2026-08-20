@@ -1249,7 +1249,6 @@ def test_config_exposes_the_champion_review_boundary():
     from src.calculator.champions import registered_champion_names
 
     assert engine["registered_count"] == len(registered_champion_names())
-    assert engine["reviewed_count"] == len(registered_champion_names())
     assert "generated_count" not in engine
     assert "unreviewed_count" not in engine
     assert "generic_enabled" not in engine

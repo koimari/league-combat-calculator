@@ -2,7 +2,7 @@
 
 Adding champion #174 must require NO literal-count edits anywhere: the
 builders derive their counts from the cache, the registry derives from
-``_CUSTOM_CHAMPION_MODULES`` (the single explicit manifest), and the audits
+``_CHAMPION_MODULES`` (the single explicit manifest), and the audits
 derive from the cache.  A literal ``173`` guard anywhere would fail these
 tests when the roster grows.
 """
@@ -96,9 +96,9 @@ def test_builder_cli_mains_succeed_with_a_larger_cached_roster(tmp_path):
 
 
 def test_registry_grows_with_a_manifest_entry(monkeypatch):
-    """A new champion only needs a _CUSTOM_CHAMPION_MODULES entry."""
+    """A new champion only needs a _CHAMPION_MODULES entry."""
     from src.calculator.champions import (
-        _CUSTOM_CHAMPION_MODULES,
+        _CHAMPION_MODULES,
         registered_champion_names,
     )
 
@@ -106,7 +106,7 @@ def test_registry_grows_with_a_manifest_entry(monkeypatch):
         cache_names = {value["name"] for value in json.load(handle).values()}
     assert set(registered_champion_names()) == cache_names
 
-    monkeypatch.setitem(_CUSTOM_CHAMPION_MODULES, "Synthetic 174", "ahri")
+    monkeypatch.setitem(_CHAMPION_MODULES, "Synthetic 174", "ahri")
     grown = registered_champion_names()
     assert "Synthetic 174" in grown
     assert len(grown) == len(cache_names) + 1
@@ -122,7 +122,6 @@ def test_api_config_counts_match_the_live_registry():
         app_module.app.test_client().get("/api/config").get_json()["champion_engine"]
     )
     assert engine["registered_count"] == len(registered_champion_names())
-    assert engine["reviewed_count"] == len(registered_champion_names())
     assert "generated_count" not in engine
     assert "unreviewed_count" not in engine
     assert "generic_enabled" not in engine

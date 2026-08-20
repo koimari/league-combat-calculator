@@ -15,7 +15,7 @@ from .module_contract import ChampionModuleContract, contract_from_module
 # Map display name -> module name within this package.  This is the single
 # explicit roster manifest: every cached champion has a reviewed module and
 # no champion is routed through an archetype parser at runtime.
-_CUSTOM_CHAMPION_MODULES: dict[str, str] = {
+_CHAMPION_MODULES: dict[str, str] = {
     "Aatrox": "aatrox",
     "Ahri": "ahri",
     "Akali": "akali",
@@ -190,17 +190,6 @@ _CUSTOM_CHAMPION_MODULES: dict[str, str] = {
     "Wukong": "wukong",
     "Ziggs": "ziggs",
 }
-
-
-# The complete runnable registration surface.  Every cached champion has a
-# reviewed module (the CP10 review program closed the generated-packet lane),
-# so the engine map IS the custom manifest — the same dict object, so a
-# manifest entry is immediately visible through every alias and there is no
-# derived generated/generic middle lane.
-_ENGINE_CHAMPION_MODULES: dict[str, str] = _CUSTOM_CHAMPION_MODULES
-# Compatibility alias for internal callers that used the historical name; it
-# is the same complete registration map, not a generic fallback path.
-_CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
 
 # Resolved module ``parse_abilities`` callables — the import system already
 # caches modules, but the coupled optimizer dispatches thousands of parses
@@ -872,42 +861,17 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
 
 
 def registered_champion_names() -> list[str]:
-    """Display names of all champions with a dedicated engine module.
+    """Sorted display names of every champion with a validated module.
 
-    This is the runnable registration surface, not the certification surface:
-    every registered module is reviewed, and the reviewed surface is exposed
-    separately through :func:`reviewed_champion_names`.
+    Registration and review are one surface: a registered module is a
+    reviewed module.
     """
     return sorted(_CHAMPION_MODULES)
 
 
-def reviewed_champion_names() -> list[str]:
-    """Display names whose modules passed the exact champion review gate.
-
-    Every registered champion has a reviewed module (the CP10 review program
-    closed the generated lane), so this equals the registration surface.
-    Kept as a separate name for API compatibility with older clients.
-    """
-    return sorted(_CUSTOM_CHAMPION_MODULES)
-
-
-def registered_engine_champion_names() -> list[str]:
-    """Display names with an importable backend module, sorted.
-
-    This is the complete runnable registration surface (all reviewed
-    modules).  It is retained as a separate name for API compatibility with
-    older clients.
-    """
-    return sorted(_ENGINE_CHAMPION_MODULES)
-
-
 def engine_registration_kind(champion_name: str) -> str | None:
-    """Return the public registration kind for one champion module.
-
-    Every registered module is a reviewed module (the generated-packet lane
-    was removed with issue #136); unknown names return ``None``.
-    """
-    if champion_name not in _CUSTOM_CHAMPION_MODULES:
+    """The public registration kind of one module; ``None`` when unknown."""
+    if champion_name not in _CHAMPION_MODULES:
         return None
     return get_champion_module_contract(champion_name).review_status
 

@@ -3,7 +3,7 @@
 import pytest
 
 from src.calculator.champions import (
-    _CUSTOM_CHAMPION_MODULES,
+    _CHAMPION_MODULES,
     engine_registration_kind,
     parse_champion_abilities,
     registered_champion_names,
@@ -21,7 +21,7 @@ def _stats(name: str, level: int = 6):
 
 def test_all_registered_modules_parse_without_a_generic_runtime_fallback():
     for name in registered_champion_names():
-        assert name in _CUSTOM_CHAMPION_MODULES
+        assert name in _CHAMPION_MODULES
         assert engine_registration_kind(name) == "reviewed_module", name
         champion, stats = _stats(name)
         result = parse_champion_abilities(

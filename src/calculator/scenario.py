@@ -11,11 +11,7 @@ from dataclasses import dataclass, field as dataclass_field, replace
 from typing import Any
 
 from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from .champions import (
-    get_champion_options_meta,
-    registered_engine_champion_names,
-    reviewed_champion_names,
-)
+from .champions import get_champion_options_meta
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .item_coverage import (
@@ -448,9 +444,6 @@ def parse_roster(
 # /api/bis so the three endpoints validate the same fields with the same
 # messages (ValueError -> 400, LookupError -> 404) and run the same item
 # coverage gates.  See tests/test_endpoint_parity.py.
-
-ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
-VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
 
 
 def load_public_champion(name: str) -> dict[str, Any]:
