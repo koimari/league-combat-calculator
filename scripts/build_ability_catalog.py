@@ -18,15 +18,21 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.source_receipt import source_receipt
-
-ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
+from src.calculator.champions import registered_champion_names
 
 
 def _first_nonempty(values: list[Any]) -> Any:
     return next((value for value in values if value not in (None, "")), None)
 
 
-def _rank_count(ability: dict[str, Any], slot: str) -> int:
+def rank_count(ability: dict[str, Any], slot: str) -> int:
+    """The catalogue's rank cardinality for one ability, clamped to the UI's five.
+
+    Distinct from ``scenario._ability_max_rank``, which reads the same cache to
+    bound a *manual* rank and so deliberately admits the level tables some
+    modifiers carry (18 and 40 entries).  A rank picker has five steps.
+    """
     if slot == "P":
         return 1
     counts: list[int] = []
@@ -35,8 +41,17 @@ def _rank_count(ability: dict[str, Any], slot: str) -> int:
             for modifier in leveling.get("modifiers", []):
                 values = modifier.get("values", [])
                 if isinstance(values, list) and values:
-                    counts.append(len(values))
+                    counts.append(len([v for v in values if _is_number(v)]))
+    counts = [count for count in counts if count]
     return 3 if slot == "R" else 5 if not counts else max(1, min(max(counts), 5))
+
+
+def _is_number(value: Any) -> bool:
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return False
+    return True
 
 
 def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
@@ -85,9 +100,29 @@ def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
         "targeting": _first_nonempty([entry.get("targeting") for entry in entries]),
         "affects": _first_nonempty([entry.get("affects") for entry in entries]),
         "resource": _first_nonempty([entry.get("resource") for entry in entries]),
-        "max_rank": _rank_count(primary, slot),
+        "max_rank": rank_count(primary, slot),
         "ingestion_status": "metadata_ingested",
     }
+
+
+def registered_champions(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """The cached rows of every validated champion module, by display name.
+
+    The registry is the roster, not the cache: an attacker the engine refuses
+    must not be published to the picker, and a module whose cache row is gone
+    is a broken build rather than a quiet omission.
+    """
+    by_name = {str(champion.get("name", "")): champion for champion in raw.values()}
+    registered = set(registered_champion_names())
+    unregistered = sorted(name for name in by_name if name not in registered)
+    if unregistered:
+        raise ValueError(
+            "cached champions with no validated module: " + ", ".join(unregistered)
+        )
+    absent = sorted(name for name in registered if name not in by_name)
+    if absent:
+        raise ValueError("registered modules with no cached row: " + ", ".join(absent))
+    return [by_name[name] for name in sorted(registered)]
 
 
 def build_catalog(source: Path, patch: str) -> dict[str, Any]:
@@ -96,23 +131,20 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         raise ValueError(f"Expected champion mapping in {source}")
 
     champions = []
-    for champion in sorted(raw.values(), key=lambda item: str(item.get("name", ""))):
+    for champion in registered_champions(raw):
         abilities = champion.get("abilities", {})
+        entries = [
+            _ability_entry(slot, abilities.get(slot, [])) for slot in BASE_CAST_SLOTS
+        ]
         champions.append(
             {
                 "name": champion.get("name", ""),
                 "key": champion.get("key", ""),
                 "id": champion.get("id"),
-                "abilities": [
-                    _ability_entry(slot, abilities.get(slot, []))
-                    for slot in ABILITY_SLOTS
-                ],
+                "abilities": entries,
                 "complete": all(
-                    _ability_entry(slot, abilities.get(slot, [])).get(
-                        "ingestion_status"
-                    )
-                    == "metadata_ingested"
-                    for slot in ABILITY_SLOTS
+                    entry["ingestion_status"] == "metadata_ingested"
+                    for entry in entries
                 ),
             }
         )
@@ -121,7 +153,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         "schema_version": 1,
         "patch": patch,
         "champion_count": len(champions),
-        "ability_slots": list(ABILITY_SLOTS),
+        "ability_slots": list(BASE_CAST_SLOTS),
         "source": source_receipt(source),
         "champions": champions,
     }
@@ -151,7 +183,7 @@ def main() -> None:
     )
     print(
         f"wrote {args.output} ({catalog['champion_count']} champions, "
-        f"{len(catalog['champions']) * len(ABILITY_SLOTS)} ability slots)"
+        f"{len(catalog['champions']) * len(BASE_CAST_SLOTS)} ability slots)"
     )
 
 

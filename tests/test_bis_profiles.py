@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-from scripts.build_bis_profiles import ABILITY_SLOTS, build_profiles
+from scripts.build_bis_profiles import build_profiles
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
+from src.calculator.champions import registered_champion_names
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCH = "26.15"
@@ -28,7 +30,7 @@ def test_wiki_bis_profiles_cover_every_champion_and_slot():
     profiles = build_profiles(ROOT / "data" / "champions.json", PATCH)
     assert profiles["champion_count"] == len(profiles["champions"])
     assert all(
-        set(champion["abilities"]) == set(ABILITY_SLOTS)
+        set(champion["abilities"]) == set(BASE_CAST_SLOTS)
         for champion in profiles["champions"].values()
     )
 
@@ -122,3 +124,14 @@ def test_axword_meraki_reference_can_fill_unparsed_wiki_packets():
         return
     profiles = build_profiles(ROOT / "data" / "champions.json", PATCH, AUXILIARY)
     assert profiles["auxiliary_source"]["merged_damage_packets"] > 0
+
+
+def test_the_published_roster_is_the_engine_registry():
+    """A BIS preview may only be offered for a champion the engine accepts."""
+    checked_in = _checked_in()
+
+    assert sorted(checked_in["champions"]) == sorted(registered_champion_names())
+    assert all(
+        set(champion["abilities"]) == set(BASE_CAST_SLOTS)
+        for champion in checked_in["champions"].values()
+    )

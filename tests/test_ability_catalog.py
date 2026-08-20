@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 
-from scripts.build_ability_catalog import ABILITY_SLOTS, build_catalog
+import pytest
+
+from scripts.build_ability_catalog import build_catalog
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
+from src.calculator.champions import registered_champion_names
 from scripts.source_receipt import source_sha256
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +18,7 @@ def test_cached_catalog_contains_all_five_slots_for_all_champions():
 
     assert catalog["champion_count"] == len(catalog["champions"])
     assert all(
-        [ability["slot"] for ability in champion["abilities"]] == list(ABILITY_SLOTS)
+        [ability["slot"] for ability in champion["abilities"]] == list(BASE_CAST_SLOTS)
         and all(
             ability["ingestion_status"] == "metadata_ingested"
             for ability in champion["abilities"]
@@ -60,3 +64,36 @@ def test_checked_in_catalog_records_the_data_it_was_built_from():
     assert checked_in["source"]["sha256"] == source_sha256(
         source
     ), f"provenance hash does not match data/champions.json — {REBUILD}"
+
+
+def test_the_published_roster_is_the_engine_registry():
+    """The picker may only offer champions the engine will accept as attackers."""
+    checked_in = json.loads(
+        (ROOT / "static" / "ability-catalog.json").read_text(encoding="utf-8")
+    )
+    names = [champion["name"] for champion in checked_in["champions"]]
+
+    assert names == sorted(registered_champion_names())
+    assert checked_in["ability_slots"] == list(BASE_CAST_SLOTS)
+
+
+def test_a_cached_champion_with_no_module_stops_the_build(tmp_path):
+    """Fail closed: an unregistered cache row is never published to the UI."""
+    raw = json.loads((ROOT / "data" / "champions.json").read_text(encoding="utf-8"))
+    raw["Nobody"] = {"name": "Nobody", "key": "Nobody", "id": -1, "abilities": {}}
+    source = tmp_path / "champions.json"
+    source.write_text(json.dumps(raw), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="no validated module: Nobody"):
+        build_catalog(source, PATCH)
+
+
+def test_a_registered_module_with_no_cache_row_stops_the_build(tmp_path):
+    raw = json.loads((ROOT / "data" / "champions.json").read_text(encoding="utf-8"))
+    dropped = next(key for key, value in raw.items() if value.get("name") == "Aatrox")
+    del raw[dropped]
+    source = tmp_path / "champions.json"
+    source.write_text(json.dumps(raw), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="no cached row: Aatrox"):
+        build_catalog(source, PATCH)

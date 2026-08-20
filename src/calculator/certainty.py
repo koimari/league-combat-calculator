@@ -6,9 +6,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from .cast_dependency import BASE_CAST_SLOTS
 from .champions import get_champion_module_meta
 
-_SLOT_LETTERS = ("P", "Q", "W", "E", "R")
+_SLOT_LETTERS = BASE_CAST_SLOTS
 
 CERTAINTY_EXACT = "exact"
 CERTAINTY_ESTIMATE = "estimate"
