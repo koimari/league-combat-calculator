@@ -2128,7 +2128,8 @@ class TestIconUrlsAreHttps:
         assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 18.0
 
     def test_ability_icons_are_https(self):
-        abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
+        champions = app_module.app.test_client().get("/api/champions").get_json()
+        abilities = next(c for c in champions if c["name"] == "Aatrox")["abilities"]
 
         assert all(not a["icon"].startswith("http://") for a in abilities.values())
         assert set(abilities) == {"P", "Q", "W", "E", "R"}

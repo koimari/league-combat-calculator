@@ -8,7 +8,7 @@ that pin the contract to the actual frontend:
   data-capability-field / control attribute that ``static/js/app.js`` or
   ``templates/index.html`` mounts maps to a declared capability token;
 * every declared supported token is actually referenced by the frontend;
-* the API responses that feed controls (``/api/config``, ``/api/abilities``,
+* the API responses that feed controls (``/api/config``, ``/api/champions``,
   ``champion_options_meta``, ``item_input_options_meta``) expose exactly the
   capability-declared fields.
 
@@ -424,9 +424,10 @@ def test_api_responses_expose_exactly_the_capability_declared_fields():
     assert isinstance(config["keystones"], list)
     assert config["keystones"]
 
-    # /api/abilities exposes exactly the declared slots and entry keys, which
+    # /api/champions exposes exactly the declared slots and entry keys, which
     # feed the ability-rank and per-ability option controls.
-    abilities = client.get("/api/abilities/Ahri").get_json()
+    champions = client.get("/api/champions").get_json()
+    abilities = next(c for c in champions if c["name"] == "Ahri")["abilities"]
     catalog = contract["catalogs"]["abilities"]
     assert list(abilities) == list(catalog["slots"])
     for entry in abilities.values():

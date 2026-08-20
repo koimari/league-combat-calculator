@@ -505,15 +505,6 @@ def _build_to_dict(build: Build) -> dict[str, Any]:
     }
 
 
-def get_build(build_id: int) -> dict[str, Any] | None:
-    """Load one build as a JSON-safe dict, or None when missing."""
-    with session() as db_session:
-        build = db_session.get(Build, int(build_id))
-        if build is None:
-            return None
-        return _build_to_dict(build)
-
-
 # ---------------------------------------------------------------------------
 # Share links
 # ---------------------------------------------------------------------------

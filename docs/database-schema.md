@@ -126,7 +126,6 @@ step.
 | Endpoint | Behavior |
 | --- | --- |
 | `POST /api/builds` | save a build → `{"build_id": …}` (201) |
-| `GET /api/builds/<id>` | build payload or 404 |
 | `POST /api/share` | `{"build_id": …, "slug": …}` → `{"token": …, "url": "/api/share/<token>"}` (201) |
 | `GET /api/share/<token>` | build payload + `share` block; increments `views` |
 | `POST /api/receipts` | record one game-receipt observation; the engine computes `expected`/`matched`/`delta` itself → `{"feedback_id": …, …}` (201) |

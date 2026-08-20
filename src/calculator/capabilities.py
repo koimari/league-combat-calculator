@@ -503,16 +503,7 @@ def public_capability_contract(
             "abilities": {
                 "supported": True,
                 "slots": ["P", "Q", "W", "E", "R"],
-                "keys": [
-                    "slot",
-                    "name",
-                    "icon",
-                    "blurb",
-                    "description",
-                    "damage_type",
-                    "targeting",
-                    "ingested",
-                ],
+                "keys": ["slot", "name", "icon", "ingested"],
                 "reason": None,
             },
         },

@@ -53,10 +53,7 @@ from src.calculator.certainty import (
     classify_assumption as _classify_assumption,
     derive_certainty,
 )
-from src.calculator.data_fetcher import (
-    fetch_champion_data,
-    get_champion,
-)
+from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.item_effects import (
     item_input_options_meta,
     refresh_item_effects,
@@ -147,7 +144,6 @@ from src.db import (
     cache_set,
     cache_stats,
     create_share_link,
-    get_build,
     get_share_link,
     is_configured,
     is_postgres,
@@ -974,25 +970,17 @@ def api_health_deep():
 
 
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
-    """Return bounded descriptive metadata without exposing raw formula graphs."""
+    """Slot identity for /api/champions: name, icon, and whether it was ingested.
+
+    Descriptive text (blurb, damage type, targeting) is the static ability
+    catalogue's job (``static/ability-catalog.json``), not the API's.
+    """
     entries = ability_list if isinstance(ability_list, list) else []
     first = entries[0] if entries and isinstance(entries[0], dict) else {}
-    descriptions = []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        for effect in entry.get("effects", []):
-            description = str(effect.get("description", "")).strip()
-            if description and description not in descriptions:
-                descriptions.append(description)
     return {
         "slot": slot,
         "name": first.get("name", slot),
         "icon": _https_icon(first.get("icon", "")),
-        "blurb": first.get("blurb") or "",
-        "description": " ".join(descriptions),
-        "damage_type": first.get("damageType"),
-        "targeting": first.get("targeting"),
         "ingested": bool(first),
     }
 
@@ -1017,12 +1005,9 @@ def api_champions():
         }
         ability_slots = {}
         for slot in ("P", "Q", "W", "E", "R"):
-            ability = _public_ability_entry(
+            ability_slots[slot] = _public_ability_entry(
                 champ_data.get("abilities", {}).get(slot, []), slot
             )
-            ability_slots[slot] = {
-                key: ability[key] for key in ("slot", "name", "icon", "ingested")
-            }
         # A module that certifies only a subset of fight modes publishes that
         # restriction (and its sourced reason) so the interface can request a
         # supported mode instead of failing closed at calculation time. None
@@ -1246,21 +1231,6 @@ def api_config():
             path="/api/update-data",
         )
     return response
-
-
-@app.route("/api/abilities/<champion_name>")
-def api_abilities(champion_name: str):
-    """Return descriptive metadata for all five ingested ability slots."""
-    try:
-        champion_data = get_champion(champion_name)
-    except KeyError:
-        return jsonify({"error": f"Champion '{champion_name}' not found"}), 404
-
-    abilities = champion_data.get("abilities", {})
-    result = {}
-    for key in ("P", "Q", "W", "E", "R"):
-        result[key] = _public_ability_entry(abilities.get(key, []), key)
-    return jsonify(result)
 
 
 @app.route("/api/loadout-stats", methods=["POST"])
@@ -1569,19 +1539,6 @@ def api_save_build():
         app.logger.exception("Failed to save build")
         return jsonify({"error": f"Database unavailable: {exc}"}), 503
     return jsonify({"build_id": build_id}), 201
-
-
-@app.route("/api/builds/<int:build_id>")
-def api_get_build(build_id: int):
-    """Return one saved build payload, or 404."""
-    try:
-        build = get_build(build_id)
-    except SQLAlchemyError as exc:  # surface DB failure to the client
-        app.logger.exception("Failed to load build")
-        return jsonify({"error": f"Database unavailable: {exc}"}), 503
-    if build is None:
-        return jsonify({"error": f"Build {build_id} not found"}), 404
-    return jsonify(build)
 
 
 @app.route("/api/share", methods=["POST"])

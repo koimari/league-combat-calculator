@@ -81,7 +81,9 @@ def test_save_and_load_build_round_trip(sqlite_database):
     build_id = response.get_json()["build_id"]
     assert isinstance(build_id, int)
 
-    loaded = client.get(f"/api/builds/{build_id}")
+    # The share link is the only read path for a saved build.
+    token = client.post("/api/share", json={"build_id": build_id}).get_json()["token"]
+    loaded = client.get(f"/api/share/{token}")
     assert loaded.status_code == 200
     payload = loaded.get_json()
     assert payload["champion"] == "Ahri"
@@ -97,10 +99,6 @@ def test_save_and_load_build_round_trip(sqlite_database):
     assert payload["request"]["champion"] == "Ahri"
     assert payload["request"]["rotations"] == 1
     assert payload["created_at"].endswith("Z")
-
-
-def test_get_build_404(sqlite_database):
-    assert _client().get("/api/builds/999999").status_code == 404
 
 
 def test_save_build_validation(sqlite_database):
@@ -341,7 +339,7 @@ def test_sqlite_fallback_without_database_url(monkeypatch, tmp_path):
     try:
         assert db.is_configured() is False
         build_id = db.save_build({"champion": "Ahri", "level": 18})
-        loaded = db.get_build(build_id)
-        assert loaded["champion"] == "Ahri"
+        token = db.create_share_link(build_id)["token"]
+        assert db.get_share_link(token)["champion"] == "Ahri"
     finally:
         db.reset()
