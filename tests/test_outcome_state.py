@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from src.calculator import ability_spec, trigger_stream
+from tests import ability_math
 from src.calculator.ability_spec import Disposition
 from src.calculator.survival import outcome_state
 from src.calculator.survival.actions import NO_SLOT, ActionKind, SurvivalAction
@@ -282,7 +283,7 @@ def test_a_total_over_a_refused_and_a_measured_member_is_measured() -> None:
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(0), damage=40.0)
     ledger.skip(action(1), "spell_shield_blocked")
-    total = ability_spec.quantity_sum(
+    total = ability_math.quantity_sum(
         (ledger.quantity(0, "applied"), ledger.quantity(1, "applied"))
     )
     assert total == ability_spec.Measured(amount=40.0)
@@ -293,7 +294,7 @@ def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() 
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(0), damage=40.0)
     with pytest.raises(trigger_stream.ProjectionStarvation):
-        ability_spec.quantity_sum(
+        ability_math.quantity_sum(
             (ledger.quantity(0, "applied"), ledger.quantity(9, "applied"))
         )
 

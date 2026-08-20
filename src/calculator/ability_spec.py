@@ -23,7 +23,7 @@ projection, and the campaign's propagation rule for aggregates is
 ``__add__`` on the type rather than a discipline each consumer maintains.
 """
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -267,19 +267,6 @@ class Starved(_QuantityAlgebra):
 Quantity = Measured | StructuralZero | Withheld | Starved
 
 
-def quantity_sum(quantities: Iterable[Quantity]) -> Quantity:
-    """Fold a set of quantities through ``__add__``, propagation and all.
-
-    An empty fold is ``Measured(0.0)``: summing nothing is a rule that ran, and
-    the caller who had nothing to sum is the one who knows whether that is a
-    structural zero.
-    """
-    total: Quantity = Measured(amount=0.0)
-    for quantity in quantities:
-        total = total + quantity
-    return total
-
-
 @dataclass(frozen=True, slots=True)
 class ZeroPolicy:
     """What a zero out of one producer *means*, declared rather than inferred.
@@ -520,19 +507,3 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             f"count={self.count}, hp_scaled={hp_scaled}, "
             f"crit_effectiveness={self.crit_effectiveness}{extras})"
         )
-
-
-def parts_raw_total(
-    parts: tuple[DamagePart, ...],
-    damage_type: str | None = None,
-) -> float:
-    """Sum the raw per-cast damage of *parts*, optionally for one type.
-
-    HP-scaled parts contribute their static ``amount`` (0.0 unless set) —
-    their live value exists only at evaluation time.
-    """
-    return sum(
-        part.amount * part.count
-        for part in parts
-        if damage_type is None or part.damage_type == damage_type
-    )

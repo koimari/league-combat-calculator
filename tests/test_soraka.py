@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
+from tests.ability_math import parts_raw_total
 from src.calculator.champions import soraka
 from tests import cc_review
 

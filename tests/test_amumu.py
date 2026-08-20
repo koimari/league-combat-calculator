@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
+from tests.ability_math import parts_raw_total
 
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import FightConfig, calculate_fight_damage
