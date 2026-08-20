@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.loadout_rules import exclusivity_groups
 from src.calculator.optimizer import (
@@ -1149,6 +1150,23 @@ _PURCHASE_IDS = {
 }
 
 
+def _patch_purchase_prices(monkeypatch, pool):
+    """Give a synthetic pool the sourced rows ``item_total`` prices from.
+
+    ``economy.item_total`` reads the atomized economics table and
+    nothing else, so a fabricated item needs a fabricated row; a test
+    world that skipped this would be pricing off the wiki cache the
+    engine no longer reads.
+    """
+    real = economy.sourced_total
+    rows = {int(item["id"]): int(item["shop"]["prices"]["total"]) for item in pool}
+    monkeypatch.setattr(
+        economy,
+        "sourced_total",
+        lambda item: rows.get(int(item.get("id") or 0), real(item)),
+    )
+
+
 def _purchase_item(name, rank, price):
     return {
         "name": name,
@@ -1164,6 +1182,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
     completed = _purchase_item("Large Rod", "LEGENDARY", 1000)
     wand = _purchase_item("Blasting Wand", "EPIC", 500)
     tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+    _patch_purchase_prices(monkeypatch, [completed, wand, tome])
     monkeypatch.setattr(
         "src.calculator.optimizer.get_purchase_items",
         lambda _role="": [completed, wand, tome],
@@ -1212,6 +1231,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
 
 def _patch_purchase_world(monkeypatch, pool, score):
     """Point the purchase search at a synthetic pool with a scripted scorer."""
+    _patch_purchase_prices(monkeypatch, pool)
     monkeypatch.setattr(
         "src.calculator.optimizer.get_purchase_items", lambda _role="": list(pool)
     )
