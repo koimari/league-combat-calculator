@@ -272,25 +272,8 @@ function mergeAbilityCatalog(catalog) {
   });
 }
 
-// Display-only numeric fields the patch snapshot carries and /api/items
-// currently zeroes. The coverage endpoint answers "is this item modelled",
-// not "what does it give you", so a 0 there means "not reported", never
-// "the item lost this stat" — merging it verbatim blanked every item's stat
-// line and price in the UI.
-const SNAPSHOT_NUMERIC_FIELDS = [
-  "price", "ap", "ad", "hp", "mana", "armor", "mr", "haste", "pen", "percentPen",
-  "lethality", "percentArmorPen", "attackSpeed", "crit", "critDamage", "lifesteal",
-  "omnivamp", "healAndShieldPower", "healthRegen", "manaRegen", "goldPer10",
-  "tenacity", "moveSpeed", "tier",
-];
-
-function preferReportedNumbers(snapshotItem, metadata) {
-  return Object.fromEntries(SNAPSHOT_NUMERIC_FIELDS.map((field) => [
-    field,
-    Number(metadata[field]) ? metadata[field] : snapshotItem[field],
-  ]));
-}
-
+// Backend receipts win for every key they carry (a backend 0 is a real 0);
+// the patch snapshot only fills keys /api/items and /api/boots do not serve.
 function mergeItemCoverage(catalog) {
   if (!Array.isArray(catalog) || !catalog.length || !Array.isArray(DATA?.items)) return;
   const byId = new Map(catalog.map((entry) => [Number(entry.id), entry]).filter(([id]) => id));
@@ -301,7 +284,6 @@ function mergeItemCoverage(catalog) {
     return {
       ...item,
       ...metadata,
-      ...preferReportedNumbers(item, metadata),
       backendName: metadata.name,
       backendAvailable: true,
       modelCoverage: metadata.model_coverage || null,

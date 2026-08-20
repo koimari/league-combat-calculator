@@ -1175,6 +1175,10 @@ def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert "mergeItemCoverage" in source
+    # Backend receipts win wherever present: no snapshot-preference helper
+    # may let static/data.json outrank a backend 0.
+    assert "preferReportedNumbers" not in source
+    assert "SNAPSHOT_NUMERIC_FIELDS" not in source
     assert 'fetch("/api/items")' in source
     assert 'fetch("/api/boots")' in source
     assert "backendAvailable" in source
@@ -1989,6 +1993,14 @@ class TestIconUrlsAreHttps:
         assert hunger["statConversions"]["famine_base_ability_haste"] == 5.0
         bandlepipes = next(item for item in items if item["name"] == "Bandlepipes")
         assert bandlepipes["statConversions"]["bonus_attack_speed_ranged"] == 20.0
+        # Display fields the browser used to take from static/data.json ride
+        # the backend receipt, so the snapshot can never outrank it.
+        phantom = next(item for item in items if item["name"] == "Phantom Dancer")
+        swiftness = next(item for item in boots if item["name"] == "Boots of Swiftness")
+        assert phantom["moveSpeed"] == 0.0 and phantom["moveSpeedPercent"] == 10.0
+        assert phantom["tier"] == 3
+        assert swiftness["moveSpeed"] == 55.0 and swiftness["tier"] == 2
+        assert all("moveSpeed" in item and "tier" in item for item in items + boots)
 
     def test_item_apis_expose_optimizer_coverage(self):
         client = app_module.app.test_client()

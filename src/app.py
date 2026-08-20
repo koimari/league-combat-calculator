@@ -1073,6 +1073,8 @@ def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
         "healAndShieldPower": stats["heal_and_shield_power_percent"],
         "healthRegen": stats["health_regen_percent"],
         "tenacity": stats["tenacity_percent"],
+        "moveSpeed": stats["move_speed_flat"],
+        "moveSpeedPercent": stats["move_speed_percent"],
         "manaRegen": stats["mana_regen_percent"],
         "goldPer10": stats["gold_per_10"],
         "critDamage": stats["critical_strike_damage_percent"],
@@ -1106,6 +1108,7 @@ def api_items():
                 "price": item.get("price", 0),
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
+                "tier": item["tier"],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
                 "model_coverage": item_model_coverage(
                     str(item.get("name", "")), ATTACKER_LANES
@@ -1147,7 +1150,7 @@ def api_boots():
                 "price": item.get("price", 0),
                 "into": item.get("into") or [],
                 "categories": item.get("categories") or [],
-                "tier": item.get("tier"),
+                "tier": item["tier"],
                 "upgrade_from": upgrade_from.get(item.get("name")),
                 "upgrade_to": next(
                     (
