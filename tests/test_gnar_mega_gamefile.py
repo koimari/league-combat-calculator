@@ -959,6 +959,9 @@ class TestRegressionSurface:
             "test_olaf_r_cleanse.py",
             "test_quinn_p_crit.py",
             "test_rengar_w_cleanse.py",
+            # weekly_ingest fetches the gnar/gnarbig authority pair, so its
+            # test module names them (added 2026-08-20 with weekly_ingest.py).
+            "test_weekly_ingest.py",
         }
 
     def test_parse_and_fight_entry_points_are_the_named_modules(self) -> None:
