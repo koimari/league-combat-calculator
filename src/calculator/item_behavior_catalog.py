@@ -393,29 +393,6 @@ UNDECLARED_DEFENSE_MECHANICS: Mapping[DefenseMechanic, str] = {
     ),
 }
 
-# Which slice retires each defence still resolved by name.  Both point at
-# 3.7 because :data:`DEFENSE_SOURCE_FAMILY` puts them outside the four
-# defence families: Death's Dance defers damage and Spirit Visage multiplies
-# healing received, and a slice that declared them here would be doing
-# another family's work under this one's zero-diff claim.
-# Empty since 3.7 declared the last two: every DefenseMechanic the resolver
-# builds now reaches a declaration, and the two that pointed outside the four
-# defence families ride their own family's interpreter.  Kept rather than
-# deleted because the *shape* is what keeps a future mechanic's refusal dated
-# — an omission with no table to name it is the silence this phase removes.
-DEFENSE_UNMIGRATED_MECHANICS: Mapping[DefenseMechanic, str] = {}
-
-# The mechanics the passive-target model runs as engine code rather than as a
-# rule, named by the registry key that identifies the entry carrying them.
-# Empty since the stat-derivation migration: Warmog's Heart is now a
-# ``ThresholdRegenRule`` and Winter's Caress a ``StatAuraRule``, so the target
-# lane folds over declarations alone and the two promises this table carried
-# are kept rather than restated.  Kept rather than deleted for the same reason
-# as :data:`DEFENSE_UNMIGRATED_MECHANICS`: the *shape* is what dates a future
-# refusal, and an omission with no table to name it is the silence this phase
-# removes.
-UNMIGRATED_TARGET_KEYS: Mapping[str, str] = {}
-
 # Which defences can only be priced from an *exactly timed* damage ledger,
 # and why each one needs the timestamps.  Every member reads its trigger out
 # of the order damage arrived in — a health threshold the ledger has to cross,
@@ -1347,10 +1324,7 @@ Compiler = Callable[
 ]
 
 # Which registry tags the delta-amp compiler below turns into declarations,
-# and — for the rest — which slice retires each refusal.  ``_unmigrated``
-# carries that promise for a whole family; a *partly* migrated family needs
-# it per tag, or the family's disappearance from UNMIGRATED_FAMILIES would
-# quietly retire promises nobody kept.
+# and — for the rest — which slice retires each refusal.
 MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset(
     {
         "ability_damage_amp",
@@ -4374,9 +4348,7 @@ ALLY_ENTRY_SHAPES: Mapping[AllyProducer, EntryShape] = {
 }
 
 
-# One entry per migrated producer.  Each slice of 3.6 moves a producer group
-# from ``ALLY_PACKET_UNMIGRATED_PRODUCERS`` to here together with its emitter,
-# so a declaration never lands without the code that reads it.
+# One entry per producer, landed together with the emitter that reads it.
 ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
     AllyProducer.EVERLASTING: AllyPacketDeclaration(
         trigger=PacketTrigger.CROWD_CONTROL,
@@ -4809,14 +4781,6 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
 }
 
 
-# Which slice of 3.6 retires each producer's stub, in the idiom
-# :data:`DELTA_AMP_UNMIGRATED_TAGS` uses for the other partly-migrated family:
-# a family whose compiler is real no longer appears in
-# :data:`UNMIGRATED_FAMILIES`, so without this the promises would disappear
-# with the stub rather than being kept.
-ALLY_PACKET_UNMIGRATED_PRODUCERS: Mapping[AllyProducer, str] = {}
-
-
 def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
     """Whether the compiled score kernel can stage this producer's packets.
 
@@ -4946,13 +4910,7 @@ def _compile_ally_packet(
     registry: ValueRegistry,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
-    """Compile the cross-participant producers one registry entry declares.
-
-    A producer whose emitter has not migrated yet compiles no rule and is
-    named in :data:`ALLY_PACKET_UNMIGRATED_PRODUCERS` with the slice that
-    retires it — the same refusal-with-a-date :func:`_unmigrated` gives a
-    whole family, at the granularity a partly-migrated family needs.
-    """
+    """Compile the cross-participant producers one registry entry declares."""
     del family
     rules = tuple(
         _ally_packet_rule(producer, owner, registry)
@@ -5126,15 +5084,12 @@ def _compile_defense(
     An entry that declares none compiles none, and that is an *answer* — a
     Guardian Angel is tagged as a starting defence and its mechanic is a
     resurrection, so the opening-defence compiler is right to hand back
-    nothing.  A mechanic whose family sits outside this slice is named in
-    :data:`DEFENSE_UNMIGRATED_MECHANICS` with the slice that retires it, so
-    the refusal carries a date as well as a reason.
+    nothing.
     """
     return tuple(
         _defense_rule(mechanic, owner, registry)
         for mechanic in defense_mechanics_for(family, entry)
-        if mechanic not in DEFENSE_UNMIGRATED_MECHANICS
-        and _defense_flag_holds(mechanic, entry)
+        if _defense_flag_holds(mechanic, entry)
     )
 
 
@@ -5446,23 +5401,6 @@ STAT_DERIVATION_DECLARED_ELSEWHERE: Mapping[str, str] = {
     "health_threshold": (
         "declared as the threshold defence the resolver builds, together with "
         "the omnivamp its own Lifeline grants"
-    ),
-}
-
-# Mechanics carried by an entry this family declares, which belong to another
-# family and are therefore *not* declared here — each dated, so a refusal
-# that outlives its slice is visible rather than absorbed.  The same record
-# ``DELTA_AMP_UNMIGRATED_TAGS`` keeps for a partly-migrated family, at the
-# granularity a mechanic-on-a-declared-entry needs.
-STAT_DERIVATION_DEFERRED_MECHANICS: Mapping[str, str] = {
-    "helping_hand_minion_damage": (
-        "3.9 residue — Helping Hand is flat damage against minions, an "
-        "on_hit_strike shape; declaring it here would be another family's "
-        "work under this slice's zero-diff claim"
-    ),
-    "retribution_missing_health_min": (
-        "3.9 residue — Retribution scales damage dealt by missing health, "
-        "which is a delta_amp magnitude and not a stat the block holds"
     ),
 }
 
@@ -5858,31 +5796,9 @@ def _compile_stat_derivation(
     return tuple(rules)
 
 
-def _unmigrated(
-    family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
-    entry: Mapping[str, Any],
-) -> tuple[BehaviorRule, ...]:
-    """No rule yet: this family's behaviour still lives as engine code.
-
-    Returning no rules is *not* a silent zero.  Every owner this compiler
-    declines is named by :func:`undeclared_owners` and counted by the
-    behaviour frontier's counter 3, and :func:`compilability_for`'s fold in
-    ``interpreters`` refuses to call such an owner compilable.  The slice
-    that replaces each entry of :data:`_COMPILERS` is named in
-    :data:`UNMIGRATED_FAMILIES`, so the refusal carries a date as well as a
-    reason.
-    """
-    del family, owner, registry, entry
-    return ()
-
-
 # One module-level ``def`` per key, keyed by a closed enum, totality asserted
 # — D-52's three conditions, which is what makes a callable registry a ruled
-# exception rather than a hole in "no callables in declarations".  Every
-# entry points at ``_unmigrated`` today; each migration slice replaces
-# exactly one, which is what keeps a slice's diff a one-symbol change.
+# exception rather than a hole in "no callables in declarations".
 _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.ON_HIT_STRIKE: _compile_on_hit_strike,
     RuleFamily.CHARGED_STRIKE: _compile_charged_strike,
@@ -5903,13 +5819,6 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.STAT_DERIVATION: _compile_stat_derivation,
     RuleFamily.ALLY_PACKET: _compile_ally_packet,
 }
-
-# Which numbered slice of this phase replaces each family's stub compiler.
-# Empty since the stat-derivation migration: every family compiles.  Kept
-# rather than deleted because the *shape* is what dates a future refusal —
-# an omission with no table to name it is the silence this phase removes,
-# and :func:`validate_catalog` asserts it names exactly the stubbed families.
-UNMIGRATED_FAMILIES: Mapping[RuleFamily, str] = {}
 
 
 # ── compilation ───────────────────────────────────────────────────────────
@@ -6278,17 +6187,16 @@ def _validate_event_certification(
 
 
 def _validate_defense_migration() -> None:
-    """Every defence is declared here or carries the slice that retires it.
+    """Every defence is declared here or owned by a champion.
 
     Three clauses, because a defence can go missing in three ways: a mechanic
-    with no declaration and no promise, a declaration whose family is not the
+    with no declaration, a declaration whose family is not the
     one :data:`DEFENSE_SOURCE_FAMILY` rules it into, and a registry entry
     whose tag says *defence* while no mechanic claims a single one of its
     keys — the last being the shape that would let an item silently stop
     defending after a parser rename.
     """
     declared = frozenset(DEFENSE_DECLARATIONS)
-    promised = frozenset(DEFENSE_UNMIGRATED_MECHANICS)
     covered = declared | frozenset(UNDECLARED_DEFENSE_MECHANICS)
     unnamed = sorted(
         mechanic.value for mechanic in frozenset(DefenseMechanic) - covered
@@ -6299,19 +6207,12 @@ def _validate_defense_migration() -> None:
             "that carries it or owned by a champion; unshaped="
             f"{unnamed}"
         )
-    if promised - declared:
-        raise BehaviorCatalogError(
-            "a defence awaiting a slice still declares the entry shape it "
-            "will be compiled from, so the promise names a real mechanic"
-        )
     for mechanic, declaration in DEFENSE_DECLARATIONS.items():
         if not declaration.shape.requires:
             raise BehaviorCatalogError(
                 f"{mechanic.value} declares no signature key, so no entry "
                 "could ever carry it"
             )
-        if mechanic in DEFENSE_UNMIGRATED_MECHANICS:
-            continue
         for field in declaration.writes:
             if field not in DEFENSE_FIELD_COMBINE:
                 raise BehaviorCatalogError(
@@ -6388,24 +6289,13 @@ def _validate_compilers() -> None:
             "_COMPILERS must be total over RuleFamily; unmapped="
             f"{sorted(family.value for family in families - frozenset(_COMPILERS))}"
         )
-    stubbed = frozenset(
-        family for family, compiler in _COMPILERS.items() if compiler is _unmigrated
-    )
-    if frozenset(UNMIGRATED_FAMILIES) != stubbed:
-        raise BehaviorCatalogError(
-            "UNMIGRATED_FAMILIES must name exactly the families whose compiler "
-            "is still the stub, so a migrated family cannot keep a stale "
-            "promise and a stub cannot exist without a slice that retires it"
-        )
 
 
 def _validate_delta_amp_migration() -> None:
     """Every delta-amp tag is either compiled here or named with its slice.
 
-    A family whose compiler is real no longer appears in
-    :data:`UNMIGRATED_FAMILIES`, so a partly migrated family would otherwise
-    lose the record of what it still refuses.  This is that record, closed:
-    the two sets partition the family's tags exactly.
+    The record of what a partly migrated family still refuses, closed: the
+    two sets partition the family's tags exactly.
     """
     declared = frozenset(
         tag for tag, family in TAG_FAMILY.items() if family is RuleFamily.DELTA_AMP
@@ -6424,25 +6314,13 @@ def _validate_delta_amp_migration() -> None:
 
 
 def _validate_ally_packet_migration() -> None:
-    """Every producer is compiled here or carries the commit that retires it.
-
-    The same record :data:`DELTA_AMP_UNMIGRATED_TAGS` keeps for the other
-    partly-migrated family, and closed the same way: the two tables partition
-    :class:`~.item_behavior.AllyProducer` exactly, so a producer cannot be
-    silently dropped and a kept promise cannot outlive the stub it described.
-    """
+    """Every producer is declared, so none can be silently dropped."""
     declared = frozenset(AllyProducer)
     migrated = frozenset(ALLY_PACKET_DECLARATIONS)
-    promised = frozenset(ALLY_PACKET_UNMIGRATED_PRODUCERS)
-    if migrated & promised:
+    if migrated != declared:
         raise BehaviorCatalogError(
-            "an ally-packet producer cannot be both migrated and awaiting a "
-            f"commit: {sorted(p.value for p in migrated & promised)}"
-        )
-    if migrated | promised != declared:
-        raise BehaviorCatalogError(
-            "every AllyProducer is either migrated or carries the commit that "
-            f"retires it; unnamed={sorted(p.value for p in declared - migrated - promised)}"
+            "every AllyProducer is declared; "
+            f"undeclared={sorted(p.value for p in declared - migrated)}"
         )
     if frozenset(ALLY_ENTRY_SHAPES) != declared:
         raise BehaviorCatalogError(
@@ -6518,7 +6396,6 @@ __all__ = [
     "ALLY_DELTA_AMP_SLOTS",
     "ALLY_ENTRY_SHAPES",
     "ALLY_PACKET_DECLARATIONS",
-    "ALLY_PACKET_UNMIGRATED_PRODUCERS",
     "AllyPacketDeclaration",
     "CITATION_KEYS",
     "COMPILED_KERNEL_CANNOT_REDIRECT",
@@ -6536,7 +6413,6 @@ __all__ = [
     "DEFENSE_DECLARATIONS",
     "DEFENSE_RECEIPTS",
     "DEFENSE_SOURCE_FAMILY",
-    "DEFENSE_UNMIGRATED_MECHANICS",
     "EVENT_CERTIFIED_MECHANICS",
     "UNDECLARED_DEFENSE_MECHANICS",
     "DefenseDeclaration",
@@ -6556,7 +6432,6 @@ __all__ = [
     "PER_ABILITY_HIT_BEHAVIOR",
     "TAG_FAMILY",
     "TermSchema",
-    "UNMIGRATED_FAMILIES",
     "behavior_rules",
     "build_context",
     "cached_source_receipt",

@@ -107,9 +107,6 @@ def test_every_defense_mechanic_is_declared_or_cited() -> None:
     assert not frozenset(catalog.DEFENSE_DECLARATIONS) & frozenset(
         catalog.UNDECLARED_DEFENSE_MECHANICS
     )
-    assert frozenset(catalog.DEFENSE_UNMIGRATED_MECHANICS) <= frozenset(
-        catalog.DEFENSE_DECLARATIONS
-    )
 
 
 def test_a_new_defense_mechanic_fails_the_catalog() -> None:
@@ -120,7 +117,7 @@ def test_a_new_defense_mechanic_fails_the_catalog() -> None:
         )
 
 
-def test_one_compiler_per_family_and_every_stub_names_its_slice() -> None:
+def test_one_compiler_per_family() -> None:
     """D-52's registry: closed enum key, module-level defs, totality asserted."""
     compilers = catalog._COMPILERS  # pylint: disable=protected-access
     assert frozenset(compilers) == frozenset(RuleFamily)
@@ -128,17 +125,10 @@ def test_one_compiler_per_family_and_every_stub_names_its_slice() -> None:
         getattr(compiler, "__name__", "") and not compiler.__name__ == "<lambda>"
         for compiler in compilers.values()
     )
-    stubbed = frozenset(
-        family
-        for family, compiler in compilers.items()
-        if compiler.__name__ == "_unmigrated"
-    )
-    assert frozenset(catalog.UNMIGRATED_FAMILIES) == stubbed
-    assert RuleFamily.DELTA_AMP not in stubbed
 
 
 def test_a_partly_migrated_family_still_names_what_it_refuses() -> None:
-    """Leaving UNMIGRATED_FAMILIES must not retire promises nobody kept."""
+    """A partly migrated family names every tag it still refuses."""
     delta_tags = frozenset(
         tag
         for tag, family in catalog.TAG_FAMILY.items()

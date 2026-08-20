@@ -323,18 +323,12 @@ def test_deleting_a_families_interpreter_withholds_it_rather_than_pricing_zero(
     *eligible* before the deletion, refused after it, and the refusal names the
     exact ``family/lane`` that went missing.
 
-    A family with no declarations yet cannot be tested this way and is not
-    quietly skipped: it must be the one the catalog dates as unmigrated, so
-    this parametrization goes red the day that family is declared without its
-    interpreter, and the day an undeclared family stops being named.
+    A family with no declarations cannot be tested this way and is not
+    quietly skipped: every family compiles, so a family no owner declares is
+    a stop naming it rather than a green node with no subject.
     """
     owners = _owners_declaring(family)
-    if not owners:
-        assert family in catalog.UNMIGRATED_FAMILIES, (
-            f"{family.value} declares no rule and no slice is on record to "
-            "migrate it, so nothing states why its interpreter has no subject"
-        )
-        return
+    assert owners, f"{family.value} declares no rule, so nothing exercises it"
     for lane in sorted(interpreters.lanes_for(family), key=lambda member: member.value):
         reduced = {
             key: value

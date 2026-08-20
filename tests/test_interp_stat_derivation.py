@@ -28,7 +28,6 @@ from src.calculator.interpreters.stat_derivation import (
     StatDerivationInterpretationError,
     declared_stat_derivations,
     stat_derivation_rules,
-    stat_slots,
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import get_item_stats
@@ -67,16 +66,29 @@ CAST_ECONOMY_HOLDER = "Actualizer"
 ELSEWHERE_HOLDER = "Phage"
 
 
-def _slot(owner: str, payload_type: type, *, melee: bool = True):
-    """The build's one declared derivation of a shape, at a mid-fight level."""
-    slots = stat_slots(
-        [owner],
-        payload_type,
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=melee,
+def _slots(owner: str, payload_type: type, *, melee: bool = True):
+    """The build's declared derivations of a shape, resolved at a mid-fight level."""
+    return tuple(
+        stat_derivation.StatSlot(
+            rule=rule,
+            fields=RESOLVER_INTERPRETER.compile(
+                rule,
+                catalog.build_context(
+                    rule.owner,
+                    13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=melee,
+                ),
+            ),
+        )
+        for rule in stat_derivation_rules([owner], payload_type)
     )
+
+
+def _slot(owner: str, payload_type: type, *, melee: bool = True):
+    """The build's one declared derivation of a shape."""
+    slots = _slots(owner, payload_type, melee=melee)
     assert len(slots) == 1, owner
     return slots[0]
 
@@ -174,14 +186,7 @@ def test_a_melee_ranged_rate_follows_the_holders_range_class() -> None:
 
 def test_one_entry_may_declare_three_stacked_stats() -> None:
     """Timeless grows health, mana and ability power, and says so three times."""
-    slots = stat_slots(
-        [STACK_HOLDER],
-        StackedStatRule,
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
-    )
+    slots = _slots(STACK_HOLDER, StackedStatRule)
     assert {slot.granted for slot in slots} == {
         DerivedStat.ABILITY_POWER,
         DerivedStat.HEALTH,
@@ -196,17 +201,7 @@ def test_an_assumed_active_grant_says_so_rather_than_looking_unconditional() -> 
     arm it from, which was a docstring.  The declaration says it, and the
     number is still the registry's own.
     """
-    grants = {
-        slot.granted: slot
-        for slot in stat_slots(
-            [GRANT_HOLDER],
-            FlatStatGrantRule,
-            level=13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
-        )
-    }
+    grants = {slot.granted: slot for slot in _slots(GRANT_HOLDER, FlatStatGrantRule)}
     assert grants[DerivedStat.ULTIMATE_HASTE].availability is StatAvailability.ALWAYS
     attack_speed = grants[DerivedStat.ATTACK_SPEED_PERCENT]
     assert attack_speed.availability is StatAvailability.ASSUMED_ACTIVE
@@ -340,13 +335,11 @@ def test_an_entry_the_family_claims_with_no_signature_key_is_a_stop() -> None:
         )
 
 
-def test_every_deferred_and_elsewhere_key_is_one_a_live_entry_carries() -> None:
-    """The rename guard on both tables of refusals.
+def test_every_elsewhere_key_is_one_a_live_entry_carries() -> None:
+    """The rename guard on the table of excused entries.
 
-    A key either table names and no entry carries would stop matching in
-    silence — the elsewhere table would stop excusing an entry and the
-    deferred table would date a mechanic nothing has, which is a receipt for
-    nothing.
+    A key it names and no entry carries would stop excusing an entry in
+    silence.
     """
     carried = {
         key
@@ -354,14 +347,11 @@ def test_every_deferred_and_elsewhere_key_is_one_a_live_entry_carries() -> None:
         for _registry, _family, entry in catalog.registry_entries(owner)
         for key in entry
     }
-    for table in (
-        catalog.STAT_DERIVATION_DECLARED_ELSEWHERE,
-        catalog.STAT_DERIVATION_DEFERRED_MECHANICS,
-    ):
-        assert table
-        for key, reason in table.items():
-            assert key in carried, key
-            assert reason.strip()
+    table = catalog.STAT_DERIVATION_DECLARED_ELSEWHERE
+    assert table
+    for key, reason in table.items():
+        assert key in carried, key
+        assert reason.strip()
 
 
 def test_both_lanes_are_registered_and_stamp_their_own_lane() -> None:

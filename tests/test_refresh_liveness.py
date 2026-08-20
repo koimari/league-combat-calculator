@@ -191,11 +191,6 @@ REFRESH_INERT_FAMILIES: dict[RuleFamily, str] = {
 }
 
 
-def migrated_families() -> frozenset[RuleFamily]:
-    """The families with a real compiler — the population owing a proof."""
-    return frozenset(catalog.RuleFamily) - frozenset(catalog.UNMIGRATED_FAMILIES)
-
-
 @pytest.fixture(name="cached_items")
 def _cached_items():
     """The parsed item cache, restored (and re-parsed) after every edit."""
@@ -229,7 +224,7 @@ def _cached_items():
 def test_every_migrated_family_carries_a_proof_or_a_measured_reason() -> None:
     """The table is total: a new family lands with its proof or fails here."""
     covered = frozenset(REFRESH_PROOFS) | frozenset(REFRESH_INERT_FAMILIES)
-    assert covered == migrated_families()
+    assert covered == frozenset(RuleFamily)
     assert not frozenset(REFRESH_PROOFS) & frozenset(REFRESH_INERT_FAMILIES)
 
 

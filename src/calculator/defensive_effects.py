@@ -13,13 +13,6 @@ apply in is the declaration order of
 :class:`~.item_behavior.DefenseMechanic`, which is arithmetic rather than
 presentation — Boundless Vitality multiplies shields three earlier mechanics
 granted, so moving it is not a refactor.
-
-Two mechanics are still resolved by name, and both are named out loud in
-``item_behavior_catalog.DEFENSE_UNMIGRATED_MECHANICS`` with the slice that
-retires them: Death's Dance defers damage (``damage_routing``) and Spirit
-Visage multiplies healing received (``sustain``).  Both families are 3.7's,
-and declaring them here would be another slice's work smuggled in under this
-one's zero-diff claim.
 """
 
 from dataclasses import dataclass

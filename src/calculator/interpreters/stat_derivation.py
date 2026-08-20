@@ -40,7 +40,7 @@ from ..item_behavior import (
     STAT_DERIVATION_REQUIRED_REFERENCES,
     StatAvailability,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules
 from ..value_ref import ValueRefError, resolve, resolve_flat
 
 
@@ -168,39 +168,6 @@ def stat_derivation_rules(
     )
 
 
-def stat_slots(
-    owners: Sequence[str],
-    payload_type: type,
-    *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
-) -> tuple[StatSlot, ...]:
-    """This build's stat derivations of one shape, in build order.
-
-    A tuple and not a single slot, unlike the sustain family: two mana items
-    really do both convert, and their grants sum — so refusing a second
-    holder here would be inventing a restriction the game does not have.
-    """
-    return tuple(
-        StatSlot(
-            rule=rule,
-            fields=RESOLVER_INTERPRETER.compile(
-                rule,
-                build_context(
-                    rule.owner,
-                    level,
-                    fight_duration_seconds=fight_duration_seconds,
-                    target_bonus_health=target_bonus_health,
-                    holder_is_melee=holder_is_melee,
-                ),
-            ),
-        )
-        for rule in stat_derivation_rules(owners, payload_type)
-    )
-
-
 def sole_declared_derivation(
     owners: Sequence[str], payload_type: type
 ) -> StatSlot | None:
@@ -233,16 +200,15 @@ def declared_stat_derivations(
 ) -> tuple[StatSlot, ...]:
     """This build's derivations of one shape, from flat references alone.
 
-    The companion to :func:`stat_slots`, and the twin of the sustain family's
-    ``declared_sustain``: for the readers that author from a build and a
+    The twin of the sustain family's ``declared_sustain``: for the readers
+    that author from a build and a
     duration before any fight context exists.  Both refuse a reference
     needing a level or a fight fact rather than inventing one — the shared
     check is ``value_ref.resolve_flat``, so "level-independent" is decided in
     one place for both families instead of twice.
 
-    A tuple like :func:`stat_slots`, and for the same reason: two holders of
-    one derivation both grant, so refusing a second would invent a
-    restriction the game does not have.
+    A tuple: two holders of one derivation both grant, so refusing a second
+    would invent a restriction the game does not have.
     """
     slots: list[StatSlot] = []
     for rule in stat_derivation_rules(owners, payload_type):
@@ -260,9 +226,8 @@ def declared_stat_derivations(
         except ValueRefError as exc:
             raise StatDerivationInterpretationError(
                 f"{rule.mechanic_id} declares a reference that needs a level "
-                "or a fight fact, and this accessor has neither; read it "
-                "through stat_slots, which is handed the context it resolves "
-                "against"
+                "or a fight fact, and this accessor has neither; resolve it "
+                "through the family's interpreter with a build context"
             ) from exc
         slots.append(
             StatSlot(
@@ -330,5 +295,4 @@ __all__ = [
     "declared_stat_derivations",
     "sole_declared_derivation",
     "stat_derivation_rules",
-    "stat_slots",
 ]

@@ -7,14 +7,12 @@ import pytest
 
 from src.calculator import item_coverage
 from src.calculator.item_behavior_catalog import (
-    UNMIGRATED_TARGET_KEYS,
     behavior_rules,
     undeclared_owners,
 )
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
-    PRECEDENCE,
     gated_state_reason,
     item_model_coverage,
     optimizer_candidate_coverage,
@@ -242,30 +240,6 @@ def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
-
-
-# The two ``PRECEDENCE`` rungs 3.8 deleted with the empty containers they kept
-# on the ladder.  The pairing is kept here as the record of what was checked
-# before the deletion: each rung's population was its container's keys, and
-# each container was empty.
-_COLLAPSED_EMPTY_RUNGS = (
-    "attacker.blocked_reasons",
-    "attacker.partial_blocked_reasons",
-)
-
-
-def test_the_collapsed_rungs_are_gone_from_the_chain():
-    """The chain no longer declares a rung whose population was empty.
-
-    The commit before this one asserted the three containers empty and pinned
-    the two rungs keying on them; this is the other side of that pair.  A rung
-    left declared against a deleted container would be a claim about a symbol
-    that no longer exists — the prose-outruns-code shape, inside the ladder
-    that exists to close it.
-    """
-    declared = {rule.rule_id for rule in PRECEDENCE}
-
-    assert declared.isdisjoint(_COLLAPSED_EMPTY_RUNGS)
 
 
 def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
@@ -976,52 +950,6 @@ def test_an_owner_the_migration_has_not_reached_still_publishes_as_modelled() ->
     for owner in sorted(undeclared_owners()):
         status = item_model_coverage(owner, ATTACKER_LANES).status
         assert status in {"modeled", "modeled_state", "modeled_effect"}, owner
-
-
-def _registry_keys_no_cached_entry_carries(keys) -> tuple[str, ...]:
-    """Which of *keys* no cached registry entry carries — () is the pass state."""
-    return tuple(
-        key
-        for key in keys
-        if not any(
-            key in entry
-            for name in _cached_names()
-            for _, _, entry in item_coverage.registry_entries(name)
-        )
-    )
-
-
-def test_every_unmigrated_target_key_is_a_key_some_entry_carries() -> None:
-    """The rename guard on the clause that reads registry keys.
-
-    A key this table names and no entry carries would stop matching in
-    silence, and the live mechanics behind it would start publishing "nothing
-    this item declares changes durability" while the timeline went on
-    scheduling them — the exact shape of the failure this campaign is named
-    for.  Each key must also select at least one cached item, because a
-    declaration that reaches nothing is a claim about nothing.
-
-    :data:`UNMIGRATED_TARGET_KEYS` is **empty** since the stat-derivation
-    migration, so this assertion is over nothing today.  That is why the
-    check is a function with an R-05 red beside it rather than a bare loop:
-    a loop over an empty mapping asserts nothing while contributing a green
-    node, which is this campaign's own failure shape wearing a test's
-    clothes.  The table survives its own emptiness deliberately — the shape
-    is what dates a future refusal — so its guard has to survive it too.
-    """
-    assert _registry_keys_no_cached_entry_carries(UNMIGRATED_TARGET_KEYS) == ()
-
-
-def test_a_target_key_no_registry_entry_carries_is_caught() -> None:
-    """R-05's red for the guard above, on a key nothing can carry.
-
-    This is the assertion that is *live* while the table is empty: it proves
-    the check can fail, which is the one thing a vacuous loop could never
-    say about itself.
-    """
-    assert _registry_keys_no_cached_entry_carries(
-        {"a_key_no_registry_entry_carries": "a renamed durability key"}
-    ) == ("a_key_no_registry_entry_carries",)
 
 
 def test_the_target_flip_refuses_only_records_no_ordinary_build_can_hold() -> None:

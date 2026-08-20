@@ -4,14 +4,14 @@ Raw item stats are always sourced by :mod:`stats`.  This module answers the
 separate question the optimiser needs: is every outgoing-damage mechanic on
 this item represented by the current fight model?
 
-Three declarations sit beside the classifiers and nothing in ``src`` reads
+Two declarations sit beside the classifiers and nothing in ``src`` reads
 them: ``COVERAGE_EVIDENCE``, the typed claim behind every answer this module
-gives; ``PRECEDENCE``, the classifier chain mirrored as data; and
-``FRONTIER``, the claims that are not backed yet and the issues that track
-them.  They live here rather than in a module of their own because a claim is
-*about* the container two hundred lines above it, and a reader checking
-whether the two agree should not have to hold two files open — pylint's line
-ceiling is a proxy for "more than one responsibility", and this is one.
+gives, and ``FRONTIER``, the claims that are not backed yet and the issues
+that track them.  They live here rather than in a module of their own
+because a claim is *about* the container two hundred lines above it, and a
+reader checking whether the two agree should not have to hold two files
+open — pylint's line ceiling is a proxy for "more than one responsibility",
+and this is one.
 """
 
 # pylint: disable=too-many-lines
@@ -21,10 +21,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from .coverage_evidence import (
-    Absence,
     Claim,
     ClaimLane,
-    ClaimStatus,
     CoverageClaimError,
     EffectKey,
     Evidence,
@@ -32,14 +30,12 @@ from .coverage_evidence import (
     OptionSchema,
     PacketSource,
     PairedSides,
-    PrecedenceRule,
     SourceRef,
     SubjectKind,
     Symbol,
     SymbolRole,
     TestRef,
     validate_claim_table,
-    validate_precedence,
 )
 from .data_fetcher import get_item_by_name
 from .interpreters import INTERPRETERS, lanes_for
@@ -233,8 +229,8 @@ class ItemCoverage:
 
 # Three blocked-reason containers stood here — two dicts and a bare frozenset,
 # the ones 3.8's first commit pinned.  All three were empty, and that commit
-# asserted the emptiness and pinned the two ``PRECEDENCE`` rungs they gated.  An
-# empty container makes ``name in`` false for every name that exists and every
+# asserted the emptiness.  An empty container makes ``name in`` false for every
+# name that exists and every
 # name that could, so those rungs decided nothing and the eligibility term added
 # nothing: deleting them moves no answer.  A withheld item now has one producer
 # — a cached record whose passive is unreviewed — instead of three that could
@@ -437,32 +433,22 @@ def unserved_lanes(name: str, needed: frozenset[EngineLane]) -> tuple[str, ...]:
     )
 
 
-def has_unserved_lane(name: str) -> bool:
-    """Rung 1: a declared family with no interpreter on an attacker lane."""
-    return bool(unserved_lanes(name, ATTACKER_LANES))
-
-
 def declares_only_defence(name: str) -> bool:
-    """Rung 2: everything this item declares is about surviving, not dealing."""
+    """Everything this item declares is about surviving, not dealing."""
     families = _declared_families(name)
     return bool(families) and families <= _DEFENCE_FAMILIES
 
 
 def declares_state(name: str) -> bool:
-    """Rung 3: declared behaviour whose numbers come out of supplied state."""
+    """Declared behaviour whose numbers come out of supplied state."""
     families = _declared_families(name)
     if not families:
         return False
     return bool(name in ITEM_INPUT_OPTIONS or families & _STATE_FAMILIES)
 
 
-def declares_behaviour(name: str) -> bool:
-    """Rung 4: anything declared at all, once the two rungs above have passed."""
-    return bool(_declared_families(name))
-
-
 def gated_state_reason(name: str) -> str | None:
-    """Rung 2's own sub-question: is this defence *armed* by a scenario input?
+    """The defence-only branch's sub-question: is the defence *armed* by an input?
 
     A defence-only item is ``stats_only`` either way, so this decides only what
     the receipt beside that label says.  When a declared rule describes an
@@ -514,12 +500,7 @@ def _state_reason(name: str, families: frozenset[RuleFamily]) -> str:
 def _declared_status(
     name: str, families: frozenset[RuleFamily]
 ) -> tuple[ItemCoverageStatus, str]:
-    """The status of an item whose behaviour is declared, from its families.
-
-    The three predicates above are the rungs ``PRECEDENCE`` mirrors, and this
-    reads them rather than re-testing the same conditions: the ladder and its
-    mirror are the same code, so they cannot drift into disagreeing.
-    """
+    """The status of an item whose behaviour is declared, from its families."""
     if declares_only_defence(name):
         gated = gated_state_reason(name)
         if gated is not None:
@@ -763,9 +744,7 @@ def is_unreviewed_fixture(item: Mapping[str, Any]) -> bool:
     The one question on the target lane that is asked of the caller's record
     rather than of the cache: a name the shop has never sold, carrying a
     described passive, is a synthetic or unknown fixture, and answering it
-    ``not_target_relevant`` would be a review nobody performed.  It is a named
-    predicate rather than an inline conjunction so ``PRECEDENCE`` can mirror
-    the rung by reading the same function the ladder branches on.
+    ``not_target_relevant`` would be a review nobody performed.
     """
     return not _cached_record(str(item.get("name", ""))) and _has_described_effect(item)
 
@@ -980,9 +959,9 @@ def require_calculation_item_coverage(
 # went on describing both halves of Imperial Mandate's Command long after only
 # one half existed, and nothing checked the sentence against the code.  These
 # are the claims that replace the sentences: one per ``(item, lane)`` for every
-# entry in the seven non-empty containers above, one per rung of ``PRECEDENCE``,
-# and one per item that emits a walk packet — each carrying typed evidence the
-# resolution tier resolves against this tree on every ``pytest`` run.
+# entry in the seven non-empty containers above and one per item that emits a
+# walk packet — each carrying typed evidence the resolution tier resolves
+# against this tree on every ``pytest`` run.
 #
 # The *evidence* is authored and the assembly is mechanical, in that order and
 # never the other way round.  A table that read its own evidence out of the
@@ -1023,25 +1002,6 @@ _ISSUE_REF_ONLY_ITEMS: Mapping[str, ItemCoverageStatus] = {
     "Zeke's Convergence": "modeled_state",
 }
 
-# Why an earlier rung means no cached item can reach a claim, keyed
-# ``<subject>@<lane>``.  Twenty-nine container entries are decided above their
-# own container, and four rungs are live code only a synthetic fixture enters;
-# ``tests/coverage_resolver.shadow_report`` derives the same set from
-# ``PRECEDENCE`` and the cached shop, and the suite asserts the two agree both
-# ways.  A claim that is dead prose in a live-looking home is what this field
-# exists to make visible, so no entry may be blank.
-_SHADOWED_CLAIM_REASONS: Mapping[str, str] = {
-    "attacker.unreviewed_fixture@attacker": "review_pending is reserved for synthetic and unknown fixtures: "
-    "every cached shop record carries an id or an icon and is "
-    "withheld by the rung above, so no cached item reaches this one.",
-    "attacker.unserved_declared_lane@attacker": "No cached item declares a family whose interpreter is missing on "
-    "the attacker lane, so nothing reaches this rung; the branch is "
-    "proved on a synthetic declaration and on the emptiness of the "
-    "population itself rather than by any real build.",
-    "target.unreviewed_fixture@target": "review_pending is reserved for a record the shop does not hold: "
-    "every cached item is in the cache by definition, so no cached "
-    "item reaches this rung and only a supplied fixture can.",
-}
 _SOURCE_REFS: Mapping[str, tuple[str, int]] = {
     "Abyssal Mask": ("https://wiki.leagueoflegends.com/en-us/Abyssal_Mask", 3984960),
     "Armored Advance": (
@@ -1655,11 +1615,6 @@ def _issue_refs(item: str, lane: ClaimLane) -> tuple[int, ...]:
     return tuple(_REVIEW_ISSUE_REFS[item])
 
 
-def _unreachable_reason(item: str, lane: ClaimLane) -> str:
-    """Why an earlier rung means no cached item reaches this claim."""
-    return _SHADOWED_CLAIM_REASONS.get(f"{item}@{lane}", "")
-
-
 def _attacker_state_claim(item: str) -> Claim:
     """One stateful item: the state, and the named home it comes from."""
     path, home = _ATTACKER_STATE_HOMES[item]
@@ -1680,7 +1635,6 @@ def _attacker_state_claim(item: str) -> Claim:
         ),
         dimensions=(),
         issue_refs=_issue_refs(item, "attacker"),
-        unreachable_reason=_unreachable_reason(item, "attacker"),
     )
 
 
@@ -1697,7 +1651,6 @@ def _stats_only_claim(item: str) -> Claim:
         ),
         dimensions=(),
         issue_refs=_issue_refs(item, "attacker"),
-        unreachable_reason=_unreachable_reason(item, "attacker"),
     )
 
 
@@ -1734,7 +1687,6 @@ def _item_effects_claim(item: str) -> Claim:
         ),
         dimensions=(),
         issue_refs=_issue_refs(item, "attacker"),
-        unreachable_reason=_unreachable_reason(item, "attacker"),
     )
 
 
@@ -1753,7 +1705,6 @@ def _target_modeled_claim(item: str) -> Claim:
         ),
         dimensions=(),
         issue_refs=_issue_refs(item, "target"),
-        unreachable_reason=_unreachable_reason(item, "target"),
     )
 
 
@@ -1776,7 +1727,6 @@ def _target_certified_claim(item: str) -> Claim:
         ),
         dimensions=(),
         issue_refs=_issue_refs(item, "target"),
-        unreachable_reason=_unreachable_reason(item, "target"),
     )
 
 
@@ -1802,7 +1752,6 @@ def _utility_claim(item: str) -> Claim:
             evidence=(_source_ref(item), node),
             dimensions=dimensions,
             issue_refs=refs,
-            unreachable_reason="",
         )
     if home == "effects":
         return Claim(
@@ -1813,7 +1762,6 @@ def _utility_claim(item: str) -> Claim:
             evidence=(Symbol(path=path, role="tag_handler"), node),
             dimensions=dimensions,
             issue_refs=refs,
-            unreachable_reason="",
         )
     role: SymbolRole = (
         "walk_packet_builder" if home.startswith("packet:") else "value_accessor"
@@ -1830,7 +1778,6 @@ def _utility_claim(item: str) -> Claim:
         ),
         dimensions=dimensions,
         issue_refs=refs,
-        unreachable_reason="",
     )
 
 
@@ -1856,205 +1803,7 @@ def _support_packet_claim(item: str) -> Claim:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
-
-
-def _rung_ref(rule_id: str) -> TestRef:
-    """The node that runs one rung against the live classifier."""
-    return _test_ref("test_a_precedence_rung_yields_its_declared_status", rule_id)
-
-
-def _rule_claim(
-    rule_id: str,
-    lane: ClaimLane,
-    status: ClaimStatus,
-    evidence: tuple[Evidence, ...],
-) -> Claim:
-    """One claim about one rung of the chain."""
-    return Claim(
-        subject_kind="rule",
-        subject=rule_id,
-        lane=lane,
-        status=status,
-        evidence=evidence,
-        dimensions=(),
-        issue_refs=(),
-        unreachable_reason=_unreachable_reason(rule_id, lane),
-    )
-
-
-def _unreachable_rung_claim(
-    rule_id: str, lane: ClaimLane, status: ClaimStatus
-) -> Claim:
-    """A rung no cached item enters: a refusal, its reason and its issue.
-
-    ``blocked`` and ``review_pending`` take exactly one ``Absence`` and no
-    positive evidence, which is why these four carry no ``TestRef`` — the
-    rung's own parametrized node still runs, and still asserts that nothing
-    reaches it (D-26's emptiness half).
-    """
-    return _rule_claim(
-        rule_id,
-        lane,
-        status,
-        (
-            Absence(
-                reason=_unreachable_reason(rule_id, lane),
-                issue_refs=(_UMBRELLA_ISSUE,),
-            ),
-        ),
-    )
-
-
-# One claim per rung of ``PRECEDENCE``, in its order.  A rung is where a status
-# comes from, so its claim is about the *mechanism* the rung routes to — and the
-# five rungs whose membership is recomputed from ``data/`` on every call carry
-# their population's backing instead of a per-item claim each, which is the
-# whole reason a claim's subject may be a rule.
-_RULE_CLAIMS: tuple[Claim, ...] = (
-    _rule_claim(
-        "attacker.unserved_declared_lane",
-        "attacker",
-        "withheld",
-        (
-            Absence(
-                reason=(
-                    "A declared family whose interpreter is missing on a lane the "
-                    "request needs is withheld with the pair named, never priced "
-                    "as zero; no cached item reaches it today, which is why the "
-                    "rung is proved on a synthetic declaration and on an "
-                    "emptiness assertion."
-                ),
-                issue_refs=(_UMBRELLA_ISSUE,),
-            ),
-        ),
-    ),
-    _rule_claim(
-        "attacker.declared_defence_only",
-        "attacker",
-        "stats_only",
-        (
-            _source_ref("Guardian Angel"),
-            _rung_ref("attacker.declared_defence_only"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.declared_state",
-        "attacker",
-        "modeled_state",
-        (
-            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
-            OptionSchema(item="Hubris", option="eminence_stacks"),
-            _rung_ref("attacker.declared_state"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.declared_behaviour",
-        "attacker",
-        "modeled_effect",
-        (
-            Symbol(path="item_behavior_catalog.behavior_rules", role="compiler"),
-            _rung_ref("attacker.declared_behaviour"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.item_input_options_membership",
-        "attacker",
-        "modeled_state",
-        (
-            Symbol(path="item_effects.item_state_receipts", role="value_accessor"),
-            OptionSchema(item="Dark Seal", option="glory_stacks"),
-            _rung_ref("attacker.item_input_options_membership"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.no_runtime_behavior",
-        "attacker",
-        "stats_only",
-        (
-            _source_ref("Banshee's Veil"),
-            _rung_ref("attacker.no_runtime_behavior"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.no_described_effect",
-        "attacker",
-        "stats_only",
-        (
-            _source_ref("Blasting Wand"),
-            _rung_ref("attacker.no_described_effect"),
-        ),
-    ),
-    _rule_claim(
-        "attacker.cached_shop_record",
-        "attacker",
-        "withheld",
-        (
-            Absence(
-                reason=(
-                    "A cached shop record whose passive or active has not been "
-                    "reviewed for outgoing damage is withheld rather than scored; "
-                    "the umbrella issue tracks the review queue."
-                ),
-                issue_refs=(_UMBRELLA_ISSUE,),
-            ),
-        ),
-    ),
-    _unreachable_rung_claim(
-        "attacker.unreviewed_fixture", "attacker", "review_pending"
-    ),
-    _rule_claim(
-        "target.attacker_refusal_passthrough",
-        "target",
-        "withheld",
-        (
-            Absence(
-                reason=(
-                    "A cached record whose described passive no rule and no "
-                    "registry entry declares is refused on both lanes by one "
-                    "answer; the umbrella issue tracks the review queue."
-                ),
-                issue_refs=(_UMBRELLA_ISSUE,),
-            ),
-        ),
-    ),
-    _unreachable_rung_claim("target.unreviewed_fixture", "target", "review_pending"),
-    _rule_claim(
-        "target.certified_declared_defence",
-        "target",
-        "modeled_event_certified",
-        (
-            Symbol(
-                path="item_behavior_catalog.EVENT_CERTIFIED_MECHANICS",
-                role="value_accessor",
-            ),
-            Symbol(
-                path="item_coverage.require_certified_target_timeline",
-                role="certification_guard",
-            ),
-            _rung_ref("target.certified_declared_defence"),
-        ),
-    ),
-    _rule_claim(
-        "target.declared_durability",
-        "target",
-        "modeled",
-        (
-            Symbol(path="item_coverage.target_lane_rules", role="value_accessor"),
-            _rung_ref("target.declared_durability"),
-        ),
-    ),
-    _rule_claim(
-        "target.not_target_relevant",
-        "target",
-        "not_target_relevant",
-        (
-            _source_ref("Abyssal Mask"),
-            _rung_ref("target.not_target_relevant"),
-        ),
-    ),
-)
 
 
 def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
@@ -2074,7 +1823,6 @@ def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
         *(_target_certified_claim(item) for item in _TARGET_CERTIFIED_IMPLS),
         *(_utility_claim(item) for item in UTILITY_OUTCOMES),
         *(_support_packet_claim(item) for item in _SUPPORT_PACKET_CLAIMS),
-        *_RULE_CLAIMS,
     ]
     return {(claim.subject_kind, claim.subject, claim.lane): claim for claim in claims}
 
@@ -2137,167 +1885,6 @@ FRONTIER: Mapping[str, str] = {
 
 validate_claim_table(COVERAGE_EVIDENCE)
 
-# ── the chain, mirrored as data ───────────────────────────────────────────
-
-# The two classifiers above are ``if``/``elif`` ladders, and the *order* of
-# their rungs is part of the public contract: an item in
-# ``NO_RUNTIME_BEHAVIOR`` that also carries a defensive effect type never
-# reaches its own container, so a coverage claim filed against that container
-# is a claim no cached item can reach.  Nothing could say that until the
-# ladder was something a program could walk.
-#
-# This is that walk, landed **beside** the chain and never instead of it
-# (D-98).  It is read-only in this phase: no function in ``src/`` consumes
-# it, ``tests/coverage_resolver.first_matching_rule`` interprets it, and a
-# test reproduces the live status for every cached item on both lanes.
-# Phase 3's step 3.8 is the one-symbol commit that flips the classifier onto
-# it.  Every rung below is in the same order as the branch it mirrors, and
-# `keys_on` names the container, registry or predicate that branch reads.
-PRECEDENCE: tuple[PrecedenceRule, ...] = (
-    PrecedenceRule(
-        rule_id="attacker.unserved_declared_lane",
-        lane="attacker",
-        kind="derivation",
-        keys_on=("item_coverage.has_unserved_lane",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="withheld",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.declared_defence_only",
-        lane="attacker",
-        kind="derivation",
-        keys_on=("item_coverage.declares_only_defence",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="stats_only",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.declared_state",
-        lane="attacker",
-        kind="derivation",
-        keys_on=("item_coverage.declares_state",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled_state",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.declared_behaviour",
-        lane="attacker",
-        kind="derivation",
-        keys_on=("item_coverage.declares_behaviour",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled_effect",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.item_input_options_membership",
-        lane="attacker",
-        kind="container",
-        keys_on=("item_effects.ITEM_INPUT_OPTIONS",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled_state",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.no_runtime_behavior",
-        lane="attacker",
-        kind="container",
-        keys_on=("item_coverage.NO_RUNTIME_BEHAVIOR",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="stats_only",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.no_described_effect",
-        lane="attacker",
-        kind="predicate",
-        keys_on=("item_coverage._has_described_effect",),
-        items=(),
-        effect_types=(),
-        negated=True,
-        status="stats_only",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.cached_shop_record",
-        lane="attacker",
-        kind="cached_record",
-        keys_on=(),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="withheld",
-    ),
-    PrecedenceRule(
-        rule_id="attacker.unreviewed_fixture",
-        lane="attacker",
-        kind="terminal",
-        keys_on=(),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="review_pending",
-    ),
-    PrecedenceRule(
-        rule_id="target.attacker_refusal_passthrough",
-        lane="target",
-        kind="status_passthrough",
-        keys_on=(),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="withheld",
-    ),
-    PrecedenceRule(
-        rule_id="target.unreviewed_fixture",
-        lane="target",
-        kind="predicate",
-        keys_on=("item_coverage.is_unreviewed_fixture",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="review_pending",
-    ),
-    PrecedenceRule(
-        rule_id="target.certified_declared_defence",
-        lane="target",
-        kind="derivation",
-        keys_on=("item_coverage.certified_target_mechanics",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled_event_certified",
-    ),
-    PrecedenceRule(
-        rule_id="target.declared_durability",
-        lane="target",
-        kind="derivation",
-        keys_on=("item_coverage.target_lane_rules",),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="modeled",
-    ),
-    PrecedenceRule(
-        rule_id="target.not_target_relevant",
-        lane="target",
-        kind="terminal",
-        keys_on=(),
-        items=(),
-        effect_types=(),
-        negated=False,
-        status="not_target_relevant",
-    ),
-)
-
-validate_precedence(PRECEDENCE)
-
 __all__ = [
     "ATTACKER_LANES",
     "COVERAGE_EVIDENCE",
@@ -2305,7 +1892,6 @@ __all__ = [
     "ItemCoverage",
     "NO_RUNTIME_BEHAVIOR",
     "SCORING_LANES",
-    "PRECEDENCE",
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",

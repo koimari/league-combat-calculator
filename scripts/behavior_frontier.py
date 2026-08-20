@@ -276,11 +276,6 @@ CLASS_C_CLAIM_EVIDENCE_CONTAINERS: Mapping[str, Mapping[str, str]] = {
             "halves belong to, and the handshake policy its packet declares, "
             "both resolved against the pairing registry"
         ),
-        "_RULE_CLAIMS": (
-            "one claim per precedence rung, for the five rungs whose membership "
-            "is recomputed from data/ and therefore cannot carry a per-item "
-            "claim"
-        ),
         "_REVIEW_ISSUE_REFS": (
             "criterion 14's own blessed survivor: tracked review issues per "
             "item, routed onto a claim at import.  An issue reference states no "

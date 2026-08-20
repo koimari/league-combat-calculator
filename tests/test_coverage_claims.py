@@ -57,7 +57,6 @@ from src.calculator import item_outcomes
 from src.calculator.item_coverage import (
     COVERAGE_EVIDENCE,
     FRONTIER,
-    PRECEDENCE,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -166,7 +165,6 @@ MANDATE_CLAIM = Claim(
     ),
     dimensions=("damage_amplification",),
     issue_refs=(),
-    unreachable_reason="",
 )
 MANDATE_REF = TestRef(node_id=MANDATE_NODE)
 
@@ -506,7 +504,6 @@ def test_relevance_tokens_are_the_claims_own_strings() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     tokens = relevance_tokens(claim)
     assert "Imperial Mandate" in tokens
@@ -566,8 +563,8 @@ def test_a_live_test_ref_resolves_through_the_live_seams() -> None:
         "tests/test_coverage_evidence.py::test_the_evidence_union_is_the_closed_nine"
     )
     claim = Claim(
-        subject_kind="rule",
-        subject="coverage_evidence.validate_claim_table",
+        subject_kind="item",
+        subject="Imperial Mandate",
         lane="attacker",
         status="modeled_effect",
         evidence=(
@@ -578,7 +575,6 @@ def test_a_live_test_ref_resolves_through_the_live_seams() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     validate_claim(claim)
     resolve_test_ref(
@@ -761,7 +757,6 @@ MANDATE_SUPPORT_CLAIM = Claim(
     ),
     dimensions=("damage_amplification",),
     issue_refs=(),
-    unreachable_reason="",
 )
 
 
@@ -958,7 +953,6 @@ def test_a_packet_source_with_no_builder_symbol_is_unresolved() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     with pytest.raises(EvidenceUnresolved, match="names no builder"):
         coverage_resolver.resolve(
@@ -1146,7 +1140,6 @@ def test_a_live_source_ref_resolves_to_that_items_audit_entry() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     coverage_resolver.resolve(claim.evidence[0], claim, _live())
 
@@ -1169,7 +1162,6 @@ def test_a_source_ref_citing_another_items_entry_is_unresolved() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     with pytest.raises(EvidenceUnresolved, match='not for "Banshee\'s Veil"'):
         coverage_resolver.resolve(claim.evidence[0], claim, _live())
@@ -1187,7 +1179,6 @@ def test_an_absence_names_the_issues_the_public_payload_publishes() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     coverage_resolver.resolve(claim.evidence[0], claim, _live())
 
@@ -1212,7 +1203,6 @@ def test_resolve_table_reports_every_broken_member_not_the_first() -> None:
         ),
         dimensions=(),
         issue_refs=(),
-        unreachable_reason="",
     )
     failures = coverage_resolver.resolve_table(
         {("item", "Imperial Mandate", "attacker"): broken}, _live()
@@ -1293,7 +1283,7 @@ def test_the_live_survey_reports_only_real_and_unimported_modules() -> None:
         assert missing.module not in imported
 
 
-# ── the chain, mirrored ───────────────────────────────────────────────────
+# ── the ladder, over the cache ───────────────────────────────────────────────────
 
 CLASSIFICATION_RECEIPT = (
     ROOT / "docs" / "receipts" / "item-coverage-classification.json"
@@ -1311,39 +1301,6 @@ EXPECTED_COVERAGE_DIFFS = sorted(
 # defines them so the allowlist's eligibility derivation cannot drift from the
 # payload's own.
 _REFUSAL_STATUSES = item_coverage._REFUSAL_STATUSES
-
-# The containers whose entries a rung reads verbatim as its reason text.  The
-# receipt records that text per item, which is what makes a *second*,
-# independent derivation of the shadow set possible: if the rung had fired,
-# the item's published reason would be its container's entry.
-_REASON_CONTAINERS: dict[str, str] = {
-    "attacker.no_runtime_behavior": "NO_RUNTIME_BEHAVIOR",
-}
-
-# Where the receipt derivation is blind, and why.  It used to hold Gunmetal
-# Greaves: the old ladder gave that one item a named rung whose inline reason
-# was a **verbatim copy** of its reviewed stats-only entry, so the published
-# reason could not say which of the two rungs produced it.  3.8 deleted the
-# named rung, and with it the collision — the two derivations now agree item
-# for item.  The set stays declared and asserted empty rather than deleted:
-# emptiness is the property, and a future ladder that reintroduces a
-# copy-pasted reason has somewhere to land and a test that notices.
-_REASON_COLLISIONS: frozenset[str] = frozenset()
-
-# The shadowed set, pinned as a **set** and never as a count: two independent
-# reproductions of it once disagreed by one, and a wrong integer is a second
-# thing to maintain.  Three rungs are live code no cached item enters, and
-# **no item claim is shadowed at all** since the stat-derivation migration took
-# Frozen Heart out of the reviewed-nothing container: no reviewed sentence in
-# this tree is now dead prose behind an earlier rung.  Shrinking it is a real
-# event — it means the chain reordered.
-SHADOWED_CLAIMS: frozenset[str] = frozenset(
-    {
-        "rule:attacker.unreviewed_fixture@attacker",
-        "rule:attacker.unserved_declared_lane@attacker",
-        "rule:target.unreviewed_fixture@target",
-    }
-)
 
 
 def _attacker(name: str):
@@ -1363,134 +1320,17 @@ def cached_items() -> dict[str, dict]:
     }
 
 
-def test_the_mirror_reproduces_the_live_classifier_on_both_lanes() -> None:
-    """Criterion 5, over every cached item — the whole point of the mirror.
+def test_every_reviewed_absence_is_the_reason_the_ladder_publishes() -> None:
+    """A reviewed-nothing entry an earlier branch decides would be dead prose.
 
-    ``PRECEDENCE`` is a second expression of an ``if``/``elif`` ladder, landed
-    beside it rather than instead of it (D-98).  A second expression that is
-    not checked against the first is drift with a type annotation, so this
-    walks both ladders for every cached record and compares the status.
+    ``NO_RUNTIME_BEHAVIOR`` is the one hand-maintained container the attacker
+    ladder reads, and it reads it below the declaration branches — so an
+    entry whose item also compiles a rule would never be published.  Every
+    entry's sentence is asserted to be the sentence the ladder publishes,
+    which is the property a container of reviewed absences has to keep.
     """
-    ctx = live_context()
-    live = {"attacker": _attacker_payload, "target": target_item_model_coverage}
-    disagreements = []
-    for name, record in cached_items().items():
-        for lane, classifier in live.items():
-            rule = coverage_resolver.first_matching_rule(
-                PRECEDENCE, record, lane, ctx=ctx
-            )
-            if rule.status != classifier(record)["status"]:
-                disagreements.append((name, lane, rule.rule_id, rule.status))
-    assert disagreements == []
-
-
-def test_the_mirror_is_read_only_and_no_src_module_consumes_it() -> None:
-    """Criterion 5's other half: a derivation beside the legacy, not in it.
-
-    Phase 3's step 3.8 is the one-symbol commit that flips the classifier onto
-    ``PRECEDENCE``.  Until then a ``src`` reader would make this a second
-    live authority for coverage, which is the thing the claim corpus is
-    forbidden from becoming.
-
-    The one read the declaring module is allowed is its own load-time guard,
-    ``validate_precedence(PRECEDENCE)`` — a declaration that checks its own
-    shape is not a consumer of it, and every other read, in any module, is.
-    """
-    guarded = {
-        node.args[0].lineno
-        for path in sorted((ROOT / "src").rglob("*.py"))
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "validate_precedence"
-        and node.args
-        and isinstance(node.args[0], ast.Name)
-        and node.args[0].id == "PRECEDENCE"
-    }
-    readers = []
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        text = path.read_text(encoding="utf-8")
-        if "PRECEDENCE" not in text:
-            continue
-        for node in ast.walk(ast.parse(text)):
-            if not isinstance(node, ast.Name) or node.id != "PRECEDENCE":
-                continue
-            if isinstance(node.ctx, ast.Store) or node.lineno in guarded:
-                continue
-            readers.append(f"{path.name}:{node.lineno}")
-    assert readers == []
-
-
-def test_every_rung_is_reachable_or_named_in_the_shadowed_set() -> None:
-    """A rung nothing reaches is either declared unreachable or a live bug."""
-    report = coverage_resolver.shadow_report(
-        PRECEDENCE, cached_items(), ctx=live_context()
-    )
-    assert {shadowed.claim_key for shadowed in report} == SHADOWED_CLAIMS
-    assert all(shadowed.reason.strip() for shadowed in report)
-
-
-def test_the_receipt_derives_the_same_shadowed_items_independently() -> None:
-    """The second derivation: what the committed classification receipt says.
-
-    A container rung hands its entry straight through as the published
-    ``reason``.  So for every hand-listed entry the receipt answers the
-    question without walking the ladder at all — if the published reason is
-    not the container's text, that container never spoke for the item — and
-    the two derivations have to agree item for item, less the one collision
-    :data:`_REASON_COLLISIONS` names.
-    """
-    # A **fresh** capture rather than the committed receipt: 3.8 lands
-    # against a receipt one commit stale (R-32 forbids re-capturing inside a
-    # semantic commit), and this derivation reads the published reason, which
-    # the flip regenerated for every item.  The property being checked is
-    # still two independent derivations of one set — the ladder walk and the
-    # published reason — and neither of them is the receipt file.
-    receipt = capture_coverage_classification.capture()
-    from_receipt: set[str] = set()
-    for rule in PRECEDENCE:
-        container_name = _REASON_CONTAINERS.get(rule.rule_id)
-        if container_name is None:
-            continue
-        container = getattr(item_coverage, container_name)
-        for name, reason in container.items():
-            record = receipt["records"][rule.lane].get(name)
-            if record is None or record["reason"] != reason:
-                from_receipt.add(f"item:{name}@{rule.lane}")
-    from_ladder = {key for key in SHADOWED_CLAIMS if key.startswith("item:")}
-    assert from_receipt == from_ladder - _REASON_COLLISIONS
-    assert _REASON_COLLISIONS == frozenset(), (
-        "a rung is copying a container's reason again; the two derivations "
-        "can no longer be compared item for item"
-    )
-
-
-def test_a_shadowed_claim_is_shadowed_for_a_reason_that_names_both_rungs() -> None:
-    """The record is a receipt, not a flag: it says what decides instead.
-
-    The exemplar used to be Banshee's Veil, then Frozen Heart — and neither is
-    here now, because the stat-derivation migration gave Winter's Caress a
-    declaration and the reviewed-nothing container stopped claiming an item
-    whose entry compiles a rule.  The property is asserted over whatever the
-    report holds rather than over one name: every shadowed claim names the
-    rung that decides instead of it, and **no item claim is shadowed at all**,
-    which is the stronger statement the exemplar was standing in for.
-    """
-    report = coverage_resolver.shadow_report(
-        PRECEDENCE, cached_items(), ctx=live_context()
-    )
-    assert report
-    for shadowed in report:
-        assert shadowed.rule_id
-        assert shadowed.reason.strip()
-        # A rung nobody reaches names no outranking rung — nothing decides
-        # *instead* of it, it is simply unreachable — and its reason says so.
-        assert shadowed.outranked_by or "no cached item reaches" in shadowed.reason
-    assert [
-        shadowed.claim_key
-        for shadowed in report
-        if shadowed.claim_key.startswith("item:")
-    ] == []
+    for name, reason in item_coverage.NO_RUNTIME_BEHAVIOR.items():
+        assert _attacker(name).reason == reason, name
 
 
 # The eight registries the collapse retired.  This is the one place in the tree
@@ -1771,54 +1611,20 @@ def _audit_entry(item: str) -> dict:
     )
 
 
-# The rungs whose membership is recomputed from ``data/`` on every call.
-# They are the reason a claim's subject may be a rule at all: nobody can
-# enumerate them at authoring time, so the claim declares the predicate and the
-# resolver enumerates the population and demands every member be backed.
-_DYNAMIC_RULES: frozenset[str] = frozenset(
-    {
-        "attacker.declared_behaviour",
-        "attacker.declared_defence_only",
-        "attacker.declared_state",
-        "attacker.item_input_options_membership",
-        "attacker.no_described_effect",
-        "attacker.cached_shop_record",
-        "target.attacker_refusal_passthrough",
-        "target.unreviewed_fixture",
-        "target.certified_declared_defence",
-        "target.declared_durability",
-    }
-)
-
-
-def _reaching(rule_id: str, lane: str) -> tuple[str, ...]:
-    """The cached items the mirror routes to one rung."""
-    ctx = _static_context()
+def _cached_with_no_described_effect() -> tuple[str, ...]:
+    """Every cached item whose Wiki record describes no passive or active."""
     return tuple(
-        name
-        for name, record in CACHE.items()
-        if coverage_resolver.first_matching_rule(
-            PRECEDENCE, record, lane, ctx=ctx
-        ).rule_id
-        == rule_id
+        sorted(
+            name
+            for name, record in CACHE.items()
+            if not item_coverage._has_described_effect(record)
+        )
     )
 
 
-def dynamic_population(rule) -> tuple[str, ...]:
-    """The membership predicate's population, enumerated.
-
-    A registry rung's population is the registry; the other three are
-    predicates over a cached record, so theirs is every cached item the ladder
-    routes to them.  Empty is a legal and meaningful answer — the target
-    lane's passthrough has no member today, and D-26's third proof is that the
-    emptiness itself is pinned.
-    """
-    if rule.kind == "container":
-        _, registry = coverage_resolver.import_symbol(
-            rule.keys_on[0], _static_context()
-        )
-        return tuple(registry)
-    return _reaching(rule.rule_id, rule.lane)
+def _cached_withheld_on_the_attacker_lane() -> tuple[str, ...]:
+    """Every cached item the attacker ladder refuses."""
+    return tuple(sorted(name for name in CACHE if _attacker(name).status == "withheld"))
 
 
 # ── one parametrized node per hand-listed entry ───────────────────────────
@@ -1898,37 +1704,42 @@ def test_an_item_input_options_member_declares_bounded_controls(item: str) -> No
     assert item in CACHE
 
 
-@pytest.mark.parametrize(
-    "item", sorted(_reaching("attacker.no_described_effect", "attacker"))
-)
-def test_an_item_with_no_described_effect_is_stats_only(item: str) -> None:
+@pytest.mark.parametrize("item", _cached_with_no_described_effect())
+def test_an_item_with_no_described_effect_is_priced_only_by_what_it_declares(
+    item: str,
+) -> None:
     """The cached entry describes no passive or active, so there is none to model.
 
-    The population backing for the ``_has_described_effect`` rule-claim.  The
-    predicate and the published status are checked together: an item that
-    grew a passive and stayed ``stats_only`` would be a mechanic nothing
-    prices, reported as a reviewed absence.
+    A few such items still compile a rule from a registry entry — Vampiric
+    Scepter's vampirism is a sustain declaration, not a Wiki passive — and
+    those publish as modelled.  Every other one is ``stats_only`` for exactly
+    the reason that nothing is described: an item that grew a passive and
+    stayed here would be a mechanic nothing prices, reported as a reviewed
+    absence.
     """
     record = CACHE[item]
     assert not item_coverage._has_described_effect(record)
-    assert _attacker(item).status == "stats_only"
+    coverage = _attacker(item)
+    if item_coverage._declared_families(item):
+        assert coverage.status in {"modeled_effect", "modeled_state"}
+    else:
+        assert coverage.status == "stats_only"
+        assert "no separate passive or active" in coverage.reason
 
 
-@pytest.mark.parametrize(
-    "item", sorted(_reaching("attacker.cached_shop_record", "attacker"))
-)
+@pytest.mark.parametrize("item", _cached_withheld_on_the_attacker_lane())
 def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> None:
     """A cached record with an unreviewed effect is withheld, not scored as zero.
 
-    The population backing for the cached-record rule-claim, and the campaign's
-    own invariant at item scale: the answer is a named refusal carrying the
-    issue that tracks it, never a number.
+    The campaign's own invariant at item scale: the answer is a named refusal
+    carrying the issue that tracks it, never a number — and the only thing the
+    ladder withholds is a shop record whose described passive nothing declares.
     """
     record = CACHE[item]
     coverage = _attacker(item)
     assert record.get("id") is not None or record.get("icon")
     assert item_coverage._has_described_effect(record)
-    assert coverage.status == "withheld"
+    assert not item_coverage._declared_families(item)
     assert not coverage.optimizer_eligible
     assert coverage.review_issue_refs
 
@@ -2006,26 +1817,6 @@ def test_an_item_with_review_issues_publishes_them(item: str) -> None:
     assert all(isinstance(ref, int) and ref > 0 for ref in declared)
 
 
-@pytest.mark.parametrize("rule_id", sorted(rule.rule_id for rule in PRECEDENCE))
-def test_a_precedence_rung_yields_its_declared_status(rule_id: str) -> None:
-    """One rung, against the live classifier, for every item that reaches it.
-
-    A rung nothing reaches is not skipped over: it is asserted empty and named
-    in the shadowed set, which is D-26's third proof — emptiness itself is
-    pinned rather than passing for coverage.
-    """
-    rule = next(rule for rule in PRECEDENCE if rule.rule_id == rule_id)
-    classifier = {
-        "attacker": _attacker_payload,
-        "target": item_coverage.target_item_model_coverage,
-    }[rule.lane]
-    reached = _reaching(rule_id, rule.lane)
-    for name in reached:
-        assert classifier(CACHE[name])["status"] == rule.status, name
-    if not reached:
-        assert f"rule:{rule_id}@{rule.lane}" in SHADOWED_CLAIMS
-
-
 # ── the corpus as a whole ─────────────────────────────────────────────────
 
 
@@ -2050,54 +1841,48 @@ def test_resolve_table_passes_the_full_session_tier_too() -> None:
 
 
 @pytest.mark.full_session
-def test_every_rule_claims_population_is_fully_backed() -> None:
-    """Criterion 3's second half: no rule-claim stands for an unbacked registry.
+def test_every_cached_item_is_backed_by_a_claim_a_node_or_the_frontier() -> None:
+    """Criterion 3's second half: no item is covered by a sentence alone.
 
-    A rule-claim is one ``Symbol`` and one ``TestRef`` speaking for a whole
-    registry unless every member of its population is separately backed — the
-    "one sentence covers everything" shape this phase exists to kill,
-    reproduced inside its own evidence union.  So each member has to resolve
+    The ladder's populations are recomputed from ``data/`` on every call and
+    cannot be enumerated at authoring time, so each cached item has to resolve
     to its own claim, to a collected parametrized node naming it, or to a
-    frontier entry.
+    frontier entry — the "one sentence covers everything" shape this phase
+    exists to kill, checked over the whole shop.
     """
     nodes = coverage_resolver.collected_nodes()
     parametrized = [node for node in nodes if "[" in node]
-    unbacked: list[str] = []
-    for rule in PRECEDENCE:
-        if rule.rule_id not in _DYNAMIC_RULES:
-            continue
-        for member in dynamic_population(rule):
-            if (
-                any(key[1] == member for key in COVERAGE_EVIDENCE)
-                or f"item:{member}@{rule.lane}" in FRONTIER
-            ):
-                continue
-            if any(member in node[node.index("[") :] for node in parametrized):
-                continue
-            unbacked.append(f"{rule.rule_id}:{member}")
+    unbacked = [
+        name
+        for name in sorted(CACHE)
+        if not any(key[1] == name for key in COVERAGE_EVIDENCE)
+        and not any(key.startswith(f"item:{name}@") for key in FRONTIER)
+        and not any(name in node[node.index("[") :] for node in parametrized)
+    ]
     assert unbacked == []
 
 
-def test_the_declared_populations_are_the_measured_ones() -> None:
-    """Emptiness is a pinned fact, not an absence nobody looked at (D-26)."""
-    sizes = {
-        rule.rule_id: len(dynamic_population(rule))
-        for rule in PRECEDENCE
-        if rule.rule_id in _DYNAMIC_RULES
+def test_every_status_the_ladder_can_yield_is_reached_by_a_cached_item() -> None:
+    """Emptiness is a pinned fact, not an absence nobody looked at (D-26).
+
+    ``review_pending`` is reserved for a record the shop does not hold, so no
+    cached item reaches it on either lane; every other status is reached.
+    """
+    attacker = {_attacker(name).status for name in CACHE}
+    target = {target_item_model_coverage(record)["status"] for record in CACHE.values()}
+    assert attacker == {"modeled_effect", "modeled_state", "stats_only", "withheld"}
+    assert target == {
+        "modeled",
+        "modeled_event_certified",
+        "not_target_relevant",
+        "withheld",
     }
-    assert sizes["target.unreviewed_fixture"] == 0
-    assert all(
-        size > 0
-        for rule_id, size in sizes.items()
-        if rule_id != "target.unreviewed_fixture"
-    )
-    assert set(sizes) == _DYNAMIC_RULES
 
 
 def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None:
-    """Criterion 4: unclaimed hand entries number zero, in seven containers.
+    """Criterion 4: unclaimed hand entries number zero, in six containers.
 
-    The seventh container is ``_REVIEW_ISSUE_REFS``, whose entries are covered
+    The sixth container is ``_REVIEW_ISSUE_REFS``, whose entries are covered
     by the ``issue_refs`` of exactly one claim about that item rather than by a
     claim of their own — the refs have one home per item, which is the same
     rule the load gate applies to a negative claim's ``Absence``.
@@ -2122,9 +1907,6 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
         ]
         if len(carriers) != 1:
             unclaimed.append(f"_REVIEW_ISSUE_REFS:{item} carried by {carriers}")
-    for rule in PRECEDENCE:
-        if ("rule", rule.rule_id, rule.lane) not in COVERAGE_EVIDENCE:
-            unclaimed.append(f"PRECEDENCE:{rule.rule_id}")
     assert unclaimed == []
     assert len(COVERAGE_EVIDENCE) == len(
         {
@@ -2180,13 +1962,7 @@ def test_a_tracked_review_on_no_claim_lane_stops_the_corpus(
 
 
 def test_claim_status_is_a_pinned_expectation_the_classifier_agrees_with() -> None:
-    """The classifier stays the only authority; the claim is checked against it.
-
-    A shadowed claim is the one exception and it is not a loophole: shadowing
-    *means* the chain never reaches the rung the claim was filed against, so
-    its status is what that container would have said.  Each of those carries
-    a written ``unreachable_reason``, and the set is pinned.
-    """
+    """The classifier stays the only authority; the claim is checked against it."""
     classifier = {
         "attacker": _attacker_payload,
         "target": item_coverage.target_item_model_coverage,
@@ -2194,9 +1970,6 @@ def test_claim_status_is_a_pinned_expectation_the_classifier_agrees_with() -> No
     disagreements: list[str] = []
     for (kind, subject, lane), claim in COVERAGE_EVIDENCE.items():
         if kind != "item" or lane not in classifier:
-            continue
-        if claim.unreachable_reason:
-            assert f"item:{subject}@{lane}" in SHADOWED_CLAIMS
             continue
         if classifier[lane](CACHE[subject])["status"] != claim.status:
             disagreements.append(f"{subject}@{lane}")
@@ -2234,22 +2007,6 @@ def test_no_src_module_reads_the_corpus_or_a_claims_status() -> None:
                 continue
             readers.append(f"{path.name}:{node.lineno}")
     assert readers == []
-
-
-def test_every_shadowed_claim_carries_its_written_reason() -> None:
-    """Criterion 6: a claim no cached item reaches says so, in words."""
-    report = coverage_resolver.shadow_report(PRECEDENCE, CACHE, ctx=live_context())
-    for shadowed in report:
-        kind, _, rest = shadowed.claim_key.partition(":")
-        subject, _, lane = rest.rpartition("@")
-        claim = COVERAGE_EVIDENCE[(kind, subject, lane)]
-        assert claim.unreachable_reason.strip(), shadowed.claim_key
-    unreachable = {
-        f"{kind}:{subject}@{lane}"
-        for (kind, subject, lane), claim in COVERAGE_EVIDENCE.items()
-        if claim.unreachable_reason
-    }
-    assert unreachable == {shadowed.claim_key for shadowed in report}
 
 
 def test_every_split_mechanic_is_claimed_with_both_sides() -> None:
@@ -2311,33 +2068,6 @@ def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_trac
     assert not set(FRONTIER) & {
         f"{kind}:{subject}@{lane}" for kind, subject, lane in COVERAGE_EVIDENCE
     }
-
-
-def test_every_rule_claim_names_a_live_rung_whose_predicate_resolves() -> None:
-    """A rule-claim's subject is a rung, and the rung's predicate resolves.
-
-    A claim's subject may be a rule precisely because some families are
-    recomputed from ``data/`` on every call and cannot be enumerated at
-    authoring time.  What makes that honest rather than convenient is that the
-    rule is a real rung of the live chain and its membership predicate is a
-    dotted path this tree resolves — a rule-claim naming a rung nobody
-    declares would be a claim about nothing at all, and one whose predicate
-    named nothing would enumerate an empty population and pass.
-
-    The pinned status is tied to the rung's here too, so the two spellings of
-    "what this rung yields" cannot drift apart in the same commit.
-    """
-    ctx = _static_context()
-    rungs = {rule.rule_id: rule for rule in PRECEDENCE}
-    for (kind, subject, lane), claim in COVERAGE_EVIDENCE.items():
-        if kind != "rule":
-            continue
-        assert subject in rungs, subject
-        rule = rungs[subject]
-        assert rule.lane == lane
-        assert rule.status == claim.status
-        for path in rule.keys_on:
-            coverage_resolver.import_symbol(path, ctx)
 
 
 # ── M1–M9: nine mutations, none of which is an edit ───────────────────────
