@@ -9,7 +9,7 @@ from typing import Any
 
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .data_registry import data_version, store_for_generation
-from .champions.slotlib import extract_named
+from .champions.slotlib import extract_named, find_named_leveling
 from .champions.skill_orders import get_ability_rank
 
 
@@ -81,27 +81,48 @@ def _declares_a_heal(prose: str) -> bool:
     return bool(_HEAL_PROSE.search(prose))
 
 
+# The shield and heal lookups, in priority order: the first name a kit
+# carries is the row that is priced.  A conditional row's floor precedes its
+# ceiling ("Minimum" before "Maximum") so an amount the scan cannot condition
+# is the guaranteed one — Shen R's shield is "increased by 0% : 60% (based on
+# target's missing health)" and live health is not a scan-time fact.
+_SHIELD_ATTRIBUTES = (
+    "Shield Strength",
+    "Shield",
+    # Magic-only shields (Morgana E's Black Shield, Galio W, Kassadin Q):
+    # the ledger absorbs them as an ordinary pool — the magic-only
+    # restriction is the boundary named in each module.
+    "Magic Shield Strength",
+    "Minimum Shield Strength",
+    "Maximum Shield Strength",
+)
+_HEAL_ATTRIBUTES = (
+    "Total Heal",
+    "Heal",
+    "Heal Per Tick",
+    # E8d follow-up: Bard W (Caretaker's Shrine) heals scale with charge
+    # time between these two sourced rows; Taric Q carries only the
+    # "Maximum Charges" attribute and its heal is owned by the E1 rule
+    # (issue #143), so it is deliberately NOT a support candidate.
+    "Minimum Heal",
+    "Maximum Heal",
+)
+
 # Attribute names that make a kit a support-packet candidate — the union of
-# the shield and heal lookups below.  A champion whose ability JSON carries
+# the shield and heal lookups above.  A champion whose ability JSON carries
 # none of them can never emit a packet, so the coupled optimizer's per-
 # candidate calls skip the full walk.  Memoized by champion-data identity
 # and re-verified on every hit, so a data refresh can never serve a stale
 # answer through a recycled ``id()``.
-_SUPPORT_ATTRIBUTES = frozenset(
-    {
-        "Shield Strength",
-        "Shield",
-        "Total Heal",
-        "Heal",
-        "Heal Per Tick",
-        # E8d follow-up: Bard W (Caretaker's Shrine) heals scale with charge
-        # time between these two sourced rows; Taric Q carries only the
-        # "Maximum Charges" attribute and its heal is owned by the E1 rule
-        # (issue #143), so it is deliberately NOT a support candidate.
-        "Minimum Heal",
-        "Maximum Heal",
-    }
-)
+_SUPPORT_ATTRIBUTES = frozenset(_SHIELD_ATTRIBUTES + _HEAL_ATTRIBUTES)
+
+# The slots a support packet can hang on.  A packet hangs on a CAST, and a
+# passive is never cast: ``champions/engine.py`` keys a P entry "passive" and
+# the rotation schedules none, so widening this tuple to P would add a pass
+# that can never fire.  A passive shield or heal therefore rides a damaging
+# cast through ``slotlib.attach_self_shield`` (Rakan P, Shen P) or a healing
+# rule (Yuumi P) instead of this scanner.
+_SUPPORT_SLOTS = ("Q", "W", "E", "R")
 _SUPPORT_ATTRS_MEMO: dict[tuple[int, int], tuple[dict[str, Any], bool]] = {}
 
 # E8d follow-up: per-champion heal-attribute overrides.  Bard W's shrine
@@ -147,6 +168,14 @@ _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     # packet targets ALLIES ONLY.  In a 1v1 (no selected teammate) the
     # packet resolves to nothing and the self heal pays exactly once.
     ("Rakan", "Q"): "all_teammates",
+    # The magic-shield rows the shield lookup reaches (below) belong to two
+    # self-shields whose sentences name the caster by an ordinary pronoun,
+    # which the caster-only narrowing cannot see: Kassadin Q ("He also gains
+    # a shield that absorbs magic damage for 1.5 seconds") and Galio W
+    # ("Galio gains Anti-Magic Bulwark ... Gain a shield that absorbs magic
+    # damage").  Neither grants anything to an ally.
+    ("Kassadin", "Q"): "self",
+    ("Galio", "W"): "self",
 }
 
 # E8c: slots whose shield the champion module authors itself (via the
@@ -231,6 +260,14 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
         ("Talon", "Q"),
         ("Yorick", "Q"),
         ("Kindred", "W"),
+        # Starcall (Q) puts Rejuvenation on SORAKA ("star dust returns to
+        # Soraka, granting her Rejuvenation"); the healing rule already
+        # prices it as the 12 sourced ticks (``Starcall · Rejuvenation``,
+        # Heal per Tick x12 == Total Heal), and the scanner re-derived the
+        # same regeneration as a flat ally heal at the cast.  An ally only
+        # gets Rejuvenation through Astral Infusion, whose own heal is a
+        # separate row.
+        ("Soraka", "Q"),
     }
 )
 
@@ -242,7 +279,7 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
         return memo[1]
     found = any(
         leveling.get("attribute") in _SUPPORT_ATTRIBUTES
-        for slot in ("Q", "W", "E", "R")
+        for slot in _SUPPORT_SLOTS
         for effect in _ability(champion_data, slot).get("effects", [])
         for leveling in effect.get("leveling", [])
     )
@@ -283,11 +320,8 @@ def _support_profile(
     memo = _SUPPORT_PROFILE_MEMO.get(memo_key)
     if memo is not None and memo[0] is ability:
         return memo[1]
-    shield_attr = _first_attribute(ability, ("Shield Strength", "Shield"))
-    heal_attr = _first_attribute(
-        ability,
-        ("Total Heal", "Heal", "Heal Per Tick", "Minimum Heal", "Maximum Heal"),
-    )
+    shield_attr = _first_attribute(ability, _SHIELD_ATTRIBUTES)
+    heal_attr = _first_attribute(ability, _HEAL_ATTRIBUTES)
     description = " ".join(
         str(effect.get("description", "")) for effect in ability.get("effects", [])
     ).lower()
@@ -369,6 +403,32 @@ def _support_profile(
     return profile
 
 
+def _scales_off_the_recipient(ability: dict[str, Any], attribute: str) -> bool:
+    """Whether a row's amount is a share of the RECIPIENT's own stats.
+
+    A support row's "target" is the shield's or heal's recipient, not an
+    enemy — Taric W's Bastion is "7 / 8 / 9 / 10 / 11% of target's maximum
+    health", each recipient off their own.  Such a row resolved against an
+    empty target map, which made it 0.0 and dropped it.
+    """
+    leveling = find_named_leveling(ability, attribute)
+    return leveling is not None and any(
+        "target's" in unit
+        for modifier in leveling.get("modifiers", [])
+        for unit in modifier.get("units", [])
+    )
+
+
+def _caster_as_recipient(stats: dict[str, float]) -> dict[str, float]:
+    """The one recipient whose stats a scan holds: the caster's own.
+
+    Live health is not a scan-time fact, so only maximum health resolves; a
+    row scaling off the recipient's current or missing health still comes
+    back 0.0 and is refused (Seraphine W's pulse heal).
+    """
+    return {"target_max_health": float(stats.get("health", 0.0) or 0.0)}
+
+
 @dataclass(frozen=True)
 class _Row:
     """One resolved leveling row: what it grants, to whom, from which cast."""
@@ -377,6 +437,7 @@ class _Row:
     kind: str
     target_scope: str
     target_self: bool
+    recipient_scaled: bool = False
 
 
 def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
@@ -440,10 +501,24 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
                 f"from source {ability.get('name', slot)!r}; supported scopes: "
                 f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
             )
+        recipient_scaled = _scales_off_the_recipient(ability, attribute)
+        if recipient_scaled:
+            # Only one recipient's stats are in reach, so only the caster's
+            # copy has a sourced amount; the ally copy is withheld rather
+            # than granted the caster's number.
+            scope, resolved_self = "self", True
         # ``target_self`` is the resolver's fallback for a teammate-less
         # roster and only a shield row carries it: a heal packet is always
         # granted outward, and the caster's own copy rides its scope.
-        rows.append(_Row(attribute, kind, scope, kind == "shield" and resolved_self))
+        rows.append(
+            _Row(
+                attribute,
+                kind,
+                scope,
+                kind == "shield" and resolved_self,
+                recipient_scaled,
+            )
+        )
     return rows
 
 
@@ -479,7 +554,7 @@ def derive_ally_effects(
         return []
     effects: list[dict[str, Any]] = []
     requested_ranks = ability_ranks or {}
-    for slot in ("Q", "W", "E", "R"):
+    for slot in _SUPPORT_SLOTS:
         ability = _ability(champion_data, slot)
         if not ability:
             continue
@@ -495,9 +570,16 @@ def derive_ally_effects(
             if cast.get("slot") == slot
         ]
         rows = _slot_rows(champion_data.get("name", ""), slot, ability)
+        recipient = _caster_as_recipient(stats)
         for cast_time in times:
             for row in rows:
-                amount = extract_named(ability, row.attribute, rank, stats, {})
+                amount = extract_named(
+                    ability,
+                    row.attribute,
+                    rank,
+                    stats,
+                    recipient if row.recipient_scaled else {},
+                )
                 if amount > 0:
                     effects.append(
                         {

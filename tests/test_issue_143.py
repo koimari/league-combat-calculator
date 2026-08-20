@@ -60,6 +60,7 @@ def test_registry_membership_and_single_definition():
             ("Talon", "Q"),
             ("Yorick", "Q"),
             ("Kindred", "W"),
+            ("Soraka", "Q"),
         }
     )
     source = inspect.getsource(support_effects)

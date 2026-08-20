@@ -25,7 +25,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import ability_on_hit_entry, simple_damage
+from .slotlib import ability_on_hit_entry, simple_damage, support_cast
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
@@ -138,6 +138,15 @@ SLOTS = {
     # cast — the 300-unit continuation only reaches a second target.
     "Q": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # Caretaker's Shrine heals the ally who walks over it.  The slot exists
+    # so the rotation casts it and the support scanner can price the shrine
+    # at full power (cached "Maximum Heal", 50-200 + 70% AP); the 5-second
+    # charge that separates it from "Minimum Heal" is the boundary.
+    "W": support_cast(
+        default_name="Caretaker's Shrine",
+        detail="Ally heal (sourced by the support scanner) at the "
+        "fully-charged shrine; the 5s charge ramp is not modeled.",
     ),
 }
 

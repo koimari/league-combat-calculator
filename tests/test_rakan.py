@@ -16,7 +16,10 @@ def test_rakan_rotation_counts_each_enemy_damage_cast_once(rakan_data, parse_at)
     )
 
     expected = {"Q": 390.0, "W": 430.0, "R": 400.0}
-    assert set(abilities) == set(expected)
+    # E (Battle Dance) is a zero-damage support cast: it exists so the
+    # rotation casts it and the scanner prices the ally shield.
+    assert set(abilities) == set(expected) | {"E"}
+    assert abilities["E"]["total_raw"] == 0.0
     for slot, raw in expected.items():
         assert parts_raw_total(abilities[slot]["parts"], "magic") == pytest.approx(raw)
 
@@ -31,9 +34,10 @@ def test_rakan_rotation_is_mitigated_and_resource_ordered(rakan_data, parse_at, 
     result = fight(stats, abilities, target_magic_resistance=100)
 
     assert result["total_damage"] == pytest.approx(610.0)
-    assert [event["slot"] for event in result["cast_timeline"]] == ["Q", "W", "R"]
-    assert sum(ability["resource_cost"] for ability in abilities.values()) == 235.0
-    assert stats["max_mana"] >= 235.0
+    assert [event["slot"] for event in result["cast_timeline"]] == ["Q", "W", "E", "R"]
+    # 235 across the three damaging casts, plus Battle Dance's own 60.
+    assert sum(ability["resource_cost"] for ability in abilities.values()) == 295.0
+    assert stats["max_mana"] >= 295.0
 
 
 def test_rakan_quickness_hits_each_selected_target_once(rakan_data, parse_at, fight):

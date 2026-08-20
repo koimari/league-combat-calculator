@@ -197,11 +197,25 @@ class TestQCosmicBinding:
 
 
 class TestNonDamageSlots:
-    """W (ally heal), E (portal), R (stasis) must not emit rows."""
+    """E (portal) and R (stasis) emit nothing; W emits a zero-damage cast."""
 
-    @pytest.mark.parametrize("slot", ["W", "E", "R"])
+    @pytest.mark.parametrize("slot", ["E", "R"])
     def test_slot_absent(self, bard_data, slot) -> None:
         assert slot not in _parse(bard_data)
+
+    def test_w_is_a_zero_damage_cast_the_support_scanner_prices(
+        self, bard_data
+    ) -> None:
+        """Caretaker's Shrine: heal 200.0 to an ally at rank 5, 0 AP.
+
+        The row is the cached "Maximum Heal" (50/87.5/125/162.5/200 + 70% AP)
+        — the fully-charged shrine; the slot exists only so the rotation
+        casts it (see tests/test_e8_support.py for the coupled probe).
+        """
+        shrine = _parse(bard_data)["W"]
+
+        assert shrine["total_raw"] == 0.0
+        assert shrine["parts"] == ()
 
 
 # ---------------------------------------------------------------------------

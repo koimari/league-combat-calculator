@@ -22,12 +22,22 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .scaling import is_flat_unit, resolve_scaling
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    attach_self_shield,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    support_cast,
+)
 from .source_receipts import load_champion_sources
 
 _Q_ATTACKS = 3
 _Q_ENHANCED_BONUS_ATTACK_SPEED = 50.0
 _E_BASE_SPEED = 800.0
+# HARDCODED: verify on patch updates — Ki Barrier's duration is prose
+# ("grants himself a shield for 47 : 128.59 (based on level) (+ 13% bonus
+# health) for 2.5 seconds"); the amount itself is the cached P "Shield" row.
+_P_SHIELD_DURATION_SECONDS = 2.5
 
 
 def _named_level_rank_damage(
@@ -188,7 +198,27 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (DamagePart("physical", total, time_offset=travel),)
     entry["resource_restore"] = _energy_restore(ctx.level)
     entry["detail"] = f"champion hit after {travel:.2f}s dash"
-    return entry
+    passive = ctx.ability("P")
+    if passive is None:
+        return entry
+    # Ki Barrier fires "after completing an ability's effects", and E is the
+    # module's first cast (CAST_ORDER), so the sourced self-shield rides it.
+    # A shield-only slot has no channel of its own — ``attach_self_shield``
+    # needs a damage event to ride (slotlib) and a passive is never cast.
+    shield = extract_named(passive, "Shield", ctx.level, ctx.stats, ctx.target)
+    if shield <= 0.0:
+        return entry
+    return attach_self_shield(
+        entry,
+        amount=shield,
+        duration=_P_SHIELD_DURATION_SECONDS,
+        source="Ki Barrier",
+        detail=(
+            f"{entry['detail']}; the E cast also grants the Ki Barrier "
+            f"self-shield ({shield:g} for {_P_SHIELD_DURATION_SECONDS:g}s, "
+            "47:128.59 by level + 13% bonus health)"
+        ),
+    )
 
 
 OPTIONS = [
@@ -243,8 +273,24 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Shen")
 
-CAST_ORDER = ["E", "Q"]
-SLOTS = {"E": _shadow_dash, "Q": _twilight_assault}
+CAST_ORDER = ["E", "Q", "R"]
+SLOTS = {
+    "E": _shadow_dash,
+    "Q": _twilight_assault,
+    # Stand United shields the target ally ("granting the target allied
+    # champion a shield for 5 seconds at the time of cast").  The slot
+    # exists so the rotation casts it and the support scanner can price the
+    # shield; the sourced floor ("Minimum Shield Strength" 120/220/320 +
+    # 135% AP + 15% of his bonus health) is what is priced, because the
+    # "increased by 0% : 60% (based on target's missing health)" that
+    # separates it from the maximum is a live-health condition.
+    "R": support_cast(
+        default_name="Stand United",
+        detail="Ally shield (sourced by the support scanner) at its "
+        "sourced floor; the 0-60% missing-health increase and the "
+        "3-second channel's teleport are not modeled.",
+    ),
+}
 
 # Reviewed crowd control, read from the cached kit.  Q (Twilight Assault):
 # "Enemy champions hit by the Spirit Blade along its path are slowed for

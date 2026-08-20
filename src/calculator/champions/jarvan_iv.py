@@ -32,6 +32,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     simple_damage,
+    support_cast,
 )
 from .source_receipts import load_champion_sources
 
@@ -173,6 +174,16 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _martial_cadence,
     "Q": _dragon_strike,
+    # Golden Aegis shields Jarvan himself ("Jarvan IV also grants himself a
+    # shield for 4 seconds", cached "Shield Strength" 60-140 + 70% bonus AD);
+    # the slot exists so the rotation casts it and the support scanner can
+    # price the shield.  The prose-only "+1.3% of his maximum health for each
+    # enemy champion hit" has no leveling row and is not priced.
+    "W": support_cast(
+        default_name="Golden Aegis",
+        detail="Self shield (sourced by the support scanner); the "
+        "per-champion-hit maximum-health increase is not priced.",
+    ),
     "E": _demacian_standard,
     "R": simple_damage(
         attr="Physical Damage",

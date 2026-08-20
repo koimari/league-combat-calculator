@@ -17,7 +17,7 @@ from typing import Any
 
 from .engine import build_parser
 from .healing_contract import declare_healing_rule
-from .slotlib import attach_self_shield, simple_damage
+from .slotlib import attach_self_shield, simple_damage, support_cast
 from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
@@ -85,6 +85,16 @@ SLOTS = {
     ),
     "R": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # Battle Dance shields the target ally ("Rakan grants a shield to the
+    # target allied champion for 3 seconds", cached "Shield Strength"
+    # 50-150 + 70% AP).  The slot exists so the rotation casts it and the
+    # support scanner can price the shield; the free recast within 5
+    # seconds re-applies it and is not modeled.
+    "E": support_cast(
+        default_name="Battle Dance",
+        detail="Ally shield (sourced by the support scanner); the free "
+        "recast within 5s is not modeled.",
     ),
 }
 
