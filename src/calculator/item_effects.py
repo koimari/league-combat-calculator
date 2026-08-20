@@ -26,15 +26,12 @@ logger = logging.getLogger(__name__)
 
 # Shared named-effect source.  Energized is not an item-specific passive: the
 # Wiki defines one charge model that every Energized item consumes, then each
-# item supplies its own trigger/proc packet.  Keep the source receipt beside
-# the typed accessors so a parser refresh cannot silently invent a recharge
-# cadence at a call site.
-ENERGIZED_SOURCE_RECEIPT: dict[str, Any] = {
+# item supplies its own trigger/proc packet.  The cadence numbers are the
+# item's own typed ``energized_*`` keys (Statikk charges at 15/attack against
+# the shared 6); this receipt is only the citation they all share.
+ENERGIZED_SOURCE_RECEIPT: dict[str, str | int] = {
     "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Tip_data/Energized",
     "source_revision_id": 4013385,
-    "max_stacks": 100,
-    "attack_stacks": 6,
-    "distance_units_per_stack": 24.0,
 }
 
 
@@ -1444,9 +1441,6 @@ def item_state_receipts(
             ),
             duration=required_effect_value("Fimbulwinter", "everlasting_duration"),
             cooldown=required_effect_value("Fimbulwinter", "everlasting_cooldown"),
-            trigger_kind=str(
-                required_effect_value("Fimbulwinter", "everlasting_trigger_kind")
-            ),
             trigger_status="authored_immobilize_or_melee_slow_only",
         )
 
@@ -2414,7 +2408,6 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "everlasting_multi_target_multiplier": 1.80,
         "everlasting_duration": 3.0,
         "everlasting_cooldown": 8.0,
-        "everlasting_trigger_kind": "crowd_control",
     },
     "Winter's Approach": {
         "type": "stat_conversion",
@@ -2935,7 +2928,6 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "everlasting_multi_target_multiplier",
             "everlasting_duration",
             "everlasting_cooldown",
-            "everlasting_trigger_kind",
         }
     ),
     "Cull": frozenset(
@@ -4793,9 +4785,7 @@ def resolve_stat_effects(
         is_melee=is_melee,
     )
     ultimate_haste = sum(
-        float(ITEM_EFFECTS[name].get("ultimate_haste", 0.0))
-        for name in _item_names(items)
-        if name in ITEM_EFFECTS
+        _declared_effect_value(name, "ultimate_haste") for name in _item_names(items)
     )
     harmony_ratio = (
         required_effect_value(
