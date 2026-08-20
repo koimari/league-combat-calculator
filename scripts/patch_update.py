@@ -558,10 +558,10 @@ def refresh_economics() -> int:
 def rebuild_static_artifacts():
     """Rebuild the derived catalogues the web UI fetches at runtime.
 
-    app.js loads ability-catalog, bis-profiles, and effect-catalog directly, so
-    a patch that refreshes data/ without rebuilding these leaves the UI serving
-    the previous patch's abilities and item effects. Skipping this step is what
-    left them stale before.
+    app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
+    directly, so a patch that refreshes data/ without rebuilding these leaves
+    the UI serving the previous patch's champions, abilities and item effects.
+    Skipping this step is what left them stale before.
 
     bis-profiles is deliberately not rebuilt here: it merges an Axword Meraki
     kit reference from a sibling repo that supplies damage packets the wiki
@@ -570,6 +570,7 @@ def rebuild_static_artifacts():
     """
     print("== Rebuilding static catalogues ==", flush=True)
     for builder in (
+        "build_static_data.py",
         "build_ability_catalog.py",
         "build_effect_catalog.py",
         # Writes only gitignored trees; it runs here because it fails closed

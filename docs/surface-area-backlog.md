@@ -15,7 +15,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| B11 | `static/data.json` | Hand-committed, no generator in `scripts/`, one patch stale. **Measured:** of its champion keys only `key`, `title`, `tags`, `resource` and `abilities` are read (`app.js:731,2556,3480,2395,685`); every stat key and `id`, `abilityCoverage`, `source`, `patch`, `coverage` are dead — stats come from `/api/loadout-stats`. Every item key is dead or overwritten by `/api/items`/`/api/boots` (`mergeItemCoverage` spreads the backend over the snapshot and `renderPicker` filters through `backendItemReady`), so the stale cells are unreachable; only `passiveText` is unique, and nothing reads it. Inside `abilities` the UI reads only `slot`, `name`, `icon`, `maxRank`, `maxHits`, `variants[].name` and `variants.length` — never a ratio. | Shrink: drop `items`, `patch`, `coverage` and the champion stat keys. Needs the `app.js` owner (`DATA.items` must stay an array or `engine.itemCatalogReady` never sets) and a browser pass, so it did not land with the scripts slice. |
 
 ## C. API / UI
 

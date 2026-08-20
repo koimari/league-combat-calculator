@@ -283,13 +283,13 @@ def test_item_prices_come_from_the_catalogue_not_a_formula(source: str):
 
 
 def test_served_item_numbers_win_over_the_snapshot(source: str):
-    """mergeItemCoverage spreads the served entry over the snapshot entry
-    verbatim: a served 0 is a real 0, and no snapshot-preference helper may
-    let static/data.json outrank /api/items or /api/boots."""
+    """buildItemCatalog publishes the served entries verbatim: a served 0 is
+    a real 0, and static/data.json carries no item that could outrank them."""
     assert "SNAPSHOT_NUMERIC_FIELDS" not in source
     assert "preferReportedNumbers" not in source
-    body = function_body(source, "function mergeItemCoverage(")
-    assert "...item,\n      ...metadata," in body
+    body = function_body(source, "function buildItemCatalog(")
+    assert "DATA.items = catalog.map((entry) => ({" in body
+    assert "...entry," in body
 
 
 def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
