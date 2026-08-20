@@ -341,6 +341,21 @@ class RuneStat(Enum):
     MAGIC_PENETRATION_FLAT = "magic_penetration_flat"
 
 
+class RuneOptionKind(Enum):
+    """What shape of number one rune option accepts.
+
+    A rune's missing input is either a switch — the health gate held or it
+    did not, the dash happened or it did not — or a count: Legend stacks,
+    the game minute Gathering Storm reached. Naming which lets
+    :meth:`RuneOption.validated` refuse the halves a range alone would
+    accept, and lets the picker render the control from the declaration
+    instead of from a coincidence.
+    """
+
+    SWITCH = "switch"
+    COUNT = "count"
+
+
 @dataclass(frozen=True, slots=True)
 class RuneOption:
     """One explicit input a rune needs that the request does not carry.
@@ -348,11 +363,13 @@ class RuneOption:
     Decision 5's shape: a stack count, a game minute, whether a dash
     happened. Every one of them is a declared option with a default the
     rune discloses in its fight notes — never a constant inferred from the
-    fight. ``bounds`` is inclusive on both ends.
+    fight. ``bounds`` is inclusive on both ends, and every option is
+    discrete: a half stack and a half-held gate are both nonsense.
     """
 
     key: str
     label: str
+    kind: RuneOptionKind
     default: float
     bounds: tuple[float, float]
     disclosure: str
@@ -362,6 +379,7 @@ class RuneOption:
         return {
             "key": self.key,
             "label": self.label,
+            "kind": self.kind.value,
             "default": self.default,
             "minimum": self.bounds[0],
             "maximum": self.bounds[1],
@@ -372,12 +390,15 @@ class RuneOption:
         """One requested value, or a refusal naming the option and its range."""
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"rune option {self.key!r} must be a number")
+        number = float(value)
+        if number != int(number):
+            raise ValueError(f"rune option {self.key!r} must be a whole number")
         low, high = self.bounds
-        if not low <= float(value) <= high:
+        if not low <= number <= high:
             raise ValueError(
                 f"rune option {self.key!r} must be between {low:g} and {high:g}"
             )
-        return float(value)
+        return number
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,14 +443,19 @@ class RuneStatGrantEffect:
 class AmpCondition(Enum):
     """When a conditional amplifier is live, in the cache's own spelling.
 
-    The values are exactly what ``rune_parser`` records under
+    The values are what ``rune_parser`` records under
     ``damage_amp_health_gate``, so a compiler reads the condition instead of
     translating it — one fact, one spelling, no mapping table to drift.
+
+    Only the gates the engine can *evaluate* are members. The cache also
+    records ``self_below`` (Last Stand's gate on the holder's own health),
+    and it is deliberately absent: the pair engine prices outgoing damage
+    and carries no holder-health track, so a compiler naming it fails here
+    rather than compiling into a walker branch that would book nothing.
     """
 
     TARGET_BELOW = "target_below"
     TARGET_ABOVE = "target_above"
-    SELF_BELOW = "self_below"
 
 
 @dataclass(frozen=True, slots=True)
@@ -1124,11 +1150,19 @@ _NO_DAMAGE_KEYSTONES: Mapping[str, tuple[Disposition, str, tuple[str, ...]]] = {
 }
 
 
-def _no_damage_compiler(
+def no_damage_compiler(
     name: str,
+    disposition: Disposition,
+    reason: str,
+    disclosures: tuple[str, ...] = (),
 ) -> Callable[[Mapping[str, Any]], RuneNoDamageEffect]:
-    """The compiler for one damageless keystone, from its declaration."""
-    disposition, reason, disclosures = _NO_DAMAGE_KEYSTONES[name]
+    """The compiler for one damageless rune, from its declaration.
+
+    Public because a path module's damageless runes are the same shape as
+    the keystone table's: they differ only in their words, and a difference
+    that is only words belongs in a table beside its reader rather than in
+    a hand-written compiler per rune.
+    """
 
     def compile_declared(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
         del entry  # the declaration is the whole compilation
@@ -1151,7 +1185,10 @@ _KEYSTONE_COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Grasp of the Undying": _compile_grasp_of_the_undying,
     "Lethal Tempo": _compile_lethal_tempo,
     "Deathfire Touch": _compile_deathfire_touch,
-    **{name: _no_damage_compiler(name) for name in _NO_DAMAGE_KEYSTONES},
+    **{
+        name: no_damage_compiler(name, *declaration)
+        for name, declaration in _NO_DAMAGE_KEYSTONES.items()
+    },
 }
 
 
@@ -1265,9 +1302,20 @@ class RunePage:
         return ((self.keystone,) if self.keystone else ()) + self.minor_runes
 
 
-def _rune_field(name: str, key: str, default: Any = "") -> Any:
-    """One field of a cached rune record."""
-    return RUNE_EFFECTS.get(name, {}).get(key, default)
+def _rune_path(name: str) -> str:
+    """One rune's path, or a refusal naming the rune the roster lacks.
+
+    A missing path is never defaulted: an empty one would group every
+    path-less rune under a single phantom path and quietly pass the
+    two-path rule.
+    """
+    entry = RUNE_EFFECTS.get(name)
+    if entry is None:
+        raise ValueError(f"Unknown rune {name!r}")
+    path = entry.get("path")
+    if not path:
+        raise KeyError(f"RUNE_EFFECTS[{name!r}] states no path — wiki parse degraded")
+    return str(path)
 
 
 def _minor_rows() -> tuple[int, ...]:
@@ -1362,7 +1410,7 @@ def _validated_minor_runes(value: Any) -> tuple[str, ...]:
                 f"{name!r} is a keystone, not a minor rune; it belongs in "
                 "the keystone field"
             )
-        path = str(_rune_field(name, "path"))
+        path = _rune_path(name)
         held = claimed.get((path, row))
         if held is not None:
             raise ValueError(
@@ -1377,8 +1425,12 @@ def _certify_path_shape(keystone: str, minors: Sequence[str]) -> None:
     """Certify the two-path shape: three from the primary, two from a second."""
     counts: dict[str, int] = {}
     for name in minors:
-        path = str(_rune_field(name, "path"))
+        path = _rune_path(name)
         counts[path] = counts.get(path, 0) + 1
+    if not counts:
+        # No minors, no shape to certify — and no reason to ask a keystone
+        # for a path nothing is being measured against.
+        return
     primary = _primary_path(keystone, counts)
     if len([path for path in counts if path != primary]) > 1:
         drawn = ", ".join(sorted(counts))
@@ -1407,7 +1459,7 @@ def _primary_path(keystone: str, counts: Mapping[str, int]) -> str:
     exactly the shapes no primary could make legal.
     """
     if keystone:
-        return str(_rune_field(keystone, "path"))
+        return _rune_path(keystone)
     return max(sorted(counts), key=lambda path: counts[path], default="")
 
 
@@ -1415,6 +1467,11 @@ def _validated_stat_shards(value: Any) -> tuple[str, ...]:
     """Parse the positional shard list: one option per row, in row order."""
     rows = _shard_rows()
     requested = tuple(_name_list(value, "stat_shards", len(rows), positional=True))
+    if any(requested) and not rows:
+        raise ValueError(
+            "the cached stat-shard table is unavailable, so no shard can be "
+            "selected; re-run the data update"
+        )
     for index, name in enumerate(requested):
         if not name:
             continue

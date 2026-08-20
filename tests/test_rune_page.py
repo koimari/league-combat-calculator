@@ -303,6 +303,7 @@ class TestTheWalkerPricesEachShape:
         """400 max health: the casts at 12s and 18s land under 160."""
         result = _fight(minor_runes=("Coup de Grace",))
         row = result["breakdown"]["rune_Coup de Grace"]
+        assert row["name"] == "Damage Amplification (Coup de Grace)"
         assert row["multiplier"] == pytest.approx(1.08)
         assert row["total_damage"] == pytest.approx(2 * _MITIGATED_CAST * 0.08)
         assert result["total_damage"] == pytest.approx(4 * _MITIGATED_CAST + 24.0)
@@ -359,6 +360,29 @@ class TestTheStatGrantReachesTheStatBlock:
         assert bare["total_damage"] == pytest.approx(1041.1, abs=0.05)
         assert with_rune["total_damage"] == pytest.approx(1121.5, abs=0.05)
         assert any("Absolute Focus is priced" in n for n in with_rune["notes"])
+
+    def test_the_adaptive_choice_reads_the_build_after_its_item_passives(self):
+        """155 bonus AD against 169 AP: the larger is AP, so AP takes it.
+
+        The comparison has to happen after the item passives, not over the
+        item stat subtotals: Rabadon's multiplier and every conversion are
+        invisible to the subtotals, and reading them would hand this build
+        18 attack damage instead of 30 ability power.
+        """
+        request = {
+            "champion": "Ahri",
+            "level": 18,
+            "fight_mode": "one_rotation",
+            "items": ["Rabadon's Deathcap", "Bloodthirster", "Infinity Edge"],
+        }
+        bare = calculate_payload(dict(request))
+        with_rune = calculate_payload({**request, "minor_runes": ["Absolute Focus"]})
+        assert (
+            bare["champion_stats"]["bonus_attack_damage"],
+            bare["champion_stats"]["ability_power"],
+        ) == (155, 169)
+        assert with_rune["champion_stats"]["bonus_attack_damage"] == 155
+        assert with_rune["champion_stats"]["ability_power"] == 208
 
     def test_turning_its_option_off_returns_the_bare_numbers(self):
         request = {
@@ -458,6 +482,15 @@ def rune_page_ui(tmp_path_factory):
             "statShards": ["Adaptive Force", "", ""],
             "runeOptions": {"Absolute Focus": {"above_health_threshold": 0}},
         },
+        "countedOption": {
+            "key": "stacks",
+            "label": "Stacks",
+            "kind": "count",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 10,
+            "disclosure": "synthetic",
+        },
     }
     path = tmp_path_factory.mktemp("runes") / "fixture.json"
     path.write_text(json.dumps(fixture), encoding="utf-8")
@@ -528,6 +561,20 @@ class TestThePickerBuildsTheRequestTheServerValidates:
         assert "disabled" not in rows
         assert 'data-rune-option="above_health_threshold"' in rows
         assert "0 turns the grant off" in rows
+
+    def test_each_option_renders_the_control_its_kind_declares(self, rune_page_ui):
+        """A switch is a checkbox; a count is a bounded number input."""
+        rows = rune_page_ui["rows"]
+        assert (
+            '<input type="checkbox" data-rune-option="above_health_threshold"' in rows
+        )
+        assert '<input type="number" step="1" min="0" max="10"' in rows
+        assert 'data-rune-option="stacks"' in rows
+
+    def test_the_picker_reads_its_side_from_the_path_it_was_opened_on(
+        self, rune_page_ui
+    ):
+        assert rune_page_ui["sides"] == ["A", "B", "B", "A"]
 
     def test_copy_a_to_b_copies_the_whole_page(self, rune_page_ui):
         assert rune_page_ui["copied"] == {

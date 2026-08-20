@@ -58,6 +58,14 @@ console.log(vm.runInContext(`
   state.attacker.minorRunesA = __fixture.page.minorRunes;
   state.attacker.statShardsA = __fixture.page.statShards;
   state.attacker.runeOptionsA = __fixture.page.runeOptions;
+  // A synthetic counted option proves the picker renders from the declared
+  // kind rather than assuming every option is a switch. No rune declares a
+  // COUNT option yet; units B and C will (Legend stacks, the game minute).
+  engine.runes = engine.runes.map((rune) => (
+    rune.name === __fixture.page.minorRunes[2]
+      ? { ...rune, options: [...(rune.options || []), __fixture.countedOption] }
+      : rune
+  ));
   const build = engineBuild("A");
   const rows = runePageRows("A");
   copyRunePage("A", "B");
@@ -71,6 +79,7 @@ console.log(vm.runInContext(`
     rows,
     choices: [0, 1, 2, 3, 4].map((index) => minorRuneChoices("A", index).map((rune) => rune.name)),
     shardChoices: [0, 1, 2].map((index) => statShardChoices(index).map((option) => option.name)),
+    sides: ["attacker.keystoneA", "attacker.minorRunesB.3", "attacker.statShardsB.0", "attacker.buildA.2"].map(pickerSide),
     copied: {
       keystone: state.attacker.keystoneB,
       minorRunes: state.attacker.minorRunesB,

@@ -56,10 +56,20 @@ def path_compilers() -> dict[str, RuneCompiler]:
 
 
 def path_options() -> dict[str, tuple[RuneOption, ...]]:
-    """Every declared rune option, merged the same way as the compilers."""
+    """Every declared rune option, merged the same way as the compilers.
+
+    A rune whose options two paths declare raises for the same reason a
+    rune two paths compile does: one of the two would silently win.
+    """
     merged: dict[str, tuple[RuneOption, ...]] = {}
     for module in PATH_MODULES:
-        merged.update(module.OPTIONS)
+        for name, options in module.OPTIONS.items():
+            if name in merged:
+                raise ValueError(
+                    f"rune {name!r} has options declared by two paths, one of "
+                    f"them {module.__name__.rsplit('.', 1)[-1]}"
+                )
+            merged[name] = options
     return merged
 
 

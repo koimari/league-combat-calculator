@@ -2891,7 +2891,6 @@ function renderDuelSide(side) {
   host.innerHTML = `${head}${invite}${rows.join("")}${keystoneRow}${runePageRows(side)}${foot}`;
 }
 
-/** One rune by name from the whole roster the config published. */
 /** Copy one side's whole rune page onto the other. */
 function copyRunePage(from, to) {
   state.attacker[`keystone${to}`] = state.attacker[`keystone${from}`];
@@ -2902,6 +2901,7 @@ function copyRunePage(from, to) {
   );
 }
 
+/** One rune by name from the whole roster the config published. */
 function getRune(name) {
   return name ? (engine.runes || []).find((entry) => entry.name === name) || null : null;
 }
@@ -2963,7 +2963,10 @@ function runeOptionControls(side) {
     const rune = getRune(name);
     return (rune?.options || []).map((option) => {
       const value = stored[name]?.[option.key] ?? option.default;
-      return `<label class="rune-option" title="${escapeHtml(option.disclosure || "")}"><input type="checkbox" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" ${Number(value) ? "checked" : ""} /><span>${escapeHtml(name)}: ${escapeHtml(option.label)}</span></label>`;
+      const control = option.kind === "switch"
+        ? `<input type="checkbox" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" ${Number(value) ? "checked" : ""} />`
+        : `<input type="number" step="1" min="${Number(option.minimum)}" max="${Number(option.maximum)}" value="${Number(value)}" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" />`;
+      return `<label class="rune-option" title="${escapeHtml(option.disclosure || "")}">${control}<span>${escapeHtml(name)}: ${escapeHtml(option.label)}</span></label>`;
     });
   });
   return controls.length ? `<div class="duel-rune-options">${controls.join("")}</div>` : "";
@@ -3545,7 +3548,7 @@ const PICKER_TITLE = {
 const RUNE_PICKERS = new Set(["keystone", "minor-rune", "stat-shard"]);
 
 function openPicker(type, path) {
-  pickerContext = { type, path };
+  pickerContext = { type, path, side: pickerSide(path) };
   $("pickerKind").textContent = PICKER_KIND[type] || "Item catalogue";
   $("pickerTitle").textContent = PICKER_TITLE[type] || "Choose an item";
   $("pickerSearch").value = "";
@@ -3634,10 +3637,19 @@ function runeSlotLabel(entry) {
   return entry.row === 0 ? `${entry.path} keystone` : `${entry.path} row ${entry.row}`;
 }
 
+/**
+ * Which build a picker path belongs to. The rune paths spell the side in
+ * the state key itself (`attacker.minorRunesB.2`), so it is read once here
+ * rather than sniffed at each use.
+ */
+function pickerSide(path) {
+  return /^attacker\.[A-Za-z]+B(\.|$)/.test(path) ? "B" : "A";
+}
+
 /** The catalogue the open picker chooses from. */
 function pickerSource() {
   const index = Number(pickerContext.path.split(".").pop());
-  const side = pickerContext.path.includes("RunesB") || pickerContext.path.includes("ShardsB") ? "B" : "A";
+  const side = pickerContext.side;
   if (pickerContext.type === "champion") return DATA.champions;
   if (pickerContext.type === "keystone") return engine.keystones;
   if (pickerContext.type === "minor-rune") return minorRuneChoices(side, index);
@@ -4495,9 +4507,12 @@ document.addEventListener("click", (event) => {
   if (runeOptionBox) {
     const { runeOption, runeName, runeSide } = runeOptionBox.dataset;
     const stored = state.attacker[`runeOptions${runeSide}`] || {};
+    const value = runeOptionBox.type === "checkbox"
+      ? (runeOptionBox.checked ? 1 : 0)
+      : Math.round(Number(runeOptionBox.value) || 0);
     state.attacker[`runeOptions${runeSide}`] = {
       ...stored,
-      [runeName]: { ...(stored[runeName] || {}), [runeOption]: runeOptionBox.checked ? 1 : 0 },
+      [runeName]: { ...(stored[runeName] || {}), [runeOption]: value },
     };
     invalidateOptimization();
     return render();

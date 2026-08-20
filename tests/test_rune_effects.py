@@ -517,6 +517,22 @@ class TestHailOfBlades:
         # Top-level, not in ``effects``: prove the accessor reads the entry.
         assert rune_effects.rune_effect_value("Hail of Blades", "cooldown") == 10.0
 
+    def test_its_priced_numbers_are_pinned_to_the_patch_they_came_from(self):
+        """A tripwire for the re-pull, not a second source.
+
+        Every other test here reads the cache, so a wiki rebalance moves the
+        answer with nothing saying so — 16.16 moved all four of these at
+        once (base 4 -> 2, bonus AD 8% -> 12%, AP 6% -> 10%, attack speed
+        120% -> 90%) and no test noticed. Re-pin these on patch day, with
+        the change explained, exactly as the golden baseline is re-captured.
+        """
+        cached = _cached("Hail of Blades")
+        assert cached["leveling"][0][0] == pytest.approx(2.0)
+        assert cached["leveling"][0][17] == pytest.approx(20.0)
+        assert cached["bonus_ad_ratio"] == pytest.approx(0.12)
+        assert cached["ap_ratio"] == pytest.approx(0.10)
+        assert cached["attack_speed_ratios"] == [0.9, 0.6]
+
 
 class TestGraspOfTheUndying:
     def test_damage_is_the_cached_share_of_the_holders_maximum_health(self):

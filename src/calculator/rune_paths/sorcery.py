@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 from ..rune_effects import (
     RuneOption,
+    RuneOptionKind,
     RuneProcEffect,
     RuneStat,
     RuneStatContext,
@@ -108,6 +109,7 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
         RuneOption(
             key=_ABOVE_THRESHOLD,
             label="Above the health threshold",
+            kind=RuneOptionKind.SWITCH,
             default=1.0,
             bounds=(0.0, 1.0),
             disclosure=(

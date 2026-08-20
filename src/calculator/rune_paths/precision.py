@@ -30,6 +30,12 @@ def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect
     name = "Coup de Grace"
     effects = RuneValues(name, entry.get("effects", {}))
     condition = AmpCondition(str(effects.value("damage_amp_health_gate")))
+    if condition is not AmpCondition.TARGET_BELOW:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states a {condition.value!r} gate and "
+            "this compiler prices the one that arms below a share of the "
+            "target's health — wiki description reordered"
+        )
     health_ratio = effects.number("damage_amp_health_ratio")
     return RuneConditionalAmpEffect(
         rune_name=name,

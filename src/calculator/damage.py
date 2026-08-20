@@ -11174,7 +11174,9 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     ):
         amped_damage = state.total_damage - rotation.first_ability_damage
         hypershot_bonus = amped_damage * (hypershot.multiplier - 1.0)
-        row = {
+        # The one amp whose pool is not a row list: the trigger cast is
+        # excluded by re-walking the ledger, so it authors its own deltas.
+        row: dict[str, Any] = {
             "name": f"Damage Amplification ({hypershot.owner})",
             "multiplier": hypershot.multiplier,
             "total_damage": hypershot_bonus,
@@ -11223,9 +11225,9 @@ def _add_rune_conditional_amp_damage(
     """Apply every selected health-gated rune amplifier (Coup de Grace-class).
 
     Runs last among the amplifiers so the ledger it reads is the whole
-    fight. A rune whose gate reads the *holder's* health is refused with a
-    receipt rather than guessed at: the pair engine prices outgoing damage
-    and carries no holder-health track.
+    fight. Only gates the walk can evaluate reach here at all — a gate on
+    the holder's own health has no ``AmpCondition`` member, so it is refused
+    where it compiles rather than booking nothing here.
     """
     effects = _page_effects(state, rune_effects.RuneConditionalAmpEffect)
     if not effects:
@@ -11240,13 +11242,6 @@ def _add_rune_conditional_amp_damage(
     max_health = max(0.0, state.target_health)
     for effect in effects:
         state.notes.extend(effect.disclosures)
-        if effect.condition is rune_effects.AmpCondition.SELF_BELOW:
-            state.notes.append(
-                f"{effect.rune_name} is not priced: its gate reads the "
-                "holder's own health share, and the pair engine prices "
-                "outgoing damage without tracking the holder's health."
-            )
-            continue
         amped = _health_gated_events(events, effect, max_health)
         bonus = sum(row[1] for row in amped) * effect.amp_ratio
         if bonus <= 0.0:
@@ -11255,23 +11250,49 @@ def _add_rune_conditional_amp_damage(
                 "landed while its health gate held."
             )
             continue
-        row = {
-            "name": effect.display_name,
-            "multiplier": 1.0 + effect.amp_ratio,
-            "total_damage": bonus,
-        }
-        delta_events = _amplifier_delta_events(amped, bonus)
-        if delta_events:
-            row["damage_events"] = delta_events
-            row["event_phase"] = "amplifier"
-        state.breakdown[effect.breakdown_key] = row
-        state.total_damage += bonus
+        _record_amp_row(
+            state,
+            effect.breakdown_key,
+            effect.rune_name,
+            1.0 + effect.amp_ratio,
+            amped,
+            bonus,
+        )
         state.notes.append(
             f"{effect.rune_name}'s gate is walked over the fight's ordered "
             "ledger with the target at full health when it starts and its "
             "shields not yet subtracted; a shielded target would cross a "
             "falling gate later than this."
         )
+
+
+def _record_amp_row(
+    state: FightState,
+    key: str,
+    name: str,
+    multiplier: float,
+    amped: list,
+    bonus: float,
+) -> None:
+    """Book one amplifier's bonus: its row, its delta events, its total.
+
+    Every amplifier that prices a pool of ledger rows ends the same way —
+    a row naming its owner and multiplier, the bonus authored back onto the
+    exact events it amplified (or left coarse when it cannot be), and the
+    bonus added to the fight. The shape lives here so each caller keeps only
+    what differs: which rows it amplified, and by how much.
+    """
+    row: dict[str, Any] = {
+        "name": f"Damage Amplification ({name})",
+        "multiplier": multiplier,
+        "total_damage": bonus,
+    }
+    delta_events = _amplifier_delta_events(amped, bonus)
+    if delta_events:
+        row["damage_events"] = delta_events
+        row["event_phase"] = "amplifier"
+    state.breakdown[key] = row
+    state.total_damage += bonus
 
 
 def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
@@ -11314,19 +11335,16 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
     bonus = sum(row[1] for row in amped) * slot.bonus_fraction
     if bonus <= 0.0:
         return
-    row = {
-        "name": f"Damage Amplification ({slot.owner} — Command)",
-        "multiplier": slot.multiplier,
-        "total_damage": bonus,
-    }
-    delta_events = _amplifier_delta_events(amped, bonus)
-    if delta_events:
-        row["damage_events"] = delta_events
-        row["event_phase"] = "amplifier"
     # Shares the ``damage_amp_<source>`` key namespace with
     # ``_apply_general_amplifiers``; item names keep the keys distinct.
-    state.breakdown[f"damage_amp_{slot.owner}"] = row
-    state.total_damage += bonus
+    _record_amp_row(
+        state,
+        f"damage_amp_{slot.owner}",
+        f"{slot.owner} — Command",
+        slot.multiplier,
+        amped,
+        bonus,
+    )
 
 
 def _apply_temporary_lethality_windows(state: FightState) -> None:
