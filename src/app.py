@@ -235,11 +235,16 @@ _RATE_LIMIT_POLICIES = {
     # session; a generous burst budget still bounds scripted spam to one
     # write every five seconds sustained.
     "metrics_event": (60, 0.2),
+    # Saving a build and minting its share link are two persistent rows per
+    # click of the share button. The burst covers a session of re-shares
+    # while one token every two seconds bounds scripted row creation.
+    "build_write": (20, 0.5),
 }
 _SCOPE_LABELS = {
     "calculate": "Calculator",
     "optimize": "Optimizer",
     "metrics_event": "Metrics",
+    "build_write": "Build sharing",
 }
 # One table for the per-operation cache/rate-limit policy (issue #138).
 # ``rate_limit_scope`` names the token bucket; ``cache_namespace`` names the
@@ -1528,6 +1533,10 @@ def api_save_build():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
+    rate_limit_response = _spend_rate_limit("build_write")
+    if rate_limit_response is not None:
+        return rate_limit_response
+
     try:
         build_id = save_build(data, session_id=_anon_session_id())
     except SQLAlchemyError as exc:  # surface DB failure to the client
@@ -1553,6 +1562,10 @@ def api_create_share():
             raise ValueError("slug must be at most 50 characters")
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+
+    rate_limit_response = _spend_rate_limit("build_write")
+    if rate_limit_response is not None:
+        return rate_limit_response
 
     try:
         share = create_share_link(
