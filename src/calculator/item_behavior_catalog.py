@@ -81,7 +81,10 @@ from .item_behavior import (
     ForcedCritHeal,
     ForcedCritRule,
     Isolation,
+    DeclaredRamp,
+    LevelRamp,
     LevelSteppedRate,
+    LevelSubject,
     LivePredicate,
     Magnitude,
     ManaflowRule,
@@ -4138,6 +4141,13 @@ class AllyPacketDeclaration:
     declaration is the same declaration for both, so binding it to an owner
     would be the item-name literal this migration removes coming back as a
     table key.
+
+    ``ramps`` carries each level-scaled number's :class:`LevelSubject`, which
+    the cached sentence states and the emitters used to guess.
+    ``tests/test_item_support_effects.py::TestDeclaredRampSubjects`` reads the
+    ``type=`` qualifier back out of every owner's cached branch text, so a
+    patch that re-scales one of these is a red test rather than a number only
+    the source moved.
     """
 
     trigger: PacketTrigger
@@ -4146,7 +4156,7 @@ class AllyPacketDeclaration:
     persistence: Persistence
     redirects_incoming_damage: bool
     reads: tuple[str, ...]
-    ramps: tuple[tuple[str, str], ...]
+    ramps: tuple[DeclaredRamp, ...]
     zero_reason: str
 
 
@@ -4388,11 +4398,12 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         persistence=Persistence.SINGLE_MOMENT,
         redirects_incoming_damage=False,
         reads=("charge_damage_ratio",),
-        ramps=(("charge_cap_min", "charge_cap_max"),),
+        ramps=(DeclaredRamp("charge_cap_min", "charge_cap_max", LevelSubject.HOLDER),),
         zero_reason=(
             "the heal is the stored charge pool, a sourced share of the "
-            "authored damage capped by a sourced level ramp; a zero means the "
-            "ledger carried no damage to charge from"
+            "authored damage capped by a sourced level ramp read at the "
+            "holder's level; a zero means the ledger carried no damage to "
+            "charge from"
         ),
     ),
     AllyProducer.CONSONANCE: AllyPacketDeclaration(
@@ -4419,10 +4430,14 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         persistence=Persistence.TIMED_WINDOW,
         redirects_incoming_damage=False,
         reads=("duration", "bonus_move_speed_percent", "cooldown"),
-        ramps=(("temporary_health_min", "temporary_health_max"),),
+        ramps=(
+            DeclaredRamp(
+                "temporary_health_min", "temporary_health_max", LevelSubject.HOLDER
+            ),
+        ),
         zero_reason=(
-            "the temporary health is a sourced level ramp read at the "
-            "recipient's own level; a zero means no authored control landed"
+            "the temporary health is a sourced level ramp read at the holder's "
+            "level; a zero means no authored control landed"
         ),
     ),
     AllyProducer.SACRIFICE: AllyPacketDeclaration(
@@ -4577,10 +4592,14 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         persistence=Persistence.TIMED_WINDOW,
         redirects_incoming_damage=False,
         reads=("dream_duration",),
-        ramps=(("blue_reduction_min", "blue_reduction_max"),),
+        ramps=(
+            DeclaredRamp(
+                "blue_reduction_min", "blue_reduction_max", LevelSubject.HOLDER
+            ),
+        ),
         zero_reason=(
-            "the reduction is a sourced level ramp read at the shielded ally's "
-            "own level; a zero means the holder healed or shielded nobody"
+            "the reduction is a sourced level ramp read at the holder's level; "
+            "a zero means the holder healed or shielded nobody"
         ),
     ),
     AllyProducer.PURPLE_BUBBLE: AllyPacketDeclaration(
@@ -4590,10 +4609,12 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         persistence=Persistence.TIMED_WINDOW,
         redirects_incoming_damage=False,
         reads=("dream_duration",),
-        ramps=(("purple_magic_min", "purple_magic_max"),),
+        ramps=(
+            DeclaredRamp("purple_magic_min", "purple_magic_max", LevelSubject.HOLDER),
+        ),
         zero_reason=(
-            "the on-hit bonus is a sourced level ramp read at the buffed ally's "
-            "own level; a zero means the holder healed or shielded nobody"
+            "the on-hit bonus is a sourced level ramp read at the holder's "
+            "level; a zero means the holder healed or shielded nobody"
         ),
     ),
     AllyProducer.DEVOTION: AllyPacketDeclaration(
@@ -4603,7 +4624,7 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         persistence=Persistence.TIMED_WINDOW,
         redirects_incoming_damage=False,
         reads=("shield_duration",),
-        ramps=(("shield_min", "shield_max"),),
+        ramps=(DeclaredRamp("shield_min", "shield_max", LevelSubject.RECIPIENT),),
         zero_reason=(
             "the shield is a sourced level ramp read at each recipient's own "
             "level; a zero means the scenario cast no active, and no packet is "
@@ -4617,7 +4638,7 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         persistence=Persistence.SINGLE_MOMENT,
         redirects_incoming_damage=False,
         reads=(),
-        ramps=(("heal_min", "heal_max"),),
+        ramps=(DeclaredRamp("heal_min", "heal_max", LevelSubject.RECIPIENT),),
         zero_reason=(
             "the heal is a sourced level ramp read at the tethered ally's own "
             "level; a zero means the scenario cast no active"
@@ -4637,11 +4658,11 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
             "target_area_range_units",
             "enemy_max_health_true_damage_ratio",
         ),
-        ramps=(("heal_min", "heal_max"),),
+        ramps=(DeclaredRamp("heal_min", "heal_max", LevelSubject.RECIPIENT),),
         zero_reason=(
-            "the heal is a sourced level ramp and the beam a sourced share of "
-            "each enemy's maximum health; a zero means the scenario cast no "
-            "active"
+            "the heal is a sourced level ramp read at each healed ally's own "
+            "level and the beam a sourced share of each enemy's maximum "
+            "health; a zero means the scenario cast no active"
         ),
     ),
     AllyProducer.INSPIRING_SPEECH: AllyPacketDeclaration(
@@ -4805,12 +4826,18 @@ def _ally_packet_rule(
 ) -> BehaviorRule:
     """One producer's declaration, bound to the owner whose entry carries it."""
     declaration = ALLY_PACKET_DECLARATIONS[producer]
+    ramps = tuple(
+        LevelRamp(
+            LevelValueRef(
+                registry, owner, ramp.min_key, ramp.max_key, "registry_start"
+            ),
+            ramp.subject,
+        )
+        for ramp in declaration.ramps
+    )
     values: tuple[Any, ...] = tuple(
         ValueRef(registry, owner, key) for key in declaration.reads
-    ) + tuple(
-        LevelValueRef(registry, owner, minimum, maximum, "registry_start")
-        for minimum, maximum in declaration.ramps
-    )
+    ) + tuple(ramp.reference for ramp in ramps)
     return BehaviorRule(
         family=RuleFamily.ALLY_PACKET,
         owner=owner,
@@ -4823,6 +4850,7 @@ def _ally_packet_rule(
             persistence=declaration.persistence,
             redirects_incoming_damage=declaration.redirects_incoming_damage,
             values=values,
+            ramps=ramps,
         ),
         compilability=_ally_compilability(declaration),
         receipt=receipt_for(

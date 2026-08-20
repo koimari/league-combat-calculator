@@ -44,7 +44,7 @@ from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 # declare Everlasting?" — rather than by spelling the item that has it, and
 # every number comes back through the rule's own references, so a key no
 # declaration carries is a stop instead of a silent registry read.
-from .item_behavior import AllyProducer, PacketKind, Resistance
+from .item_behavior import AllyProducer, LevelSubject, PacketKind, Resistance
 from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
 from .interpreters.resistance_shred import ShredSlot, walk_slot as _shred_walk_slot
 
@@ -292,6 +292,22 @@ _CHAIN_FRACTION_KEYS: Mapping[PacketKind, str] = MappingProxyType(
         PacketKind.SHIELD: "shield_chain_fraction",
     }
 )
+
+
+def _ramp_value(
+    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any
+) -> float:
+    """One declared level ramp, read at the level its declaration names.
+
+    Every call site used to pass the recipient's level, which is right for
+    the three actives the Wiki qualifies ``type=target's level`` and wrong
+    for the four it qualifies ``type=your level`` — Soul Siphon's charge cap
+    tracked whoever got healed instead of the holder who stored the charges.
+    The subject is declared beside the ramp, so no emitter chooses again.
+    """
+    subject = slot.level_subject(key)
+    level = holder.level if subject is LevelSubject.HOLDER else recipient.level
+    return slot.level_value(key, level)
 
 
 def _support_triggers(
@@ -1068,8 +1084,11 @@ def derive_item_support_effects(
                         time=time,
                         kind="damage_modifier",
                         source="Dream Maker — Blue Dream Bubble",
-                        amount=blue_bubble.level_value(
-                            "blue_reduction_min", target.level
+                        amount=_ramp_value(
+                            blue_bubble,
+                            "blue_reduction_min",
+                            holder=attacker,
+                            recipient=target,
                         ),
                         duration=blue_bubble.value("dream_duration"),
                         damage_reduction=True,
@@ -1098,8 +1117,11 @@ def derive_item_support_effects(
                         time=time,
                         kind="on_hit_magic",
                         source="Dream Maker — Purple Dream Bubble",
-                        amount=purple_bubble.level_value(
-                            "purple_magic_min", target.level
+                        amount=_ramp_value(
+                            purple_bubble,
+                            "purple_magic_min",
+                            holder=attacker,
+                            recipient=target,
                         ),
                         duration=purple_bubble.value("dream_duration"),
                         next_event_only=True,
@@ -1117,7 +1139,9 @@ def derive_item_support_effects(
             raw_damage = sum(
                 event.raw_damage or event.damage for event in damage_events
             )
-            cap = soul_siphon.level_value("charge_cap_min", target.level)
+            cap = _ramp_value(
+                soul_siphon, "charge_cap_min", holder=attacker, recipient=target
+            )
             charges = min(cap, raw_damage * soul_siphon.value("charge_damage_ratio"))
             if charges > 0.0:
                 packets.append(
@@ -1207,8 +1231,11 @@ def derive_item_support_effects(
                         time=time,
                         kind="temporary_health",
                         source="Solstice Sleigh — Going Sledding",
-                        amount=going_sledding.level_value(
-                            "temporary_health_min", recipient.level
+                        amount=_ramp_value(
+                            going_sledding,
+                            "temporary_health_min",
+                            holder=attacker,
+                            recipient=recipient,
                         ),
                         duration=going_sledding.value("duration"),
                         bonus_move_speed_percent=going_sledding.value(
@@ -1280,7 +1307,9 @@ def derive_item_support_effects(
                     time=active_time,
                     kind="shield",
                     source="Locket of the Iron Solari — Devotion",
-                    amount=devotion.level_value("shield_min", target.level),
+                    amount=_ramp_value(
+                        devotion, "shield_min", holder=attacker, recipient=target
+                    ),
                     duration=devotion.value("shield_duration"),
                     target_scope="all_selected_teammates",
                 )
@@ -1297,7 +1326,9 @@ def derive_item_support_effects(
                 time=active_time,
                 kind="heal",
                 source="Mikael's Blessing — Purify",
-                amount=purify.level_value("heal_min", target.level),
+                amount=_ramp_value(
+                    purify, "heal_min", holder=attacker, recipient=target
+                ),
                 target_scope="explicit_selected_ally",
                 cleanse=True,
             )
@@ -1316,7 +1347,9 @@ def derive_item_support_effects(
                     time=active_time + beam_delay,
                     kind="heal",
                     source="Redemption — Intervention",
-                    amount=intervention.level_value("heal_min", target.level),
+                    amount=_ramp_value(
+                        intervention, "heal_min", holder=attacker, recipient=target
+                    ),
                     target_scope="redemption_allies_in_radius",
                     beam_delay=beam_delay,
                     range_assumption=f"within_{range_units:g}_units",
