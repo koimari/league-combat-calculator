@@ -41,6 +41,16 @@ from src.calculator.rune_effects import keystone_catalog, resolve_keystone  # no
 
 LEVEL = 18
 MODES = ("one_rotation", "time_based", "timed", "auto_only")
+#: The windows the item axis crosses.  ``auto_only`` is covered by the
+#: autos-off pair below rather than twice: with the flag set it casts
+#: nothing, so its item surface is the auto stream's.
+ITEM_WINDOWS = (
+    ("timed", True),
+    ("timed", False),
+    ("one_rotation", True),
+    ("time_based", True),
+    ("auto_only", True),
+)
 #: The BIS axis is a named sample, not the full roster: one BIS request scores
 #: the whole candidate pool, so the axis exists to catch endpoint-level crashes
 #: and withhold notes, and a spread of archetypes reaches every scoring path.
@@ -162,8 +172,10 @@ def run_census():
             **extra,
         }
 
-    # 1. champion x mode, and the bare-kit timed baseline.
+    # 1. champion x mode, and a bare-kit baseline for every window the item
+    #    axis will use.
     baselines = {}
+    window_baselines = {}
     for champ in champions:
         for mode in MODES:
             r = _probe(
@@ -182,22 +194,48 @@ def run_census():
                 baselines[champ] = _coarse(r)
                 if baselines[champ]:
                     frontier["attacker_kit_coarse"][champ] = sorted(baselines[champ])
+        for mode, autos in ITEM_WINDOWS:
+            r = _probe(
+                calculate_payload,
+                {
+                    "champion": champ,
+                    "level": LEVEL,
+                    "items": [],
+                    "fight_mode": mode,
+                    "include_auto_attacks": autos,
+                },
+            )
+            window_baselines[(champ, mode, autos)] = _coarse(r)
 
-    # 2. champion x legally-slotted item.
+    # 2. champion x legally-slotted item, across every window the interface can
+    #    ask for.  A single mode with autos on is not "all modes with all
+    #    items": an item can be coarse in one rotation and clean in a timed
+    #    window, and turning the auto stream off changes which sources are
+    #    active at all.  Each cell is compared against that champion's bare kit
+    #    IN THE SAME WINDOW, so the entry is the item's contribution.
     for champ in champions:
-        base = baselines.get(champ, set())
-        for record in records:
-            slotted = _slot_payload(record)
-            if slotted is None:
-                continue
-            r = _probe(calculate_payload, timed_payload(champ, **slotted))
-            key = f"{champ}|{record.get('name')}"
-            if not r["ok"]:
-                frontier["item_pair_failures"][key] = r["error"]
-            else:
-                extra = sorted(_coarse(r) - base)
-                if extra:
-                    frontier["item_pair_coarse"][key] = extra
+        for mode, autos in ITEM_WINDOWS:
+            base = window_baselines[(champ, mode, autos)]
+            for record in records:
+                slotted = _slot_payload(record)
+                if slotted is None:
+                    continue
+                payload = {
+                    "champion": champ,
+                    "level": LEVEL,
+                    "items": [],
+                    "fight_mode": mode,
+                    "include_auto_attacks": autos,
+                    **slotted,
+                }
+                r = _probe(calculate_payload, payload)
+                key = f"{champ}|{record.get('name')}|{mode}|autos={autos}"
+                if not r["ok"]:
+                    frontier["item_pair_failures"][key] = r["error"]
+                else:
+                    extra = sorted(_coarse(r) - base)
+                    if extra:
+                        frontier["item_pair_coarse"][key] = extra
 
     # 3. champion x compiled keystone.
     for champ in champions:

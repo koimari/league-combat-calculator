@@ -724,7 +724,13 @@ class FightParams(FightConfig):
                 "fight_mode must be one_rotation, time_based, timed, or auto_only"
             )
         one_rotation = fight_mode == "one_rotation"
-        auto_attacks_only = _request_bool(data, "auto_attacks_only", False)
+        # ``auto_only`` is a public fight mode and says exactly what the flag
+        # says, so it sets it.  Validating the name and then dropping it served
+        # a full rotation — abilities, summons and all — to anyone who asked
+        # for autos alone, and made the mode indistinguishable from time_based.
+        auto_attacks_only = (
+            _request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
+        )
         requested_duration = _bounded_request_float(
             data, "fight_duration", DEFAULT_FIGHT_DURATION
         )
