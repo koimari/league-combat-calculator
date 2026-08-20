@@ -298,3 +298,19 @@ class TestModuleOverrides:
         assert (
             self._parse(certified, "Zac")["Q"]["event_order_certified"] == "single_hit"
         )
+
+    def test_single_hit_slots_naming_a_slot_with_no_row_is_refused(self) -> None:
+        """The same refusal ``slot_wrappers`` and ``slot_order`` give a typo:
+        a certification that reaches no row would otherwise certify nothing
+        in silence.  Singed's W is a ``no_damage`` slot; a ticked
+        ``wiki_attribute`` row is rebuilt by its tick fix, not certified."""
+        with pytest.raises(KeyError, match=r"single_hit_slots names \['Z'\]"):
+            self._build("Singed", single_hit_slots=frozenset({"Z"}))
+        with pytest.raises(KeyError, match=r"single_hit_slots names \['W'\]"):
+            self._build("Singed", single_hit_slots=frozenset({"W"}))
+        with pytest.raises(KeyError, match=r"single_hit_slots names \['W'\]"):
+            self._build(
+                "Zac",
+                single_hit_slots=frozenset({"W"}),
+                wiki_attribute_tick_fixes={"W": {"ticks": 1}},
+            )

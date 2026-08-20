@@ -274,6 +274,11 @@ def _packet_cooldown(ctx: SlotCtx, spec: dict[str, Any], slot: str, rank: int) -
     return extract_cooldown(ability, rank, level=ctx.level) if ability else 0.0
 
 
+def _one_hit(spec: dict[str, Any]) -> bool:
+    """Whether a packet row is exactly one hit (a packet without ``count`` is)."""
+    return int(spec.get("count", 1)) == 1
+
+
 def _packet_parser(
     spec: dict[str, Any],
     slot: str,
@@ -363,11 +368,11 @@ def _packet_parser(
         # intra-cast ordering left to guess.  Multi-hit packets deliberately
         # keep the conservative cast-boundary marker until their hit timing
         # is sourced separately.
-        if single_hit_certified and int(spec.get("count", 1)) == 1:
+        if single_hit_certified and _one_hit(spec):
             entry["event_order_certified"] = "single_hit"
         if spec.get("cast_time") is not None:
             entry["cast_time"] = float(spec["cast_time"])
-        if spec.get("count", 1) != 1:
+        if not _one_hit(spec):
             entry["parts"] = tuple(
                 DamagePart(
                     part.damage_type,
@@ -552,6 +557,63 @@ def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
     return parse
 
 
+def _single_hit_row(spec: dict[str, Any] | None, *, ticked: bool) -> bool:
+    """Whether ``single_hit_slots`` reaches a row this slot compiles.
+
+    A one-hit ``packet`` row certifies, a ``wiki_attribute`` row certifies
+    unless a tick fix rebuilt it, and a ``variants`` slot certifies through
+    its one-hit packet variants.  A ``no_damage`` slot, a multi-hit packet,
+    or a slot the packet never compiled has no row to certify, so naming it
+    would certify nothing in silence.
+    """
+    if not spec:
+        return False
+    kind = spec.get("kind")
+    if kind == "variants":
+        return any(
+            _single_hit_row(variant, ticked=False)
+            for variant in spec.get("variants", ())
+            if variant.get("kind") == "packet"
+        )
+    if kind == "wiki_attribute":
+        return not ticked
+    return kind == "packet" and _one_hit(spec)
+
+
+def _apply_slot_overrides(
+    champion_name: str,
+    slots: PacketSlotMap,
+    slot_parsers: dict[str, Any] | None,
+    slot_wrappers: dict[str, Any] | None,
+    slot_order: tuple[str, ...] | None,
+) -> None:
+    """Apply a module's slot overrides to the compiled map, in place.
+
+    Raises:
+        KeyError: ``slot_wrappers`` or ``slot_order`` names a slot that
+            neither the packet nor ``slot_parsers`` compiled.
+    """
+    for slot, custom in (slot_parsers or {}).items():
+        slots[slot] = custom
+    for slot, wrap in (slot_wrappers or {}).items():
+        if slot not in slots:
+            raise KeyError(
+                f"{champion_name} slot_wrappers names {slot!r}, which neither the "
+                f"packet nor slot_parsers compiled (slots are {sorted(slots)})"
+            )
+        slots[slot] = wrap(slots[slot])
+    if slot_order is not None:
+        unknown = [slot for slot in slot_order if slot not in slots]
+        if unknown:
+            raise KeyError(
+                f"{champion_name} slot_order names {unknown}, which neither the "
+                f"packet nor slot_parsers compiled (slots are {sorted(slots)})"
+            )
+        ordered = {slot: slots[slot] for slot in slot_order}
+        slots.clear()
+        slots.update(ordered)
+
+
 def build_packet_module(
     champion_name: str,
     packet_sha256: str,
@@ -576,9 +638,8 @@ def build_packet_module(
     the module never rebinds the parser, the slot map, or the packet pin it
     gets back, because the contract reads the pin off what this returns.
 
-    Three keyword arguments let a module say everything it used to say by
-    editing the slot map afterwards, applied in this order once the packet
-    is compiled:
+    Three keyword arguments override the compiled slot map, applied in this
+    order once the packet is compiled:
 
     * ``slot_parsers`` — ``{slot: parser}`` replaces the compiled slot,
       whatever kind the packet gave it; a slot the packet does not compile
@@ -591,8 +652,11 @@ def build_packet_module(
       evaluated (within a phase, evaluation order is insertion order); a
       compiled slot the tuple leaves out is withheld from the module.
 
-    ``single_hit_slots`` certifies a ``packet`` or ``wiki_attribute`` slot's
-    one hit at the cast boundary (variants certify per packet variant).
+    ``single_hit_slots`` certifies a one-hit ``packet`` or ``wiki_attribute``
+    slot at the cast boundary (variants certify per one-hit packet variant).
+    Naming any other slot — a ``no_damage`` slot, a multi-hit packet, a
+    ticked ``wiki_attribute`` row, a typo — is an error, since the
+    certification would otherwise reach nothing.
 
     ``cc_kinds`` is the module's ``MODULE_CC`` declaration, handed to the
     same ``build_parser`` application every hand-written module uses so a
@@ -626,6 +690,20 @@ def build_packet_module(
     wiki_attribute_tick_fixes = wiki_attribute_tick_fixes or {}
     variant_parser_overrides = variant_parsers or {}
     packet_part_timings = packet_part_timings or {}
+    uncertifiable = sorted(
+        slot
+        for slot in single_hit_slots
+        if not _single_hit_row(
+            champion.get("slots", {}).get(slot),
+            ticked=slot in wiki_attribute_tick_fixes,
+        )
+    )
+    if uncertifiable:
+        raise KeyError(
+            f"{champion_name} single_hit_slots names {uncertifiable}, which the "
+            "packet compiles as no one-hit packet or wiki_attribute row "
+            f"(slots are {sorted(champion.get('slots', {}))})"
+        )
     slots = PacketSlotMap(champion, packet_sha256, cast_dependencies=cast_dependencies)
     options: list[dict[str, Any]] = []
     for slot in ("Q", "W", "E", "R", "P"):
@@ -735,25 +813,7 @@ def build_packet_module(
         else:
             slots[slot] = no_damage_parser(slot)
 
-    for slot, custom in (slot_parsers or {}).items():
-        slots[slot] = custom
-    for slot, wrap in (slot_wrappers or {}).items():
-        if slot not in slots:
-            raise KeyError(
-                f"{champion_name} slot_wrappers names {slot!r}, which neither the "
-                f"packet nor slot_parsers compiled (slots are {sorted(slots)})"
-            )
-        slots[slot] = wrap(slots[slot])
-    if slot_order is not None:
-        unknown = [slot for slot in slot_order if slot not in slots]
-        if unknown:
-            raise KeyError(
-                f"{champion_name} slot_order names {unknown}, which neither the "
-                f"packet nor slot_parsers compiled (slots are {sorted(slots)})"
-            )
-        ordered = {slot: slots[slot] for slot in slot_order}
-        slots.clear()
-        slots.update(ordered)
+    _apply_slot_overrides(champion_name, slots, slot_parsers, slot_wrappers, slot_order)
 
     # The digest above proves the evidence is the reviewed one; this
     # proves the declarations are about slots that evidence compiled.  A
