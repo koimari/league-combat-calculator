@@ -416,16 +416,6 @@ class TestTheVerdictSetCannotSayNoEvidence:
             (RECEIPTS / "oracle-P3-3.8-leaf24.json").read_text(encoding="utf-8")
         )
         assert answered["verdict"] == "old_value_correct"
-        row = next(
-            candidate
-            for candidate in json.loads(
-                (RECEIPTS / "standing-dissent-adjudications.json").read_text(
-                    encoding="utf-8"
-                )
-            )["adjudications"]
-            if candidate["receipt"] == "oracle-P3-3.8-leaf24.json"
-        )
-        assert row["kind"] == "citation"
         # ...and the leaf no ruling reaches still keeps the entry open.
         assert "oracle-S6S7-leaf30" in block["why_this_entry_stays_open"]
 

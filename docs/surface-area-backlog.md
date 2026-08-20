@@ -90,7 +90,6 @@ when its fix lands; this file is the one home for the list.
 |---|---|---|---|
 | F1 | `data/economics-sourced.json` `provenance.fetched_at` | Wall-clock float → every refresh dirties the file with zero row changes. | Drop it or pin to the DDragon version. |
 | F2 | `champions/source_receipts.py:66` | `static/cp10_batch_*_sources.json` glob: a stray file dropped into `static/` silently becomes runtime source of truth; batches 01/02 have no file and fall through to `reviewed-packets.json`. | Enumerate the files the registry expects. |
-| F3 | `docs/receipts/standing-dissent-adjudications.json` (61 KB) | Survives for one assertion in `tests/test_escalated_defects_s6s7_oracle.py:380`. | Trim the assertion; delete the file. |
 | F4 | `scripts/build_receipts.py` | Writes gitignored `docs/receipts/champions/`, `items/` plus a tracked `summary.json`; still reads the legacy per-item atoms tree (`extract_item_atoms` is gone). | Read `data/atoms/items.json`; decide whether the summary is read. |
 | F5 | `item_effects.py:2417` `everlasting_trigger_kind: "crowd_control"` | Not what the consumer keys on (it reads `CcClass` from the bus). | Delete the key. |
 
