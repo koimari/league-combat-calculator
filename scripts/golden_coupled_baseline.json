@@ -3481,15 +3481,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "Q",
@@ -8575,15 +8566,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "Q",
@@ -8944,15 +8926,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "Q",
@@ -18704,15 +18677,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -35643,15 +35607,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -36681,15 +36636,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -40750,15 +40696,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -43106,15 +43043,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -49970,15 +49898,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -59425,15 +59344,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "Q",
@@ -66519,18 +66429,6 @@
             "consume": [
               "R"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": [
-                "Q requires W (damage_enabler) was not consulted: Zed's order is the hand seed in CAST_ORDER_OVERRIDES (override_reason=dps_tiebreak)",
-                "E requires W (damage_enabler) was not consulted: Zed's order is the hand seed in CAST_ORDER_OVERRIDES (override_reason=dps_tiebreak)"
-              ]
-            },
             "order": [
               "W",
               "E",
@@ -70778,15 +70676,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "Q",
@@ -74884,15 +74773,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "Q",
@@ -76124,15 +76004,6 @@
               "W"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "R",
@@ -77358,15 +77229,6 @@
               "W"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "R",
@@ -78565,15 +78427,6 @@
               "W"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "E",
               "R",
@@ -93646,15 +93499,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -94538,15 +94382,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -96556,15 +96391,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "Q2",
@@ -98311,15 +98137,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "W",
@@ -100109,15 +99926,6 @@
               "R"
             ],
             "consume": [],
-            "dependencies": {
-              "active": [],
-              "confirmed_by_inference": [],
-              "conflicts": [],
-              "inactive": [],
-              "latent": [],
-              "suppressed": [],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "Q2",
@@ -101921,24 +101729,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [
-                "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
-                "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]"
-              ],
-              "confirmed_by_inference": [],
-              "conflicts": [
-                "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression"
-              ],
-              "inactive": [],
-              "latent": [
-                "E -> Q2 (cc_setup) is latent: No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84)."
-              ],
-              "suppressed": [
-                "E -> Q (cc_setup) suppressed by E requires Q: The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round."
-              ],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "Q2",
@@ -103708,24 +103498,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [
-                "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
-                "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]"
-              ],
-              "confirmed_by_inference": [],
-              "conflicts": [
-                "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression"
-              ],
-              "inactive": [],
-              "latent": [
-                "E -> Q2 (cc_setup) is latent: No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84)."
-              ],
-              "suppressed": [
-                "E -> Q (cc_setup) suppressed by E requires Q: The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round."
-              ],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "E",
@@ -105538,24 +105310,6 @@
               "R",
               "W"
             ],
-            "dependencies": {
-              "active": [
-                "E requires Q (declared cc_enabler): Scatter the Weak's stun is the Dark Sphere's, not the cone's: the wave knocks a sphere through the target and only 'targets hit are also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly that assumption, so a sphere has to be on the field before E is cast or the authored stun has no referent \u2014 and an amplifier keyed on immobilizing CC would then price a stun that never happened. [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]",
-                "E requires Q2 (declared cc_enabler): The 40-splinter second charge is another Dark Sphere ('causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'), so it is subject to the same rule as Q: the stored charge is spent before E, not after it. Load-bearing, not a restatement of E requires Q \u2014 without it the resolver's tie-break ranks E ahead of Q2, which has no outgoing edges, and the derived order changes (D-83). [source: https://wiki.leagueoflegends.com/en-us/Syndra@4024662]"
-              ],
-              "confirmed_by_inference": [],
-              "conflicts": [
-                "E -> Q (cc_setup) opposes E requires Q \u2014 covered by the declaration's own suppression"
-              ],
-              "inactive": [],
-              "latent": [
-                "E -> Q2 (cc_setup) is latent: No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84)."
-              ],
-              "suppressed": [
-                "E -> Q (cc_setup) suppressed by E requires Q: The detector reads E's cc_kind and fans a cc_setup edge out to every castable damage row, Q among them, which would place E first. E's stun is the sphere's consumer, never its setup; the inference has the mechanic the wrong way round."
-              ],
-              "unconsulted": []
-            },
             "order": [
               "Q",
               "Q2",
@@ -105617,15 +105371,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 21,
-      "leaves": 66875,
+      "leaves": 66858,
       "numeric_leaves": 21801,
       "sections": "coupled_scenarios"
     },
-    "git_head": "508f384fc192274877d52ae4545a9f4c367f98b4",
+    "git_head": "e085f1f6eff8c8ee5120856d2dce4c60fc6a6305",
     "items_fetched_at": 1786113359.0537379,
     "producer_count": 6,
     "scenario_count": 21,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "d89ce56a11cdb1d7e243837afd2477fdc4819b20"
+    "src_tree_sha": "ce71bc37e7e8ba973b243c06c95d031e7bb4924a"
   }
 }
