@@ -289,16 +289,46 @@ class Resists:
     # resource budget refused, a cast order without R, or an auto-only
     # window never sets it, and ``effective_mr`` stays pre-ult.
     ult_cast: bool = False
+    # The rotation's final Bloodletter's Curse stacks.  Set once the
+    # rotation is over, because the damage that outlives it (autos,
+    # on-hits, item procs, burns) meets the debuff at full depth; the
+    # rotation's own hits read their per-hit count through ``_ability_mr``.
+    shred_stacks: int = 0
 
     def mark_ult_cast(self) -> None:
         """Record the rotation's accepted R cast; Hatefog's zone is open."""
         self.ult_cast = True
         self._select_mr()
 
+    def apply_shred_stacks(self, stacks: int) -> None:
+        """Record the rotation's final Vile Decay stacks; the served MR follows."""
+        self.shred_stacks = stacks
+        self._select_mr()
+
     def _select_mr(self) -> None:
-        """Serve the MR of the rotation's R outcome (see ``ult_cast``)."""
-        self.effective_mr = (
-            self.effective_mr_post_ult if self.ult_cast else self.effective_mr_pre_ult
+        """Serve the MR the rotation's outcome leaves behind.
+
+        The one home for ``effective_mr``, so the order the outcome's two
+        halves land in cannot change it: ``ult_cast`` picks Hatefog's
+        reduction, ``shred_stacks`` deepens whichever it picked, and every
+        method that re-resolves a pen variant ends here.  The stacks are set
+        only after the rotation, which is also the only phase auto pen
+        applies to.
+        """
+        if self.mr_shred is None or self.shred_stacks <= 0:
+            self.effective_mr = (
+                self.effective_mr_post_ult
+                if self.ult_cast
+                else self.effective_mr_pre_ult
+            )
+            return
+        base = self.reduced_mr if self.ult_cast else self.base_mr
+        stacked = max(
+            reduce_resistance(base, self.mr_shred.reduction_percent(self.shred_stacks)),
+            min(0.0, base),
+        )
+        self.effective_mr = apply_magic_penetration(
+            stacked, self.magic_pen_flat, self.auto_magic_pen_percent
         )
 
     def resolve_magic(self) -> None:
@@ -4837,22 +4867,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             else:
                 _apply_target_shred(resists, target_debuff, coverage)
 
-    # Update effective MR for non-ability damage using final Vile Decay stacks.
-    # Non-ability damage occurs during/after the full rotation, so it sees
-    # Hatefog's reduction exactly when the rotation accepted an R cast.
-    if resists.mr_shred is not None and vile_decay_stacks > 0:
-        base_mr = resists.reduced_mr if resists.ult_cast else resists.base_mr
-        mr_with_stacks = reduce_resistance(
-            base_mr,
-            resists.mr_shred.reduction_percent(vile_decay_stacks),
-        )
-        mr_with_stacks = max(mr_with_stacks, min(0.0, base_mr))
-        resists.effective_mr = apply_magic_penetration(
-            mr_with_stacks, resists.magic_pen_flat, resists.auto_magic_pen_percent
-        )
-
-    # Abilities are done; remaining damage (autos, on-hit, item procs)
-    # switches to the auto-attack pen variants (Terminus average).
+    # The rotation's two outcomes for non-ability damage: the debuff it left
+    # on the target, and the pen variant the remaining damage (autos,
+    # on-hit, item procs) is mitigated by.  Either order serves the same MR —
+    # ``Resists._select_mr`` resolves it once from both.
+    resists.apply_shred_stacks(vile_decay_stacks)
     if resists.has_terminus and resists.terminus_avg_pen > 0:
         resists.use_auto_pen()
 
