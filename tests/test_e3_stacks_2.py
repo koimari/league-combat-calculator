@@ -294,8 +294,11 @@ def test_yone_q3_gathering_storm_keeps_sourced_damage():
 def test_rengar_ferocity_empowers_q_w_e():
     """At 4 Ferocity stacks the next Q/W/E is empowered: the per-level
     Ferocity Bonus values replace the per-rank base values."""
-    empowered = _fight("Rengar", options={"p_ferocity": 4})
-    base = _fight("Rengar", options={"p_ferocity": 0})
+    # R's armour shred is off here: this test compares raw rows against
+    # mitigated totals, and a shredded target would move the mitigation
+    # rather than the row the Ferocity empowerment is about.
+    empowered = _fight("Rengar", options={"p_ferocity": 4, "r_thrill_attack": False})
+    base = _fight("Rengar", options={"p_ferocity": 0, "r_thrill_attack": False})
     stats = empowered["champion_stats"]
 
     q_emp = _resolve(

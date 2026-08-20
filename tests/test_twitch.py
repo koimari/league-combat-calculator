@@ -18,7 +18,9 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # Venom Cask is where the kit's slow lives, and it deals no damage.
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == ["slow"]
-        assert get_champion_module_contract("Twitch").coverage["W"] == "out_of_scope"
+        # W is emitted and grants nothing the engine prices — the slow
+        # carries no magnitude field — which is what ``no_damage`` states.
+        assert get_champion_module_contract("Twitch").coverage["W"] == "no_damage"
         for slot in ("P", "Q", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
 

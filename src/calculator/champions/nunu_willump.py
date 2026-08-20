@@ -9,15 +9,57 @@ instead, and the champion Q self-heal (Base Champion Heal 39-111 +
 authored by healing.py's HEALING_RULE_CHAMPIONS rule.
 
 E2 already fixed E (Snowball Barrage) to the 3-snowball volley; W and R
-damage are modeled; P (Call of the Freljord) is documented out_of_scope.
+damage are modeled.  P (Call of the Freljord) grants "20% bonus attack
+speed and 10% bonus movement speed" whenever the duo damage an enemy
+champion, and successive triggers extend the 4-second window — so the
+attack-speed half rides a BUFF-phase ``stat_buff`` the fight's own
+damage holds up.  Its movement speed has no stat_buff key, and Willump's
+cone cleave lands on secondary targets a 1v1 does not have.
 """
 
 from typing import Any
 
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    STEROID_ZERO,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+)
+
+# HARDCODED: verify on patch updates — Call of the Freljord's grants are
+# cached P prose only ("Gain 20% bonus attack speed and 10% bonus
+# movement speed"); the JSON carries no leveling row for the passive.
+_P_BONUS_ATTACK_SPEED = 20.0
+_P_BONUS_MOVEMENT_SPEED = 10.0
+
+
+def _call_of_the_freljord(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the 20% attack speed the duo's own damage keeps refreshed."""
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    entry = damage_entry(
+        ability.get("name", "Call of the Freljord"),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": _P_BONUS_ATTACK_SPEED}
+    entry["detail"] = (
+        f"+{_P_BONUS_ATTACK_SPEED:g}% bonus attack speed, refreshed by "
+        "every damaging cast and auto against the target; the "
+        f"+{_P_BONUS_MOVEMENT_SPEED:g}% movement speed, the ally copy of "
+        "the buff and Willump's secondary-target cleave have no channel"
+    )
+    return entry
+
+
+_call_of_the_freljord.phase = BUFF
 
 
 def _consume(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -90,6 +132,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"W", "R"}),
     slot_parsers={
         "Q": _consume,
+        "P": _call_of_the_freljord,
     },
     cc_kinds=MODULE_CC,
 )
@@ -104,10 +147,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "authored by the HEALING_RULE_CHAMPIONS rule in healing.py; the "
     "below-half empowerment is a live health formula re-priced at the "
     "heal timestamp.",
+    "P (Call of the Freljord) grants 20% bonus attack speed (cached P "
+    "prose; the JSON has no leveling row) and the fight engine applies "
+    "it to the auto count.  The 4-second window is treated as held for "
+    "the fight, because every damaging cast and auto in the modeled "
+    "rotation extends it; the per-enemy re-trigger cooldown the cache "
+    "calls 'a time' carries no number.  The 10% movement speed, the "
+    "nearby ally's copy of the buff, and Willump's 30% AD cone cleave "
+    "on secondary targets are named rather than priced.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 SELF_HEALING_RULE = declare_healing_rule("Nunu & Willump")

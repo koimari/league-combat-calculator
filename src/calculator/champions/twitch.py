@@ -16,19 +16,28 @@ Why each slot is non-generic:
   bonus attack damage for 6 seconds. The reviewed packet priced that AD
   as if it were direct damage; the stat_buff (Vayne R precedent) makes
   autos and E's %bonus-AD stack term parse against the buffed stat.
-- Q (Ambush) and W (Venom Cask) deal no direct damage: Q is stealth +
-  attack speed, W is a slow zone that applies poison stacks (covered by
-  the pre-stack option). Both emit zero-damage rows.
+- Q (Ambush) deals no direct damage, but "upon breaking stealth, Twitch
+  gains bonus attack speed for 6 seconds" — the cached "Bonus Attack
+  Speed" row (40-60%), emitted as a second BUFF-phase ``stat_buff`` so
+  the fight engine's auto count scales with it.  Breaking the stealth is
+  what the modeled rotation does (the fight's own autos end Ambush), so
+  ``q_stealth_broken`` defaults on; the camouflage and its movement
+  speed have no channel.
+- W (Venom Cask) is a slow zone that applies poison stacks (covered by
+  the pre-stack option) and emits a zero-damage row.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import buff_window_share
 from .slotlib import (
+    STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
     stat_buff,
 )
 from .source_receipts import load_champion_sources
@@ -42,6 +51,10 @@ _POISON_TOTAL_BREAKPOINTS = (6.0, 12.0, 18.0, 24.0, 30.0)
 _POISON_BREAKPOINT_LEVELS = (1, 6, 11, 16, 18)
 _POISON_AP_RATIO = 0.18  # (+ 18% AP) total per stack
 _E_MAGIC_AP_RATIO = 0.35  # "and 35% AP magic damage for each stack"
+# Ambush's post-stealth window: "Upon breaking stealth, Twitch gains
+# bonus attack speed for 6 seconds" (cached Q prose; the percentage is
+# the JSON's "Bonus Attack Speed" row).
+_Q_AS_DURATION_SECONDS = 6.0
 
 
 def _poison_stacks(options: dict[str, Any]) -> int:
@@ -144,22 +157,37 @@ def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: stealth and attack speed — no enemy damage."""
+    """Q: the 40-60% post-stealth attack speed — no enemy damage."""
     ability = ctx.ability()
     if ability is None:
         return None
-    return {
-        "name": ability.get("name", "Ambush"),
-        "rank": ctx.rank_for(),
-        "cooldown": extract_cooldown(ability, ctx.rank_for()),
-        "damage_type": "physical",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
-            "Camouflage and post-stealth attack speed: self buffs only, "
-            "no enemy damage."
-        ),
-    }
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    broken = bool(ctx.option("q_stealth_broken"))
+    share = buff_window_share(ctx, _Q_AS_DURATION_SECONDS) if broken else 0.0
+    bonus_as = granted * share
+    entry = damage_entry(
+        ability.get("name", "Ambush"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed for "
+        f"{_Q_AS_DURATION_SECONDS:g}s on breaking stealth "
+        f"({'broken' if broken else 'held'}: {bonus_as:g}% applied); the "
+        "camouflage and its movement speed have no channel"
+    )
+    return entry
+
+
+_ambush.phase = BUFF
 
 
 def _venom_cask(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -193,6 +221,20 @@ OPTIONS: list[dict[str, Any]] = [
             "(6 = fully stacked)"
         ),
     },
+    {
+        "key": "q_stealth_broken",
+        "type": "bool",
+        "default": True,
+        "label": "Ambush's stealth is broken in the fight (grants its AS)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "Q",
+            "note": (
+                "Arms Q's own post-stealth attack speed; the auto stream "
+                "breaks the stealth, so there is no cross-slot cast edge."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = [
@@ -208,11 +250,14 @@ ASSUMPTIONS = [
     "The auto-attack rate that applies poison in a real fight is not "
     "modeled (stack rate is the option); the fight's own autos still "
     "deal their base AD damage",
-    "Q (Ambush) stealth/attack speed and W (Venom Cask) slow are "
-    "utility-only zero-damage rows; W's in-zone stack applications are "
-    "covered by the poison_stacks option",
-    "The 40% bonus attack speed from Q's post-stealth buff is not "
-    "applied to the auto count",
+    "Q (Ambush) grants the cached Bonus Attack Speed row (40-60%) for 6 "
+    "seconds once the stealth breaks; q_stealth_broken (default on, "
+    "because the modeled rotation's own autos end Ambush) arms it and "
+    "the fight engine applies it to the auto count, time-weighted by the "
+    "share of the fight window the 6-second buff covers.  The 1-second "
+    "entry delay, the camouflage and its movement speed are not modeled",
+    "W (Venom Cask) is a utility-only zero-damage row; its in-zone stack "
+    "applications are covered by the poison_stacks option",
 ]
 
 SLOTS = {
@@ -237,8 +282,10 @@ MODULE_CC = {"E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Twitch", cc_kinds=MODULE_CC)
 
+# W is emitted and grants nothing the engine prices: its slow has no
+# magnitude field, and the poison stacks it applies are the P option's.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
 }
 
 SOURCES = load_champion_sources("Twitch")

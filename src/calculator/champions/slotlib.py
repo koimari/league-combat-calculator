@@ -483,7 +483,7 @@ MODULE_FORMULA_ZERO = ZeroPolicy(
 
 Every numeric leaf a champion authors is born in one of the two builders
 below, so this is the single place the disposition has to be stated — the
-377 call sites across 144 champion modules are deliberately **not** edited,
+397 call sites across 151 champion modules are deliberately **not** edited,
 and a required-no-default field there would be a campaign-wide champion
 sweep smuggled in by an idiom.  Those two figures are measured, not
 recalled: ``tests/test_zero_policy.py`` counts the calls and states the

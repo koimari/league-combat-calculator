@@ -18,16 +18,27 @@ E9-2 gap fixes:
 - E (Eviscerate) prices BOTH the dash and the Flurry explosion on
   arrival (Dash Physical Damage + Flurry Physical Damage == Total
   Physical Damage), instead of the packet's dash-only row.
-- P packmate summon and the W/R shields stay documented out.
+- W (The Call of the Pack) prices the one grant the engine dispatches:
+  "while on the hunt, Naafiri gains 20% AD bonus attack damage" for the
+  cast's sourced 5 seconds.  The two extra Packmates it summons, its
+  bonus movement speed, and P's Packmate roster have no axis — no pet
+  timeline exists.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    STEROID_ZERO,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
@@ -42,6 +53,48 @@ _BLEED_FIRST_TICK = 0.5
 _BLEED_TICK_INTERVAL = 0.5
 _BLEED_DURATION = 5.0
 _RECAST_TIME_OFFSET = 0.5
+
+# HARDCODED: verify on patch updates — The Call of the Pack's hunt lasts
+# "the next 5 seconds" and grants "20% AD bonus attack damage"; both are
+# cached W prose, and the JSON's only W leveling row is movement speed.
+_W_DURATION_SECONDS = 5.0
+_W_BONUS_AD_RATIO = 0.20
+
+
+def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the hunt's 20% AD bonus attack damage for its 5 seconds."""
+    ability = ctx.ability("W")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+
+    share = buff_window_share(ctx, _W_DURATION_SECONDS)
+    granted = _W_BONUS_AD_RATIO * ctx.stat("attack_damage")
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    bonus_ad = granted * share
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
+    entry = damage_entry(
+        ability.get("name", "The Call of the Pack"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
+    entry["detail"] = (
+        f"+{_W_BONUS_AD_RATIO * 100:g}% AD = +{granted:.2f} bonus attack "
+        f"damage for {_W_DURATION_SECONDS:g}s (+{bonus_ad:.2f} over the "
+        f"fight window); the hunt's two extra Packmates and its "
+        f"+{movement:g}% movement speed have no axis"
+    )
+    return entry
+
+
+_call_of_the_pack.phase = BUFF
 
 
 def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -177,6 +230,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "Q": _darkin_daggers,
         "E": _eviscerate,
+        "W": _call_of_the_pack,
     },
     cc_kinds=MODULE_CC,
 )
@@ -204,12 +258,21 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "ledger receipt",
     "E (Eviscerate) prices the dash plus the Flurry explosion (Dash "
     "Physical Damage + Flurry Physical Damage == Total Physical Damage)",
-    "P packmate summon and the W hunt / R shield stay documented "
-    "out-of-scope state.",
+    "W (The Call of the Pack) grants 20% AD bonus attack damage for the "
+    "hunt's 5 seconds (cached W prose; the JSON's only W leveling row is "
+    "movement speed), time-weighted by the share of the fight window the "
+    "buff covers and fed into the parse context so Q/E/R's bonus-AD "
+    "ratios scale off it.  The two extra Packmates, the untargetable "
+    "first second and the bonus movement speed have no axis.",
+    "P (We Are More) is the Packmate roster: an emitted zero-damage row, "
+    "because no pet timeline exists.  R's recast shield needs the "
+    "takedown-gated second cast and is not priced.",
 ]
 
+# P is emitted and grants nothing the engine prices — Packmates have no
+# pet timeline.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
 }
 
 SELF_HEALING_RULE = declare_healing_rule("Naafiri")

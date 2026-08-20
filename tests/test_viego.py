@@ -30,11 +30,15 @@ class TestReviewedCrowdControl:
         assert "slowing them by 99% for 0.25 seconds" in r_text
         assert "other nearby enemies are knocked back" in r_text
 
-    def test_the_out_of_scope_slots_stay_absent(self):
-        """E leaves a mist trail and P is possession — neither damages."""
+    def test_the_undamaging_slots_stay_absent_from_the_review(self):
+        """E leaves a mist trail and P is possession — neither damages.
+
+        E is ``modeled`` all the same: the mist's attack speed is a
+        priced stat_buff row.  P grants nothing the engine prices.
+        """
         assert "E" not in viego.MODULE_CC and "P" not in viego.MODULE_CC
-        assert get_champion_module_contract("Viego").coverage["E"] == "out_of_scope"
-        assert get_champion_module_contract("Viego").coverage["P"] == "out_of_scope"
+        assert get_champion_module_contract("Viego").coverage["E"] == "modeled"
+        assert get_champion_module_contract("Viego").coverage["P"] == "no_damage"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Viego") == []

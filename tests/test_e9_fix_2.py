@@ -174,6 +174,21 @@ def _fight_stats(data: dict) -> dict:
     return data["champion_stats"]
 
 
+def _hunting_stats() -> dict:
+    """``_PARSE_STATS`` with Naafiri's W hunt bonus AD already folded in.
+
+    The Call of the Pack grants "20% AD bonus attack damage" as a
+    BUFF-phase ``stat_buff``, so every bonus-AD ratio on Q/E/R parses
+    against the buffed stat.  A direct parse call has no fight window,
+    which is the per-cast model — the whole 20%.
+    """
+    stats = dict(_PARSE_STATS)
+    bonus = 0.20 * stats["attack_damage"]
+    stats["bonus_attack_damage"] += bonus
+    stats["attack_damage"] += bonus
+    return stats
+
+
 # ---------------------------------------------------------------------------
 # Ahri — P Essence Theft (9-fragment heal)
 # ---------------------------------------------------------------------------
@@ -388,25 +403,28 @@ class TestNaafiriQRecastAndE:
         abilities = _parse("Naafiri")
         q = abilities["Q"]
         assert len(q["parts"]) == 3
+        # Every row below carries a bonus-AD ratio, and W's hunt is a
+        # BUFF-phase bonus-AD grant that parses before Q.
+        hunting = _hunting_stats()
         initial = extract_named(
             _ability("Naafiri", "Q"),
             "Initial Physical Damage",
             5,
-            dict(_PARSE_STATS),
+            hunting,
             {},
         )
         per_tick = extract_named(
             _ability("Naafiri", "Q"),
             "Bleed Physical Damage per Tick",
             5,
-            dict(_PARSE_STATS),
+            hunting,
             {},
         )
         recast_min = extract_named(
             _ability("Naafiri", "Q"),
             "Minimum Bonus Physical Damage",
             5,
-            dict(_PARSE_STATS),
+            hunting,
             {},
         )
         assert q["total_raw"] == pytest.approx(initial + per_tick * 10 + recast_min)
@@ -427,21 +445,31 @@ class TestNaafiriQRecastAndE:
     def test_e_prices_dash_plus_flurry(self):
         abilities = _parse("Naafiri")
         e = abilities["E"]
+        hunting = _hunting_stats()
         dash = extract_named(
-            _ability("Naafiri", "E"), "Dash Physical Damage", 5, dict(_PARSE_STATS), {}
+            _ability("Naafiri", "E"), "Dash Physical Damage", 5, hunting, {}
         )
         flurry = extract_named(
             _ability("Naafiri", "E"),
             "Flurry Physical Damage",
             5,
-            dict(_PARSE_STATS),
+            hunting,
             {},
         )
         assert e["total_raw"] == pytest.approx(dash + flurry)
+        # The fight's own stats already carry W's hunt bonus, weighted by
+        # the share of the 10-second window its 5 seconds cover.
         data = _fight("Naafiri")
+        fight_stats = _fight_stats(data)
+        fight_dash = extract_named(
+            _ability("Naafiri", "E"), "Dash Physical Damage", 5, fight_stats, {}
+        )
+        fight_flurry = extract_named(
+            _ability("Naafiri", "E"), "Flurry Physical Damage", 5, fight_stats, {}
+        )
         casts = int(data["breakdown"]["E"]["casts"])
         assert data["breakdown"]["E"]["total_damage"] == pytest.approx(
-            (dash + flurry) * casts
+            (fight_dash + fight_flurry) * casts, abs=0.06
         )
 
 

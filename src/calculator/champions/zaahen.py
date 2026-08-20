@@ -15,17 +15,36 @@ which is the two summed.  Two legs is not one hit, so W declares its
 aggregate at the cast boundary instead of certifying a single hit; the
 glaive's travel time to maximum range is not in the entry, so the second
 leg's offset is left for the timing wave.
+
+P (Cultivation of War) is the Determination stack buff: "for each stack,
+Zaahen gains bonus attack damage equal to 1.5% : 2.95% (based on level)
+AD.  At maximum stacks ... double the bonus to 36% : 70.87%".  Both
+percentages are cached per-level rows and the stack count is an explicit
+option (default 12, the sourced maximum), because the request carries no
+stack state.  The BUFF phase puts the bonus AD into the parse context,
+so Q/W/E/R's own %AD and %bonus-AD ratios scale off it.  The passive's
+other half — a once-per-cooldown resurrection at maximum stacks — is the
+revive axis, which ``starting_revive_defense`` states only for a fight's
+opening health, not a mid-fight trigger.
 """
 
 from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, with_item_on_hits
+from .slotlib import (
+    STEROID_ZERO,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    find_named_leveling,
+    sum_modifiers,
+    with_item_on_hits,
+)
 
 PACKET_SHA256 = "5f5796aa0364becd253cbb3b7b05939147841a3f76e41cfa061242d344ec9f63"
 
@@ -33,6 +52,61 @@ PACKET_SHA256 = "5f5796aa0364becd253cbb3b7b05939147841a3f76e41cfa061242d344ec9f6
 # his glaive down after a 0.6-second delay, unleashing a shockwave that
 # deals physical damage to nearby enemies" (cached R prose).
 _R_SLAM_DELAY_SECONDS = 0.6
+
+# HARDCODED: verify on patch updates — Determination's 12-stack cap is
+# cached P prose ("stacking up to 12 times"), and the two Per-Level
+# Scaling rows are ordered per-stack first, filled-at-maximum second.
+_P_MAX_STACKS = 12
+_P_PER_STACK_OCCURRENCE = 0
+_P_MAX_STACK_OCCURRENCE = 1
+
+
+def _determination_percent(ctx: SlotCtx, occurrence: int) -> float:
+    """One of Cultivation of War's two Per-Level Scaling rows, in percent."""
+    ability = ctx.ability("P")
+    leveling = find_named_leveling(ability, "Per-Level Scaling", occurrence=occurrence)
+    if leveling is None:
+        # A silent zero would erase the passive — fail loudly instead.
+        raise ValueError(
+            f"Zaahen P: 'Per-Level Scaling' leveling entry #{occurrence} "
+            "(per-stack / filled Determination) missing from the ability JSON"
+        )
+    return sum_modifiers(leveling, ctx.level, level=ctx.level)
+
+
+def _cultivation_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: Determination's bonus AD, doubled once the 12th stack lands."""
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+
+    stacks = min(max(int(ctx.option("p_determination_stacks")), 0), _P_MAX_STACKS)
+    per_stack = _determination_percent(ctx, _P_PER_STACK_OCCURRENCE)
+    filled = _determination_percent(ctx, _P_MAX_STACK_OCCURRENCE)
+    percent = filled if stacks >= _P_MAX_STACKS else per_stack * stacks
+    bonus_ad = percent / 100.0 * ctx.stat("attack_damage")
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
+    entry = damage_entry(
+        ability.get("name", "Cultivation of War"),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
+    entry["detail"] = (
+        f"{stacks}/{_P_MAX_STACKS} Determination stack(s) = {percent:g}% "
+        f"AD (+{bonus_ad:.2f} bonus attack damage); at maximum stacks the "
+        f"per-stack {per_stack:g}% row is replaced by the filled "
+        f"{filled:g}% row.  The maximum-stack resurrection is the revive "
+        "axis, which has no mid-fight channel"
+    )
+    return entry
+
+
+_cultivation_of_war.phase = BUFF
 
 
 def _darkin_glaive(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -125,6 +199,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "Q": _darkin_glaive,
         "W": _dreaded_return,
+        "P": _cultivation_of_war,
     },
     slot_wrappers={
         "Q": partial(
@@ -142,13 +217,39 @@ OPTIONS = list(OPTIONS) + [
         "min": 0,
         "max": 2,
         "label": "Q damage variant",
-    }
+    },
+    {
+        "key": "p_determination_stacks",
+        "type": "int",
+        "default": _P_MAX_STACKS,
+        "min": 0,
+        "max": _P_MAX_STACKS,
+        "label": ("Determination stacks (12 = filled, which doubles the bonus)"),
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Stacks Zaahen's own attacks and abilities generate; the "
+                "buff is self-state, not a consumed setup."
+            ),
+        },
+    },
+]
+
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Cultivation of War) grants bonus attack damage equal to the "
+    "cached per-level Determination row (1.5% : 2.95% AD) per stack, "
+    "replaced at the 12-stack cap by the filled row (36% : 70.87% AD).  "
+    "p_determination_stacks (default 12, the sourced maximum) is the "
+    "stack state the request does not carry; the buff reaches the parse "
+    "context before Q/W/E/R, so their AD ratios scale off it.",
+    "The passive's maximum-stack resurrection — 4 seconds of "
+    "invulnerability restoring 30-75% of maximum health — is not "
+    "priced: the revive axis states a fight's opening health, not a "
+    "mid-fight trigger.",
 ]
 
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 SELF_HEALING_RULE = declare_healing_rule("Zaahen")

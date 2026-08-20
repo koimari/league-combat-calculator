@@ -17,9 +17,12 @@ Stack mechanics modeled (E3):
 - E (Bola Strike) base: "Physical Damage" (55 : 235 + 80% bonus AD);
   empowered: "Bonus Physical Damage" (50 : 335 by level + 80% bonus AD).
 
-R (Thrill of the Hunt) keeps the reviewed CP10.6 packet pricing
-(armor reduction and leap bonus are state). All numeric values are read
-from the champion JSON data.
+R (Thrill of the Hunt) is not a self buff.  Its priced effect is the
+armour reduction the empowered attack leaves on the target — "then
+inflicts armor reduction for 4 seconds", the cached "Armor Reduction"
+row (15/20/25) — emitted as a ``target_debuff`` the fight engine shreds
+with (``engine.py`` ``_ALLOWED_DEBUFF_KEYS``).  All numeric values are
+read from the champion JSON data.
 """
 
 from __future__ import annotations
@@ -27,13 +30,15 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import DEBUFF, SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
+    STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
     find_named_leveling,
     sum_modifiers,
 )
@@ -41,6 +46,55 @@ from .slotlib import (
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
 _FEROCITY_MAX = 4
+
+# HARDCODED: verify on patch updates — the shred's window is cached R
+# prose ("then inflicts armor reduction for 4 seconds"); the magnitude
+# is the JSON's "Armor Reduction" row.
+_R_SHRED_SECONDS = 4.0
+
+
+def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the empowered attack's flat armour shred on the marked target."""
+    ability = ctx.ability("R")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+
+    landed = bool(ctx.option("r_thrill_attack"))
+    shred = extract_value(ability, "Armor Reduction", rank)
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    entry = damage_entry(
+        ability.get("name", "Thrill of the Hunt"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    if landed and shred > 0.0:
+        entry["target_debuff"] = {
+            "armor_reduction_flat": shred,
+            "duration": _R_SHRED_SECONDS,
+        }
+    entry["detail"] = (
+        f"the empowered attack shreds {shred:g} armour for "
+        f"{_R_SHRED_SECONDS:g}s (the engine weights it by the share of "
+        "the fight the window covers, timed from the cast rather than "
+        "from the attack that lands it 2s later); the row's "
+        f"+{movement:g}% movement speed, the camouflage and the 100% AD "
+        "rider on that attack have no channel here"
+        if landed
+        else (
+            "not armed: r_thrill_attack is off, so no empowered attack "
+            f"lands and the {shred:g} armour shred is not applied"
+        )
+    )
+    return entry
+
+
+_thrill_of_the_hunt.phase = DEBUFF
 
 
 def _ferocity_bonus(
@@ -241,14 +295,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array as per-rank base "
         "damage; this module prices base Q from the rank array (20 : 160 + 5% AD) and the empower "
         "from the level array (35 : 260 + 20% AD)",
-        "R (Thrill of the Hunt) keeps the reviewed packet pricing; its armor reduction and leap "
-        "bonus are target/state effects",
+        "R (Thrill of the Hunt) prices its armour reduction as a target_debuff: the cached Armor "
+        "Reduction row (15/20/25) for the sourced 4 seconds, applied when r_thrill_attack is on "
+        "(default).  The engine weights the shred by the share of the fight its window covers, "
+        "timed from the cast rather than from the empowered attack that lands 2 seconds later, "
+        "and the 100% AD rider on that attack, the camouflage and the movement speed are not "
+        "priced",
     ),
     slot_parsers={
         "P": _unseen_predator,
         "Q": _savagery,
         "W": _battle_roar,
         "E": _bola_strike,
+        "R": _thrill_of_the_hunt,
     },
     slot_order=("P", "Q", "W", "E", "R"),
     cc_kinds=MODULE_CC,
@@ -263,10 +322,22 @@ OPTIONS = [
         "max": 4,
         "label": "Ferocity stacks (4 = empowered next)",
     },
+    {
+        "key": "r_thrill_attack",
+        "type": "bool",
+        "default": True,
+        "label": "Thrill of the Hunt's empowered attack lands (armour shred)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "R",
+            "note": (
+                "Arms R's own armour shred, which is already a parsed "
+                "target_debuff atom."
+            ),
+        },
+    },
 ]
 
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
-    for slot in "PQWER"
-}
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now
+# (R's is the target_debuff armour shred).

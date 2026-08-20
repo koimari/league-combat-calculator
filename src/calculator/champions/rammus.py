@@ -12,14 +12,20 @@ during the stance via the ``w_thorns_autos`` option (0 by default — the
 fight engine has no incoming-auto hook, so the enemy's auto count is
 explicit state); the stance's bonus armor/MR rows are the defensive
 buff, not damage, and remain state.
+
+P (Spiked Shell) is a plain conversion: "Rammus gains bonus attack
+damage equal to the sum of 15% total armor and 15% total magic
+resistance".  ``stat_buff``'s percent_of mode reads one stat, never a
+sum, so the addition is written here, in a BUFF-phase row every later
+slot parses against.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import STEROID_ZERO, damage_entry, extract_cooldown
 
 # HARDCODED: verify on patch updates — the thorns formula exists only in
 # the cached W description prose ("enemies that use a basic attack
@@ -28,6 +34,49 @@ from .slotlib import damage_entry, extract_cooldown
 _THORNS_BASE = 15.0
 _THORNS_ARMOR_RATIO = 0.10
 _THORNS_MAGIC_RESISTANCE_RATIO = 0.10
+
+# HARDCODED: verify on patch updates — Spiked Shell's two ratios are
+# cached P prose only ("the sum of 15% total armor and 15% total magic
+# resistance"); the passive carries no leveling row.
+_SPIKED_SHELL_ARMOR_RATIO = 0.15
+_SPIKED_SHELL_MAGIC_RESISTANCE_RATIO = 0.15
+
+
+def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: bonus AD equal to 15% total armour plus 15% total magic resist."""
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+
+    armor = ctx.stat("armor")
+    magic_resistance = ctx.stat("magic_resistance")
+    bonus_ad = (
+        _SPIKED_SHELL_ARMOR_RATIO * armor
+        + _SPIKED_SHELL_MAGIC_RESISTANCE_RATIO * magic_resistance
+    )
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
+    entry = damage_entry(
+        ability.get("name", "Spiked Shell"),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
+    entry["detail"] = (
+        f"+{bonus_ad:.2f} bonus attack damage = "
+        f"{_SPIKED_SHELL_ARMOR_RATIO * 100:g}% of {armor:.1f} armour + "
+        f"{_SPIKED_SHELL_MAGIC_RESISTANCE_RATIO * 100:g}% of "
+        f"{magic_resistance:.1f} magic resistance; the build's "
+        "resistances, not the stance's, since W's bonus armour is a "
+        "state row rather than a stat_buff"
+    )
+    return entry
+
+
+_spiked_shell.phase = BUFF
 
 PACKET_SHA256 = "e48aa5766d5565b485a6d7fa34421f25d11f56fdcfdec5bb0c0823acc991e0f0"
 
@@ -100,6 +149,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "R"}),
     slot_parsers={
         "W": _defensive_ball_curl,
+        "P": _spiked_shell,
     },
     cc_kinds=MODULE_CC,
 )
@@ -124,7 +174,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "enemy autos (0 = none). The reviewed packet's misread of the "
     "'Bonus Armor' row as magic damage is removed; the stance's bonus "
     "armor/MR rows are the defensive buff and remain state.",
+    "P (Spiked Shell) grants bonus attack damage equal to 15% of total "
+    "armour plus 15% of total magic resistance (cached P prose; the "
+    "passive has no leveling row).  It reads the BUILD's resistances: "
+    "W's stance bonus is a state row rather than a stat_buff, so the "
+    "in-game dynamic update from Defensive Ball Curl is not modelled.",
+    "E (Frenzying Taunt) is an emitted zero-damage row: its 1.2-2s taunt "
+    "is control the engine records as a kind without a magnitude, and "
+    "its only damage row is monsters-only.",
 ]
+
+# E is emitted and grants nothing the engine prices against a champion.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "E" else "modeled") for slot in "PQWER"
 }
