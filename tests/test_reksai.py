@@ -65,9 +65,9 @@ class TestPricedRows:
         assert row_review.priced("Rek'Sai", "Q", q_variant=1) == pytest.approx(magic)
 
 
-def test_the_published_options_are_the_two_the_module_reads():
-    """The kit is gated on the Q variant and the Fury pool, and nothing else."""
+def test_the_published_options_are_the_three_the_module_reads():
+    """Q variant, the Fury Furious Bite reads, and the Fury the burrow spends."""
     from src.calculator.champions import get_champion_options_meta
 
     keys = {option["key"] for option in get_champion_options_meta("Rek'Sai")["options"]}
-    assert keys == {"q_variant", "e_fury"}
+    assert keys == {"q_variant", "e_fury", "p_burrow_fury"}

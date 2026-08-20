@@ -15,16 +15,25 @@ expire 4 seconds after the last application, every third hit procs the
 %max-health damage as an authored exact event, and the 20% shred is carried
 as a 4-second ``target_debuff`` on the first ranked cast slot (Q, else E)
 whenever the walk procs at least once.
+
+P (Blast Shield) is the kit's one defensive row: "Periodically, Vi's next
+ability hit grants her a shield equal to 12% of her maximum health for 3
+seconds."  The P slot is where that shield is priced, but a shield-only
+row has no damage event for the ledger to hang it on
+(``slotlib.attach_self_shield``), so the first ranked damage slot carries
+the same payload to the timeline.
 """
 
 import math
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
-from .engine import SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
+    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -73,6 +82,85 @@ def _q_geometry(ctx: SlotCtx) -> tuple[float, float, float, float]:
 
 def _is_primary_target(ctx: SlotCtx) -> bool:
     return int(ctx.target_stat("roster_target_index")) == 0
+
+
+# Blast Shield's size and duration are cached prose, not a leveling row,
+# so they are read out of the sentence that states them.
+_P_SHIELD_PROSE = re.compile(
+    r"shield equal to\s+(\d+(?:\.\d+)?)%\s+of her maximum health for\s+"
+    r"(\d+(?:\.\d+)?)\s+seconds",
+    re.IGNORECASE,
+)
+
+# The damage slots that can carry P's payload, in the order the certified
+# sequence lands them.
+_SHIELD_CARRIERS = ("Q", "E", "R")
+
+
+def _blast_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P (BUFF): price the sourced shield the next ability hit grants.
+
+    The row damages nothing, so the ledger cannot grant from it directly —
+    ``attach_self_shield`` aligns a payload to an ability's damage events
+    and this ability has none.  :func:`_carry_blast_shield` hands the same
+    payload to the first ranked damage slot, which is the ability hit the
+    wiki says activates it.
+    """
+    ability = ctx.ability("P")
+    if ability is None or not _is_primary_target(ctx):
+        return None
+    match = _P_SHIELD_PROSE.search(
+        " ".join(effect.get("description", "") for effect in ability.get("effects", []))
+    )
+    if match is None:
+        return None
+    percent = float(match.group(1))
+    duration = float(match.group(2))
+    amount = percent / 100.0 * ctx.stat("health")
+    if amount <= 0.0:
+        return None
+    entry = {
+        "name": ability.get("name", "Blast Shield"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "physical",
+        "total_raw": 0.0,
+        "parts": (),
+        "detail": (
+            f"{percent:g}% of maximum health ({amount:.0f}) for "
+            f"{duration:g}s on the next ability hit"
+        ),
+    }
+    return attach_self_shield(
+        entry,
+        amount=amount,
+        duration=duration,
+        source="Blast Shield",
+        detail=entry["detail"],
+    )
+
+
+_blast_shield.phase = BUFF
+
+
+def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
+    """Hand P's shield payload to the first damage slot that can grant it.
+
+    One activation, one shield: the earliest ranked carrier takes the
+    payload and the later ones leave it alone.  Secondary roster targets
+    never carry it — P priced nothing for them — so a roster grants Vi one
+    shield rather than one per enemy.
+    """
+    payload = (ctx.results.get("passive") or {}).get("self_shield_events")
+    if not payload:
+        return entry
+    if any(
+        (ctx.results.get(slot) or {}).get("self_shield_events")
+        for slot in _SHIELD_CARRIERS
+    ):
+        return entry
+    entry["self_shield_events"] = payload
+    return entry
 
 
 def _w_trigger_slot(ctx: SlotCtx) -> str | None:
@@ -344,7 +432,7 @@ def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
     elif _w_trigger_slot(ctx) == "Q":
         entry["post_hit_proc"] = _w_proc(ctx, hit_time)
         entry["target_max_health_sensitive"] = True
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 def _e_hit_time(ctx: SlotCtx) -> float:
@@ -416,7 +504,7 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         # Fallback shred carrier when Q is unranked: the walk's procs
         # still shred, anchored at E's cast times.
         entry["target_debuff"] = _w_shred_debuff()
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -451,7 +539,7 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["detail"] = (
         "primary grab" if _is_primary_target(ctx) else "enemy crossed in R path"
     )
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 CAST_ORDER = ("Q", "E", "R")
@@ -532,8 +620,12 @@ ASSUMPTIONS = [
     "windows to casts, not procs",
     "W's 30-50% attack-speed steroid after a proc is not modeled "
     "(conservative in both modes)",
-    "Blast Shield is defensive only: Q/E may activate its 12% max-health shield, "
-    "but it does not change outgoing TDD",
+    "P (Blast Shield) grants 12% of maximum health for 3 seconds (cached "
+    "P prose) on the first ranked ability hit of the fight — the shield "
+    "rides that slot's first damage event into the ledger, and only the "
+    "primary target's fight authors it, so a roster grants one shield. "
+    "Its unstated internal cooldown ('periodically') is not enforced and "
+    "the 4-second reduction per Denting Blows consume is not modeled",
 ]
 
 SOURCES = load_champion_sources("Vi")
@@ -541,6 +633,8 @@ SOURCES = load_champion_sources("Vi")
 # W runs first: Q/E read its presence in ctx.results to decide whether
 # the timed shred has a proc to anchor to.
 SLOTS = {
+    # BUFF phase: P prices Blast Shield before any damage slot asks for it.
+    "P": _blast_shield,
     "W": _denting_blows_timed,
     "Q": _vault_breaker,
     "E": _relentless_force,

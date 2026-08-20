@@ -8,8 +8,22 @@ damage dealt + 7.5% of pre-mitigation damage taken as Potential Shield
 recast time (W cast + 0.5 s per the wiki).  The module keeps pricing W
 as a non-damaging state-only slot; the engine's cast timeline still
 schedules the W cast that arms the recast.
+
+R (Realm of Death) deals no damage either, but it "consumes the target's
+soul ..., healing himself for 10% of their maximum health".  That share
+of *another unit's* maximum health is the one number the self-heal rule
+cannot read — the rule never sees target stats — so the slot prices it
+here, against the champion this pair fight targets, and the rule places
+it at the R cast.  The stat theft in the same sentence (10% of the
+target's AP, attack speed, maximum health, resistances and AD, granted
+to Mordekaiser for 7 seconds) has no engine axis and stays documented.
 """
 
+import re
+from typing import Any
+
+from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import simple_damage
 
@@ -22,6 +36,50 @@ PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d22
 # cast-time qualifier to the number, so it is read from the cast start as
 # written.
 _E_CLAW_SECONDS = 0.5
+
+# R carries no leveling row at all — the drain is one sentence of the
+# cached R prose, so the percentage is read from there rather than pinned
+# as a module constant.
+_R_DRAIN_PROSE = re.compile(
+    r"healing himself for\s+(\d+(?:\.\d+)?)%\s+of their maximum health",
+    re.IGNORECASE,
+)
+
+
+def _realm_of_death(compiled):
+    """R: carry the sourced soul-drain heal for the primary target."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = compiled(ctx)
+        if entry is None or ctx.rank_for("R") < 1:
+            return entry
+        # Realm of Death banishes exactly one champion, so only the pair
+        # fight against the primary defender may author the drain; a
+        # roster must not heal Mordekaiser once per enemy.
+        if int(ctx.target_stat("roster_target_index")) != 0:
+            return entry
+        ability = ctx.ability("R")
+        if ability is None:
+            return entry
+        match = _R_DRAIN_PROSE.search(
+            " ".join(
+                effect.get("description", "") for effect in ability.get("effects", [])
+            )
+        )
+        if match is None:
+            return entry
+        percent = float(match.group(1))
+        amount = percent / 100.0 * float(ctx.target_stat("target_max_health"))
+        if amount <= 0.0:
+            return entry
+        entry["self_heal_state"] = {"percent": percent, "amount": amount}
+        entry["detail"] = (
+            f"{str(entry.get('detail', '')).strip()} Soul drain: {percent:g}% "
+            f"of the target's maximum health ({amount:.1f})."
+        ).strip()
+        return entry
+
+    return parse
 
 
 # Reviewed crowd control, read from the cached kit.  Obliterate "deal[s]
@@ -48,6 +106,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             event_order_certified="single_hit",
         ),
     },
+    slot_wrappers={"R": _realm_of_death},
     cc_kinds=MODULE_CC,
 )
 
@@ -59,8 +118,18 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(35/37.5/40/42.5/45% by W rank) of the stored shield — the E8a "
     "grey-health primitive authors it from the incoming/outgoing "
     "ledgers. Shield conversion and both decay curves are state.",
+    "R (Realm of Death) heals 10% of the banished champion's maximum "
+    "health at the cast (cached R prose). Only the primary defender's "
+    "pair fight authors it — one banishment, one heal. The 7-second "
+    "stat theft (10% of the target's ability power, total attack speed, "
+    "maximum health, armour, magic resistance and total AD, transferred "
+    "to Mordekaiser) and the Death Realm itself have no engine axis and "
+    "are not modeled.",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E"} else "out_of_scope") for slot in "PQWER"
-}
+# No MODULE_COVERAGE any more: W's Potential Shield recast heal is
+# authored by the grey-health primitive and R's soul drain by the
+# self-heal rule, so every slot in SLOTS now prices a row the engine
+# consumes — which is what the contract derives.
+
+SELF_HEALING_RULE = declare_healing_rule("Mordekaiser")

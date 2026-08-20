@@ -17,6 +17,22 @@ The calculator's target is a full-health champion above the threshold,
 so R prices the sourced damage row (level-based, physical) plus the
 bAD and lethality terms.  The threshold itself is documented, not
 priced as damage — an execution is a kill boundary, not a number.
+
+P and W stay ``out_of_scope``, each for a named missing axis:
+
+- P (Gift of the Drowned Ones) is three mechanics. The grey-health store
+  is priced by the shared primitive (probe: ``grey_health_stored`` 80.0
+  at level 18 with no items — the flat cap), but its consume is a VISION
+  boundary ("while Pyke is not visible to enemies") and the engine has no
+  vision axis, so nothing is paid back. The other half is a stat
+  CONVERSION the stat layer cannot express: Pyke's maximum health may not
+  rise except by growth, and bonus health becomes 7.143% of itself as
+  bonus attack damage instead. Probe with Warmog's Armor: health
+  2540 -> 3660 and attack damage unchanged at 96 — the model grants him
+  the health the game denies him and none of the attack damage the game
+  gives him.
+- W (Ghostwater Dive) is camouflage plus lethality-scaled movement speed:
+  no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
 """
 
 from .packet_module import build_packet_module

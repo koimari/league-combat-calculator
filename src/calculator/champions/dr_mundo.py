@@ -1,9 +1,12 @@
 """Dr. Mundo — slot map for the archetype engine.
 
 Why each slot is non-generic:
-- P (Goes Where He Pleases) is deliberately ABSENT: health regeneration,
-  an immobilize cleanse and a self-heal on the dropped canister. It deals
-  no damage to an enemy, so it gets no slot.
+- P (Goes Where He Pleases) has no slot: it deals no damage to an enemy.
+  Its sustain is priced by the self-heal rule instead, off the cached P's
+  SECOND "Max Health Damage" row (the cache mislabels both regeneration
+  rows) — 0.04% : 0.23% (based on level) of maximum health every 0.5
+  seconds. The immobilize cleanse and the canister pickup heal stay
+  documented boundaries.
 - Q (Infected Bonesaw) is %CURRENT-health magic damage floored at a flat
   minimum, and both halves defeat the generic path. The unit
   ``"% of target's current health"`` resolves against a
@@ -79,6 +82,14 @@ R_MAX_NEARBY_CHAMPIONS = 4
 _DEFAULT_MISSING_HEALTH_PERCENT = 30
 _DEFAULT_NEARBY_CHAMPIONS = 0
 
+# P's regeneration: the cache labels both of its rows "Max Health Damage"
+# (they are heals, not damage) and states the same stream twice — row 0
+# per five seconds, row 1 per half second. Ten of row 1 equal row 0 at
+# every level, so the half-second row is read and its own cadence used.
+P_REGEN_ROW = "Max Health Damage"
+P_REGEN_HALF_SECOND_ROW = 1
+P_REGEN_INTERVAL = 0.5
+
 
 # ---------------------------------------------------------------------------
 # Shared fight state
@@ -102,6 +113,44 @@ def _missing_health_fraction(ctx: SlotCtx) -> float:
 # ---------------------------------------------------------------------------
 # R: Maximum Dosage — BUFF phase, listed first (E's passive reads its health)
 # ---------------------------------------------------------------------------
+
+
+def _goes_where_he_pleases(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the additional regeneration stream, priced for the self-heal rule.
+
+    "Dr. Mundo regenerates an additional 0.04% : 0.23% (based on level) of
+    his maximum health every 0.5 seconds" — the cached P's SECOND
+    ``Max Health Damage`` row (the cache mislabels both regeneration rows;
+    the first states the same stream per five seconds, and ten of this row
+    equal it at every level).  DAMAGE phase, so the percentage applies to
+    the maximum health R has already raised.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    percent = extract_value(
+        ability,
+        P_REGEN_ROW,
+        ctx.level,
+        level=ctx.level,
+        occurrence=P_REGEN_HALF_SECOND_ROW,
+    )
+    per_half_second = percent / 100.0 * ctx.stat("health")
+    if per_half_second <= 0.0:
+        return None
+    return {
+        "name": ability.get("name", "Goes Where He Pleases"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_heal_state": {"per_half_second": per_half_second},
+        "detail": (
+            f"{percent:g}% of maximum health every {P_REGEN_INTERVAL:g}s "
+            f"({per_half_second:.2f} per tick)"
+        ),
+    }
 
 
 def _nearby_champions(ctx: SlotCtx) -> int:
@@ -369,8 +418,15 @@ ASSUMPTIONS = [
     "Overlord's Bloodmail",
     "R's bonus movement speed, health regeneration and takedown duration "
     "extension are not modeled (no damage impact)",
-    "Mundo's passive, Q's health cost and refund, and W's grey-health "
-    "healing are self-sustain and are not modeled",
+    "P (Goes Where He Pleases) regenerates an additional 0.04% : 0.23% "
+    "(based on level) of maximum health every 0.5 seconds — the cached P's "
+    "second 'Max Health Damage' row, ten of which equal its first row's "
+    "per-five-seconds statement. The self-heal rule pays it over the whole "
+    "fight window; champion base regeneration stays outside the ledger, so "
+    "this is the passive's additional stream alone. The immobilize "
+    "immunity, the canister's 4%-maximum-health pickup heal and Q's health "
+    "cost and refund are not modeled",
+    "W's grey-health healing is self-sustain and is not modeled",
     "Dr. Mundo has no AP scaling anywhere in his kit",
 ]
 
@@ -381,6 +437,8 @@ SLOTS = {
     "E": _blunt_force_trauma,
     "Q": _infected_bonesaw,
     "W": _heart_zapper,
+    # DAMAGE phase, so the regeneration reads the max health R raised.
+    "P": _goes_where_he_pleases,
 }
 
 # Reviewed crowd control, read from the cached kit.  Q (Infected Bonesaw)
@@ -393,6 +451,10 @@ SLOTS = {
 MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
+
+# No MODULE_COVERAGE: P's row prices the regeneration the self-heal rule
+# pays and the survival walk consumes, which is what the contract derives
+# for a slot that is in SLOTS.
 
 
 SOURCES = load_champion_sources("Dr. Mundo")

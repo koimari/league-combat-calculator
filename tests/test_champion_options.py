@@ -103,10 +103,15 @@ class TestChampionOptionsMetaMap:
         assert "Kog'Maw" in meta_map
 
     def test_includes_assumptions_only_champions(self) -> None:
-        """Alistar has no knobs but does have assumptions to display."""
+        """A champion with no knobs still has assumptions to display.
+
+        Named by the property rather than by one champion: a module that
+        gains its first option should not turn this test red.
+        """
         meta_map = champion_options_meta_map()
-        assert meta_map["Alistar"]["options"] == []
-        assert len(meta_map["Alistar"]["assumptions"]) > 0
+        knobless = [name for name, meta in meta_map.items() if not meta["options"]]
+        assert knobless
+        assert all(meta_map[name]["assumptions"] for name in knobless)
 
     def test_includes_revision_backed_champions(self) -> None:
         meta_map = champion_options_meta_map()

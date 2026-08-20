@@ -1,4 +1,19 @@
-"""Tahm Kench's acquired-taste and defensive-state packets."""
+"""Tahm Kench's acquired-taste and defensive-state packets.
+
+E (Thick Skin) stays off the slot map — it damages nothing, and a slot
+would invent a cast — so the contract derives ``out_of_scope`` for it.
+The mechanic itself is priced elsewhere: the shared grey-health
+primitive (``participant_timeline._grey_health_receipts``, reached
+through ``healing.GREY_HEALTH_RULE_CHAMPIONS``) reads E's rank off the
+skill order and works the incoming ledger. Runtime probe, level 18 / E
+rank 5 / one enemy dealing 314.4 post-mitigation: ``grey_health_stored``
+147.75 (0.47 x, the rank row) and a ``Thick Skin (grey health)`` heal of
+147.75 four seconds after the last hit — which lands only when the fight
+leaves him those four seconds, exactly as the wiki states. The E ACTIVE
+(grey health converted into a 2.5 s shield) is the part with no channel:
+the pool is walk state and a parse-time ``attach_self_shield`` payload
+cannot read it.
+"""
 
 from typing import Any
 

@@ -12,9 +12,14 @@ Why each slot is non-generic:
   damage — auto-mode ``simple_damage``, exactly the generic path the
   legacy module reached by calling the generic parser and patching its
   output.
-- R (Unbreakable Will) is damage reduction only and P (Triumphant
-  Roar) is healing only — neither is modeled, both absent from the
-  slot map.
+- P (Triumphant Roar) is healing only: its slot is a zero-damage
+  receipt carrying the Triumph stacks Alistar walks in with, so the
+  self-heal rule can complete the seven-stack set inside the fight.
+- R (Unbreakable Will) stays `out_of_scope` and off the slot map: it
+  reduces incoming damage by 55-75%, and the engine's
+  ``incoming_damage_multiplier`` axis is item-only
+  (``defensive_effects.py``) — no champion can author a
+  damage-reduction-taken row.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -146,16 +151,78 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-OPTIONS: list[dict[str, Any]] = []
+# A carried set of 7 would consume itself before the fight, so the option
+# stops one short: 0-6 stacks in hand, and Q/W supply the rest.
+_TRIUMPH_CARRY_MAX = 6
+
+
+def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the Triumph stacks Alistar carries into the fight.
+
+    "Alistar generates a stack of Triumph for each enemy champion he stuns
+    or displaces with his abilities, and each time a nearby enemy minion or
+    non-epic monster dies... At 7 stacks, Alistar consumes them all to heal
+    himself for 5% of his maximum health."  Q and W each generate one
+    against this fight's champion, so a duel reaches at most two — the
+    stacks Alistar walked in with are what decide whether the set completes,
+    and they are player state the model cannot derive.  The heal formula
+    itself stays in the self-heal rule, which reads it from the same cached
+    P prose.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    stacks = max(0, min(int(ctx.option("p_triumph_stacks")), _TRIUMPH_CARRY_MAX))
+    if stacks <= 0:
+        return None
+    return {
+        "name": ability.get("name", "Triumphant Roar"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_heal_state": {"stacks": stacks},
+        "detail": f"{stacks} Triumph stack(s) carried into the fight",
+    }
+
+
+OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "p_triumph_stacks",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": _TRIUMPH_CARRY_MAX,
+        "step": 1,
+        "label": "Triumph stacks carried into the fight (P Triumphant Roar)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Q and W each add one Triumph stack; the carried stacks "
+                "decide whether the seventh lands inside the fight, and "
+                "no cast order changes them."
+            ),
+        },
+    },
+]
 
 ASSUMPTIONS = [
     "E Trample deals full duration damage (10 ticks over 5 seconds)",
     "E empowered auto always procs once per cast (5 stacks reached)",
-    "Passive (Triumphant Roar) healing is ignored",
+    "P (Triumphant Roar) heals 5% of maximum health when the seventh "
+    "Triumph stack lands (cached P prose). Q and W each generate one "
+    "stack against this fight's champion, so p_triumph_stacks (default "
+    "0) supplies the rest; minion and monster deaths are not simulated, "
+    "and the wiki's unstated internal cooldown ('only once every few "
+    "seconds') is not enforced. The 7%-maximum-health ally heal in the "
+    "same sentence belongs to the ally scanner, not to this rule",
     "R (Unbreakable Will) damage reduction is ignored",
 ]
 
 SLOTS = {
+    "P": _triumphant_roar,
     # Both are one instantaneous hit with no sourced sub-cast phase — the
     # smash lands beneath Alistar and the headbutt on arrival — so each
     # certifies the cast boundary its reviewed control rides on.

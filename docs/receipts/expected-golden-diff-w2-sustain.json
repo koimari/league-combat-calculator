@@ -1,0 +1,75 @@
+{
+  "slice": "W2-SUSTAIN",
+  "campaign": "docs/plans/2026-08-20-coverage-frontier-campaign.md",
+  "census": "docs/plans/utility-axis-census.md §2 slices 5 and 7",
+  "decisions": ["D-06", "D-10"],
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17/D-97 — the unit declares its moved leaves; the orchestrator re-captures once at integration close"
+  },
+  "what_moved_and_why": {
+    "Trundle W (Frozen Domain)": "The compiled packet gave W a no-damage placeholder row. The slot now reads the cached 'Bonus Attack Speed' row (30/45/60/75/90% by rank) through slotlib.stat_buff, so damage.py's bonus_attack_speed dispatch reaches the auto stream. Every moved number in registered_champion_fights is Trundle's auto count rising with it (level 18 no_items auto_attacks 480.0 -> 768.0, +60%; the on-hit and Shadowflame rows follow the same swings). The ability row itself changes shape: cooldown 0.0 -> 16.0 (the cached W cooldown the placeholder never read), damage_type magic -> physical (stat_buff's steroid default), the placeholder detail drops, and parts[0] plus stat_buff appear.",
+    "Dr. Mundo P (Goes Where He Pleases)": "P gains a slot. Its row is zero-damage and carries self_heal_state.per_half_second for the self-heal rule — the cached P's SECOND 'Max Health Damage' row (0.04% : 0.23% of maximum health every 0.5 s, mislabelled as damage in the cache). No fight total moves: the pair golden does not carry self-healing.",
+    "Mordekaiser R (Realm of Death)": "The R row gains self_heal_state {percent 10.0, amount 200.0} — 10% of the banished champion's maximum health, from the cached R prose — and its detail names the drain. No fight total moves for the same reason.",
+    "Vi P (Blast Shield)": "P gains a slot holding the sourced 12%-maximum-health / 3-second self-shield payload, and Q carries the same payload onto its first damage event so the ledger can grant it. Defensive only: no damage total moves.",
+    "Cho'Gath P (Carnivore)": "The coupled rotation rationale gains the new p_carnivore_kills option in its classified-options sentence. Text only; the option defaults to 0 kills, so no number moves anywhere."
+  },
+  "expected_diff_paths": {
+    "golden": [
+      "/champion_baselines/DrMundo/abilities_level_11/passive",
+      "/champion_baselines/Mordekaiser/abilities_level_11/R/detail",
+      "/champion_baselines/Mordekaiser/abilities_level_11/R/self_heal_state",
+      "/champion_baselines/Trundle/abilities_level_11/W/cooldown",
+      "/champion_baselines/Trundle/abilities_level_11/W/damage_type",
+      "/champion_baselines/Trundle/abilities_level_11/W/detail",
+      "/champion_baselines/Trundle/abilities_level_11/W/parts[0]",
+      "/champion_baselines/Trundle/abilities_level_11/W/stat_buff",
+      "/champion_baselines/Vi/abilities_level_11/Q/self_shield_events",
+      "/champion_baselines/Vi/abilities_level_11/passive",
+      "/registered_champion_fights/Trundle/11/sustained/magic_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Trundle/11/sustained/no_items/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Trundle/11/sustained/physical_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Trundle/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Trundle/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Trundle/18/sustained/magic_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Trundle/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Trundle/18/sustained/no_items/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Trundle/18/sustained/physical_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Trundle/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Trundle/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+      "/registered_champion_fights/Trundle/18/sustained/spellblade_build/total_damage"
+    ],
+    "golden_shape_counters": [
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves"
+    ],
+    "coupled_golden": [
+      "/coupled_scenarios/everlasting_forced_swing_roster/fights/0:Darius/rotation/rationale",
+      "/coupled_scenarios/everlasting_forced_swing_roster/fights/0:Darius/rotation/sources[2]"
+    ],
+    "coupled_golden_shape_counters": []
+  },
+  "measured": {
+    "golden": "31 differing leaves, all enumerated above",
+    "coupled_golden": "3 differing leaves: the two enumerated above plus /metadata/fingerprint/leaves, already claimed by an earlier receipt; no coupled number moved",
+    "quoted_values": {
+      "/registered_champion_fights/Trundle/18/sustained/no_items/breakdown_totals/auto_attacks": [480.0, 768.0],
+      "/registered_champion_fights/Trundle/18/sustained/no_items/total_damage": [1134.17, 1422.17],
+      "/registered_champion_fights/Trundle/11/sustained/physical_build/total_damage": [2244.05, 2995.41],
+      "/metadata/fingerprint/leaves": [56609, 56633],
+      "/metadata/fingerprint/numeric_leaves": [44217, 44232]
+    }
+  },
+  "numbers_that_did_not_move": {
+    "option_gated_heals": "Cho'Gath P (p_carnivore_kills), Trundle P (p_nearby_deaths), Rek'Sai P (p_burrow_fury) and Alistar P (p_triumph_stacks) all default to 0, so a default request emits no receipt and no number moves — plan decision 5's disclosed default, and decision 10's identical-by-default requirement.",
+    "self_healing": "The pair golden carries no self-healing leaf, so Dr. Mundo's and Mordekaiser's new heals move nothing there; they are pinned by tests/test_w2_sustain_heals.py instead."
+  }
+}
