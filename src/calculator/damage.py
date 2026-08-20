@@ -7645,19 +7645,30 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
     spread, and the final application resolves fully past the fight's
     end (refresh EVENTS stop with the last cast/DoT tick; the burn they
     lit does not).
+
+    A burn is lit by a damaging ability hit and by nothing else, so a
+    window with no accepted damaging cast — ``auto_only``, a cast order
+    the kit prices at zero, a rotation the resource budget refused — has
+    no burn row at all rather than a coarse total.  Auras and
+    fixed-interval strikes below are clock-driven and keep firing.
     """
     resists = state.resists
     ability_damages = state.ability_damages
+    lit_burns = (
+        state.item_periodics.burns if _damaging_cast_times(state, rotation) else ()
+    )
 
-    for effect in state.item_periodics.burns:
+    for effect in lit_burns:
         source = effect.source
         raw_burn = source.raw_damage(_damage_inputs(state))
         burn_duration = effect.duration
         # Burn refreshes on each ability hit (including R dashes —
         # only multi-instance Rs declare cast_instances; default 1).
+        # The dashes belong to an R the rotation accepted (``ult_cast``),
+        # not to an R the kit merely prices.
         r_info = ability_damages.get("R")
         r_extra = 0
-        if r_info:
+        if r_info and resists.ult_cast:
             r_extra = r_info.get("cast_instances", 1) - 1
         # Estimate time from first to last ability hit.  In a fast
         # one-rotation combo, casts are ~0.5s apart (GCD-limited).
@@ -7673,15 +7684,17 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             default=0.0,
         )
         # Other item DoTs (e.g. Malignance Hatefog) deal ability
-        # damage that also refreshes burns.  Hatefog starts at R cast
-        # (not at fight start), so its refresh window begins partway
-        # through the cast_spread.
+        # damage that also refreshes burns.  Hatefog starts at the
+        # rotation's accepted R cast (``ult_cast`` — the same fact the
+        # proc row and the served MR read), so its refresh window begins
+        # partway through the cast_spread and a window that never accepts
+        # an R extends nothing.
         # In timed mode, abilities recast on cooldown across the whole
         # fight — the last recast (rotation.last_cast_time) refreshes
         # the burn far beyond the GCD combo spread.
         dot_refresh_end = max(cast_spread, rotation.last_cast_time) + champion_dot_tail
-        for ultimate_proc in state.item_cast_procs.ultimate_procs:
-            if "R" in ability_damages:
+        if resists.ult_cast:
+            for ultimate_proc in state.item_cast_procs.ultimate_procs:
                 # R1 lands r_extra dashes (x0.5s each) before the last hit
                 r_start = cast_spread - r_extra * inter_cast_delay
                 hatefog_end = r_start + ultimate_proc.duration

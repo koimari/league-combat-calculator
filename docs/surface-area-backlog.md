@@ -9,7 +9,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| A1 | `src/calculator/damage.py` ~7620-7690 (Liandry's/Blackfire burns; Hatefog refresh tail at `:7684 if "R" in ability_damages`) | Burns fire in `auto_only` with no ability hit (Ahri + Liandry's: burn 35.0 + amp 8.8, certified exact); the Hatefog tail extends them off the R *key*, not an accepted R cast. Same family as U05b's fix for Horizon Focus / Malignance. | Gate on a damaging ability hit / the rotation's accepted R, like 0ff91c6 and 23af61b did; add the census-style probe. Golden will move for `auto_only`-style cells only. |
 | A2 | `damage.py` `_add_expose_weakness` | Prices (total − arming sequence) × rate even when its own ledger holds nothing after the arming proc (Vayne one_rotation: 22.8 on an empty pool). Standing ruling Phase 4 S7. | Re-rule: the coarse label is honest but the number disagrees with the ledger. |
 | A3 | spellblade weave (`damage.py`) | Arming proc placed at a fixed 1.5 s even when the on-hit-applying ability lands at 0.0 (Ezreal Q, Senna Q). | Take the proc time from the ability's hit time. |
 | A4 | `damage.py` ~4830 | Post-rotation Vile Decay MR is overwritten by `use_auto_pen()` when Terminus is held — ordering quirk. | Resolve MR once, after both. |
