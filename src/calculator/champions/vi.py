@@ -15,9 +15,17 @@ expire 4 seconds after the last application, every third hit procs the
 %max-health damage as an authored exact event, and the 20% shred is carried
 as a 4-second ``target_debuff`` on the first ranked cast slot (Q, else E)
 whenever the walk procs at least once.
+
+P (Blast Shield) is the kit's one defensive row: "Periodically, Vi's next
+ability hit grants her a shield equal to 12% of her maximum health for 3
+seconds."  It has no cast and no damage, so it reaches the ledger as a
+``self_shield_events`` payload on the first ranked damage slot — the
+ability hit the wiki says activates it — and the coverage map names that
+channel (``module_contract.COVERAGE_CHANNELS``).
 """
 
 import math
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -25,6 +33,7 @@ from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
+    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -73,6 +82,63 @@ def _q_geometry(ctx: SlotCtx) -> tuple[float, float, float, float]:
 
 def _is_primary_target(ctx: SlotCtx) -> bool:
     return int(ctx.target_stat("roster_target_index")) == 0
+
+
+# Blast Shield's size and duration are cached prose, not a leveling row,
+# so they are read out of the sentence that states them.
+_P_SHIELD_PROSE = re.compile(
+    r"shield equal to\s+(\d+(?:\.\d+)?)%\s+of her maximum health for\s+"
+    r"(\d+(?:\.\d+)?)\s+seconds",
+    re.IGNORECASE,
+)
+
+# The damage slots that can carry P's payload, in the order the certified
+# sequence lands them.
+_SHIELD_CARRIERS = ("Q", "E", "R")
+
+
+def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
+    """Ride P's sourced shield on the first damage slot that can grant it.
+
+    Blast Shield has no cast and no damage of its own, so it reaches the
+    ledger the way Mana Barrier and Adaptive Defenses do: as a
+    ``self_shield_events`` payload on an ability that emits damage events
+    (``slotlib.attach_self_shield``), which the participant ledger turns
+    into a timed self-shield at that event's timestamp.  One activation is
+    one shield, so the earliest ranked carrier takes the payload and the
+    later ones leave it alone; secondary roster targets never carry it, so
+    a roster grants Vi one shield rather than one per enemy.
+    """
+    if not _is_primary_target(ctx):
+        return entry
+    if any(
+        (ctx.results.get(slot) or {}).get("self_shield_events")
+        for slot in _SHIELD_CARRIERS
+    ):
+        return entry
+    ability = ctx.ability("P")
+    if ability is None:
+        return entry
+    match = _P_SHIELD_PROSE.search(
+        " ".join(effect.get("description", "") for effect in ability.get("effects", []))
+    )
+    if match is None:
+        return entry
+    percent = float(match.group(1))
+    duration = float(match.group(2))
+    amount = percent / 100.0 * ctx.stat("health")
+    if amount <= 0.0:
+        return entry
+    return attach_self_shield(
+        entry,
+        amount=amount,
+        duration=duration,
+        source=ability.get("name", "Blast Shield"),
+        detail=(
+            f"{entry.get('detail', '')}; Blast Shield {percent:g}% of "
+            f"maximum health ({amount:.0f}) for {duration:g}s"
+        ).strip("; "),
+    )
 
 
 def _w_trigger_slot(ctx: SlotCtx) -> str | None:
@@ -344,7 +410,7 @@ def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
     elif _w_trigger_slot(ctx) == "Q":
         entry["post_hit_proc"] = _w_proc(ctx, hit_time)
         entry["target_max_health_sensitive"] = True
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 def _e_hit_time(ctx: SlotCtx) -> float:
@@ -416,7 +482,7 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         # Fallback shred carrier when Q is unranked: the walk's procs
         # still shred, anchored at E's cast times.
         entry["target_debuff"] = _w_shred_debuff()
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -451,7 +517,7 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["detail"] = (
         "primary grab" if _is_primary_target(ctx) else "enemy crossed in R path"
     )
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 CAST_ORDER = ("Q", "E", "R")
@@ -532,8 +598,12 @@ ASSUMPTIONS = [
     "windows to casts, not procs",
     "W's 30-50% attack-speed steroid after a proc is not modeled "
     "(conservative in both modes)",
-    "Blast Shield is defensive only: Q/E may activate its 12% max-health shield, "
-    "but it does not change outgoing TDD",
+    "P (Blast Shield) grants 12% of maximum health for 3 seconds (cached "
+    "P prose) on the first ranked ability hit of the fight — the shield "
+    "rides that slot's first damage event into the ledger, and only the "
+    "primary target's fight authors it, so a roster grants one shield. "
+    "Its unstated internal cooldown ('periodically') is not enforced and "
+    "the 4-second reduction per Denting Blows consume is not modeled",
 ]
 
 SOURCES = load_champion_sources("Vi")
@@ -558,3 +628,8 @@ SLOTS = {
 MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
+
+# P emits no row of its own — Blast Shield has no cast and no damage — so
+# the map names the channel that pays it instead.
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

@@ -47,7 +47,11 @@
       "sample_author": "Briar"
     },
     "stat_buff": {
+<<<<<<< HEAD
       "authors": 37,
+=======
+      "authors": 36,
+>>>>>>> fc/sustain
       "negative_test": "test_withholding_stat_buff_drops_the_buff_edge",
       "sample_author": "Aatrox"
     },
@@ -279,7 +283,11 @@
       11,
       18
     ],
+<<<<<<< HEAD
     "states_walked": 4120
+=======
+    "states_walked": 4088
+>>>>>>> fc/sustain
   },
   "order_override_frontier": {
     "champions": [

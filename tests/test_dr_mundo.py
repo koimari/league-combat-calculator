@@ -492,9 +492,14 @@ class TestMissingHealthIsOneInput:
 class TestSlots:
     """What the module emits, and what it deliberately does not."""
 
-    def test_passive_is_absent(self, dr_mundo_data) -> None:
-        """Goes Where He Pleases deals no damage — no slot, no row."""
+    def test_passive_emits_no_row_and_names_its_channel(self, dr_mundo_data) -> None:
+        """Goes Where He Pleases deals no damage; the heal rule prices it."""
+        from src.calculator.champions import get_champion_module_contract
+
         assert "passive" not in _abilities(dr_mundo_data)
+        contract = get_champion_module_contract("Dr. Mundo")
+        assert contract.coverage["P"] == "modeled"
+        assert contract.coverage_channels["P"] == ("self_healing_rule",)
 
     def test_all_four_castables_emit(self, dr_mundo_data) -> None:
         assert set(_abilities(dr_mundo_data)) == {"Q", "W", "E", "R"}

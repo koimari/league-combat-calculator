@@ -23,7 +23,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Iterable
 
-from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
+from .champions.slotlib import (
+    extract_named,
+    extract_value,
+    find_named_leveling,
+    sum_modifiers,
+)
 
 
 def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
@@ -364,6 +369,27 @@ def _attributing_cast(cast_times: list[float], event_time: float) -> float | Non
     return attributed
 
 
+def _takedown_payments(
+    count: int, damage_events: list[dict[str, Any]]
+) -> list[_Payment]:
+    """The first *count* hits a takedown-paid rule can honestly ride.
+
+    A heal the game pays when a nearby unit *dies* — Cho'Gath's Carnivore,
+    Trundle's King's Tribute, Alistar's seven-stack Triumph — has neither a
+    cast nor a damage row of its own, and a duel simulates neither the wave
+    nor the takedown.  So the champion module declares the count as an
+    option and the fight supplies the times: the first *count* hits that
+    dealt damage, in order.  That is the most a rule can conclude without a
+    kill to point at, and it keeps the heals inside the window the fight
+    actually covers instead of stacking them all on one instant.
+    """
+    if count <= 0:
+        return []
+    payments = _payments(HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events)
+    payments.sort(key=lambda payment: payment.cast_time)
+    return payments[: int(count)]
+
+
 def _payments(
     anchor: HealAnchor,
     source,
@@ -420,7 +446,10 @@ HEALING_RULE_CHAMPIONS = frozenset(
         "Ahri",
         "Alistar",
         "Ambessa",
+        "Cho'Gath",
         "Darius",
+        "Mordekaiser",
+        "Rek'Sai",
         "Warwick",
         "Dr. Mundo",
         "Ekko",
@@ -588,6 +617,72 @@ def _legacy_derive_self_healing(
                         }
                     )
 
+    elif name == "Cho'Gath":
+        # Carnivore (P): "Whenever Cho'Gath kills an enemy, it heals for
+        # 18 : 52 (based on level)".  The module read the level row and
+        # carried the user's declared kill count on the P receipt; each
+        # kill rides one of the fight's first hits (_takedown_payments).
+        carnivore = ability_damages.get("passive", {}).get("self_heal_state")
+        if isinstance(carnivore, dict):
+            amount = float(carnivore.get("amount", 0.0) or 0.0)
+            for payment in _takedown_payments(
+                int(carnivore.get("kills", 0) or 0), damage_events
+            ):
+                healing.append(
+                    {
+                        "time": float(payment.event.get("time", 0.0)),
+                        "amount": amount,
+                        "source": "Carnivore",
+                        "kind": "champion_passive",
+                        "actor_wide": True,
+                        **_trigger_fields(payment.event),
+                    }
+                )
+
+    elif name == "Mordekaiser":
+        # Realm of Death (R): Mordekaiser "consumes the target's soul ...,
+        # healing himself for 10% of their maximum health" at the cast.
+        # Only the module can price a share of the *target's* health, so
+        # it carried the amount on the R row for the primary defender; one
+        # banishment pays one heal, hence actor-wide.  W's Potential
+        # Shield recast heal is the grey-health primitive's, not this
+        # rule's (GREY_HEALTH_RULE_CHAMPIONS).
+        realm = ability_damages.get("R", {}).get("self_heal_state")
+        if isinstance(realm, dict):
+            amount = float(realm.get("amount", 0.0) or 0.0)
+            for cast_time in _cast_slot_times(cast_timeline, "R"):
+                healing.append(
+                    {
+                        "time": cast_time,
+                        "amount": amount,
+                        "source": "Realm of Death",
+                        "kind": "champion_ability",
+                        "actor_wide": True,
+                    }
+                )
+
+    elif name == "Rek'Sai":
+        # Fury of the Xer'Sai (P): "When Rek'Sai becomes Burrowed, she
+        # consumes her current Fury over 3 seconds to heal for 0% : 100%
+        # (based on Fury) of 9% : 21.29% (based on level) maximum health."
+        # The module priced the burrow's Fury against her own maximum
+        # health; the fight's first W is where that burrow ends, so the
+        # consume is paid there.
+        burrow = ability_damages.get("passive", {}).get("self_heal_state")
+        w_casts = _cast_slot_times(cast_timeline, "W")
+        if isinstance(burrow, dict) and w_casts:
+            amount = float(burrow.get("amount", 0.0) or 0.0)
+            if amount > 0.0:
+                healing.append(
+                    {
+                        "time": w_casts[0],
+                        "amount": amount,
+                        "source": "Fury of the Xer'Sai",
+                        "kind": "champion_passive",
+                        "actor_wide": True,
+                    }
+                )
+
     elif name == "Darius":
         # Decimate's outer blade heals for 17% of missing health per enemy
         # champion hit, capped at 51% for three or more champions. Pair
@@ -697,6 +792,41 @@ def _legacy_derive_self_healing(
                         }
                     )
                     tick += 0.5
+        # Goes Where He Pleases (P): "Dr. Mundo regenerates an additional
+        # 0.04% : 0.23% (based on level) of his maximum health every 0.5
+        # seconds" — the cached P's SECOND "Max Health Damage" row (the
+        # cache mislabels both regeneration rows as damage and states the
+        # same stream twice, per five seconds and per half second; ten of
+        # the second row equal the first at every level).  The heal has a
+        # cadence of its own and no cast to read, so it runs the whole
+        # fight window on the half-second the row names, against the
+        # maximum health R has already raised.  Champion base regeneration
+        # stays outside the ledger (pipeline.py adds only the item
+        # contribution), so this is the passive's additional stream alone.
+        level = int(champion_stats.get("level", 0) or 0)
+        regen_percent = extract_value(
+            _ability(champion_data, "P"),
+            "Max Health Damage",
+            level,
+            level=level,
+            occurrence=1,
+        )
+        per_half_second = (
+            regen_percent / 100.0 * float(champion_stats.get("health", 0.0) or 0.0)
+        )
+        if per_half_second > 0.0 and duration > 0.0:
+            tick = 0.5
+            while tick <= duration + 1e-9:
+                healing.append(
+                    {
+                        "time": tick,
+                        "amount": per_half_second,
+                        "source": "Goes Where He Pleases",
+                        "kind": "champion_passive",
+                        "actor_wide": True,
+                    }
+                )
+                tick += 0.5
 
     elif name == "Irelia":
         ability = _ability(champion_data, "Q")
@@ -1712,6 +1842,28 @@ def _legacy_derive_self_healing(
             event = payment.event
             dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
             _heal_from_damage(healing, event, dealt, "Subjugate", link_to_damage=False)
+        # King's Tribute (P): "Whenever a nearby enemy dies, Trundle heals
+        # himself for 1.8% : 5.94% (based on level) of their maximum
+        # health."  The module priced the per-death amount against the
+        # enemy this fight targets and carried it on the P row with the
+        # user's declared death count; each death rides one of the fight's
+        # first hits (see _takedown_payments).
+        tribute = ability_damages.get("passive", {}).get("self_heal_state")
+        if isinstance(tribute, dict):
+            amount = float(tribute.get("amount", 0.0) or 0.0)
+            for payment in _takedown_payments(
+                int(tribute.get("deaths", 0) or 0), damage_events
+            ):
+                healing.append(
+                    {
+                        "time": float(payment.event.get("time", 0.0)),
+                        "amount": amount,
+                        "source": "King's Tribute",
+                        "kind": "champion_passive",
+                        "actor_wide": True,
+                        **_trigger_fields(payment.event),
+                    }
+                )
 
     elif name == "Xin Zhao":
         # Wind Becomes Lightning's damage "heals Xin Zhao for 33.3% of his
@@ -1839,7 +1991,9 @@ def _legacy_derive_self_healing(
         # Wiki text ("At 7 stacks, Alistar consumes them all to heal
         # himself for 5% of his maximum health").  A nearby enemy
         # champion death would grant all 7 stacks at once, but a 1v1
-        # kill ends the fight before any heal receipt can apply.
+        # kill ends the fight before any heal receipt can apply — so a
+        # duel completes the set only with stacks already in hand, which
+        # the module carries on the P row from its declared option.
         p_text = " ".join(
             effect.get("description", "")
             for effect in _ability(champion_data, "P").get("effects", [])
@@ -1861,7 +2015,8 @@ def _legacy_derive_self_healing(
             + _payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
             key=lambda payment: float(payment.event.get("time", 0.0)),
         )
-        qw_seen = 0
+        carried = ability_damages.get("passive", {}).get("self_heal_state")
+        qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
         for payment in casts:
             event = payment.event
             if stack_cap <= 0:

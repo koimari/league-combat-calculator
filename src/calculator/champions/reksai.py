@@ -9,6 +9,14 @@ P1 addition over the reviewed packet:
   (0-100, default 0 = no Fury): at 100 Fury the E packet prices the
   sourced true-damage row, otherwise the reviewed physical row.
 
+P (Fury of the Xer'Sai): "When Rek'Sai becomes Burrowed, she consumes her
+current Fury over 3 seconds to heal for 0% : 100% (based on Fury) of
+9% : 21.29% (based on level) maximum health" (cached P prose; the level
+row is mislabelled ``Max Health Damage``).  Fury generation is player
+state the duel does not simulate, so ``p_burrow_fury`` (0-100, default 0)
+is the Fury the burrow that opens the fight consumes; the P row carries
+the resulting amount and the self-heal rule places it at the first W.
+
 Row-selection fix (Q variant 0): Queen's Wrath empowers Rek'Sai's next
 basic attack, and "if Rek'Sai completes an attack, the duration is
 refreshed, for up to 3 total empowered attacks".  The generated packet
@@ -24,10 +32,40 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import typed_damage
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 
 PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
+
+# The burrow heal's level row, which the cache labels as damage.
+_P_LEVEL_ROW = "Max Health Damage"
+
+
+def _fury_of_the_xersai(compiled):
+    """P: carry the burrow's Fury-scaled heal when the user declares Fury."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = compiled(ctx)
+        if entry is None:
+            return None
+        fury = max(0, min(100, int(ctx.option("p_burrow_fury"))))
+        if fury <= 0:
+            return entry
+        percent = extract_value(
+            ctx.ability("P") or {}, _P_LEVEL_ROW, ctx.level, level=ctx.level
+        )
+        amount = fury / 100.0 * percent / 100.0 * float(ctx.stat("health"))
+        if amount <= 0.0:
+            return entry
+        entry["self_heal_state"] = {"fury": fury, "amount": amount}
+        entry["detail"] = (
+            f"Burrow consumes {fury} Fury: {fury}% of {percent:g}% maximum "
+            f"health ({amount:.1f})"
+        )
+        return entry
+
+    return parse
 
 
 def _queens_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -98,6 +136,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "E": _furious_bite,
     },
+    slot_wrappers={"P": _fury_of_the_xersai},
     cc_kinds=MODULE_CC,
 )
 
@@ -114,6 +153,23 @@ OPTIONS = list(OPTIONS) + [
             "damage (the cached True Damage row)"
         ),
     },
+    {
+        "key": "p_burrow_fury",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 100,
+        "step": 25,
+        "label": "Fury consumed by the burrow that opens the fight (P heal)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "The burrow heal is Fury Rek'Sai carried in, spent before "
+                "the rotation starts; no cast orders it."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -121,16 +177,27 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "100 Fury it prices the physical row (70-170 + 60% bonus AD); at 100 "
     "Fury it prices the sourced true-damage variant (84-204 + 72% bonus "
     "AD == 120% of the physical row, 'converted to true damage').  Fury "
-    "generation (P Fury of the Xer'Sai) and burrow CC remain documented "
-    "out-of-scope",
+    "generation and decay are not simulated, and Burrow's CC remains "
+    "documented out-of-scope",
     "Q variant 0 (Queen's Wrath) prices all three empowered attacks — "
     "the cached Total Bonus Physical Damage row (90/105/120/135/150% "
     "AD), three times the per-attack Bonus Physical Damage row the "
     "generated packet selected.  The aggregate is declared at the cast "
     "boundary; the attacks' spacing across the 3-second window and the "
     "primary target's critical-strike modifiers are not priced.",
+    "P (Fury of the Xer'Sai) heals 0% : 100% (based on Fury) of "
+    "9% : 21.29% (based on level) maximum health when Rek'Sai burrows — "
+    "the cached P level row, which the wiki data mislabels 'Max Health "
+    "Damage'. p_burrow_fury (default 0) is the Fury the burrow that "
+    "opens the fight consumes and the heal lands at the fight's first W "
+    "cast; it is a separate input from e_fury, which is the Fury she has "
+    "re-earned by the time Furious Bite is cast. The 3-second consume is "
+    "paid as one receipt, and its stop-at-full-health clause is the "
+    "survival walk's overheal rather than a cap applied here.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+
+# No MODULE_COVERAGE: P now prices the burrow heal the self-heal rule
+# places, so every slot in SLOTS prices a row the engine consumes, which
+# is what the contract derives.
+
+SELF_HEALING_RULE = declare_healing_rule("Rek'Sai")

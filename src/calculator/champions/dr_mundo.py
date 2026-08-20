@@ -1,9 +1,12 @@
 """Dr. Mundo — slot map for the archetype engine.
 
 Why each slot is non-generic:
-- P (Goes Where He Pleases) is deliberately ABSENT: health regeneration,
-  an immobilize cleanse and a self-heal on the dropped canister. It deals
-  no damage to an enemy, so it gets no slot.
+- P (Goes Where He Pleases) has no slot: it deals no damage to an enemy.
+  Its sustain is priced by the self-heal rule instead, off the cached P's
+  SECOND "Max Health Damage" row (the cache mislabels both regeneration
+  rows) — 0.04% : 0.23% (based on level) of maximum health every 0.5
+  seconds. The immobilize cleanse and the canister pickup heal stay
+  documented boundaries.
 - Q (Infected Bonesaw) is %CURRENT-health magic damage floored at a flat
   minimum, and both halves defeat the generic path. The unit
   ``"% of target's current health"`` resolves against a
@@ -369,8 +372,15 @@ ASSUMPTIONS = [
     "Overlord's Bloodmail",
     "R's bonus movement speed, health regeneration and takedown duration "
     "extension are not modeled (no damage impact)",
-    "Mundo's passive, Q's health cost and refund, and W's grey-health "
-    "healing are self-sustain and are not modeled",
+    "P (Goes Where He Pleases) regenerates an additional 0.04% : 0.23% "
+    "(based on level) of maximum health every 0.5 seconds — the cached P's "
+    "second 'Max Health Damage' row, ten of which equal its first row's "
+    "per-five-seconds statement. The self-heal rule pays it over the whole "
+    "fight window; champion base regeneration stays outside the ledger, so "
+    "this is the passive's additional stream alone. The immobilize "
+    "immunity, the canister's 4%-maximum-health pickup heal and Q's health "
+    "cost and refund are not modeled",
+    "W's grey-health healing is self-sustain and is not modeled",
     "Dr. Mundo has no AP scaling anywhere in his kit",
 ]
 
@@ -393,6 +403,12 @@ SLOTS = {
 MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
+
+# P damages nothing and has no cast, so it emits no row; the self-heal
+# rule is what prices its regeneration, and that is the channel the map
+# names.
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
 SOURCES = load_champion_sources("Dr. Mundo")

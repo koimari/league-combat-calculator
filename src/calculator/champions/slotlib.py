@@ -283,6 +283,7 @@ def extract_value(
     modifier_index: int = 0,
     *,
     level: int | None = None,
+    occurrence: int = 0,
 ) -> float:
     """Extract a raw numeric leveling value without resolving scaling.
 
@@ -297,11 +298,15 @@ def extract_value(
         modifier_index: Which modifier to read (default 0 = first).
         level: Champion level, when the caller knows it — see
             :func:`sum_modifiers`.
+        occurrence: Which row of a repeated attribute name to read — see
+            :func:`find_named_leveling`.  Dr. Mundo's P states the same
+            regeneration twice under one name, per five seconds and per
+            half second, and only the caller knows which cadence it wants.
 
     Returns:
         The flat numeric value at the given rank, or 0.0 if not found.
     """
-    leveling = find_named_leveling(ability, attribute)
+    leveling = find_named_leveling(ability, attribute, occurrence=occurrence)
     if leveling is None:
         return 0.0
     return _modifier_value(leveling, modifier_index, rank, level)

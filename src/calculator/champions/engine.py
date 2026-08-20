@@ -128,6 +128,15 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # below 25%).  The champion's rule in ``healing_legacy`` reads it
         # off the entry.
         "self_heal_share_of_damage",
+        # Module-declared state the champion's self-heal rule reads
+        # (``healing.derive_self_healing``).  That rule is handed the parsed
+        # entries but neither the champion options nor the target stats, so
+        # a heal whose size or count is player state — Cho'Gath's kills,
+        # Trundle's nearby deaths, Alistar's carried Triumph stacks,
+        # Rek'Sai's Fury, the share of a target's maximum health
+        # Mordekaiser's Realm of Death drains — is priced here, where both
+        # are in hand, and placed there.  The fight engine never reads it.
+        "self_heal_state",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it

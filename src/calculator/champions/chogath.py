@@ -20,8 +20,12 @@ Why each slot is non-generic:
 - Q (Rupture) and W (Feral Scream) are clean single-attribute reads,
   kept explicit ("Magic damage", lowercase d — and W's classifier pick
   must never drift onto the "Silence Duration" entry).
-- P (Carnivore) heals and restores mana on kill — no damage to enemies,
-  absent from the map.
+- P (Carnivore) "heals for 18 : 52 (based on level)" whenever Cho'Gath
+  kills an enemy — no damage, so its slot is a zero-damage receipt that
+  carries the user's declared kill count to the self-heal rule. A duel
+  simulates no wave, so the count is the ``p_carnivore_kills`` option
+  (default 0) and the receipt is emitted only when it is set. The mana
+  restore in the same sentence has no channel a champion can author.
 """
 
 import re
@@ -29,6 +33,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import delayed_damage
 from .slotlib import (
     damage_entry,
@@ -117,6 +122,38 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the on-kill heal receipt the self-heal rule places.
+
+    "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
+    level)" — a level row, not a rank one, and no damage of its own. The
+    kills are player state the duel does not simulate, so the receipt only
+    exists once the user declares some.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    kills = max(0, int(ctx.option("p_carnivore_kills")))
+    if kills <= 0:
+        return None
+    heal = extract_value(ability, "Heal", ctx.level, level=ctx.level)
+    if heal <= 0.0:
+        return None
+    return {
+        "name": ability.get("name", "Carnivore"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_heal_state": {"kills": kills, "amount": heal},
+        "detail": (
+            f"{kills} kill(s): {heal:g} health each (18 : 52 based on "
+            "level); the mana restore has no champion-authored channel"
+        ),
+    }
+
+
 def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
     """R (BUFF): stack bonus health first, then true damage off buffed stats.
 
@@ -164,10 +201,31 @@ OPTIONS: list[dict[str, Any]] = [
         "min": 0,
         "max": 15,
     },
+    {
+        "key": "p_carnivore_kills",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "label": "Enemies Cho'Gath kills during the fight (P Carnivore)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Carnivore pays on a kill, which no cast orders; the "
+                "count is player state, not a rotation edge."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = [
-    "Passive (Carnivore) not modeled — heal/mana sustain on kill only",
+    "P (Carnivore) heals 18 : 52 (based on level) per kill — the cached P "
+    "'Heal' level row. A duel simulates no wave, so p_carnivore_kills "
+    "(default 0) supplies the count and the heals ride Cho'Gath's first "
+    "damaging hits; the 4.72 : 9.48 mana restore in the same sentence is "
+    "not modeled",
     "Feast stacks default to 6 (the minion/non-epic-monster cap); "
     "stacks from champions and epic monsters are uncapped — raise the "
     "option to match",
@@ -183,6 +241,7 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
+    "P": _carnivore,
     "R": _feast,
     "Q": delayed_damage(
         delay=_Q_RUPTURE_FROM_CAST_START_S,
@@ -210,5 +269,10 @@ MODULE_CC = {"Q": "knockup", "W": "silence", "E": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 
+# No MODULE_COVERAGE: every slot is in SLOTS and every slot prices a row
+# the engine consumes — P's is the Carnivore heal the self-heal rule
+# places — which is exactly what the contract derives.
 
 SOURCES = load_champion_sources("Cho'Gath")
+
+SELF_HEALING_RULE = declare_healing_rule("Cho'Gath")
