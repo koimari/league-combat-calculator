@@ -66,7 +66,7 @@ def _ravenous_flock_ultimate(packet_r):
         )
         return entry
 
-    parse.phase = getattr(packet_r, "phase", "damage")
+    parse.phase = packet_r.phase
     return parse
 
 
