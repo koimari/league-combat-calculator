@@ -1309,7 +1309,16 @@ Follow-ups (recorded): multi-target roster engine (per-target cooldown
 clocks then feed real targets); DoT/CC stack sources (wiki grants stacks
 for DoT/CC applications — the engine counts damaging casts and autos
 only; documented withheld dimension); strongest-shield-selection rule
-(additive stacking documented); pet-exclusion test (implicit today).
+(additive stacking documented) — RETIRED 2026-08-20 (Phase B alt-row
+lever, GOAL-0fails.md): the rule is unsourced in every authority layer
+(wiki effect text silent, no `item_effects` accessor, absence already
+recorded here and in `bis.py:245-250`) AND physically unreachable
+(Eclipse cooldown 6.0s > shield duration 2.0s, both sourced in
+`item_effects.py`, so two Eclipse shields from one holder can never
+overlap); the 8 xfail rows in `tests/test_eclipse_shield_selection.py`
+were deleted, each with a currently-passing primary already pinning the
+additive contract on the identical event set; pet-exclusion test
+(implicit today).
 
 
 #### 4.26A P1 Eclipse DoT/CC stack-source certification (2026-08-11)
