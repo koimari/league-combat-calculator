@@ -2,8 +2,7 @@
 
 Operating procedure for a League of Legends patch day. This turns the P3
 automation (`scripts/patch_regression.py`, `scripts/patch_update.py`,
-`data/staleness.json`, `scripts/issue_gate.py`) into a repeatable,
-SLA-bound operating procedure.
+`data/staleness.json`) into a repeatable, SLA-bound operating procedure.
 
 Read `architecture.md` for the module map and the `/patch-update` skill
 (`.agents/skills/patch-update/SKILL.md`) for the audit-report interpretation
@@ -267,12 +266,9 @@ python scripts/golden_snapshot.py capture scripts/golden_baseline.json
    `feat(patch): re-cert 16.16 — every golden diff explained in the body`
    (see commit f7e8aad for the established format).
 4. Push the patch branch and merge via the normal review flow.
-5. If the patch closes GitHub issues, gate the closures:
-   ```bash
-   python scripts/issue_gate.py check --issue <n> --commit <sha> [--deploy-sha <sha>]
-   ```
-   (per `docs/issue-closure-policy.md`: commit-addressed, merged on the
-   working branch, clean tree, gates green, deployment ancestor when known).
+5. If the patch closes GitHub issues, gate the closures per
+   `docs/issue-closure-policy.md`: commit-addressed, merged, clean tree,
+   gates green, deployment ancestor when known.
 
 ## Step 5 — Clear staleness; confirm badges disappear
 
