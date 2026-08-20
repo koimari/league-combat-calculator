@@ -8,6 +8,7 @@ this item represented by the current fight model?
 from typing import Any, Literal
 
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS, ITEM_INPUT_OPTIONS
+from .item_source import effect_entries, effect_text
 
 ItemCoverageStatus = Literal[
     "modeled_effect",
@@ -284,6 +285,522 @@ _REVIEWED_STATS_ONLY: dict[str, str] = {
     "Youmuu's Ghostblade": "Haunt and Wraith Step grant movement speed.",
     "Zhonya's Hourglass": "Time Stop is defensive stasis.",
 }
+
+
+# ---------------------------------------------------------------------------
+# Stats-only certification (docs/roadmap-100.md §1, the 92 SR-admitted
+# ``stats_only`` items)
+# ---------------------------------------------------------------------------
+#
+# ``stats_only`` means item_model_coverage found no OUTGOING-damage mechanic
+# on the item's OWN HOLDER to model -- it is not a claim that the cached
+# entry is textually numberless.  51 of the 92 SR-admitted stats_only items
+# have no passive/active in the cache at all (potions, wards, components,
+# most boots).  The other 41 carry a real, numeric passive/active -- shields
+# (Bloodthirster, Hexdrinker, Kaenic Rookern, the Lifeline family),
+# Grievous Wounds, movement speed, stasis, slows, or an ally-directed
+# heal/shield routed through the separate support ledger
+# (item_support_effects.py) -- and are still correctly ``stats_only``
+# because none of that text adds outgoing TDD from the item's own holder in
+# this 1v1 attacker fight model.
+#
+# The drift risk this section guards is narrower than "does this item have
+# numbers": every one of those 41 items is matched by NAME ONLY in
+# ``_REVIEWED_STATS_ONLY`` / the defensive-``effect_type`` branch above, so a
+# future Wiki refresh that silently appends a new outgoing-damage clause to
+# one of those named passives (without renaming it) would keep sailing
+# through as ``stats_only`` forever -- the classification never re-reads the
+# text.  Pin the exact cached branch text captured at certification time
+# (2026-08-20) so ``tests/test_stats_only_items.py`` fails loudly, not
+# silently, the moment any certified item's effect text changes at all.  A
+# text difference does not by itself prove a new mechanic appeared; it means
+# a human must re-read the branch and either re-pin the fingerprint (no
+# mechanic change) or reclassify the item (a mechanic was added).
+_STATS_ONLY_CERTIFIED_EFFECT_TEXT: dict[str, tuple[tuple[str, str, str], ...]] = {
+    "Armored Advance": (
+        (
+            "passive",
+            "Plating",
+            "Reduces all incoming {{tip|basic damage}} by 10% (''excluding "
+            "from [[turret]] attacks'').",
+        ),
+        (
+            "passive",
+            "Noxian Endurance",
+            "Taking {{as|physical damage}} from champions grants you a "
+            "{{tip|shield}} that absorbs {{pp|100 to 200|color=pd}} "
+            "{{as|(+ 8% '''bonus''' health)}} {{as|physical damage}} for 5 "
+            "seconds.",
+        ),
+    ),
+    "Banshee's Veil": (
+        (
+            "passive",
+            "Annul",
+            "Grants a {{tip|spell shield}} that blocks the next hostile "
+            "ability (40 second cooldown, timer restarts upon taking damage "
+            "from champions).",
+        ),
+    ),
+    "Bloodthirster": (
+        (
+            "passive",
+            "Ichorshield",
+            "Convert the {{tip|healing}} received from {{sti|life steal}} in "
+            "excess of {{as|'''maximum''' health}} into a {{tip|shield}} for "
+            "up to {{pp|165 + (315-165)/10*(x-1)|1;9 to 20 by "
+            "1|formula=165 base, then +15 per level starting from level "
+            "9.}}, which lasts until destroyed.",
+        ),
+    ),
+    "Boots of Swiftness": (("passive", "Fleetfooted", "Gain 25% [[slow resist]]."),),
+    "Celestial Opposition": (
+        (
+            "passive",
+            "Blessing of the Mountain",
+            "Become ''Blessed'' to reduce incoming champion damage by "
+            "{{rd|35%|25%}}, lingering for 2 seconds after taking damage "
+            "from a champion. After the linger ends, you lose ''Blessed'' "
+            "to unleash a shockwave around you that {{tip|slow|slows}} "
+            "enemies within 500 units by 50% for {{fd|1.5}} seconds (18 "
+            "second cooldown, timer restarts upon taking damage from "
+            "champions).",
+        ),
+        (
+            "active",
+            "Ward",
+            "Consumes a charge to place a {{tip|Stealth Ward}} at the "
+            "target location, which grants {{tip|sight}} of the "
+            "surrounding area. Charges refill upon visiting the shop.",
+        ),
+    ),
+    "Chainlaced Crushers": (
+        (
+            "passive",
+            "Noxian Persistence",
+            "Taking {{as|magic damage}} from champions grants you a "
+            "{{tip|shield}} that absorbs {{pp|100 to 200|color=md}} "
+            "{{as|(+ 8% '''bonus''' health)}} {{as|magic damage}} for 5 "
+            "seconds.",
+        ),
+    ),
+    "Chempunk Chainsword": (
+        (
+            "passive",
+            "Hackshorn",
+            "Dealing {{as|physical damage}} to enemy champions inflicts "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Cosmic Drive": (
+        (
+            "passive",
+            "Spelldance",
+            "Dealing {{as|magic|magic damage}} or {{as|true|true damage}} "
+            "damage to an enemy champion grants you {{as|20 '''bonus''' "
+            "movement speed|ms}} for 4 seconds.",
+        ),
+    ),
+    "Crimson Lucidity": (
+        (
+            "passive",
+            "Ionian Lucidity",
+            "Gain 20 [[Haste#Summoner spell haste|summoner spell haste]].",
+        ),
+        (
+            "passive",
+            "Noxian Haste",
+            "{{tip|heal|Healing}}, {{tip|shield|shielding}} or buffing an "
+            "ally, damaging abilities against champions, and using "
+            "[[summoner spell]]s grants you {{as|{{rd|10%|8%}} '''bonus''' "
+            "movement speed}} for 4 seconds. This can be triggered from the "
+            "same {{tip|cast instance}} only once every 4 seconds.",
+        ),
+    ),
+    "Diadem of Songs": (
+        (
+            "passive",
+            "Harmony",
+            "Grants {{as|heal and shield power}} equal to {{as|{{fd|0.5}}% "
+            "'''bonus''' mana}}.",
+        ),
+        (
+            "passive",
+            "Consonance",
+            "{{tip|Heal}} the nearest and {{tt|most wounded|Lowest health "
+            "percent}} allied champion within 900 units for "
+            "{{as|{{fd|0.8}}% of your '''maximum''' mana}} if you or any "
+            "allied champion you have healed or {{tip|shield|shielded}} in "
+            "the last 3 seconds is [[combat status|in combat]] with enemy "
+            "champions (1 second cooldown for triggering the heal).",
+        ),
+    ),
+    "Doran's Helm": (
+        (
+            "passive",
+            "Helping Hand",
+            "Basic attacks deal {{as|5 '''bonus''' physical damage}} "
+            "[[on-hit]] against [[minions]].",
+        ),
+    ),
+    "Dream Maker": (
+        (
+            "passive",
+            "Dream Maker",
+            "Every 8 seconds, you gain a ''Blue Dream Bubble'' and a "
+            "''Purple Dream Bubble''. Granting a {{tip|heal}} or "
+            "{{tip|shield}} to an allied champion ''(excluding yourself)'' "
+            "causes you to grant both of your ''Dream Bubbles'' to them, "
+            "empowering them for 3 seconds. The ''Blue Bubble'' reduces the "
+            "damage of the next attack or spell they receive from "
+            "non-{{tip|minions}} by {{pp|50 to 194 for 13|1;7 to 18|type="
+            "your level}} and the ''Purple Bubble'' grants them "
+            "{{as|{{pp|40 to 160 for 13|1;7 to 18|type=your level}} "
+            "'''bonus''' magic damage}} on their next damaging attack or "
+            "ability, with the latter reduced to {{fd|33.3}}% for [[area "
+            "of effect]] damage against non-champions.",
+        ),
+        (
+            "active",
+            "Ward",
+            "Consumes a charge to place a {{tip|Stealth Ward}} at the "
+            "target location, which grants {{tip|sight}} of the "
+            "surrounding area. Charges refill upon visiting the shop.",
+        ),
+    ),
+    "Echoes of Helia": (
+        (
+            "passive",
+            "Soul Siphon",
+            "Gain 30% of {{tt|pre-mitigation damage|Damage calculated "
+            "before modifiers}} dealt to champions as ''Soul Charges'', up "
+            "to {{pp|80 to 250|tooltipSize=20}}. {{tip|Healing}} or "
+            "{{tip|shielding}} an allied champion ''(excluding yourself)'' "
+            "consumes all charges to heal them equal to the consumed "
+            "amount.",
+        ),
+    ),
+    "Edge of Night": (
+        (
+            "passive",
+            "Annul",
+            "Grants a {{tip|spell shield}} that blocks the next hostile "
+            "ability (40 second cooldown, timer restarts upon taking damage "
+            "from champions).",
+        ),
+    ),
+    "Executioner's Calling": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|physical damage}} to enemy champions inflicts "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Guardian Angel": (
+        (
+            "passive",
+            "Rebirth",
+            "Upon taking [[death|lethal damage]], enter "
+            "{{tip|resurrection}} for 4 seconds, during which you are "
+            "{{tip|invulnerable}}, {{tip|untargetable}}, and unable to act, "
+            "and afterwards {{tip|heal}} for {{as|50% of '''base''' "
+            "health}} and restore {{as|100% of '''maximum''' mana}} (300 "
+            "second cooldown, starts after resurrection ends).",
+        ),
+    ),
+    "Gustwalker Hatchling": (
+        (
+            "passive",
+            "Jungle Companions",
+            "Summon a ''Gustwalker Hatchling'' companion to assist you in "
+            "combat against monsters.",
+        ),
+        (
+            "passive",
+            "Gustwalker's Gait",
+            "Feed your companion enough treats to evolve it and upgrade "
+            "your {{si|Smite}}. Upon the companion reaching its final "
+            "evolution, this item is consumed, granting you the "
+            "{{bi|Gustwalker's Gait}} buff.",
+        ),
+    ),
+    "Hexdrinker": (
+        (
+            "passive",
+            "Lifeline",
+            "If you would take {{as|magic damage}} that would reduce you "
+            "below {{as|30% of your '''maximum''' health}}, you first gain "
+            "a {{tip|shield}} that absorbs {{as|{{rd|110 to 280|82.5 to "
+            "210|pp=true}} magic damage}} for {{fd|2.5}} seconds.",
+        ),
+    ),
+    "Immortal Shieldbow": (
+        (
+            "passive",
+            "Lifeline",
+            "If you would take damage that would reduce you below "
+            "{{as|30% of your '''maximum''' health}}, you first gain a "
+            "{{tip|shield}} that absorbs {{rd|400 to 700 for 11|400*0.8 to "
+            "700*0.8 for 11|levels=1;9 to 18|pp=true}} damage for 3 "
+            "seconds.",
+        ),
+    ),
+    "Ionian Boots of Lucidity": (
+        (
+            "passive",
+            "Ionian Insight",
+            "Gain 10 [[Haste#Summoner spell haste|summoner spell haste]].",
+        ),
+    ),
+    "Kaenic Rookern": (
+        (
+            "passive",
+            "Magebane",
+            "After not taking {{as|magic damage}} for 15 seconds, gain a "
+            "{{tip|shield}} that absorbs {{as|magic damage}} equal to "
+            "{{as|15% of '''maximum''' health}} until destroyed.",
+        ),
+    ),
+    "Moonstone Renewer": (
+        (
+            "passive",
+            "Starlit Grace",
+            "{{tip|Heal|Healing}} or {{tip|shield|shielding}} an allied "
+            "champion chains the effect to the other nearest and {{tt|most "
+            "wounded|Lowest health percent}} allied champion within "
+            "{{tip|cr|icononly = true}} 800 units of them (''excluding "
+            "yourself''), granting them 30% of the heal or 35% of the "
+            "shield's initial strength. If no other allied champions are "
+            "in the radius, grant the same target an additional 30% of the "
+            "heal or 35% of the shield.",
+        ),
+    ),
+    "Morellonomicon": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|magic damage}} to enemy champions inflicts them "
+            "with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Mortal Reminder": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|physical damage}} to enemy champions inflicts "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Mosstomper Seedling": (
+        (
+            "passive",
+            "Jungle Companions",
+            "Summon a ''Mosstomper Seedling'' companion to assist you in "
+            "combat against monsters.",
+        ),
+        (
+            "passive",
+            "Mosstomper's Courage",
+            "Feed your companion enough treats to evolve it and upgrade "
+            "your {{si|Smite}}. Upon the companion reaching its final "
+            "evolution, this item is consumed, granting you the "
+            "{{bi|Mosstomper's Courage}} buff.",
+        ),
+    ),
+    "Oblivion Orb": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|magic damage}} to enemy champions inflicts them "
+            "with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Phantom Dancer": (
+        ("passive", "Spectral Waltz", "Become permanently {{tip|ghosted}}."),
+    ),
+    "Plated Steelcaps": (
+        (
+            "passive",
+            "Plating",
+            "Reduces all incoming {{tip|basic damage}} by 10% (''excluding "
+            "from [[turret]] attacks'').",
+        ),
+    ),
+    "Protoplasm Harness": (
+        (
+            "passive",
+            "Lifeline",
+            "If you would take damage that would reduce you below "
+            "{{as|30% of your '''maximum''' health}}, you first gain "
+            "{{as|{{pp|100 to 300|tooltipSize=20}} '''bonus''' health}} for "
+            "5 seconds and {{tip|heal}} yourself for {{pp|100 to 400|"
+            "tooltipSize=20|color=heal}} {{as|(+ 175% '''bonus''' armor)}} "
+            "{{as|(+ 175% '''bonus''' magic resistance)}} over the same "
+            "duration, during which you also gain 15% increased [[size]], "
+            "{{as|10% '''bonus''' movement speed}}, and 25% "
+            "{{tip|tenacity}}.",
+        ),
+    ),
+    "Randuin's Omen": (
+        (
+            "passive",
+            "Resilience",
+            "Reduces incoming damage from {{tip|critical strike|critical "
+            "strikes}} by 30%.",
+        ),
+        (
+            "active",
+            "Humility",
+            "Unleash a shockwave around you that {{tip|slow|slows}} "
+            "nearby enemies by 70% for 2 seconds.",
+        ),
+    ),
+    "Refillable Potion": (
+        (
+            "passive",
+            None,
+            "Holds charges that refill upon visiting the [[shop]].",
+        ),
+    ),
+    "Rylai's Crystal Scepter": (
+        (
+            "passive",
+            "Rimefrost",
+            "Dealing {{tip|ability damage}} {{tip|slow|slows}} affected "
+            "[[unit]]s by 30% for 1 second.",
+        ),
+    ),
+    "Scorchclaw Pup": (
+        (
+            "passive",
+            "Jungle Companions",
+            "Summon a ''Scorchclaw Pup'' companion to assist you in "
+            "combat against monsters.",
+        ),
+        (
+            "passive",
+            "Scorchclaw's Slash",
+            "Feed your companion enough treats to evolve it and upgrade "
+            "your {{si|Smite}}. Upon the companion reaching its final "
+            "evolution, this item is consumed, granting you the "
+            "{{bi|Scorchclaw's Slash}} buff.",
+        ),
+    ),
+    "Seeker's Armguard": (
+        (
+            "active",
+            "Time Stop",
+            "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} "
+            "seconds, rendering you {{tip|untargetable}} and "
+            "{{tip|invulnerable}} for the duration but also unable to "
+            "move, declare [[basic attack]]s, cast [[champion "
+            "ability|abilities]], use [[summoner spell]]s, or [[active "
+            "ability items|activate items]].",
+        ),
+    ),
+    "Serylda's Grudge": (
+        (
+            "passive",
+            "Bitter Cold",
+            "Dealing [[ability damage]] to an enemy that is at or below "
+            "{{as|50% of their '''maximum''' health}} {{tip|slow|slows}} "
+            "them by 30% for 1 second.",
+        ),
+    ),
+    "Solstice Sleigh": (
+        (
+            "passive",
+            "Going Sledding",
+            "{{tip|Slow|Slowing}} or {{tip|immobilize|immobilizing}} an "
+            "enemy champion causes you and the {{tt|most wounded|Lowest "
+            "health percent}} allied champion within 1500 units to gain "
+            "{{as|20% '''bonus''' movement speed}} decaying over "
+            "{{fd|2.5}} seconds and {{as|{{pp|50 to 230 for 13|1;7 to "
+            "18|type=your level}}|hp}} {{as|'''bonus''' health}} for "
+            "{{fd|2.5}} seconds.",
+        ),
+        (
+            "active",
+            "Ward",
+            "Consumes a charge to place a {{tip|Stealth Ward}} at the "
+            "target location, which grants {{tip|sight}} of the "
+            "surrounding area. Charges refill upon visiting the shop.",
+        ),
+    ),
+    "Spirit Visage": (
+        (
+            "passive",
+            "Boundless Vitality",
+            "Increases all {{tip|heal|healing}} and {{tip|shield|"
+            "shielding}} received as well as {{stil|health regeneration}} "
+            "by 25%.",
+        ),
+    ),
+    "Verdant Barrier": (
+        (
+            "passive",
+            "Annul",
+            "Grants a {{tip|spell shield}} that blocks the next hostile "
+            "ability (60 second cooldown, timer restarts upon taking damage "
+            "from champions).",
+        ),
+    ),
+    "Warden's Mail": (
+        (
+            "passive",
+            "Rock Solid",
+            "Every first incoming instance of {{tt|post-mitigation|Damage "
+            "calculated after modifiers}} {{tip|basic damage}} per "
+            "{{tip|cast instance}} is [[Damage modifier|reduced]] by 15, "
+            "with a '''maximum''' of 20% reduction each.",
+        ),
+    ),
+    "Youmuu's Ghostblade": (
+        (
+            "passive",
+            "Haunt",
+            "Gain {{as|{{rd|20|10}} '''bonus''' movement speed}} while "
+            "out-of-combat with enemy champions for 3 seconds.",
+        ),
+        (
+            "active",
+            "Wraith Step",
+            "Gain {{as|{{rd|20%|15%}} '''bonus''' movement speed}} and "
+            "{{tip|ghosted|ghosting}} for {{rd|6|4}} seconds.",
+        ),
+    ),
+    "Zhonya's Hourglass": (
+        (
+            "active",
+            "Time Stop",
+            "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} "
+            "seconds, rendering you {{tip|untargetable}} and "
+            "{{tip|invulnerable}} for the duration but also unable to "
+            "move, declare [[basic attack]]s, cast [[champion "
+            "ability|abilities]], use [[summoner spell]]s, or [[active "
+            "ability items|activate items]].",
+        ),
+    ),
+}
+
+
+def stats_only_effect_fingerprint(
+    item: dict[str, Any],
+) -> tuple[tuple[str, str | None, str], ...]:
+    """Return one item's current ``(kind, effect_name, full_text)`` triples.
+
+    Used by the stats-only certification suite to diff a cached item's live
+    passive/active text against :data:`_STATS_ONLY_CERTIFIED_EFFECT_TEXT`.
+    An empty result means the cached item has no described passive or
+    active at all (the 51 undescribed stats-only items).
+    """
+    fingerprint = []
+    for kind, entry in effect_entries(item):
+        raw_name = entry.get("name")
+        name = str(raw_name) if raw_name is not None else None
+        fingerprint.append((kind, name, effect_text(entry)))
+    return tuple(fingerprint)
 
 
 # Target loadouts are currently passive recipients of the selected attacker
@@ -955,6 +1472,7 @@ __all__ = [
     "require_optimizer_item_coverage",
     "require_target_item_coverage",
     "review_issue_refs",
+    "stats_only_effect_fingerprint",
     "target_build_coverage",
     "target_item_model_coverage",
 ]

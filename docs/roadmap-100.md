@@ -38,6 +38,31 @@ item is **Fimbulwinter** (Winter's Approach's completed form): the mana-gate
 threshold and its comparison operator are untyped, so the optimizer withholds
 it (`item_coverage._PARTIAL_BLOCKED_REASONS`).
 
+**Update (2026-08-20) — the 92 `stats_only` items are now formally
+certified.** `tests/test_stats_only_items.py` is the certification pass:
+every one of the 92 is machine-verified as genuinely `stats_only` /
+optimizer-eligible / calculation-eligible, an ordinary SR purchase per
+`item_source.is_ordinary_sr_item`, and — for the 41 that carry a real
+described passive/active (see §1.3) — its cached branch text is pinned
+byte-for-byte in `item_coverage._STATS_ONLY_CERTIFIED_EFFECT_TEXT` so a
+future patch cannot silently attach a new outgoing-damage clause to a
+name-matched entry and keep sailing through unreviewed. Each item's own
+cached stat block is also spot-verified against `calculate_total_stats`
+through isolated output fields (no hardcoded item numbers; every expected
+value is read live from `data/items.json` via the existing `get_item_stats`
+accessor). **Zero misclassifications found**: none of the 92 add outgoing
+damage to a champion target — the 41 described items' numeric mechanics are
+self-directed (shields: Bloodthirster, Hexdrinker, Kaenic Rookern, the
+Lifeline family, Guardian Angel) or non-damage debuffs/utility on the enemy
+(Grievous Wounds, slows, stasis), and Doran's Helm's 5 bonus physical damage
+is minion-only (no champion target in this 1v1 fight model) — already an
+explicit named boundary, not a gap. Ally-directed heals/shields among the 41
+(Echoes of Helia, Moonstone Renewer, Dream Maker, Solstice Sleigh, ...) are
+separately modeled through `item_support_effects.py`'s ally ledger; that
+representation is out of `item_coverage`'s outgoing-TDD scope by design and
+is unaffected by this certification pass. The golden gate showed zero diffs
+(certification changed no calculation, only added a registry and tests).
+
 ### 1.2 BIS-frequency tiers — PROVISIONAL PROXY
 
 **PROVISIONAL PROXY.** Tiering below ranks items by how often `optimize_build`
@@ -103,14 +128,20 @@ eligible; simply never won a slot against this sample's 30 champions and 2
 target profiles. Not a coverage gap — a sampling gap. Not enumerated here
 (reproduce via appendix §6.2 against a different roster to populate it).
 
-### 1.3 Stat-only list (`stats_only`, 92 items)
+### 1.3 Stat-only list (`stats_only`, 92 items) — CERTIFIED (2026-08-20)
 
-`stats_only` means item_coverage found no bespoke damage/proc formula to
-model — the item contributes only its raw stat line (and any generic
-mechanic owned elsewhere, e.g. life steal). It is not a judgment about the
+`stats_only` means `item_model_coverage` found no mechanic that adds
+**outgoing damage from the item's own holder** — corrected wording: this is
+narrower than "no bespoke formula at all". 51 of the 92 truly have no cached
+passive/active. The other **41 do carry a real, numeric mechanic** (a self
+shield, Grievous Wounds, a slow, stasis, or an ally-directed heal/shield
+routed through the separate support ledger) — they are still correctly
+`stats_only` because none of that text deals damage to a champion target;
+see the certification note in §1.1 and `item_coverage.py`'s
+`_STATS_ONLY_CERTIFIED_EFFECT_TEXT` docstring. It is not a judgment about the
 item's power; six `stats_only` items are in Tier 1/2 above (Void Staff,
 Serylda's Grudge, Bloodthirster, and three others carry stats the optimizer
-values highly with no bespoke passive to model).
+values highly with no outgoing-damage passive to model).
 
 Split by shop price (≤1600g = component/boots/consumable tier, the "near-free"
 set; ≥2200g = completed legendary stat-sticks):
@@ -134,8 +165,11 @@ Mercury's Treads, Chainlaced Crushers, Spectre's Cowl, B. F. Sword,
 Hexdrinker, Noonquiver, The Brutalizer, Last Whisper, Seeker's Armguard,
 Shattered Armguard, Verdant Barrier.
 
-**Legendary stat-sticks (≥2200g), 22 items** — no bespoke mechanic modeled,
-but full-price and build-relevant: Moonstone Renewer, Echoes of Helia,
+**Legendary stat-sticks (≥2200g), 22 items** — no outgoing-damage mechanic
+modeled (most of these 22 are among the 41 certified "described" items —
+see §1.1 — carrying a real self-shield/heal/utility passive that is out of
+this calculator's attacker-TDD scope by design), but full-price and
+build-relevant: Moonstone Renewer, Echoes of Helia,
 Diadem of Songs, Protoplasm Harness, Rylai's Crystal Scepter, Phantom
 Dancer, Spirit Visage, Randuin's Omen, Youmuu's Ghostblade, Morellonomicon,
 Kaenic Rookern, Mortal Reminder, Banshee's Veil, Void Staff, Edge of Night,
