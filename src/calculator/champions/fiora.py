@@ -118,11 +118,10 @@ SLOTS = {
 # damage part, and P's vitals are an effect-phase proc row whose event list
 # the module builds itself, so a marker there would never reach the ledger.
 #
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Bladework's first attack "slows the target by 30% for 1 second", but the
-# row's damage is the engine's reattributed empowered swings with no damage
-# part of its own, so there is nothing for the declaration to stamp.
-MODULE_CC = {"Q": "none", "W": "slow"}
+# Bladework empowers two attacks and "the first attack slows the target
+# by 30% for 1 second"; the row's damage is those swings, so the slow
+# rides the events the engine reattributes to it.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 

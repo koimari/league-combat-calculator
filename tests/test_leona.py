@@ -1,10 +1,9 @@
-"""Reviewed crowd control for Leona (MODULE_CC) — and the slot that still
-withholds.
+"""Reviewed crowd control for Leona (MODULE_CC), whole kit.
 
 Eclipse detonates 3 seconds after its cast and controls nothing; Zenith
 Blade roots; Solar Flare strikes 0.625 seconds after its cast and slows
-every enemy it hits.  Shield of Daybreak's stun is real but its row
-authors no part, so this kit stays coarse.
+every enemy it hits.  Shield of Daybreak stuns through the basic attack
+it empowers, which is where its row's damage comes from.
 """
 
 from src.calculator.champions import leona, parse_champion_abilities
@@ -24,7 +23,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Leona")
-        assert leona.MODULE_CC == {"W": "none", "E": "root", "R": "slow"}
+        assert leona.MODULE_CC == {
+            "Q": "stun",
+            "W": "none",
+            "E": "root",
+            "R": "slow",
+        }
         assert leona.parse_abilities.cc_kinds == leona.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         assert "roots them for 0.5 seconds" in cc_review.slot_text(data, "E")
@@ -53,17 +57,25 @@ class TestReviewedCrowdControl:
         assert part.time_offset == 0.625
         assert part.cc_kind == "slow"
 
-    def test_shield_of_daybreak_withholds_on_its_partless_row(self):
-        """Q's stun is real; its row is an on-hit payload, not a hit."""
+    def test_shield_of_daybreak_stuns_through_the_swing_it_forces(self):
+        """Q's row is an on-hit payload, so the engine builds its carrier.
+
+        The cast deals nothing itself: its bonus rides the on-hit stream and
+        the row's own damage is the swing the fight engine reattributes to
+        it.  ``engine._apply_module_cc`` gives that declaration a
+        zero-damage part to live on, which is what the swing events read
+        their marker from.
+        """
         data = cc_review.kit("Leona")
-        assert "Q" not in leona.MODULE_CC
         assert "stun the target for 1 second" in cc_review.slot_text(data, "Q")
         entry = parse_champion_abilities(data, 18, 100.0, _RANKS)["Q"]
-        assert entry["parts"] == ()
+        assert entry["empowers_next_auto"] is True
+        (marker,) = entry["parts"]
+        assert (marker.amount, marker.count, marker.cc_kind) == (0.0, 1, "stun")
         assert entry["on_hit"]["name"] == "Shield of Daybreak"
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Leona") == ["Q"]
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Leona") == []
         coverage = cc_review.fimbulwinter_coverage("Leona")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

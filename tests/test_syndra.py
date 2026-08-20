@@ -659,23 +659,29 @@ class TestScatterTheWeakStun:
 
         assert syndra.MODULE_CC["E"] == "stun"
 
-    def test_the_rest_of_the_kit_stays_unreviewed(self, syndra_data) -> None:
-        """Not an oversight: W is the mixed magic+true pair, two parts of
-        one landing, and R is one part per sphere, so neither can carry a
-        reviewed kind into the event ledger — and a declaration the ledger
-        cannot show is refused.  Q and Q2 are one sphere, one detonation,
-        which is why they can."""
+    def test_the_mixed_landing_is_reviewed_and_the_barrage_is_not(
+        self, syndra_data
+    ) -> None:
+        """W is two parts of ONE landing, so it certifies and carries its
+        slow; R is one part of ``r_spheres`` hits — a schedule with no
+        sourced cadence, which certification refuses and which therefore
+        carries no reviewed kind."""
         parsed = _parse(syndra_data)
         unreviewed = {
             slot
             for slot, entry in parsed.items()
             if any(part.cc_kind is None for part in entry.get("parts", ()))
         }
-        assert unreviewed == {"W", "R"}
+        assert unreviewed == {"R"}
+        assert parsed["W"]["event_order_certified"] == "single_hit"
+        assert [
+            (part.damage_type, part.cc_kind, part.time_offset)
+            for part in parsed["W"]["parts"]
+        ] == [("magic", "slow", 0.0), ("true", "slow", 0.0)]
 
     def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
         """The honest consequence of the line above: the control token
-        stays until those four rows author events of their own."""
+        stays until Unleashed Power's spheres author events of their own."""
         from src.calculator.calculate import calculate_payload
 
         coverage = calculate_payload(

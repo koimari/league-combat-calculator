@@ -23,7 +23,13 @@ vanish). Dropping a non-damaging slot is the parser's decision.
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Mapping
 
-from ..ability_spec import CC_KIND_VOCABULARY
+from ..ability_spec import (
+    CC_KIND_VOCABULARY,
+    DamagePart,
+    Disposition,
+    ZeroPolicy,
+    part_damage_types,
+)
 from .inputs import (
     ChampionInputError,
     champion_stat,
@@ -455,6 +461,13 @@ def _validate_cc_event_contract(
     certified = entry.get("event_order_certified") == "single_hit"
     has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
     has_authored_events = isinstance(entry.get("damage_events"), list)
+    # An empowering cast is delivered BY the basic attacks it forces, so
+    # its row's events are authored from the swings the fight engine
+    # reattributes to it (``damage._author_empowered_swing_events``) and
+    # the marker on them is this entry's own declaration, read back by
+    # ``damage._declared_cc_marker``. That producer is the carrier, so the
+    # part-timing tests below are the wrong question to ask of this row.
+    empowers = bool(entry.get("empowers_next_auto"))
     for part in cc_parts:
         emits = (
             (certified and len(parts) == 1 and part.count <= 1)
@@ -464,16 +477,106 @@ def _validate_cc_event_contract(
             )
             or has_dynamic_part
             or has_authored_events
+            or empowers
         )
         if not emits:
             raise ValueError(
                 f"{champion_name} entry {result_key!r}: cc_kind "
                 f"{part.cc_kind!r} would never reach the event ledger — "
-                "certify event_order_certified='single_hit' (one part, one "
-                "hit), author the part's time_offset, or author "
-                "damage_events; without one of these the CC silently "
-                "triggers nothing"
+                "certify event_order_certified='single_hit' (one landing), "
+                "author the part's time_offset, author damage_events, or "
+                "empower a basic attack; without one of these the CC "
+                "silently triggers nothing"
             )
+
+
+# A cast whose only damage is the basic attack it forces prices at zero
+# on its own account.  That is a declaration, not a computation, so the
+# marker part it carries says so with the campaign's own vocabulary.
+_EMPOWER_MARKER_ZERO = ZeroPolicy(
+    disposition=Disposition.STRUCTURAL_ZERO,
+    reason=(
+        "an empowering cast deals no damage of its own: its bonus rides the "
+        "basic attacks it forces, so this part exists only to carry the "
+        "module's reviewed cc_kind onto the swings the fight engine "
+        "reattributes to the row"
+    ),
+)
+
+
+# The channels that ride the holder's basic attacks as a *rate* rather
+# than as a cast: an entry declaring one is priced per swing, forever, in
+# every branch it has (Corki's Hextech Munitions, Gangplank's Trial by
+# Fire).  Its damage lands on the auto stream, which is never an ability
+# event, so a crowd-control declaration on such a row can never be read.
+#
+# An ``on_hit`` payload is deliberately NOT here: it belongs to a cast
+# that may or may not force a swing depending on the fight's options
+# (Kassadin's W does both), so an on-hit row with no swing this parse is
+# simply a row that prices nothing — the quiet answer below, not a
+# contradiction.
+_SWING_RIDER_CHANNELS = frozenset(
+    {
+        "basic_attack_true_ratio",
+        "spellblade_true_ratio",
+        "spellblade_bonus_true_ratio",
+        "auto_attack_override",
+        "auto_attack_conversion",
+        "double_shot",
+    }
+)
+
+
+def _empower_marker_part(
+    entry: dict[str, Any],
+    kind: str,
+    champion_name: str,
+    slot: str,
+) -> DamagePart | None:
+    """The carrier for a declaration on a slot that emits no damage part.
+
+    ``ability_on_hit_entry`` and the empower shells return ``parts = ()``:
+    their bonus rides the on-hit stream and the row's own damage is the
+    consumed swing ``damage._reattribute_empowered_swings`` moves onto it.
+    Those swings DO author events, and ``damage._declared_cc_marker`` reads
+    the kind to stamp on them off this entry's parts — so a partless shell
+    is exactly the case where a declaration would look landed and reach
+    nothing.  One zero-damage part gives the marker somewhere to live.
+
+    A partless slot that prices itself per swing
+    (:data:`_SWING_RIDER_CHANNELS`) has no cast in any branch, so its
+    declaration can never be read and is refused rather than stamped.
+
+    ``None`` is the third answer, and the only quiet one: an entry with no
+    parts and no swing rider prices nothing this parse — an option emptied
+    it (Corki's barrage at zero charges, Kassadin's unempowered W) or the
+    slot is pure state.  A row with no damage authors no event for
+    anything to miss.
+    """
+    if not entry.get("empowers_next_auto"):
+        channels = sorted(_SWING_RIDER_CHANNELS & set(entry))
+        if not channels:
+            return None
+        raise ValueError(
+            f"{champion_name} slot {slot!r}: MODULE_CC declares {kind!r} but "
+            f"the slot prices itself per basic attack through {channels} and "
+            "emits no damage part — that damage never becomes an ability "
+            "event, so the declaration would reach nothing"
+        )
+    damage_type = str(entry.get("damage_type", ""))
+    if damage_type not in part_damage_types():
+        raise ValueError(
+            f"{champion_name} slot {slot!r}: MODULE_CC declares {kind!r} on a "
+            f"partless empower whose damage_type is {damage_type!r}, which is "
+            "not a part damage type (known types are defined by "
+            "ability_spec.part_damage_types)"
+        )
+    return DamagePart(
+        damage_type,
+        0.0,
+        cc_kind=kind,
+        zero_policy=_EMPOWER_MARKER_ZERO,
+    )
 
 
 def _apply_module_cc(
@@ -488,16 +591,27 @@ def _apply_module_cc(
     cast, so every part of that cast carries the same reviewed control
     state.  Stamping here rather than at each construction site is what
     makes the declaration true of parts a module rebuilds after
-    ``damage_entry`` (Pantheon's Q and R do exactly that) instead of only
-    of the ones that happened to go through a builder keyword.
+    ``damage_entry`` (Pantheon's Q and R do exactly that) and of parts an
+    AMP-phase slot appends to a finished entry (Amumu's Cursed Touch),
+    instead of only of the ones that happened to go through a builder
+    keyword.
 
     A part that already carries its own kind keeps it — an explicit
-    per-part statement is the more specific one — but a part that carries a
-    *different* kind is two declarations of one fact that disagree, so it
+    per-part statement is the more specific one — but a part that carries
+    a *different* kind is two declarations of one fact that disagree, so it
     raises rather than silently preferring either.
+
+    A slot with no parts at all gets one built for it, stops the import,
+    or is a row that prices nothing at all — :func:`_empower_marker_part`
+    rules which.  What must not happen is the outcome this used to have for
+    all three alike, where a declaration on a row that DOES price damage
+    returned quietly and stamped nothing.
     """
     parts = entry.get("parts") or ()
     if not parts:
+        marker = _empower_marker_part(entry, kind, champion_name, slot)
+        if marker is not None:
+            entry["parts"] = (marker,)
         return
     stamped: list[Any] = []
     changed = False
@@ -516,6 +630,71 @@ def _apply_module_cc(
         stamped.append(part)
     if changed:
         entry["parts"] = tuple(stamped)
+
+
+# The instant a multi-part ``single_hit`` row occupies: the cast boundary
+# itself, which is where its one landing has always been priced.
+_SHARED_INSTANT = 0.0
+
+
+def _certify_shared_instant(
+    champion_name: str,
+    result_key: str,
+    entry: dict[str, Any],
+) -> None:
+    """Give a multi-part ``single_hit`` row the instant it certifies.
+
+    ``single_hit`` says the row is ONE landing.  A landing is regularly
+    computed in more than one part: Syndra's W lands magic plus
+    Transcendent's true bonus, Ahri's Q is one pass out and one back,
+    Amumu's Cursed Touch appends a true part to every entry in the kit,
+    Seraphine's Q is a flat term plus a missing-health term, and
+    Malphite's W is the empowered attack's bonus plus its cone.  The fight
+    engine's certified export carries only a one-part cast
+    (``damage._evaluate_cast_parts``), so the split parts say what they
+    are instead: each authors the shared instant as its own
+    ``time_offset``, the per-part path that already exports an authored
+    hit.  Modules that hand-wrote that offset (Twitch E, Seraphine Q) keep
+    theirs — this is the same statement, made once.
+
+    **A landing is not a schedule**, and two tests separate them:
+
+    * a part that hits more than once (``count > 1``) is that part's own
+      repetition — Syndra's spheres, Ahri's flames and dashes — and needs
+      a sourced cadence, not an instant it does not have;
+    * parts authoring DIFFERENT offsets sit at different instants, so the
+      row spans an interval rather than landing.
+
+    Either raises, naming the slot: certifying a schedule as a landing is
+    the same silent overstatement, in the other direction.
+    """
+    if entry.get("event_order_certified") != "single_hit":
+        return
+    parts = entry.get("parts") or ()
+    if len(parts) <= 1:
+        # One part is the fight engine's own certified export path; leave
+        # it exactly as it is rather than authoring an offset it never had.
+        return
+    for part in parts:
+        if part.count > 1:
+            raise ValueError(
+                f"{champion_name} entry {result_key!r}: "
+                "event_order_certified='single_hit' but a part hits "
+                f"{part.count} times — a repeated part is a schedule, not "
+                "one landing; author its time_offset and hit_interval "
+                "instead of certifying"
+            )
+    offsets = {part.time_offset for part in parts if part.time_offset is not None}
+    if len(offsets) > 1:
+        raise ValueError(
+            f"{champion_name} entry {result_key!r}: "
+            "event_order_certified='single_hit' but its parts author "
+            f"{sorted(offsets)} — a row whose parts sit at different "
+            "instants is not one landing"
+        )
+    instant = offsets.pop() if offsets else _SHARED_INSTANT
+    if any(part.time_offset is None for part in parts):
+        entry["parts"] = tuple(replace(part, time_offset=instant) for part in parts)
 
 
 def _result_key(slot: str) -> str:
@@ -611,15 +790,19 @@ def build_parser(
             )
             entry = parser(ctx)
             if entry is not None:
-                declared_cc = declared_cc_kinds.get(slot)
-                if declared_cc is not None:
-                    _apply_module_cc(entry, declared_cc, champion_name, slot)
                 _stamp_slot_facts(entry, ctx, level=level, resource_type=resource_type)
                 results[_result_key(slot)] = entry
 
-        # Validate AFTER all phases: AMP parsers mutate earlier entries,
-        # and a mutated entry must obey the contract too.
+        # Stamp and validate AFTER all phases: AMP parsers mutate earlier
+        # entries, and a mutated entry must obey the contract too — Amumu's
+        # Cursed Touch appends a true part to every damage slot in the kit,
+        # and a part the declaration never reached is an unreviewed event.
+        for slot, declared_cc in declared_cc_kinds.items():
+            entry = results.get(_result_key(slot))
+            if entry is not None:
+                _apply_module_cc(entry, declared_cc, champion_name, slot)
         for result_key, entry in results.items():
+            _certify_shared_instant(champion_name, result_key, entry)
             _validate_entry_keys(champion_name, result_key, entry)
             _validate_cc_event_contract(champion_name, result_key, entry)
 

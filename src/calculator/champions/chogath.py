@@ -201,11 +201,11 @@ SLOTS = {
 # debuff is a silence — real control, but neither an immobilizing effect
 # nor a slow — and R "deal[s] them true damage" and nothing else.
 #
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan:
-# its row is the three empowered basic attacks summed in one part with no
-# per-swing cadence to place them on, so no part of it is a hit the
-# ledger can time.
-MODULE_CC = {"Q": "knockup", "W": "silence", "R": "none"}
+# E's spikes ride the three basic attacks it empowers: "Enemies struck
+# are dealt magic damage and slowed by an amount that decays over 1.5
+# seconds" — one event per consumed swing, authored by the engine's
+# empowered-swing reattribution.
+MODULE_CC = {"Q": "knockup", "W": "silence", "E": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 

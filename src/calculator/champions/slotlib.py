@@ -795,7 +795,10 @@ def simple_damage(
             exports it as an authored event instead of folding it into a
             coarse aggregate row. It is a claim about timing and nothing
             else — an ability with sourced travel or delay authors the
-            part's ``time_offset`` instead of certifying.
+            part's ``time_offset`` instead of certifying. A ``"mixed"``
+            slot is one landing split into a magic and a true part, which
+            certifies too: ``engine._certify_shared_instant`` gives the
+            split parts the instant they share.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -812,11 +815,6 @@ def simple_damage(
         raise ValueError(
             "simple_damage: cc_kind requires a single-part slot "
             "(dmg_type must not be 'mixed')"
-        )
-    if event_order_certified is not None and dmg_type == "mixed":
-        raise ValueError(
-            "simple_damage: event_order_certified requires a single-part "
-            "slot (dmg_type must not be 'mixed')"
         )
     extract_cd = extract_recharge if cooldown == "recharge" else extract_cooldown
 

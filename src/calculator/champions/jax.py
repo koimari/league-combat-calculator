@@ -150,11 +150,10 @@ SLOTS = {
 # them for 1 second".  P is the attack-speed stack row and authors no
 # damage part.
 #
-# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Empower controls nothing, but its row's damage is the engine's
-# reattributed empowered swing with no damage part of its own, so there is
-# nothing for the declaration to stamp.
-MODULE_CC = {"Q": "none", "R": "none", "E": "stun"}
+# W (Empower) empowers "his next basic attack or Leap Strike ... to deal
+# additional magic damage" and nothing else — a reviewed absence of
+# control, riding the swing the cast forces.
+MODULE_CC = {"Q": "none", "W": "none", "R": "none", "E": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Jax", cc_kinds=MODULE_CC)
 OPTIONS = [

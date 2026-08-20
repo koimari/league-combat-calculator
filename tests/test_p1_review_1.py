@@ -302,7 +302,10 @@ def test_malphite_api_w_and_e_match_sourced_mitigation():
     w_events = _main_damage_events(combat, "W")
     e_events = _main_damage_events(combat, "E")
     assert w_events and e_events
-    assert w_events[0]["raw_damage"] == pytest.approx(w_raw / len(w_events), rel=1e-3)
+    # Thunderclap lands its empowered-attack bonus and its cone in one
+    # instant but at two magnitudes, so the row's claim is that its events
+    # ACCOUNT for the raw total, not that they are equal shares of it.
+    assert sum(e["raw_damage"] for e in w_events) == pytest.approx(w_raw, rel=1e-3)
     assert e_events[0]["raw_damage"] == pytest.approx(e_raw / len(e_events), rel=1e-3)
     assert sum(e["damage"] for e in w_events) == pytest.approx(
         w_raw * 100.0 / (100.0 + enemy_stats["armor"]), rel=1e-3

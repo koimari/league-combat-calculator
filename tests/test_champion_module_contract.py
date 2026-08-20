@@ -186,10 +186,12 @@ class TestModuleCcDeclaration:
         A pilot's declaration grows as the rest of its kit is reviewed, so
         what is pinned here is the fact each migration established — the
         kind, on the slot the wave read it off — not the size of the dict
-        that has since grown around it.
+        that has since grown around it.  Corki's P dropped out: Hextech
+        Munitions delivers on the auto stream, so its row authors no
+        ability event and the engine refuses a declaration there.
         """
         assert get_champion_module_contract("Corki").cc_kinds == {
-            slot: "none" for slot in ("Q", "W", "E", "R", "P")
+            slot: "none" for slot in ("Q", "W", "E", "R")
         }
         for name, slot, kind in (
             ("Syndra", "E", "stun"),

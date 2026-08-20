@@ -186,10 +186,18 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
 
     @classmethod
     def _marked(cls, champion_name, champion_data, kind="stun"):
-        """The kit with *kind* stamped on every part, by the engine itself."""
+        """The kit with *kind* stamped on every part, by the engine itself.
+
+        Every slot a ``MODULE_CC`` may name: one with parts, or an empower
+        shell the engine builds a carrier for.  A row that prices itself
+        per basic attack (Corki's Hextech Munitions) cannot carry a
+        declaration at all — the engine refuses one there — so this world
+        cannot mark it either.
+        """
         parsed = cls._silent(champion_data)
         for slot, entry in parsed.items():
-            _apply_module_cc(entry, kind, champion_name, slot)
+            if entry.get("parts") or entry.get("empowers_next_auto"):
+                _apply_module_cc(entry, kind, champion_name, slot)
         return parsed
 
     @staticmethod

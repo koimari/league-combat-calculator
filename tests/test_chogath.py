@@ -362,16 +362,24 @@ class TestPassiveCarnivore:
 
 
 class TestReviewedCrowdControl:
-    """Cho'Gath's crowd-control review, and the slot that still withholds.
+    """Cho'Gath's crowd-control review, whole kit.
 
-    Q's knock-up lands with the rupture, on the sourced delay the row now
-    authors; E's row is its three empowered attacks in one part with no
-    per-swing cadence, so it cannot carry a marker at all.
+    Q's knock-up lands with the rupture, on the sourced delay the row
+    authors; E's slow rides the three basic attacks it empowers, on the
+    events the fight engine authors from the swings they consume.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Cho'Gath")
-        assert chogath.MODULE_CC == {"Q": "knockup", "W": "silence", "R": "none"}
+        assert chogath.MODULE_CC == {
+            "Q": "knockup",
+            "W": "silence",
+            "E": "slow",
+            "R": "none",
+        }
+        assert "slowed by an amount that decays over 1.5 seconds" in (
+            cc_review.slot_text(data, "E")
+        )
         assert "knocking them up for 1 second" in cc_review.slot_text(data, "Q")
         assert "silenced for a duration" in cc_review.slot_text(data, "W")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
@@ -391,8 +399,8 @@ class TestReviewedCrowdControl:
         assert part.time_offset == pytest.approx(1.127)
         assert part.cc_kind == "knockup"
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Cho'Gath") == ["E"]
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Cho'Gath") == []
         coverage = cc_review.fimbulwinter_coverage("Cho'Gath")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

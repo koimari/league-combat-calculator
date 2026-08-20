@@ -236,8 +236,19 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
     name = ability.get("name", "Force of Will")
+    # One landing either way: the thrown target deals its damage "once
+    # they land", which is the instant this row certifies.  Above 60
+    # splinters that landing is split into a magic and a true part, which
+    # is still one landing (``engine._certify_shared_instant``).
     if _splinters(ctx) < SPLINTERS_W_TRUE_DAMAGE:
-        return damage_entry(name, rank, cooldown, magic, "magic")
+        return damage_entry(
+            name,
+            rank,
+            cooldown,
+            magic,
+            "magic",
+            event_order_certified="single_hit",
+        )
 
     ap = ctx.stat("ability_power")
     true_bonus = (W_TRUE_RATIO_BASE + W_TRUE_RATIO_PER_100_AP * ap / 100.0) * magic
@@ -250,6 +261,7 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
         # Magic part FIRST: the evaluator's first-part return is the
         # Horizon Focus trigger for mixed entries.
         "parts": (DamagePart("magic", magic), DamagePart("true", true_bonus)),
+        "event_order_certified": "single_hit",
     }
 
 
@@ -355,14 +367,14 @@ SLOTS = {
 # cast.  E (Scatter the Weak) scatters a sphere into the target, and
 # "targets hit are also stunned for 1.25 seconds".
 #
-# W and R stay UNREVIEWED, so this kit keeps the coarse control-armed
-# scan.  Force of Will does control — the thrown target's landing means
-# "all targets hit are slowed by 25% for 1.5 seconds" — but its row is the
-# mixed magic+true pair, two parts of one landing, and ``single_hit``
-# certification requires one part.  Unleashed Power is control-free
-# ("each dealing magic damage upon hit") but its row is one aggregated
-# part of ``r_spheres`` hits with no sourced cadence between them.
-MODULE_CC = {"E": "stun", "Q": "none", "Q2": "none"}
+# W (Force of Will) throws the grabbed target and deals its damage "once
+# they land"; "all targets hit are slowed by 25% for 1.5 seconds".
+#
+# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Unleashed Power is control-free ("each dealing magic damage upon hit")
+# but its row is one aggregated part of ``r_spheres`` hits with no sourced
+# cadence between them — a schedule, which ``single_hit`` refuses.
+MODULE_CC = {"E": "stun", "Q": "none", "Q2": "none", "W": "slow"}
 
 # The revision these declarations were read from, in the shape
 # scripts/cast_dependency_audit.py will resolve against the committed

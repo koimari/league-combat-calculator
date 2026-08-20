@@ -410,11 +410,16 @@ SLOTS = {
 # Reviewed cc-free, whole kit.  Nothing in the cached entries applies any
 # crowd control to an enemy: the bomb, the blazing patches, the gatling
 # cone (resistance shred, not control) and the missiles all deal damage
-# only, and Hextech Munitions is a true-damage rider on basic attacks.
-# Every slot says so explicitly, which is what lets control-armed item
-# passives (Fimbulwinter's Everlasting) price a Corki fight instead of
-# withholding on an unreviewed kit.
-MODULE_CC = {slot: "none" for slot in SLOTS}
+# only.  Every castable slot says so explicitly, which is what lets
+# control-armed item passives (Fimbulwinter's Everlasting) price a Corki
+# fight instead of withholding on an unreviewed kit.
+#
+# P is not declared: Hextech Munitions is a true-damage rider the fight
+# engine prices onto each basic attack, so its damage is auto-phase and
+# the row emits no part of its own — a declaration there would reach no
+# ability event, which the engine now refuses rather than accepting as a
+# no-op.
+MODULE_CC = {slot: "none" for slot in SLOTS if slot != "P"}
 
 parse_abilities = build_parser(SLOTS, "Corki", cc_kinds=MODULE_CC)
 

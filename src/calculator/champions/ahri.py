@@ -155,7 +155,16 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _essence_theft,
-    "Q": simple_damage(attr="Damage Per Pass", dmg_type="mixed", casts=2),
+    # One pass out and one back is one landing per enemy ("enemies can be
+    # hit only once per pass"), split magic outgoing / true returning —
+    # the mixed split ``engine._certify_shared_instant`` gives its shared
+    # instant to.
+    "Q": simple_damage(
+        attr="Damage Per Pass",
+        dmg_type="mixed",
+        casts=2,
+        event_order_certified="single_hit",
+    ),
     "W": _fox_fire,
     "E": _charm,
     "R": _spirit_rush,
@@ -169,11 +178,15 @@ MODULE_COVERAGE = {
     "R": "modeled",
 }
 
-# E alone is reviewed: Q is the mixed magic+true pair, W is two flame
-# tiers and R is three dashes, so none of them can carry a reviewed kind
-# into the event ledger yet, and a declaration the ledger cannot show is
-# refused rather than stamped.
-MODULE_CC = {"E": "immobilize"}
+# Q (Orb of Deception) "deals magic damage to enemies it passes through"
+# and returns "to deal the same amount in true damage" — damage only, so a
+# reviewed absence of control.
+#
+# W and R stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Fox-Fire is two flame tiers (a second part of the same damage
+# type, hitting twice) and Spirit Rush is three dashes in one part: both
+# are schedules with unsourced cadence, which ``single_hit`` refuses.
+MODULE_CC = {"E": "immobilize", "Q": "none"}
 
 REVIEW_STATUS = "reviewed_module"
 

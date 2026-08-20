@@ -33,25 +33,39 @@ from .engine import AMP, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage
 
 _CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
+_W_TICK_SECONDS = 0.5  # Despair "deal[s] magic damage every 0.5 seconds"
 
 
 def _apply_curse(result: dict[str, Any]) -> None:
     """Add Cursed Touch bonus true damage to one ability entry.
 
-    Mutates *result* in place: appends a true-damage part equal to 10%
-    of the ability's magic-part damage, switches ``damage_type`` to
-    ``"mixed"``, and increases ``total_raw`` accordingly.
+    Mutates *result* in place: appends one true-damage part per magic part,
+    switches ``damage_type`` to ``"mixed"``, and increases ``total_raw``
+    accordingly.
+
+    The rider is "10% bonus true damage from all incoming pre-mitigation
+    magic damage" — per instance, so it mirrors the magic part it rides:
+    same count, same authored timing.  One lumped true part would sum to
+    the same number and then strand the entry's timing, because a row's
+    events are authored only when EVERY part places itself.
     """
     parts = result.get("parts", ())
-    magic = sum(
-        part.amount * part.count for part in parts if part.damage_type == "magic"
-    )
+    magic_parts = [part for part in parts if part.damage_type == "magic"]
+    magic = sum(part.amount * part.count for part in magic_parts)
     if magic <= 0:
         return
-    bonus_true = magic * _CURSE_BONUS_FRACTION
-    result["total_raw"] = magic + bonus_true
+    result["total_raw"] = magic + magic * _CURSE_BONUS_FRACTION
     result["damage_type"] = "mixed"
-    result["parts"] = parts + (DamagePart("true", bonus_true),)
+    result["parts"] = parts + tuple(
+        DamagePart(
+            "true",
+            part.amount * _CURSE_BONUS_FRACTION,
+            count=part.count,
+            time_offset=part.time_offset,
+            hit_interval=part.hit_interval,
+        )
+        for part in magic_parts
+    )
 
 
 def _cursed_touch_amp(ctx: SlotCtx) -> None:
@@ -89,7 +103,7 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
-    total_ticks = int(w_seconds / 0.5)
+    total_ticks = int(w_seconds / _W_TICK_SECONDS)
     total = per_tick * total_ticks
 
     return {
@@ -99,7 +113,13 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "magic",
         "damage_per_tick": per_tick,
         "total_ticks": total_ticks,
-        "parts": (DamagePart("magic", total),),
+        # The toggle's window is one aggregate placed at the cast, and the
+        # part says so: an authored ``time_offset`` is what carries the
+        # row's reviewed control answer into the event ledger.  It does NOT
+        # certify ``single_hit`` — three seconds of a toggle is not one
+        # landing — and it does not split into its 0.5 s ticks, which would
+        # re-price Shadowflame.
+        "parts": (DamagePart("magic", total, time_offset=0.0),),
         "total_raw": total,
     }
 
@@ -129,26 +149,40 @@ ASSUMPTIONS = [
     "E passive (damage reduction) is not modeled — defensive only",
 ]
 
+# Q, E and R each land once at the cast: the bandage "deals magic damage
+# to the first enemy hit", Tantrum "deal[s] magic damage to nearby
+# enemies", and Curse of the Sad Mummy "deal[s] magic damage" as it
+# entangles.  Cursed Touch then splits each of those landings into a magic
+# and a true part, which is still one landing.
 SLOTS = {
     "P": _cursed_touch_display,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic", cooldown="recharge"),
+    "Q": simple_damage(
+        attr="Magic Damage",
+        dmg_type="magic",
+        cooldown="recharge",
+        event_order_certified="single_hit",
+    ),
     "W": _despair,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "curse": _cursed_touch_amp,
 }
 
-# No MODULE_CC, though the kit's control is unambiguous: Q (Bandage Toss)
-# is "stunning them for 1 second and pulling him to them", R (Curse of the
-# Sad Mummy) is "knocking them down and stunning them for 1.5 seconds", and
-# W (Despair) and E (Tantrum) control nothing.  The AMP-phase Cursed Touch
-# amplifier appends a true-damage part to every one of those entries
-# (``_apply_curse``), so no entry is one part by the time the contract is
-# validated, and ``single_hit`` certification — which requires one part —
-# cannot state a row that is one hit split across two damage types.  Until
-# that certification can span a mixed-type hit, this kit keeps the coarse
-# control-armed scan.
-parse_abilities = build_parser(SLOTS, "Amumu")
+# Reviewed crowd control, read from the cached kit.  Q (Bandage Toss)
+# "deals magic damage to the first enemy hit, stunning them for 1 second
+# and pulling him to them"; R (Curse of the Sad Mummy) deals its damage
+# "as well as knocking them down and stunning them for 1.5 seconds".  W
+# (Despair) is a damage toggle and E (Tantrum) "releases his anger,
+# dealing magic damage to nearby enemies" — neither controls anything, a
+# reviewed absence.  P is the amplifier itself: its display row prices
+# nothing, so it carries no declaration.
+MODULE_CC = {"Q": "stun", "W": "none", "E": "none", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Amumu", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

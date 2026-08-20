@@ -132,7 +132,7 @@ class TestCharmIsTheKitsOneReviewedControl:
     def test_the_charm_is_declared_once_in_module_cc(self) -> None:
         from src.calculator.champions import ahri
 
-        assert ahri.MODULE_CC == {"E": "immobilize"}
+        assert ahri.MODULE_CC == {"E": "immobilize", "Q": "none"}
 
     def test_the_declaration_lands_on_the_part(self, ahri_data, parse_at) -> None:
         _, abilities = parse_at(ahri_data, 18, ap=100)
@@ -140,17 +140,25 @@ class TestCharmIsTheKitsOneReviewedControl:
         assert part.cc_kind == "immobilize"
         assert abilities["E"]["event_order_certified"] == "single_hit"
 
-    def test_the_rest_of_the_kit_stays_unreviewed(self, ahri_data, parse_at) -> None:
-        """Q is the mixed magic+true pair, W two flame tiers, R three
-        dashes: none of them authors an event a reviewed kind could ride,
-        so none of them may claim one."""
+    def test_the_orb_is_one_landing_and_the_rest_is_a_schedule(
+        self, ahri_data, parse_at
+    ) -> None:
+        """Q is the mixed magic+true pair — one landing per enemy, so it
+        certifies.  W is two flame tiers and R three dashes: repeated parts
+        with no sourced cadence, which certification refuses, so neither
+        may claim a reviewed kind."""
         _, abilities = parse_at(ahri_data, 18, ap=100)
         unreviewed = {
             slot
             for slot, entry in abilities.items()
             if any(part.cc_kind is None for part in entry.get("parts", ()))
         }
-        assert unreviewed == {"Q", "W", "R"}
+        assert unreviewed == {"W", "R"}
+        assert abilities["Q"]["event_order_certified"] == "single_hit"
+        assert [
+            (part.damage_type, part.cc_kind, part.time_offset)
+            for part in abilities["Q"]["parts"]
+        ] == [("magic", "none", 0.0), ("true", "none", 0.0)]
 
     def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
         from src.calculator.calculate import calculate_payload
@@ -177,7 +185,7 @@ class TestReviewedCrowdControl:
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert ahri.MODULE_CC == {"E": "immobilize"}
+        assert ahri.MODULE_CC == {"E": "immobilize", "Q": "none"}
         assert ahri.parse_abilities.cc_kinds == ahri.MODULE_CC
 
     def test_the_declared_kind_is_the_one_the_cached_kit_gives(self):
@@ -194,7 +202,8 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Ahri")
         for slot in ("Q", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
-            assert slot not in ahri.MODULE_CC
+        assert ahri.MODULE_CC["Q"] == "none"
+        assert "R" not in ahri.MODULE_CC
         # Fox-Fire names Charm only as a targeting priority, never as
         # something it applies: "flames prioritize enemy champions hit by
         # Charm, then enemy champions".
@@ -202,7 +211,7 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(w_text) == ["charm"]
         assert "flames prioritize enemy champions hit by charm" in w_text
         assert "W" not in ahri.MODULE_CC
-        assert cc_review.unreviewed_ability_slots("Ahri") == ["Q", "R", "W"]
+        assert cc_review.unreviewed_ability_slots("Ahri") == ["R", "W"]
         coverage = cc_review.fimbulwinter_coverage("Ahri")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

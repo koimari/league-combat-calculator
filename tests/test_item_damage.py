@@ -444,6 +444,9 @@ class TestFimbulwinterTimelineCertification:
     """Everlasting never guesses an unreviewed ability control state."""
 
     def test_unreviewed_ability_control_is_coarse(self, ahri_data: dict) -> None:
+        """Fox-Fire is the kit's still-unreviewed row: the first flame plus
+        two more in one repeated part, a schedule with no sourced cadence,
+        so nothing may state its control either way."""
         from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.stats import calculate_total_stats
 
@@ -452,7 +455,7 @@ class TestFimbulwinterTimelineCertification:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         result = calculate_fight_damage(
             stats,
-            {"Q": abilities["Q"]},
+            {"W": abilities["W"]},
             [item],
             FightConfig(
                 target_health=5000.0,
@@ -461,7 +464,7 @@ class TestFimbulwinterTimelineCertification:
                 fight_duration_seconds=2.0,
                 auto_attack_uptime=0.0,
                 one_rotation=True,
-                cast_order=["Q"],
+                cast_order=["W"],
             ),
         )
 
@@ -473,6 +476,8 @@ class TestFimbulwinterTimelineCertification:
     def test_one_unreviewed_ability_keeps_mixed_timeline_coarse(
         self, ahri_data: dict
     ) -> None:
+        """Charm is reviewed and Fox-Fire is not: one unreviewed row in the
+        cast order is enough to withhold."""
         from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.stats import calculate_total_stats
 
@@ -481,7 +486,7 @@ class TestFimbulwinterTimelineCertification:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         result = calculate_fight_damage(
             stats,
-            {"Q": abilities["Q"], "E": abilities["E"]},
+            {"W": abilities["W"], "E": abilities["E"]},
             [item],
             FightConfig(
                 target_health=2000.0,
@@ -491,7 +496,7 @@ class TestFimbulwinterTimelineCertification:
                 auto_attack_uptime=0.0,
                 one_rotation=True,
                 include_actives=True,
-                cast_order=["E", "Q"],
+                cast_order=["E", "W"],
             ),
         )
 

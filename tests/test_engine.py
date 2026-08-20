@@ -15,15 +15,17 @@ import json
 
 import pytest
 
-from src.calculator.ability_spec import DamagePart
+from src.calculator.ability_spec import DamagePart, Disposition
 from src.calculator.champions import GENERIC_SLOTS
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
+    AMP,
     BUFF,
     DAMAGE,
     PHASE_ORDER,
     build_parser,
 )
+from src.calculator.damage import _declared_cc_marker
 from src.calculator.champions.slotlib import (
     STEROID_ZERO,
     ability_on_hit_entry,
@@ -1349,3 +1351,234 @@ class TestModuleCcApplication:
         assert not hasattr(
             build_parser({"Q": self._two_part_slot(None)}, "X"), "cc_kinds"
         )
+
+    def test_a_declaration_reaches_a_part_the_amp_phase_appended(self) -> None:
+        """Stamping runs after every phase, not inside the slot loop.
+
+        An AMP slot that appends a part to a finished entry (Amumu's
+        Cursed Touch) would otherwise leave that part unreviewed, which
+        is an unreviewed ability event on a row the module called done.
+        """
+
+        def amp(ctx):
+            ctx.results["Q"]["parts"] += (DamagePart("true", 5.0, time_offset=0.0),)
+            return None
+
+        amp.phase = AMP
+        parse = build_parser(
+            {"Q": self._two_part_slot(None), "amp": amp},
+            "TestChamp",
+            cc_kinds={"Q": "stun"},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.cc_kind for part in results["Q"]["parts"]] == ["stun", "stun"]
+
+
+# ---------------------------------------------------------------------------
+# A declaration on a partless slot: carrier, refusal, or nothing to review
+# ---------------------------------------------------------------------------
+
+
+def _empower_shell(**overrides):
+    """An ``ability_on_hit_entry``-shaped slot: no parts of its own."""
+
+    def parse(ctx):
+        entry = ability_on_hit_entry(
+            "Shell",
+            3,
+            "magic",
+            {"name": "Shell", "damage_per_hit": 40.0, "damage_type": "magic"},
+            8.0,
+        )
+        entry.update(overrides)
+        return entry
+
+    parse.phase = DAMAGE
+    return parse
+
+
+class TestDeclarationOnAPartlessSlot:
+    """A declaration must reach a carrier or stop the import.
+
+    The empower shells (Leona Q, Fiora E, Jax W) emit no damage part: the
+    row's damage is the swing ``damage._reattribute_empowered_swings``
+    moves onto it, and ``damage._declared_cc_marker`` reads the kind to
+    stamp on those swing events off the entry's parts.  Returning quietly
+    on ``parts == ()`` therefore made the declaration a no-op that read as
+    reviewed — the exact shape this campaign exists to end.
+    """
+
+    def test_an_empower_shell_gets_the_marker_the_swings_read(self) -> None:
+        parse = build_parser(
+            {"Q": _empower_shell(empowers_next_auto=True)},
+            "TestChamp",
+            cc_kinds={"Q": "stun"},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        (marker,) = results["Q"]["parts"]
+        assert (marker.damage_type, marker.amount, marker.cc_kind) == (
+            "magic",
+            0.0,
+            "stun",
+        )
+        assert marker.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
+
+    def test_the_marker_is_what_the_reattribution_reads(self) -> None:
+        """The producer, not a restatement of it: the same function
+        ``damage`` calls to stamp the swing events."""
+        parse = build_parser(
+            {"Q": _empower_shell(empowers_next_auto=True)},
+            "TestChamp",
+            cc_kinds={"Q": "slow"},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert _declared_cc_marker(results["Q"]) == {
+            "cc_kind": "slow",
+            "cc_reviewed": True,
+        }
+
+    def test_a_swing_rider_is_refused(self) -> None:
+        """Corki's Hextech Munitions: a ratio priced onto every basic
+        attack, in every branch it has.  Its damage is auto-stream, never
+        an ability event, so no declaration there can ever be read."""
+        parse = build_parser(
+            {"Q": _empower_shell(basic_attack_true_ratio=0.2)},
+            "TestChamp",
+            cc_kinds={"Q": "none"},
+        )
+        with pytest.raises(ValueError, match="would reach nothing"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_a_row_that_prices_nothing_this_parse_is_left_alone(self) -> None:
+        """An option can empty a slot (Corki's barrage at zero charges) or
+        withhold its swing (Kassadin's unempowered W).  A row with no
+        damage authors no event for anything to miss, and the same slot's
+        other branch is where the declaration does its work."""
+        parse = build_parser(
+            {"Q": _empower_shell()}, "TestChamp", cc_kinds={"Q": "none"}
+        )
+        assert parse(_champion(Q=[_ability()]), 9, 0.0)["Q"]["parts"] == ()
+
+        def empty(ctx):
+            entry = damage_entry("Empty", 3, 8.0, 0.0, "magic")
+            entry["parts"] = ()
+            return entry
+
+        empty.phase = DAMAGE
+        parse = build_parser({"Q": empty}, "TestChamp", cc_kinds={"Q": "none"})
+        assert parse(_champion(Q=[_ability()]), 9, 0.0)["Q"]["parts"] == ()
+
+
+# ---------------------------------------------------------------------------
+# single_hit across more than one part: a landing, never a schedule
+# ---------------------------------------------------------------------------
+
+
+class TestSingleHitSpansOneLanding:
+    """``single_hit`` says ONE landing, which may be split across parts.
+
+    The fight engine's certified export carries a one-part cast only, so a
+    row that is one hit split by damage type (Syndra W, Ahri Q, every
+    Amumu slot) had its certification silently ignored.  The engine now
+    gives such a row the instant it certifies — and refuses a row that is
+    a schedule rather than a landing.
+    """
+
+    @staticmethod
+    def _slot(parts, **overrides):
+        def parse(ctx):
+            entry = damage_entry("Split", 3, 8.0, 100.0, "physical")
+            entry["parts"] = parts
+            entry["event_order_certified"] = "single_hit"
+            entry.update(overrides)
+            return entry
+
+        parse.phase = DAMAGE
+        return parse
+
+    def test_a_mixed_type_landing_gets_the_instant_it_shares(self) -> None:
+        parse = build_parser(
+            {
+                "Q": self._slot(
+                    (DamagePart("magic", 80.0), DamagePart("true", 20.0)),
+                )
+            },
+            "TestChamp",
+            cc_kinds={"Q": "stun"},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [
+            (part.damage_type, part.time_offset, part.cc_kind)
+            for part in results["Q"]["parts"]
+        ] == [("magic", 0.0, "stun"), ("true", 0.0, "stun")]
+
+    def test_two_parts_of_one_type_are_still_one_landing(self) -> None:
+        """Seraphine's Q is a flat term plus a missing-health term, and
+        Malphite's W the empowered attack plus its cone: one landing whose
+        damage takes two terms to state."""
+        parse = build_parser(
+            {
+                "Q": self._slot(
+                    (DamagePart("physical", 60.0), DamagePart("physical", 40.0)),
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.time_offset for part in results["Q"]["parts"]] == [0.0, 0.0]
+
+    def test_a_hand_authored_instant_is_kept(self) -> None:
+        parse = build_parser(
+            {
+                "Q": self._slot(
+                    (
+                        DamagePart("physical", 60.0, time_offset=1.5),
+                        DamagePart("magic", 40.0, time_offset=1.5),
+                    )
+                )
+            },
+            "TestChamp",
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.time_offset for part in results["Q"]["parts"]] == [1.5, 1.5]
+
+    def test_a_repeated_part_is_a_schedule_and_is_refused(self) -> None:
+        """Syndra's spheres and Ahri's flames: a part that hits N times
+        needs a sourced cadence, not an instant it does not have."""
+        parse = build_parser(
+            {
+                "Q": self._slot(
+                    (
+                        DamagePart("magic", 80.0),
+                        DamagePart("magic", 20.0, count=3),
+                    )
+                )
+            },
+            "TestChamp",
+        )
+        with pytest.raises(ValueError, match="a schedule, not"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_parts_at_different_instants_are_refused(self) -> None:
+        parse = build_parser(
+            {
+                "Q": self._slot(
+                    (
+                        DamagePart("magic", 80.0, time_offset=0.0),
+                        DamagePart("true", 20.0, time_offset=0.9),
+                    )
+                )
+            },
+            "TestChamp",
+        )
+        with pytest.raises(ValueError, match="different instants"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_a_one_part_row_keeps_the_engines_own_certified_export(self) -> None:
+        """The single-part path is untouched: no offset is authored where
+        the fight engine already exports the hit itself."""
+        parse = build_parser(
+            {"Q": self._slot((DamagePart("magic", 100.0),))}, "TestChamp"
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert results["Q"]["parts"][0].time_offset is None

@@ -119,13 +119,11 @@ SOURCES = load_champion_sources("Leona")
 # on the epicenter, which this model does not place, so the unconditional
 # slow is the reviewed kind.
 #
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Shield of Daybreak genuinely stuns ("empowering his next basic attack
-# ... and stun the target for 1 second"), but its row authors no part at
-# all: the bonus rides the on-hit stream and the row's own damage is the
-# consumed swing the engine moves onto it (``damage._reattribute_
-# empowered_swings``), so there is no part for a marker to ride.
-MODULE_CC = {"W": "none", "E": "root", "R": "slow"}
+# Shield of Daybreak "empower[s] his next basic attack within 6 seconds
+# to have an uncancellable windup, gain 50 bonus range, deal bonus magic
+# damage and stun the target for 1 second" — the stun rides the swing the
+# cast forces, which is the event the engine reattributes to this row.
+MODULE_CC = {"Q": "stun", "W": "none", "E": "root", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Leona", cc_kinds=MODULE_CC)
 
