@@ -101,8 +101,6 @@ import argparse
 import ast
 import functools
 import json
-import re
-import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -759,27 +757,36 @@ COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ()
 # named after, one level up.
 CAMPAIGN_STAGES = ROOT / "docs" / "receipts" / "campaign-stages.json"
 
-#: The commit the campaign is measured from; the same base the sole-home scan
-#: reads, so "the campaign range" means one range in both instruments.
-CAMPAIGN_BASE = "584071e"
-
-_SUBJECT_TAGS = re.compile(r"\(([^()]*)\)\s*$")
+#: The campaign range's slice tags, derived from commit subjects once and
+#: committed.  The range is closed and named in one place -- ``campaign_range``
+#: on the stage records -- so the derivation has one answer forever, and
+#: re-deriving it per run is the whole reason this suite needed the repository
+#: rather than the tree.
+CAMPAIGN_SLICE_TAGS = ROOT / "docs" / "receipts" / "campaign-slice-tags.json"
 
 
 @functools.lru_cache(maxsize=None)
-def declared_stages() -> Mapping[str, Mapping[str, str]]:
-    """The committed stage records, keyed by the name a deferral spells.
+def _campaign_stages_block() -> Mapping[str, Any]:
+    """The ruled artifact, read once per process.
 
-    Read once per process.  Four call sites resolve against these records and
-    two of them run per deferral row, so an uncached read parsed the ruled
-    artifact fourteen times before ``import`` returned and thirty more times
-    per ``--check`` — the same file, the same answer, and a reader of the
-    module could not tell that from a single read.  The cache is on the I/O
-    leaf and not on the derivations above it, so ``declared_stages`` stays the
-    one seam a test may replace.
+    Four call sites resolve against these records and two of them run per
+    deferral row, so an uncached read parsed the artifact fourteen times before
+    ``import`` returned and thirty more times per ``--check`` — the same file,
+    the same answer, and a reader of the module could not tell that from a
+    single read.  The cache is on the I/O leaf and not on the derivations above
+    it, so ``declared_stages`` stays the one seam a test may replace.
     """
-    block = json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
-    return {row["stage"]: row for row in block["stages"]}
+    return json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
+
+
+def declared_stages() -> Mapping[str, Mapping[str, str]]:
+    """The committed stage records, keyed by the name a deferral spells."""
+    return {row["stage"]: row for row in _campaign_stages_block()["stages"]}
+
+
+def campaign_range() -> str:
+    """The closed commit range the campaign is measured over."""
+    return _campaign_stages_block()["campaign_range"]
 
 
 #: The debt whose creditor a stage record may declare itself.  Spelled the way
@@ -850,56 +857,37 @@ COUNTER_4_DEFERRALS: Mapping[str, str] = {
 
 
 @functools.lru_cache(maxsize=None)
-def _tag_first_seen(base: str = CAMPAIGN_BASE) -> Mapping[str, str]:
-    """Every slice tag in the campaign range → the earliest sha carrying it.
+def _tag_first_seen() -> Mapping[str, str]:
+    """Every slice tag of the campaign range → the earliest sha carrying it.
 
-    A subject's tag list is its trailing parenthetical, comma separated:
-    ``feat(program): ... (P4-S9-ledger-join, 2/2b)``.  Earliest rather than
-    latest because the earliest sha is stable — later commits do not move it,
-    so a derived fact built on it does not churn the frontier receipt on every
-    commit.
-
-    Read once per process, for the same reason ``declared_stages`` is: the
-    overdue clause runs per deferral row and each run spawned its own ``git
-    log`` over the whole campaign range, fifteen subprocesses per ``--check``
-    for one unchanging answer.
+    Read from the committed derivation rather than re-walked, and read once per
+    process: the overdue clause runs per deferral row, and each run parsed the
+    same closed answer again.
 
     Raises:
-        RuntimeError: git is unavailable or the range does not resolve.  Fail
-            closed: a stage-completion read that silently returns nothing
-            would report every overdue row as on schedule, which is the
-            silence this derivation exists to end.
+        RuntimeError: the pinned tags name a range the stage records do not.
+            Fail closed: a tag map read against the wrong range would report
+            every overdue row as on schedule, which is the silence this
+            derivation exists to end.
     """
-    try:
-        completed = subprocess.run(
-            ["git", "log", "--format=%h\x1f%s", f"{base}..HEAD"],
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-            check=True,
-        )
-    except (OSError, subprocess.CalledProcessError) as error:
+    pinned = json.loads(CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8"))
+    declared = campaign_range()
+    if pinned["range"] != declared:
         raise RuntimeError(
-            f"cannot read the campaign range {base}..HEAD: {error}"
-        ) from error
-    seen: dict[str, str] = {}
-    for line in completed.stdout.splitlines():  # newest first
-        sha, _, subject = line.partition("\x1f")
-        match = _SUBJECT_TAGS.search(subject)
-        if match is None:
-            continue
-        for tag in match.group(1).split(","):
-            seen[tag.strip()] = sha
-    return seen
+            f"{CAMPAIGN_SLICE_TAGS.name} pins the tags of {pinned['range']} but "
+            f"{CAMPAIGN_STAGES.name} declares the campaign range {declared}"
+        )
+    return pinned["tags"]
 
 
 def completed_stages() -> Mapping[str, str]:
-    """Stage → why the **tree** says it shipped, for every declared stage.
+    """Stage → why the campaign's commits say it shipped, for every declared stage.
 
     Two conjuncts, both read from commit subjects: the stage's own slice tag
     is present, and its declared successor's tag is too.  The first alone
     fires on the stage's opening commit, and a stage is not shipped while it
-    is being shipped.
+    is being shipped.  The subjects are read from the committed derivation, not
+    from the stage record, so a stage still cannot declare itself shipped.
     """
     tags = _tag_first_seen()
     shipped: dict[str, str] = {}
