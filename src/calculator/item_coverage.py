@@ -219,80 +219,20 @@ class ItemCoverage:
         }
 
 
-# The eight retired registries are named in exactly one place in this tree, and
-# these tombstones are deliberately not it: the absence gate that proves none of
-# them survived — ``tests/test_coverage_claims.py``'s
-# ``test_the_eight_retired_registries_have_no_occurrences_left`` — scans this
-# package for whole identifiers, and prose that spells one is an occurrence it
-# has to report.  Grepping a retired name lands on that assertion, which is the
-# right destination for it; what stood where is described here instead.
-
-# Three blocked-reason containers stood here — two dicts and a bare frozenset,
-# the ones 3.8's first commit pinned.  All three were empty, and that commit
-# asserted the emptiness.  An empty container makes ``name in`` false for every
-# name that exists and every
-# name that could, so those rungs decided nothing and the eligibility term added
-# nothing: deleting them moves no answer.  A withheld item now has one producer
-# — a cached record whose passive is unreviewed — instead of three that could
-# disagree with each other.
-
-# A stateful-items set stood here: twenty-one sentences saying an item's state
-# was represented, checked by nothing.  It is gone.  ``modeled_state`` is now
-# what the declared families say — an ally packet or a stat derivation is state
-# the shared ledger schedules — or what ``ITEM_INPUT_OPTIONS`` says, and both
-# are read out of a registry rather than asserted in prose here.
-
-
-# Three target-lane containers stood here — modelled reasons, event-certified
-# reasons and blocked reasons: thirty-nine reviewed sentences answering "what
-# does this item do to the actor wearing it" by looking the actor's item up by
-# name.  The ladder above now
-# asks the declarations, the certification is a property of the mechanic in
-# the catalog, and the refusal is the attacker lane's own.  What the sentences
-# carried that a declaration cannot — which symbol prices each item — is the
-# evidence beside the claim, in ``_TARGET_MODELED_IMPLS`` and
-# ``_TARGET_CERTIFIED_IMPLS`` below, where it is checked against the derived
-# population rather than trusted.
-
-# The per-item outcome-dimension table stood here too, and its contents are the
-# one thing the collapse did not delete: an outcome label no declaration can
-# derive.  It is ``item_outcomes.UTILITY_OUTCOMES`` now — a declaration in a
-# home of declarations, read by the payload builder below.
-
-
-# The one reviewed registry that survives the flip, and the reason it has to:
-# "we read the cached page and there is no runtime behaviour" is a fact about
-# an *absence*, and no declaration can carry an absence.  Every other container
-# in this module asserted the presence of a model, which is what declarations
-# now say instead.
+# The one hand-maintained registry the attacker ladder reads: "we read the
+# cached page and there is no runtime behaviour" is a fact about an *absence*,
+# and no declaration can carry an absence.  Each entry was reviewed against the
+# cached Wiki passive/active description at the revision ``_SOURCE_REFS``
+# records for it.
 #
-# It is a ratchet and not an escape hatch (criterion 2).  Its membership is
-# committed to ``docs/behavior-frontier.json``, diff-gated by set equality, and
-# **non-increasing** from the size measured before the phase — otherwise
-# counter 3's target could be reached by reviewing the backlog into silence.
-# Each entry was reviewed against the cached Wiki passive/active description at
-# the revision ``_SOURCE_REFS`` records for it.
-#
-# **No member may compile a ``BehaviorRule`` that declares runtime
-# behaviour** (``item_behavior_catalog.declares_runtime_behaviour``), and that
-# is asserted rather than
-# intended.  A compiled rule *is* declared runtime behaviour, so an item
-# holding one and sitting here would assert two contradictory things at once —
-# which is what thirty-four of these entries did when the set was renamed from
-# ``_REVIEWED_STATS_ONLY``.  That name said "stats only on the outgoing-damage
-# lane", which is a smaller claim and was true of all of them; this name says
-# there is nothing to run, which was false of Frozen Heart's aura, of Spirit
-# Visage's healing multiplier, and of thirty-two more.  The rename widened the
-# claim without re-reviewing it, the widened members were unreachable (the
-# defence and state rungs answer them first), and an unreachable false claim
-# is exactly the shape this campaign exists to remove.  The set is now the
-# ones the review actually covers: an item with a described passive and no
-# rule that runs it, where "we looked and there is nothing to model" is the
-# only thing that can be said.  A member may hold a registry entry whose whole
-# content is where one of its *cached stats* lands — two do — because that
-# declaration schedules nothing and moves no number the block did not already
-# hold; what the review found about the item's described passive is untouched
-# by it.
+# Membership is a ratchet: it is committed to ``docs/behavior-frontier.json``,
+# diff-gated by set equality, and non-increasing.  No member may compile a
+# ``BehaviorRule`` that declares runtime behaviour
+# (``item_behavior_catalog.declares_runtime_behaviour``) — a compiled rule *is*
+# declared runtime behaviour, so an item holding one and sitting here would
+# assert two contradictory things at once.  A member may hold a registry entry
+# whose whole content is where one of its *cached stats* lands; that
+# declaration schedules nothing.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions; the "
     "full Wiki entry has no champion-facing sustain branch.",
