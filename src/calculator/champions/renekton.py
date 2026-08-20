@@ -2,6 +2,11 @@
 
 E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
 30 sourced 0.5s ticks (this module's packet timing declaration).
+
+Coverage: P (Reign of Anger) is the Fury meter that empowers the next
+ability. Its empowered rows are priced on the abilities themselves;
+what the slot holds is resource generation, an axis the engine does not
+have.
 """
 
 from functools import partial

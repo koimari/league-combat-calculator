@@ -17,6 +17,12 @@ files (Community Dragon ``BushwhackAbility``) contain only the
 ``DamagePerSecond`` calculation.  Nothing is invented; the trap's
 outgoing damage is the DoT above, and the armor-shred note is recorded
 as stale in this module.
+
+Coverage: P (Prowl) grants movement speed in brush and marks a Hunted
+target, and R (Aspect of the Cougar) is the form swap itself — movement
+speed and transform, axes the engine does not have. Cougar form is still
+reachable: the ``w_variant`` packet option selects the cougar abilities
+directly, so R has no state of its own left to price.
 """
 
 from __future__ import annotations

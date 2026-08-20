@@ -22,6 +22,11 @@ The cache's Q "Heal" row (40 : 174.12 by level) is the lightning
 strike's minimum damage against MINIONS (wiki prose), not a self-heal;
 the Awaken self-heal family is the W stance stream, which the healing
 rule already models.
+
+Coverage: P (Bridge Between) is the stance and Awaken system itself and
+E (Blazing Stampede) is a stance stun with movement speed. Transform and
+CC magnitude are axes the engine does not have, so both slots are out of
+scope; the stances' own damage is priced on Q/W/E/R.
 """
 
 from typing import Any

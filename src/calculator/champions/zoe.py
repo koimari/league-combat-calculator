@@ -10,6 +10,9 @@ Smite) are modeled as an explicit ``w_summoner`` option: none of them
 deals damage to enemy champions in this calculator's scope (Heal heals
 the caster, Barrier shields, Smite damages monsters), so each variant
 is a documented no-damage row instead of being collapsed into a bolt.
+
+Coverage: R (Portal Jump) blinks Zoe out and back. Mobility is an axis
+the engine does not have, so the slot is out of scope.
 """
 
 from ..ability_spec import DamagePart
