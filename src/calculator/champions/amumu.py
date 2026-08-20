@@ -138,6 +138,16 @@ SLOTS = {
     "curse": _cursed_touch_amp,
 }
 
+# No MODULE_CC, though the kit's control is unambiguous: Q (Bandage Toss)
+# is "stunning them for 1 second and pulling him to them", R (Curse of the
+# Sad Mummy) is "knocking them down and stunning them for 1.5 seconds", and
+# W (Despair) and E (Tantrum) control nothing.  The AMP-phase Cursed Touch
+# amplifier appends a true-damage part to every one of those entries
+# (``_apply_curse``), so no entry is one part by the time the contract is
+# validated, and ``single_hit`` certification — which requires one part —
+# cannot state a row that is one hit split across two damage types.  Until
+# that certification can span a mixed-type hit, this kit keeps the coarse
+# control-armed scan.
 parse_abilities = build_parser(SLOTS, "Amumu")
 
 

@@ -146,14 +146,15 @@ SLOTS = {
 }
 
 # Q's leap only damages the target it lands on and R's lantern swing only
-# damages.  W is the on-hit empower: its row's damage is the engine's
-# reattributed empowered swing with no damage part of its own, so the scan
-# stays coarse whatever else is declared.  E's recast does "stun[] them for
-# 1 second", but declaring that kind makes rotation_resolver infer a
-# cc_setup edge and cast E first, which moves the fight's numbers for no
-# coverage, so it is left to the wave that fixes the empowered-swing row.
-# P is the attack-speed stack row and authors no damage part.
-MODULE_CC = {"Q": "none", "R": "none"}
+# damages.  E's recast "deals magic damage to nearby enemies ... and stuns
+# them for 1 second".  P is the attack-speed stack row and authors no
+# damage part.
+#
+# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Empower controls nothing, but its row's damage is the engine's
+# reattributed empowered swing with no damage part of its own, so there is
+# nothing for the declaration to stamp.
+MODULE_CC = {"Q": "none", "R": "none", "E": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Jax", cc_kinds=MODULE_CC)
 OPTIONS = [

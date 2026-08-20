@@ -111,18 +111,18 @@ SLOTS = {
     "E": _bladework,
     "R": _grand_challenge,
 }
-# Q only dashes and stabs.  E is undeclared because Bladework's damage is
-# the engine's reattributed empowered swings with no damage part of its own,
-# which is why Fiora's kit reads coarse to the control scan whatever else it
-# declares.  W's shock does "slow[] and cripple[]" the champion struck (its
-# stun branch needs Riposte to negate an immobilizing effect, which this
-# module does not model), but declaring that kind makes rotation_resolver
-# infer a cc_setup edge and cast W first, which moves the fight's numbers
-# for no coverage — E blocks the scan either way — so it is left to the wave
-# that fixes the empowered-swing row.  R authors no damage part, and P's
-# vitals are an effect-phase proc row whose event list the module builds
-# itself, so a marker there would never reach the ledger.
-MODULE_CC = {"Q": "none"}
+# Q only dashes and stabs.  W's shock: "the enemy champion struck is also
+# slowed and crippled by 25% for 2 seconds" — the slow is the kind the cast
+# lands on the target it damages (its stun branch needs Riposte to negate
+# an immobilizing effect, which this module does not model).  R authors no
+# damage part, and P's vitals are an effect-phase proc row whose event list
+# the module builds itself, so a marker there would never reach the ledger.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Bladework's first attack "slows the target by 30% for 1 second", but the
+# row's damage is the engine's reattributed empowered swings with no damage
+# part of its own, so there is nothing for the declaration to stamp.
+MODULE_CC = {"Q": "none", "W": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 

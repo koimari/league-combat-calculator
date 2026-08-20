@@ -29,7 +29,15 @@ from .slotlib import damage_entry, extract_cooldown, extract_named, extract_valu
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
 
 _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Pantheon", PACKET_SHA256)
+    build_packet_module(
+        "Pantheon",
+        PACKET_SHA256,
+        # The row this packet prices for E is the recast slam ("Recast:
+        # Pantheon slams with his shield in a cone in front of him,
+        # dealing physical damage to enemies hit") — one part and one
+        # hit; the channel's 0.125-second strikes stay unpriced.
+        single_hit_slots=frozenset({"E"}),
+    )
 )
 PACKET_SPEC = _packet_slots.packet_spec
 
@@ -79,6 +87,10 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", value),)
+    # One spear, hurled or thrust, on the enemies in its line — one part
+    # and one hit, which carries Q's reviewed control answer into the
+    # event ledger.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"{branch} row + Mortal Will empowered term "
         f"({per_level if empowered else 0.0:g} by level + 115% bonus AD)"
@@ -144,6 +156,9 @@ def _grand_starfall(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    # One shockwave crossing the target area — one part and one hit, which
+    # carries R's reviewed slow into the event ledger.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"{'Reduced edge' if attr == 'Reduced Damage' else 'Center'} "
         "Magic Damage row (edge hits take up to 50% less)."
@@ -156,12 +171,16 @@ SLOTS["Q"] = _comet_spear
 SLOTS["W"] = _shield_vault
 SLOTS["R"] = _grand_starfall
 
-# W alone is reviewed.  Q's charge slows Pantheon himself (not the target)
-# and R's spear slows on impact, but neither row authors an event the
-# marker could ride: Q rebuilds its part with no sourced travel time and
-# R's magic row is the shockwave, a separate hit from the slowing spear.
-# Declaring either would claim a review the ledger cannot show.
-MODULE_CC = {"W": "stun"}
+# Reviewed crowd control, read from the cached kit.  Q (Comet Spear)
+# "deals physical damage to enemies hit": the only slow in its text is on
+# Pantheon himself while he "charges while being slowed by 10%".  W
+# (Shield Vault) "deals physical damage and stuns them for 1 second".  E
+# (Aegis Assault) braces, strikes and slams with no control clause.  R
+# (Grand Starfall) "deals ... physical damage to enemies near the impact
+# and slows them by 50% for 2 seconds" — the row prices the shockwave of
+# that same cast, which lands on the target the spear slowed.  P authors
+# no damage part.
+MODULE_CC = {"W": "stun", "Q": "none", "E": "none", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Pantheon", cc_kinds=MODULE_CC)
 

@@ -119,6 +119,16 @@ SLOTS = {
     "P": _deathbringer_stance,
 }
 
+# No MODULE_CC: neither damaging row can carry one true answer.  Q (The
+# Darkin Blade) knocks up only "enemies hit within a Sweetspot of the
+# area", which is this module's ``sweetspot`` option, and its row sums all
+# three casts into one part with no cadence between them.  W (Infernal
+# Chains) slows on the first hit ("slowing them for 1.5 seconds") and
+# pulls on the second ("the target is dealt the same physical damage again
+# and pulled to the center of the area"), and its row is the cached Total
+# of both — two hits that do not control alike (the Annie Pyromania rule).
+# R fears "nearby enemy minions and monsters" only and authors no damage
+# part; P is the on-hit stance row.
 parse_abilities = build_parser(SLOTS, "Aatrox")
 
 

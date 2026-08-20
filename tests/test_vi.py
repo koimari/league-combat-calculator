@@ -11,6 +11,8 @@ from src.calculator.champions import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions import vi
+from tests import cc_review
 
 
 def _timed_payload(duration, *, include_autos=True, champion_options=None):
@@ -475,3 +477,32 @@ def test_sources_and_options_are_public_revision_receipts():
         row["url"].startswith("https://wiki.leagueoflegends.com/")
         for row in meta["sources"]
     )
+
+
+class TestReviewedCrowdControl:
+    """Vi's whole kit is reviewed: Q knocks back, R knocks up, E does neither.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        assert vi.MODULE_CC == {"Q": "knockback", "E": "none", "R": "knockup"}
+        assert vi.parse_abilities.cc_kinds == vi.MODULE_CC
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Vi")
+        q_text = cc_review.slot_text(data, "Q")
+        assert "she stops upon hitting an enemy champion, knocking them back" in q_text
+        assert "pull all non-champions hit towards her" in q_text
+        assert "knocking them up for 1.3 seconds" in cc_review.slot_text(data, "R")
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Vi") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Vi")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

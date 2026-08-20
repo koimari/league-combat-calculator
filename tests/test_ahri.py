@@ -9,7 +9,9 @@ import pytest
 
 from src.calculator.ability_spec import parts_raw_total
 
+from src.calculator.champions import ahri
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests import cc_review
 
 
 class TestParseAhriAbilities:
@@ -164,3 +166,43 @@ class TestCharmIsTheKitsOneReviewedControl:
         )["timeline_coverage"]
 
         assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
+
+
+class TestReviewedCrowdControl:
+    """Charm is reviewed; every other row holds several hits in one part.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        assert ahri.MODULE_CC == {"E": "immobilize"}
+        assert ahri.parse_abilities.cc_kinds == ahri.MODULE_CC
+
+    def test_the_declared_kind_is_the_one_the_cached_kit_gives(self):
+        """Charm knocks down, charms and slows one target, so the reviewed
+        answer is the un-narrowed immobilize."""
+        text = cc_review.slot_text(cc_review.kit("Ahri"), "E")
+        assert "knocking them down and charming and slowing them by 65%" in text
+
+    def test_the_unreviewable_rows_keep_the_fight_coarse(self):
+        """Q is the mixed magic+true pair over two passes, W is the first
+        flame plus two more, and R is three dashes in one part - none of
+        them a single hit the ledger can certify, though all three are
+        control-free in the cache."""
+        data = cc_review.kit("Ahri")
+        for slot in ("Q", "R"):
+            assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
+            assert slot not in ahri.MODULE_CC
+        # Fox-Fire names Charm only as a targeting priority, never as
+        # something it applies: "flames prioritize enemy champions hit by
+        # Charm, then enemy champions".
+        w_text = cc_review.slot_text(data, "W")
+        assert cc_review.control_words(w_text) == ["charm"]
+        assert "flames prioritize enemy champions hit by charm" in w_text
+        assert "W" not in ahri.MODULE_CC
+        assert cc_review.unreviewed_ability_slots("Ahri") == ["Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Ahri")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

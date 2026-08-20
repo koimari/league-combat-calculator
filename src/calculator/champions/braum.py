@@ -232,12 +232,15 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     total = sum_modifiers(
         leveling, rank, ctx.stats, ctx.target, modifier_override=own_max_health
     )
+    # One shot of ice on "the first enemy hit" — one part and one hit,
+    # which carries Q's reviewed slow into the event ledger.
     return damage_entry(
         ability.get("name", "Winter's Bite"),
         rank,
         extract_cooldown(ability, rank),
         total,
         "magic",
+        event_order_certified="single_hit",
     )
 
 
@@ -324,11 +327,25 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": _winters_bite,
     "W": _stand_behind_me,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One fissure sweep on one target, so one part and one hit — the
+    # certification that carries R's reviewed knockup into the ledger.
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "P": _concussive_blows,
 }
 
-parse_abilities = build_parser(SLOTS, "Braum")
+# Reviewed crowd control, read from the cached kit.  Q (Winter's Bite)
+# deals "magic damage to the first enemy hit and slow[s] them by 70%
+# decaying over 2 seconds".  R (Glacial Fissure) damages "enemies within
+# its path as well as those around Braum", and "the first target hit is
+# knocked up for at least 0.6 seconds.  All other enemies hit are knocked
+# up for 0.6 seconds".  W is the shield/dash row with no damage part, and
+# P's Concussive Blows stun is the four-stack proc row the engine builds
+# from the auto stream, not a cast this module authors a part for.
+MODULE_CC = {"Q": "slow", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Braum", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

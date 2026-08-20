@@ -124,7 +124,12 @@ _transcendent.phase = BUFF
 # Q: Dark Sphere — R's Q-only ability haste folded into the cooldown
 # ---------------------------------------------------------------------------
 
-_q_damage = simple_damage(attr="Magic Damage", dmg_type="magic")
+# One sphere, one detonation ("appears after a 0.6-second delay, dealing
+# magic damage to nearby enemies") — one part and one hit, which is the
+# certification that carries Q's reviewed control answer into the ledger.
+_q_damage = simple_damage(
+    attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+)
 
 
 def _q_only_haste(ctx: SlotCtx) -> float:
@@ -192,7 +197,16 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     name = ability.get("name", "Dark Sphere")
-    entry = damage_entry(f"{name} (2nd charge)", rank, 0.0, total, "magic")
+    # A stocked charge is a whole cast of Dark Sphere, so it is the same
+    # one sphere and one detonation Q certifies above.
+    entry = damage_entry(
+        f"{name} (2nd charge)",
+        rank,
+        0.0,
+        total,
+        "magic",
+        event_order_certified="single_hit",
+    )
     entry["recast_of"] = "Q"
     entry["resource_type"] = str(ability.get("resource", "NONE"))
     entry["resource_cost"] = extract_resource_cost(ability, rank, ctx.level)
@@ -335,13 +349,20 @@ SLOTS = {
     "R": _unleashed_power,
 }
 
-# E alone is reviewed: the rest of the kit's rows are multi-hit or
-# multi-part casts with no sourced sub-cast timing (Q's sphere lands after
-# a 0.6s delay the module does not yet author, W is the mixed
-# magic+true pair, R is one part per sphere), so no "none" can be declared
-# for them — an unreachable declaration is refused by the engine, and
-# declaring one anyway would claim a review the ledger cannot show.
-MODULE_CC = {"E": "stun"}
+# Reviewed crowd control, read from the cached kit.  Q (Dark Sphere)
+# "appears after a 0.6-second delay, dealing magic damage to nearby
+# enemies" with no control clause, and Q2 is a stocked charge of that same
+# cast.  E (Scatter the Weak) scatters a sphere into the target, and
+# "targets hit are also stunned for 1.25 seconds".
+#
+# W and R stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Force of Will does control — the thrown target's landing means
+# "all targets hit are slowed by 25% for 1.5 seconds" — but its row is the
+# mixed magic+true pair, two parts of one landing, and ``single_hit``
+# certification requires one part.  Unleashed Power is control-free
+# ("each dealing magic damage upon hit") but its row is one aggregated
+# part of ``r_spheres`` hits with no sourced cadence between them.
+MODULE_CC = {"E": "stun", "Q": "none", "Q2": "none"}
 
 # The revision these declarations were read from, in the shape
 # scripts/cast_dependency_audit.py will resolve against the committed

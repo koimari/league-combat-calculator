@@ -181,13 +181,22 @@ class TestModuleCcDeclaration:
             )
 
     def test_the_pilots_declare_what_they_wired(self):
-        """The wave's four migrated modules, read off the live registry."""
+        """The wave's four migrated modules, read off the live registry.
+
+        A pilot's declaration grows as the rest of its kit is reviewed, so
+        what is pinned here is the fact each migration established — the
+        kind, on the slot the wave read it off — not the size of the dict
+        that has since grown around it.
+        """
         assert get_champion_module_contract("Corki").cc_kinds == {
             slot: "none" for slot in ("Q", "W", "E", "R", "P")
         }
-        assert get_champion_module_contract("Syndra").cc_kinds == {"E": "stun"}
-        assert get_champion_module_contract("Ahri").cc_kinds == {"E": "immobilize"}
-        assert get_champion_module_contract("Pantheon").cc_kinds == {"W": "stun"}
+        for name, slot, kind in (
+            ("Syndra", "E", "stun"),
+            ("Ahri", "E", "immobilize"),
+            ("Pantheon", "W", "stun"),
+        ):
+            assert get_champion_module_contract(name).cc_kinds[slot] == kind
 
     def test_a_packet_module_wires_its_declaration_the_same_way(self):
         """A packet champion reviews its control in ``MODULE_CC`` too: the

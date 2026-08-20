@@ -238,6 +238,10 @@ def _ace_in_the_hole(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=_R_CRIT_EFFECTIVENESS,
             ),
         )
+        # One homing bullet on "the first enemy champion it hits" — one
+        # part, one hit, which carries R's reviewed control answer into
+        # the event ledger.
+        entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -323,14 +327,33 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # Each of these is one shot on one target — the piercing bolt's first
+    # enemy, the net's first enemy — so one part and one hit, which is the
+    # certification that carries their reviewed control into the ledger.
+    "Q": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "W": _yordle_snap_trap,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _ace_in_the_hole,
     "P": _headshot,
 }
 
-parse_abilities = build_parser(SLOTS, "Caitlyn")
+# Reviewed crowd control, read from the cached kit.  Q (Piltover
+# Peacemaker) "deals physical damage to the first enemy it passes
+# through" with no control clause.  E (90 Caliber Net) "deals magic
+# damage to the first enemy hit and slows them by 50% for 1 second".  R
+# (Ace in the Hole) "deals physical damage to the first enemy champion it
+# hits" and reveals, which is not control.  W is the trap row — its root
+# is real, but the row prices the trap Headshot the passive owns, not a
+# cast of Caitlyn's own, and P is that passive.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Caitlyn", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

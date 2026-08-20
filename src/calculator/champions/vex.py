@@ -119,6 +119,10 @@ SLOTS["P"] = _gloom_detonation
 # will flee from the epicenter instead" replaces even E's own slow.  Neither
 # a slot-wide fear nor a slot-wide "none" is true of Q, W or E (the Annie
 # Pyromania rule), so this kit keeps the coarse control-armed scan.
+# R (Shadow Surge) is outside Doom's reach — it empowers a *basic* ability —
+# and controls nothing, but its packet row is the cached Total Magic Damage:
+# the Shadow's hit plus the recast dash's arrival, two hits in one part, so
+# ``single_hit`` certification cannot state it either.
 parse_abilities = build_parser(SLOTS, "Vex")
 
 OPTIONS = list(OPTIONS) + [

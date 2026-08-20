@@ -802,21 +802,28 @@ class TestStatsBonusAttackSpeed:
 
 
 class TestReviewedCrowdControl:
-    """Bel'Veth's crowd-control review, and the slot that still withholds.
+    """Bel'Veth's reviewed crowd control, and the slots that still withhold.
 
-    Q and E each hold many hits in one part (four cardinal dashes, six
-    slashes) with no per-hit cadence; W and R could each carry their
-    answer, but declaring one makes rotation_resolver order the cast
-    first as cc setup, which moves the fight's numbers (see the batch
-    report).
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Bel'Veth")
-        assert not hasattr(belveth, "MODULE_CC")
+        assert belveth.MODULE_CC == {"W": "knockup", "R": "slow"}
+        w_text = cc_review.slot_text(data, "W")
+        assert "knocks them up for a duration" in w_text
+        assert "slows them by 30% for 2 seconds" in w_text
+        assert "slowing nearby enemies by 25%" in cc_review.slot_text(data, "R")
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["E", "Q", "R", "W"]
+        """Q's cardinal dashes and E's slashes are each one aggregated part
+        of many hits with no sourced cadence, so no event of theirs is
+        timed - even though both are control-free in the cache."""
+        data = cc_review.kit("Bel'Veth")
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["E", "Q"]
         coverage = cc_review.fimbulwinter_coverage("Bel'Veth")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

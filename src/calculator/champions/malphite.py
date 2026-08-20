@@ -46,7 +46,12 @@ from .slotlib import (
 PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Malphite", PACKET_SHA256
+    "Malphite",
+    PACKET_SHA256,
+    # Ground Slam is one slam on the enemies around Malphite and
+    # Unstoppable Force is one arrival — one part and one hit each, which
+    # is what carries their reviewed control into the event ledger.
+    single_hit_slots=frozenset({"E", "R"}),
 )
 PACKET_SPEC = SLOTS.packet_spec
 
@@ -142,7 +147,23 @@ SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
 SLOTS["Q"] = _seismic_shard
 SLOTS["W"] = _thunderclap
-parse_abilities = build_parser(SLOTS, "Malphite")
+
+# Reviewed crowd control, read from the cached kit.  Q (Seismic Shard)
+# "deals magic damage and slows them for 3 seconds upon impact".  E
+# (Ground Slam) deals "magic damage to nearby enemies and crippl[es] them
+# for 3 seconds" — an attack-speed slow, which is neither an immobilize
+# nor a movement slow.  R (Unstoppable Force) arrives and "deals magic
+# damage to nearby enemies and knocks them up for 1.5 seconds".  P is the
+# shield row with no damage part.
+#
+# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Thunderclap controls nothing, but its row is two parts — the empowered
+# attack's on-hit bonus and the cone every attack triggers "for the next
+# 5 seconds" — which are different hits, so ``single_hit`` certification
+# (one part, one hit) cannot state it and neither hit has a sourced offset.
+MODULE_CC = {"Q": "slow", "E": "cripple", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Malphite", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Granite Shield) is modeled as a pre-fight granted shield: 10% of "

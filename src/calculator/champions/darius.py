@@ -209,6 +209,10 @@ def _decimate(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["applies_dot_stack"] = True
     entry["cast_time"] = Q_CAST_TIME
+    # One swing on one target ("swinging it around himself to deal physical
+    # damage to nearby enemies") — the certification that carries the row's
+    # reviewed control answer into the event ledger.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -247,6 +251,10 @@ def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["empowers_next_auto"] = True
     entry["applies_dot_stack"] = True
+    # "empowers his next basic attack" — one empowered swing per cast, so
+    # one part and one hit, which is what carries W's reviewed slow into
+    # the event ledger.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -384,7 +392,23 @@ SLOTS = {
     "R": _noxian_guillotine,
 }
 
-parse_abilities = build_parser(SLOTS, "Darius")
+# Reviewed crowd control, read from the cached kit.  Q (Decimate) swings
+# "to deal physical damage to nearby enemies" with no control clause.  W
+# (Crippling Strike) empowers the next attack to "deal bonus physical
+# damage and slow the target by 90% for 1 second".  R (Noxian Guillotine)
+# is the pull/airborne/slow row, but it deals no damage of its own; P is
+# the Hemorrhage bleed.
+#
+# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Noxian Guillotine is control-free against the champion it damages — it
+# fears only on a kill and only "nearby minions and monsters" — but its
+# row is two parts (the True Damage term and the per-Hemorrhage-stack
+# term, both of the one strike), so ``single_hit`` certification, which
+# requires one part, cannot state it and the stack term has no cadence to
+# author.
+MODULE_CC = {"Q": "none", "W": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

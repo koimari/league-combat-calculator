@@ -326,16 +326,31 @@ class TestFightEngineIntegration:
 
 
 class TestReviewedCrowdControl:
-    """Amumu's crowd-control review, and the slot that still withholds.
+    """Amumu declares nothing, and the reason is the Cursed Touch amp.
 
-    Cursed Touch adds a true-damage rider part to every damaging cast,
-    so no slot is the one-part cast the certified single-hit export
-    carries — and W's row is the toggle's ticks summed.
+    Q and R are unambiguous stuns and W and E control nothing, but the
+    AMP-phase amplifier appends a true-damage part to every damaging
+    entry, so no row is the one part single-hit certification requires.
     """
 
-    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
-        data = cc_review.kit("Amumu")
+    def test_the_kit_declares_nothing(self):
         assert not hasattr(amumu, "MODULE_CC")
+
+    def test_the_cached_kit_states_the_stuns_this_module_cannot_carry(self):
+        data = cc_review.kit("Amumu")
+        assert "stunning them for 1 second" in cc_review.slot_text(data, "Q")
+        assert "stunning them for 1.5 seconds" in cc_review.slot_text(data, "R")
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+
+    def test_the_curse_amp_leaves_no_single_part_row_to_certify(self):
+        from src.calculator.champions import parse_champion_abilities
+        from src.calculator.stats import calculate_total_stats
+
+        data = cc_review.kit("Amumu")
+        parsed = parse_champion_abilities(
+            data, 18, 100.0, champion_stats=calculate_total_stats(data, 18, [])
+        )
+        assert [part.damage_type for part in parsed["Q"]["parts"]] == ["magic", "true"]
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Amumu") == ["E", "Q", "R", "W"]

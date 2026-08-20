@@ -580,7 +580,17 @@ SLOTS = {
     "R": _cease_and_desist,
 }
 
-parse_abilities = build_parser(SLOTS, "Vi")
+# Reviewed crowd control, read from the cached kit.  Q (Vault Breaker)
+# "stops upon hitting an enemy champion, knocking them back over 0.75
+# seconds" — the pull in the same sentence reaches "all non-champions
+# hit".  E (Relentless Force) is the empowered blast, with no control
+# clause.  R (Cease and Desist) grabs the singled-out champion, "knocking
+# them up for 1.3 seconds and dealing physical damage after 0.75 seconds
+# into the grab duration".  W (Denting Blows) is armour reduction, which
+# is not crowd control, and it is the auto-stack row besides.
+MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

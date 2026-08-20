@@ -11,6 +11,8 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.stats import calculate_total_stats
+from tests import cc_review
+from src.calculator.champions import karthus
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -268,109 +270,33 @@ def test_timed_defile_pulse_prices_the_sourced_drain_and_fixed_cadence(
     assert hasted["cooldown"] == pytest.approx(1.5)
 
 
-# ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
-# ---------------------------------------------------------------------------
-
-# The Wiki's crowd-control vocabulary, as this module's review read it:
-# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
-_CC_CONTROL_WORDS = (
-    "airborne",
-    "charm",
-    "fear",
-    "flee",
-    "immobiliz",
-    "knock",
-    "pull",
-    "root",
-    "sleep",
-    "slow",
-    "snare",
-    "stasis",
-    "stun",
-    "suppress",
-    "taunt",
-)
-_CC_CHAMPION = "Karthus"
-_CC_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
-
-
-def _cc_slot_text(slot):
-    """Every cached description of one slot, lowercased."""
-    from src.calculator.data_fetcher import get_champion
-
-    return " ".join(
-        effect.get("description") or ""
-        for ability in get_champion(_CC_CHAMPION)["abilities"].get(slot, [])
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
-def _cc_control_hits(slot):
-    """The control vocabulary one slot's cached text actually uses."""
-    text = _cc_slot_text(slot)
-    return [word for word in _CC_CONTROL_WORDS if word in text]
-
-
-def _cc_kinds(**options):
-    """Result key -> the reviewed kinds the slot's parts actually carry."""
-    from src.calculator.champions import parse_champion_abilities
-    from src.calculator.data_fetcher import get_champion
-
-    parsed = parse_champion_abilities(
-        get_champion(_CC_CHAMPION),
-        18,
-        100.0,
-        _CC_RANKS,
-        champion_options=options or None,
-    )
-    carried = {
-        key: sorted({part.cc_kind for part in entry.get("parts") or () if part.cc_kind})
-        for key, entry in parsed.items()
-    }
-    return {key: kinds for key, kinds in carried.items() if kinds}
-
-
-def _cc_timeline_coverage():
-    """The campaign's control-token probe, through the public entry."""
-    from src.calculator.calculate import calculate_payload
-
-    return calculate_payload(
-        {
-            "champion": _CC_CHAMPION,
-            "level": 18,
-            "items": ["Fimbulwinter"],
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-        }
-    )["timeline_coverage"]
-
-
 class TestReviewedCrowdControl:
-    """Karthus' only control is W's wall, which damages nothing.
-
-    A control-armed holder shield (Fimbulwinter's Everlasting) reads the
-    reviewed ``cc_kind`` off authored damage events; an unreviewed ability
-    packet makes the whole timed fight fall back to coarse ordering, so the
-    probe below is the reason these declarations exist.
-    """
+    """Lay Waste and Requiem control nothing; Defile's timed branch withholds."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        from src.calculator.champions import karthus
-
         assert karthus.MODULE_CC == {"Q": "none", "R": "none"}
         assert karthus.parse_abilities.cc_kinds == karthus.MODULE_CC
 
-    def test_control_free_slots_name_every_word_their_text_contains(self):
-        for slot, expected in [["Q", []], ["R", []], ["E", []]]:
-            assert _cc_control_hits(slot) == list(expected), slot
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Karthus")
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
 
-    def test_every_reviewed_part_carries_its_kind(self):
-        assert _cc_kinds() == {"Q": ["none"], "E": ["none"], "R": ["none"]}
+    def test_the_only_control_in_the_kit_damages_nothing(self):
+        """Wall of Pain slows, but it authors no damage part to stamp."""
+        data = cc_review.kit("Karthus")
+        assert "become slowed for 5 seconds" in cc_review.slot_text(data, "W")
+        assert "W" not in karthus.MODULE_CC
 
-    def test_a_timed_fimbulwinter_fight_is_still_coarse_on_e(self):
-        """The timed Defile toggle's ticks are authored engine-side from dot_duration/dot_tick_interval, not by the part — so E reaches the ledger unreviewed and the kit stays coarse."""
-        coverage = _cc_timeline_coverage()
-
+    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
+        """Defile's aura controls nothing, and the selected-tick branch
+        authors that answer on its parts.  The timed toggle branch cannot:
+        the engine builds its four ticks from ``dot_duration`` and
+        ``dot_tick_interval``, so the row has no part to carry a marker."""
+        data = cc_review.kit("Karthus")
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+        assert "E" not in karthus.MODULE_CC
+        assert cc_review.unreviewed_ability_slots("Karthus") == ["E"]
+        coverage = cc_review.fimbulwinter_coverage("Karthus")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

@@ -10,24 +10,30 @@ from tests import cc_review
 
 
 class TestReviewedCrowdControl:
-    """W and E reviewed; Q's summed packet keeps Sylas coarse."""
+    """Sylas' whole kit is reviewed once Q's lump declares its own time."""
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Sylas")
-        assert sylas.MODULE_CC == {"W": "none", "E": "immobilize"}
+        assert sylas.MODULE_CC == {"W": "none", "E": "immobilize", "Q": "slow"}
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
-        # Abduct stuns on the chain hit and knocks up on arrival — two
+        assert "slowing them for 1.5 seconds" in cc_review.slot_text(data, "Q")
+        # Abduct stuns on the chain hit and knocks up on arrival - two
         # immobilize kinds, so the reviewed kind is the un-narrowed one.
         assert "stun them for 0.5 seconds" in cc_review.slot_text(data, "E")
         assert "knocks them up for 0.5 seconds" in cc_review.slot_text(data, "E")
 
-    def test_q_is_undeclared_because_its_packet_sums_two_hits(self):
-        """Chain Lash does slow, but the packet prices the cached "Total
-        Magic Damage" row — the lash and the 0.6s-delayed explosion in one
-        cast-boundary lump — so no part of it is a hit the ledger can time."""
+    def test_chain_lash_declares_its_lumped_row_at_the_cast(self):
+        """The packet prices the lash and the 0.6s-delayed explosion in one
+        part, so the row states when the ledger sees it instead of being
+        split into the two cached rows - which re-prices the fight."""
+        from src.calculator.champions import parse_champion_abilities
+        from src.calculator.stats import calculate_total_stats
+
         data = cc_review.kit("Sylas")
-        assert "slowing them for 1.5 seconds" in cc_review.slot_text(data, "Q")
-        assert "Q" not in sylas.MODULE_CC
+        parsed = parse_champion_abilities(
+            data, 18, 100.0, champion_stats=calculate_total_stats(data, 18, [])
+        )
+        assert [part.time_offset for part in parsed["Q"]["parts"]] == [0.0]
         assert sylas.PACKET_SPEC["slots"]["Q"]["base"] == [
             100.0,
             175.0,
@@ -36,8 +42,10 @@ class TestReviewedCrowdControl:
             400.0,
         ]
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Sylas") == ["Q"]
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Sylas") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         coverage = cc_review.fimbulwinter_coverage("Sylas")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

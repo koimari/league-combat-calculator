@@ -157,16 +157,15 @@ SLOTS = {
     "E": _skip_n_slash,
     "R": _needlework,
 }
-# E only empowers attacks.  Q is undeclared on purpose: Snip Snip! is an
-# aggregate of "at least twice" snips over the cast time with no sourced
-# per-snip cadence, so its row cannot carry a marker the event ledger would
-# see, and a declaration the ledger never reads reviews nothing.  R's
-# needles do "slow them for 1.5 seconds", but declaring that kind makes
-# rotation_resolver infer a cc_setup edge and cast R first, which costs Gwen
-# a Q cast in a timed fight for no coverage — Q blocks the scan either way —
-# so it is left to the wave that fixes the aggregate-row family.  P and W
-# author no damage part.
-MODULE_CC = {"E": "none"}
+# E only empowers attacks.  R (Needlework) "deals magic damage to enemies
+# hit and slows them for 1.5 seconds".  P and W author no damage part.
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Snip Snip! is an aggregate of "at least twice" snips over the cast time
+# with no sourced per-snip cadence, so its row cannot carry a marker the
+# event ledger would see, and a declaration the ledger never reads reviews
+# nothing.
+MODULE_CC = {"E": "none", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Gwen", cc_kinds=MODULE_CC)
 

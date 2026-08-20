@@ -626,21 +626,29 @@ class TestDerivedStackMonotonicity:
 
 
 class TestReviewedCrowdControl:
-    """Darius's crowd-control review, and the slot that still withholds.
+    """Darius' reviewed crowd control, and the slot that still withholds.
 
-    Q's swing lands after the sourced 0.75-second heft the row does not
-    author and R's entry is the execute plus its five Hemorrhage
-    applications in one cast; W could carry its slow, but declaring it
-    makes rotation_resolver order W first as cc setup, which moves the
-    fight's numbers (see the batch report).
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Darius")
-        assert not hasattr(darius, "MODULE_CC")
+        assert darius.MODULE_CC == {"Q": "none", "W": "slow"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert "slow the target by 90% for 1 second" in cc_review.slot_text(data, "W")
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Darius") == ["Q", "R", "W"]
+    def test_noxian_guillotines_fear_never_reaches_the_champion_it_damages(self):
+        """R's fear is a kill trigger on minions and monsters, not the target."""
+        text = cc_review.slot_text(cc_review.kit("Darius"), "R")
+        assert "darius fears nearby minions and monsters for 3 seconds" in text
+        assert "R" not in darius.MODULE_CC
+
+    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
+        """R's row is two parts - the True Damage term and the per-stack
+        term of the one strike - and single-hit certification takes one."""
+        assert cc_review.unreviewed_ability_slots("Darius") == ["R"]
         coverage = cc_review.fimbulwinter_coverage("Darius")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

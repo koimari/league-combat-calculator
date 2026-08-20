@@ -92,6 +92,9 @@ PACKET_SHA256 = "82f4b06f86d7d9d576a27f3e9e4e639261e0bb5f50c969cd0592a0ff8459a2f
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Teemo",
     PACKET_SHA256,
+    # Blinding Dart is one dart "at the target enemy" — one part and one
+    # hit, which is what carries Q's reviewed blind into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
     assumption_overrides=(
         "Noxious Trap prices the full 4-second poison: 4 ticks of Magic "
         "Damage per Tick (== Total Magic Damage) at 1-second intervals.",
@@ -124,19 +127,15 @@ PACKET_SPEC = SLOTS.packet_spec
 _R_SLOT = SLOTS["R"]
 SLOTS["R"] = _noxious_trap
 
-# Reviewed crowd control, read from the cached kit.  E (Toxic Shot) is an
-# on-hit poison — "the target takes magic damage every second over 4
-# seconds" — with no control clause.  R (Noxious Trap) detonates
+# Reviewed crowd control, read from the cached kit.  Q (Blinding Dart)
+# "deals magic damage and blinds them for a duration" — real crowd
+# control that is neither an immobilize nor a movement slow, which is
+# what ``blind`` is in ability_spec.CC_KIND_VOCABULARY.  E (Toxic Shot)
+# is an on-hit poison — "the target takes magic damage every second over
+# 4 seconds" — with no control clause.  R (Noxious Trap) detonates
 # "inflicting poison to nearby enemies and slowing them for 4 seconds".
-#
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Blinding Dart "deals magic damage and blinds them for a duration": a
-# blind is real crowd control, and ability_spec.CC_KIND_VOCABULARY has no
-# term for it (its non-immobilizing kinds are slow, cripple and silence),
-# so there is nothing true this slot could declare.  "none" would be
-# false.  Q would also need single-hit certification before any answer
-# could reach the ledger.
-MODULE_CC = {"E": "none", "R": "slow"}
+# W (Move Quick) is Teemo's own movement speed and authors no damage.
+MODULE_CC = {"Q": "blind", "E": "none", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Teemo", cc_kinds=MODULE_CC)
 ASSUMPTIONS.extend(

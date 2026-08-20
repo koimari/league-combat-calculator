@@ -14,7 +14,10 @@ missing-health-scaled heal (Minimum/Maximum Heal rows) is authored by
 ``derive_self_healing`` (test_sylas_kingslayer_heals_scaled_by_missing).
 """
 
-from .engine import build_parser
+from dataclasses import replace
+from typing import Any
+
+from .engine import SlotCtx, build_parser
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
@@ -31,22 +34,41 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 PACKET_SPEC = SLOTS.packet_spec
 
+_packet_chain_lash = SLOTS["Q"]
+
+
+def _chain_lash(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: the packet's Total Magic Damage row, declared at the cast.
+
+    The row is the lash and the explosion "after a 0.6-second delay"
+    summed into one lump, so it is not a single hit the ledger can
+    certify.  Declaring the lump's own position — the cast boundary, where
+    the lash lands — is the Xin Zhao W shape: it leaves the row's price
+    and its aggregation alone and only says when the ledger sees it, which
+    is what carries Q's reviewed slow to the control-armed readers.
+    """
+    entry = _packet_chain_lash(ctx)
+    if entry is None:
+        return None
+    entry["parts"] = tuple(
+        replace(part, time_offset=0.0) for part in entry.get("parts") or ()
+    )
+    return entry
+
+
+SLOTS["Q"] = _chain_lash
+
 # Reviewed crowd control, read from the cached kit.  W (Kingslayer)
 # applies no control.  E (Abduct) deals its damage and "reveal[s] and
 # stun[s] them for 0.5 seconds", then "knocks them up for 0.5 seconds upon
 # arrival" — two immobilize kinds on the one target, so the reviewed
 # answer is the un-narrowed one.  R (Hijack) deals no damage of its own.
 #
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Chain Lash does slow ("dealing magic damage to enemies hit and slowing
-# them for 1.5 seconds"), but its packet prices the cached "Total Magic
-# Damage" row — the lash and the explosion "after a 0.6-second delay"
-# summed into one cast-boundary lump — so no part of it is a hit the
-# ledger can time.  Splitting it into the two cached rows at that cached
-# delay was measured to move the row's ledger position (it drops
-# Shadowflame's Cinderbloom out of the level-11 magic build), which is a
-# re-timing decision this review does not own.
-MODULE_CC = {"W": "none", "E": "immobilize"}
+# Q (Chain Lash) deals "magic damage to enemies hit and slow[s] them for
+# 1.5 seconds"; its lumped row is declared at the cast boundary (see
+# ``_chain_lash``) rather than split into the two cached rows, which was
+# measured to move the row's ledger position.
+MODULE_CC = {"W": "none", "E": "immobilize", "Q": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Sylas", cc_kinds=MODULE_CC)
 

@@ -20,6 +20,8 @@ from src.calculator.champions import (
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions import caitlyn
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -679,3 +681,37 @@ class TestOptionsMeta:
     def test_assumptions_documented(self) -> None:
         meta = get_champion_options_meta("Caitlyn")
         assert meta["assumptions"]
+
+
+class TestReviewedCrowdControl:
+    """Only 90 Caliber Net controls among the casts this module prices.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        assert caitlyn.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
+        assert caitlyn.parse_abilities.cc_kinds == caitlyn.MODULE_CC
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Caitlyn")
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert "slows them by 50% for 1 second" in cc_review.slot_text(data, "E")
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_the_traps_root_belongs_to_a_row_this_module_does_not_price(self):
+        """W's row reports the sprung-trap count; the damage it contributes
+        is the trap Headshot the passive prices, so W authors no part."""
+        text = cc_review.slot_text(cc_review.kit("Caitlyn"), "W")
+        assert "springs the trap is rooted for 1.5 seconds" in text
+        assert "W" not in caitlyn.MODULE_CC
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Caitlyn") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Caitlyn")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

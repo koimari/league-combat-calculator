@@ -256,17 +256,26 @@ class TestEUmbralDash:
 
 
 class TestReviewedCrowdControl:
-    """Aatrox's crowd-control review, and the slot that still withholds.
+    """Aatrox declares nothing: neither damaging row has one true answer.
 
-    Q sums all three sweetspot strikes into one part and W sums the
-    chain hit with the tether hit that pulls, so neither cast has a hit
-    the ledger can attach one answer to — and Q's answer is the
-    sweetspot branch's, not the slot's.
+    Q knocks up only in the Sweetspot - this module's own option - and its
+    row sums all three casts; W slows on the chain hit and pulls on the
+    tether hit, and its row is the cached Total of both.
     """
 
-    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
-        data = cc_review.kit("Aatrox")
+    def test_the_kit_declares_nothing(self):
         assert not hasattr(aatrox, "MODULE_CC")
+
+    def test_the_darkin_blades_knockup_is_the_sweetspot_branchs(self):
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
+        assert "enemies hit within a sweetspot of the area" in text
+        assert "are also knocked up for 0.25 seconds" in text
+        assert any(row["key"] == "sweetspot" for row in aatrox.OPTIONS)
+
+    def test_infernal_chains_two_hits_do_not_control_alike(self):
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")
+        assert "slowing them for 1.5 seconds" in text
+        assert "pulled to the center of the area" in text
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Aatrox") == ["Q", "W"]

@@ -18,6 +18,8 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import braum
+from tests import cc_review
 
 
 def _parse(braum_data, level, *, stats=None, options=None, ap=0.0):
@@ -350,3 +352,33 @@ class TestFightIntegration:
         )
         result = run_fight(braum_data, 11, [], params)
         assert "passive" not in result["breakdown"]
+
+
+class TestReviewedCrowdControl:
+    """Braum's damaging casts both control: Winter's Bite slows, R knocks up.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        assert braum.MODULE_CC == {"Q": "slow", "R": "knockup"}
+        assert braum.parse_abilities.cc_kinds == braum.MODULE_CC
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Braum")
+        assert "slowing them by 70% decaying over 2 seconds" in (
+            cc_review.slot_text(data, "Q")
+        )
+        assert "all other enemies hit are knocked up for 0.6 seconds" in (
+            cc_review.slot_text(data, "R")
+        )
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Braum") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Braum")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

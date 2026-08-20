@@ -70,7 +70,19 @@ def _mimic(ctx: SlotCtx) -> dict[str, Any] | None:
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
         "total_raw": value,
-        "parts": (DamagePart("magic", value, time_offset=0.2),),
+        # Mimic's reviewed control is the copied ability's, so it is
+        # authored here rather than declared for the slot.  Sigil of Malice
+        # and Distortion control nothing; the Ethereal Chains variant
+        # prices the application and the fracture together and only the
+        # fracture roots, so that variant is left unreviewed.
+        "parts": (
+            DamagePart(
+                "magic",
+                value,
+                time_offset=0.2,
+                cc_kind=None if choice == "E" else "none",
+            ),
+        ),
         "detail": (
             f"Mimic variant {choice}; copied basic-ability effects remain in "
             "the explicit variant choice."
@@ -88,7 +100,12 @@ SLOTS = {
         ),
     ),
     "Q": _sigil_of_malice,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One arrival ("dealing magic damage to all nearby enemies upon
+    # arrival") — one part and one hit, which carries W's reviewed answer
+    # into the event ledger.
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _ethereal_chains,
     "R": _mimic,
 }
@@ -119,7 +136,22 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("LeBlanc")
-parse_abilities = build_parser(SLOTS, "LeBlanc")
+# Reviewed crowd control, read from the cached kit.  W (Distortion)
+# "deal[s] magic damage to all nearby enemies upon arrival" with no
+# control clause.  R (Mimic) copies a basic ability, so its answer is the
+# copied ability's and is authored on the part (see ``_mimic``).  P
+# authors no damage part.
+#
+# Q and E stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Sigil of Malice controls nothing, but its row is the orb plus the
+# mark's consumption — two hits in one part.  Ethereal Chains does root,
+# but only at the fracture ("if the tether is not broken by the end of its
+# duration, it fractures to deal magic damage to the target and root them
+# for 1.5 seconds"), and its row is the application and the fracture
+# summed, two hits that do not control alike.
+MODULE_CC = {"W": "none"}
+
+parse_abilities = build_parser(SLOTS, "LeBlanc", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "P" else "no_damage") for slot in "PQWER"

@@ -602,3 +602,185 @@ class TestEmpoweredBurstSwingSchedule:
         thirty = _swing_schedule(monkeypatch, "Jayce", [], 30.0)
         assert len(thirty) == 35
         assert max(thirty) <= 30.0 + 1e-9
+
+
+def _breakdown(champion: str, items: list[str], **extra):
+    """One timed level-18 fight's own breakdown, unrounded."""
+    request = parse_scenario_request(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": items,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            **extra,
+        },
+        deterministic=True,
+    )
+    resolved = resolve_scenario(request)
+    return run_fight(
+        resolved.champion_data,
+        request.level,
+        list(resolved.items),
+        resolved.fight_params,
+    )
+
+
+# Every one of these is a lethality/armor-penetration build on a champion
+# whose empowering ability consumes the whole auto stream, which is what
+# leaves the ``auto_attacks`` row with no swings at all.
+GAVE_AWAY_EVERY_SWING = [
+    ("Vayne", "Edge of Night"),
+    ("Vayne", "The Brutalizer"),
+    ("Shen", "The Collector"),
+    ("Shen", "Umbral Glaive"),
+    ("Shen", "Serylda's Grudge"),
+]
+
+
+class TestAnEmptyAutoRowIsWorthExactlyZero:
+    """A row that gave every swing away reads 0.0, not a floating crumb.
+
+    ``_event_timeline_coverage`` skips a row at ``total_damage <= 0``, so a
+    residue of 1.1e-13 made an empty ledger an "active damage source using
+    coarse phase ordering" and took the whole fight to
+    ``partial_event_order``.  The row is the sum of its own ledger by
+    construction — the swing simulator publishes the ledger's sum rather
+    than a running total beside it — so giving every swing away subtracts
+    that same number from itself.
+    """
+
+    @pytest.mark.parametrize(("champion", "item"), GAVE_AWAY_EVERY_SWING)
+    def test_the_row_is_exactly_zero_and_the_fight_certifies(self, champion, item):
+        row = _breakdown(champion, [item])["breakdown"]["auto_attacks"]
+        assert row["count"] == 0
+        assert row["damage_events"] == []
+        assert row["total_damage"] == 0.0
+        coverage = _coverage(champion, [item])
+        assert coverage["coarse_sources"] == []
+        assert coverage["complete"] is True
+
+
+# Each of these declares ``empowers_next_auto`` and owns no part that emits
+# its own events, so the row's whole damage is the swing reattribution
+# moves onto it.
+EMPOWERED_ROWS = [
+    ("Leona", "Q"),
+    ("Cho'Gath", "E"),
+    ("Fiora", "E"),
+    ("Jax", "W"),
+]
+
+
+class TestEmpoweredRowsAuthorTheSwingsTheyConsumed:
+    """The reattributed damage lands on the stream, not the cast boundary.
+
+    Without an authored event the row's damage reached the fight ledger
+    only as one lump synthesized at its cast time, and a reviewed
+    ``cc_kind`` had nothing to ride — which is what keeps these four kits
+    coarse for a control-armed holder shield (Fimbulwinter's Everlasting).
+    """
+
+    @pytest.mark.parametrize(("champion", "slot"), EMPOWERED_ROWS)
+    def test_events_sum_to_the_row(self, champion, slot):
+        row = _breakdown(champion, ["Fimbulwinter"])["breakdown"][slot]
+        events = row["damage_events"]
+        assert events
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            row["total_damage"], rel=1e-9, abs=1e-6
+        )
+
+    @pytest.mark.parametrize(("champion", "slot"), EMPOWERED_ROWS)
+    def test_events_land_on_the_casts_that_forced_them(self, champion, slot):
+        """Each consumed swing is timed at the cast that consumed it.
+
+        All four of these empowers reset the attack timer, so the swing
+        lands with the cast — the instant the reconstruction has always
+        placed this damage at, which is why authoring it moves no number.
+        The row's damage came from the stream's trailing swings (wave 1E
+        prices the move there), and those sit at the far end of a long
+        fight: timing the events from them would post a cast's damage
+        seconds before or after the cast that forced it.
+        """
+        result = _breakdown(champion, ["Fimbulwinter"])
+        row = result["breakdown"][slot]
+        moved = sorted({round(float(e["time"]), 3) for e in row["damage_events"]})
+        casts = sorted(
+            round(float(event["time"]), 3)
+            for event in result["cast_timeline"]
+            if event["slot"] == slot
+        )
+        assert moved
+        assert moved == casts[: len(moved)]
+
+    def test_a_self_rated_burst_uses_its_own_declared_impacts(self):
+        """Jayce's Hyper Charge does not swing at its cast boundary.
+
+        Its three attacks fire at the burst's own rate, and the burst wave
+        already resolved where they land (``BurstSwingSchedule.by_ability``).
+        The row reads that schedule rather than repeating the cast time
+        once per hit.
+        """
+        result = _breakdown("Jayce", ["Fimbulwinter"], fight_duration=10.0)
+        times = sorted(
+            {
+                round(float(e["time"]), 3)
+                for e in result["breakdown"]["W"]["damage_events"]
+            }
+        )
+        casts = sorted(
+            round(float(event["time"]), 3)
+            for event in result["cast_timeline"]
+            if event["slot"] == "W"
+        )
+        assert len(times) > len(casts)
+        assert set(casts) <= set(times)
+        interval = times[1] - times[0]
+        assert interval > 0
+        assert times[2] - times[1] == pytest.approx(interval, rel=1e-6)
+
+
+class TestADeclaredControlKindRidesTheConsumedSwing:
+    """What the authoring is for: the marker now has an event to ride.
+
+    Cho'Gath's Vorpal Spikes is the one of the four whose entry owns a part
+    at all, so ``engine._apply_module_cc`` can stamp a ``MODULE_CC``
+    declaration on it — this stands in for that declaration and shows the
+    kind reaching the fight ledger on the swings the cast consumed, which
+    clears Fimbulwinter's Everlasting scan.  The module's own declaration
+    is still owed; ``engine._validate_cc_event_contract`` rejects it today
+    because it reads part timing only and cannot see this authoring.
+    """
+
+    def test_fimbulwinter_certifies_once_the_kind_is_declared(self, monkeypatch):
+        from dataclasses import replace as _replace  # pylint: disable=C0415
+
+        from src.calculator import champions  # pylint: disable=C0415
+        from src.calculator.champions import chogath  # pylint: disable=C0415
+
+        parse = chogath.parse_abilities
+
+        def declared(*args, **kwargs):
+            entries = parse(*args, **kwargs)
+            entry = entries["E"]
+            entry["parts"] = tuple(
+                _replace(part, cc_kind="slow") for part in entry["parts"]
+            )
+            return entries
+
+        declared.cc_kinds = {**parse.cc_kinds, "E": "slow"}
+        monkeypatch.setattr(chogath, "MODULE_CC", declared.cc_kinds)
+        monkeypatch.setattr(chogath, "parse_abilities", declared)
+        # The registry caches the resolved contract per champion; a fresh
+        # cache makes it re-read the module this test just declared on.
+        monkeypatch.setattr(champions, "_MODULE_CONTRACTS", {})
+
+        result = _breakdown("Cho'Gath", ["Fimbulwinter"])
+        marked = [
+            event
+            for event in result["damage_events"]
+            if event.get("source_key") == "E" and event.get("cc_kind") == "slow"
+        ]
+        assert len(marked) == len(result["breakdown"]["E"]["damage_events"])
+        assert result["timeline_coverage"]["coarse_sources"] == []
+        assert result["timeline_coverage"]["complete"] is True

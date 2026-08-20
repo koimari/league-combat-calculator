@@ -100,6 +100,10 @@ def _golden_eclipse(ctx: SlotCtx):
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One radiant blast on the marked target, so one part and one hit —
+        # the certification that carries R's reviewed "no control" into the
+        # event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         f"{flat_share:g} flat + {per_stack:g} per Overwhelm stack x "
@@ -188,14 +192,20 @@ def _solar_snare(ctx: SlotCtx):
         total,
         "magic",
     )
+    # The two halves of Solar Snare do not control alike — "enemies hit by
+    # the orb are dealt magic damage and rooted for 1.5 seconds", while
+    # "enemies within the field are dealt magic damage and slowed by 30%
+    # every 0.125 seconds" — so the reviewed kind is authored per part
+    # rather than declared once for the slot.
     entry["parts"] = (
-        DamagePart("magic", amount=orb, time_offset=0.0),
+        DamagePart("magic", amount=orb, time_offset=0.0, cc_kind="root"),
         DamagePart(
             "magic",
             amount=per_tick,
             count=4,
             time_offset=0.5,
             hit_interval=0.125,
+            cc_kind="slow",
         ),
     )
     entry["dot_duration"] = 0.5
@@ -211,7 +221,15 @@ SLOTS["W"] = _rebuttal
 SLOTS["Q"] = _radiant_volley
 SLOTS["E"] = _solar_snare
 SLOTS["R"] = _golden_eclipse
-parse_abilities = build_parser(SLOTS, "Mel")
+# Reviewed crowd control, read from the cached kit.  Q (Radiant Volley)
+# is bolts that "explode[] upon landing to deal magic damage to nearby
+# enemies" with no control clause, and R (Golden Eclipse) "deal[s] magic
+# damage to each of them" and reveals, which is not control.  E's orb and
+# field answer differently and are authored per part (see
+# ``_solar_snare``).  P and W author no damage part of their own.
+MODULE_CC = {"Q": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Mel", cc_kinds=MODULE_CC)
 
 OPTIONS = list(OPTIONS) + [
     {

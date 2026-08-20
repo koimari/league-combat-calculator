@@ -257,6 +257,10 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "true",
+        # One explosion at the Coral ("creates an explosion at the location
+        # to deal true damage to enemies within") — one part, one hit,
+        # which carries R's reviewed slow into the event ledger.
+        event_order_certified="single_hit",
     )
     if bool(ctx.options.get("true_form", False)):
         bonus_health = extract_named(ability, "Bonus Health", rank, ctx.stats)
@@ -427,13 +431,32 @@ SOURCES = [
 SLOTS = {
     "P": _death_in_lavender,
     "Q": _void_surge,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One tail slam on one target, so one part and one hit — the
+    # certification that carries W's reviewed knockup into the ledger.
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _royal_maelstrom,
     "R": _endless_banquet,
     "R_onhit": _endless_banquet_onhit,
 }
 
-parse_abilities = build_parser(SLOTS, "Bel'Veth")
+# Reviewed crowd control, read from the cached kit.  W (Above and Below)
+# "deals magic damage to enemies hit, knocks them up for a duration, and
+# slows them by 30% for 2 seconds" — the immobilize is the narrower answer
+# of the two.  R (Endless Banquet) consumes the Coral "slowing nearby
+# enemies by 25% : 96% (based on seconds elapsed) for the duration" before
+# its explosion.
+#
+# Q and E stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Both are control-free in the cache — Void Surge "deal[s] physical
+# damage to enemies she passes through" and Royal Maelstrom only slashes —
+# but each row is one aggregated part of many hits (Q's cardinal dashes, E's
+# "up to 6 (+ 1 per 40% bonus attack speed)" slashes) with no sourced
+# cadence between them, so no event of theirs reaches the ledger.
+MODULE_CC = {"W": "knockup", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Bel'Veth", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).

@@ -34,6 +34,11 @@ _packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_opti
     build_packet_module(
         "Naafiri",
         PACKET_SHA256,
+        # Hounds' Pursuit is one arrival on the singled-out champion —
+        # one part and one hit, which is what carries R's reviewed slow
+        # into the event ledger.  (Eviscerate's dash-and-explode row is
+        # two hits, so it is not certified here.)
+        single_hit_slots=frozenset({"R"}),
         packet_tick_fixes={
             "Darkin Daggers": {
                 "initial_tick": 0.0,
@@ -167,7 +172,15 @@ def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = dict(_packet_slots)
 SLOTS["Q"] = _darkin_daggers
 SLOTS["E"] = _eviscerate
-parse_abilities = build_parser(SLOTS, "Naafiri")
+# Reviewed crowd control, read from the cached kit.  Q (Darkin Daggers)
+# "deals physical damage to enemies hit and inflicts them with a bleed"
+# with no control clause, and E (Eviscerate) dashes and explodes with
+# none either.  R (Hounds' Pursuit) arrives and "deals physical damage
+# and slows the target by 99% for 0.25 seconds".  P and W author no
+# damage part.
+MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Naafiri", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     {

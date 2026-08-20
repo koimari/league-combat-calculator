@@ -625,21 +625,29 @@ class TestFightIntegration:
 
 
 class TestReviewedCrowdControl:
-    """Dr. Mundo's crowd-control review, and the slot that still withholds.
+    """Dr. Mundo's reviewed crowd control, and what declaring it clears.
 
-    Q's bonesaw slow and W's control-free ticks are both readable and
-    both reach the ledger, but declaring Q's slow makes
-    rotation_resolver order Q first as cc setup, which re-prices its
-    current-health formula and moves the fight's numbers (see the batch
-    report).
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Dr. Mundo")
-        assert not hasattr(dr_mundo, "MODULE_CC")
+        assert dr_mundo.MODULE_CC == {"Q": "slow", "W": "none", "E": "none"}
+        assert "slows them by 40% for 2 seconds" in cc_review.slot_text(data, "Q")
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Dr. Mundo") == ["E", "Q", "W"]
+    def test_blunt_force_trauma_only_displaces_a_target_that_dies(self):
+        """E's airborne needs the target dead, so the priced hit controls nothing."""
+        text = cc_review.slot_text(cc_review.kit("Dr. Mundo"), "E")
+        assert "if the target dies or is a small monster, they are sent flying" in text
+        assert dr_mundo.MODULE_CC["E"] == "none"
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Dr. Mundo") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         coverage = cc_review.fimbulwinter_coverage("Dr. Mundo")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

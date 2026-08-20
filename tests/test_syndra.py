@@ -23,6 +23,7 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests import cc_review
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -656,20 +657,21 @@ class TestScatterTheWeakStun:
         slot map states only the separate event-order claim."""
         from src.calculator.champions import syndra
 
-        assert syndra.MODULE_CC == {"E": "stun"}
+        assert syndra.MODULE_CC["E"] == "stun"
 
     def test_the_rest_of_the_kit_stays_unreviewed(self, syndra_data) -> None:
-        """Not an oversight: Q's sphere lands after a delay the module does
-        not author, W is the mixed magic+true pair and R is one part per
-        sphere, so none of them can carry a reviewed kind into the event
-        ledger — and a declaration the ledger cannot show is refused."""
+        """Not an oversight: W is the mixed magic+true pair, two parts of
+        one landing, and R is one part per sphere, so neither can carry a
+        reviewed kind into the event ledger — and a declaration the ledger
+        cannot show is refused.  Q and Q2 are one sphere, one detonation,
+        which is why they can."""
         parsed = _parse(syndra_data)
         unreviewed = {
             slot
             for slot, entry in parsed.items()
             if any(part.cc_kind is None for part in entry.get("parts", ()))
         }
-        assert unreviewed == {"Q", "Q2", "W", "R"}
+        assert unreviewed == {"W", "R"}
 
     def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
         """The honest consequence of the line above: the control token

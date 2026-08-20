@@ -130,7 +130,22 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kled")
-parse_abilities = build_parser(SLOTS, "Kled")
+# Reviewed crowd control, read from the cached kit.  W (Violent
+# Tendencies) is the empowered fourth attack, which "deal[s] additional
+# physical damage" and nothing else.  R (Chaaaaaaaarge!!!) collides with
+# the first champion in the path "to deal magic damage ... [and] knock
+# them back 150 units".  P authors no damage part.
+#
+# Q and E stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Bear Trap on a Rope does control at the tether's end ("Kled pulls
+# the target 150 units toward him, deals physical damage and slows them
+# for 2.5 seconds"), but the row the default ``q_pull`` selects is the
+# Total — the trap hit plus that pull hit — and the two do not control
+# alike.  Jousting's row is likewise the Total of the first dash and the
+# recast dash, two hits with no sourced cadence between them.
+MODULE_CC = {"W": "none", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Skaarl the Cowardly Lizard (P): the mounted duo's damage is suffered "

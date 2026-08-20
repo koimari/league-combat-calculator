@@ -105,29 +105,27 @@ def test_pantheon_w_stun_reaches_the_event_ledger():
 
 def test_pantheon_declares_his_crowd_control_in_one_place():
     """The kind is MODULE_CC's to state; the entry states only the
-    separate claim that W's one hit lands at the cast boundary."""
+    separate claim that each row's one hit lands at the cast boundary."""
     from src.calculator.champions import pantheon
 
-    assert pantheon.MODULE_CC == {"W": "stun"}
+    assert pantheon.MODULE_CC == {"W": "stun", "Q": "none", "E": "none", "R": "slow"}
 
 
-def test_pantheon_leaves_the_unauthored_slots_unreviewed():
-    """Q's charge slows Pantheon himself and R's spear slows on impact,
-    but neither row authors an event a kind could ride (R's magic row is
-    the shockwave, a different hit from the slowing spear), so neither
-    may claim a review."""
+def test_pantheon_reviews_every_slot_that_authors_a_part():
+    """Comet Spear's only slow is on Pantheon himself while he charges,
+    Aegis Assault controls nothing, and Grand Starfall "slows them by 50%
+    for 2 seconds" on the target its shockwave crosses."""
     parsed = _parse("Pantheon")
     unreviewed = {
         slot
         for slot, entry in parsed.items()
         if any(part.cc_kind is None for part in entry.get("parts", ()))
     }
-    assert unreviewed == {"Q", "E", "R"}
+    assert unreviewed == set()
 
 
-def test_pantheon_timed_fimbulwinter_fight_is_still_coarse():
-    """The honest consequence: the control token stays until those rows
-    author events of their own."""
+def test_pantheon_timed_fimbulwinter_fight_is_fully_certified():
+    """The consequence of reviewing every row: the control token clears."""
     from src.calculator.calculate import calculate_payload
 
     coverage = calculate_payload(
@@ -140,4 +138,4 @@ def test_pantheon_timed_fimbulwinter_fight_is_still_coarse():
         }
     )["timeline_coverage"]
 
-    assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
+    assert coverage["coarse_sources"] == []

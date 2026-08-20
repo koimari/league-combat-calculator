@@ -208,6 +208,10 @@ def _blunt_force_trauma(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["total_raw"] = total
     entry["parts"] = (DamagePart("physical", total),)
     entry["empowers_next_auto"] = True
+    # One empowered swing per cast (see above), so one part and one hit —
+    # the certification that carries the row's reviewed control answer into
+    # the event ledger.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -377,7 +381,16 @@ SLOTS = {
     "W": _heart_zapper,
 }
 
-parse_abilities = build_parser(SLOTS, "Dr. Mundo")
+# Reviewed crowd control, read from the cached kit.  Q (Infected Bonesaw)
+# "deals magic damage to the first enemy hit and slows them by 40% for 2
+# seconds".  W (Heart Zapper) charges, ticks and detonates with no control
+# clause.  E (Blunt Force Trauma) sends a target flying only "if the target
+# dies or is a small monster" — the enemy this module prices survives the
+# hit, so the row applies no control.  R is the self-buff and authors no
+# damage part.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
 
 
 # Authoritative review metadata (issue #161).
