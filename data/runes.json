@@ -1050,7 +1050,17 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Transcendence/Transcendence.png",
     "description": "{{sbc|Passive:}} Gain '''bonuses''' upon reaching the following levels:\n* Level 5: + 5 [[ability haste]].\n* Level 8: + 5 [[ability haste]].\n* Level 11: Scoring a {{tip|takedown}} against an enemy {{tip|champion}} reduces the '''current''' cooldowns of your basic [[champion ability|abilities]] by 20%.",
     "effects": {
-      "ability_haste": 5.0
+      "ability_haste": 5.0,
+      "ability_haste_level_gates": [
+        [
+          5,
+          5.0
+        ],
+        [
+          8,
+          5.0
+        ]
+      ]
     }
   },
   "Celerity": {
@@ -1172,11 +1182,34 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/GatheringStorm/GatheringStorm.png",
     "description": "{{sbc|Passive:}} Gain increasing {{tip|adaptive Force}} every 10 minutes that grants a total of {{as|{{pp|(4*0.6)*x*(x-1);\u221e|0 to 70 for 8;\u221e|type=minutes|formula=2.4 * m * (m-1), where m = 1 + (1 per 10 minutes of game time)|changedisplay=true}} '''bonus''' Attack Damage}} or {{as|{{pp|4*x*(x-1);\u221e|0 to 70 for 8;\u221e|type=minutes|formula=4 * m * (m-1), where m = 1 + (1 per 10 minutes of game time)|changedisplay=true}} Ability Power}}.\n{{sbc|Adaptive:}} Grants bonuses based on which stat you already have the most bonuses for. ''Defaults to the first listed.''",
-    "effects": {},
-    "parse_warnings": [
-      "Unsupported pp range spec '0 to 70 for 8;\u221e'",
-      "Unsupported pp range spec '0 to 70 for 8;\u221e'"
-    ]
+    "effects": {
+      "minutes_range": [
+        0.0,
+        70.0
+      ],
+      "leveling": [
+        [
+          0.0,
+          4.8,
+          14.399999999999999,
+          28.799999999999997,
+          48.0,
+          72.0,
+          100.80000000000001,
+          134.4
+        ],
+        [
+          0.0,
+          8.0,
+          24.0,
+          48.0,
+          80.0,
+          120.0,
+          168.0,
+          224.0
+        ]
+      ]
+    }
   },
   "Grasp of the Undying": {
     "name": "Grasp of the Undying",
@@ -1494,7 +1527,8 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Overgrowth/Overgrowth.png",
     "description": "{{sbc|Passive:}} Every 8 {{tip|monster|monsters}} or enemy {{tip|minion|minions}} that die near you permanently generates a [[stack]]. Each stack grants {{as|3 '''bonus''' health}}. This effect can stack indefinitely.\nAfter reaching 15 stacks (120 monsters or minions), your {{as|'''base'''|health}} and {{as|'''bonus''' health}} are permanently increased by {{fd|3.5}}%.",
     "effects": {
-      "bonus_health": 3.0
+      "bonus_health": 3.0,
+      "stack_threshold": 15
     }
   },
   "Revitalize": {
