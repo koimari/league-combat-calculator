@@ -15,6 +15,7 @@ import urllib.parse
 import pytest
 
 from src.calculator.champions import (
+    get_champion_module_contract,
     _CHAMPION_MODULES,
     engine_registration_kind,
     get_champion_options_meta,
@@ -202,7 +203,12 @@ def test_a_full_entry_module_cites_its_parent_page_and_every_ability(name) -> No
 
 @pytest.mark.parametrize("name", FULL_ENTRY)
 def test_a_full_entry_packet_prices_every_slot(name) -> None:
-    """With its own options armed, all five slots author a typed row."""
+    """With its own options armed, every slot the contract models authors a typed row."""
+    modeled = {
+        "passive" if slot == "P" else slot
+        for slot, state in get_champion_module_contract(name).coverage.items()
+        if state == "modeled"
+    }
     parsed = parse_champion_abilities(
         get_champion(name),
         18,
@@ -212,7 +218,7 @@ def test_a_full_entry_packet_prices_every_slot(name) -> None:
         champion_stats=dict(row_review.STATS),
         target_stats=dict(row_review.TARGET),
     )
-    assert _SLOTS <= set(parsed), f"{name} prices no {sorted(_SLOTS - set(parsed))}"
+    assert modeled <= set(parsed), f"{name} prices no {sorted(modeled - set(parsed))}"
     for slot, entry in parsed.items():
         assert "parts" in entry, f"{name} {slot} authors no parts"
         assert "damage_type" in entry, f"{name} {slot} has no damage type"
