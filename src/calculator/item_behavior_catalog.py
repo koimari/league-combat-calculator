@@ -4144,10 +4144,10 @@ class AllyPacketDeclaration:
 
     ``ramps`` carries each level-scaled number's :class:`LevelSubject`, which
     the cached sentence states and the emitters used to guess.
-    ``tests/test_item_support_effects.py::TestDeclaredRampSubjects`` reads the
-    ``type=`` qualifier back out of every owner's cached branch text, so a
-    patch that re-scales one of these is a red test rather than a number only
-    the source moved.
+    ``tests/test_coupled_ally_item_packets.py::TestDeclaredRampSubjects``
+    reads the ``type=`` qualifier back out of every owner's cached branch
+    text, so a patch that re-scales one of these is a red test rather than a
+    number only the source moved.
     """
 
     trigger: PacketTrigger

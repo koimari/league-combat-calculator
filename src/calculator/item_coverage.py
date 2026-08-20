@@ -1345,9 +1345,10 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
 # test that exercises the behaviour.  A packet whose source the builder composes
 # with an f-string is written the way the builder renders it -- ``{} — Ward``,
 # not ``World Atlas — Ward`` -- because the interpolated part is not in the
-# source at all and a member spelling the item name there could never resolve.  Seven more items own a walk packet and have
-# no such test; they are on ``FRONTIER`` rather than here, because a claim backed
-# by "some test file mentions this string" is the prose this corpus replaces.
+# source at all and a member spelling the item name there could never resolve.
+# Six more items own a walk packet and have no such test; they are on
+# ``FRONTIER`` rather than here, because a claim backed by "some test file
+# mentions this string" is the prose this corpus replaces.
 _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
     "Abyssal Mask": (
         "item_support_effects.derive_item_support_effects",
@@ -1402,6 +1403,13 @@ _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
         ("Dream Maker — Blue Dream Bubble",),
         "tests/test_item_support_effects.py::TestCrossParticipantAuthorities"
         "::test_dream_maker_is_a_producer",
+    ),
+    "Echoes of Helia": (
+        "item_support_effects.derive_item_support_effects",
+        ("Echoes of Helia — Soul Siphon",),
+        "tests/test_coupled_ally_item_packets.py"
+        "::TestSoulSiphonPricesTheHoldersCharges"
+        "::test_the_heal_is_thirty_percent_of_the_holders_pre_mitigation_damage",
     ),
     "Fimbulwinter": (
         "item_support_effects.derive_item_support_effects",
@@ -1797,10 +1805,6 @@ COVERAGE_EVIDENCE: Mapping[tuple[SubjectKind, str, ClaimLane], Claim] = _corpus(
 FRONTIER: Mapping[str, str] = {
     "item:Diadem of Songs@support_packet": (
         "Consonance emits a walk packet no focused test exercises; #48 tracks "
-        "the support-item authoring debt."
-    ),
-    "item:Echoes of Helia@support_packet": (
-        "Soul Siphon emits a walk packet no focused test exercises; #48 tracks "
         "the support-item authoring debt."
     ),
     "item:Locket of the Iron Solari@support_packet": (
