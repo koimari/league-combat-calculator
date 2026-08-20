@@ -10,6 +10,13 @@ withhold, coarse source, or crash the sweep can reach is a frontier entry.
 The campaign closes when the frontier is empty. Until then the receipt pins
 the shrinking frontier.
 
+A frontier entry the campaign cannot close without inventing data is
+acknowledged in ``docs/coverage-residue.json`` instead — one row per
+(champion, source), carrying the cached sentence that describes the hits and
+what that sentence fails to say. The gate then fails two ways: on an entry no
+row acknowledges, and on a row whose entry no longer reproduces, so the list
+can neither grow in silence nor outlive its cause.
+
 Usage:
     python scripts/coverage_census.py run                     # sweep + summary
     python scripts/coverage_census.py run --output docs/coverage-census.json
@@ -294,6 +301,44 @@ def run_census():
     }
 
 
+RESIDUE_PATH = REPO_ROOT / "docs" / "coverage-residue.json"
+
+
+def _residue_rows():
+    """The committed acknowledgements, or none if the file is absent."""
+    if not RESIDUE_PATH.exists():
+        return []
+    return json.loads(RESIDUE_PATH.read_text(encoding="utf-8"))["acknowledged"]
+
+
+def _frontier_pairs(frontier):
+    """Every (champion, coarse source) the sweep still reports."""
+    pairs = set()
+    for key, sources in frontier["item_pair_coarse"].items():
+        champion = key.split("|", 1)[0]
+        for source in sources:
+            pairs.add((champion, source))
+    return pairs
+
+
+def reconcile_residue(receipt):
+    """Split the frontier into acknowledged rows and unacknowledged entries.
+
+    Two failures, not one. An entry nothing acknowledges is the frontier
+    proper — the campaign's own work, unfinished. A row whose entry no longer
+    reproduces is an acknowledgement that outlived its cause, which is how a
+    list of known gaps quietly becomes a list of forgotten ones.
+    """
+    rows = _residue_rows()
+    acknowledged = {(row["champion"], row["source"]) for row in rows}
+    live = _frontier_pairs(receipt["frontier"])
+    return {
+        "acknowledged_rows": len(rows),
+        "unacknowledged": sorted(f"{c}|{s}" for c, s in live - acknowledged),
+        "stale_acknowledgements": sorted(f"{c}|{s}" for c, s in acknowledged - live),
+    }
+
+
 def main(argv):
     """CLI: ``run [--output PATH]`` or ``check PATH``; exit 1 on any frontier."""
     if not argv or argv[0] not in {"run", "check"}:
@@ -318,7 +363,19 @@ def main(argv):
         if key != "total":
             print(f"{key}: {count}")
     print(f"frontier total: {total}")
-    return 0 if total == 0 else 1
+
+    residue = reconcile_residue(receipt)
+    print(f"acknowledged residue rows: {residue['acknowledged_rows']}")
+    for entry in residue["unacknowledged"]:
+        print(f"UNACKNOWLEDGED: {entry}")
+    for entry in residue["stale_acknowledgements"]:
+        print(f"STALE ACKNOWLEDGEMENT (no longer reproduces): {entry}")
+    if residue["unacknowledged"] or residue["stale_acknowledgements"]:
+        return 1
+    other = total - sum(
+        len(sources) for sources in receipt["frontier"]["item_pair_coarse"].values()
+    )
+    return 0 if other == 0 else 1
 
 
 if __name__ == "__main__":
