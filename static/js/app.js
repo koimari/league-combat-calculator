@@ -556,14 +556,30 @@ function championOptionCapability(kind, championName) {
   return base;
 }
 
+// One ability control bound to one sourced module option key.
+const SLOT_OPTION_BINDINGS = {
+  "P:ability_casts": "passive_procs",
+  "E:ability_hits": "mines_hit",
+  "R:ability_variants": "r_sweet_spot",
+};
+
+// Champion options the Variant buttons write, mapped to the variant index
+// that means `true`.  The backend types these as booleans, so the payload
+// must never carry the raw variant index (Gnar's `mega: 0` and Ziggs'
+// `r_sweet_spot: 0` each answered "must be true or false").  Indices follow
+// the wiki's packet order: Gnar lists Mini first (mega = 1), while Jayce's
+// hammer kit and Ziggs' epicenter blast come first (0).
+const VARIANT_BOOLEAN_OPTIONS = { "mega": 1, "hammer_stance": 0, "r_sweet_spot": 0 };
+
+// The boolean options no single slot claims: global form toggles that
+// re-shape every Q/W/E entry rather than one slot's variant list.
+function globalFormToggles() {
+  const owned = new Set(Object.values(SLOT_OPTION_BINDINGS));
+  return Object.keys(VARIANT_BOOLEAN_OPTIONS).filter((key) => !owned.has(key));
+}
+
 function abilityOptionBinding(slot, field, championName = state.attacker.champion) {
-  // Legacy explicit overrides first (sourced module option keys).
-  const bindings = {
-    "P:ability_casts": "passive_procs",
-    "E:ability_hits": "mines_hit",
-    "R:ability_variants": "r_sweet_spot",
-  };
-  const overrideKey = bindings[`${slot}:${field}`];
+  const overrideKey = SLOT_OPTION_BINDINGS[`${slot}:${field}`];
   const options = engine.championOptions[championName]?.options || [];
   if (overrideKey) {
     return options.some((option) => option.key === overrideKey) ? overrideKey : null;
@@ -586,7 +602,7 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   const direct = perSlot.find((key) => declared.has(key));
   if (direct) return direct;
   if (slot !== "R") {
-    const toggle = Object.keys(GLOBAL_FORM_TOGGLES).find((key) => declared.has(key));
+    const toggle = globalFormToggles().find((key) => declared.has(key));
     if (toggle) return toggle;
     if (declared.has("stance")) return "stance";
   }
@@ -597,27 +613,18 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   return family || null;
 }
 
-// Bool form toggles driven by the ability Variant buttons, mapped to the
-// variant index that means "true".  The backend types these as booleans, so
-// the payload must never carry the raw variant index (sending Gnar's
-// ``mega: 0`` produced "champion_options.mega must be true or false" the
-// moment he was selected).  Gnar's forms list Mini first (Mega = index 1);
-// Jayce's hammer kit is the wiki's first entry (hammer_stance = index 0,
-// cannon second).
-const GLOBAL_FORM_TOGGLES = { "mega": 1, "hammer_stance": 0 };
-
 /**
- * The variant index a slot starts on: the one matching its bound form
- * toggle's module default.  Variant 0 is Jayce's hammer kit, but his module
+ * The variant index a slot starts on: the one matching its bound boolean
+ * option's module default.  Variant 0 is Jayce's hammer kit, but his module
  * defaults hammer_stance to false (cannon) — a fresh pick must not flip the
  * form.  Slots without a bound form toggle start on their first variant.
  */
 function defaultFormVariantIndex(slot) {
   const binding = abilityOptionBinding(slot, "ability_variants");
-  if (!(binding in GLOBAL_FORM_TOGGLES)) return 0;
+  if (!(binding in VARIANT_BOOLEAN_OPTIONS)) return 0;
   const option = (engine.championOptions[state.attacker.champion]?.options || [])
     .find((entry) => entry.key === binding);
-  const trueIndex = GLOBAL_FORM_TOGGLES[binding];
+  const trueIndex = VARIANT_BOOLEAN_OPTIONS[binding];
   return option?.default ? trueIndex : 1 - trueIndex;
 }
 
@@ -629,7 +636,7 @@ function defaultFormVariantIndex(slot) {
  */
 function syncGlobalFormVariants(slot, variantIndex) {
   const binding = abilityOptionBinding(slot, "ability_variants");
-  if (!(binding in GLOBAL_FORM_TOGGLES)) return;
+  if (!(binding in VARIANT_BOOLEAN_OPTIONS)) return;
   activeAbilityKit().forEach((ability) => {
     if (ability.slot === slot || !(ability.variants?.length > 1)) return;
     if (abilityOptionBinding(ability.slot, "ability_variants") !== binding) return;
@@ -1420,7 +1427,6 @@ function abilityBindsChampionOption(key) {
   const abilities = activeAbilityKit();
   if (key === "passive_procs") return abilities.some((ability) => ability.slot === "P");
   if (key === "mines_hit") return abilities.some((ability) => ability.slot === "E" && Number(ability.maxHits) > 1);
-  if (key === "r_sweet_spot") return abilities.some((ability) => ability.slot === "R" && ability.variants?.length > 1);
   return abilities.some((ability) =>
     ability.variants?.length > 1
       && abilityOptionBinding(ability.slot, "ability_variants") === key
@@ -1603,8 +1609,6 @@ function engineChampionOptions() {
       options[option.key] = abilityInput("P").casts;
     } else if (option.key === "mines_hit" && abilityBindsChampionOption(option.key)) {
       options[option.key] = abilityInput("E").hits;
-    } else if (option.key === "r_sweet_spot" && abilityBindsChampionOption(option.key)) {
-      options[option.key] = abilityInput("R").variant === 0;
     }
     const variantAbility = activeAbilityKit().find((ability) =>
       ability.variants?.length > 1
@@ -1615,8 +1619,8 @@ function engineChampionOptions() {
       // option keeps its stored/default value instead of reading the
       // synthetic variant-0 fallback (which would flip Jayce to hammer).
       const input = state.attacker.abilityInputs[variantAbility.slot];
-      if (option.key in GLOBAL_FORM_TOGGLES) {
-        if (input) options[option.key] = input.variant === GLOBAL_FORM_TOGGLES[option.key];
+      if (option.key in VARIANT_BOOLEAN_OPTIONS) {
+        if (input) options[option.key] = input.variant === VARIANT_BOOLEAN_OPTIONS[option.key];
       } else if (input) {
         options[option.key] = input.variant;
       }
