@@ -41,7 +41,9 @@ try:
 except ImportError:  # imported as scripts.build_reviewed_modules in tests
     from scripts.source_receipt import source_receipt
 
-SLOTS = ("P", "Q", "W", "E", "R")
+from src.calculator.cast_dependency import BASE_CAST_SLOTS  # noqa: E402
+
+SLOTS = BASE_CAST_SLOTS
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

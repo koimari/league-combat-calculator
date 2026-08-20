@@ -19,9 +19,9 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from scripts.build_ability_catalog import catalogue_champions, rank_count
 from scripts.source_receipt import source_receipt, source_sha256
-
-ABILITY_SLOTS = ("P", "Q", "W", "E", "R")
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 
 _DAMAGE_ATTRIBUTE = re.compile(
     r"(?i)(damage|strike|hit|burst|bleed|burn|detonat|poison|explos|rocket|"
@@ -106,19 +106,6 @@ def _ratio_components(unit: str, attribute: str) -> dict[str, float]:
             return {"selfMaxHp": 1.0 / 100.0}
         return {}
     return {}
-
-
-def _rank_count(ability: dict[str, Any], slot: str) -> int:
-    if slot == "P":
-        return 1
-    counts: list[int] = []
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            for modifier in leveling.get("modifiers", []):
-                values = _values(modifier)
-                if values:
-                    counts.append(len(values))
-    return 3 if slot == "R" else 5 if not counts else max(1, min(max(counts), 5))
 
 
 def _cooldown_values(ability: dict[str, Any]) -> list[float]:
@@ -252,7 +239,7 @@ def _form_profile(slot: str, ability: dict[str, Any]) -> dict[str, Any]:
     return {
         "name": ability.get("name") or slot,
         "slot": slot,
-        "maxRank": _rank_count(ability, slot),
+        "maxRank": rank_count(ability, slot),
         "cooldown": _cooldown_values(ability),
         "damageType": ability.get("damageType"),
         "targeting": ability.get("targeting"),
@@ -341,10 +328,10 @@ def build_profiles(
 ) -> dict[str, Any]:
     raw = json.loads(source.read_text(encoding="utf-8"))
     champions: dict[str, Any] = {}
-    for champion in sorted(raw.values(), key=lambda item: str(item.get("name", ""))):
+    for champion in catalogue_champions(raw):
         abilities = champion.get("abilities", {})
         forms: dict[str, list[dict[str, Any]]] = {}
-        for slot in ABILITY_SLOTS:
+        for slot in BASE_CAST_SLOTS:
             forms[slot] = [
                 _form_profile(slot, ability)
                 for ability in abilities.get(slot, [])

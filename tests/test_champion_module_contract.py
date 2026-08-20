@@ -419,11 +419,9 @@ class TestPacketPinCarriers:
         assert compiled >= 76
 
 
-def test_add_champion_skills_describe_the_same_single_module_flow():
-    agents = Path(".agents/skills/add-champion/skill.md").read_text(encoding="utf-8")
-    claude = Path(".claude/skills/add-champion/skill.md").read_text(encoding="utf-8")
+def test_the_add_champion_skill_describes_the_single_module_flow():
+    skill = Path(".claude/skills/add-champion/SKILL.md").read_text(encoding="utf-8")
 
-    assert agents == claude
-    assert "Two implementation lanes" not in agents
-    assert "ChampionModuleContract" in agents
-    assert "reviewed_batch_" not in agents
+    assert "Two implementation lanes" not in skill
+    assert "ChampionModuleContract" in skill
+    assert "reviewed_batch_" not in skill

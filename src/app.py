@@ -80,6 +80,7 @@ from src.calculator.champions import (
     registered_champion_names,
 )
 from src.calculator.capabilities import public_capability_contract
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_selectable_items,
@@ -1005,7 +1006,7 @@ def api_champions():
             "blockers": [],
         }
         ability_slots = {}
-        for slot in ("P", "Q", "W", "E", "R"):
+        for slot in BASE_CAST_SLOTS:
             ability_slots[slot] = _public_ability_entry(
                 champ_data.get("abilities", {}).get(slot, []), slot
             )

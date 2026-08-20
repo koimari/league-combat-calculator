@@ -55,6 +55,11 @@ def test_the_committed_file_is_current_for_the_committed_cache(
     assert stale_reasons(tables, items, ddragon_version) == []
 
 
+def test_the_provenance_carries_no_wall_clock(tables):
+    """A refresh that changes no row must leave the file byte-identical."""
+    assert set(tables["provenance"]) == {"source_url", "patch"}
+
+
 def test_a_cache_on_another_release_is_stale(tables, items, ddragon_version):
     (reason,) = stale_reasons(tables, items, "99.1.1")
     assert ddragon_version in reason

@@ -2,8 +2,10 @@
 """E9 — per-champion and per-item receipts consolidating atoms + module coverage
 + audit verdict + heal rules into one verifiable receipt per entity.
 
-Output: docs/receipts/champions/<name>.json, docs/receipts/items/<id>.json,
-docs/receipts/summary.json.
+Output: docs/receipts/champions/<name>.json and docs/receipts/items/<id>.json,
+both gitignored and rebuilt from the local corpus.  The run's counts are
+printed and returned; nothing tracked is written, so a partial local atom
+corpus cannot commit itself.
 
 Item atoms are read from the unified Atomizer domain file
 ``data/atoms/items.json`` (issue #163): the retired ``data/item-atoms/`` tree
@@ -246,14 +248,12 @@ def build() -> dict:
             )
         for item_id, rec in item_records.items():
             (tmp / "items" / f"{item_id}.json").write_text(json.dumps(rec, indent=1))
-        (tmp / "summary.json").write_text(json.dumps(summary, indent=1))
 
         for child in ("champions", "items"):
             dest = OUT / child
             if dest.exists():
                 shutil.rmtree(dest)
             os.replace(tmp / child, dest)
-        os.replace(tmp / "summary.json", OUT / "summary.json")
 
     print(f"champions: {len(summary['champions'])} | items: {len(summary['items'])}")
     verdicts = Counter(v["verdict"] for v in summary["champions"].values())

@@ -5,7 +5,7 @@ automation (`scripts/patch_regression.py`, `scripts/patch_update.py`,
 `data/staleness.json`) into a repeatable, SLA-bound operating procedure.
 
 Read `architecture.md` for the module map and the `/patch-update` skill
-(`.agents/skills/patch-update/SKILL.md`) for the audit-report interpretation
+(`.claude/skills/patch-update/SKILL.md`) for the audit-report interpretation
 detail this runbook summarizes.
 
 ## When this runs
@@ -294,7 +294,7 @@ A kit rework changes abilities, not just numbers. A number update is Step
 3-A; a rework is a full module review:
 
 1. Run the `/analyze-champion` skill's red-flag checklist (Step 4 of
-   `.agents/skills/analyze-champion/skill.md`): pet/summon secondary damage,
+   `.claude/skills/analyze-champion/SKILL.md`): pet/summon secondary damage,
    retaliation/shield damage, stat-granting abilities applied before damage
    calc, empowered-autos once per cast, passive cooldowns, recasts,
    %max/%current/%missing-HP components, unusual crit scaling, DoT tick

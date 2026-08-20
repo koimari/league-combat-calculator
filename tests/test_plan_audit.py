@@ -20,6 +20,16 @@ import plan_audit  # noqa: E402  (path is set above)
 UMBRELLA = plan_audit.PLANS_DIR / plan_audit.UMBRELLA_NAME
 
 
+def _window_line():
+    """The first line naming ``CITATION_WINDOW`` — where drift re-points to."""
+    lines = (
+        (REPO_ROOT / "scripts" / "plan_audit.py")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    )
+    return next(i for i, l in enumerate(lines, 1) if "CITATION_WINDOW" in l)
+
+
 def cite(target, line, fragment=None):
     """One markdown line carrying a citation, optionally with its fragment."""
     body = f"`{target}:{line}`"
@@ -162,7 +172,10 @@ class TestCitationChecks:
             )
         )
         assert "has drifted" in finding.message
-        assert "refresh the locator in a doc-only commit" in finding.message
+        assert "--refresh-drift" in finding.message
+        assert finding.repair == plan_audit.Repair(
+            "scripts/plan_audit.py:1", f"scripts/plan_audit.py:{_window_line()}"
+        )
 
     def test_a_vanished_fragment_is_escalated_rather_than_re_pointed(self):
         (finding,) = plan_audit.check_citations(
@@ -172,6 +185,58 @@ class TestCitationChecks:
         )
         assert "plan/tree divergence to escalate" in finding.message
         assert "drifted" not in finding.message
+        assert finding.repair is None
+
+    def test_a_drifted_range_keeps_its_span(self):
+        """A range locates a block; refreshing it moves both ends together."""
+        (finding,) = plan_audit.check_citations(
+            plan_audit.parse_citations(
+                "`scripts/plan_audit.py:1-9` (`CITATION_WINDOW`)", "d.md"
+            )
+        )
+        at = _window_line()
+        assert finding.repair == plan_audit.Repair(
+            "scripts/plan_audit.py:1-9", f"scripts/plan_audit.py:{at}-{at + 8}"
+        )
+
+
+class TestRefreshDrift:
+    """``--refresh-drift`` re-points a locator; it never invents one."""
+
+    def _doc(self, tmp_path, body):
+        (tmp_path / "d.md").write_text(body, encoding="utf-8")
+        return tmp_path
+
+    def test_a_drifted_locator_is_rewritten_in_place(self, tmp_path):
+        body = "intro\n" + cite("scripts/plan_audit.py", 1, "CITATION_WINDOW") + "\n"
+        directory = self._doc(tmp_path, body)
+        findings = plan_audit.check_citations(plan_audit.parse_citations(body, "d.md"))
+        assert plan_audit.refresh_drift(findings, directory) == 0
+        rewritten = (directory / "d.md").read_text(encoding="utf-8")
+        assert f"scripts/plan_audit.py:{_window_line()}" in rewritten
+        assert (
+            plan_audit.check_citations(plan_audit.parse_citations(rewritten, "d.md"))
+            == ()
+        )
+
+    def test_an_escalated_fragment_is_left_alone(self, tmp_path):
+        body = cite("scripts/plan_audit.py", 1, "no_such_symbol_anywhere") + "\n"
+        directory = self._doc(tmp_path, body)
+        findings = plan_audit.check_citations(plan_audit.parse_citations(body, "d.md"))
+        plan_audit.refresh_drift(findings, directory)
+        assert (directory / "d.md").read_text(encoding="utf-8") == body
+
+    def test_an_ambiguous_line_is_reported_rather_than_guessed(self, tmp_path, capsys):
+        """Two copies of one locator on a line: which one moved is unknowable."""
+        body = (
+            "`scripts/plan_audit.py:1` (`CITATION_WINDOW`) and "
+            "`scripts/plan_audit.py:1` (`PROXIMITY_TOKENS`)\n"
+        )
+        directory = self._doc(tmp_path, body)
+        findings = plan_audit.check_citations(plan_audit.parse_citations(body, "d.md"))
+        plan_audit.refresh_drift(findings, directory)
+        assert (directory / "d.md").read_text(encoding="utf-8") == body
+        assert "refresh it by hand" in capsys.readouterr().err
 
     def test_a_vanished_fragment_past_a_wrap_is_escalated_too(self):
         """The red for the paragraph rule: a wrapped pair the gate used to skip."""
@@ -343,6 +408,43 @@ class TestGoldenFigures:
         )
         assert counts, "the fingerprints receipt carries no golden shape counts"
         assert all(isinstance(value, int) for value in counts)
+
+
+class TestAllowanceStaleness:
+    """An exemption outlives the receipt figure it was written against."""
+
+    ROW = plan_audit.Allowance(
+        doc="d.md", value=24, context="counter reads", reason="a site count"
+    )
+
+    def test_a_row_no_receipt_block_holds_and_nothing_needs_is_reported(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(plan_audit, "COLLISION_ALLOWLIST", (self.ROW,))
+        (finding,) = plan_audit.check_allowances((), {"d.md"}, {25: ("x.entries",)})
+        assert finding.check == "allowlist"
+        assert "counter reads" in finding.message
+
+    def test_a_row_the_receipt_still_holds_is_kept(self, monkeypatch):
+        """The prose may hold no occurrence today; the collision is still live."""
+        monkeypatch.setattr(plan_audit, "COLLISION_ALLOWLIST", (self.ROW,))
+        assert plan_audit.check_allowances((), {"d.md"}, {24: ("x.entries",)}) == ()
+
+    def test_a_row_still_suppressing_a_finding_is_kept(self, monkeypatch):
+        """The proximity prong flags an integer whatever the receipt holds."""
+        monkeypatch.setattr(plan_audit, "COLLISION_ALLOWLIST", (self.ROW,))
+        used = set()
+        assert (
+            plan_audit.check_golden_figures(
+                "d.md", "the golden counter reads 24 entries", {}, used
+            )
+            == ()
+        )
+        assert plan_audit.check_allowances(used, {"d.md"}, {}) == ()
+
+    def test_a_row_for_an_unaudited_document_is_not_judged(self, monkeypatch):
+        monkeypatch.setattr(plan_audit, "COLLISION_ALLOWLIST", (self.ROW,))
+        assert plan_audit.check_allowances((), {"other.md"}, {}) == ()
 
 
 class TestDecisionInventory:

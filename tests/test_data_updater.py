@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import requests
 
+from scripts.reparse_runes import drifted_runes
 from src.calculator import data_updater
 
 
@@ -68,3 +69,8 @@ def test_reparse_cached_rune_effects_recomputes_without_network(tmp_path):
     on_disk = json.loads((tmp_path / "runes.json").read_text(encoding="utf-8"))
     assert on_disk["First Strike"]["effects"] == effects
     assert on_disk["First Strike"]["icon"] == "http://x/fs.png"
+
+
+def test_the_committed_rune_cache_is_what_the_parser_produces():
+    """`scripts/reparse_runes.py --check` is green on the tracked cache."""
+    assert drifted_runes() == []

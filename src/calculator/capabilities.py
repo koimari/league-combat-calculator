@@ -22,9 +22,12 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Mapping
 
-# This module's one intra-package import, and the price of deriving the
-# published phase list instead of hand-listing it (0A.6): the public schema
-# now points at the kernel.  Note the reach — importing ``.survival.actions``
+# The cast-slot vocabulary, from the stdlib-only leaf that owns it.
+from .cast_dependency import BASE_CAST_SLOTS
+
+# The price of deriving the published phase list instead of hand-listing it
+# (0A.6): the public schema now points at the kernel.  Note the reach —
+# importing ``.survival.actions``
 # executes ``survival/__init__.py``, so compile, transitions, accumulate,
 # receipt_state and score_state all load with this module, which is heavier
 # than the import line reads for a module whose job is publishing a contract.
@@ -502,7 +505,7 @@ def public_capability_contract(
             },
             "abilities": {
                 "supported": True,
-                "slots": ["P", "Q", "W", "E", "R"],
+                "slots": list(BASE_CAST_SLOTS),
                 "keys": ["slot", "name", "icon", "ingested"],
                 "reason": None,
             },

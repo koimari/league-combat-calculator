@@ -28,9 +28,7 @@ when its fix lands; this file is the one home for the list.
 | B4 | `passive_parser.py:2742-2745` `parse_all_item_effects` | Silently drops an item whose `parse_item_effect` returns None/empty; surfaces only on read or via the parity test. | Raise naming the item. |
 | B5 | `roster_composition.py:101,150-155`, `participant_timeline.py:965/975` (`Combatant.request: Any`); `survival/transitions.py:261,264` `getattr(self.ledger, "records_*", True)`; `program/compile.py:1569-1575` `getattr(payload, …)`; `item_coverage.py:~635-660`, `interpreters/stat_derivation.StatSlot.granted`, `gated_state_reason` `getattr(payload, name, None)` | The U09 family on other subjects: declared-absence reads across typed objects. | Type the field (Protocol/Union) and read directly, as 5a260de did for `defenses`. |
 | B6 | `app.py api_champions` `champ_data.get("icon","")` / `get("patchLastChanged")`; `optimizer.item_gold` `.get(...).get("total", 0)` | Literal defaults on cache-owned fields. | Required reads. |
-| B9 | `scripts/build_bis_profiles.py`, `build_ability_catalog.py` | Import zero `src`; re-parse `data/champions.json` and re-derive ability leveling, then publish to the UI (`app.js:4706-4707`). A second ability-parsing home with no gate comparing it to the engine. `("P","Q","W","E","R")` literal copies ×6 (`build_ability_catalog.py:22`, `build_bis_profiles.py:24`, `app.py` ×2, `capabilities.py`, `certainty.py`) vs `cast_dependency.BASE_CAST_SLOTS`. | Build both catalogs from the champion contracts; import the slot tuple. |
-| B10 | `.claude/skills/` ↔ `.agents/skills/` | Near-identical trees; every skill edit this campaign was made twice. | One tree, one pointer (the `Agents.md` treatment). |
-| B11 | `static/data.json` | Hand-committed, no generator in `scripts/`, one patch stale (Spellslinger's Shoes `percentPen`, Redemption price). Since 7cc64a9 the picker reads the API for every stat it serves. | Generate it on patch day or shrink it to icons. |
+| B11 | `static/data.json` | Hand-committed, no generator in `scripts/`, one patch stale. **Measured:** of its champion keys only `key`, `title`, `tags`, `resource` and `abilities` are read (`app.js:731,2556,3480,2395,685`); every stat key and `id`, `abilityCoverage`, `source`, `patch`, `coverage` are dead — stats come from `/api/loadout-stats`. Every item key is dead or overwritten by `/api/items`/`/api/boots` (`mergeItemCoverage` spreads the backend over the snapshot and `renderPicker` filters through `backendItemReady`), so the stale cells are unreachable; only `passiveText` is unique, and nothing reads it. Inside `abilities` the UI reads only `slot`, `name`, `icon`, `maxRank`, `maxHits`, `variants[].name` and `variants.length` — never a ratio. | Shrink: drop `items`, `patch`, `coverage` and the champion stat keys. Needs the `app.js` owner (`DATA.items` must stay an array or `engine.itemCatalogReady` never sets) and a browser pass, so it did not land with the scripts slice. |
 
 ## C. API / UI
 
@@ -43,7 +41,7 @@ when its fix lands; this file is the one home for the list.
 | C5 | `app.py` `api_save_build`, `api_create_share` | DB writes with no `_spend_rate_limit` (the only sites are calculate/bis/optimize/receipts/metrics). | Spend a token. |
 | C6 | `app.py:261` `_DEV_UPDATE_TOKEN = secrets.token_urlsafe(32)` | Minted per import → per-worker cookie for `/api/update-data`. | Derive from config or accept single-worker. |
 | C7 | `docs/invite-flow.md:88` | Says the landing page calls `POST /api/auth/invite`; `templates/beta_landing.html` has no fetch (form posts to `/auth/login`). | Fix the doc or wire the check. |
-| C8 | `db.list_metric_events`, `data_updater.reparse_cached_rune_effects` | Test-only / REPL-only (the rune refresh is named in `data/README.md:31` but has no CLI). | Give the refresh a `scripts/` entry; cut the other if nothing will call it. |
+| C8 | `db.list_metric_events` | Test-only. | Cut it if nothing will call it. |
 | C9 | `docs/deploy.md:42` | Post-deploy metrics smoke only checks for a non-503. | Assert the scorecard shape. |
 
 ## D. Champion package
@@ -58,7 +56,6 @@ when its fix lands; this file is the one home for the list.
 | # | Where | What | Action |
 |---|---|---|---|
 | E3 | `tests/test_migration_frontier.py:150-170,305` (`REPORT_TIP="067c94c"`), `tests/test_trigger_stream.py` ~2711-2800 (`git archive <commit>` per test) | Closed-campaign git walks inside kept product tests; the reason CI keeps `fetch-depth: 0`. | Pin the artefacts, drop the history walk, shallow-fetch CI. |
-| E9 | `scripts/plan_audit.py` | No refresh mode for locator drift — five doc-only re-pin commits this campaign; `value=24` allowance stale (entries is 25); 7 more line pins into `participant_timeline.py` / `program/compile.py` / `transitions.py` will drift on the next edit. | `--refresh-drift` (difflib line map from the last-verified commit); staleness check on allowances. |
 | E12 | `tests/coverage_resolver.py` (1.8k) + `test_coverage_claims.py` (2.7k, subprocess pytest at `:654`) + `coverage_evidence.py` (1.1k) | 5.6k lines proving evidence strings name real symbols, run through `conftest.py` on every `pytest -k`. | Not deletable; worth knowing it is the largest non-domain cost per run. |
 | E14 | `scripts/load_sanity.py` | Updated in 39d3794 for `checks.cache`; not run live (needs `DATABASE_URL`/`REDIS_URL`). | Run once against a deployed target. |
 
@@ -66,9 +63,6 @@ when its fix lands; this file is the one home for the list.
 
 | # | Where | What | Action |
 |---|---|---|---|
-| F1 | `data/economics-sourced.json` `provenance.fetched_at` | Wall-clock float → every refresh dirties the file with zero row changes. | Drop it or pin to the DDragon version. |
-| F3 | `docs/receipts/standing-dissent-adjudications.json` (61 KB) | Survives for one assertion in `tests/test_escalated_defects_s6s7_oracle.py:380`. | Trim the assertion; delete the file. |
-| F4 | `scripts/build_receipts.py` | Writes gitignored `docs/receipts/champions/`, `items/` plus a tracked `summary.json`; still reads the legacy per-item atoms tree (`extract_item_atoms` is gone). | Read `data/atoms/items.json`; decide whether the summary is read. |
 | F5 | `item_effects.py:2417` `everlasting_trigger_kind: "crowd_control"` | Not what the consumer keys on (it reads `CcClass` from the bus). | Delete the key. |
 
 ## G. Traps (informational — not fixes)
