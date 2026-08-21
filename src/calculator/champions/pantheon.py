@@ -17,6 +17,14 @@ The CP-era gap items are closed here:
   option.
 - P (Mortal Will) remains a documented no-damage row; the empowered
   rider on Q is priced in Q, not P.
+
+Roadmap session 4 batch E (2026-08-21): the P no-damage row above was
+documented in prose, but MODULE_COVERAGE still read "out_of_scope" for
+P — the pinned reviewed packet declares P ``kind: "no_damage"`` with a
+sourced reason, and this module never overrides P, so it already emits
+the packet's zero-damage row (``build_packet_module``'s ``no_damage``
+branch). Reclassified to "no_damage" (the Malzahar/Nasus precedent,
+roadmap session 4 batch D); zero fight-computation change.
 """
 
 from typing import Any
@@ -227,11 +235,16 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "E Aegis Assault blocks selected marked skillshots during the sourced "
     "1.5 second front-facing channel; direction is represented by the "
     "explicit source selection.",
+    "P (Mortal Will) itself has no enemy-damage formula in the pinned "
+    "packet; it emits the sourced zero-damage row (MODULE_COVERAGE: "
+    "no_damage, not out_of_scope). P is already a cast slot in this "
+    "module (never overridden from build_packet_module's no_damage "
+    "branch); its empowered rider is priced in Q, not on P itself.",
 ]
 
 SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
-    "P": "out_of_scope",
+    "P": "no_damage",
     "Q": "modeled",
     "W": "modeled",
     "E": "modeled",

@@ -2,6 +2,16 @@
 
 E2 DoT fix: E (Unspeakable Horror) prices 4 sourced 0.5s tether ticks
 (this module's packet timing declaration).
+
+Roadmap session 4 batch E (2026-08-21): W (Shroud of Darkness, the spell
+shield) is a pure state ability with no enemy-damage formula. The pinned
+reviewed packet already declares W ``kind: "no_damage"`` with a sourced
+reason, and this module never overrides W, so it already emits the
+packet's zero-damage row (``build_packet_module``'s ``no_damage``
+branch) — MODULE_COVERAGE was simply stale, still reading "out_of_scope"
+for an already-covered slot. Reclassified to "no_damage" (the
+Malzahar/Nasus precedent, roadmap session 4 batch D); zero
+fight-computation change.
 """
 
 from ..ability_spec import ControlEvent
@@ -72,8 +82,16 @@ OPTIONS.append(
 )
 
 
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "W (Shroud of Darkness) is the spell-shield state ability with no "
+    "enemy-damage formula in the pinned packet; it emits the sourced "
+    "zero-damage row (MODULE_COVERAGE: no_damage, not out_of_scope). W "
+    "is already a cast slot in this module (never overridden from "
+    "build_packet_module's no_damage branch).",
+]
+
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

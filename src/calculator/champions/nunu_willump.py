@@ -9,7 +9,17 @@ instead, and the champion Q self-heal (Base Champion Heal 39-111 +
 authored by healing.py's HEALING_RULE_CHAMPIONS rule.
 
 E2 already fixed E (Snowball Barrage) to the 3-snowball volley; W and R
-damage are modeled; P (Call of the Freljord) is documented out_of_scope.
+damage are modeled.
+
+Roadmap session 4 batch E (2026-08-21): P (Call of the Freljord) is a
+pure movement/attack-speed state passive with no enemy-damage formula.
+The pinned reviewed packet already declares P ``kind: "no_damage"`` with
+a sourced reason, and this module never overrides P, so it already emits
+the packet's zero-damage row (``build_packet_module``'s ``no_damage``
+branch) — MODULE_COVERAGE was simply stale, still reading "out_of_scope"
+for an already-covered slot ("documented out_of_scope" above was the
+stale label). Reclassified to "no_damage" (the Malzahar/Nasus precedent,
+roadmap session 4 batch D); zero fight-computation change.
 """
 
 from typing import Any
@@ -80,9 +90,14 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "authored by the HEALING_RULE_CHAMPIONS rule in healing.py; the "
     "below-half empowerment is a live health formula re-priced at the "
     "heal timestamp.",
+    "P (Call of the Freljord) is a movement-speed/attack-speed state "
+    "passive with no enemy-damage formula in the pinned packet; it "
+    "emits the sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
+    "out_of_scope). P is already a cast slot in this module (never "
+    "overridden from build_packet_module's no_damage branch).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

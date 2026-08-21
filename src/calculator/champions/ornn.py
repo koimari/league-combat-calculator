@@ -1,4 +1,18 @@
-"""Ornn's authored multi-hit combat timeline."""
+"""Ornn's authored multi-hit combat timeline.
+
+Roadmap session 4 batch E (2026-08-21): P (Living Forge) grants
+item-upgrade/anvil-drop state with no enemy-damage formula — pure
+item/state system, already noted in ASSUMPTIONS below. The pinned
+reviewed packet (static/reviewed-packets.json) independently declares P
+``kind: "no_damage"`` with a sourced reason ("no enemy-damage formula is
+listed for this slot"). P is not a cast slot in this custom module's
+SLOTS map (unlike the packet-module champions in this batch, Ornn's
+SLOTS dict was authored directly and never wired P at all), so this is
+a documentation-only reclassification with zero fight-computation
+change — the Malzahar precedent from roadmap session 4 batch D, where a
+non-cast P slot was corrected from "out_of_scope" to "no_damage" on the
+same sourced-evidence basis.
+"""
 
 from typing import Any
 
@@ -87,6 +101,11 @@ ASSUMPTIONS = [
     "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout Brittle state in its detail receipt.",
     "Call of the Forge God defaults to both sourced passes; one pass is available as an explicit option.",
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
+    "P (Living Forge) has no enemy-damage formula (confirmed by the pinned "
+    "reviewed packet's kind='no_damage' declaration for P); it is not a "
+    "cast slot in this module's SLOTS map, so MODULE_COVERAGE reflects a "
+    "sourced no-damage classification rather than an unmodeled gap "
+    "(no_damage, not out_of_scope).",
 ]
 
 SOURCES = [
@@ -101,6 +120,9 @@ SOURCES = [
 
 # Authoritative review metadata (issue #161).
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    slot: (
+        "modeled" if slot in SLOTS else ("no_damage" if slot == "P" else "out_of_scope")
+    )
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

@@ -17,6 +17,16 @@ P1-3 closures:
   fight's own target is the one nearby enemy champion, so the shield =
   ShieldAmount + ShieldPerChampion + (75% + 40%) AP for 2 seconds
   (ShieldDuration), riding the R damage event via self_shield_events.
+
+Roadmap session 4 batch E (2026-08-21): P (Inherent Glamour, the disguise
+passive) is a pure state/utility ability with no enemy-damage formula.
+The pinned reviewed packet already declares P ``kind: "no_damage"`` with
+a sourced reason, and this module never overrides P, so it already emits
+the packet's zero-damage row (``build_packet_module``'s ``no_damage``
+branch) — MODULE_COVERAGE was simply stale, still reading "out_of_scope"
+for an already-covered slot. Reclassified to "no_damage" (the
+Malzahar/Nasus precedent, roadmap session 4 batch D); zero
+fight-computation change.
 """
 
 from ..ability_spec import DamagePart
@@ -146,9 +156,14 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "nearby enemy champion + 75% AP + 40% AP, 2s) — the cached wiki page "
     "omits the shield row; the 1v1 fight's own target is the one nearby "
     "enemy champion.",
+    "P (Inherent Glamour) is the disguise passive with no enemy-damage "
+    "formula in the pinned packet; it emits the sourced zero-damage row "
+    "(MODULE_COVERAGE: no_damage, not out_of_scope). P is already a cast "
+    "slot in this module (never overridden from build_packet_module's "
+    "no_damage branch).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
