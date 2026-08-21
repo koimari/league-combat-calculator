@@ -13,7 +13,7 @@ is.  :func:`event_id_text` is the single producer of the public string, and
 it is byte-identical to the four legacy formats it replaces:
 
 * :class:`PairOrigin` -- ``f"{attacker_id}:{defender_id}:{i}"``, authored by
-  ``participant_timeline._pair_packet`` and rebuilt by
+  ``program.compile.WalkCompiler.add_engine_result`` and rebuilt by
   ``survival.compile.WalkCompiler``.
 * :class:`SupportOrigin` -- ``f"{holder_id}:{label}:{i}"``, the timeline's
   ``:warmog:``, ``:heal:``, ``:grey:`` and ``:defy:`` packets.

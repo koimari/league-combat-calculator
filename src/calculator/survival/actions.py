@@ -851,9 +851,9 @@ def action_key(
     The ``_event_id`` component is a dead tie-break for engine damage
     events: ``sequence`` is unique per pair fight, and events from
     different pairs already differ at the source/participant components.
-    ``_pair_packet``'s pair-local event numbering depends on that — if an
-    engine event ever arrived without its sequence, the packet builder
-    rejects that instead of letting numbering become order-relevant.
+    The compiler's pair-local event numbering depends on that — if an
+    engine event ever arrives without its sequence, it is rejected instead
+    of letting numbering become order-relevant.
 
     The timestamp is required to be **finite** here rather than at the one
     constructor, and that is where the check belongs: ``float()`` already
