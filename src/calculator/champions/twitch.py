@@ -17,27 +17,81 @@ Why each slot is non-generic:
   as if it were direct damage; the stat_buff (Vayne R precedent) makes
   autos and E's %bonus-AD stack term parse against the buffed stat.
 - Q (Ambush) deals no direct damage, but "upon breaking stealth, Twitch
-  gains bonus attack speed for 6 seconds" — the cached "Bonus Attack
-  Speed" row (40-60%), emitted as a second BUFF-phase ``stat_buff`` so
-  the fight engine's auto count scales with it.  Breaking the stealth is
-  what the modeled rotation does (the fight's own autos end Ambush), so
-  ``q_stealth_broken`` defaults on; the camouflage and its movement
-  speed have no channel.
+  gains bonus attack speed for 6 seconds" — the "Bonus Attack Speed" row
+  (40-60%), emitted as a second BUFF-phase ``stat_buff`` so the fight
+  engine's auto count scales with it.  It is OPTION-GATED and DEFAULT
+  OFF — see below.
 - W (Venom Cask) is a slow zone that applies poison stacks (covered by
   the pre-stack option) and emits a zero-damage row.
+
+Roadmap session 5 batch L (2026-08-21): Q's magnitude moves onto its
+typed atom, the window is published to the engine instead of being
+averaged into the magnitude, and the whole buff is gated behind an
+explicit state assertion.
+
+  The magnitude is a typed atom, ``ability.bonus _attack _speed``
+  (40/45/50/55/60% by rank), and the binary agrees:
+  ``TwitchHideInShadows`` ``AttackSpeedMod`` [.35 .40 .45 .50 .55 .60
+  .65].  Riot spell DataValues are rank-0-indexed, and this file's
+  ``StealthDuration`` row proves that indexing independently — its
+  indices 1..5 are 10/11/12/13/14, exactly the wiki's
+  ``ability.stealth _duration`` atom.  So indices 1..5 of
+  ``AttackSpeedMod`` are the rank 1-5 values.
+
+  The 6-second WINDOW has no ability atom (the wiki carries it as prose
+  in the effect description, not a ``leveling`` row), so it lives here as
+  a module constant with both receipts: the cached description ("Upon
+  breaking stealth, Twitch gains bonus attack speed for 6 seconds") and
+  ``AttackSpeedDuration`` 6.0 flat at every rank index.
+  ``tests/test_twitch_ambush_and_cask.py`` re-derives it from both.
+
+  Why DEFAULT OFF, unlike Tristana Q: Rapid Fire fires ON THE CAST, so
+  "Q is cast at t=0" and "the buff starts at t=0" are the same
+  statement.  Ambush does the opposite — casting it makes Twitch
+  CAMOUFLAGED after a 1-second fade (binary ``MaxFadeTime`` 1.0), for
+  10-14s, and the attack speed arrives only when he BREAKS that stealth.
+  A Twitch who casts Q at t=0 is not attacking at t=0, so a buff that is
+  live from t=0 by default is a phantom proc (the Rammus lesson).  The
+  option ``q_ambush_break`` is the user ASSERTING the pre-fight state —
+  Twitch walked in already stealthed and breaks Ambush as the fight
+  opens — which is the same shape as ``poison_stacks`` asserting stacks
+  already on the target.  Under that assertion the window [0, 6) is
+  exact, because ``damage.py`` resolves the window start by walking
+  ``state.cast_order`` and breaking on ``"Q"``.
+
+  That exactness is why the window is published rather than folded into
+  the magnitude by ``module_helpers.buff_window_share``: the share helper
+  weights the MAGNITUDE by the fraction of the fight the buff covers,
+  which is the right answer only when the engine cannot place the window.
+  Here it can, so the engine splits the auto count at full magnitude.
+
+  The override carries ``active_duration`` and NOTHING else on purpose.
+  ``ad_ratio`` defaults to 1.0 and the per-swing ``swing_window_ratio``
+  that consumes it is read only inside the ``crit_as_bonus`` branch
+  (Ashe's flurry), so a bare window changes the auto COUNT and never the
+  per-swing formula.
+
+  W (Venom Cask) closes as ``no_damage``.  ``damageType`` is ``None`` and
+  the slot's whole atom catalog is the slow (30/35/40/45/50%, plus 6% per
+  100 AP) and the cooldown.  The one damage-relevant thing it does —
+  applying Deadly Venom stacks in the zone — is already priced by
+  ``poison_stacks``, so nothing damaging is left unmodeled and the Olaf-R
+  rule does not force an ``out_of_scope`` receipt.  The slow carries no
+  sourced DURATION anywhere in the cache (the zone's 3 seconds is prose
+  with no ``leveling`` row), so it is named rather than published as a
+  control event.
 """
 
 from typing import Any
 
+from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import buff_window_share
 from .slotlib import (
     STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
-    extract_value,
     stat_buff,
 )
 from .source_receipts import load_champion_sources
@@ -51,10 +105,15 @@ _POISON_TOTAL_BREAKPOINTS = (6.0, 12.0, 18.0, 24.0, 30.0)
 _POISON_BREAKPOINT_LEVELS = (1, 6, 11, 16, 18)
 _POISON_AP_RATIO = 0.18  # (+ 18% AP) total per stack
 _E_MAGIC_AP_RATIO = 0.35  # "and 35% AP magic damage for each stack"
-# Ambush's post-stealth window: "Upon breaking stealth, Twitch gains
-# bonus attack speed for 6 seconds" (cached Q prose; the percentage is
-# the JSON's "Bonus Attack Speed" row).
-_Q_AS_DURATION_SECONDS = 6.0
+# HARDCODED: verify on patch updates — the Element of Surprise window is
+# wiki PROSE ("Upon breaking stealth, Twitch gains bonus attack speed for
+# 6 seconds"), with no leveling row and therefore no ability atom.  The
+# game binary corroborates it: TwitchHideInShadows AttackSpeedDuration is
+# 6.0 at every rank index.  Both receipts are re-derived in
+# tests/test_twitch_ambush_and_cask.py, which is what fails closed if a
+# patch moves the number.  (The magnitude, unlike the window, IS a typed
+# atom and is read as one.)
+_Q_ATTACK_SPEED_WINDOW = 6.0
 
 
 def _poison_stacks(options: dict[str, Any]) -> int:
@@ -157,18 +216,18 @@ def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: the 40-60% post-stealth attack speed — no enemy damage."""
+    """Q: stealth, and — when asserted — the 6s attack-speed window.
+
+    Zero enemy damage either way.  The steroid is published only when
+    ``q_ambush_break`` asserts that Twitch entered the fight already in
+    Ambush and breaks it as the fight opens; otherwise the row names the
+    mechanic and stays inert (no phantom proc).  The row itself is kept
+    at rank 0 so the withheld mechanic stays user-visible.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
     rank = ctx.rank_for()
-    if rank < 1:
-        return None
-
-    granted = extract_value(ability, "Bonus Attack Speed", rank)
-    broken = bool(ctx.option("q_stealth_broken"))
-    share = buff_window_share(ctx, _Q_AS_DURATION_SECONDS) if broken else 0.0
-    bonus_as = granted * share
     entry = damage_entry(
         ability.get("name", "Ambush"),
         rank,
@@ -177,12 +236,30 @@ def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
         zero_policy=STEROID_ZERO,
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    if rank < 1 or not ctx.option("q_ambush_break"):
+        entry["detail"] = (
+            "Camouflage and post-stealth attack speed: self buffs only, no "
+            "enemy damage. Element of Surprise (+40/45/50/55/60% bonus "
+            f"attack speed for {_Q_ATTACK_SPEED_WINDOW:g}s) is NOT applied: "
+            "it needs Twitch to break an existing Ambush, which the fight "
+            "model does not otherwise enter. Enable the 'opens the fight by "
+            "breaking Ambush' option to assert that state."
+        )
+        return entry
+
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    bonus_as_pct, _as_atom = required_ranked_attribute_atom(
+        "Twitch", champion_data, "Q", "Bonus Attack Speed", rank
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as_pct}
+    # A BARE window: no ad_ratio and no crit_as_bonus, so only the auto
+    # COUNT moves (the per-swing ratio is crit_as_bonus-only).
+    entry["auto_attack_override"] = {"active_duration": _Q_ATTACK_SPEED_WINDOW}
     entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for "
-        f"{_Q_AS_DURATION_SECONDS:g}s on breaking stealth "
-        f"({'broken' if broken else 'held'}: {bonus_as:g}% applied); the "
-        "camouflage and its movement speed have no channel"
+        f"Element of Surprise: +{bonus_as_pct:g}% bonus attack speed for "
+        f"{_Q_ATTACK_SPEED_WINDOW:g}s from the stealth break, asserted at the "
+        "fight open. Self buff, no enemy damage: the autos ride the buffed "
+        "rate inside the window and the base rate after it."
     )
     return entry
 
@@ -191,22 +268,46 @@ _ambush.phase = BUFF
 
 
 def _venom_cask(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: slow zone that applies poison stacks — no direct damage."""
+    """W: slow zone that applies poison stacks — a sourced zero-damage row.
+
+    The stack application is the only damage-relevant thing here and it
+    is already priced by ``poison_stacks``, so this is ``no_damage``, not
+    a receipted ``out_of_scope`` opening.  The slow's magnitude rides its
+    typed atoms so the row names sourced numbers.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
-    return {
+    rank = ctx.rank_for()
+    entry: dict[str, Any] = {
         "name": ability.get("name", "Venom Cask"),
-        "rank": ctx.rank_for(),
-        "cooldown": extract_cooldown(ability, ctx.rank_for()),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
         "total_raw": 0.0,
         "parts": (),
-        "detail": (
+    }
+    if rank < 1:
+        entry["detail"] = (
             "Contaminated zone applies Deadly Venom stacks and slows; "
             "stack applications are covered by the poison_stacks option."
-        ),
-    }
+        )
+        return entry
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    slow_pct, _slow_atom = required_ranked_attribute_atom(
+        "Twitch", champion_data, "W", "Slow", rank
+    )
+    slow_ap, _slow_ap_atom = required_ranked_attribute_atom(
+        "Twitch", champion_data, "W", "Slow", rank, modifier_index=1
+    )
+    entry["detail"] = (
+        f"Movement slow only: {slow_pct:g}% (+{slow_ap:g}% per 100 AP) in the "
+        "contaminated zone, which also applies a Deadly Venom stack each "
+        "second. No enemy-damage clause exists in the slot; the stack "
+        "applications are already priced by the poison_stacks option, and "
+        "the slow carries no sourced duration to publish as a control event."
+    )
+    return entry
 
 
 OPTIONS: list[dict[str, Any]] = [
@@ -222,16 +323,22 @@ OPTIONS: list[dict[str, Any]] = [
         ),
     },
     {
-        "key": "q_stealth_broken",
+        "key": "q_ambush_break",
         "type": "bool",
-        "default": True,
-        "label": "Ambush's stealth is broken in the fight (grants its AS)",
+        "default": False,
+        "label": (
+            "Twitch opens the fight by breaking Ambush "
+            "(Element of Surprise: bonus attack speed for 6s)"
+        ),
         "rotation": {
             "role": "self_state",
             "slot": "Q",
             "note": (
-                "Arms Q's own post-stealth attack speed; the auto stream "
-                "breaks the stealth, so there is no cross-slot cast edge."
+                "Asserts the PRE-FIGHT state Q's post-stealth attack speed "
+                "needs — Twitch walked in already camouflaged and breaks "
+                "Ambush as the fight opens — so the window sits at [0, 6). "
+                "Casting Q inside the fight instead makes him camouflaged, "
+                "not faster, which is why this is off by default."
             ),
         },
     },
@@ -250,14 +357,25 @@ ASSUMPTIONS = [
     "The auto-attack rate that applies poison in a real fight is not "
     "modeled (stack rate is the option); the fight's own autos still "
     "deal their base AD damage",
-    "Q (Ambush) grants the cached Bonus Attack Speed row (40-60%) for 6 "
-    "seconds once the stealth breaks; q_stealth_broken (default on, "
-    "because the modeled rotation's own autos end Ambush) arms it and "
-    "the fight engine applies it to the auto count, time-weighted by the "
-    "share of the fight window the 6-second buff covers.  The 1-second "
-    "entry delay, the camouflage and its movement speed are not modeled",
-    "W (Venom Cask) is a utility-only zero-damage row; its in-zone stack "
-    "applications are covered by the poison_stacks option",
+    "Q (Ambush) deals no enemy damage. Element of Surprise — the sourced "
+    "40/45/50/55/60% bonus attack speed for 6 seconds on breaking stealth "
+    "(atom ability.bonus _attack _speed; binary TwitchHideInShadows "
+    "AttackSpeedMod agrees, and its AttackSpeedDuration 6.0 plus the "
+    "cached prose carry the window) — is published as a stat_buff with a "
+    "bare 6-second auto_attack_override window ONLY when the "
+    "q_ambush_break option is on. It defaults OFF because the buff needs "
+    "Twitch to break an already-active Ambush: casting Q at the fight "
+    "open makes him camouflaged, not faster, so an always-on window would "
+    "be a phantom proc. With the option on, the Q-slot kernel places the "
+    "window at [0, 6) exactly, and the override carries the window only — "
+    "no ad_ratio and no crit conversion — so the per-swing formula is "
+    "untouched and only the auto count moves. The 1-second entry delay, "
+    "the camouflage and its movement speed are not modeled",
+    "W (Venom Cask) is a movement slow only (30/35/40/45/50%, +6% per 100 "
+    "AP): a sourced zero-damage row (MODULE_COVERAGE: no_damage). Its "
+    "in-zone Deadly Venom applications are already priced by the "
+    "poison_stacks option, so no damage channel is left unmodeled, and "
+    "the slow has no sourced duration to publish as a control event",
 ]
 
 SLOTS = {

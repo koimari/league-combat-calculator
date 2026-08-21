@@ -17,9 +17,12 @@ haste applied to both cooldowns; E and W recast on their own cooldowns
 through the shared scheduler, each E window detonating the selected stones.
 
 Coverage: P (Rock Surfing) grants movement speed near terrain and R
-(Weaver's Wall) raises a wall Taliyah can ride. Movement speed, mobility
-and terrain are axes the engine does not have, so both slots are out of
-scope.
+(Weaver's Wall) raises a wall Taliyah can ride. Neither slot carries a
+damage instance anywhere in the cached entry, so both are emitted as
+sourced zero-damage rows (``no_damage``) rather than withheld — the
+settled shape for a self movement state or a terrain utility with
+nothing damage-relevant left unmodeled (Sivir P, Akshan W, Aurora W,
+Nilah W, Zilean E).
 """
 
 import math
@@ -28,7 +31,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
-from .module_helpers import clamp
+from .module_helpers import clamp, no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -361,11 +364,93 @@ ASSUMPTIONS = [
     "select applies to one-rotation mode only.",
     "Target distance prices Q projectile travel while Taliyah remains at that "
     "distance for the volley.",
-    "Passive and R are excluded because they deal no enemy damage.",
+    "P (Rock Surfing) and R (Weaver's Wall) deal no enemy damage; both are "
+    "emitted as sourced zero-damage rows (MODULE_COVERAGE: no_damage) "
+    "rather than withheld. P is a self movement state and R is terrain "
+    "plus a knockback that carries no sourced duration attribute, so "
+    "neither leaves a damage channel unmodeled.",
 ]
+
+
+def _rock_surfing(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: terrain-hugging move speed — a sourced zero-enemy-damage row.
+
+    Rock Surfing carries no damage instance anywhere in the cached entry:
+    both effect rows have an empty ``leveling`` array, ``damageType`` is
+    ``None`` and ``affects`` is ``Self``.  The slot's whole atom catalog
+    is ``timing.active_duration`` (1.0s) plus the cooldown row — there is
+    no ability atom at all, i.e. no number to price.  Its payload is the
+    10% / 15% / 25% / 40% (based on level) bonus movement speed, prose-only
+    in the cache, and percent move speed reaches damage only through
+    Swiftmarch's Noxian Fervor, which reads TOTAL move speed at build time
+    with no flat/percent decomposition available at fight time (the named
+    Sivir R / Naafiri W boundary).  A self movement state with no damage
+    instance is the settled ``no_damage`` shape (Sivir P, Akshan W,
+    Aurora W, Nilah W, Zilean E), not an ``out_of_scope`` receipt.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Rock Surfing"),
+        reason=(
+            "Innate: 10% / 15% / 25% / 40% (based on level) bonus movement "
+            "speed near terrain — self movement state with no damage "
+            "instance, and it is suppressed while casting or in champion "
+            "combat."
+        ),
+    )
+
+
+def _weavers_wall(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: terrain + knockback — a sourced zero-enemy-damage row.
+
+    Every one of Weaver's Wall's four cached effect rows has an empty
+    ``leveling`` array and the entry's ``damageType`` is ``None``: the
+    ultimate summons terrain, knocks champions aside and lets Taliyah
+    surf it.  The slot's atom catalog holds only ``timing.active_duration``
+    (4.0s, the cast channel) and the cooldown row.  The knockback carries
+    no sourced duration attribute anywhere in the slot, so no control
+    event is authored — an invented duration is exactly what this module
+    refuses to do (contrast Udyr E in the same batch, whose 0.75s stun IS
+    a validated ``timing.control_duration`` atom).
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Weaver's Wall"),
+        reason=(
+            "Terrain wall plus a knockback on champions hit: no damage row "
+            "exists in the slot, and the knockback has no sourced duration "
+            "attribute to author a control event from."
+        ),
+    )
+
 
 SOURCES = load_champion_sources("Taliyah")
 
-SLOTS = {"E": _unraveled_earth, "W": _seismic_shove, "Q": _threaded_volley}
+SLOTS = {
+    "E": _unraveled_earth,
+    "W": _seismic_shove,
+    "Q": _threaded_volley,
+    "P": _rock_surfing,
+    "R": _weavers_wall,
+}
 
 parse_abilities = build_parser(SLOTS, "Taliyah")
+
+# P and R are emitted but carry no damage instance, so the derived
+# "modeled" would overstate them.  Neither is out_of_scope either (the
+# Olaf-R rule reserves that for a real sourced mechanic that WOULD change
+# damage): P's payload is percent move speed and R's is terrain plus an
+# undurationed knockback, so nothing damage-relevant is withheld.
+MODULE_COVERAGE = {
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "no_damage",
+}
