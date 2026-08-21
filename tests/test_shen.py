@@ -2,7 +2,8 @@
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities
+from src.app import app
+from src.calculator.champions import get_champion_module_meta, parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
@@ -189,3 +190,158 @@ def test_target_max_health_change_is_repriced(shen_data):
     assert result["target_effective_max_health"] == pytest.approx(700.0)
     assert result["target_healing_received"] > 0.0
     assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+
+
+# ---------------------------------------------------------------------------
+# P/W/R disposition (Shen slot-closure session, 2026-08-20)
+# ---------------------------------------------------------------------------
+
+
+def test_p_ki_barrier_shield_is_sourced_and_attached_to_e(shen_data):
+    """P has no cast of its own; its sourced shield rides E (the first
+    ability to complete in the certified E-then-Q order)."""
+    _, abilities = _parse(shen_data)
+
+    (shield,) = abilities["E"]["self_shield_events"]
+    # Level 12 flat 94.24 + 13% of 1,000 bonus health.
+    assert shield["amount"] == pytest.approx(224.24)
+    assert shield["duration"] == pytest.approx(2.5)
+    assert shield["source"] == "Ki Barrier"
+    assert "Ki Barrier" in abilities["E"]["detail"]
+
+
+def test_p_ki_barrier_shield_scales_with_level_and_bonus_health(shen_data):
+    stats = calculate_total_stats(shen_data, 1, [])
+    stats.update(
+        {
+            "bonus_health": 0.0,
+            "attack_damage": 100.0,
+            "base_attack_damage": 100.0,
+            "bonus_attack_damage": 0.0,
+            "ability_power": 0.0,
+            "attack_speed": 1.0,
+            "attack_speed_ratio": 1.0,
+            "move_speed": 340.0,
+        }
+    )
+    abilities = parse_champion_abilities(
+        shen_data,
+        1,
+        0.0,
+        ability_ranks={"Q": 0, "W": 0, "E": 1, "R": 0},
+        champion_stats=stats,
+        target_stats={
+            "target_max_health": 2500.0,
+            "target_current_health": 2500.0,
+            "target_missing_health": 0.0,
+        },
+        champion_options={"e_dash_distance": 600.0},
+    )
+
+    (shield,) = abilities["E"]["self_shield_events"]
+    # Level 1 flat base, zero bonus health.
+    assert shield["amount"] == pytest.approx(47.0)
+
+
+def test_w_spirits_refuge_is_explicit_zero_damage_row(shen_data):
+    """W carries no damage/heal/shield leveling row; it emits an explicit
+    zero-damage state row (module_helpers.no_damage), not a silent absence."""
+    _, abilities = _parse(shen_data)
+    entry = abilities["W"]
+
+    assert entry["name"] == "Spirit's Refuge"
+    assert entry["total_raw"] == 0.0
+    assert entry["parts"] == ()
+    assert "no damage" in entry["detail"].lower()
+    assert "block" in entry["detail"].lower()
+
+
+def test_r_stand_united_remains_absent_from_parsed_abilities(shen_data):
+    """R stays unwired: no top-level SLOTS entry, so no parsed row."""
+    _, abilities = _parse(shen_data)
+
+    assert "R" not in abilities
+    assert "R" not in get_champion_module_meta("Shen")["slots"]
+
+
+def test_module_coverage_reflects_p_w_r_dispositions():
+    """P's shield rides E and is modeled; W is an atoms-confirmed
+    zero-damage state row; R's sourced ally shield is not yet wired into
+    CAST_ORDER or the ally-support scanner and stays out_of_scope."""
+    coverage = get_champion_module_meta("Shen")["coverage"]
+
+    assert coverage == {
+        "P": "modeled",
+        "Q": "modeled",
+        "W": "no_damage",
+        "E": "modeled",
+        "R": "out_of_scope",
+    }
+
+
+def test_sources_include_receipts_for_every_named_ability():
+    meta = get_champion_module_meta("Shen")
+
+    assert {row["revision_id"] for row in meta["sources"]} == {
+        3985839,  # Ki Barrier
+        4008038,  # Twilight Assault
+        3977238,  # Spirit's Refuge
+        4007754,  # Shadow Dash
+        4004939,  # Stand United
+    }
+    assert all(
+        row["url"].startswith("https://wiki.leagueoflegends.com/")
+        for row in meta["sources"]
+    )
+
+
+def _post_shen_fight(*, duration=6.0):
+    previous_testing = app.config.get("TESTING")
+    app.config["TESTING"] = True
+    try:
+        response = app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Shen",
+                "level": 12,
+                "items": [],
+                "fight_mode": "time_based",
+                "fight_duration": duration,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+                "ability_ranks": {"Q": 5, "W": 1, "E": 3, "R": 2},
+                "champion_options": {
+                    "q_spirit_blade_hit": True,
+                    "q_attacks_landed": 3,
+                    "q_first_attack_delay": 0.5,
+                    "e_dash_distance": 600.0,
+                },
+                "enemies": [{"champion": "Aatrox", "level": 12, "items": []}],
+            },
+        )
+        assert response.status_code == 200, response.get_data(as_text=True)[:500]
+        return response.get_json()["combat"]
+    finally:
+        if previous_testing is None:
+            app.config.pop("TESTING", None)
+        else:
+            app.config["TESTING"] = previous_testing
+
+
+def test_api_ki_barrier_shield_absorbs_through_the_participant_ledger():
+    """Live end-to-end check: the module-authored payload on E resolves
+    through the shared self-shield ledger into a real absorbed shield,
+    the same path exercised for Ambessa/Blitzcrank (E8c)."""
+    combat = _post_shen_fight()
+
+    rows = [
+        event
+        for event in combat.get("support_events", [])
+        if event.get("kind") == "shield" and event.get("source") == "Ki Barrier"
+    ]
+    assert len(rows) == 1
+    main = next(
+        row for row in combat["participants"] if row["participant_id"] == "main"
+    )["survival"]
+    assert main["support_shield_received"] == pytest.approx(rows[0]["amount"], abs=0.06)
+    assert main["shield_absorbed"] == pytest.approx(rows[0]["amount"], abs=0.06)
