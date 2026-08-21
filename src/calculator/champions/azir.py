@@ -32,6 +32,19 @@ Why each slot is non-generic:
 - R (Emperor's Divide) pins "Magic Damage"; effect[0] carries geometry
   rows ("Width" with units of " soldiers") that must never parse as
   damage or scaling values.
+
+Roadmap session 5 slot 14 (2026-08-21): P (Shurima's Legacy) has no
+enemy-damage formula — the cached entry carries zero leveling data, and
+Sun Disc is a separate destroyed-tower entity with its own HP (see the
+SLOTS comment above). The pinned reviewed packet
+(static/reviewed-packets.json) independently declares P
+``kind: "no_damage"`` with a sourced reason, and P has never been wired
+into SLOTS (deliberate, documented above), so the fight ledger never
+invents an enemy hit for it — confirmed live: ``parse_champion_abilities``
+emits no P/passive key at all for Azir, and the fight breakdown has no
+P row. MODULE_COVERAGE was simply stale, reading "out_of_scope" for a
+slot this module already treats as non-damaging (the Vayne P precedent).
+Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from typing import Any
@@ -126,7 +139,8 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive Sun Disc not modeled (requires a destroyed tower; separate entity)",
+    "Passive Sun Disc not modeled (requires a destroyed tower; separate "
+    "entity) (MODULE_COVERAGE: no_damage, not out_of_scope)",
     "Single-target: soldier spear line's reduced damage to targets beyond "
     "the closest (20-100% by level) not modeled",
     "Q deals one instance regardless of soldier count (in-game rule)",
@@ -171,3 +185,9 @@ parse_abilities = build_parser(SLOTS, "Azir", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Azir")
+
+# P is not absent for want of a parser: Sun Disc is a separate destroyed-tower
+# entity that deals no enemy damage, which the derived map cannot say.
+MODULE_COVERAGE = {
+    slot: ("modeled" if slot in SLOTS else "no_damage") for slot in "PQWER"
+}

@@ -11,8 +11,10 @@ deals damage to enemy champions in this calculator's scope (Heal heals
 the caster, Barrier shields, Smite damages monsters), so each variant
 is a documented no-damage row instead of being collapsed into a bolt.
 
-Coverage: R (Portal Jump) blinks Zoe out and back. Mobility is an axis
-the engine does not have, so the slot is out of scope.
+Coverage: R (Portal Jump) blinks Zoe out and back — a reposition with a
+movement-speed lock and an attack reset, and no enemy-damage row (the
+pinned packet declares the slot ``kind: "no_damage"``), so R is
+``no_damage``.  Mobility itself stays an axis the engine does not have.
 """
 
 from ..ability_spec import DamagePart
@@ -140,8 +142,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "summoner-spell values (90 : 345 based on level) are not part of "
     "data/champions.json, so no heal atom is authored — the option "
     "stays a no-damage receipt until a summoner-spell atom exists.",
+    "R (Portal Jump) has no enemy-damage formula: it is a blink "
+    "reposition with a static movement-speed lock and a basic-attack "
+    "reset, no term dealt to an enemy (confirmed by the pinned reviewed "
+    "packet's kind='no_damage' declaration for R). R is a cast slot in "
+    "this module (never reassigned away from build_packet_module's "
+    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
+    "no-damage classification rather than an unmodeled gap (no_damage, "
+    "not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "no_damage")
     for slot in "PQWER"
 }

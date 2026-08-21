@@ -43,11 +43,19 @@ ASSUMPTIONS = [
     "rank-indexed 80 + 55% AP while the champion rule owns the per-level "
     "self heal (40 : 230 based on level + 55% AP) — the self copy pays "
     "exactly once and the ally branch never double-grants it.",
-    "E (Battle Dance) shields the selected teammate the sourced Shield "
-    "Strength (50-150 + 70% AP) for 3s (selection key shield:E:<cast>); "
-    "the free 5s recast is a second cast in the rotation when the fight "
-    "schedule casts E twice and 'the shields do not stack' refresh rule "
-    "is state.",
+    "P (Fey Feathers) has no standalone cast; its sourced self-shield "
+    "(30:247.94 by level + 95% AP) is attached to Q (Gleaming Quill), "
+    "this module's own parser, via attach_self_shield -- the Shen Ki "
+    "Barrier precedent. The periodic/out-of-combat refresh cadence and "
+    "the 'until broken' persistence beyond the fight window are state.",
+    "E (Battle Dance)'s ally shield is sourced (Shield Strength "
+    "50-150 + 70% AP, data/champions.json Rakan E) and its attribute "
+    "name is already recognized by the generic ally-support scanner, "
+    "but E is not yet wired: it has no SLOTS entry, so no E cast is "
+    "ever scheduled onto the engine's cast_timeline (parse_abilities "
+    "returns only Q/W/R today) and the scanner therefore never fires "
+    "for it. The sourced 'free 5s recast, mimics the first cast' rule "
+    "is also unmodeled second-cast timing. E stays out_of_scope.",
 ]
 
 SOURCES = load_champion_sources("Rakan")

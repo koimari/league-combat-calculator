@@ -397,11 +397,16 @@ class TestPykeGiftOfTheDrownedOnes:
         assert survival["grey_health_consumed"] == 0.0
         assert "vision boundary" in survival["grey_health_source"]
 
-    def test_the_slot_stays_out_of_scope(self):
-        """No channel pays it, so the map may not call it modeled."""
+    def test_the_slot_is_never_called_modeled(self):
+        """No channel pays it, so the map may not call it modeled.
+
+        Main's session-5 relabel made both a sourced ``no_damage`` row
+        (the pinned packet declares the zero); what this pins is that
+        neither is ``modeled`` while nothing prices the heal.
+        """
         contract = get_champion_module_contract("Pyke")
-        assert contract.coverage["P"] == "out_of_scope"
-        assert contract.coverage["W"] == "out_of_scope"
+        assert contract.coverage["P"] != "modeled"
+        assert contract.coverage["W"] != "modeled"
 
 
 # ---------------------------------------------------------------------------

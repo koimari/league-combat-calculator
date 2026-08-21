@@ -23,7 +23,9 @@ Coverage: P and W are ``no_damage``, not ``out_of_scope``.  Way of the
 Wanderer deals nothing — it grants the Flow shield and the crit
 conversion the fight engine already applies through ``crit_modifier`` —
 and Wind Wall only destroys projectiles.  Q, E and R each price their
-own row.
+own row — R (Last Breath) among them: the map dropped it while its SLOTS
+entry was never touched (the Samira precedent), which is the stale label
+this fixes.
 """
 
 from __future__ import annotations

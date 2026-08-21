@@ -18,11 +18,14 @@ so R prices the sourced damage row (level-based, physical) plus the
 bAD and lethality terms.  The threshold itself is documented, not
 priced as damage — an execution is a kill boundary, not a number.
 
-P and W stay ``out_of_scope``, each for a named missing axis:
+P and W are ``no_damage``: neither carries an enemy-damage clause, and
+the pinned packet declares both so.  Each still has a named missing
+axis, which the label does not close:
 
 - P (Gift of the Drowned Ones) is three mechanics. The grey-health store
-  is priced by the shared primitive (probe: ``grey_health_stored`` 80.0
-  at level 18 with no items — the flat cap), but its consume is a VISION
+  is priced by the shared E8a primitive (probe: ``grey_health_stored``
+  80.0 at level 18 with no items — the flat cap; "Pyke" is registered in
+  ``healing.GREY_HEALTH_RULE_CHAMPIONS``), but its consume is a VISION
   boundary ("while Pyke is not visible to enemies") and the engine has no
   vision axis, so nothing is paid back. The other half is a stat
   CONVERSION the stat layer cannot express: Pyke's maximum health may not
@@ -124,7 +127,24 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "'Per-Level Scaling' [1]). The execute threshold row (250 : 550 + "
     "80% bonus AD + 1.5 per Lethality) is a kill boundary and is "
     "documented, not priced as damage.",
+    "P (Gift of the Drowned Ones) deals no enemy damage; its "
+    "store/consume mechanic is priced by the shared E8a grey-health "
+    "primitive (participant_timeline.py), not this module's own SLOTS "
+    "map -- Pyke is registered in healing.GREY_HEALTH_RULE_CHAMPIONS. "
+    "Reclassified from out_of_scope to no_damage (a stale label, not a "
+    "computation change): the passive was already priced, just not "
+    "through this module's own slot declaration.",
+    "W (Ghostwater Dive) carries no enemy-damage formula of any kind "
+    "(the reviewed packet's own no_damage slot declaration already "
+    "names it): a stealth/decaying-haste self-buff. Reclassified from "
+    "out_of_scope to no_damage (a stale label, not a computation "
+    "change): the slot was previously mislabeled out_of_scope despite "
+    "the packet layer already carrying no enemy-damage formula for it.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }

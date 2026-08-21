@@ -32,7 +32,11 @@ class TestReviewedCrowdControl:
         w_text = cc_review.slot_text(data, "W")
         assert "knocking aside enemies hit by the walls" in w_text
         assert "they are pulled inside" in w_text
-        assert get_champion_module_contract("Yorick").coverage["W"] == "out_of_scope"
+        # W is a cast slot that emits the packet's sourced zero row (its
+        # "Wall Health" leveling row is the wall's own HP, not a term dealt
+        # to an enemy), so the label is ``no_damage`` — a reviewed zero —
+        # rather than ``out_of_scope``, which names an unmodeled mechanic.
+        assert get_champion_module_contract("Yorick").coverage["W"] == "no_damage"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Yorick") == []

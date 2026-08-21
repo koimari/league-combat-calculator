@@ -121,6 +121,15 @@ ASSUMPTIONS.extend(
         "the trap DoT, so no shred is modeled.",
         "Trap placement, arm time, trigger radius and the trap's 6-HP "
         "health bar are state outside the damage model.",
+        "P (Prowl) and R (Aspect of the Cougar) carry no enemy-damage "
+        "formula of any kind (the reviewed packet's own no_damage_slots "
+        "list already names both): Prowl is brush ghosting + up to 30% "
+        "movement speed and the Hunt mark; Aspect of the Cougar is the "
+        "human/cougar form-switch toggle whose cooldown-reset rule the "
+        "form selector already encodes. Reclassified from out_of_scope "
+        "to no_damage (a stale label, not a computation change): both "
+        "slots were previously mislabeled out_of_scope despite the "
+        "packet layer already carrying no enemy-damage formula for them.",
     ]
 )
 OPTIONS.append(
@@ -134,7 +143,11 @@ OPTIONS.append(
     }
 )
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "no_damage",
 }
 
 

@@ -15,10 +15,14 @@ minimum at every rank, so the Q is modeled as the minimum row times
 between.  The test fights (no items) sit at 0% crit and price exactly
 the minimum row.
 
-Coverage: P (Joy Unending) amplifies nearby allied heals and shields, and
-W (Jubilant Veil) is a flat magic-damage reduction plus a full
-basic-attack dodge. An ally heal/shield amplifier and damage taken are
-axes the engine does not have, so both slots are out of scope.
+Coverage: P (Joy Unending) amplifies nearby allied heals and shields and
+converts self-heal excess into a shield; W (Jubilant Veil) is ghosting,
+bonus movement speed, 25% magic-damage reduction and a basic-attack
+dodge.  Neither carries an enemy-damage clause — the pinned packet
+declares both ``kind: "no_damage"`` — so both slots are ``no_damage``,
+not ``out_of_scope``.  The ally heal/shield amplifier and the
+damage-taken reduction remain axes the engine does not have, documented
+in ASSUMPTIONS.
 """
 
 from .inputs import champion_stat
@@ -143,9 +147,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "ability_rows_stale flag requires a data/champions.json re-pull/"
     "re-cert, which is outside this task's scope (see "
     "docs/patch-day-runbook.md Step 3.A).",
+    "P (Joy Unending) and W (Jubilant Veil) carry no enemy-damage "
+    "formula of any kind (the reviewed packet's own slot declarations "
+    "already carry kind='no_damage' for both): Joy Unending is the "
+    "excess-heal-to-shield converter documented above; Jubilant Veil is "
+    "the ghost/mist self-and-ally defensive buff (bonus movement speed, "
+    "25% magic damage reduction, basic-attack dodge). Reclassified from "
+    "out_of_scope to no_damage (a stale label, not a computation "
+    "change): both slots were previously mislabeled out_of_scope "
+    "despite the packet layer already carrying no enemy-damage formula "
+    "for them.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }
 
 

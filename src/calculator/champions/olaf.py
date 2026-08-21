@@ -23,6 +23,10 @@ row and each as a BUFF-phase ``stat_buff`` the fight engine folds in:
 - R (Ragnarok) grants bonus attack damage (10/20/30 + 25% AD) and
   bonus resistances (10/15/20) for 3 seconds; its bonus movement speed
   has no key.
+
+R's cleanse, its 3s crowd-control immunity, the 10% size increase and
+the per-hit duration extension have no kernel field and stay named
+rather than priced (tests/test_olaf_r_cleanse.py is their receipt).
 """
 
 from typing import Any
