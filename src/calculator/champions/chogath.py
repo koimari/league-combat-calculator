@@ -20,8 +20,16 @@ Why each slot is non-generic:
 - Q (Rupture) and W (Feral Scream) are clean single-attribute reads,
   kept explicit ("Magic damage", lowercase d — and W's classifier pick
   must never drift onto the "Silence Duration" entry).
-- P (Carnivore) heals and restores mana on kill — no damage to enemies,
-  absent from the map.
+- P (Carnivore) heals for 18-96 and restores mana on an enemy KILL only
+  — no combat-damage interaction. Roadmap session 4 batch B
+  (2026-08-21): closes the single out_of_scope slot with an explicit
+  ``no_damage`` row via ``module_helpers.no_damage`` (same pattern as
+  Cassiopeia's P) rather than leaving MODULE_COVERAGE reading
+  "out_of_scope" for a kill-triggered passive this calculator's 1v1
+  model has no kill receipt for (tests/test_e1_healing_b3.py documents
+  this exact boundary: "the 1v1 model has no minion kills and no kill
+  receipt"). Cho'Gath is not in ``rotation_resolver.COMBO_TABLE``, so no
+  combo table edit is implicated.
 """
 
 import re
@@ -29,6 +37,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -154,7 +163,10 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive (Carnivore) not modeled — heal/mana sustain on kill only",
+    "P (Carnivore) heals 18-96 (based on level) and restores 4.72-9.48 "
+    "mana ONLY on an enemy kill; the 1v1 model has no minion kills and "
+    "no kill receipt, so it emits a sourced zero-damage row "
+    "(MODULE_COVERAGE: no_damage, not out_of_scope)",
     "Feast stacks default to 6 (the minion/non-epic-monster cap); "
     "stacks from champions and epic monsters are uncapped — raise the "
     "option to match",
@@ -170,6 +182,14 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
+    "P": lambda ctx: no_damage(
+        ctx,
+        name="Carnivore",
+        reason=(
+            "Heals 18-96 and restores mana ONLY on an enemy kill; the 1v1 "
+            "model has no minion kills and no kill receipt to trigger it."
+        ),
+    ),
     "R": _feast,
     "Q": simple_damage(attr="Magic damage", dmg_type="magic"),
     "W": with_control(
@@ -193,6 +213,7 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

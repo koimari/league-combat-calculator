@@ -24,7 +24,23 @@ Why each slot is non-generic:
   with ``proc_window`` (zone duration): the fight engine procs it on
   the autos landing inside the window against decaying current health,
   and shows zero with no autos (one-rotation / autos off).
-- P (Adaptive Defenses) is a defensive shield — absent from the map.
+- P (Adaptive Defenses) is a defensive shield — no slot function of its
+  own, but it is NOT unmodeled: ``_tactical_sweep_with_shield`` (W)
+  attaches the sourced shield (20% max HP, 2s) as a
+  ``self_shield_events`` payload the survival ledger grants pre-fight,
+  live-tested end to end
+  (``tests/test_e8_shields.py::test_camille_adaptive_defenses_payload_is_sourced``,
+  ``test_camille_api_adaptive_defenses_absorbs_known_incoming_hit``).
+
+Roadmap session 4 batch B (2026-08-21): closes the single out_of_scope
+slot (P). MODULE_COVERAGE was stale, still reading "out_of_scope" for a
+mechanic the shield kernel had already closed via W — the identical
+stale-label pattern Anivia's P (Rebirth) was corrected under in Roadmap
+session 3 (``anivia.py``) and Blitzcrank's P (Mana Barrier) was corrected
+under earlier in this same batch. Reclassified from out_of_scope to
+modeled; no behavior change, no new SLOTS entry (P stays absent from the
+``abilities`` dict — the shield surfaces through W's payload and the
+survival receipt, not a standalone P row).
 
 All numeric values are read from the champion JSON data.
 """
@@ -286,7 +302,8 @@ ASSUMPTIONS = [
     "slow are not modeled",
     "E's 40-60% attack speed is applied for the whole fight (in-game: 5s "
     "per cast); the sourced 0.75-second stun is counted as action downtime",
-    "P (Adaptive Defenses) is modeled as a pre-fight granted shield: 20% "
+    "P (Adaptive Defenses) is modeled as a pre-fight granted shield "
+    "(MODULE_COVERAGE: modeled, not out_of_scope): 20% "
     "of max HP for 2s riding the first W cast. The in-game trigger (the "
     "next auto against a champion) and the physical/magic adaptation "
     "are documented boundaries — the model grants a general shield that "
@@ -328,7 +345,11 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 

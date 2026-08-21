@@ -361,17 +361,33 @@ class TestRStaticField:
 
 
 # ---------------------------------------------------------------------------
-# Passive: Mana Barrier (skip — defensive shield only)
+# Passive: Mana Barrier (defensive shield, modeled via Q's payload)
 # ---------------------------------------------------------------------------
 
 
 class TestPassiveManaBarrier:
-    """Passive is a defensive shield — absent from results."""
+    """Passive is a defensive shield; it has no standalone row in
+    ``abilities`` — the shield rides Q's ``self_shield_events`` payload
+    (see TestQRocketGrab / tests/test_e8_shields.py) — but MODULE_COVERAGE
+    reports it modeled, not out_of_scope (roadmap session 4 batch B)."""
 
     def test_passive_not_in_results(self, blitzcrank_data, parse_at) -> None:
         _, abilities = parse_at(blitzcrank_data, 9)
         assert "passive" not in abilities
         assert "P" not in abilities
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.blitzcrank import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }
 
 
 # ---------------------------------------------------------------------------

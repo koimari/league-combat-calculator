@@ -9,10 +9,10 @@ champion membership or champion-specific formulas.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import DAMAGE, SlotCtx
 from .slotlib import (
     damage_entry,
     extract_cooldown,

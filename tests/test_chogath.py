@@ -346,14 +346,33 @@ class TestRFeast:
 
 
 # ---------------------------------------------------------------------------
-# Passive: Carnivore (skip — heal/mana sustain only)
+# Passive: Carnivore (kill-triggered heal/mana — no combat-damage interaction)
 # ---------------------------------------------------------------------------
 
 
-class TestPassiveCarnivore:
-    """Passive heals on kill — deals no damage, absent from results."""
+class TestPPassiveCarnivore:
+    """P (Carnivore) heals/restores mana ONLY on an enemy kill — the 1v1
+    model has no minion kills and no kill receipt. It emits a sourced
+    zero-damage row (MODULE_COVERAGE: no_damage) rather than staying
+    silently absent."""
 
-    def test_passive_not_in_results(self, chogath_data, parse_at) -> None:
+    def test_p_present_zero_damage(self, chogath_data, parse_at) -> None:
         _, abilities = parse_at(chogath_data, 9)
-        assert "passive" not in abilities
-        assert "P" not in abilities
+        entry = abilities["passive"]
+        assert entry["name"] == "Carnivore"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.chogath import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }

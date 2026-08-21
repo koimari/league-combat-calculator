@@ -22,7 +22,21 @@ Why each slot is non-generic:
   selects the active by the ABSENCE of the passive's '% maximum mana'
   modifier (robust to effect reordering on data re-pulls).
 - Q (Rocket Grab) is a clean generic read, kept explicit here.
-- P (Mana Barrier) is a defensive shield only — absent from the map.
+- P (Mana Barrier) is a defensive shield only — no slot function of its
+  own, but it is NOT unmodeled: ``_rocket_grab`` (Q) attaches the sourced
+  shield (35% max mana, up to 10s) as a ``self_shield_events`` payload the
+  survival ledger grants pre-fight, live-tested end to end
+  (``tests/test_e8_shields.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
+  ``test_blitzcrank_api_mana_barrier_absorbs_sourced_amount``).
+
+Roadmap session 4 batch B (2026-08-21): closes the single out_of_scope
+slot (P). MODULE_COVERAGE was stale, still reading "out_of_scope" for a
+mechanic the shield kernel had already closed via Q — the identical
+stale-label pattern Anivia's P (Rebirth) was corrected under in Roadmap
+session 3 (``anivia.py``). Reclassified from out_of_scope to modeled; no
+behavior change, no new SLOTS entry (P stays absent from the ``abilities``
+dict — the shield surfaces through Q's payload and the survival receipt,
+not a standalone P row).
 """
 
 from typing import Any
@@ -158,7 +172,8 @@ def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
 OPTIONS: list[dict[str, Any]] = []
 
 ASSUMPTIONS = [
-    "P (Mana Barrier) is modeled as a pre-fight granted shield: the "
+    "P (Mana Barrier) is modeled as a pre-fight granted shield (MODULE_"
+    "COVERAGE: modeled, not out_of_scope): the "
     "cached passive (35% of maximum mana for up to 10s, 90s cooldown) "
     "rides the first Q cast's event so the ledger grants it before "
     "incoming damage. The in-game trigger (damage taken while below "
@@ -227,6 +242,10 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"

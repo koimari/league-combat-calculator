@@ -4674,6 +4674,17 @@
           "resource_type": "MANA",
           "skillshot": true,
           "total_raw": 100.0
+        },
+        "passive": {
+          "cooldown": 0.0,
+          "damage_type": "magic",
+          "detail": "Movement-speed-bonus effectiveness (6-40% by level) is stat-effectiveness state; no positioning/MS-to-damage kernel exists in this calculator.",
+          "name": "Serpentine Grace",
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -4868,6 +4879,17 @@
           "resource_type": "MANA",
           "skillshot": true,
           "total_raw": 180.0
+        },
+        "passive": {
+          "cooldown": 0.0,
+          "damage_type": "magic",
+          "detail": "Heals 18-96 and restores mana ONLY on an enemy kill; the 1v1 model has no minion kills and no kill receipt to trigger it.",
+          "name": "Carnivore",
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -43016,7 +43038,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1787268652.393148,
-    "git_head": "39a3f567fe25f3ddc6ca09c242e5080a1530b364",
+    "git_head": "27d1c51b37a0b92afd544399b260c9b490a30d50",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
