@@ -167,6 +167,11 @@ from . import item_effects
 from . import resource_ledger
 from . import rune_effects
 from . import shield_ledger
+from .ability_atoms import (
+    ability_field,
+    ability_payload,
+    ability_sub_payload,
+)
 from .ability_spec import (
     ACTION_BLOCKING_CC_KINDS,
     AttackClass,
@@ -1502,8 +1507,8 @@ def _simulate_cooldown_current_health_procs(
         return []
 
     pct = on_hit_data["current_health_percent"] / 100.0
-    min_damage = on_hit_data.get("min_damage", 0.0)
-    dmg_type = on_hit_data.get("damage_type", "physical")
+    min_damage = ability_field(on_hit_data, "min_damage", form="on_hit")
+    dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
     proc_set = set(proc_autos)
 
     current_hp = target_health
@@ -1989,14 +1994,14 @@ def _ordered_damage_events(
                     cast_event
                 )
         slot_timeline = timeline_by_slot.get(key, [])
-        info = ability_damages.get(key, {})
-        instances = max(1, int(info.get("cast_instances", 1)))
+        info = ability_payload(ability_damages, key)
+        instances = max(1, int(ability_field(info, "cast_instances")))
         raw_total = float(entry.get("total_raw", 0.0) or 0.0)
         # The control facts belong to the ONE part that authored control, so
         # they are kept apart from the row's shared facts and stamped only on
         # that part's damage type — a two-typed cast must not publish one
         # stun twice.
-        authored_parts = tuple(info.get("parts", ()))
+        authored_parts = tuple(ability_field(info, "parts"))
         cc_part = next(
             (part for part in authored_parts if part.cc_kind is not None), None
         )
@@ -2194,8 +2199,8 @@ def _event_timeline_coverage(
             exact.append(key)
             continue
         if key in cast_keys and int(entry.get("casts", 0)) > 0:
-            info = ability_damages.get(key, {})
-            if float(info.get("dot_duration", 0.0)) > 0:
+            info = ability_payload(ability_damages, key)
+            if float(ability_field(info, "dot_duration")) > 0:
                 coarse.append(key)
             else:
                 exact.append(key)
@@ -3224,9 +3229,9 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         # Recalculate attack speed and auto count if AS was buffed
         if "bonus_attack_speed" in stat_buff:
             bonus_as_pct = stat_buff["bonus_attack_speed"]
-            active_duration = (ability_info.get("auto_attack_override") or {}).get(
-                "active_duration"
-            )
+            active_duration = (
+                ability_sub_payload(ability_info, "auto_attack_override")
+            ).get("active_duration")
             if active_duration:
                 # P1 Slice 11: the timed Q window [cast_start, cast_start
                 # + window) — the autos ride the base rate until the cast,
@@ -3240,8 +3245,9 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                     if slot == "Q":
                         break
                     cast_start += float(
-                        (state.ability_damages.get(slot) or {}).get("cast_time", 0.0)
-                        or 0.0
+                        ability_field(
+                            ability_payload(state.ability_damages, slot), "cast_time"
+                        )
                     )
                 base_as = state.attack_speed
                 buffed_as = base_as + state.attack_speed_ratio * (bonus_as_pct / 100.0)
@@ -3314,16 +3320,24 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         crit_modifier = ability_info.get("crit_modifier")
         if not crit_modifier:
             continue
-        chance_multiplier = float(crit_modifier.get("crit_chance_multiplier", 1.0))
+        chance_multiplier = float(
+            ability_field(crit_modifier, "crit_chance_multiplier", form="crit_modifier")
+        )
         raw_crit_percent = float(stats["critical_strike_chance"])
         state.crit_chance = min(raw_crit_percent / 100.0 * chance_multiplier, 1.0)
-        damage_factor = float(crit_modifier.get("crit_damage_multiplier_factor", 1.0))
+        damage_factor = float(
+            ability_field(
+                crit_modifier, "crit_damage_multiplier_factor", form="crit_modifier"
+            )
+        )
         state.crit_multiplier = (
             BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
         ) * damage_factor
         excess_percent = raw_crit_percent * chance_multiplier - 100.0
         per_percent = float(
-            crit_modifier.get("excess_crit_bonus_ad_per_percent", 0.0) or 0.0
+            ability_field(
+                crit_modifier, "excess_crit_bonus_ad_per_percent", form="crit_modifier"
+            )
         )
         if excess_percent > 0.0 and per_percent > 0.0:
             stats["bonus_attack_damage"] = (
@@ -3400,7 +3414,11 @@ def _empower_hits(empower: Any) -> int:
     that may carry ``hits`` (Cho'Gath E empowers the next 3). Absent
     ``hits`` defaults to 1.
     """
-    return int(empower.get("hits", 1)) if isinstance(empower, dict) else 1
+    return (
+        int(ability_field(empower, "hits", form="empower"))
+        if isinstance(empower, dict)
+        else 1
+    )
 
 
 def _empower_cooldown_delay(empower: Any) -> float:
@@ -3435,7 +3453,7 @@ def _empower_burst_attack_speed(empower: Any) -> float:
     """
     if not isinstance(empower, dict):
         return 0.0
-    return float(empower.get("attack_speed", 0.0))
+    return float(ability_field(empower, "attack_speed", form="empower"))
 
 
 def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
@@ -3451,8 +3469,8 @@ def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
     timing = empower.get("authored_timing")
     if not isinstance(timing, dict):
         return None
-    first = float(timing.get("first_attack_delay", 0.0))
-    interval = float(timing.get("attack_interval", 0.0))
+    first = float(ability_field(timing, "first_attack_delay", form="empower_timing"))
+    interval = float(ability_field(timing, "attack_interval", form="empower_timing"))
     if first < 0 or interval < 0:
         raise ValueError("Empowered attack timing cannot be negative")
     return first, interval
@@ -3529,12 +3547,16 @@ def _apply_target_shred(
     ``mr_reduction_flat`` (Corki E), each naming the FULL reduction.
     ``fraction`` applies one equal share of it — the ramp seam below.
     """
-    armor_pct = debuff.get("armor_reduction_percent", 0.0)
-    armor_flat = debuff.get("armor_reduction_flat", 0.0) * fraction
+    armor_pct = ability_field(debuff, "armor_reduction_percent", form="target_debuff")
+    armor_flat = (
+        ability_field(debuff, "armor_reduction_flat", form="target_debuff") * fraction
+    )
     if armor_pct or armor_flat:
         resists.shred_armor(armor_pct * fraction, armor_flat)
-    mr_pct = debuff.get("mr_reduction_percent", 0.0)
-    mr_flat = debuff.get("mr_reduction_flat", 0.0) * fraction
+    mr_pct = ability_field(debuff, "mr_reduction_percent", form="target_debuff")
+    mr_flat = (
+        ability_field(debuff, "mr_reduction_flat", form="target_debuff") * fraction
+    )
     if mr_pct or mr_flat:
         resists.shred_mr(mr_pct * fraction, mr_flat)
 
@@ -3625,11 +3647,15 @@ def _make_shred_ramp(
 ) -> _ShredRamp | _ThresholdShred | None:
     """Build the hit ramp/threshold for a target debuff, else None."""
     debuff = ability_info.get("target_debuff")
-    threshold_hits = int(debuff.get("threshold_hits", 0)) if debuff else 0
+    threshold_hits = (
+        int(ability_field(debuff, "threshold_hits", form="target_debuff"))
+        if debuff
+        else 0
+    )
     if threshold_hits > 0:
         if debuff.get("stacks"):
             raise ValueError(
-                f"{ability_info.get('name', '?')!r}: target_debuff cannot declare "
+                f"{ability_field(ability_info, "name")!r}: target_debuff cannot declare "
                 "both threshold_hits and stacks"
             )
         return _ThresholdShred(
@@ -3637,12 +3663,12 @@ def _make_shred_ramp(
             debuff=debuff,
             threshold_hits=threshold_hits,
         )
-    stacks = int(debuff.get("stacks", 0)) if debuff else 0
+    stacks = int(ability_field(debuff, "stacks", form="target_debuff")) if debuff else 0
     if stacks <= 0:
         return None
     if debuff.get("armor_reduction_percent") or debuff.get("mr_reduction_percent"):
         raise ValueError(
-            f"{ability_info.get('name', '?')!r}: a ramped target_debuff must "
+            f"{ability_field(ability_info, "name")!r}: a ramped target_debuff must "
             "reduce resistances by a FLAT amount — percent stages compound "
             "multiplicatively and cannot be split into equal shares"
         )
@@ -3998,7 +4024,7 @@ def _apply_post_hit_proc(
     if not spec or num_casts <= 0:
         return 0.0
 
-    parts = tuple(spec.get("parts", ()))
+    parts = tuple(ability_field(spec, "parts", form="post_hit_proc"))
     if not parts:
         return 0.0
     total, _, by_type, events = _evaluate_cast_parts(
@@ -4014,7 +4040,7 @@ def _apply_post_hit_proc(
 
     row_key = str(spec.get("breakdown_key", f"post_hit_proc_{trigger_key}"))
     row: dict[str, Any] = {
-        "name": str(spec.get("name", "Post-hit proc")),
+        "name": str(ability_field(spec, "name", form="post_hit_proc")),
         "count": num_casts,
         "damage_per_hit": total / num_casts,
         "unit": "procs",
@@ -4041,7 +4067,7 @@ def _apply_post_hit_proc(
             if state.one_rotation
             else _debuff_coverage(
                 cast_times,
-                debuff.get("duration", 0.0),
+                ability_field(debuff, "duration", form="target_debuff"),
                 state.fight_duration_seconds,
             )
         )
@@ -4076,7 +4102,7 @@ def _effective_timed_cooldown(
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
     immobilizing slot earns (Imperial Mandate's Control), and Navori
     auto-attack refunds."""
-    base_cd = ability_info.get("cooldown", 0.0)
+    base_cd = ability_field(ability_info, "cooldown")
     total_haste = state.ability_haste
     if ability_key in ("Q", "W", "E"):
         total_haste += basic_ability_haste
@@ -4138,7 +4164,7 @@ def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
     parent = info.get("recast_of")
     if not parent:
         return None
-    return parent if float(info.get("cooldown", 0.0) or 0.0) > 0 else None
+    return parent if float(ability_field(info, "cooldown")) > 0 else None
 
 
 def _schedule_shared_casts(
@@ -4180,7 +4206,9 @@ def _schedule_shared_casts(
         )
         for key in keys
     }
-    cast_times = {key: state.ability_damages[key].get("cast_time", 0.0) for key in keys}
+    cast_times = {
+        key: ability_field(state.ability_damages[key], "cast_time") for key in keys
+    }
     # Dead time between the cast finishing and its cooldown starting: an
     # empowered burst whose timer only begins once its attacks are spent.
     cooldown_delays = {
@@ -4434,7 +4462,7 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         # champion stat and ability packets.
         return plan
     resource_types = {
-        str(info.get("resource_type", "NONE"))
+        str(ability_field(info, "resource_type"))
         for info in state.ability_damages.values()
     }
     resource_types.discard("NONE")
@@ -4453,7 +4481,7 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     if resource_type == "ENERGY":
         return _apply_resource_limits_legacy(state, plan, resource_type)
     if any(
-        float(info.get("resource_maximum_bonus", 0.0) or 0.0) > 0.0
+        float(ability_field(info, "resource_maximum_bonus")) > 0.0
         for info in state.ability_damages.values()
     ):
         # Only Akali (ENERGY) declares a temporary maximum bonus today.  A
@@ -4496,12 +4524,16 @@ def _apply_resource_limits_legacy(
         (
             info
             for info in state.ability_damages.values()
-            if float(info.get("resource_restore_per_proc", 0.0)) > 0
-            and int(info.get("proc_count", 0)) > 0
+            if float(ability_field(info, "resource_restore_per_proc")) > 0
+            and int(ability_field(info, "proc_count")) > 0
         ),
         None,
     )
-    proc_restores_left = int(proc_restore.get("proc_count", 0)) if proc_restore else 0
+    proc_restores_left = (
+        int(ability_field(proc_restore, "proc_count", form="proc_restore"))
+        if proc_restore
+        else 0
+    )
 
     # Essence Reaver's Manaflow is restored by the accepted Spellblade attack,
     # not by the ability that arms it.  Keep those restores on the same
@@ -4608,7 +4640,7 @@ def _apply_resource_limits_legacy(
         if parent and ordinal not in accepted_ordinals.get(parent, set()):
             omitted.append(key)
             continue
-        cost = float(info.get("resource_cost", 0.0))
+        cost = float(ability_field(info, "resource_cost"))
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
@@ -4621,16 +4653,17 @@ def _apply_resource_limits_legacy(
         before = remaining
         remaining -= cost
         spent += cost
-        cast_maximum_bonus = float(info.get("resource_maximum_bonus", 0.0))
+        cast_maximum_bonus = float(ability_field(info, "resource_maximum_bonus"))
         if cast_maximum_bonus > 0:
             maximum_bonus = max(maximum_bonus, cast_maximum_bonus)
             maximum_bonus_until = max(
                 maximum_bonus_until,
-                cast_time + float(info.get("resource_maximum_bonus_duration", 0.0)),
+                cast_time
+                + float(ability_field(info, "resource_maximum_bonus_duration")),
             )
             maximum = base_maximum + maximum_bonus
 
-        restored = float(info.get("resource_restore", 0.0))
+        restored = float(ability_field(info, "resource_restore"))
         if proc_restore is not None and proc_restores_left > 0:
             # A fixed-count proc entry represents those procs as having
             # happened in this scenario. For Ambessa, each accepted ability
@@ -4704,7 +4737,7 @@ def _tear_hit_identity(
     with none of those (a pure self-only receipt) fails closed with a
     ``missing_hit_identity`` denial instead of being treated as a hit.
     """
-    parts = info.get("parts") or ()
+    parts = ability_field(info, "parts")
     for part in parts:
         if part.cc_kind is not None:
             return f"{key}:{accepted_ordinal + 1}"
@@ -4822,7 +4855,9 @@ def _planned_burst_seconds(state: FightState, plan: CastPlan) -> float:
     """The fight's total planned burst-time budget (all arming casts)."""
     total = 0.0
     for key in state.cast_order:
-        empower = (state.ability_damages.get(key) or {}).get("empowers_next_auto")
+        empower = (ability_payload(state.ability_damages, key)).get(
+            "empowers_next_auto"
+        )
         burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
         if burst_as <= 0.0:
             continue
@@ -4903,7 +4938,7 @@ def _auto_restore_decl(
             )
         amount = decl.get("amount")
         source = decl.get("source")
-        atoms = decl.get("atoms", ())
+        atoms = ability_field(decl, "atoms", form="resource_declaration")
         if (
             isinstance(amount, bool)
             or not isinstance(amount, (int, float))
@@ -4988,7 +5023,9 @@ def _auto_restore_schedule(
     burst_seconds = 0.0
     swing_events: list[dict[str, Any]] = []
     for key in state.cast_order:
-        empower = (state.ability_damages.get(key) or {}).get("empowers_next_auto")
+        empower = (ability_payload(state.ability_damages, key)).get(
+            "empowers_next_auto"
+        )
         burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
         if burst_as <= 0.0:
             continue
@@ -5037,7 +5074,7 @@ def _kill_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
         raise ValueError("kill_refund must be a mapping")
     flat = decl.get("flat")
     source = decl.get("source")
-    atoms = decl.get("atoms", ())
+    atoms = ability_field(decl, "atoms", form="resource_declaration")
     if (
         isinstance(flat, bool)
         or not isinstance(flat, (int, float))
@@ -5119,7 +5156,7 @@ def _mark_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
     window_seconds = decl.get("window_seconds")
     source = decl.get("source")
     detonation = decl.get("detonation")
-    atoms = decl.get("atoms", ())
+    atoms = ability_field(decl, "atoms", form="resource_declaration")
     if (
         isinstance(flat, bool)
         or not isinstance(flat, (int, float))
@@ -5216,12 +5253,16 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         (
             info
             for info in state.ability_damages.values()
-            if float(info.get("resource_restore_per_proc", 0.0)) > 0
-            and int(info.get("proc_count", 0)) > 0
+            if float(ability_field(info, "resource_restore_per_proc")) > 0
+            and int(ability_field(info, "proc_count")) > 0
         ),
         None,
     )
-    proc_restores_left = int(proc_restore.get("proc_count", 0)) if proc_restore else 0
+    proc_restores_left = (
+        int(ability_field(proc_restore, "proc_count", form="proc_restore"))
+        if proc_restore
+        else 0
+    )
 
     # Essence Reaver's Manaflow is restored by the accepted Spellblade attack,
     # not by the ability that arms it.  Keep those restores on the same
@@ -5507,7 +5548,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         if parent and ordinal not in accepted_ordinals.get(parent, set()):
             omitted.append(key)
             continue
-        cost = float(info.get("resource_cost", 0.0))
+        cost = float(ability_field(info, "resource_cost"))
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
@@ -5539,7 +5580,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         remaining = spend.current_after
         spent += cost
 
-        restored = float(info.get("resource_restore", 0.0))
+        restored = float(ability_field(info, "resource_restore"))
         if proc_restore is not None and proc_restores_left > 0:
             # A fixed-count proc entry represents those procs as having
             # happened in this scenario. For Ambessa, each accepted ability
@@ -6096,7 +6137,10 @@ def _stack_application_times(
         for ordinal, cast_time in enumerate(plan.times[ability_key]):
             applications.append((cast_time, (ability_key, ordinal), None))
 
-    if spec.get("applied_by_autos", True) and state.num_auto_attacks > 0:
+    if (
+        ability_field(spec, "applied_by_autos", form="stacking_dot")
+        and state.num_auto_attacks > 0
+    ):
         applications.extend(
             (time, None, index)
             for index, time in enumerate(_auto_attack_timestamps(state))
@@ -6137,7 +6181,7 @@ def _build_stack_timeline(state: FightState, plan: CastPlan) -> StackTimeline | 
             # count them it could never fire, and would silently grant
             # nothing rather than failing loudly.
             raise ValueError(
-                f"stack_triggered_buff {buff.get('name', '?')!r} declared "
+                f"stack_triggered_buff {ability_field(buff, "name", form="stack_triggered_buff")!r} declared "
                 "without a stacking_dot to trigger it — the buff has no "
                 "stack source"
             )
@@ -6150,7 +6194,9 @@ def _build_stack_timeline(state: FightState, plan: CastPlan) -> StackTimeline | 
     buff_duration = float(buff["duration"]) if buff else 0.0
     buff_bonus_ad = float(buff["bonus_attack_damage"]) if buff else 0.0
 
-    starting_stacks = min(int(spec.get("starting_stacks", 0)), max_stacks)
+    starting_stacks = min(
+        int(ability_field(spec, "starting_stacks", form="stacking_dot")), max_stacks
+    )
 
     applications: list[StackApplication] = []
     by_cast: dict[tuple[str, int], int] = {}
@@ -6287,7 +6333,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 "cast_id": f"{ability_key}:{ordinal + 1}",
                 "target_id": f"target:{state.roster_target_index}",
                 "resource_cost": float(
-                    ability_damages[ability_key].get("resource_cost", 0.0)
+                    ability_field(ability_damages[ability_key], "resource_cost")
                 ),
                 **plan.resource_by_cast.get((ability_key, ordinal), {}),
             }
@@ -6489,7 +6535,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
-        control_specs = tuple(ability_info.get("control_events", ()))
+        control_specs = tuple(ability_field(ability_info, "control_events"))
         if control_specs:
             serialized_controls: list[dict[str, Any]] = []
             for control in control_specs:
@@ -6555,8 +6601,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                                     {
                                         "control_source_atoms": [
                                             dict(atom)
-                                            for atom in ability_info.get(
-                                                "control_source_atoms", []
+                                            for atom in ability_field(
+                                                ability_info, "control_source_atoms"
                                             )
                                         ]
                                     }
@@ -6637,7 +6683,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # that deals zero damage (spell-shield slots, rank-0 leftovers,
         # stat-buff ultimates) never procs.  Multi-instance abilities (e.g.
         # Ahri R with 3 dashes) proc once per instance.
-        cast_instances = ability_info.get("cast_instances", 1)
+        cast_instances = ability_field(ability_info, "cast_instances")
         if num_casts > 0 and ability_total > 0.0:
             result.total_muramana_procs += cast_instances * num_casts
 
@@ -6774,7 +6820,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         if on_hit_spec and num_casts > 0:
             applications = num_casts * int(on_hit_spec["hits"])
             effectiveness = float(on_hit_spec["effectiveness"])
-            triggers = frozenset(on_hit_spec.get("triggers", ("on_hit",)))
+            triggers = frozenset(ability_field(on_hit_spec, "triggers", form="on_hit"))
             is_on_hit = "on_hit" in triggers
             applied_total = 0.0
             applied_by_type: dict[str, float] = {}
@@ -6791,7 +6837,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 # order remains the module's part order; no fractional
                 # average or target-health guess is introduced.
                 cast_times = [float(time) for time in plan.times.get(ability_key, ())]
-                hits_per_cast = max(1, int(on_hit_spec.get("hits", 1)))
+                hits_per_cast = max(
+                    1, int(ability_field(on_hit_spec, "hits", form="on_hit"))
+                )
                 fallback_times = [
                     cast_time for cast_time in cast_times for _ in range(hits_per_cast)
                 ]
@@ -6891,7 +6939,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 if state.one_rotation
                 else _debuff_coverage(
                     plan.times.get(ability_key, ()),
-                    target_debuff.get("duration", 0.0),
+                    ability_field(target_debuff, "duration", form="target_debuff"),
                     state.fight_duration_seconds,
                 )
             )
@@ -6923,7 +6971,7 @@ def _add_precomputed_proc_damage(
     for key, info in state.ability_damages.items():
         if key in state.cast_order or "on_hit" in info or "stat_buff" in info:
             continue
-        proc_count = info.get("proc_count", 0)
+        proc_count = ability_field(info, "proc_count")
         if proc_count <= 0:
             continue
         authored_proc_times: list[float] | None = None
@@ -6936,8 +6984,8 @@ def _add_precomputed_proc_damage(
             # Short Fuse starts ready, then enters its 12s cooldown after the
             # empowered swing.  Every ability cast reduces the remaining
             # cooldown at cast start by the sourced level refund.
-            cooldown = float(info.get("short_fuse_cooldown", 0.0))
-            refund = float(info.get("short_fuse_refund", 0.0))
+            cooldown = float(ability_field(info, "short_fuse_cooldown"))
+            refund = float(ability_field(info, "short_fuse_refund"))
             auto_times = _auto_attack_timestamps(state)
             cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
             ready_at = 0.0
@@ -6977,7 +7025,7 @@ def _add_precomputed_proc_damage(
         ):
             # The module's packet count is an upper bound; a stack-triggered
             # proc cannot occur before its required ambient swings land.
-            every = max(1, int(info.get("auto_stack_every", 1)))
+            every = max(1, int(ability_field(info, "auto_stack_every")))
             proc_count = min(int(proc_count), int(state.num_auto_attacks) // every)
             if proc_count <= 0:
                 continue
@@ -7045,8 +7093,8 @@ def _add_precomputed_proc_damage(
             # two-second ring delay. The accepted cast ledger supplies the
             # actual stack-application times, including Pyroclasm's sourced
             # 0.15s bounce spacing, so no phase-order estimate is used.
-            stack_count = int(info.get("dot_stack_count", 0))
-            tick_interval = float(info.get("dot_tick_interval", 0.0))
+            stack_count = int(ability_field(info, "dot_stack_count"))
+            tick_interval = float(ability_field(info, "dot_tick_interval"))
             ability_events = _ordered_damage_events(
                 state.breakdown,
                 state.ability_damages,
@@ -7075,7 +7123,9 @@ def _add_precomputed_proc_damage(
                 and len(stack_times) == stack_count
             ):
                 authored: list[dict[str, Any]] = []
-                ticks = int(round(float(info.get("dot_duration", 0.0)) / tick_interval))
+                ticks = int(
+                    round(float(ability_field(info, "dot_duration")) / tick_interval)
+                )
                 for stack_time in stack_times:
                     for tick_index in range(1, ticks + 1):
                         authored.append(
@@ -7151,7 +7201,9 @@ def _add_precomputed_proc_damage(
                 for event in declared_events
                 if isinstance(event, dict)
             ]
-            state.breakdown[key]["event_phase"] = str(info.get("event_phase", "effect"))
+            state.breakdown[key]["event_phase"] = str(
+                ability_field(info, "event_phase")
+            )
         elif (
             info.get("event_order_certified") == "auto_stack_proc"
             and state.num_auto_attacks > 0
@@ -7160,7 +7212,7 @@ def _add_precomputed_proc_damage(
             # module supplies the sourced stack cadence (Akshan: every
             # third damaging attack).  Do not invent times when the fight
             # contains fewer swings than the requested proc packet.
-            every = max(1, int(info.get("auto_stack_every", 1)))
+            every = max(1, int(ability_field(info, "auto_stack_every")))
             required_swings = proc_count * every
             auto_times = _auto_attack_timestamps(state)
             if required_swings <= len(auto_times):
@@ -7257,8 +7309,10 @@ def _ability_dot_tick_events(
     ``dot_duration``/``dot_tick_interval``) is treated the same as a missing
     one — fail-closed, never coerced or invented.
     """
-    dot_duration = _finite_numeric_receipt(info.get("dot_duration", 0.0)) or 0.0
-    tick_interval = _finite_numeric_receipt(info.get("dot_tick_interval", 0.0)) or 0.0
+    dot_duration = _finite_numeric_receipt(ability_field(info, "dot_duration")) or 0.0
+    tick_interval = (
+        _finite_numeric_receipt(ability_field(info, "dot_tick_interval")) or 0.0
+    )
     if dot_duration <= 0 or tick_interval <= 0:
         return None
     if info.get("empowers_next_auto"):
@@ -7300,7 +7354,7 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
         times_by_slot.setdefault(slot, []).append(float(event["time"]))
     for key in state.cast_order:
         entry = state.breakdown.get(key)
-        info = state.ability_damages.get(key, {})
+        info = ability_payload(state.ability_damages, key)
         if not entry or entry.get("damage_events") is not None:
             continue
         events = _ability_dot_tick_events(entry, info, times_by_slot.get(key, []))
@@ -7465,7 +7519,7 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     # DoT's own declared derivative in bonus AD (Darius' bleed: 30% of
     # bonus AD per stack).
     buffed_bonus_dps = (
-        float(spec.get("single_stack_bonus_ad_ratio", 0.0))
+        float(ability_field(spec, "single_stack_bonus_ad_ratio", form="stacking_dot"))
         * timeline.buff_bonus_ad
         / duration
     )
@@ -7494,10 +7548,12 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             total_raw += tick_rate(stacks, False) * (end - cursor)
         return total_raw
 
-    ledger = _DotTickLedger(float(spec.get("tick_interval", 0.0)), integrate)
+    ledger = _DotTickLedger(
+        float(ability_field(spec, "tick_interval", form="stacking_dot")), integrate
+    )
     raw_total = _integrate_stack_chains(timeline, duration, ledger)
 
-    damage_type = spec.get("damage_type", "physical")
+    damage_type = ability_field(spec, "damage_type", form="stacking_dot")
     total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)
     # A seeded-only fight lands no applications; the pre-fight stacks are
     # what the row is reporting, so they are its count.
@@ -7596,7 +7652,7 @@ def _shaped_charge_proc_receipts(
         ability = state.ability_damages.get(slot)
         if not isinstance(ability, Mapping):
             return None
-        parts = ability.get("parts", ())
+        parts = ability_field(ability, "parts")
         if not isinstance(parts, (tuple, list)):
             return None
         damaging = any(
@@ -8120,9 +8176,9 @@ def _basic_attack_true_rider(
     it. The name comes from the declaring entry — no second key.
     """
     for info in ability_damages.values():
-        ratio = info.get("basic_attack_true_ratio", 0.0)
+        ratio = ability_field(info, "basic_attack_true_ratio")
         if ratio > 0:
-            return ratio, info.get("name", "Passive")
+            return ratio, ability_field(info, "name")
     return 0.0, ""
 
 
@@ -8138,7 +8194,11 @@ def _on_hit_effectiveness(state: FightState) -> float:
     ``_simulate_auto_attacks``, which skips its branch in replace mode).
     """
     override = _find_auto_attack_override(state.ability_damages)
-    return override.get("on_hit_effectiveness", 1.0) if override else 1.0
+    return (
+        ability_field(override, "on_hit_effectiveness", form="auto_attack_override")
+        if override
+        else 1.0
+    )
 
 
 def _auto_swing_bonus_ad(
@@ -8215,7 +8275,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             break
     converted_auto_limit = min(
         num_auto_attacks,
-        max(0, int(conversion_info.get("count", 0))) if conversion_info else 0,
+        (
+            max(0, int(ability_field(conversion_info, "count", form="conversion")))
+            if conversion_info
+            else 0
+        ),
     )
 
     # Simulate each auto attack individually, rolling for crits.  The two
@@ -8257,10 +8321,16 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     )
     q_window_end = state.q_window_end
     if auto_attack_override:
-        override_ad_ratio = auto_attack_override.get("ad_ratio", 1.0)
-        override_crit_as_bonus = auto_attack_override.get("crit_as_bonus", False)
+        override_ad_ratio = ability_field(
+            auto_attack_override, "ad_ratio", form="auto_attack_override"
+        )
+        override_crit_as_bonus = ability_field(
+            auto_attack_override, "crit_as_bonus", form="auto_attack_override"
+        )
         override_replace_raw = auto_attack_override.get("replace_raw")
-        override_damage_type = auto_attack_override.get("damage_type", "physical")
+        override_damage_type = ability_field(
+            auto_attack_override, "damage_type", form="auto_attack_override"
+        )
         if not override_replace_raw and q_window_end > 0.0:
             # P1 Slice 11: the flurry ratio applies only inside the Q
             # active window [0, q_window_end) — the post-window swings
@@ -8272,7 +8342,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         # Flat modifier on ALL basic-attack damage (Bel'Veth passive:
         # 75%): scaling the AD every auto branch reads covers normal,
         # crit, empowered, forced-crit, and double-shot attacks alike.
-        damage_ratio = auto_attack_override.get("damage_ratio", 1.0)
+        damage_ratio = ability_field(
+            auto_attack_override, "damage_ratio", form="auto_attack_override"
+        )
         attack_damage *= damage_ratio
 
     # A stack-triggered bonus-AD steroid (Darius' Noxian Might) only
@@ -8295,8 +8367,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             adjusted_ad *= state.target_critical_strike_damage_multiplier
         return _mitigate_basic_attack_swing(
             state,
-            float(conversion_info.get("bonus_raw", 0.0)) + adjusted_ad,
-            str(conversion_info.get("damage_type", "magic")),
+            float(ability_field(conversion_info, "bonus_raw", form="conversion"))
+            + adjusted_ad,
+            str(ability_field(conversion_info, "damage_type", form="conversion")),
         )
 
     for i in range(num_auto_attacks):
@@ -8467,7 +8540,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             converted_auto_events.append(
                 {
                     "time": attack_time,
-                    "damage_type": str(conversion_info.get("damage_type", "magic")),
+                    "damage_type": str(
+                        ability_field(conversion_info, "damage_type", form="conversion")
+                    ),
                     "damage": mitigated,
                 }
             )
@@ -8570,11 +8645,13 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     }
     if conversion_info is not None and converted_auto_limit > 0:
         breakdown["on_hit_ability_passive"] = {
-            "name": str(conversion_info.get("name", "Modified attacks")),
+            "name": str(ability_field(conversion_info, "name", form="conversion")),
             "count": converted_auto_limit,
             "damage_per_hit": converted_auto_total / converted_auto_limit,
             "total_damage": converted_auto_total,
-            "damage_type": str(conversion_info.get("damage_type", "magic")),
+            "damage_type": str(
+                ability_field(conversion_info, "damage_type", form="conversion")
+            ),
             "damage_events": converted_auto_events,
             "event_phase": "auto",
             "detail": (
@@ -8661,7 +8738,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # Double shot: second auto per attack at reduced AD (e.g. Akshan passive)
     double_shot_total = 0.0
     if double_shot_info and num_auto_attacks > 0:
-        ds_ratio = double_shot_info.get("ad_ratio", 0.5)
+        ds_ratio = ability_field(double_shot_info, "ad_ratio", form="double_shot")
         ds_crits = 0
         double_shot_events: list[dict[str, Any]] = []
         for i in range(num_auto_attacks):
@@ -8707,7 +8784,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
         ds_non_crits = num_auto_attacks - ds_crits
         breakdown["double_shot"] = {
-            "name": double_shot_info.get("name", "Double Shot"),
+            "name": ability_field(double_shot_info, "name", form="double_shot"),
             "count": num_auto_attacks,
             "num_crits": ds_crits,
             "num_non_crits": ds_non_crits,
@@ -8953,7 +9030,7 @@ def _add_empower_window_on_hit(
     if not proc_times:
         return 0.0
 
-    damage_type = str(on_hit_data.get("damage_type", "magic"))
+    damage_type = str(ability_field(on_hit_data, "damage_type", form="on_hit"))
     # Scaled by the fight's on-hit effectiveness for the same reason every
     # other champion on-hit row is (a proxy attacker's reduced on-hit
     # application, e.g. Azir soldiers); it is 1.0 for an ordinary attacker.
@@ -9283,11 +9360,11 @@ def _layer_on_hit_effects(
         ):
             continue
 
-        raw_base = float(on_hit_data.get("damage_per_hit", 0.0))
+        raw_base = float(ability_field(on_hit_data, "damage_per_hit", form="on_hit"))
         if raw_base <= 0:
             continue
 
-        dmg_type = on_hit_data.get("damage_type", "magic")
+        dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
         raw_per_hit = raw_base * on_hit_effectiveness
         per_hit = _mitigate(raw_per_hit, dmg_type, resists, magic_amp)
 
@@ -9355,7 +9432,7 @@ def _layer_on_hit_effects(
         if max_procs is not None:
             hits = min(hits, int(max_procs))
 
-        stacks_required = on_hit_data.get("stacks_required", 0)
+        stacks_required = ability_field(on_hit_data, "stacks_required", form="on_hit")
         ramping = bool(on_hit_data.get("ramping"))
         stack_ramp = on_hit_data.get("stack_ramp")
 
@@ -9640,7 +9717,7 @@ def _layer_on_hit_effects(
             )
             proc_total = sum(proc_damages)
             on_hit_total += proc_total
-            proc_damage_type = on_hit_data.get("damage_type", "physical")
+            proc_damage_type = ability_field(on_hit_data, "damage_type", form="on_hit")
             breakdown[f"on_hit_ability_{ability_key}"] = {
                 "name": on_hit_data.get("name", f"{ability_key} (on-hit)"),
                 "count": len(proc_autos),
@@ -9808,7 +9885,7 @@ def _add_spellblade_true_rider(
     """
     ratio = max(
         (
-            info.get("spellblade_bonus_true_ratio", 0.0)
+            ability_field(info, "spellblade_bonus_true_ratio")
             for info in state.ability_damages.values()
         ),
         default=0.0,
@@ -9958,7 +10035,7 @@ def _add_spellblade_damage(
         converted_ratio = 0.0
         converted = 0
         for key, info in state.ability_damages.items():
-            ratio = info.get("spellblade_true_ratio", 0.0)
+            ratio = ability_field(info, "spellblade_true_ratio")
             if ratio > 0:
                 converted_ratio = max(converted_ratio, ratio)
                 converted += state.breakdown.get(key, {}).get("casts", 0)
@@ -10280,7 +10357,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         r_info = ability_damages.get("R")
         r_extra = 0
         if r_info and resists.ult_cast:
-            r_extra = r_info.get("cast_instances", 1) - 1
+            r_extra = ability_field(r_info, "cast_instances") - 1
         # Estimate time from first to last ability hit.  In a fast
         # one-rotation combo, casts are ~0.5s apart (GCD-limited).
         inter_cast_delay = 0.5
@@ -10291,7 +10368,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         # cast — every tick refreshes the burn. Ablaze re-applies on
         # each cast, so the tail extends from the LAST cast.
         champion_dot_tail = max(
-            (info.get("dot_duration", 0.0) for info in ability_damages.values()),
+            (ability_field(info, "dot_duration") for info in ability_damages.values()),
             default=0.0,
         )
         # Other item DoTs (e.g. Malignance Hatefog) deal ability
@@ -11196,7 +11273,7 @@ def _add_item_proc_damage(
         # Hatefog zone refreshes on each R dash.  Effective duration is
         # the time from R1 to R_last plus the base zone duration.
         hatefog_duration = effect.duration
-        r_total_casts = r_info.get("cast_instances", 1)
+        r_total_casts = ability_field(r_info, "cast_instances")
         r_dash_spread = (r_total_casts - 1) * 0.5  # ~0.5s between dashes
         effective_hatefog = r_dash_spread + hatefog_duration
         raw *= effective_hatefog / hatefog_duration
@@ -13071,11 +13148,11 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     the flurry/AS pricing stay exactly as the module prices them).
     """
     option = state.champion_options
-    q_entry = state.ability_damages.get("Q") or {}
+    q_entry = ability_payload(state.ability_damages, "Q")
     q_active = bool(
         option.get("q_active", declared_option_default("champion", "Ashe", "q_active"))
     )
-    is_ashe = str(q_entry.get("name", "")) == "Ranger's Focus"
+    is_ashe = bool(q_entry) and str(ability_field(q_entry, "name")) == "Ranger's Focus"
     # The Ashe identity: the module's Q entry name, OR the explicitly
     # passed q_active False override (the Q entry is absent when the
     # module gates on q_active first — the Focus still exists, the auto
@@ -13585,11 +13662,13 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
 
     # The availability the engine actually priced at parse time: the P
     # on-hit's max_procs (stock + floor(duration / recharge) when timed).
-    on_hit = state.ability_damages.get("passive", {}).get("on_hit", {})
+    on_hit = ability_sub_payload(
+        ability_payload(state.ability_damages, "passive"), "on_hit"
+    )
     if (
         on_hit.get("name") != "Traveler's Call (Meep)"
         or not isinstance(on_hit.get("max_procs"), (int, float))
-        or float(on_hit.get("max_procs", 0.0)) <= 0
+        or float(ability_field(on_hit, "max_procs", form="on_hit")) <= 0
     ):
         opening = 0
     else:
@@ -14093,7 +14172,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
         detail = (
             str(row.get("detail", ""))
             if isinstance(row, dict)
-            else str(info.get("detail", "")) if info is not None else ""
+            else str(ability_field(info, "detail")) if info is not None else ""
         )
         if not detail or not empowered_any or not base_any:
             continue
@@ -14133,8 +14212,8 @@ def _deathfire_trigger_events(
 
     triggers: list[dict[str, Any]] = []
     for slot, times in cast_times.items():
-        info = state.ability_damages.get(slot, {})
-        category = str(info.get("deathfire_category", ""))
+        info = ability_payload(state.ability_damages, slot)
+        category = str(ability_field(info, "deathfire_category"))
         if not category:
             continue
         slot_events = [event for event in detailed if event.get("source_key") == slot]
@@ -14654,7 +14733,7 @@ def _item_proc_precision(state: FightState, slot: str) -> str:
         # The DoT check reads the ABILITY packet's dot duration (P3 package
         # 3D): breakdown rows never carry dot_duration, so reading it there
         # was a dead branch that stamped uncertified DoT casts as exact.
-        dot = float(info.get("dot_duration", 0.0) or 0.0)
+        dot = float(ability_field(info, "dot_duration"))
     else:
         dot = 0.0
     # A slot with no breakdown row, or a fight with no cast order, has no
@@ -14697,7 +14776,7 @@ def _muramana_cast_receipt(
     ability = state.ability_damages.get(slot) if isinstance(slot, str) else None
     if not isinstance(slot, str) or not isinstance(ability, Mapping):
         return None
-    parts = ability.get("parts", ())
+    parts = ability_field(ability, "parts")
     if not isinstance(parts, (tuple, list)):
         return None
     # Shock is gated on "Dealing ability damage to champions".  The authored
@@ -14719,7 +14798,7 @@ def _muramana_cast_receipt(
     event_time = _finite_numeric_receipt(cast_event.get("time"))
     cast_id = cast_event.get("cast_id")
     target_id = cast_event.get("target_id")
-    raw_instances = ability.get("cast_instances", 1)
+    raw_instances = ability_field(ability, "cast_instances")
     if (
         event_time is None
         or event_time < 0.0
@@ -16631,7 +16710,7 @@ def _carry_declarations_onto_repriced_ticks(
     for authored_tick, repriced_tick in zip(authored, repriced):
         if not isinstance(authored_tick, dict):
             continue
-        authored_damage = float(authored_tick.get("damage", 0.0) or 0.0)
+        authored_damage = float(authored_tick["damage"])
         _restate_declaration(
             authored_tick,
             scale=(
@@ -17401,8 +17480,12 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                 "end_time": min(trigger_times) + duration,
                 "amount": amount,
                 "applies_to_triggering_event": bool(
-                    temporary.get("applied_to_triggering_event", False)
-                    or temporary.get("applies_before_event", False)
+                    ability_field(
+                        temporary, "applied_to_triggering_event", form="temporary_buff"
+                    )
+                    or ability_field(
+                        temporary, "applies_before_event", form="temporary_buff"
+                    )
                 ),
                 "applied_count": 0,
             }
@@ -17493,7 +17576,10 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
             continue
         applied = int(window["applied_count"])
         temporary["applied_to_triggering_event"] = bool(
-            temporary.get("applied_to_triggering_event", False) and applied > 0
+            ability_field(
+                temporary, "applied_to_triggering_event", form="temporary_buff"
+            )
+            and applied > 0
         )
         temporary["applied_to_later_events"] = applied > 0
         temporary["applied_event_count"] = applied
@@ -17537,12 +17623,17 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         if not cast_times:
             continue
 
-        ratio = float(storage.get("ratio", 0.0) or 0.0)
-        duration = float(storage.get("duration", 0.0) or 0.0)
+        ratio = float(ability_field(storage, "ratio", form="stored_damage"))
+        duration = float(ability_field(storage, "duration", form="stored_damage"))
         source_slots = {
-            str(source_slot) for source_slot in storage.get("source_slots", ())
+            str(source_slot)
+            for source_slot in ability_field(
+                storage, "source_slots", form="stored_damage"
+            )
         }
-        include_auto_attacks = bool(storage.get("include_auto_attacks", False))
+        include_auto_attacks = bool(
+            ability_field(storage, "include_auto_attacks", form="stored_damage")
+        )
         if ratio <= 0.0 or duration <= 0.0 or not source_slots:
             continue
 
@@ -17760,7 +17851,7 @@ def _declared_cc_marker(info: Mapping[str, Any]) -> dict[str, Any]:
     reconstructed as the row's lump — are where the same declaration has
     to land.
     """
-    kind = _declared_cc_kind(info.get("parts") or ())
+    kind = _declared_cc_kind(ability_field(info, "parts"))
     return {"cc_kind": kind, "cc_reviewed": True} if kind is not None else {}
 
 
@@ -18207,13 +18298,13 @@ def calculate_fight_damage(
             if not isinstance(event, dict):
                 continue
             source_key = str(event["source_key"])
-            ability = state.ability_damages.get(source_key, {})
+            ability = ability_payload(state.ability_damages, source_key)
             # P4: the on-hit passive row's events carry source_key
             # "on_hit_ability_passive" — resolve the passive entry's own
             # execute stamp (Zeri's Living Battery).
             if not ability and source_key == "on_hit_ability_passive":
-                ability = state.ability_damages.get("passive", {})
-            ability_ratio = float(ability.get("execute_threshold_ratio", 0.0) or 0.0)
+                ability = ability_payload(state.ability_damages, "passive")
+            ability_ratio = float(ability_field(ability, "execute_threshold_ratio"))
             item_ratio = (
                 float(item_execute.threshold) if item_execute is not None else 0.0
             )

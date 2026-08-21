@@ -63,7 +63,9 @@ def _identity_element(node: ast.AST) -> bool:
     """True for the zero of a type: a number, a bool, or an empty container."""
     if isinstance(node, ast.Constant):
         return not isinstance(node.value, str)
-    return not _children(node)
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set, ast.Dict)):
+        return not _children(node)
+    return True
 
 
 def _text(node: ast.AST, source: str) -> str:
