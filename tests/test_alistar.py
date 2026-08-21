@@ -139,11 +139,23 @@ class TestETrample:
 
 
 class TestRUnbreakableWill:
-    """Tests for R (Unbreakable Will) — utility, should not appear."""
+    """R (Unbreakable Will) — modeled as a zero-damage self state row
+    carrying the sourced damage-reduction modifier (final-slots batch;
+    the old absence pin predates the damage_modifier seam)."""
 
-    def test_r_not_in_results(self, alistar_data, parse_at) -> None:
+    def test_r_present_zero_damage_with_sourced_reduction(
+        self, alistar_data, parse_at
+    ) -> None:
         _, abilities = parse_at(alistar_data, 11)
-        assert "R" not in abilities
+        entry = abilities["R"]
+        assert entry["total_raw"] == 0.0
+        # Rank 2 at level 11 default ladder: sourced 65% reduction, 7s.
+        events = entry["self_state_events"]
+        assert events and events[0]["kind"] == "damage_modifier"
+        # Rank 2: 65% sourced reduction -> multiplier 0.35 over the 7s window.
+        assert events[0]["multiplier"] == pytest.approx(0.35)
+        assert events[0]["duration"] == 7.0
+        assert events[0]["source"].startswith("Unbreakable Will")
 
 
 class TestPassive:

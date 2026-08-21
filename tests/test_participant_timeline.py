@@ -30,6 +30,7 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     _actor_params,
+    _owned_state_event_id,
     _schedule_authored_reactive_events,
     _schedule_thorns_events,
     _regeneration_windows,
@@ -6082,3 +6083,119 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
             assert event["wound_until"] == pytest.approx(
                 event["time"] + event["wound_duration"], abs=1e-3
             )
+
+
+class TestSelfStateEventIdsNameTheirOwner:
+    """A self-state packet's published id names the actor that cast it.
+
+    A champion module authors its self-state ids out of what a champion
+    knows -- slot, cast ordinal, packet ordinal, so Alistar R is always
+    ``self_state:R:0:0`` -- and a keystone authors its own against the
+    fight's own actor.  Neither knows which roster slot the pair fight was
+    priced for, so every actor holding the mechanic authors the *same* id.
+    The roster fold is the first place the owner exists, and it re-keys
+    there, exactly as ``_pair_packet`` already does for damage and control
+    packets.
+
+    Without the re-key a roster holding one champion twice publishes one id
+    twice on one panel, which ``precision.SumPlan`` refuses at construction
+    (``DuplicateSumMember``) -- and refusing it is right twice over, because
+    an event id is also the walk's join key, so a shared id cross-links two
+    actors' riders as well as double-counting one panel.
+    """
+
+    @staticmethod
+    def _duplicate_alistar_roster() -> dict:
+        """The live ``cassiopeia_5champ`` shape, reduced to what breaks it.
+
+        Alistar is the ally support *and* the enemy support; both cast R.
+        Cross-team is the only reachable duplicate-champion roster -- the
+        scenario boundary refuses duplicates *within* a team -- so this is
+        the shape, not a shape.
+        """
+        return {
+            "champion": "Cassiopeia",
+            "level": 13,
+            "fight_mode": "one_rotation",
+            "role": "mid",
+            "ally_effects_enabled": True,
+            "allies": [
+                {"champion": "Alistar", "level": 13, "role": "support", "items": []}
+            ],
+            "enemies": [
+                {"champion": "Alistar", "level": 13, "role": "support", "items": []},
+                {"champion": "Dr. Mundo", "level": 13, "role": "top", "items": []},
+            ],
+        }
+
+    def test_two_alistars_publish_two_distinct_owner_named_ids(self) -> None:
+        """The regression: one panel, two R packets, two ids."""
+        app.config["TESTING"] = True
+        response = app.test_client().post(
+            "/api/calculate", json=self._duplicate_alistar_roster()
+        )
+        # A served 200 is itself half the assertion: the receipt builds a
+        # ``SumPlan`` over its three panels, so a duplicated id raises out
+        # of ``/api/calculate`` rather than serving repeated rows.
+        assert response.status_code == 200
+        support_events = response.get_json()["combat"]["support_events"]
+        unbreakable = [
+            event
+            for event in support_events
+            if str(event.get("source", "")).startswith("Unbreakable Will")
+        ]
+        assert len(unbreakable) == 2, "the fixture no longer casts R on both Alistars"
+        assert sorted(event["event_id"] for event in unbreakable) == [
+            "ally:Alistar:self_state:R:0:0",
+            "enemy:Alistar:self_state:R:0:0",
+        ]
+        # Each packet is self-targeted, so the owner in the id is the owner
+        # in the packet -- the re-key names the caster, not the recipient.
+        for event in unbreakable:
+            assert event["event_id"].startswith(f"{event['attacker']}:")
+            assert event["target"] == event["attacker"]
+
+    def test_every_published_panel_id_is_unique_within_its_panel(self) -> None:
+        """The invariant the fold exists to hold, over all three panels."""
+        app.config["TESTING"] = True
+        response = app.test_client().post(
+            "/api/calculate", json=self._duplicate_alistar_roster()
+        )
+        assert response.status_code == 200
+        combat = response.get_json()["combat"]
+        for panel in ("events", "healing_events", "support_events"):
+            ids = [
+                event["event_id"]
+                for event in combat[panel]
+                if event.get("event_id") is not None
+            ]
+            assert ids, f"panel {panel} publishes no identified rows"
+            duplicated = sorted({one for one in ids if ids.count(one) > 1})
+            assert (
+                not duplicated
+            ), f"panel {panel} publishes {duplicated} more than once"
+
+    def test_an_id_that_already_names_this_actor_is_left_verbatim(self) -> None:
+        """A keystone authors ``main:...`` against the fight's own actor.
+
+        That id already names its owner, so ``main`` keeps the published
+        spelling rather than gaining ``main:main:``; a second actor holding
+        the same keystone gains its own prefix and is distinct.
+        """
+        authored = {"_event_id": "main:conqueror:stack:0"}
+        assert _owned_state_event_id("main", authored, 0) == "main:conqueror:stack:0"
+        assert (
+            _owned_state_event_id("enemy:Alistar", authored, 0)
+            == "enemy:Alistar:main:conqueror:stack:0"
+        )
+        # A prefix match is on the whole participant id plus its separator,
+        # so a participant whose id is a prefix of another's is not read as
+        # already-owned.
+        assert (
+            _owned_state_event_id("main_2", authored, 0)
+            == "main_2:main:conqueror:stack:0"
+        )
+
+    def test_an_unauthored_packet_is_named_by_owner_and_ordinal(self) -> None:
+        """No authored id: the fold names the owner and the packet ordinal."""
+        assert _owned_state_event_id("ally:Alistar", {}, 3) == "ally:Alistar:state:3"

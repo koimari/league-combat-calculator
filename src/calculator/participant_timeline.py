@@ -1768,6 +1768,43 @@ def _aery_support_templates(
     return templates
 
 
+def _owned_state_event_id(
+    participant_id: str, effect: Mapping[str, Any], state_index: int
+) -> str:
+    """Name the owner in a self-state packet's id, once, at the fold.
+
+    A champion module authors its state ids out of what a champion knows —
+    the slot, the cast ordinal, the packet ordinal
+    (``support_effects.derive_self_state_effects`` spells them
+    ``self_state:R:0:0``) — and a keystone authors its own against the
+    fight's own actor (``main:conqueror:stack:0``).  Neither knows which
+    roster slot the pair fight was priced for, so **every actor holding the
+    mechanic authors the same id**, and a roster holding one champion twice
+    publishes that id twice on one panel.  The live shape is
+    ``cassiopeia_5champ``: Alistar is the ally support *and* the enemy
+    support, both cast Unbreakable Will, and both self-state packets arrive
+    as ``self_state:R:0:0``.  That is exactly what
+    :class:`~.program.precision.DuplicateSumMember` refuses — and refusing
+    it is right twice over, because an event id is also the walk's join key
+    (``EVENT_SLOTS``), so a shared id cross-links two actors' riders as well
+    as double-counting one panel.
+
+    This fold is the first place the owner exists, so the re-key belongs
+    here — the same move ``_pair_packet`` already makes for damage and
+    control packets, which are re-keyed to ``attacker:defender:index`` and
+    never keep the engine's champion-local numbering.  An id that already
+    names *this* actor is left verbatim, so the ids a keystone authors for
+    the fight's own actor keep their published spelling; the same keystone
+    on a second actor gets that actor's prefix and is distinct.
+    """
+    authored = effect.get("_event_id")
+    if authored is None:
+        return f"{participant_id}:state:{state_index}"
+    text = str(authored)
+    prefix = f"{participant_id}:"
+    return text if text.startswith(prefix) else f"{prefix}{text}"
+
+
 def _support_effect_templates(
     attacker: Combatant,
     result: Mapping[str, Any],
@@ -1821,11 +1858,8 @@ def _support_effect_templates(
                 "target": attacker.participant_id,
                 "target_scope": "self",
                 "target_policy": "self",
-                "_event_id": str(
-                    effect.get(
-                        "_event_id",
-                        f"{attacker.participant_id}:state:{state_index}",
-                    )
+                "_event_id": _owned_state_event_id(
+                    attacker.participant_id, effect, state_index
                 ),
             }
         )

@@ -1,0 +1,93 @@
+{
+  "slice": "slots18-alistar-r",
+  "companion_receipt": "docs/receipts/golden-recapture-2026-08-21-slots18.md",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 — golden re-captured directly in this commit (see the companion receipt above); coupled_golden holds none of the affected scenarios and does not move; coupled_exact moves and is declared here rather than re-captured, per R-17's per-phase-boundary recapture rule."
+  },
+  "what_changed": {
+    "alistar_r": "src/calculator/champions/alistar.py's R (Unbreakable Will) leaves the absence pin and joins the slot map as a zero-damage self_state_events packet of kind=damage_modifier (Briar-E / Sivir-E seam), multiplier 1 - reduction%/100 over the ranked Damage Reduction row, active for the description's timing.active_duration window, declared physical+magic only (true damage is explicitly excluded by the cached ability note).",
+    "fold_layer_dup_fix": "participant_timeline._support_effect_templates named every self-state packet's published event id out of the champion module's own authored spelling (e.g. 'self_state:R:0:0'), with no owner prefix when the module supplied one. Two actors holding the same self-state mechanic on one roster panel — reachable for the first time by this slice, because R is the first Alistar mechanic to author self_state_events, and cassiopeia_5champ holds Alistar as both ally and enemy support — therefore authored the identical id twice, which precision.SumPlan refuses at construction (DuplicateSumMember). The new _owned_state_event_id helper prefixes every self-state id with its caster's participant id unless the id already names that participant, fixing the collision. This also renames every OTHER champion's already-authored self-state ids (Briar E, Sivir E) from their bare champion-local spelling to an owner-prefixed one (tests/test_briar_e.py's 'self_state:E:0:0' -> 'enemy:Briar:self_state:E:0:0'); no committed baseline captures event_id text, so this rename moves no golden or coupled_golden leaf and is visible only in the two test files that pin it directly."
+  },
+  "landed_against_golden": {
+    "result": "captured directly against the working tree; python scripts/golden_snapshot.py compare scripts/golden_baseline.json reports OK: snapshot identical. See docs/receipts/golden-recapture-2026-08-21-slots18.md for the 19-diff recapture (17 Alistar structural rows + 2 fingerprint counters) this commit already carries."
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "rule": "R's self_state_events packet reduces incoming physical/magic damage on whichever actor casts it, only inside the roster-coupled walk (participant_timeline / cross-participant producers). The isolated single-target 'fights/<idx>:<name>' totals in golden_coupled_exact.json run the standalone pair path, which the coupled self_state seam never touches, so no fights/* key is eligible. A combat/* key is eligible only if it is (a) an Alistar entry's own 'incoming' total (directly re-priced by the multiplier, net of any true-damage component the multiplier excludes), (b) another entry's 'outgoing' total whose cross-target sum includes an Alistar target on the opposing side, or (c) an Alistar entry's own 'outgoing'/another Alistar entry's total where the roster's shared timeline reprices packet counts for every actor sharing the window once one actor's incoming damage changes (the same walk-order knock-on the wave2-statbuff and self-shield-carrier receipts describe for other roster slices). No 'main/incoming' key is eligible: nothing in this slice changes what main takes.",
+    "scenarios_holding_alistar": [
+      "cassiopeia_3champ",
+      "cassiopeia_5champ",
+      "syndra_mandate_3champ"
+    ],
+    "scenarios_excluded_by_construction": {
+      "mundo_3champ": "no participant is Alistar; verified zero diffs against the committed exact snapshot."
+    },
+    "level_and_rank": "all three scenarios run Alistar at level 13 (scripts/bench_coupled_optimizer.py CASSIOPEIA_SCENARIO / FIVE_CHAMPION_SCENARIO / SYNDRA_MANDATE_SCENARIO), the same rank-2 bracket the pair-golden recapture pins at level 11 — 65% reduction, multiplier 0.35, 7s window. cassiopeia_3champ's enemy-Alistar incoming move (509.7 -> 178.4) is exactly old * 0.35, confirming rank 2 and no true-damage component in that build. cassiopeia_5champ's ally-Alistar incoming move (1290.1 -> 475.8) is NOT exactly old * 0.35 (would be 451.5): the enemy roster there adds Vayne, whose Silver Bolts true-damage passive is excluded from the modifier by design, so a fraction of Alistar's incoming survives the reduction — the module's declared damage_classes = {PHYSICAL, MAGIC} working as sourced."
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": [],
+    "coupled_exact": {
+      "cassiopeia_3champ": {
+        "combat/0:main/outgoing": {
+          "old": "768.0",
+          "new": "436.6"
+        },
+        "combat/1:enemy:Alistar/incoming": {
+          "old": "509.7",
+          "new": "178.4"
+        }
+      },
+      "cassiopeia_5champ": {
+        "combat/0:main/outgoing": {
+          "old": "1309.3",
+          "new": "978.0"
+        },
+        "combat/1:ally:Alistar/incoming": {
+          "old": "1290.1",
+          "new": "475.8"
+        },
+        "combat/1:ally:Alistar/outgoing": {
+          "old": "1292.7",
+          "new": "965.6"
+        },
+        "combat/2:enemy:Alistar/incoming": {
+          "old": "1013.0",
+          "new": "354.5"
+        },
+        "combat/2:enemy:Alistar/outgoing": {
+          "old": "946.0",
+          "new": "665.4"
+        },
+        "combat/3:enemy:Dr. Mundo/outgoing": {
+          "old": "1155.1",
+          "new": "800.6"
+        },
+        "combat/4:enemy:Vayne/outgoing": {
+          "old": "676.9",
+          "new": "497.8"
+        }
+      },
+      "syndra_mandate_3champ": {
+        "combat/0:main/outgoing": {
+          "old": "1092.4",
+          "new": "640.8"
+        },
+        "combat/1:enemy:Alistar/incoming": {
+          "old": "717.6",
+          "new": "266.0"
+        }
+      }
+    }
+  },
+  "measured": {
+    "golden": "compare clean (scripts/golden_baseline.json is the recaptured file, see companion receipt)",
+    "coupled_golden": "0 Alistar-related leaves in tests/test_coupled_golden_allowlist.py's standing_coupled_diffs(); none of the three affected scenarios (cassiopeia_3champ, cassiopeia_5champ, syndra_mandate_3champ) are members of the committed scripts/golden_coupled_baseline.json's 21 scenarios (they are bench-only, gs.coupled_scenarios_for(exact=True)), so this slice cannot move that baseline and does not need to.",
+    "coupled_exact": "11 of 11 moved keys across the 3 eligible scenarios are declared above and match tests/test_golden_snapshot.py::TestExactBaseline::test_the_exact_capture_reproduces_the_committed_totals exactly (every other key in every scenario, including all of mundo_3champ and every fights/* key, is unchanged); zero unclaimed moves.",
+    "note": "Measured after the src/ edits, against the committed scripts/golden_coupled_exact.json. The declared pairs above are the complete difference set — recomputed via gs.capture_coupled(gs.coupled_scenarios_for(exact=True), producers=gs.cross_participant_producers(), exact=True) diffed key-for-key against the committed file."
+  }
+}

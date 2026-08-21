@@ -20,15 +20,28 @@ Why each slot is non-generic:
   5%, which the engine's heal fan-out (``participant_timeline.py``
   clones one shared ``amount`` to every recipient) cannot express, so it
   belongs to the ally scanner rather than to this rule.
-- R (Unbreakable Will) stays off the slot map: it reduces incoming
-  damage by 55/65/75% for 7s and cleanses Alistar's own CC, and the
-  engine's ``incoming_damage_multiplier`` axis is item-only, wired
-  inline inside ``resolve_starting_defenses`` and keyed by item name
-  (``defensive_effects.py``) — no champion can author a
-  damage-reduction-taken row.  The three champion-module hooks the
-  runtime actually reads are ``SELF_HEALING_RULE``,
-  ``starting_revive_defense`` and ``GRIEVOUS_WOUNDS_SOURCES``; none
-  accepts a mid-fight reduction window.
+- R (Unbreakable Will) IS on the slot map: the old "no champion-authored
+  incoming-damage-reduction hook" receipt is obsolete.  PR #202 gave the
+  engine a champion-authored ``self_state_events`` packet of
+  ``kind: "damage_modifier"`` (precedent: Briar E, ``briar.py``'s
+  ``_chilling_scream``; Sivir E, ``sivir.py``'s ``_spell_shield``),
+  consumed by ``participant_timeline._support_effect_templates`` (which
+  folds ``result["self_state_events"]`` into a self-targeted support
+  template) and armed by
+  ``survival.transitions._apply_damage_modifier`` /
+  ``_apply_cross_participant_modifiers``.  R is a zero-damage row: the
+  cast total is 0.0 and the mechanic is entirely the self-state window.
+  The ranked "Damage Reduction" leveling row (55/65/75%) is read through
+  the typed ``required_ranked_attribute_atom`` accessor, exactly like a
+  normal named-attribute read; the "for the next 7 seconds" active
+  window is the cached description's prose ``timing.active_duration``
+  atom (the same helper Briar E and Sivir E use).  The modifier
+  declares physical + magic only — NOT true — because the cached ability
+  note is explicit: "True damage cannot be reduced by any means and
+  will deal full damage to Alistar during Unbreakable Will."  The
+  self-cleanse of Alistar's own CC has no channel in this engine (no
+  champion module clears an already-armed CC on itself) and stays
+  unmodeled, same as before.
 
 
 All numeric values are read from the champion JSON data; nothing is
@@ -38,8 +51,15 @@ hardcoded.
 import re
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+    required_ranked_attribute_atom,
+)
+from ..ability_spec import AttackClass, DamageClass, DamagePart
 from ..healing_helpers import HealAnchor, _payments, _ability, _trigger_fields
+from ..survival.actions import TransitionRank
 from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
@@ -200,6 +220,114 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+_R_DURATION_SOURCE = "Alistar.R[0].effects[0].description"
+
+_ATOM_RECEIPT_KEYS = (
+    "atom_id",
+    "behavior",
+    "source",
+    "values",
+    "units",
+    "evidence",
+    "hash",
+)
+
+
+def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+    """Keep the provenance fields that identify one runtime atom."""
+    return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
+
+
+def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: zero damage, a sourced incoming-damage-reduction self-state window.
+
+    "Active: Alistar cleanses himself of all crowd control. For the next
+    7 seconds, he reduces incoming damage taken." (cached R[0].effects[0]
+    description).  The percent is a normal ranked leveling row
+    ("Damage Reduction": 55/65/75%), read through the typed
+    ``required_ranked_attribute_atom`` accessor; the "7 seconds" window
+    is the same description's prose ``timing.active_duration`` atom
+    (the Briar E / Sivir E helper).  True damage is excluded from the
+    declared classes: the cached ability note states "True damage cannot
+    be reduced by any means and will deal full damage to Alistar during
+    Unbreakable Will."  The self-CC-cleanse has no channel in this engine
+    and stays unmodeled (see the module docstring).
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    reduction_percent, reduction_atom = required_ranked_attribute_atom(
+        ctx.champion_name, champion_data, "R", "Damage Reduction", rank
+    )
+    # The wiki row carries one unit entry per rank (['%', '%', '%']); require
+    # every entry to be percent (fail-closed on any non-percent unit) rather
+    # than pinning the list shape.
+    reduction_units = {str(unit).strip().lower() for unit in reduction_atom["units"]}
+    if not reduction_units or reduction_units != {"%"}:
+        raise ValueError("Alistar R damage-reduction atom must use percent")
+
+    duration_atom = required_ability_atom(
+        ctx.champion_name,
+        champion_data,
+        "R",
+        query=AbilityAtomQuery(
+            source=_R_DURATION_SOURCE,
+            behavior="timing",
+            evidence_prefix="active duration@",
+        ),
+    )
+    if [str(unit).strip().lower() for unit in duration_atom["units"]] != ["s"]:
+        raise ValueError("Alistar R active-duration atom must use seconds")
+    duration = ranked_ability_atom_value(duration_atom, 1, source=_R_DURATION_SOURCE)
+
+    name = ability.get("name", "Unbreakable Will")
+    return {
+        "name": name,
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_state_events": [
+            {
+                "kind": "damage_modifier",
+                # 55/65/75% damage reduction -> take (1 - pct/100) of each
+                # incoming physical/magic packet.
+                "multiplier": 1.0 - reduction_percent / 100.0,
+                "duration": duration,
+                "source": f"{name} · damage reduction",
+                "source_atoms": [
+                    _atom_receipt(reduction_atom),
+                    _atom_receipt(duration_atom),
+                ],
+                # The cached prose reduces "incoming damage taken" with no
+                # attack/spell-only carve-out, so the modifier gates no
+                # source kind (the Briar-E / Glacial-Augment convention).
+                "all_sources": True,
+                # D-04: true damage is explicitly excluded by the cached
+                # ability note ("True damage cannot be reduced by any
+                # means"), so the declared set is physical + magic only —
+                # NOT the full DamageClass enum.
+                "damage_classes": frozenset({DamageClass.PHYSICAL, DamageClass.MAGIC}),
+                "attack_classes": frozenset(AttackClass),
+                # An amplification already in force at its own timestamp
+                # must price the hit landing at that timestamp.
+                "_rank": TransitionRank.AURA_ARM,
+            }
+        ],
+        "detail": (
+            f"Unbreakable Will reduces incoming physical/magic damage by "
+            f"{reduction_percent:g}% for {duration:g}s (true damage is not "
+            "reduced)."
+        ),
+    }
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "p_triumph_stacks",
@@ -234,11 +362,18 @@ ASSUMPTIONS = [
     "the 5% self heal, and the engine's champion-authored heal fan-out "
     "clones one shared amount to every recipient — so it belongs to the "
     "ally scanner, not to this rule",
-    "R (Unbreakable Will) damage reduction (55/65/75% for 7s, cleanses "
-    "Alistar's own CC) is sourced but unmodeled: no champion-authored "
-    "hook for a mid-fight incoming-damage-reduction window exists in "
-    "this engine today (only SELF_HEALING_RULE, starting_revive_defense, "
-    "and GRIEVOUS_WOUNDS_SOURCES are read from a champion module)",
+    "R (Unbreakable Will) is modeled as a zero-damage self-state window: "
+    "the ranked Damage Reduction row (55/65/75%, required_ranked_"
+    "attribute_atom) prices the multiplier and the description's prose "
+    "'for the next 7 seconds' (timing.active_duration atom) prices the "
+    "window, armed through self_state_events kind=damage_modifier "
+    "(Briar-E / Sivir-E precedent). Declared classes are physical + "
+    "magic only: true damage is explicitly excluded ('True damage "
+    "cannot be reduced by any means and will deal full damage to "
+    "Alistar during Unbreakable Will', cached R note). The self-cleanse "
+    "of Alistar's own crowd control has no channel in this engine (no "
+    "champion module clears an already-armed CC on itself) and stays "
+    "unmodeled",
 ]
 
 SLOTS = {
@@ -249,13 +384,16 @@ SLOTS = {
     "Q": simple_damage(event_order_certified="single_hit"),
     "W": simple_damage(event_order_certified="single_hit"),
     "E": _trample,
+    "R": _unbreakable_will,
 }
 
 # Cached kit review.  Q stuns "and knock[s] them up simultaneously for 1
 # second" and W "knocks them back 700 units ... while also stunning them
 # for 0.75 seconds": each cast applies two immobilize kinds at once, which
 # is what the un-narrowed "immobilize" kind states.  E is absent because
-# its two parts disagree (see _trample); R and P deal no damage.
+# its two parts disagree (see _trample); P deals no damage and R's own
+# self-cleanse is not a control effect applied to a target, so neither
+# names a CC kind here.
 MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
 
 parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
