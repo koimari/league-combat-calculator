@@ -3508,6 +3508,22 @@ def _apply_post_hit_proc(
     return total
 
 
+def _immobilize_ability_haste(
+    state: "FightState", ability_info: Mapping[str, Any]
+) -> float:
+    """The haste one slot earns by immobilizing (Imperial Mandate's Control).
+
+    Gated on the slot's *reviewed* control marker — the declaration Command
+    already gates on, read through the one immobilize predicate — so a slot
+    nobody reviewed pays nothing rather than being assumed to immobilize.
+    The item is found by the value key it declares, never by name: a second
+    item stating the mechanic joins by declaring the key.
+    """
+    if not is_immobilizing_event(_declared_cc_marker(ability_info)):
+        return 0.0
+    return item_effects.immobilize_ability_haste(state.items)
+
+
 def _effective_timed_cooldown(
     state: "FightState",
     result: "RotationResult",
@@ -3516,7 +3532,8 @@ def _effective_timed_cooldown(
     basic_ability_haste: float,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
-    Shojin basic-ability haste (Q/W/E), ultimate haste (R), and Navori
+    Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
+    immobilizing slot earns (Imperial Mandate's Control), and Navori
     auto-attack refunds."""
     base_cd = ability_info.get("cooldown", 0.0)
     total_haste = state.ability_haste
@@ -3524,6 +3541,7 @@ def _effective_timed_cooldown(
         total_haste += basic_ability_haste
     elif ability_key == "R":
         total_haste += float(state.champion_stats.get("ultimate_haste", 0.0) or 0.0)
+    total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)

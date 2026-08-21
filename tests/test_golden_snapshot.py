@@ -1494,10 +1494,17 @@ def declared_exact_moves():
     one the baseline still holds or exactly the one the slice declared, and
     nothing else.  That keeps the entry harmless after the phase-boundary
     re-capture instead of turning a stale allowlist into a permanent hole.
+
+    Two receipts may claim one key — a leaf a later slice moved again — and
+    the later declaration is the live one, so precedence is the receipt
+    *name* rather than the ``Path``: comparing paths on Windows folds case,
+    which would order the receipts differently here than on a POSIX runner
+    and hand the two platforms different allowlists.
     """
     declared: dict[str, dict[str, dict[str, str]]] = {}
     for receipt in sorted(
-        (REPO_ROOT / "docs" / "receipts").glob("expected-*-diff-*.json")
+        (REPO_ROOT / "docs" / "receipts").glob("expected-*-diff-*.json"),
+        key=lambda path: path.name,
     ):
         body = json.loads(receipt.read_text(encoding="utf-8"))
         moves = body.get("expected_diff_paths", {}).get("coupled_exact", {})
