@@ -22,9 +22,11 @@ numbers appear in a small set of template forms:
   Template:Rd), recorded under a key naming its quantity (attack speed,
   movement speed, gold conversion, heal share, max-health damage/heal)
 - ``deals 30 {{as|(+ 11 per Soul)}}`` — flat base plus per-soul damage
-- display wrappers ``{{fd|3.5}}`` / ``{{ap|6*0.8}}`` / ``{{sti|...}}`` and
-  ``0.6{{recurring|6}}`` repeating decimals are inlined first so the value
-  patterns can see through them
+- ``(+ {{as|1.5%|attack speed}} per ''Legend'' {{tip|stack}})`` — a per-stack
+  step, recorded as the step alone (the stack count is a compiler's option)
+- display wrappers ``{{fd|3.5}}`` / ``{{ap|6*0.8}}`` / ``{{sti|...}}`` /
+  ``{{#vardefineecho:x|3}}`` and ``0.6{{recurring|6}}`` repeating decimals are
+  inlined first so the value patterns can see through them
 - prose stack rules — "Applying 3 stacks to a target within a 3 second period"
 - prose buff windows — "grants ... for 3 seconds, causing"
 - prose refreshing stacks — "apply a stack for 4 seconds ... stacking up to 3 times"
@@ -90,6 +92,32 @@ _FLAT_STAT_RULES: tuple[tuple[str, re.Pattern], ...] = (
     ("bonus_health", re.compile(r"\{\{as\|([\d.]+) '''bonus''' health\}\}")),
     ("ability_haste", re.compile(r"([\d.]+) (?:\[\[ability haste\]\]|ability haste)")),
 )
+#: Grants stated per stack of a named counter — "(+ 1.5% attack speed per
+#: ''Legend'' stack)".  What is recorded is the *step*, never a total: the
+#: stack count is an input the request does not carry, so a compiler declares
+#: it as an option and multiplies.  The "up to N at maximum stacks" clause
+#: that restates step × ceiling is masked before these ever see the text.
+_PER_STACK_TAIL = r" per ''\w[^']*'' \{\{tip\|stack\}\}"
+#: Legend: Alacrity states its base and its step in one sentence, so one rule
+#: reads both — splitting them would let a reworded page keep one and drop
+#: the other without either looking wrong.
+_ATTACK_SPEED_PER_STACK = re.compile(
+    r"\{\{as\|([\d.]+)%\|attack speed\}\} \(\+ \{\{as\|([\d.]+)%\|attack speed\}\}"
+    + _PER_STACK_TAIL
+)
+_PER_STACK_RULES: tuple[tuple[str, re.Pattern], ...] = (
+    (
+        "basic_ability_haste_per_stack",
+        re.compile(r"\{\{as\|([\d.]+) basic ability haste\}\}" + _PER_STACK_TAIL),
+    ),
+    (
+        "life_steal_percent_per_stack",
+        re.compile(r"\{\{fd\|([\d.]+)% life steal\}\}+" + _PER_STACK_TAIL),
+    ),
+)
+#: "Gain ''Legend'' stacks for every 100 points earned, up to 10:" — the
+#: ceiling that bounds a per-stack grant's option.
+_STACK_CEILING = re.compile(r"stacks for every \d+ points earned, up to (\d+):")
 _BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _POUNCE_DELAY = re.compile(r"over \{\{fd\|([\d.]+)\}\} seconds, dealing")
@@ -122,6 +150,12 @@ _STI_WRAPPER = re.compile(r"\{\{sti\|([^{}|]*)\}\}")
 _AP_ARITHMETIC = re.compile(r"\{\{ap\|([^{}|=]+)\}\}")
 # ``0.6{{recurring|6}}`` overlines the repeating decimals (Template:Recurring).
 _RECURRING = re.compile(r"(\d+)\.(\d*)\{\{recurring\|(\d+)\}\}")
+# ``{{#vardefineecho:basealacrity|3}}`` defines a wiki variable *and* prints
+# its value, so the value is the rendered text.  The plain ``{{#var:}}`` read
+# and ``{{#expr:}}`` arithmetic that restate it later are deliberately left
+# alone: those appear only inside "up to … at maximum stacks" restatements,
+# which are masked before any value pattern sees them.
+_VARDEFINEECHO = re.compile(r"\{\{#vardefineecho:[^{}|]+\|([^{}|]*)\}\}")
 
 # "up to <derived value> at maximum stacks/range" — a restatement, never a
 # second source value.  Tempered so the span starts at the *nearest* "up to"
@@ -475,6 +509,7 @@ def _resolve_display_templates(text: str) -> str:
     """
     for _ in range(4):
         resolved = _RECURRING.sub(_resolve_recurring, text)
+        resolved = _VARDEFINEECHO.sub(lambda match: match.group(1), resolved)
         resolved = _FD_NUMBER.sub(lambda match: match.group(1), resolved)
         resolved = _STI_WRAPPER.sub(lambda match: match.group(1), resolved)
         resolved = _AP_ARITHMETIC.sub(_resolve_ap_arithmetic, resolved)
@@ -589,6 +624,23 @@ def _claim_split_pairs(text: str, recorder: _EffectRecorder) -> str:
     return _AS_RATIO_PAIR.sub(claim_ratio_pair, text)
 
 
+def _parse_per_stack_grants(text: str, recorder: _EffectRecorder) -> None:
+    """Read the stat grants a rune states per stack of a named counter.
+
+    Only the step is recorded — the stack count is an input the request does
+    not carry, so a compiler declares it as an option and multiplies. Legend:
+    Alacrity states a base beside its step in one sentence, and one rule
+    reads both so a reworded page cannot keep one and drop the other.
+    """
+    base_and_step = _ATTACK_SPEED_PER_STACK.search(text)
+    if base_and_step:
+        recorder.record("attack_speed_percent", float(base_and_step.group(1)))
+        recorder.record("attack_speed_percent_per_stack", float(base_and_step.group(2)))
+    for key, pattern in _PER_STACK_RULES:
+        for amount in pattern.findall(text):
+            recorder.record(key, float(amount))
+
+
 def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None:
     """Read the single-value template forms: ratios, gold, range splits.
 
@@ -617,6 +669,8 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     for key, pattern in _FLAT_STAT_RULES:
         for amount in pattern.findall(text):
             recorder.record(key, float(amount))
+
+    _parse_per_stack_grants(text, recorder)
 
     for formula, levels in _ADAPTIVE_FORCE.findall(text):
         try:
@@ -655,7 +709,9 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     if duration_match:
         recorder.record("stack_duration_seconds", float(duration_match.group(1)))
 
-    max_stacks_match = _MAX_STACKS.search(description)
+    max_stacks_match = _MAX_STACKS.search(description) or _STACK_CEILING.search(
+        description
+    )
     if max_stacks_match:
         recorder.record("max_stacks", int(max_stacks_match.group(1)))
 

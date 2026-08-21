@@ -383,7 +383,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendAlacrity/LegendAlacrity.png",
     "description": "{{sbc|Passive:}} Gain {{sti|{{as|{{#vardefineecho:basealacrity|3}}%|attack speed}} (+ {{as|{{fd|{{#vardefineecho:scalingalacrity|1.5}}}}%|attack speed}} per ''Legend'' {{tip|stack}}) {{as|'''bonus''' attack speed}}}}, up to {{as|{{#expr:{{#var:basealacrity}}+{{#var:scalingalacrity}}*10}}%|attack speed}} at maximum stacks.\n{{sbc|Legend:}} Gain ''Legend'' stacks for every 100 points earned, up to 10:\n* 100 points for champion {{tip|takedown|takedowns}}\n* 100 points for epic monster {{tip|takedown|takedowns}}\n* 25 points for large monster kills\n* 4 points for minion kills",
-    "effects": {}
+    "effects": {
+      "attack_speed_percent": 3.0,
+      "attack_speed_percent_per_stack": 1.5,
+      "max_stacks": 10
+    }
   },
   "Legend: Haste": {
     "name": "Legend: Haste",
@@ -392,7 +396,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendHaste/LegendHaste.png",
     "description": "{{sbc|Passive:}} Gain {{sti|ability haste|icononly=true}} {{as|{{fd|1.5}} basic ability haste}} per ''Legend'' {{tip|stack}}, up to {{as|15|ability haste}} at maximum stacks.\n{{sbc|Legend:}} Gain ''Legend'' stacks for every 100 points earned, up to 10:\n* 100 points for champion {{tip|takedown|takedowns}}\n* 100 points for epic monster {{tip|takedown|takedowns}}\n* 25 points for large monster kills\n* 4 points for minion kills",
-    "effects": {}
+    "effects": {
+      "basic_ability_haste_per_stack": 1.5,
+      "max_stacks": 10
+    }
   },
   "Legend: Bloodline": {
     "name": "Legend: Bloodline",
@@ -401,7 +408,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendBloodline/LegendBloodline.png",
     "description": "{{sbc|Passive:}} Gain {{as|{{sti|life steal|{{fd|{{#vardefineecho:scalingbloodline|0.45}}% life steal}}}}}} per ''Legend'' {{tip|stack}}, up to {{as|{{fd|{{#expr:{{#var:scalingbloodline}}*15}}}}%|life steal}} at maximum stacks, at which you also gain {{as|{{#vardefineecho:hpbloodline|85}} '''bonus''' health}}.\n{{sbc|Legend:}} Gain ''Legend'' stacks for every 100 points earned, up to 15:\n* 100 points for champion {{tip|takedown|takedowns}}\n* 100 points for epic monster {{tip|takedown|takedowns}}\n* 25 points for large monster kills\n* 4 points for minion kills",
-    "effects": {}
+    "effects": {
+      "bonus_health": 85.0,
+      "life_steal_percent_per_stack": 0.45,
+      "max_stacks": 15
+    }
   },
   "Coup de Grace": {
     "name": "Coup de Grace",
