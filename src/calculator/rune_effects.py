@@ -170,6 +170,12 @@ class RuneTrigger(Enum):
     #: the engine carries no control *duration*, so damage landing later
     #: inside the same control is not in this stream.
     IMPAIRED_INSTANCES = "impaired_instances"
+    #: The swings a self-shield armed: the first basic attack at or after
+    #: each ``self_shield_events`` entry the fight publishes. Named for the
+    #: arming event because that is what a rune watching it declares; what
+    #: it *counts* is swings, because a shield with no attack after it
+    #: empowers nothing and must book nothing.
+    SELF_SHIELD_EVENTS = "self_shield_events"
 
 
 @dataclass(frozen=True, slots=True)

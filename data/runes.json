@@ -1485,7 +1485,9 @@
           31.47058823529412,
           32.94117647058824
         ]
-      ]
+      ],
+      "bonus_health_ratio": 0.025,
+      "shield_amount_ratio": 0.15
     }
   },
   "Conditioning": {

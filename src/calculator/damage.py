@@ -8550,6 +8550,46 @@ def _impaired_instance_times(
     )
 
 
+def _self_shield_times(state: FightState) -> list[float]:
+    """When a self-shield lands on the holder, from the fight's own rows.
+
+    Champion modules and the Eclipse item family publish the same shape: a
+    ``self_shield_events`` list on a breakdown row, aligned by ordinal with
+    that row's own damage events, which ``_ordered_damage_events`` later
+    copies onto each event as ``self_shield``. It is read here rather than
+    off the reconstructed ledger because every rune stream is read before
+    reconstruction — and a shield entry with no damage event to align with
+    has no timestamp, so it contributes nothing rather than a guessed one.
+    """
+    times: list[float] = []
+    for entry in state.breakdown.values():
+        shields = entry.get("self_shield_events")
+        events = entry.get("damage_events")
+        if not isinstance(shields, list) or not isinstance(events, list):
+            continue
+        for index, shield in enumerate(shields):
+            if index < len(events) and isinstance(shield, Mapping):
+                times.append(float(events[index].get("time", 0.0)))
+    return sorted(times)
+
+
+def _shield_armed_attack_times(state: FightState) -> list[float]:
+    """The first swing at or after each self-shield the fight publishes.
+
+    A shield empowers the *next* attack, so the instance the rune counts is
+    that swing and not the shield: a shield the fight never follows with an
+    attack empowers nothing, and pricing it at the shield's own timestamp
+    would book damage no swing delivered. Two shields inside one swing gap
+    empower that one swing once.
+    """
+    swings = sorted(_auto_attack_timestamps(state))
+    armed = {
+        next((swing for swing in swings if swing >= shield_time), None)
+        for shield_time in _self_shield_times(state)
+    }
+    return sorted(time for time in armed if time is not None)
+
+
 def _rune_trigger_times(
     state: FightState, rotation: RotationResult, trigger: "rune_effects.RuneTrigger"
 ) -> list[float]:
@@ -8564,6 +8604,8 @@ def _rune_trigger_times(
         return _damaging_cast_times(state, rotation)
     if trigger is rune_effects.RuneTrigger.IMPAIRED_INSTANCES:
         return _impaired_instance_times(state, rotation)
+    if trigger is rune_effects.RuneTrigger.SELF_SHIELD_EVENTS:
+        return _shield_armed_attack_times(state)
     return _rune_instance_times(state, rotation)
 
 
@@ -8634,6 +8676,9 @@ _RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = MappingProx
         ),
         rune_effects.RuneTrigger.IMPAIRED_INSTANCES: (
             "damaging ability casts whose own parts apply crowd control"
+        ),
+        rune_effects.RuneTrigger.SELF_SHIELD_EVENTS: (
+            "basic attacks following a self-shield"
         ),
     }
 )

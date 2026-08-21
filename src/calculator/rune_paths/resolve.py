@@ -10,16 +10,24 @@ buy maximum health, which the fight's stat block does read.
 from typing import Any, Callable, Mapping
 
 from ..ability_spec import Disposition
+from ..item_effects import DamageInputs
 from ..rune_effects import (
     RUNE_EFFECTS,
     RuneEffect,
     RuneOption,
     RuneOptionKind,
+    RuneProcEffect,
     RuneStat,
     RuneStatContext,
     RuneStatGrantEffect,
+    RuneTrigger,
     RuneValues,
+    at_level,
+    breakdown_key,
+    display_name,
     no_damage_compiler,
+    pure_adaptive_type,
+    required_leveling,
 )
 
 #: Overgrowth's stacks are minions and monsters that died near the holder
@@ -79,6 +87,58 @@ def _compile_overgrowth(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
+def _compile_shield_bash(entry: Mapping[str, Any]) -> RuneProcEffect:
+    """Compile Shield Bash: the attack after a self-shield hits harder.
+
+    The one Resolve rune whose damage the pair engine can reach, now that a
+    trigger stream watches the ``self_shield_events`` champion modules and
+    the Eclipse item family publish. Two of its three terms are priced — the
+    level table and its share of the holder's bonus health — and the third,
+    a share of the shield's own amount, varies proc by proc while one
+    breakdown row prices one number, so it is disclosed rather than
+    averaged.
+    """
+    name = "Shield Bash"
+    effects = RuneValues(name, entry.get("effects", {}))
+    base_by_level = required_leveling(name, effects)
+    bonus_health_ratio = effects.number("bonus_health_ratio")
+    shield_ratio = effects.number("shield_amount_ratio")
+
+    def raw(inputs: DamageInputs) -> float:
+        bonus_health = inputs.champion_stats.get(
+            "health", 0.0
+        ) - inputs.champion_stats.get("base_health", 0.0)
+        return at_level(base_by_level, inputs.level) + bonus_health_ratio * max(
+            0.0, bonus_health
+        )
+
+    return RuneProcEffect(
+        rune_name=name,
+        breakdown_key=breakdown_key(name),
+        display_name=display_name(name),
+        stacks_required=1,
+        stack_window_seconds=None,
+        # No cooldown of its own: each shield arms exactly one attack, and
+        # the shield stream is what limits the count.
+        cooldown_seconds=0.0,
+        proc_delay_seconds=0.0,
+        raw_damage=raw,
+        damage_type=pure_adaptive_type,
+        trigger=RuneTrigger.SELF_SHIELD_EVENTS,
+        disclosures=(
+            f"{name} empowers the first swing after each self-shield the "
+            f"fight publishes, for its level table plus "
+            f"{bonus_health_ratio * 100:g}% of the holder's bonus health; a "
+            "shield with no attack after it empowers nothing and books "
+            "nothing.",
+            f"{name}'s third term — {shield_ratio * 100:g}% of the shield's "
+            "own amount — is withheld: it differs from shield to shield and "
+            "one breakdown row prices one number, so the row is a floor "
+            "rather than an average of shields the fight happened to grant.",
+        ),
+    )
+
+
 #: The Resolve runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
@@ -100,19 +160,6 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         (
             "Font of Life's ally half is withheld twice over: the pair "
             "engine prices one attacker and has no ally to heal.",
-        ),
-    ),
-    # The shield that arms Shield Bash is on the ledger — champion self
-    # shields publish ``self_shield_events`` — but no rune trigger stream
-    # reads it, and two of the three terms of its damage never parsed.
-    "Shield Bash": (
-        Disposition.WITHHELD,
-        "its empowered attack is armed by the holder gaining a shield, and "
-        "no rune trigger stream watches the fight's self-shield events",
-        (
-            "Shield Bash's damage would be understated even with the "
-            "trigger: the cache carries its level table but neither its "
-            "share of bonus health nor its share of the shield's own amount.",
         ),
     ),
     "Conditioning": (
@@ -150,6 +197,7 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Overgrowth": _compile_overgrowth,
+    "Shield Bash": _compile_shield_bash,
     **{
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()

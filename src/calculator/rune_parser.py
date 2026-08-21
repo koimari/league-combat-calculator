@@ -78,6 +78,21 @@ _AS_RATIO_PAIR = re.compile(
     r"\{\{as\|\(\+\s*\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}\s*"
     r"(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
 )
+#: The scaling ratios that read something other than the holder's attack
+#: damage or ability power.  One key per quantity and each pattern spelled
+#: for exactly the sentence that states it: Aftershock's and Guardian's
+#: "of your '''bonus''' health" is a different quantity from Shield Bash's
+#: "'''bonus''' health" and must not read as it.
+_AS_QUANTITY_RATIO_RULES: tuple[tuple[str, re.Pattern], ...] = (
+    (
+        "bonus_health_ratio",
+        re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*'''bonus'''\s*health\)"),
+    ),
+    (
+        "shield_amount_ratio",
+        re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*shield amount\)"),
+    ),
+)
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
 _STACK_DURATION = re.compile(r"apply a \{\{tip\|stacks?\}\} for ([\d.]+) seconds")
 _MAX_STACKS = re.compile(r"stacking up to (\d+) times")
@@ -779,6 +794,10 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
         else:
             key = "ad_ratio"
         recorder.record(key, float(percent) / 100.0)
+
+    for key, pattern in _AS_QUANTITY_RATIO_RULES:
+        for percent in pattern.findall(text):
+            recorder.record(key, float(percent) / 100.0)
 
     for percent in _BONUS_TRUE_DAMAGE.findall(text):
         recorder.record("bonus_true_damage_ratio", float(percent) / 100.0)
