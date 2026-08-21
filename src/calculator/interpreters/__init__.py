@@ -1,26 +1,34 @@
-"""One interpreter per family per engine lane, and the gates over that map.
+"""One reading per family per engine lane, and the gates over that map.
 
 A declared behaviour is only worth something if some engine runs it.  This
 package is where that is decided and, more importantly, where *not* deciding
 it becomes visible: :func:`compilability_for` refuses to call an owner
 compilable, for the refusal it is asked about, while any of its rules is
-receipt-only in that scope, and
-:func:`reachability_report` names both a declaration no interpreter reaches
-and an interpreter branch no declaration reaches (D-51).  Both directions
-have live motivating cases, which is why neither is dropped as theoretical.
+receipt-only in that scope, and :func:`reachability_report` names both a
+declaration no reading reaches and a registered reading no declaration
+reaches.  Both directions have live motivating cases, which is why neither is
+dropped as theoretical.
 
-**Interpreters run at build time.**  A walk-lane interpreter emits
-``KernelField``s — value-typed fields the kernel already understands — rather
-than being called from inside the walk, so the dependency stays one-way:
-``interpreters/`` may read ``survival/``'s vocabulary and nothing under
-``survival/`` imports this package.  A source assertion in the test front
-door pins that, because an interpreter that touched ``SurvivalAction`` and
-was called from ``survival/transitions.py`` would close exactly the cycle the
-leaf-ness of ``item_behavior`` does not cover.
+Two tables.  :data:`INTERPRETERS` maps ``(family, lane)`` to the function that
+compiles one rule's :class:`~..item_behavior.KernelField`s for that lane, and
+:func:`compile_rule` is its dispatch.  :data:`RESOLVERS` maps the six defence
+families to the function that resolves one rule against a subject, and
+:func:`resolve_defense` is its dispatch.  A registry with no entry is a stop,
+which is what makes "delete a family's reading and its items are withheld" a
+property of the code instead of a claim about it.
 
-There is one interpreter module per family and never a single dispatch file:
-an eighteen-branch god module cannot carry eighteen test front doors, and the
-derived front-door check (D-95) is what would notice.
+**Readings run at build time.**  A walk-lane reading emits ``KernelField``s —
+value-typed fields the kernel already understands — rather than being called
+from inside the walk, so the dependency stays one-way: ``interpreters/`` may
+read ``survival/``'s vocabulary and nothing under ``survival/`` imports this
+package.  A source assertion in the test front door pins that, because a
+reading that touched ``SurvivalAction`` and was called from
+``survival/transitions.py`` would close exactly the cycle the leaf-ness of
+``item_behavior`` does not cover.
+
+There is one module per family and never a single dispatch file: an
+eighteen-branch god module cannot carry eighteen test front doors, and the
+derived front-door check is what would notice.
 """
 
 # This module's length is one row per ``(family, lane)`` and one dated receipt
@@ -32,10 +40,10 @@ derived front-door check (D-95) is what would notice.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Protocol
+from typing import Any
 
 from ..ability_spec import Authority
 from ..item_behavior import (
@@ -68,6 +76,7 @@ from . import (
     combat_state,
     crit_profile,
     damage_routing,
+    defense_state,
     delta_amp,
     on_hit_strike,
     opening_defense,
@@ -86,31 +95,20 @@ class InterpreterRegistryError(RuntimeError):
     """The (family, lane) map does not say what it claims to say."""
 
 
-class Interpreter(Protocol):  # pylint: disable=too-few-public-methods
-    """What every family's interpreter module exposes.
+#: One rule's kernel fields for one lane.  Build-time only: the context
+#: carries a level, an owner and a data version and deliberately carries no
+#: walk state, and the lane is stamped onto every field emitted.
+FieldsFn = Callable[[BehaviorRule, BuildContext, EngineLane], tuple[KernelField, ...]]
 
-    ``compile`` is build-time only and returns value-typed fields; it is
-    handed a :class:`~..item_behavior.BuildContext`, which carries a level, an
-    owner and a data version and deliberately carries no walk state.
-    """
-
-    FAMILY: RuleFamily
-    LANES: frozenset[EngineLane]
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """Emit this rule's kernel fields for the lanes this interpreter serves."""
+#: One declared defence, resolved against the subject it is defending.
+ResolveFn = Callable[[BehaviorRule, DefenseSubject], DefenseOutcome]
 
 
 # Which lanes must be able to answer for each family, declared rather than
 # inferred from what happens to be registered — otherwise "every family is
 # interpreted" would be true of an empty registry.  Counter 4 is the size of
-# the gap between this table and INTERPRETERS.
-#
-#   PAIR_ENGINE          the one-attacker damage model
-#   RECEIPT_WALK         the coupled roster walk that serves receipts
-#   COMPILED_SCORE_WALK  the compiled kernel the optimizer scores through
-#   DEFENSE_RESOLVER     the defensive-effects build, before any walk
-#   STAT_RESOLVER        the stat build, before any damage exists
+# the gap between this table and INTERPRETERS.  Lane spellings and their
+# meanings live on :class:`~..item_behavior.EngineLane`.
 _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
     # Strike and pricing families produce damage, so all three damage lanes
     # owe an answer.
@@ -286,126 +284,105 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
 }
 
 
-# The registry itself.  One entry per family per lane, filled by the slice
-# that migrates it; every remaining gap is counted by the frontier's counter
-# 4 rather than being an absence nobody measures.  ``delta_amp`` serves the
-# pair engine only — H5 is SCOPED, but the compiled-kernel extension it scopes
-# lands as its own stage after Phase 4's S7, so until that stage's flip no amp
-# is compilable — and the coupled walk never reads an amp declaration at all,
-# which is its row's reason below rather than a gap waiting on an interpreter.
-INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], Interpreter] = {
-    (
-        RuleFamily.ACTIVE_CAST,
-        EngineLane.PAIR_ENGINE,
-    ): active_cast.PAIR_INTERPRETER,
-    (
-        RuleFamily.ACTIVE_CAST,
-        EngineLane.RECEIPT_WALK,
-    ): active_cast.WALK_INTERPRETER,
-    (
-        RuleFamily.ALLY_PACKET,
-        EngineLane.RECEIPT_WALK,
-    ): ally_packet.WALK_INTERPRETER,
-    (RuleFamily.CAST_PROC, EngineLane.PAIR_ENGINE): cast_proc.PAIR_INTERPRETER,
-    (RuleFamily.CAST_PROC, EngineLane.RECEIPT_WALK): cast_proc.WALK_INTERPRETER,
+# The registry itself.  One entry per family per lane; every remaining gap is
+# counted by the frontier's counter 4 rather than being an absence nobody
+# measures.  Two lanes sharing one function is the normal case — a lane is
+# stamped onto the fields, not baked into the body — and the four families
+# whose two lanes disagree about what they emit say so with two functions.
+INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], FieldsFn] = {
+    (RuleFamily.ACTIVE_CAST, EngineLane.PAIR_ENGINE): active_cast.active_fields,
+    (RuleFamily.ACTIVE_CAST, EngineLane.RECEIPT_WALK): active_cast.active_fields,
+    (RuleFamily.ALLY_PACKET, EngineLane.RECEIPT_WALK): ally_packet.packet_fields,
+    (RuleFamily.CAST_PROC, EngineLane.PAIR_ENGINE): cast_proc.proc_fields,
+    (RuleFamily.CAST_PROC, EngineLane.RECEIPT_WALK): cast_proc.proc_fields,
+    (RuleFamily.CHARGED_STRIKE, EngineLane.PAIR_ENGINE): charged_strike.strike_fields,
+    (RuleFamily.CHARGED_STRIKE, EngineLane.RECEIPT_WALK): charged_strike.strike_fields,
     (
         RuleFamily.COMBAT_STATE,
         EngineLane.DEFENSE_RESOLVER,
-    ): combat_state.RESOLVER_INTERPRETER,
-    (
-        RuleFamily.CHARGED_STRIKE,
-        EngineLane.PAIR_ENGINE,
-    ): charged_strike.PAIR_INTERPRETER,
-    (
-        RuleFamily.CHARGED_STRIKE,
-        EngineLane.RECEIPT_WALK,
-    ): charged_strike.WALK_INTERPRETER,
-    (
-        RuleFamily.CRIT_PROFILE,
-        EngineLane.PAIR_ENGINE,
-    ): crit_profile.PAIR_INTERPRETER,
+    ): defense_state.compiled_shape,
+    (RuleFamily.CRIT_PROFILE, EngineLane.PAIR_ENGINE): crit_profile.crit_fields,
     (
         RuleFamily.DAMAGE_ROUTING,
         EngineLane.DEFENSE_RESOLVER,
-    ): damage_routing.RESOLVER_INTERPRETER,
-    (
-        RuleFamily.DAMAGE_ROUTING,
-        EngineLane.PAIR_ENGINE,
-    ): damage_routing.PAIR_INTERPRETER,
-    (
-        RuleFamily.DAMAGE_ROUTING,
-        EngineLane.RECEIPT_WALK,
-    ): damage_routing.WALK_INTERPRETER,
-    (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.PAIR_INTERPRETER,
-    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): delta_amp.WALK_INTERPRETER,
-    (
-        RuleFamily.STAT_DERIVATION,
-        EngineLane.PAIR_ENGINE,
-    ): stat_derivation.PAIR_INTERPRETER,
-    (
-        RuleFamily.STAT_DERIVATION,
-        EngineLane.STAT_RESOLVER,
-    ): stat_derivation.RESOLVER_INTERPRETER,
-    (
-        RuleFamily.ON_HIT_STRIKE,
-        EngineLane.PAIR_ENGINE,
-    ): on_hit_strike.PAIR_INTERPRETER,
-    (
-        RuleFamily.ON_HIT_STRIKE,
-        EngineLane.RECEIPT_WALK,
-    ): on_hit_strike.WALK_INTERPRETER,
+    ): defense_state.compiled_shape,
+    (RuleFamily.DAMAGE_ROUTING, EngineLane.PAIR_ENGINE): damage_routing.pair_fields,
+    (RuleFamily.DAMAGE_ROUTING, EngineLane.RECEIPT_WALK): damage_routing.walk_fields,
+    (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.amp_fields,
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): delta_amp.amp_fields,
+    (RuleFamily.ON_HIT_STRIKE, EngineLane.PAIR_ENGINE): on_hit_strike.strike_fields,
+    (RuleFamily.ON_HIT_STRIKE, EngineLane.RECEIPT_WALK): on_hit_strike.strike_fields,
     (
         RuleFamily.OPENING_DEFENSE,
         EngineLane.DEFENSE_RESOLVER,
-    ): opening_defense.RESOLVER_INTERPRETER,
-    (
-        RuleFamily.PERIODIC,
-        EngineLane.PAIR_ENGINE,
-    ): periodic.PAIR_INTERPRETER,
-    (
-        RuleFamily.PERIODIC,
-        EngineLane.RECEIPT_WALK,
-    ): periodic.WALK_INTERPRETER,
-    (
-        RuleFamily.REACTIVE,
-        EngineLane.DEFENSE_RESOLVER,
-    ): reactive.RESOLVER_INTERPRETER,
-    (RuleFamily.REACTIVE, EngineLane.RECEIPT_WALK): reactive.WALK_INTERPRETER,
-    (
-        RuleFamily.RESISTANCE_SHRED,
-        EngineLane.PAIR_ENGINE,
-    ): resistance_shred.PAIR_INTERPRETER,
+    ): defense_state.compiled_shape,
+    (RuleFamily.PERIODIC, EngineLane.PAIR_ENGINE): periodic.cadence_fields,
+    (RuleFamily.PERIODIC, EngineLane.RECEIPT_WALK): periodic.cadence_fields,
+    (RuleFamily.REACTIVE, EngineLane.DEFENSE_RESOLVER): defense_state.compiled_shape,
+    (RuleFamily.REACTIVE, EngineLane.RECEIPT_WALK): reactive.thorns_fields,
+    (RuleFamily.RESISTANCE_SHRED, EngineLane.PAIR_ENGINE): resistance_shred.ramp_fields,
     (
         RuleFamily.RESISTANCE_SHRED,
         EngineLane.RECEIPT_WALK,
-    ): resistance_shred.WALK_INTERPRETER,
+    ): resistance_shred.ramp_fields,
     (
         RuleFamily.SECONDARY_TARGET,
         EngineLane.PAIR_ENGINE,
-    ): secondary_target.PAIR_INTERPRETER,
+    ): secondary_target.routing_fields,
     (
         RuleFamily.SECONDARY_TARGET,
         EngineLane.RECEIPT_WALK,
-    ): secondary_target.WALK_INTERPRETER,
+    ): secondary_target.routing_fields,
+    (RuleFamily.SPELLBLADE, EngineLane.PAIR_ENGINE): spellblade.spellblade_fields,
+    (RuleFamily.SPELLBLADE, EngineLane.RECEIPT_WALK): spellblade.spellblade_fields,
     (
-        RuleFamily.SPELLBLADE,
+        RuleFamily.STAT_DERIVATION,
         EngineLane.PAIR_ENGINE,
-    ): spellblade.PAIR_INTERPRETER,
+    ): stat_derivation.reference_fields,
     (
-        RuleFamily.SPELLBLADE,
-        EngineLane.RECEIPT_WALK,
-    ): spellblade.WALK_INTERPRETER,
-    (
-        RuleFamily.SUSTAIN,
-        EngineLane.DEFENSE_RESOLVER,
-    ): sustain.RESOLVER_INTERPRETER,
-    (RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE): sustain.PAIR_INTERPRETER,
-    (RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK): sustain.WALK_INTERPRETER,
+        RuleFamily.STAT_DERIVATION,
+        EngineLane.STAT_RESOLVER,
+    ): stat_derivation.reference_fields,
+    (RuleFamily.SUSTAIN, EngineLane.DEFENSE_RESOLVER): defense_state.compiled_shape,
+    (RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE): sustain.sustain_fields,
+    (RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK): sustain.walk_fields,
     (
         RuleFamily.THRESHOLD_DEFENSE,
         EngineLane.DEFENSE_RESOLVER,
-    ): threshold_defense.RESOLVER_INTERPRETER,
+    ): defense_state.compiled_shape,
 }
+
+
+# The defence resolver's other half.  Compiling a defence is uniform — the
+# shape is all that lane can prove at build time — but resolving one against a
+# subject is each family's own arithmetic, so it is keyed by family alone.
+RESOLVERS: Mapping[RuleFamily, ResolveFn] = {
+    RuleFamily.COMBAT_STATE: combat_state.resolve_combat_state,
+    RuleFamily.DAMAGE_ROUTING: damage_routing.resolve_deferral,
+    RuleFamily.OPENING_DEFENSE: opening_defense.resolve_opening_defense,
+    RuleFamily.REACTIVE: reactive.resolve_reactive,
+    RuleFamily.SUSTAIN: sustain.resolve_received_healing,
+    RuleFamily.THRESHOLD_DEFENSE: threshold_defense.resolve_threshold_defense,
+}
+
+
+def compile_rule(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """One rule's kernel fields for *lane*, through the registered reading.
+
+    The registry *is* the dispatch: deleting a family's reading for a lane
+    stops every rule of that family on it with this error rather than letting
+    the engine quietly compile nothing.
+    """
+    fields = INTERPRETERS.get((rule.family, lane))
+    if fields is None:
+        raise InterpreterRegistryError(
+            f"{rule.mechanic_id} declares {rule.family.value} and no "
+            f"interpreter serves the {lane.value} lane, so its numbers are "
+            "withheld rather than compiled"
+        )
+    return fields(rule, ctx, lane)
 
 
 @dataclass(frozen=True, slots=True)
@@ -521,14 +498,11 @@ _COMPILED_PAIR_PRICED_OR_PACKET_FED = (
     " — two routes, neither of them the rule"
 )
 
-# One row per unserved pair a declaration reaches, carrying no stage — see
-# UnservedLane.  ``delta_amp``'s compiled lane is all that stands between that
-# lane and an unreceipted zero since H5's stage made those rules compilable
-# (D-101, D-92).  Its receipt-walk twin is gone — Amendment M, Ruling 1 rules
-# this family first of the fourteen and its act to be the walk-side delivery
-# of the holder's static amps, which ``DeltaAmpWalkInterpreter`` performs —
-# and the shared reason went with it, since it opened "neither walk reads an
-# amp declaration" and a row leaving that behind would contradict the tree.
+# One row per unserved pair a declaration reaches — see UnservedLane.
+# ``delta_amp``'s compiled lane is all that stands between that lane and an
+# unreceipted zero, since every amp rule is compilable.  Its receipt-walk twin
+# has no row: the walk reads the amp declaration through ``delta_amp``'s own
+# registration.
 _AMP_LANE = UnservedLane(_COMPILED_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
@@ -541,17 +515,13 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
     ),
-    # Eight families' receipt-walk twins are gone — the walk reads each item
+    # Eight families have no receipt-walk row: the walk reads each item
     # active, each cast-triggered proc, each charged strike, every routing
     # rule, every on-hit strike, every periodic cadence, every stacking
     # resistance shred and every spellblade from its own declaration, through
-    # ``ActiveCastWalkInterpreter``, ``CastProcWalkInterpreter``,
-    # ``ChargedStrikeWalkInterpreter``, ``DamageRoutingWalkInterpreter``,
-    # ``OnHitStrikeWalkInterpreter``, ``PeriodicWalkInterpreter``,
-    # ``ResistanceShredWalkInterpreter`` and ``SpellbladeWalkInterpreter``,
-    # which is Amendment F's act in the lane Amendment K rules — so only the
-    # compiled lane defers for them, and it says so in its own words rather
-    # than inheriting a sentence about both walks.  Two of the eight hand the
+    # each family's own receipt-walk registration — so only the compiled lane
+    # defers for them, and it says so in its own words rather than inheriting
+    # a sentence about both walks.  Two of the eight hand the
     # walk no price and for two different reasons.  ``damage_routing``'s
     # delivery is the rider and kernel-state paths umbrella Amendment P names,
     # already in the tree.  ``resistance_shred``'s is the cross-participant
@@ -633,22 +603,20 @@ DEFENSE_FAMILIES: frozenset[RuleFamily] = frozenset(
 
 
 def resolve_defense(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-    """One declared defence, resolved by the interpreter registered for it.
+    """One declared defence, resolved by the function registered for it.
 
-    The registry *is* the dispatch: deleting a family's defensive
-    interpreter stops every defence of that family with this error rather
-    than letting the resolver quietly grant nothing, which is what makes
-    "delete an interpreter and its items are withheld" a property of the
-    code instead of a claim about it.
+    The registry *is* the dispatch: deleting a family's resolver stops every
+    defence of that family with this error rather than letting the resolver
+    quietly grant nothing.
     """
-    interpreter = INTERPRETERS.get((rule.family, EngineLane.DEFENSE_RESOLVER))
-    if interpreter is None:
+    resolver = RESOLVERS.get(rule.family)
+    if resolver is None:
         raise InterpreterRegistryError(
             f"{rule.mechanic_id} declares {rule.family.value} and no "
             "interpreter serves the defense_resolver lane, so its defence is "
             "withheld rather than resolved"
         )
-    return interpreter.resolve(rule, subject)
+    return resolver(rule, subject)
 
 
 def lanes_for(family: RuleFamily) -> frozenset[EngineLane]:
@@ -960,26 +928,16 @@ def reachability_report(owners: frozenset[str] | None = None) -> ReachabilityRep
     )
 
 
-def _validate_registry_keys() -> tuple[str, ...]:
-    """Every registration's key agrees with the interpreter's own declaration."""
-    failures: list[str] = []
-    for (family, lane), interpreter in INTERPRETERS.items():
-        if getattr(interpreter, "FAMILY", None) is not family:
-            failures.append(
-                f"{family.value}/{lane.value} is registered under a family its "
-                "interpreter does not claim"
-            )
-        if lane not in getattr(interpreter, "LANES", frozenset()):
-            failures.append(
-                f"{family.value}/{lane.value} is registered on a lane its "
-                "interpreter does not serve"
-            )
-        if lane not in lanes_for(family):
-            failures.append(
-                f"{family.value} declares no {lane.value} lane, so an "
-                "interpreter registered there can never be reached"
-            )
-    return tuple(failures)
+def _validate_declared_lanes() -> tuple[str, ...]:
+    """No registration sits on a lane its family never declared."""
+    return tuple(
+        f"{family.value} declares no {lane.value} lane, so an interpreter "
+        "registered there can never be reached"
+        for family, lane in sorted(
+            INTERPRETERS, key=lambda pair: (pair[0].value, pair[1].value)
+        )
+        if lane not in lanes_for(family)
+    )
 
 
 def _validate_authority_agreement(owners: frozenset[str]) -> tuple[str, ...]:
@@ -1112,10 +1070,30 @@ def _validate_unserved_routes() -> tuple[str, ...]:
     return tuple(failures)
 
 
+def _validate_resolvers() -> tuple[str, ...]:
+    """The two defence tables name the same families, in both directions."""
+    failures = [
+        f"{family.value} declares the defense_resolver lane and no resolver "
+        "answers for it, so its defence would be withheld at every build"
+        for family in sorted(
+            DEFENSE_FAMILIES - frozenset(RESOLVERS), key=lambda f: f.value
+        )
+    ]
+    failures.extend(
+        f"RESOLVERS answers for {family.value}, which declares no "
+        "defense_resolver lane, so nothing ever calls it"
+        for family in sorted(
+            frozenset(RESOLVERS) - DEFENSE_FAMILIES, key=lambda f: f.value
+        )
+    )
+    return tuple(failures)
+
+
 def validate_registrations() -> None:
     """Totality, authority agreement and no orphan branch — or raise."""
     owners = rule_owners()
-    failures = list(_validate_registry_keys())
+    failures = list(_validate_declared_lanes())
+    failures.extend(_validate_resolvers())
     failures.extend(_validate_unserved_lanes(owners))
     failures.extend(_validate_unserved_routes())
     failures.extend(_validate_authority_agreement(owners))
@@ -1130,17 +1108,20 @@ validate_registrations()
 __all__ = [
     "DEFENSE_FAMILIES",
     "INTERPRETERS",
+    "RESOLVERS",
     "UNSERVED_LANE_RECEIPTS",
-    "UnservedLane",
-    "Interpreter",
+    "FieldsFn",
     "InterpreterRegistryError",
     "ReachabilityReport",
+    "ResolveFn",
+    "UnservedLane",
     "compilability_for",
+    "compile_rule",
     "declared_pairs",
-    "uncompilable_item_receipt",
     "lanes_for",
     "reachability_report",
     "resolve_defense",
+    "uncompilable_item_receipt",
     "uninterpreted_pairs",
     "validate_registrations",
 ]

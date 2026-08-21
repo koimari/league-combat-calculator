@@ -1818,7 +1818,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Catalyst of Aeons": "interpreters.sustain.sustain_slot",
     "Cryptbloom": "item_support_effects.derive_item_support_effects",
     "Cull": "item_support_effects.derive_item_support_effects",
-    "Death's Dance": "interpreters.damage_routing.DamageRoutingResolverInterpreter",
+    "Death's Dance": "interpreters.damage_routing.resolve_deferral",
     "Diadem of Songs": "item_support_effects.derive_item_support_effects",
     "Doran's Blade": "interpreters.sustain.sustain_slot",
     "Doran's Ring": "interpreters.sustain.sustain_slot",

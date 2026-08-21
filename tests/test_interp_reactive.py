@@ -17,13 +17,16 @@ from __future__ import annotations
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.interpreters import INTERPRETERS, resolve_defense
-from src.calculator.interpreters.defense_state import DefenseInterpretationError
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
+from src.calculator.interpreters.defense_state import (
+    DefenseInterpretationError,
+    compiled_shape,
+)
 from src.calculator.interpreters.reactive import (
-    RESOLVER_INTERPRETER,
     THORNS_FIELDS,
-    WALK_INTERPRETER,
+    resolve_reactive,
     thorns_effects,
+    thorns_fields,
 )
 from src.calculator.item_behavior import (
     BehaviorRule,
@@ -80,8 +83,9 @@ def test_the_family_is_registered_on_the_lane_that_builds_it() -> None:
     """A reactive defence's schedule is built before any walk."""
     assert (
         INTERPRETERS[(RuleFamily.REACTIVE, EngineLane.DEFENSE_RESOLVER)]
-        is RESOLVER_INTERPRETER
+        is compiled_shape
     )
+    assert RESOLVERS[RuleFamily.REACTIVE] is resolve_reactive
 
 
 @pytest.mark.parametrize(
@@ -179,11 +183,11 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
     from src.calculator import interpreters
 
     remaining = {
-        key: value
-        for key, value in INTERPRETERS.items()
-        if key != (RuleFamily.REACTIVE, EngineLane.DEFENSE_RESOLVER)
+        family: resolver
+        for family, resolver in RESOLVERS.items()
+        if family is not RuleFamily.REACTIVE
     }
-    monkeypatch.setattr(interpreters, "INTERPRETERS", remaining)
+    monkeypatch.setattr(interpreters, "RESOLVERS", remaining)
     with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
         resolve_defense(
             _rule("Armored Advance", DefenseMechanic.NOXIAN_ENDURANCE), _subject()
@@ -201,15 +205,13 @@ def test_the_family_is_registered_on_the_walk_that_pays_the_strike_back() -> Non
     walk-lane interpretation, and until this registration the lane was a gap
     whose dated receipt said the walks stage what the resolver built.
     """
-    assert (
-        INTERPRETERS[(RuleFamily.REACTIVE, EngineLane.RECEIPT_WALK)] is WALK_INTERPRETER
-    )
+    assert INTERPRETERS[(RuleFamily.REACTIVE, EngineLane.RECEIPT_WALK)] is thorns_fields
 
 
 def test_the_walk_lane_compiles_the_three_numbers_a_strike_back_declares() -> None:
     """Every field is the declaration's own, stamped with the lane it serves."""
     rule = _rule("Thornmail", DefenseMechanic.THORNS)
-    fields = WALK_INTERPRETER.compile(rule, _ctx(rule.owner))
+    fields = thorns_fields(rule, _ctx(rule.owner), EngineLane.RECEIPT_WALK)
     assert [field.name for field in fields] == list(THORNS_FIELDS)
     assert all(field.lane is EngineLane.RECEIPT_WALK for field in fields)
     assert all(field.rule_id == rule.mechanic_id for field in fields)
@@ -224,7 +226,7 @@ def test_the_accessor_and_the_interpreter_share_one_arithmetic_home() -> None:
     rule = _rule("Thornmail", DefenseMechanic.THORNS)
     fields = {
         field.name: float(field.value)
-        for field in WALK_INTERPRETER.compile(rule, _ctx(rule.owner))
+        for field in thorns_fields(rule, _ctx(rule.owner), EngineLane.RECEIPT_WALK)
     }
     (packet,) = thorns_effects(_build("Thornmail"))
     assert packet.damage == fields["base"]
@@ -236,4 +238,4 @@ def test_the_walk_lane_refuses_a_reactive_shield_rather_than_pricing_it_twice() 
     """The shields reach the walk as resolved state; asking here is a stop."""
     rule = _rule("Armored Advance", DefenseMechanic.NOXIAN_ENDURANCE)
     with pytest.raises(DefenseInterpretationError, match="price it twice"):
-        WALK_INTERPRETER.compile(rule, _ctx(rule.owner))
+        thorns_fields(rule, _ctx(rule.owner), EngineLane.RECEIPT_WALK)

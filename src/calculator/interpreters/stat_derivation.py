@@ -45,7 +45,7 @@ class StatDerivationInterpretationError(ValueError):
     """A stat-derivation rule was asked something its payload does not answer."""
 
 
-def _reference_fields(
+def reference_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
     """Every sourced number one stat-derivation declaration resolves to.
@@ -53,6 +53,11 @@ def _reference_fields(
     A declared absence contributes no field at all, which is the whole point
     of the optional half of the reference tables: a mechanic with no ceiling
     must not publish a zero ceiling that a reader would then cap against.
+
+    Registered for the stat resolver and the pair engine, on two keys rather
+    than one: a :class:`KernelField` carries the lane it was built for, so a
+    field the pair engine reads must say so or the two lanes' fields become
+    indistinguishable the moment anything collects them together.
     """
     payload = rule.payload
     if not isinstance(payload, STAT_DERIVATION_PAYLOADS):
@@ -79,38 +84,6 @@ def _reference_fields(
             )
         )
     return tuple(fields)
-
-
-class StatDerivationResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The stat resolver's answer: the numbers, before anything reads them."""
-
-    FAMILY = RuleFamily.STAT_DERIVATION
-    LANES = frozenset({EngineLane.STAT_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """One declaration's sourced numbers, resolved for this build."""
-        return _reference_fields(rule, ctx, EngineLane.STAT_RESOLVER)
-
-
-class StatDerivationPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer, which is the same numbers on its own lane.
-
-    Two registrations rather than one shared interpreter object because a
-    :class:`KernelField` carries the lane it was built for: a field the pair
-    engine reads must say so, or the two lanes' fields become
-    indistinguishable the moment anything collects them together.
-    """
-
-    FAMILY = RuleFamily.STAT_DERIVATION
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """One declaration's sourced numbers, resolved for this build."""
-        return _reference_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-RESOLVER_INTERPRETER = StatDerivationResolverInterpreter()
-PAIR_INTERPRETER = StatDerivationPairInterpreter()
 
 
 def granted_stat(payload: object) -> DerivedStat | None:
@@ -298,14 +271,11 @@ def armor_penetration_split(owner: str, percent: float) -> tuple[float, float]:
 
 
 __all__ = [
-    "PAIR_INTERPRETER",
-    "RESOLVER_INTERPRETER",
     "StatDerivationInterpretationError",
-    "armor_penetration_split",
-    "StatDerivationPairInterpreter",
-    "StatDerivationResolverInterpreter",
     "StatSlot",
+    "armor_penetration_split",
     "declared_stat_derivations",
+    "reference_fields",
     "sole_declared_derivation",
     "stat_derivation_rules",
 ]

@@ -48,7 +48,6 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
-from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 # The field names a routing rule compiles to on the pair lane.
@@ -99,166 +98,119 @@ class DamageRoutingInterpretationError(ValueError):
     """A routing rule was asked something its payload does not answer."""
 
 
-class DamageRoutingPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the two target-side routing rules."""
+def pair_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """The two target-side routing rules, priced for the pair engine.
 
-    FAMILY = RuleFamily.DAMAGE_ROUTING
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
+    The melee/ranged share is chosen here, from the build context's own range
+    class, because that choice is made once per build and not per event — the
+    same reason the magnitude carries a split rather than the typing carrying
+    an attack class.
+    """
 
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The sourced numbers one routing declaration resolves to.
+    def field(name: str, value: float) -> KernelField:
+        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
 
-        The melee/ranged share is chosen here, from the build context's own
-        range class, because that choice is made once per build and not per
-        event — the same reason the magnitude carries a split rather than the
-        typing carrying an attack class.
-        """
+    payload = rule.payload
+    if isinstance(payload, ExecuteRule):
+        return (field(EXECUTE_THRESHOLD_FIELD, resolve(payload.threshold, ctx.level)),)
+    if not isinstance(payload, ShieldBypassRule):
+        raise DamageRoutingInterpretationError(
+            f"{rule.mechanic_id} is priced on the pair lane and is neither "
+            "an execution nor a shield bypass; the deferral is built by the "
+            "defensive resolver, not here"
+        )
+    share = payload.fraction.melee if ctx.holder_is_melee else payload.fraction.ranged
+    return (
+        field(SHIELD_BYPASS_FRACTION_FIELD, resolve(share, ctx.level)),
+        field(SHIELD_BYPASS_DURATION_FIELD, resolve(payload.duration, ctx.level)),
+    )
 
-        def field(name: str, value: float) -> KernelField:
-            return KernelField(
-                name=name,
-                value=value,
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            )
 
-        payload = rule.payload
-        if isinstance(payload, ExecuteRule):
-            return (
-                field(EXECUTE_THRESHOLD_FIELD, resolve(payload.threshold, ctx.level)),
-            )
-        if not isinstance(payload, ShieldBypassRule):
-            raise DamageRoutingInterpretationError(
-                f"{rule.mechanic_id} is priced on the pair lane and is neither "
-                "an execution nor a shield bypass; the deferral is built by the "
-                "defensive resolver, not here"
-            )
+def resolve_deferral(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
+    """The deferral schedule, against the subject that will pay it."""
+    slot = DefenseSlot(rule)
+    if slot.mechanic is not DefenseMechanic.IGNORE_PAIN:
+        raise DefenseInterpretationError(
+            f"{rule.mechanic_id} declares damage_routing at the resolver and "
+            "this family has no branch for it; a schedule with no arithmetic "
+            "is a mechanic that would silently do nothing"
+        )
+    deferred_key = (
+        "damage_deferral_melee" if subject.is_melee else "damage_deferral_ranged"
+    )
+    fields = [
+        slot.grant(DefenseField.DAMAGE_DEFERRAL_FRACTION, slot.value(deferred_key))
+    ]
+    fields.extend(
+        slot.grant(
+            field,
+            int(slot.value(key)) if field in _INTEGER_FIELDS else slot.value(key),
+        )
+        for key, field in _DEFERRAL_SCHEDULE
+    )
+    return DefenseOutcome(
+        fields=tuple(fields),
+        notes=(IGNORE_PAIN_NOTE.format(owner=slot.owner),),
+    )
+
+
+def walk_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """All three routing rules, as the riders the walk stages.
+
+    One branch per declared payload, and each emits the rider or the state
+    adjustment the kernel already understands rather than a price.  Field
+    names differ from the pair lane's, and the venom's share is delivered as
+    its complement — the ledger holds what SURVIVES, not what is cut — so
+    this is a different body rather than the pair lane's with a lane swapped.
+
+    The deferral's branch is the one that looks redundant and is not.  Its
+    schedule is also built by :func:`resolve_deferral`, and what the resolver
+    publishes is the holder's *opening defensive state* — the block a receipt
+    reader sees.  What this emits is the rider on the incoming events the walk
+    stages, which is a different consumer of the same declaration; the two are
+    one producer each rather than two producers of one number, and the
+    equivalence fixture asserts they agree.
+
+    The melee/ranged share is chosen from the build context's range class,
+    exactly as the pair lane does — but the *participant* whose range class
+    that is differs by payload and is the caller's to supply: a deferral is
+    resolved against the holder paying it and a venom against the holder
+    applying it.
+    """
+
+    def field(name: str, value: float) -> KernelField:
+        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+
+    payload = rule.payload
+    if isinstance(payload, ExecuteRule):
+        return (field(EXECUTE_THRESHOLD_FIELD, resolve(payload.threshold, ctx.level)),)
+    if isinstance(payload, ShieldBypassRule):
         share = (
             payload.fraction.melee if ctx.holder_is_melee else payload.fraction.ranged
         )
         return (
-            field(SHIELD_BYPASS_FRACTION_FIELD, resolve(share, ctx.level)),
-            field(SHIELD_BYPASS_DURATION_FIELD, resolve(payload.duration, ctx.level)),
+            field(VENOM_KEEP_FIELD, 1.0 - resolve(share, ctx.level)),
+            field(VENOM_DURATION_FIELD, resolve(payload.duration, ctx.level)),
         )
-
-
-class DamageRoutingResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the deferral."""
-
-    FAMILY = RuleFamily.DAMAGE_ROUTING
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape the deferral compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """The deferral schedule, against the subject that will pay it."""
-        slot = DefenseSlot(rule)
-        if slot.mechanic is not DefenseMechanic.IGNORE_PAIN:
-            raise DefenseInterpretationError(
-                f"{rule.mechanic_id} declares damage_routing at the resolver "
-                "and this interpreter has no branch for it; a schedule with no "
-                "arithmetic is a mechanic that would silently do nothing"
-            )
-        deferred_key = (
-            "damage_deferral_melee" if subject.is_melee else "damage_deferral_ranged"
+    if not isinstance(payload, DamageDeferralRule):
+        raise DamageRoutingInterpretationError(
+            f"{rule.mechanic_id} declares damage_routing and this family has "
+            "no walk branch for it; a routing rule the walk cannot stage would "
+            "silently do nothing"
         )
-        fields = [
-            slot.grant(DefenseField.DAMAGE_DEFERRAL_FRACTION, slot.value(deferred_key))
-        ]
-        fields.extend(
-            slot.grant(
-                field,
-                int(slot.value(key)) if field in _INTEGER_FIELDS else slot.value(key),
-            )
-            for key, field in _DEFERRAL_SCHEDULE
-        )
-        return DefenseOutcome(
-            fields=tuple(fields),
-            notes=(IGNORE_PAIN_NOTE.format(owner=slot.owner),),
-        )
-
-
-class DamageRoutingWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for all three routing rules.
-
-    One branch per declared payload family, and each branch emits the rider
-    or the state adjustment the kernel already understands rather than a
-    price — umbrella Amendment P's substitution.  The walk reads these
-    instead of the two routes it used before: the execution arrived stamped
-    on the pair engine's own events, and the venom arrived from the
-    name-keyed effects registry, so neither reached the walk through an
-    interpreter of this family at all.
-
-    The deferral's branch is the one that looks redundant and is not.  Its
-    schedule is also built by the resolver, and what the resolver publishes
-    is the holder's *opening defensive state* — the block a receipt reader
-    sees.  What this emits is the rider on the incoming events the walk
-    stages, which is a different consumer of the same declaration; the two
-    are one producer each rather than two producers of one number, and the
-    equivalence fixture asserts they agree.
-    """
-
-    FAMILY = RuleFamily.DAMAGE_ROUTING
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The rider or state adjustment one routing declaration resolves to.
-
-        The melee/ranged share is chosen here from the build context's range
-        class, exactly as the pair lane does — but the *participant* whose
-        range class that is differs by payload and is the caller's to supply:
-        a deferral is resolved against the holder paying it and a venom
-        against the holder applying it.
-        """
-
-        def field(name: str, value: float) -> KernelField:
-            return KernelField(
-                name=name,
-                value=value,
-                lane=EngineLane.RECEIPT_WALK,
-                rule_id=rule.mechanic_id,
-            )
-
-        payload = rule.payload
-        if isinstance(payload, ExecuteRule):
-            return (
-                field(EXECUTE_THRESHOLD_FIELD, resolve(payload.threshold, ctx.level)),
-            )
-        if isinstance(payload, ShieldBypassRule):
-            share = (
-                payload.fraction.melee
-                if ctx.holder_is_melee
-                else payload.fraction.ranged
-            )
-            # The ledger holds what SURVIVES, not what is cut, so the
-            # declaration's share is delivered as its complement.  One
-            # subtraction, in the one place that knows both spellings.
-            return (
-                field(VENOM_KEEP_FIELD, 1.0 - resolve(share, ctx.level)),
-                field(VENOM_DURATION_FIELD, resolve(payload.duration, ctx.level)),
-            )
-        if not isinstance(payload, DamageDeferralRule):
-            raise DamageRoutingInterpretationError(
-                f"{rule.mechanic_id} declares damage_routing and this "
-                "interpreter has no walk branch for it; a routing rule the "
-                "walk cannot stage would silently do nothing"
-            )
-        slot = DefenseSlot(rule)
-        deferred_key = (
-            "damage_deferral_melee" if ctx.holder_is_melee else "damage_deferral_ranged"
-        )
-        return (
-            field(DEFER_FRACTION_FIELD, slot.value(deferred_key)),
-            field(DEFER_DURATION_FIELD, slot.value("damage_deferral_duration")),
-            field(DEFER_TICKS_FIELD, slot.value("damage_deferral_ticks")),
-        )
-
-
-PAIR_INTERPRETER = DamageRoutingPairInterpreter()
-RESOLVER_INTERPRETER = DamageRoutingResolverInterpreter()
-WALK_INTERPRETER = DamageRoutingWalkInterpreter()
+    slot = DefenseSlot(rule)
+    deferred_key = (
+        "damage_deferral_melee" if ctx.holder_is_melee else "damage_deferral_ranged"
+    )
+    return (
+        field(DEFER_FRACTION_FIELD, slot.value(deferred_key)),
+        field(DEFER_DURATION_FIELD, slot.value("damage_deferral_duration")),
+        field(DEFER_TICKS_FIELD, slot.value("damage_deferral_ticks")),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -325,7 +277,7 @@ def resolve_execution(
             "a second one owns the fold"
         )
     rule = found[0]
-    fields = PAIR_INTERPRETER.compile(
+    fields = pair_fields(
         rule,
         build_context(
             rule.owner,
@@ -334,6 +286,7 @@ def resolve_execution(
             target_bonus_health=target_bonus_health,
             holder_is_melee=holder_is_melee,
         ),
+        EngineLane.PAIR_ENGINE,
     )
     return Execution(
         owner=rule.owner, threshold=_field(fields, EXECUTE_THRESHOLD_FIELD)
@@ -363,7 +316,7 @@ def resolve_shield_bypass(
             "a second one owns the fold"
         )
     rule = found[0]
-    fields = PAIR_INTERPRETER.compile(
+    fields = pair_fields(
         rule,
         build_context(
             rule.owner,
@@ -372,6 +325,7 @@ def resolve_shield_bypass(
             target_bonus_health=target_bonus_health,
             holder_is_melee=holder_is_melee,
         ),
+        EngineLane.PAIR_ENGINE,
     )
     return ShieldBypass(
         owner=rule.owner,
@@ -448,7 +402,7 @@ def _walk_fields(  # pylint: disable=too-many-arguments
             "the fold"
         )
     rule = found[0]
-    return rule, WALK_INTERPRETER.compile(
+    return rule, walk_fields(
         rule,
         build_context(
             rule.owner,
@@ -457,6 +411,7 @@ def _walk_fields(  # pylint: disable=too-many-arguments
             target_bonus_health=target_bonus_health,
             holder_is_melee=holder_is_melee,
         ),
+        EngineLane.RECEIPT_WALK,
     )
 
 
@@ -556,27 +511,24 @@ __all__ = [
     "DEFER_FRACTION_FIELD",
     "DEFER_TICKS_FIELD",
     "DamageRoutingInterpretationError",
-    "DamageRoutingPairInterpreter",
-    "DamageRoutingResolverInterpreter",
-    "DamageRoutingWalkInterpreter",
     "Deferral",
     "EXECUTE_THRESHOLD_FIELD",
     "Execution",
     "IGNORE_PAIN_NOTE",
-    "PAIR_INTERPRETER",
-    "RESOLVER_INTERPRETER",
     "SHIELD_BYPASS_DURATION_FIELD",
     "SHIELD_BYPASS_FRACTION_FIELD",
     "ShieldBypass",
     "VENOM_DURATION_FIELD",
     "VENOM_KEEP_FIELD",
     "Venom",
-    "WALK_INTERPRETER",
+    "pair_fields",
+    "resolve_deferral",
     "resolve_execution",
     "resolve_shield_bypass",
     "routing_rules",
     "walk_deferral",
     "walk_execution",
+    "walk_fields",
     "walk_rules",
     "walk_venom",
 ]

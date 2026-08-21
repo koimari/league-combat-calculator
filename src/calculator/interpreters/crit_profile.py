@@ -52,72 +52,56 @@ class CritProfileInterpretationError(ValueError):
     """A crit declaration was asked something its payload does not answer."""
 
 
-class CritProfilePairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``crit_profile`` family."""
+def crit_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """The sourced numbers one crit declaration resolves to.
 
-    FAMILY = RuleFamily.CRIT_PROFILE
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
+    Three payloads, three field sets, and no shared default: a rule that is
+    none of the three is a stop rather than an empty tuple, because an empty
+    tuple here would be a crit profile that silently changes nothing.
+    """
 
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The sourced numbers one crit declaration resolves to.
+    def field(name: str, value: float) -> KernelField:
+        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
 
-        Three payloads, three field sets, and no shared default: a rule that
-        is none of the three is a stop rather than an empty tuple, because an
-        empty tuple here would be a crit profile that silently changes
-        nothing.
-        """
-
-        def field(name: str, value: float) -> KernelField:
-            return KernelField(
-                name=name,
-                value=value,
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            )
-
-        payload = rule.payload
-        if isinstance(payload, CritDamageBonusRule):
-            return (field(CRIT_DAMAGE_BONUS_FIELD, resolve(payload.bonus, ctx.level)),)
-        if isinstance(payload, AttackCooldownRefundRule):
-            return (
+    payload = rule.payload
+    if isinstance(payload, CritDamageBonusRule):
+        return (field(CRIT_DAMAGE_BONUS_FIELD, resolve(payload.bonus, ctx.level)),)
+    if isinstance(payload, AttackCooldownRefundRule):
+        return (
+            field(COOLDOWN_REFUND_FIELD, resolve(payload.refund_fraction, ctx.level)),
+        )
+    if not isinstance(payload, ForcedCritRule):
+        raise CritProfileInterpretationError(
+            f"{rule.mechanic_id} is not a crit-profile rule"
+        )
+    fields = [
+        field(FORCED_CRIT_RATIO_FIELD, resolve(payload.reduced_ratio, ctx.level)),
+        field(FORCED_CRIT_COOLDOWN_FIELD, resolve(payload.cooldown, ctx.level)),
+    ]
+    if payload.heal is not None:
+        fields.extend(
+            (
                 field(
-                    COOLDOWN_REFUND_FIELD,
-                    resolve(payload.refund_fraction, ctx.level),
+                    FORCED_CRIT_HEAL_BASE_AD_FIELD,
+                    resolve(payload.heal.base_ad_ratio, ctx.level),
+                ),
+                field(
+                    FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD,
+                    resolve(payload.heal.base_ad_ratio_ranged, ctx.level),
+                ),
+                field(
+                    FORCED_CRIT_HEAL_MISSING_HEALTH_FIELD,
+                    resolve(payload.heal.missing_health_ratio, ctx.level),
+                ),
+                field(
+                    FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD,
+                    resolve(payload.heal.temporary_health_duration, ctx.level),
                 ),
             )
-        if not isinstance(payload, ForcedCritRule):
-            raise CritProfileInterpretationError(
-                f"{rule.mechanic_id} is not a crit-profile rule"
-            )
-        fields = [
-            field(FORCED_CRIT_RATIO_FIELD, resolve(payload.reduced_ratio, ctx.level)),
-            field(FORCED_CRIT_COOLDOWN_FIELD, resolve(payload.cooldown, ctx.level)),
-        ]
-        if payload.heal is not None:
-            fields.extend(
-                (
-                    field(
-                        FORCED_CRIT_HEAL_BASE_AD_FIELD,
-                        resolve(payload.heal.base_ad_ratio, ctx.level),
-                    ),
-                    field(
-                        FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD,
-                        resolve(payload.heal.base_ad_ratio_ranged, ctx.level),
-                    ),
-                    field(
-                        FORCED_CRIT_HEAL_MISSING_HEALTH_FIELD,
-                        resolve(payload.heal.missing_health_ratio, ctx.level),
-                    ),
-                    field(
-                        FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD,
-                        resolve(payload.heal.temporary_health_duration, ctx.level),
-                    ),
-                )
-            )
-        return tuple(fields)
-
-
-PAIR_INTERPRETER = CritProfilePairInterpreter()
+        )
+    return tuple(fields)
 
 
 @dataclass(frozen=True, slots=True)
@@ -234,7 +218,7 @@ def resolve_profile(
     forced: ForcedCrit | None = None
     refund: CooldownRefund | None = None
     for rule in crit_rules(owners):
-        fields = PAIR_INTERPRETER.compile(
+        fields = crit_fields(
             rule,
             build_context(
                 rule.owner,
@@ -243,6 +227,7 @@ def resolve_profile(
                 target_bonus_health=target_bonus_health,
                 holder_is_melee=holder_is_melee,
             ),
+            EngineLane.PAIR_ENGINE,
         )
         payload = rule.payload
         if isinstance(payload, CritDamageBonusRule):
@@ -277,7 +262,6 @@ __all__ = [
     "CooldownRefund",
     "CritProfile",
     "CritProfileInterpretationError",
-    "CritProfilePairInterpreter",
     "FORCED_CRIT_COOLDOWN_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD",
@@ -285,7 +269,7 @@ __all__ = [
     "FORCED_CRIT_RATIO_FIELD",
     "FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD",
     "ForcedCrit",
-    "PAIR_INTERPRETER",
+    "crit_fields",
     "crit_rules",
     "resolve_profile",
 ]

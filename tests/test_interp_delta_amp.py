@@ -188,7 +188,7 @@ def test_the_pair_interpreter_emits_one_value_typed_field() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    (field,) = delta_amp.PAIR_INTERPRETER.compile(rule, ctx)
+    (field,) = delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == delta_amp.AMP_FRACTION_FIELD
     assert field.rule_id == "horizon_focus.hypershot"
     assert isinstance(field.value, float)
@@ -578,7 +578,10 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
             target_bonus_health=0.0,
             holder_is_melee=True,
         )
-        names = {field.name for field in delta_amp.PAIR_INTERPRETER.compile(rule, ctx)}
+        names = {
+            field.name
+            for field in delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
+        }
         assert names == {
             delta_amp.AMP_FRACTION_FIELD,
             delta_amp.LIVE_THRESHOLD_FIELD,
@@ -784,7 +787,9 @@ def test_a_stat_scaled_magnitude_has_no_build_time_fraction() -> None:
     )
     with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="bonus_mana"):
         delta_amp.magnitude_fraction(rule.payload.magnitude, ctx)
-    names = {field.name for field in delta_amp.PAIR_INTERPRETER.compile(rule, ctx)}
+    names = {
+        field.name for field in delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
+    }
     assert delta_amp.AMP_BASE_FRACTION_FIELD in names
     assert delta_amp.AMP_PER_HUNDRED_STAT_FIELD in names
     assert delta_amp.AMP_FRACTION_FIELD not in names

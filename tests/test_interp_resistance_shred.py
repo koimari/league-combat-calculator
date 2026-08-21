@@ -18,8 +18,9 @@ up here as a decision rather than as a diff nobody attributed.
 import pytest
 
 from src.calculator.ability_spec import DamageClass
-from src.calculator.interpreters import resistance_shred
+from src.calculator.interpreters import INTERPRETERS, resistance_shred
 from src.calculator.item_behavior import (
+    EngineLane,
     RampModel,
     Resistance,
     ResistanceShredRule,
@@ -167,10 +168,13 @@ def test_a_question_the_declaration_does_not_answer_raises() -> None:
         _armor().value("window_end")
 
 
-def test_the_interpreter_serves_the_lane_it_is_registered_on() -> None:
-    """The registry key and the interpreter's own claim are one fact."""
-    assert resistance_shred.PAIR_INTERPRETER.FAMILY is RuleFamily.RESISTANCE_SHRED
+def test_both_lanes_read_the_one_ramp_body() -> None:
+    """The pair engine and the walk are registered on the same function."""
     assert (
-        resistance_shred.PAIR_INTERPRETER.LANES
-        == resistance_shred.ResistanceShredPairInterpreter.LANES
+        INTERPRETERS[(RuleFamily.RESISTANCE_SHRED, EngineLane.PAIR_ENGINE)]
+        is resistance_shred.ramp_fields
+    )
+    assert (
+        INTERPRETERS[(RuleFamily.RESISTANCE_SHRED, EngineLane.RECEIPT_WALK)]
+        is resistance_shred.ramp_fields
     )

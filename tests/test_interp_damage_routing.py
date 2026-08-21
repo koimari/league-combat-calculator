@@ -19,15 +19,16 @@ import pytest
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.interpreters import INTERPRETERS
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS
 from src.calculator.interpreters.damage_routing import (
     DamageRoutingInterpretationError,
     EXECUTE_THRESHOLD_FIELD,
-    PAIR_INTERPRETER,
-    RESOLVER_INTERPRETER,
+    pair_fields,
+    resolve_deferral,
     resolve_execution,
     resolve_shield_bypass,
 )
+from src.calculator.interpreters.defense_state import compiled_shape
 from src.calculator.item_behavior import (
     DamageDeferralRule,
     DefenseMechanic,
@@ -71,13 +72,13 @@ def _rule(owner: str, payload_type: type):
 def test_both_lanes_are_registered() -> None:
     """The family is built in two places and says so in the lane table."""
     assert (
-        INTERPRETERS[(RuleFamily.DAMAGE_ROUTING, EngineLane.PAIR_ENGINE)]
-        is PAIR_INTERPRETER
+        INTERPRETERS[(RuleFamily.DAMAGE_ROUTING, EngineLane.PAIR_ENGINE)] is pair_fields
     )
     assert (
         INTERPRETERS[(RuleFamily.DAMAGE_ROUTING, EngineLane.DEFENSE_RESOLVER)]
-        is RESOLVER_INTERPRETER
+        is compiled_shape
     )
+    assert RESOLVERS[RuleFamily.DAMAGE_ROUTING] is resolve_deferral
 
 
 def test_every_routing_entry_declares_a_rule() -> None:
@@ -194,7 +195,7 @@ def test_the_pair_interpreter_refuses_the_deferral() -> None:
     """The deferral is built by the resolver; asking the pair lane is a stop."""
     rule = _rule(DEFERRAL_HOLDER, DamageDeferralRule)
     with pytest.raises(DamageRoutingInterpretationError, match="defensive resolver"):
-        PAIR_INTERPRETER.compile(
+        pair_fields(
             rule,
             catalog.build_context(
                 rule.owner,
@@ -203,13 +204,14 @@ def test_the_pair_interpreter_refuses_the_deferral() -> None:
                 target_bonus_health=0.0,
                 holder_is_melee=True,
             ),
+            EngineLane.PAIR_ENGINE,
         )
 
 
 def test_the_compiled_execute_field_is_the_one_engines_ask_for() -> None:
     """A field a caller cannot name is a number nobody can read."""
     rule = _rule(EXECUTE_HOLDER, ExecuteRule)
-    fields = PAIR_INTERPRETER.compile(
+    fields = pair_fields(
         rule,
         catalog.build_context(
             rule.owner,
@@ -218,6 +220,7 @@ def test_the_compiled_execute_field_is_the_one_engines_ask_for() -> None:
             target_bonus_health=0.0,
             holder_is_melee=True,
         ),
+        EngineLane.PAIR_ENGINE,
     )
     assert [field.name for field in fields] == [EXECUTE_THRESHOLD_FIELD]
     assert all(field.rule_id == rule.mechanic_id for field in fields)

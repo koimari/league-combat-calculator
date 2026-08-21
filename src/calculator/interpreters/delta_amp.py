@@ -28,9 +28,8 @@ resolved form, and the engine asks for one by the attack class it is about
 to price rather than by an item's name.
 
 Everything the engine takes from a declaration comes through
-:meth:`DeltaAmpPairInterpreter.compile` — the fraction, the window bounds —
-and everything it *asks* of one comes through :class:`AmpSlot` or
-:class:`PartAmp`.  A question a rule does not answer raises; it never
+:func:`amp_fields` — the fraction, the window bounds — and everything it
+*asks* of one comes through :class:`AmpSlot` or :class:`PartAmp`.  A question a rule does not answer raises; it never
 resolves to a zero.
 """
 
@@ -218,19 +217,24 @@ def _magnitude_fields(
     return (field(AMP_FRACTION_FIELD, magnitude_fraction(magnitude, ctx)),)
 
 
-def _amp_fields(
+def amp_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """Every number one amp rule contributes, stamped for the asking lane.
+    """Every number one amp rule contributes, stamped with *lane*.
 
     The fraction always; the window bounds when the activation declares an
     absolute one.  This is the single path from a declaration to a number an
     engine uses — a caller that resolved a `ValueRef` itself would be a
-    second reader of the same declaration — and the *lane* is the only thing
-    that varies between the two interpreters below.  Sharing the body rather
-    than spelling it twice is what makes "the walk reads the same
-    declaration the pair engine reads" a property of the tree instead of a
-    claim two functions could drift out of.
+    second reader of the same declaration.
+
+    Registered for both the pair engine and the receipt walk: the lane is the
+    only thing that differs between them, so one body is what makes "the walk
+    reads the same declaration the pair engine reads" a property of the tree
+    rather than a claim two functions could drift out of.  The walk needs its
+    own reading because the holder's static amps used to reach it already
+    folded into the pair engine's rows, and a walk that prices a declaration
+    itself has nowhere to take them from (:func:`resolve_static_holder_amps`,
+    ``survival.pricing.DeclaredPacket``).
     """
     payload = rule.payload
     if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
@@ -265,56 +269,6 @@ def _amp_fields(
             )
         )
     return tuple(fields)
-
-
-class DeltaAmpPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``delta_amp`` family."""
-
-    FAMILY = RuleFamily.DELTA_AMP
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This rule's numbers, resolved for the one-attacker engine."""
-        return _amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-class DeltaAmpWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the ``delta_amp`` family.
-
-    The half the umbrella's Amendment M, Ruling 1 rules as this family's
-    retirement act.  Before it, the coupled walk read no amp declaration at
-    all: the holder's own static, pair-local amplifiers reached it already
-    folded into ``participant_timeline._pair_run_fight``'s rows, which is
-    what ``delta_amp/receipt_walk``'s deferral said in its own words.  A walk
-    that prices a family's declaration itself has nowhere to take an amp from
-    under that arrangement, and would silently drop it — so the walk reads
-    the declaration through this interpreter and composes the result onto the
-    packet it prices (:func:`resolve_static_holder_amps`,
-    ``survival.pricing.DeclaredPacket``).
-
-    It compiles the same fields the pair interpreter does, stamped with its
-    own lane.  Two lanes reading one declaration is the shape D-60 asks for;
-    two lanes computing one number from two bodies is the shape it forbids.
-    """
-
-    FAMILY = RuleFamily.DELTA_AMP
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This rule's numbers, resolved for the coupled roster walk."""
-        return _amp_fields(rule, ctx, EngineLane.RECEIPT_WALK)
-
-
-PAIR_INTERPRETER = DeltaAmpPairInterpreter()
-WALK_INTERPRETER = DeltaAmpWalkInterpreter()
-
-#: Which interpreter answers for a lane.  The two resolvers below take a lane
-#: rather than an interpreter, so a caller names the engine it is pricing for
-#: and never reaches past the registry to pick a compiler.
-_INTERPRETER_OF_LANE: Mapping[EngineLane, Any] = {
-    EngineLane.PAIR_ENGINE: PAIR_INTERPRETER,
-    EngineLane.RECEIPT_WALK: WALK_INTERPRETER,
-}
 
 
 @dataclass(frozen=True, slots=True)
@@ -720,19 +674,17 @@ def resolve_part_amp(
     no holder declares a per-part amp for this damage, so no rule ran and
     there is no multiplier to report.
 
-    ``lane`` names the engine asking, and selects the interpreter that
-    answers.  The two compile identical values and differ only in the lane
-    their fields carry, so the coupled walk's reading of an amp declaration
-    is the pair engine's reading — which is the point: the walk has to be
-    able to deliver the holder's amps *itself* without becoming a second
-    place the amp is computed (D-60).
+    ``lane`` names the engine asking, and is the only thing it changes: the
+    values are identical and only the lane the fields carry differs, so the
+    coupled walk's reading of an amp declaration is the pair engine's reading
+    — which is the point, since the walk has to deliver the holder's amps
+    itself without becoming a second place the amp is computed.
     """
     rules = part_amp_rules(owners, attack_class)
     if not rules:
         return None
-    interpreter = _INTERPRETER_OF_LANE[lane]
     compiled = tuple(
-        interpreter.compile(
+        amp_fields(
             rule,
             build_context(
                 rule.owner,
@@ -741,6 +693,7 @@ def resolve_part_amp(
                 target_bonus_health=target_bonus_health,
                 holder_is_melee=holder_is_melee,
             ),
+            lane,
         )
         for rule in rules
     )
@@ -913,7 +866,7 @@ def resolve_slot(
     if not rules:
         return None
     compiled = tuple(
-        PAIR_INTERPRETER.compile(
+        amp_fields(
             rule,
             build_context(
                 rule.owner,
@@ -922,6 +875,7 @@ def resolve_slot(
                 target_bonus_health=target_bonus_health,
                 holder_is_melee=holder_is_melee,
             ),
+            EngineLane.PAIR_ENGINE,
         )
         for rule in rules
     )
@@ -938,12 +892,9 @@ __all__ = [
     "WINDOW_START_FIELD",
     "AmpSlot",
     "DeltaAmpInterpretationError",
-    "DeltaAmpPairInterpreter",
-    "DeltaAmpWalkInterpreter",
-    "PAIR_INTERPRETER",
-    "WALK_INTERPRETER",
     "PartAmp",
     "StaticHolderAmps",
+    "amp_fields",
     "magnitude_fraction",
     "part_amp_rules",
     "resolve_part_amp",

@@ -16,12 +16,12 @@ import pytest
 from src.calculator.defensive_effects import option_reader
 
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.interpreters import INTERPRETERS, resolve_defense
-from src.calculator.interpreters.defense_state import DefenseInterpretationError
-from src.calculator.interpreters.opening_defense import (
-    RESOLVER_INTERPRETER,
-    OpeningDefenseResolverInterpreter,
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
+from src.calculator.interpreters.defense_state import (
+    DefenseInterpretationError,
+    compiled_shape,
 )
+from src.calculator.interpreters.opening_defense import resolve_opening_defense
 from src.calculator.item_behavior import (
     BehaviorRule,
     DefenseField,
@@ -62,10 +62,9 @@ def test_the_family_is_registered_on_the_lane_that_builds_it() -> None:
     """A defence is built before any walk, and the registry says so."""
     assert (
         INTERPRETERS[(RuleFamily.OPENING_DEFENSE, EngineLane.DEFENSE_RESOLVER)]
-        is RESOLVER_INTERPRETER
+        is compiled_shape
     )
-    assert RESOLVER_INTERPRETER.LANES == frozenset({EngineLane.DEFENSE_RESOLVER})
-    assert isinstance(RESOLVER_INTERPRETER, OpeningDefenseResolverInterpreter)
+    assert RESOLVERS[RuleFamily.OPENING_DEFENSE] is resolve_opening_defense
 
 
 def test_magebane_is_a_share_of_the_subjects_own_maximum_health() -> None:
@@ -173,18 +172,18 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
     from src.calculator import interpreters
 
     remaining = {
-        key: value
-        for key, value in INTERPRETERS.items()
-        if key != (RuleFamily.OPENING_DEFENSE, EngineLane.DEFENSE_RESOLVER)
+        family: resolver
+        for family, resolver in RESOLVERS.items()
+        if family is not RuleFamily.OPENING_DEFENSE
     }
-    monkeypatch.setattr(interpreters, "INTERPRETERS", remaining)
+    monkeypatch.setattr(interpreters, "RESOLVERS", remaining)
     with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
         resolve_defense(_rule("Kaenic Rookern", DefenseMechanic.MAGEBANE), _subject())
 
 
 def test_a_defence_of_another_family_is_refused() -> None:
-    """An interpreter answers for its own family and says so."""
+    """A resolver answers for its own family and says so."""
     with pytest.raises(DefenseInterpretationError, match="no branch for it"):
-        RESOLVER_INTERPRETER.resolve(
+        resolve_opening_defense(
             _rule("Force of Nature", DefenseMechanic.STEADFAST), _subject()
         )

@@ -56,16 +56,24 @@ class BehaviorRuleError(ValueError):
 class EngineLane(Enum):
     """The engines a declared behaviour may have to be interpreted by.
 
-    Phase 1 exports ``ClaimLane`` and this phase exports ``EngineLane``
-    (D-45): two lane vocabularies answering different questions must never
-    both be spelled ``Lane``.  A claim lane says *who is claiming coverage*;
-    an engine lane says *which engine has to run the rule*.
+    ``ClaimLane`` and ``EngineLane`` are two lane vocabularies answering
+    different questions and neither is ever spelled ``Lane``: a claim lane
+    says *who is claiming coverage*, an engine lane says *which engine has to
+    run the rule*.
+
+    This is the whole lane set, named once.  ``interpreters._FAMILY_LANES``
+    says which of these owe each family an answer.
     """
 
+    #: The one-attacker damage model.
     PAIR_ENGINE = "pair_engine"
+    #: The coupled roster walk that serves receipts.
     RECEIPT_WALK = "receipt_walk"
+    #: The compiled kernel the optimizer scores through.
     COMPILED_SCORE_WALK = "compiled_score_walk"
+    #: The defensive-effects build, before any walk.
     DEFENSE_RESOLVER = "defense_resolver"
+    #: The stat build, before any damage exists.
     STAT_RESOLVER = "stat_resolver"
 
 

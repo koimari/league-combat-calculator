@@ -54,64 +54,41 @@ _REACTIVE_SHIELDS = frozenset(
 THORNS_FIELDS: tuple[str, ...] = ("base", "bonus_armor_ratio", "grievous_duration")
 
 
-class ReactiveResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the ``reactive`` family."""
+def resolve_reactive(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
+    """One reactive defence, against the subject it is defending.
 
-    FAMILY = RuleFamily.REACTIVE
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape a reactive defence compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """One reactive defence, against the subject it is defending."""
-        slot = DefenseSlot(rule)
-        if slot.mechanic in _REACTIVE_SHIELDS:
-            return _reactive_shield(slot, subject)
-        if slot.mechanic is DefenseMechanic.THORNS:
-            return DefenseOutcome(fields=(), notes=())
-        raise DefenseInterpretationError(
-            f"{rule.mechanic_id} declares reactive and this interpreter has no "
-            "branch for it; a defence with no arithmetic is a mechanic that "
-            "would silently do nothing"
-        )
-
-
-class ReactiveWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the one reactive mechanic it pays itself.
-
-    Thorns is not staged from resolved defensive state: it writes none, and
-    the coupled timeline compiles the declaration at its own boundary — one
-    profile per roster actor, per fight — before scheduling a strike-back
-    event against whoever swung.  That is a walk-lane interpretation and it
-    has been one since the family was migrated; what it lacked was a
-    registration saying so, which left the lane counted as a gap whose dated
-    receipt said the walks stage the resolver's work.  They do for the two
-    reactive shields and they do not for this.
-
-    Field for field this is :func:`thorns_effects`' own arithmetic, shared
-    through :func:`_thorns_fields`, so the registered interpreter and the
-    accessor the timeline calls cannot answer differently — the same single
-    arithmetic home the sustain family's walk half keeps.
+    Thorns resolves to nothing here: it writes no defensive state, and the
+    walk pays it through :func:`thorns_fields` instead.
     """
-
-    FAMILY = RuleFamily.REACTIVE
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """One Thorns declaration's numbers, on the lane that pays them.
-
-        ``ctx`` is unread: every reference a strike-back declares is flat, and
-        the boundary that builds a walk has no level to resolve a ramp
-        against.
-        """
-        del ctx
-        return _thorns_fields(rule, EngineLane.RECEIPT_WALK)
+    slot = DefenseSlot(rule)
+    if slot.mechanic in _REACTIVE_SHIELDS:
+        return _reactive_shield(slot, subject)
+    if slot.mechanic is DefenseMechanic.THORNS:
+        return DefenseOutcome(fields=(), notes=())
+    raise DefenseInterpretationError(
+        f"{rule.mechanic_id} declares reactive and this family has no branch "
+        "for it; a defence with no arithmetic is a mechanic that would "
+        "silently do nothing"
+    )
 
 
-RESOLVER_INTERPRETER = ReactiveResolverInterpreter()
-WALK_INTERPRETER = ReactiveWalkInterpreter()
+def thorns_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """One Thorns declaration's numbers, on the lane that pays them.
+
+    Thorns is the one reactive mechanic the walk pays itself: the coupled
+    timeline compiles the declaration at its own boundary — one profile per
+    roster actor, per fight — before scheduling a strike-back event against
+    whoever swung.  Field for field this is :func:`thorns_effects`' own
+    arithmetic, shared through :func:`_thorns_fields`, so the registered
+    reading and the accessor the timeline calls cannot answer differently.
+
+    ``ctx`` is unread: every reference a strike-back declares is flat, and the
+    boundary that builds a walk has no level to resolve a ramp against.
+    """
+    del ctx
+    return _thorns_fields(rule, lane)
 
 
 def _thorns_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:
@@ -215,10 +192,8 @@ def thorns_effects(items: Sequence[Mapping[str, object]]) -> tuple[ThornsEffect,
 __all__ = [
     "REACTIVE_SHIELD_NOTE",
     "REACTIVE_SHIELD_SOURCE",
-    "RESOLVER_INTERPRETER",
     "THORNS_FIELDS",
-    "WALK_INTERPRETER",
-    "ReactiveResolverInterpreter",
-    "ReactiveWalkInterpreter",
+    "resolve_reactive",
     "thorns_effects",
+    "thorns_fields",
 ]

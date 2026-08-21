@@ -23,10 +23,9 @@ from dataclasses import replace
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters import stat_derivation
 from src.calculator.interpreters.stat_derivation import (
-    PAIR_INTERPRETER,
-    RESOLVER_INTERPRETER,
     StatDerivationInterpretationError,
     declared_stat_derivations,
+    reference_fields,
     stat_derivation_rules,
 )
 from src.calculator.data_fetcher import get_item_by_name
@@ -76,7 +75,7 @@ def _slots(owner: str, payload_type: type, *, melee: bool = True):
     return tuple(
         stat_derivation.StatSlot(
             rule=rule,
-            fields=RESOLVER_INTERPRETER.compile(
+            fields=reference_fields(
                 rule,
                 catalog.build_context(
                     rule.owner,
@@ -85,6 +84,7 @@ def _slots(owner: str, payload_type: type, *, melee: bool = True):
                     target_bonus_health=0.0,
                     holder_is_melee=melee,
                 ),
+                EngineLane.STAT_RESOLVER,
             ),
         )
         for rule in stat_derivation_rules([owner], payload_type)
@@ -361,13 +361,10 @@ def test_every_elsewhere_key_is_one_a_live_entry_carries() -> None:
 
 def test_both_lanes_are_registered_and_stamp_their_own_lane() -> None:
     """Two registrations, because a KernelField carries the lane it was built for."""
-    for lane, interpreter in (
-        (EngineLane.PAIR_ENGINE, PAIR_INTERPRETER),
-        (EngineLane.STAT_RESOLVER, RESOLVER_INTERPRETER),
-    ):
-        assert INTERPRETERS[(RuleFamily.STAT_DERIVATION, lane)] is interpreter
+    for lane in (EngineLane.PAIR_ENGINE, EngineLane.STAT_RESOLVER):
+        assert INTERPRETERS[(RuleFamily.STAT_DERIVATION, lane)] is reference_fields
         rule = stat_derivation_rules([MULTIPLIER_HOLDER], StatMultiplierRule)[0]
-        fields = interpreter.compile(
+        fields = reference_fields(
             rule,
             catalog.build_context(
                 rule.owner,
@@ -376,15 +373,16 @@ def test_both_lanes_are_registered_and_stamp_their_own_lane() -> None:
                 target_bonus_health=0.0,
                 holder_is_melee=True,
             ),
+            lane,
         )
         assert {field.lane for field in fields} == {lane}
 
 
 def test_the_interpreter_refuses_a_payload_of_another_family() -> None:
-    """Asking a stat interpreter for a sustain rule is a stop, not a zero."""
+    """Asking the stat reading for a sustain rule is a stop, not a zero."""
     rule = catalog.behavior_rules("Vampiric Scepter")[0]
     with pytest.raises(StatDerivationInterpretationError, match="not a stat"):
-        PAIR_INTERPRETER.compile(
+        reference_fields(
             rule,
             catalog.build_context(
                 rule.owner,
@@ -393,6 +391,7 @@ def test_the_interpreter_refuses_a_payload_of_another_family() -> None:
                 target_bonus_health=0.0,
                 holder_is_melee=True,
             ),
+            EngineLane.PAIR_ENGINE,
         )
 
 

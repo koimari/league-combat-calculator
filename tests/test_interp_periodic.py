@@ -13,6 +13,7 @@ import pytest
 
 from src.calculator.interpreters import periodic
 from src.calculator.item_behavior import (
+    EngineLane,
     PeriodicCadence,
     PeriodicRule,
     RuleFamily,
@@ -202,7 +203,7 @@ def test_the_pair_interpreter_compiles_the_cadence_it_can_know() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    (field,) = periodic.PAIR_INTERPRETER.compile(rule, ctx)
+    (field,) = periodic.cadence_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == periodic.PERIODIC_INTERVAL_FIELD
     assert field.value == pytest.approx(float(ITEM_EFFECTS[ANGUISH]["interval"]))  # type: ignore[arg-type]
     assert field.rule_id == rule.mechanic_id
@@ -223,4 +224,4 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
         holder_is_melee=True,
     )
     with pytest.raises(periodic.PeriodicInterpretationError):
-        periodic.PAIR_INTERPRETER.compile(foreign, ctx)
+        periodic.cadence_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

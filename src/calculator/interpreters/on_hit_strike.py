@@ -53,20 +53,20 @@ class OnHitStrikeInterpretationError(ValueError):
     """A rule reached this interpreter that is not an on-hit strike."""
 
 
-def _strike_fields(
+def strike_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One on-hit strike's compiled numbers for *lane*.
+    """One on-hit strike's compiled numbers, stamped with *lane*.
 
     The shape a strike compiles to, and the proof its bases resolve.
     Compiling here is what makes a formula's *build-time* failures — a
     missing registry key, a basis with no reading — surface when the build
     is made rather than on whichever event first asks for the number.
 
-    The lane is the only thing that varies between the two interpreters
-    below.  Sharing the body rather than spelling it twice is what makes
-    "the walk reads the same declaration the pair engine reads" a property
-    of the tree instead of a claim two functions could drift out of.
+    Registered for both the pair engine and the receipt walk: the lane is the
+    only thing that differs between them, so one body is what makes "the walk
+    reads the same declaration the pair engine reads" a property of the tree
+    rather than a claim two functions could drift out of.
     """
     payload = rule.payload
     if not isinstance(payload, OnHitStrikeRule):
@@ -82,61 +82,6 @@ def _strike_fields(
             rule_id=rule.mechanic_id,
         ),
     )
-
-
-class OnHitStrikePairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``on_hit_strike`` family.
-
-    Its number is a **preview** since this family retired: every strike
-    declares ``ViewTag.THEORETICAL`` on its pair lane and
-    ``damage._layer_on_hit_effects`` stamps ``pair_preview_of`` on the row it
-    authors, so the honest one-attacker figure stays in the pair fight's own
-    receipt and leaves every total the roster composes.
-    """
-
-    FAMILY = RuleFamily.ON_HIT_STRIKE
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This strike's numbers, resolved for the one-attacker engine."""
-        return _strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-class OnHitStrikeWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the ``on_hit_strike`` family.
-
-    The half that retires ``on_hit_strike/receipt_walk`` (umbrella
-    Amendment F's act, in the lane Amendment K rules and with the whole
-    shape Amendment L, Ruling 1 requires).  Before it, the coupled walk
-    consumed this family as ``participant_timeline._pair_run_fight``'s
-    already-priced rows, which is what the deferral row said in its own
-    words.  Now each application's pair event is a declaration and no price:
-    the walk mitigates the declared magnitude itself, through
-    ``survival.pricing.price_declared_packet``.
-
-    What the declaration has to carry is enumerated at the authoring site
-    rather than assumed here.  The magnitude is **per application**, because
-    Blade of the Ruined King re-reads the target's falling health on every
-    one of them and a row total split evenly would price the walk's packets
-    at a number no application had.  The on-hit effectiveness of the
-    application that carried the strike is folded in, because the pair
-    engine applies it pre-mitigation and it allocates one application rather
-    than amplifying it.  And the attack class is ``OTHER`` for every one of
-    the eight, measured rather than defaulted: an on-hit row is priced by
-    ``damage._mitigate`` and by nothing else, so a declaration claiming a
-    part amp would hand the walk an amplifier the pair engine never paid.
-    """
-
-    FAMILY = RuleFamily.ON_HIT_STRIKE
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This strike's numbers, resolved for the coupled roster walk."""
-        return _strike_fields(rule, ctx, EngineLane.RECEIPT_WALK)
-
-
-PAIR_INTERPRETER = OnHitStrikePairInterpreter()
-WALK_INTERPRETER = OnHitStrikeWalkInterpreter()
 
 
 # The mechanic slug a class-restricted on-hit row previews.  One prefix and
@@ -251,12 +196,9 @@ __all__ = [
     "ON_HIT_SUFFIX",
     "STRIKE_TERM_COUNT_FIELD",
     "OnHitStrikeInterpretationError",
-    "OnHitStrikePairInterpreter",
-    "OnHitStrikeWalkInterpreter",
-    "PAIR_INTERPRETER",
-    "WALK_INTERPRETER",
     "per_hit_effect",
     "per_hit_effects",
+    "strike_fields",
     "strike_mechanic_id",
     "strike_rules",
 ]

@@ -24,6 +24,7 @@ from __future__ import annotations
 from .. import item_effects
 from ..item_behavior import (
     BehaviorRule,
+    BuildContext,
     DEFENSE_PAYLOAD_TYPES,
     DefenseExclusivity,
     DefenseField,
@@ -186,25 +187,30 @@ def declared_defenses(names: frozenset[str]) -> dict[DefenseMechanic, BehaviorRu
     return selected
 
 
-def compiled_shape(rule: BehaviorRule, level: int) -> tuple[KernelField, ...]:
+def compiled_shape(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
     """The shape a defence compiles to, and the proof its numbers resolve.
 
-    Resolving every reference here is what makes a defence's *build-time*
+    Registered for every defence family on the resolver lane — a defence's
+    *value* depends on the subject's own resolved stats, so the shape is all
+    this lane can honestly compile and all six families compile it the same
+    way.  Resolving every reference here is what makes a defence's build-time
     failures — a missing registry key, a ramp whose ends were not parsed —
-    surface when the build is made rather than on whichever fight first
-    needed the number.
+    surface when the build is made rather than on whichever fight first needed
+    the number.
     """
     references = payload(rule).values
     for reference in references:
         if isinstance(reference, (LevelValueRef, LateLevelValueRef)):
-            reference.get(level)
+            reference.get(ctx.level)
         else:
             reference.get()
     return (
         KernelField(
             name=DEFENSE_VALUE_COUNT_FIELD,
             value=len(references),
-            lane=EngineLane.DEFENSE_RESOLVER,
+            lane=lane,
             rule_id=rule.mechanic_id,
         ),
     )

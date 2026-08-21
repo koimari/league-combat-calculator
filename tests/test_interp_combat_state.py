@@ -15,9 +15,9 @@ import pytest
 from src.calculator.defensive_effects import option_reader
 
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.interpreters.defense_state import declared_defenses
-from src.calculator.interpreters import INTERPRETERS, resolve_defense
-from src.calculator.interpreters.combat_state import RESOLVER_INTERPRETER
+from src.calculator.interpreters.defense_state import compiled_shape, declared_defenses
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
+from src.calculator.interpreters.combat_state import resolve_combat_state
 from src.calculator.item_behavior import (
     BehaviorRule,
     DefenseMechanic,
@@ -54,8 +54,9 @@ def test_the_family_is_registered_on_the_lane_that_builds_it() -> None:
     """A combat state's metadata is built before any walk."""
     assert (
         INTERPRETERS[(RuleFamily.COMBAT_STATE, EngineLane.DEFENSE_RESOLVER)]
-        is RESOLVER_INTERPRETER
+        is compiled_shape
     )
+    assert RESOLVERS[RuleFamily.COMBAT_STATE] is resolve_combat_state
 
 
 def test_steadfast_publishes_a_schedule_and_pays_nothing_yet() -> None:
@@ -155,10 +156,10 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
     from src.calculator import interpreters
 
     remaining = {
-        key: value
-        for key, value in INTERPRETERS.items()
-        if key != (RuleFamily.COMBAT_STATE, EngineLane.DEFENSE_RESOLVER)
+        family: resolver
+        for family, resolver in RESOLVERS.items()
+        if family is not RuleFamily.COMBAT_STATE
     }
-    monkeypatch.setattr(interpreters, "INTERPRETERS", remaining)
+    monkeypatch.setattr(interpreters, "RESOLVERS", remaining)
     with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
         resolve_defense(_rule("Force of Nature", DefenseMechanic.STEADFAST), _subject())
