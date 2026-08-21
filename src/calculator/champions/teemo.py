@@ -27,10 +27,12 @@ Boundary: shroom/trap placement, arm time, trigger radius and the 6-HP
 trap health bar are state the fight model does not price — the damage
 is the detonation DoT above.
 
-Coverage: P (Guerrilla Warfare) is idle stealth with an attack-speed
-burst on breaking it, and W (Move Quick) is movement speed. Neither
-vision/stealth nor movement speed is an axis the engine has, so both
-slots are out of scope.
+Coverage: W (Move Quick) is Teemo's own movement speed with no
+enemy-damage clause anywhere in the slot, so it is a sourced
+zero-damage row (``no_damage``).  P (Guerrilla Warfare) is idle stealth
+with a real attack-speed steroid on breaking it, which WOULD change
+damage — so it stays ``out_of_scope`` with a receipt (the Olaf-R rule),
+never ``no_damage``.
 """
 
 from __future__ import annotations
@@ -99,6 +101,69 @@ def _noxious_trap(packet_r):
 PACKET_SHA256 = "82f4b06f86d7d9d576a27f3e9e4e639261e0bb5f50c969cd0592a0ff8459a2f4"
 
 
+def _move_quick(packet_w):
+    """W: movement only — a sourced zero-enemy-damage row.
+
+    Replaces the packet's generic "no enemy-damage formula" stub with the
+    sourced movement numbers, read from the cache rather than restated.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_w(ctx)
+        if entry is None:
+            return None
+        ability = ctx.ability()
+        rank = ctx.rank_for()
+        if ability is None or rank < 1:
+            return entry
+        passive_ms = extract_value(ability, "Bonus Movement Speed", rank)
+        active_ms = extract_value(ability, "Enhanced Bonus Movement Speed", rank)
+        entry["detail"] = (
+            f"Movement only: {passive_ms:g}% bonus movement speed after 5s "
+            f"undamaged, doubled to {active_ms:g}% for 3s on cast. No "
+            "enemy-damage clause exists in the slot; the percent movement "
+            "grant is not published as a stat_buff (the named "
+            "percent-movement boundary)."
+        )
+        return entry
+
+    return parse
+
+
+def _guerrilla_warfare(packet_p):
+    """P: stealth + a real but unmodelable attack-speed steroid.
+
+    Kept ``out_of_scope`` (receipted open, the Olaf-R rule) because
+    Element of Surprise WOULD change damage if it could be modeled.  The
+    row states the mechanic and the two live blockers instead of
+    pretending the slot is non-damaging.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_p(ctx)
+        if entry is None:
+            return None
+        entry["detail"] = (
+            "Stealth (utility) plus Element of Surprise: 20% / 40% / 60% / "
+            "80% (based on level) bonus attack speed for 5s on breaking "
+            "stealth. Not modeled and not called no_damage. (1) The trigger "
+            "is unreachable: the cached innate grants the stealth only "
+            "'after 1.5 seconds without moving, taking non-over-time "
+            "damage, performing actions that break stealth' — a state a "
+            "modeled fight never enters, which is what separates this from "
+            "Twitch Q, an active cast the rotation does break. (2) The "
+            "magnitude has no cached ability atom: both P effect rows carry "
+            "an empty leveling array, so the ladder exists only as wiki "
+            "prose plus the binary's TeemoPassive BonusAttackSpeed level "
+            "breakpoints (0.20 at level 1, +0.20 at 5/10/15) and would have "
+            "to be republished as a module constant with no cached "
+            "accessor behind it."
+        )
+        return entry
+
+    return parse
+
+
 # Reviewed crowd control, read from the cached kit.  Q (Blinding Dart)
 # "deals magic damage and blinds them for a duration" — real crowd
 # control that is neither an immobilize nor a movement slow, which is
@@ -144,6 +209,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
     slot_wrappers={
         "R": _noxious_trap,
+        "W": _move_quick,
+        "P": _guerrilla_warfare,
     },
     cc_kinds=MODULE_CC,
 )
@@ -173,6 +240,29 @@ OPTIONS.append(
         "label": "Shroom detonations (Noxious Trap)",
     }
 )
+ASSUMPTIONS.extend(
+    [
+        "W (Move Quick) is a sourced zero-damage row (MODULE_COVERAGE: "
+        "no_damage, reclassified from out_of_scope; the row stays "
+        "zero-damage and zero-part, only its detail becomes sourced). The "
+        "percent movement grant is NOT published as a stat_buff — the "
+        "named Naafiri-W / Sivir-R boundary: only the final soft-capped "
+        "move_speed scalar is exposed, so a percent-to-flat decomposition "
+        "would be invented, and Swiftmarch's adaptive force would turn it "
+        "into damage.",
+        "P (Guerrilla Warfare) stays out_of_scope, NOT no_damage (the "
+        "Olaf-R rule): Element of Surprise grants 20/40/60/80% (based on "
+        "level) bonus attack speed for 5s on breaking stealth, a real "
+        "sourced steroid that would change damage. It is withheld because "
+        "the stealth's 1.5s-idle entry condition is a state the fight "
+        "model never enters, and because the cache carries no leveling "
+        "row for the magnitude (wiki prose and the game binary only).",
+    ]
+)
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    "P": "out_of_scope",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }

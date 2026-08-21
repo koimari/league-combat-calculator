@@ -50,23 +50,23 @@
   "golden": {
     "sections": "champion_baselines,item_sweep,registered_champion_fights",
     "entries": 670,
-    "leaves": 58428,
-    "numeric_leaves": 44820,
-    "src_tree_sha": "bd1329b4237dc26f0c7d21312c1de5ec2e1c2f53"
+    "leaves": 58453,
+    "numeric_leaves": 44829,
+    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
   },
   "coupled_golden": {
     "sections": "coupled_scenarios",
     "entries": 22,
-    "leaves": 85811,
-    "numeric_leaves": 28814,
-    "src_tree_sha": "7c749b790969fe24b0dfd51ff8fcc0196b4683b3"
+    "leaves": 85845,
+    "numeric_leaves": 28820,
+    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
   },
   "coupled_golden_exact": {
     "sections": "coupled_scenarios",
     "entries": 26,
     "leaves": 189,
     "numeric_leaves": 0,
-    "src_tree_sha": "7c749b790969fe24b0dfd51ff8fcc0196b4683b3"
+    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
   },
   "bench": {
     "cassiopeia_3champ": {

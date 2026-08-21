@@ -940,7 +940,7 @@ class TestApiFightOutput:
 
 class TestRegressionSurface:
     def test_gnar_test_file_set_is_pinned(self) -> None:
-        # grep -il gnar tests/ (--include="*.py"): the exact 21-file set.
+        # grep -il gnar tests/ (--include="*.py"): the exact 26-file set.
         # The Gnar-CODE surfaces are test_gnar.py, test_damage.py,
         # test_jayce_form_transition.py, test_e3_stacks_1.py (Hyper),
         # test_mechanics_packets.py (Q secondary targets) and
@@ -980,6 +980,16 @@ class TestRegressionSurface:
             "test_olaf_r_cleanse.py",
             "test_quinn_p_crit.py",
             "test_rengar_w_cleanse.py",
+            # Roadmap session 5 batch L (2026-08-21).  None of these four
+            # touch Gnar CODE: each cites this module by NAME in a header
+            # comment, for the "ternary idiom" precedent that reads a
+            # game-file constant when the bin cache is present and skips
+            # the claim when it is absent.  Prose citations of the
+            # precedent, not new Gnar coupling.
+            "test_teemo_stealth_and_move_quick.py",
+            "test_tristana_rapid_fire_and_range.py",
+            "test_twitch_ambush_and_cask.py",
+            "test_udyr_stampede_and_monk_training.py",
             "test_wave2_stat_buffs.py",
             # weekly_ingest fetches the gnar/gnarbig authority pair, so its
             # test module names them (added 2026-08-20 with weekly_ingest.py).

@@ -17,9 +17,12 @@ class TestReviewedCrowdControl:
         assert udyr.MODULE_CC == {"R": "slow"}
         assert "slows them while they remain within" in cc_review.slot_text(data, "R")
         # Blazing Stampede is where the kit's stun lives, and it deals no
-        # damage of its own, so no part can carry that answer.
+        # damage of its own, so no part can carry that answer: the stun is
+        # published as a standalone sourced ControlEvent instead (the
+        # Rammus-E shape), which is what lets E be no_damage — nothing
+        # damage-relevant is left unmodeled — rather than out_of_scope.
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == ["stun"]
-        assert get_champion_module_contract("Udyr").coverage["E"] == "out_of_scope"
+        assert get_champion_module_contract("Udyr").coverage["E"] == "no_damage"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Udyr") == []

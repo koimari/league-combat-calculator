@@ -47,29 +47,21 @@ def _row(tables, items, name):
 
 
 def _added_reasons(reasons, baseline):
-    """The reasons one injected defect ADDED, not the file's own backlog.
+    """The reasons one injected defect ADDED, on a file with no backlog.
 
-    MERGE: these tests used to unpack a single reason, which silently
-    assumed the committed economics file was current for the committed
-    cache.  It is not right now (see the xfail below), so an injected
-    defect came back as the second of two reasons and the unpacking blew
-    up on the file's state rather than on the defect.  Reading the
-    difference is what each of them meant to assert either way.
+    These tests unpack a single reason, which only means "this defect" if
+    the committed file is already current.  The merge briefly left it
+    stale (ours' 16.15.1 economics asset against main's 16.16.1 cache),
+    an injected defect came back as the second of two reasons, and the
+    unpacking blew up on the file's state rather than on the defect.  The
+    2026-08-21 refresh cleared that backlog, so the baseline is asserted
+    empty here rather than merely subtracted: a silently-reappearing
+    backlog would otherwise hide behind the subtraction.
     """
+    assert baseline == [], f"the committed economics file is stale: {baseline}"
     return [reason for reason in reasons if reason not in baseline]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "MERGE: data/economics-sourced.json is ours' 16.15.1 asset while the "
-        "merged cache is main's 16.16.1, so it reports two reasons: the "
-        "DDragon pin, and Sunfire Aegis 2800 != 2700 unacknowledged.  The "
-        "fix is the patch-day refresh on the merged tree "
-        "(python scripts/refresh_economics_data.py, which fetches DDragon), "
-        "not a test change."
-    ),
-)
 def test_the_committed_file_is_current_for_the_committed_cache(
     tables, items, ddragon_version
 ):

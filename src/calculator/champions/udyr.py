@@ -40,8 +40,10 @@ from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_on_hit_entry,
     extract_named,
+    extract_value,
     find_named_leveling,
     resolve_scaling,
+    with_control_event,
 )
 
 # HARDCODED: verify on patch updates — wiki Q prose, not JSON:
@@ -177,12 +179,95 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
 _wilding_claw.phase = ONHIT
 
 
+def _blazing_stampede(packet_e):
+    """E: movement + a sourced stun — a zero-enemy-damage stance row.
+
+    Replaces the packet's generic "no enemy-damage formula" stub text
+    with the sourced movement numbers read back out of the cache.  The
+    stun itself is not described here: it is authored as a real
+    ``ControlEvent`` by the ``with_control_event`` wrapper below, so the
+    duration reaches the fight report through the validated atom rather
+    than through this string.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_e(ctx)
+        if entry is None:
+            return None
+        ability = ctx.ability()
+        rank = ctx.rank_for()
+        if ability is None or rank < 1:
+            return entry
+        burst_ms = extract_value(ability, "Bonus Movement Speed", rank)
+        decayed_ms = extract_value(ability, "Decayed Bonus Movement Speed", rank)
+        entry["detail"] = (
+            "Stampede Stance: no damage row exists in the slot. Ghosting "
+            f"plus {burst_ms:g}% bonus movement speed (+5% per 100 bonus AD) "
+            f"for 4s, decaying to {decayed_ms:g}% (+1.5% per 100 bonus AD) "
+            "over 1.5s; the Awaken recast adds 75 bonus attack range, a "
+            "per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus "
+            "and 1.5s of crowd-control immunity. The empowered attack's "
+            "0.75s stun IS priced, as a sourced control event. The percent "
+            "movement grants are not published as a stat_buff (the named "
+            "percent-movement boundary)."
+        )
+        return entry
+
+    return parse
+
+
+def _bridge_between(packet_p):
+    """P: stance/cooldown system plus an unmodelable attack-speed steroid.
+
+    Kept ``out_of_scope`` (receipted open, the Olaf-R rule) because Monk
+    Training WOULD change damage if it could be modeled.  The row states
+    the mechanic and its live blockers instead of pretending the slot is
+    non-damaging.
+
+    Three blockers: the windowed path, the cooldown refund, and
+    ``buff_window_share``.  All three hold — the windowed kernel in
+    ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_p(ctx)
+        if entry is None:
+            return None
+        entry["detail"] = (
+            "Awakened Spirit (stance swaps, a 1.5s global cooldown and the "
+            "Awaken recast window) carries no damage instance. Monk "
+            "Training does move damage and is NOT modeled: after any cast, "
+            "the next two basic attacks within 4s gain 30% bonus attack "
+            "speed and refund 5% of Awakened Spirit's cooldown (wiki prose "
+            "plus the binary's UdyrPassive AttackSpeed calculation 0.30, "
+            "AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, "
+            "not called no_damage, on three counts. The engine's only "
+            "WINDOWED attack-speed path resolves its window start by "
+            "walking cast_order to the Q slot, so it is Q-slot-only (the "
+            "Miss Fortune W precedent) and a P-slot steroid cannot reach "
+            "it. The unwindowed self-buff channel "
+            "(module_helpers.buff_window_share) weights a bonus purely by "
+            "TIME, while this window is bounded by attack count as well as "
+            "time — it closes on the second empowered attack or at 4s, "
+            "whichever comes first — so a time-weighted share would "
+            "over-credit it whenever the attacks land early. And the "
+            "cooldown refund has no engine channel at all (the one "
+            "per-attack refund path is item_effects' CooldownProcEffect, "
+            "read only by the item-proc scheduler)."
+        )
+        return entry
+
+    return parse
+
+
 # Reviewed crowd control, read from the cached kit: R (Wingborne Storm)
 # "summons a blizzard around himself for 4 seconds that deals magic damage
 # every 0.5 seconds to nearby enemies and slows them while they remain
 # within" (the Awakened storm "slows by an additional 5%").  Q rides the
 # attack stream as an on-hit payload and W is a shield; E (Blazing
-# Stampede), where the stun lives, deals no damage of its own.
+# Stampede) deals no damage of its own, so its stun is not a part kind —
+# it is published as a standalone sourced ControlEvent by the
+# ``with_control_event`` wrapper below (the Rammus-E shape).
 MODULE_CC = {"R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -202,6 +287,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             dot_duration=4.0,
         ),
         "Q": _wilding_claw,
+    },
+    slot_wrappers={
+        # The Rammus-E shape: a utility-only slot still publishes its one
+        # sourced control event, read through the validated atom catalog.
+        "E": lambda parser: with_control_event(
+            _blazing_stampede(parser),
+            kind="stun",
+            duration_attr="Stun Duration",
+            time_offset=None,
+        ),
+        "P": _bridge_between,
     },
     cc_kinds=MODULE_CC,
 )
@@ -243,8 +339,35 @@ OPTIONS.append(
         "label": "Q empowered basic attacks",
     }
 )
+ASSUMPTIONS = ASSUMPTIONS + [
+    "E (Blazing Stampede) is a sourced zero-damage row (MODULE_COVERAGE: "
+    "no_damage, reclassified from out_of_scope). Its empowered attack IS "
+    "priced as a sourced control event: a 0.75s stun from the validated "
+    "timing.control_duration atom, corroborated by the binary's UdyrE "
+    "StunDuration 0.75. It is published at cast_boundary precision "
+    "(time_offset=None) because the stun rides the next empowered basic "
+    "attack and no cast-to-hit delay is sourced, and once per cast "
+    "because the sourced on-target cooldown exceeds the window. The "
+    "percent movement grants are not published as a stat_buff (the named "
+    "Naafiri-W / Sivir-R boundary), and nothing damage-relevant is left "
+    "unmodeled once the stun is authored.",
+    "P (Bridge Between) stays out_of_scope, not no_damage (the Olaf-R "
+    "rule): Monk Training's 30% bonus attack speed on the next two "
+    "attacks within 4s is a real sourced steroid that would change "
+    "damage (wiki prose plus the binary's UdyrPassive AttackSpeed "
+    "calculation 0.30, AttackSpeedDuration 4.0, UltCDReduction 0.05). It "
+    "is withheld because the engine's only windowed attack-speed path "
+    "resolves its window start from the Q slot (the Miss Fortune W "
+    "precedent), because the unwindowed self-buff channel weights purely "
+    "by time whereas this window is bounded by attack count as well, and "
+    "because the cooldown refund has no engine channel.",
+]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "R", "W"} else "out_of_scope") for slot in "PQWER"
+    "P": "out_of_scope",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
 }
 
 

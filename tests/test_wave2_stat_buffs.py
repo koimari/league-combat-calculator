@@ -120,6 +120,44 @@ _ATTACK_SPEED_ROWS = [
     ("Lulu", "W", "Bonus Attack Speed", 30.0),
 ]
 
+# Rows whose grant is an asserted STATE rather than the slot's own cast.
+# Every other row here fires when the ability is cast, so the default
+# parse already holds it.  Twitch's Ambush is the exception and the
+# reason this table exists: casting Q is what ENTERS the camouflage, and
+# the attack speed arrives only when he BREAKS it, so a Twitch who cast Q
+# at t=0 is not attacking at t=0.  ``q_ambush_break`` is the user saying
+# he walked in already stealthed — the same shape as ``poison_stacks``
+# asserting stacks already on the target — and it defaults off so the
+# unasserted fight does not bill a phantom proc.  Arming it here keeps
+# both claims of this slice intact for the slot without pretending the
+# default grants it; ``test_twitch_ambush_grants_its_row_only_once_the_``
+# ``stealth_breaks`` below is what pins the default itself.
+_ARMED_BY = {("Twitch", "Q"): {"q_ambush_break": True}}
+
+
+def _buff_window_start(champion, slot, result, **options):
+    """When the granted rate begins — 0.0 unless the row is WINDOWED.
+
+    A plain ``stat_buff`` is one scalar for the whole fight, so it starts
+    at 0.0.  A row that also carries ``auto_attack_override`` is windowed,
+    and ``damage.py`` resolves that window's start by walking
+    ``cast_order`` to the ``"Q"`` slot — the Q-slot-only kernel — so the
+    start is the Q cast's own time, read here from the fight's published
+    ``cast_timeline`` rather than restated.
+    """
+    entry = _slot_entry(champion, slot, **options)
+    override = entry.get("auto_attack_override") or {}
+    if "active_duration" not in override:
+        return 0.0
+    start = next(
+        cast["time"] for cast in result["cast_timeline"] if cast["slot"] == "Q"
+    )
+    # The identity below has no post-window term, so the window must
+    # still be open when the fight ends.  Every windowed row here
+    # satisfies that; one that stopped would fail here, not silently.
+    assert start + override["active_duration"] >= _WINDOW
+    return start
+
 
 @pytest.mark.parametrize(
     ("champion", "slot", "attribute", "quoted"), _ATTACK_SPEED_ROWS
@@ -130,7 +168,7 @@ def test_the_attack_speed_row_is_what_the_slot_grants(
     """A direct parse has no fight window, so the whole row lands."""
     cached = _row(champion, slot, attribute)
     assert cached == pytest.approx(quoted)
-    entry = _slot_entry(champion, slot)
+    entry = _slot_entry(champion, slot, **_ARMED_BY.get((champion, slot), {}))
     assert entry["total_raw"] == 0.0
     assert entry["stat_buff"]["bonus_attack_speed"] == pytest.approx(cached)
 
@@ -141,15 +179,30 @@ def test_the_attack_speed_row_is_what_the_slot_grants(
 def test_the_attack_speed_grant_reaches_the_fights_auto_count(
     champion, slot, attribute, quoted
 ):
-    """base_AS + AS_ratio x bonus/100, and floor(AS x window) autos."""
-    del slot, attribute, quoted
+    """base_AS + AS_ratio x bonus/100, then the autos the rate buys.
+
+    The count splits at the moment the buff STARTS: autos before it ride
+    the base rate, autos inside it the buffed one, and the floor applies
+    per phase.  For an unwindowed grant, and for a windowed one whose
+    window opens at t=0, the pre-window phase is empty and the whole
+    thing collapses to ``floor(fought x window)`` — which is every row
+    here but Twitch, whose Ambush is cast third and so opens its window
+    at 0.25s.  Crediting those 0.25 seconds at the buffed rate is exactly
+    the one auto of over-count this term removes.
+    """
+    del attribute, quoted
+    options = _ARMED_BY.get((champion, slot), {})
     build = _build_stats(champion)
-    result = _fight(champion)
+    result = _fight(champion, **options)
     fought = result["champion_stats"]["attack_speed"]
     assert fought > build["attack_speed"]
     granted = (fought - build["attack_speed"]) / build["attack_speed_ratio"] * 100.0
     assert granted > 0.0
-    assert _autos(result) == math.floor(fought * _WINDOW)
+
+    start = _buff_window_start(champion, slot, result, **options)
+    assert _autos(result) == math.floor(build["attack_speed"] * start) + math.floor(
+        fought * (_WINDOW - start)
+    )
     assert _autos(result) > math.floor(build["attack_speed"] * _WINDOW)
 
 
@@ -183,12 +236,24 @@ def test_nocturne_doubles_its_row_only_when_the_spell_shield_blocks():
 
 
 def test_twitch_ambush_grants_its_row_only_once_the_stealth_breaks():
-    plain = _slot_entry("Twitch", "Q")["stat_buff"]["bonus_attack_speed"]
-    held = _slot_entry("Twitch", "Q", q_stealth_broken=False)["stat_buff"][
-        "bonus_attack_speed"
-    ]
-    assert plain == pytest.approx(_row("Twitch", "Q", "Bonus Attack Speed"))
-    assert held == 0.0
+    """The withheld side is the DEFAULT here, and it publishes no key.
+
+    The slot was re-reviewed with the option renamed ``q_ambush_break``
+    and defaulted OFF: casting Ambush enters the camouflage rather than
+    leaving it, so the unasserted fight must not hold the steroid at all.
+    The held side therefore asserts the absence of ``stat_buff`` — a
+    stronger statement than the zero it used to read, which a slot that
+    silently stopped computing its grant could also have produced.
+    """
+    held = _slot_entry("Twitch", "Q")
+    armed = _slot_entry("Twitch", "Q", q_ambush_break=True)
+
+    assert "stat_buff" not in held
+    assert "auto_attack_override" not in held
+    assert held["total_raw"] == 0.0
+    assert armed["stat_buff"]["bonus_attack_speed"] == pytest.approx(
+        _row("Twitch", "Q", "Bonus Attack Speed")
+    )
 
 
 def test_viego_mist_uptime_scales_the_row_it_grants():

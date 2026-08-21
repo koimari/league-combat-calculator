@@ -6479,6 +6479,30 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "item_denial_receipts[0].rebind_time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "item_denial_receipts[0].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "item_denial_receipts[0].withheld_amount": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "item_denial_receipts[1].rebind_time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "item_denial_receipts[1].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "item_denial_receipts[1].withheld_amount": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.enemy_team_damage_before_death": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -8889,7 +8913,34 @@
             "trigger_target": "enemy:Malphite"
           }
         ],
-        "item_denial_receipts": [],
+        "item_denial_receipts": [
+          {
+            "attacker": "enemy:Malphite",
+            "carrier_event_id": "enemy:Malphite:ally:Pantheon:0",
+            "carrier_skipped_reason": "attacker_state_blocked",
+            "event_id": "enemy:Malphite:ally:Pantheon:0:shield",
+            "kind": "item_denial",
+            "reason": "self_shield_carrier_skipped",
+            "rebind_time": 7.49,
+            "source": "Granite Shield",
+            "target": "enemy:Malphite",
+            "time": 0.0,
+            "withheld_amount": 243.3
+          },
+          {
+            "attacker": "enemy:Malphite",
+            "carrier_event_id": "enemy:Malphite:main:0",
+            "carrier_skipped_reason": "attacker_state_blocked",
+            "event_id": "enemy:Malphite:main:0:shield",
+            "kind": "item_denial",
+            "reason": "self_shield_carrier_skipped",
+            "rebind_time": 7.49,
+            "source": "Granite Shield",
+            "target": "enemy:Malphite",
+            "time": 0.0,
+            "withheld_amount": 243.3
+          }
+        ],
         "objective": {
           "enemy_team_damage_before_death": 1978.2,
           "enemy_team_effective_health": 5534.3,
@@ -135048,15 +135099,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 22,
-      "leaves": 85811,
-      "numeric_leaves": 28814,
+      "leaves": 85845,
+      "numeric_leaves": 28820,
       "sections": "coupled_scenarios"
     },
-    "git_head": "9cf719642972a4559d1d7f826600423ea19979a2",
+    "git_head": "87d1f4fe76457596cba1ebd862302af235db3b67",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 22,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "7c749b790969fe24b0dfd51ff8fcc0196b4683b3"
+    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
   }
 }

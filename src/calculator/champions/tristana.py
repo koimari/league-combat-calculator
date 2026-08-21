@@ -11,25 +11,69 @@ Why each slot is non-generic:
   Damage" row at every rank. The charge detonates once per cast.
 - Q (Rapid Fire) is the attack-speed steroid, and for a marksman whose
   output is basic attacks it is the biggest number in the kit: the
-  cached "Bonus Attack Speed" row (60-120%) rides a BUFF-phase
-  ``stat_buff`` so the fight engine's auto count scales with it.
+  "Bonus Attack Speed" row (60-120%) rides a BUFF-phase ``stat_buff`` so
+  the fight engine's auto count scales with it.  It is published with a
+  sourced WINDOW rather than a fight-averaged magnitude — see below.
 - P (Draw a Bead) is attack range only: an emitted zero-damage row.
 - W (Rocket Jump) and R (Buster Shot) are plain attribute reads; W's
   takedown/max-stack-detonation reset is CC/state only, and R's
   knockback/stun is CC only.
+
+Roadmap session 5 batch L (2026-08-21): Q's magnitude and window both
+move onto typed ability atoms, and the window is published to the engine
+instead of being averaged into the magnitude.
+
+  Both roots are typed atoms — ``ability.bonus _attack _speed``
+  (60/75/90/105/120% by rank) and ``timing.active_duration`` (7.0s) — and
+  the game binary agrees (``TristanaQ`` ``AttackSpeedMod``
+  [.45 .60 .75 .90 1.05 1.20 1.35]; Riot spell DataValues are
+  rank-0-indexed, so ranks 1-5 are indices 1..5 = 60/75/90/105/120%, with
+  ``BuffDuration`` 7.0 flat at every rank index).  Nothing here is a
+  literal, so a degraded cache raises instead of zeroing out.
+
+  Why a published window beats ``module_helpers.buff_window_share`` HERE:
+  the share helper weights the MAGNITUDE by the fraction of the fight the
+  buff covers, which is the only option when the engine cannot place the
+  window.  ``damage.py`` CAN place this one — it resolves the window
+  start by walking ``state.cast_order`` and breaking on ``"Q"`` — and
+  Rapid Fire IS the Q cast, so [0, 7) is its real window.  The engine
+  then splits the fight into pre-window / in-window / post-window auto
+  counts at the full magnitude, which is the exact answer rather than a
+  fight-averaged one.  (The Miss Fortune W / Teemo P boundary, from the
+  other side: a steroid stuck in a non-Q slot has no placeable window and
+  keeps the share helper.)
+
+  The override carries ``active_duration`` and NOTHING else on purpose.
+  ``ad_ratio`` defaults to 1.0 and the per-swing ``swing_window_ratio``
+  that consumes it is read only inside the ``crit_as_bonus`` branch
+  (Ashe's flurry), so a bare window changes the auto COUNT and never the
+  per-swing formula — which is exactly what Rapid Fire does.
+
+  P (Draw a Bead) closes as ``no_damage``.  Its whole payload is bonus
+  attack RANGE (0 : 167.65 by level, atom ``ability.per-_level
+  _scaling``); ``damageType`` is ``None`` and the slot has no timing or
+  damage atom at all.  Attack range is inert in this model — ``is_melee``
+  is a static champion stat, never derived from range — so unlike an
+  unmodeled attack-speed steroid nothing about it would change damage if
+  it were modeled.  That is the settled ``no_damage`` shape, not an
+  ``out_of_scope`` receipt (the Olaf-R / Sivir-R rule).
 """
 
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+    required_ranked_attribute_atom,
+)
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import buff_window_share
 from .slotlib import (
     STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
-    extract_value,
     simple_damage,
     with_control,
 )
@@ -40,10 +84,9 @@ from .source_receipts import load_champion_sources
 # rows themselves are read from the JSON.
 _E_MAX_STACKS = 4
 
-# HARDCODED: verify on patch updates — Rapid Fire's window is cached Q
-# prose ("gaining bonus attack speed for 7 seconds"); the percentage is
-# the JSON's "Bonus Attack Speed" row.
-_Q_DURATION_SECONDS = 7.0
+# Rapid Fire's window is NOT a literal: it is the typed
+# ``timing.active_duration`` atom, selected by this exact source path.
+_Q_DURATION_SOURCE = "Tristana.Q[0].effects[0].description"
 
 
 def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -82,7 +125,13 @@ def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: the 60-120% attack-speed steroid, priced onto the auto count."""
+    """Q: the sourced 7-second attack-speed window (no enemy damage).
+
+    Both numbers ride typed ability atoms and fail closed when the cache
+    degrades: the rank magnitude through
+    :func:`required_ranked_attribute_atom` and the window through
+    :func:`required_ability_atom`.  Nothing here is a literal.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -90,9 +139,24 @@ def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    share = buff_window_share(ctx, _Q_DURATION_SECONDS)
-    granted = extract_value(ability, "Bonus Attack Speed", rank)
-    bonus_as = granted * share
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    bonus_as_pct, _as_atom = required_ranked_attribute_atom(
+        "Tristana", champion_data, "Q", "Bonus Attack Speed", rank
+    )
+    duration_atom = required_ability_atom(
+        "Tristana",
+        champion_data,
+        "Q",
+        query=AbilityAtomQuery(
+            source=_Q_DURATION_SOURCE,
+            behavior="timing",
+            evidence_prefix="active duration@",
+        ),
+    )
+    if duration_atom.get("units") != ["s"]:
+        raise ValueError("Tristana Q active-duration atom must use seconds")
+    window = ranked_ability_atom_value(duration_atom, 1, source=_Q_DURATION_SOURCE)
+
     entry = damage_entry(
         ability.get("name", "Rapid Fire"),
         rank,
@@ -101,10 +165,15 @@ def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
         zero_policy=STEROID_ZERO,
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as_pct}
+    # A BARE window: no ad_ratio and no crit_as_bonus, so only the auto
+    # COUNT moves (the per-swing ratio is crit_as_bonus-only).
+    entry["auto_attack_override"] = {"active_duration": window}
     entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for {_Q_DURATION_SECONDS:g}s "
-        f"({bonus_as:g}% over the fight window); no enemy damage"
+        f"Self buff, no enemy damage: +{bonus_as_pct:g}% bonus attack "
+        f"speed for {window:g}s from the Q cast. The autos ride the base "
+        "rate before the cast, the buffed rate inside the window, and the "
+        "base rate again after it."
     )
     return entry
 
@@ -113,10 +182,21 @@ _rapid_fire.phase = BUFF
 
 
 def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: longer-range basic attacks — no enemy damage beyond the auto."""
+    """P: bonus attack RANGE — a sourced zero-enemy-damage row.
+
+    Range is inert in this model (``is_melee`` is a static champion stat,
+    never derived from attack range), so nothing about the slot would
+    change damage if it were modeled: ``no_damage``, not a receipted
+    ``out_of_scope`` opening.  The magnitude still rides its typed atom,
+    so the row names a sourced number instead of a bare disclaimer.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    bonus_range, _range_atom = required_ranked_attribute_atom(
+        "Tristana", champion_data, "P", "Per-Level Scaling", ctx.level
+    )
     return {
         "name": ability.get("name", "Draw a Bead"),
         "rank": ctx.level,
@@ -125,7 +205,10 @@ def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": 0.0,
         "parts": (),
         "detail": (
-            "Ranged auto-attack bonus: range/on-hit state only, no " "separate damage."
+            f"Innate: +{bonus_range:g} bonus attack range at level "
+            f"{ctx.level} (0 : 167.65 by level) on basic attacks, Explosive "
+            "Charge and Buster Shot. Range is positioning state with no "
+            "damage instance and no damage channel in this model."
         ),
     }
 
@@ -154,11 +237,19 @@ ASSUMPTIONS = [
     "still deal their base AD damage",
     "The charge's 0-40% (+0-12%) crit-chance bonus to its total damage "
     "is not modeled (no crit in the no-items reference)",
-    "Q (Rapid Fire) grants the cached Bonus Attack Speed row (60-120%) "
-    "for 7 seconds; the fight engine applies it to the auto count, "
-    "time-weighted by the share of the fight window the 7-second buff "
-    "covers (the whole bonus in one-rotation mode, which has no window)",
-    "P (Draw a Bead) is attack range only — an emitted zero-damage row",
+    "Q (Rapid Fire) is a modeled zero-damage buff: the sourced "
+    "60/75/90/105/120% bonus attack speed (atom ability.bonus _attack "
+    "_speed; binary TristanaQ AttackSpeedMod agrees) is published as a "
+    "stat_buff with the sourced 7-second window (atom "
+    "timing.active_duration; binary BuffDuration 7.0 flat), so the "
+    "fight's auto count splits into pre-window / in-window / post-window "
+    "at the Q cast rather than carrying a fight-averaged magnitude. The "
+    "override carries the window only — no ad_ratio and no crit "
+    "conversion — so the per-swing formula is untouched",
+    "P (Draw a Bead) is bonus attack RANGE only (0 : 167.65 by level): a "
+    "sourced zero-damage row (MODULE_COVERAGE: no_damage). Range is inert "
+    "in this model — is_melee is a static champion stat, never derived "
+    "from attack range — so no damage channel is left unmodeled",
     "W's takedown/max-stack reset and R's knockback/stun are " "CC/state only",
 ]
 

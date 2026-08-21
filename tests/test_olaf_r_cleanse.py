@@ -1812,19 +1812,42 @@ class TestOneUseAndCooldown:
 
     def test_r_cooldown_row_pinned_and_never_enforced(self):
         # Pinned actual (the brief's contract #8): the cached cooldown
-        # row 100/90/80 (affectedByCdr) + the game cooldownTime agree;
-        # the engine enforces the cooldown via the cast_timeline (rank-3
-        # R casts once per 80s — one cast in any fight window), and the
-        # module parse does NOT publish the row today (0.0) — the typed
-        # declaration must receipt it, never enforce it.
+        # row 100/90/80 (affectedByCdr) + the game cooldownTime agree,
+        # and the module parse now PUBLISHES that row per rank.
+        #
+        # It published 0.0 until the utility-axis slice rebuilt this
+        # module around ``slotlib.extract_cooldown`` (Olaf P/W/R were
+        # priced as stat grants); the golden baseline carries the same
+        # value (Olaf/abilities_level_11/R cooldown 90.0 = the rank-2
+        # row), so the published figure is the sourced one and the 0.0
+        # here was a stale pin from before that slice, not a regression.
+        #
+        # "Never enforced" is the half that still has to hold, and it is
+        # asserted below rather than assumed: R books exactly ONE cast no
+        # matter how long the window is — at 400s, five times the rank-3
+        # cooldown, it is still one — while Q/W/E in the same fight do
+        # scale with the window.  So the typed declaration receipts the
+        # row; nothing re-arms R off it.
         assert _r_ability()["cooldown"]["modifiers"][0]["values"] == _R_COOLDOWN
         assert _r_game_spell()["cooldownTime"][1:4] == [float(v) for v in _R_COOLDOWN]
+        for rank, sourced in enumerate(_R_COOLDOWN, start=1):
+            _, ranked = _parse(ranks={**_RANKS, "R": rank})
+            assert ranked["R"]["cooldown"] == pytest.approx(float(sourced))
         _, abilities = _parse()
-        assert abilities["R"]["cooldown"] == pytest.approx(0.0)
+        assert abilities["R"]["cooldown"] == pytest.approx(float(_R_COOLDOWN[2]))
         timed = _fight({}, duration=30.0)
         r_casts = [c for c in timed["cast_timeline"] if c["slot"] == "R"]
         assert len(r_casts) == 1
         assert r_casts[0]["time"] == pytest.approx(0.5)
+        # The cooldown is receipted, never re-armed: a window five rank-3
+        # cooldowns long still books one R, while the other slots repeat.
+        long_fight = _fight({}, duration=400.0)
+        long_casts = [c for c in long_fight["cast_timeline"] if c["slot"] == "R"]
+        assert len(long_casts) == 1
+        assert long_casts[0]["time"] == pytest.approx(0.5)
+        assert (
+            len([c for c in long_fight["cast_timeline"] if c["slot"] == "Q"]) > 1
+        ), "the other slots do repeat, so one R is R's own rule"
 
     def test_r_second_cast_fails_closed_use_spent(self):
         # P2-9 contract (the brief's contract #8): the per-fight one-use
