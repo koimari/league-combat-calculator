@@ -14,17 +14,17 @@
     "rule": "R-17 -- this receipt declares no standing diff. All three baselines were re-captured once in commit 56f20e71 after every unit merged, so the compare is clean; every leaf that moved between 5af69843 and that capture is claimed by a unit receipt (expected-golden-diff-{E,riders,w2-sustain,wave2-statbuff,support,a2}.json) and the standing coupled-exact Aatrox total by expected-golden-diff-surface-area-A2-expose-weakness-pool.json. What this receipt carries is the one ordinal-addressed reading the re-capture moved."
   },
   "what_landed": "docs/receipts/campaign-fingerprints.json holds the new shape counts with the cause line (golden leaves 56609 -> 56868, numeric 44217 -> 44424; coupled leaves 66858 -> 67353, numeric 21801 -> 21927; coupled_exact unchanged in shape). The cleaver_bloodsong_roster events list grew from 83 to 85 records: the wave2-statbuff slice priced Lulu's W and R stat grants, and her pair walk now authors two zero-damage ally rows against Aatrox (ally:Lulu:enemy:Aatrox:15 at 6.26 s, on_hit_ability_passive; ally:Lulu:enemy:Aatrox:16 at 7.25 s, Q), both claimed in expected-golden-diff-wave2-statbuff.json.",
-  "why_each_moved": "The C3 classification addresses the record at events[82] by ordinal. The two Lulu rows sort ahead of that ordinal, so the position now holds the main champion's pair-walk row main:enemy:Aatrox:54 instead of main:enemy:Aatrox:58; no main-walk record was removed or renumbered (main:enemy:Aatrox:58 stands, field for field, two ordinals later). The reading the C3 remedy makes -- the removed identity main:enemy:Aatrox:33 and its sibling main:enemy:Aatrox:34 are absent from the list -- is unchanged.",
-  "how_to_reproduce": "git show 56f20e71~1:scripts/golden_coupled_baseline.json and scripts/golden_coupled_baseline.json; compare coupled_scenarios/cleaver_bloodsong_roster/combat/events by event_id: two added, none removed, events[82].event_id main:enemy:Aatrox:58 -> main:enemy:Aatrox:54. tests/test_escalated_defects_s6s7_oracle.py::TestTheIdentityKeyedReportRemediesTheIdentityBearingCase reads the successor through this receipt.",
+  "why_each_moved": "The C3 classification addresses its record by ordinal, events[82]. The two Lulu rows sort ahead of it, so the record the ordinal used to substitute -- main:enemy:Aatrox:58, the identity expected-golden-diff-surface-area-A2-expose-weakness-pool.json declared -- now stands at events[84], field for field what events[82] held before the capture, and is still the last record of the list. No main-walk record was removed or renumbered; the identity declaration stands and only the ordinal moves, the same shape the C4 record took when its list grew.",
+  "how_to_reproduce": "git show 56f20e71~1:scripts/golden_coupled_baseline.json and scripts/golden_coupled_baseline.json; compare coupled_scenarios/cleaver_bloodsong_roster/combat/events by event_id: two added, none removed; the record with event_id main:enemy:Aatrox:58 moves from index 82 to index 84 and compares equal field for field. tests/test_escalated_defects_s6s7_oracle.py::TestTheIdentityKeyedReportRemediesTheIdentityBearingCase reads the ordinal through this receipt.",
   "expected_diff_paths": {},
   "expected_diff_values": {
-    "/classification-P4D-C3/the_instrument_fix/measured_after/the_record_the_ordinal_used_to_substitute/identity": {
-      "old": "main:enemy:Aatrox:58",
-      "new": "main:enemy:Aatrox:54",
+    "/classification-P4D-C3/the_instrument_fix/measured_after/path": {
+      "old": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]",
+      "new": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[84]",
       "supersedes": {
-        "receipt": "expected-golden-diff-surface-area-A2-expose-weakness-pool.json",
-        "entry": "the_record_the_ordinal_used_to_substitute",
-        "why": "That allowlist declared the index the surface-area A2 re-capture left at the ordinal. This re-capture inserts two ally rows ahead of the ordinal, so the same position addresses an earlier main-walk record; the main walk itself authored the same rows as before."
+        "receipt": "classification-P4D-C3-events-82-ordinal-substitution.json",
+        "entry": "the_instrument_fix.measured_after",
+        "why": "The classification measured the ordinal on its own tree. This re-capture inserts two ally rows ahead of it, so the same record is two positions later; the record itself and its declared identity are unchanged."
       }
     }
   }

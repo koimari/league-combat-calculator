@@ -460,6 +460,20 @@ def _c3_identity(field, recorded):
     )
 
 
+def _c3_path(recorded):
+    """The ordinal a later capture declares for the C3 record's own leaf.
+
+    The record is addressed by position in the cleaver events list; a capture
+    that inserts rows ahead of it moves the position while the record stays.
+    """
+    return _superseding_value(
+        "/classification-P4D-C3/the_instrument_fix/measured_after/path",
+        recorded,
+        C3_CLASSIFICATION,
+        "the_instrument_fix.measured_after",
+    )
+
+
 def _c4_path(recorded):
     """The ordinal a later capture declares for the C4 record's own leaf.
 
@@ -591,7 +605,7 @@ class TestTheIdentityKeyedReportRemediesTheIdentityBearingCase:
         assert removed not in identities, removed
         sibling = _c3_identity("sibling_removal/identity", "main:enemy:Aatrox:34")
         assert sibling not in identities, sibling
-        ordinal = int(c3["path"].rsplit("[", 1)[1].rstrip("]"))
+        ordinal = int(_c3_path(c3["path"]).rsplit("[", 1)[1].rstrip("]"))
         assert events[ordinal][gs.IDENTITY_FIELD] == _c3_identity(
             "the_record_the_ordinal_used_to_substitute/identity",
             "main:enemy:Aatrox:35",
