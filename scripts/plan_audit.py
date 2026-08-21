@@ -178,16 +178,6 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
     )
 ) + (
     Allowance(
-        doc="2026-08-20-surface-area-campaign.md",
-        value=25,
-        context="acknowledged",
-        reason=(
-            "the census gate's acknowledged-residue row count, which happens to "
-            "equal coupled_golden_exact.entries; docs/coverage-residue.json is "
-            "its home"
-        ),
-    ),
-    Allowance(
         doc="phase-0-gates-and-corrections.md",
         value=0,
         context="Expected qualifying occurrences",
@@ -235,68 +225,69 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
     ),
     *(
         Allowance(
-            doc=UMBRELLA_NAME,
-            value=21,
+            doc=doc,
+            value=22,
             context=context,
             reason=(
-                f"{what}, which happens to equal coupled_golden_exact.entries "
-                "since the two amp-armed rosters joined the coupled scenario "
-                "set on 2026-08-15 (umbrella Amendment M, Ruling 2)"
+                f"{what}, which happens to equal coupled_golden.entries since "
+                "control_event_roster joined the coupled scenario set; the "
+                "sentence is about no capture at all"
             ),
         )
-        # H5's arithmetic counts sites and states a bound; both are the same
-        # small integer the exact capture's entry count just became.
-        for context, what in (
+        for doc, context, what in (
             (
-                "NO_RUNTIME_BEHAVIOR`, 21 sites",
-                "the site count of a name-keyed container",
-            ),
-            (
+                UMBRELLA_NAME,
                 "21 + 22 = 43",
-                "the same site count and the bound it is measured against",
+                "H5's site-count arithmetic",
             ),
             (
-                "sites are the count of",
-                "the same site count, as what the bound is the count of",
+                "phase-1-coverage-evidence.md",
+                "modules (**22**)",
+                "the interpreters module count",
             ),
             (
-                "against a bound of",
-                "that bound, where the measured counter is read against it",
+                "phase-3-behavior-rules.md",
+                "22 new modules",
+                "the same module count, in the front-door rule",
+            ),
+            (
+                "utility-axis-census.md",
+                "| 22 | Tristana Q",
+                "a census row's slot count",
+            ),
+            (
+                "utility-axis-census.md",
+                "varus.py:22",
+                "a source line number",
             ),
         )
     ),
     *(
         Allowance(
             doc=doc,
-            value=25,
+            value=26,
             context=context,
             reason=(
                 f"{what}, which happens to equal coupled_golden_exact.entries "
-                "since the Everlasting forced-swing roster joined the coupled "
-                "scenario set on 2026-08-20 (docs/item-source-reconciliation.md, "
-                "entry 3); the sentence is about no capture at all"
+                "since control_event_roster joined the coupled scenario set; "
+                "the sentence is about no capture at all"
             ),
         )
         for doc, context, what in (
             (
-                UMBRELLA_NAME,
-                "~25 new clean modules",
-                "an estimate of how many small modules lift a pylint average",
+                "2026-08-18-full-coverage-campaign.md",
+                "26 champs",
+                "a coverage-family champion count",
             ),
             (
-                "silent-failure-runbook.md",
-                "~25 small clean modules",
-                "the same pylint-average estimate, restated in the runbook",
+                "2026-08-20-surface-area-campaign.md",
+                "26 unread rules",
+                "a by-type-name grep count the campaign overturned",
             ),
             (
-                "phase-3-behavior-rules.md",
-                "25 at HEAD",
-                "the DefenseSource construction count under the stated counting rule",
-            ),
-            (
-                "phase-3-behavior-rules.md",
-                '"25 producers"',
-                "the producer count a naive packet-site reading would state",
+                "full-coverage-notes.md",
+                "26 champions affected",
+                "the same champion count, in the notes",
             ),
         )
     ),

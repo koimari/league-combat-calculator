@@ -1398,7 +1398,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > gains a scenario that **arms the enemy-held swing terms**: a defender holding **Warden's Mail**,
    > with the plating multiplier and the crit-damage reduction in reach, met by an attacker whose
    > delivery is a basic-attack swing. The coverage derivation **reads the term mapping**, the way
-   > `repricing_window_declarations` (`golden_snapshot.py:1505`) already reads the window mapping
+   > `repricing_window_declarations` (`golden_snapshot.py:1515`) already reads the window mapping
    > and `holder_amp_declarations` the amp-kind mapping, so a further target-side swing term that no
    > scenario arms fails the capture on the commit that declares it rather than being discovered by
    > whoever next prices a swing. **Armed means met**: a defender holding the item in a fight nobody

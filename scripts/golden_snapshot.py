@@ -982,6 +982,21 @@ def _roster_request(champion, items, *, enemies, allies, enemy_cards=None, **ext
 
 
 COUPLED_SCENARIOS = (
+    # A control-carrying roster fight: Xayah E roots, so the score panels and
+    # the receipt walk both compile CROWD_CONTROL actions.  No other scenario
+    # emits a control event, which is how the panel path compiled them as
+    # plain damage for a whole campaign unnoticed.
+    CoupledScenario(
+        "control_event_roster",
+        _roster_request(
+            "Xayah",
+            ("Black Cleaver",),
+            enemies=("Aatrox", "Veigar"),
+            allies=("Pantheon",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
     # Three cross-participant producers on one holder, with an ally to price
     # and an authored charm to arm Command.
     CoupledScenario(
