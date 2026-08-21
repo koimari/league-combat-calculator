@@ -27,10 +27,28 @@ def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
         return json.load(data_file)
 
 
+@lru_cache(maxsize=8)
+def _resolved(data_directory: Path, filename: str) -> Path:
+    """The canonical path of one cache file.
+
+    Canonicalization is what lets two spellings of the same directory share a
+    parse, and it is a filesystem call that answers the same for the life of
+    the process — the file's *contents* move, its true path does not.  The
+    freshness check is the ``stat`` in :func:`_cache_version`, which is not
+    memoized.
+    """
+    return (data_directory / filename).resolve()
+
+
+def _cache_version(data_directory: Path, filename: str) -> tuple[Path, int]:
+    """The ``(canonical path, mtime)`` key every derivation of a cache shares."""
+    data_path = _resolved(data_directory, filename)
+    return data_path, data_path.stat().st_mtime_ns
+
+
 def _read_cache(data_directory: Path, filename: str) -> dict[str, Any]:
     """Read cached data, parsing each path-and-mtime version only once."""
-    data_path = (data_directory / filename).resolve()
-    return _read_json_version(data_path, data_path.stat().st_mtime_ns)
+    return _read_json_version(*_cache_version(data_directory, filename))
 
 
 def _validate_champion_data(data: dict[str, Any]) -> None:
@@ -187,6 +205,21 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
     raise KeyError(f"Champion '{name}' not found in data")
 
 
+@lru_cache(maxsize=8)
+def _item_name_index(data_path: Path, _modified_ns: int) -> dict[str, dict[str, Any]]:
+    """``{lowered display name: record}`` for one on-disk items version.
+
+    Earliest spelling wins, which is the answer the linear scan this replaces
+    gave: it returned the first record whose name matched.  Keyed on the same
+    path-and-mtime version as the parse, so a replaced cache file is a
+    different key rather than a stale index.
+    """
+    index: dict[str, dict[str, Any]] = {}
+    for item_data in _read_json_version(data_path, _modified_ns).values():
+        index.setdefault(item_data.get("name", "").lower(), item_data)
+    return index
+
+
 def get_item_by_name(
     name: str, data_directory: Path = DEFAULT_DATA_DIR
 ) -> dict[str, Any]:
@@ -202,8 +235,10 @@ def get_item_by_name(
     Raises:
         KeyError: If the item is not found.
     """
-    items = fetch_item_data(data_directory=data_directory)
-    for _, item_data in items.items():
-        if item_data.get("name", "").lower() == name.lower():
-            return item_data
-    raise KeyError(f"Item '{name}' not found in data")
+    fetch_item_data(data_directory=data_directory)
+    found = _item_name_index(*_cache_version(data_directory, "items.json")).get(
+        name.lower()
+    )
+    if found is None:
+        raise KeyError(f"Item '{name}' not found in data")
+    return found

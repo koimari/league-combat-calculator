@@ -410,7 +410,8 @@ def write_runtime_cache(
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
 
-    from .data_fetcher import _read_json_version  # local: no import cycle
+    # local: no import cycle
+    from .data_fetcher import _item_name_index, _read_json_version
     from .patch_identity import PatchIdentityError, canonical_patch
 
     # The file on disk has changed, so the parsed-JSON cache is stale and so
@@ -420,6 +421,7 @@ def write_runtime_cache(
     # module-level counter; hiding it in a container would not make the
     # state any less module-level.
     _read_json_version.cache_clear()
+    _item_name_index.cache_clear()
     global _DATA_VERSION  # pylint: disable=global-statement
     _DATA_VERSION += 1
 
