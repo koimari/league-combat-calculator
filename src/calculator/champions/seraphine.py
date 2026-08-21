@@ -17,6 +17,60 @@ P1 addition over the reviewed packet:
   row (105-280 + 70% AP = 1.75 x base).  The engine evaluates the
   hp-scaled part at the cast with the target's live missing health —
   deterministic given the fight's health walk (Akshan R precedent).
+
+Roadmap session (2026-08-21): closes both remaining out_of_scope slots
+(P, W).
+
+  - P (Stage Presence) is NOT a no-damage slot.  Its third effect row
+    carries a real sourced on-hit damage formula: "While any amount of
+    Notes are active, Seraphine's next basic attack is empowered ... and
+    fire all Notes at the target, with each one dealing 4 : 27.47 (based
+    on level) (+ 4% AP) magic damage" (``data/champions.json`` Seraphine
+    P, effect 2, leveling attribute "Bonus Magic Damage" — a 20-entry
+    per-LEVEL array plus one 4% AP modifier).  The game binary agrees
+    exactly (``data/bin/characters/seraphine.bin.json``, record
+    ``SeraphinePassive``: ``AutoDamage`` ByCharLevel 4 -> 25 with the
+    level-20 extrapolation to 27.47, and ``NoteAPRatio`` 0.04).  The
+    packet's ``no_damage`` label was therefore INCOMPLETE, not stale.
+
+    Notes are a stack window the fight engine does not simulate (they
+    are granted by ability casts, last 6 seconds and cap at 4 per unit),
+    so the number of Notes fired is explicit state: the ``p_notes_fired``
+    option (0 by default), the Rumble ``overheat_autos`` / Rammus
+    ``w_thorns_autos`` template for a proc whose trigger count the engine
+    cannot derive.  Its ceiling of 4 is the sourced ``MaxNotes`` cap, and
+    the option prices ONE empowered basic attack — a fight with a second
+    empowered attack would fire more Notes, so the reading is
+    conservative in the fail-closed direction.
+
+    Two sourced riders in the same effect are deliberately NOT modeled:
+      * Ally Notes ("reduced by 75% for Notes from allies", binary
+        ``AllyNoteDamagePercent`` 0.25).  They require allied champions
+        standing in range at Seraphine's cast times — structurally
+        outside the 1v1 damage surface (the Rakan-E / Kai'Sa-R
+        ally-coupling boundary).  Only Seraphine's own Notes are priced.
+      * The empowered attack's "uncancellable windup" and "25 bonus
+        attack range per Note".  Neither is damage and this engine has
+        no attack-range or windup channel.
+
+  - W (Surround Sound) is a sourced self-and-ally shield with no damage
+    row of any kind: Shield Strength 60/80/100/120/140 (+ 20% AP) for
+    2.5 seconds, plus the conditional missing-health pulse heal already
+    described above.  Being shield-only it cannot carry
+    ``attach_self_shield`` (that payload rides damage-event rows), so it
+    stays priced by the ally-support scanner, which already derives BOTH
+    rows — the shield at target scope ``self_and_all_teammates`` with
+    ``target_self`` true, and the gated heal with its typed live
+    missing-health atom (pinned by tests/test_support_effects.py).
+    Reclassified out_of_scope -> modeled, the Ekko-W / Rumble-W
+    precedent for a scanner-priced shield-only slot.
+
+    W's bonus movement speed (20% + 2% per 100 AP decaying on self, 8% +
+    0.8% per 100 AP on allies) is sourced but NOT modeled: it is an
+    additive PERCENT and the only ability-buff channel adds a flat
+    scalar onto ``champion_stats["move_speed"]``, bypassing
+    ``stats.apply_movement_speed_soft_caps`` — the Naafiri-W boundary.
+    The 2-stack shield rule is state and the base row is priced.
 """
 
 from typing import Any
@@ -39,8 +93,22 @@ OPTIONS = list(OPTIONS) + [
         "type": "bool",
         "default": False,
         "label": "W caster already has a shield for the first pulse",
-    }
+    },
+    {
+        "key": "p_notes_fired",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "label": "Notes fired by the empowered basic attack",
+    },
 ]
+
+# The sourced cap on Notes held by one unit: "stacks up to 4 times on
+# each unit" (cached P effect 1), corroborated by the game binary's
+# SeraphinePassive ``MaxNotes`` = 4.  Unlike the Rumble/Rammus rails this
+# IS a modeled game value, so it doubles as the option's ceiling.
+_MAX_NOTES = 4
 
 # HARDCODED: verify on patch updates — the 0%:75% missing-health amplifier
 # is prose in the cached Q second effect ("Against champions and monsters,
@@ -93,7 +161,49 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the empowered attack's Note damage, per Note fired.
+
+    The "Bonus Magic Damage" leveling row is a per-LEVEL array (20
+    entries), so it is read at ``ctx.level``, not at an ability rank —
+    Stage Presence is an innate with no rank of its own (the Rumble
+    ``_junkyard_titan`` convention, which substitutes ``ctx.level`` for
+    the rank on passive slots).  ``extract_named`` resolves the flat
+    per-level term and the "% AP" modifier together.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    notes = min(max(int(ctx.options.get("p_notes_fired", 0)), 0), _MAX_NOTES)
+    per_note = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
+    )
+    total = per_note * notes
+    entry = damage_entry(
+        "Stage Presence (Notes)",
+        ctx.level,
+        extract_cooldown(ability, ctx.level),
+        total,
+        "magic",
+    )
+    # Only override the parts when a Note actually lands: the fight engine
+    # reads ONLY ``parts``, so a floored count would price a full Note at
+    # the default of zero Notes (the phantom-proc bug this session fixed
+    # in Rammus' thorns).
+    if notes > 0:
+        entry["parts"] = (DamagePart("magic", per_note, count=notes),)
+    entry["detail"] = (
+        f"empowered basic attack fires {notes} Note(s) at "
+        f"{per_note:.2f} magic damage each (level-{ctx.level} flat + 4% "
+        "AP); Notes from allies (25% damage) are outside the 1v1 surface "
+        "and the empowered attack's bonus attack range and uncancellable "
+        "windup are unmodeled state"
+    )
+    return entry
+
+
 SLOTS = dict(SLOTS)
+SLOTS["P"] = _stage_presence
 SLOTS["Q"] = _high_note
 SLOTS["E"] = with_control(
     SLOTS["E"],
@@ -115,9 +225,44 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "40% AP) plus 0.75 x base x the target's live missing-health ratio "
     "(0%:75% based on missing health; equals the cached Maximum Enhanced "
     "Damage row at full missing health)",
+    "P (Stage Presence) prices the empowered basic attack's Note damage - "
+    "4:27.47 by level + 4% AP per Note fired (cached P effect 2, leveling "
+    "attribute 'Bonus Magic Damage', a per-level array; corroborated by "
+    "the game binary's SeraphinePassive AutoDamage ByCharLevel 4->25 and "
+    "NoteAPRatio 0.04). The fight engine does not simulate the Note stack "
+    "window, so p_notes_fired is the explicit count of Notes on the "
+    "empowered attack (0 = none, the default), capped at the sourced "
+    "MaxNotes of 4. The option prices ONE empowered attack; a fight with "
+    "a second empowered attack would fire more Notes, so the reading is "
+    "conservative. Notes from allies (25% damage, binary "
+    "AllyNoteDamagePercent 0.25) are NOT priced: they require allied "
+    "champions in range at cast time and are structurally outside the 1v1 "
+    "damage surface. The empowered attack's 25 bonus attack range per "
+    "Note and its uncancellable windup are not damage and remain state. "
+    "Reclassified from out_of_scope to modeled; the packet's no_damage "
+    "label was incomplete, not stale.",
+    "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/"
+    "120/140 + 20% AP for 2.5 seconds on Seraphine and nearby allies. "
+    "Shield-only abilities cannot carry attach_self_shield (that payload "
+    "rides damage-event rows), so W stays priced by the ally-support "
+    "scanner, which derives the shield at target scope "
+    "self_and_all_teammates with target_self true, plus the conditional "
+    "missing-health pulse heal through its typed live-missing-health "
+    "atom. W's bonus movement speed (20% + 2% per 100 AP on self, 8% + "
+    "0.8% per 100 AP on allies) is sourced but NOT modeled: it is an "
+    "additive percent and the ability stat_buff channel adds a flat "
+    "number onto champion_stats['move_speed'], bypassing "
+    "stats.apply_movement_speed_soft_caps (the Naafiri-W boundary). The "
+    "2-stack shield rule is state and the base Shield Strength row is "
+    "priced. Reclassified from out_of_scope to modeled (the Ekko-W / "
+    "Rumble-W precedent for a scanner-priced shield-only slot).",
 ]
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"

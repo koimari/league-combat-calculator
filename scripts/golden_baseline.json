@@ -21843,7 +21843,7 @@
           "detail": "thorns: 27.40 magic damage per enemy basic attack (15 + 10% total armor (74.0) + 10% total magic resistance (50.0)) x 0 auto(s) that hit Rammus during the stance; the stance's bonus armor/MR rows are the defensive buff, not damage",
           "name": "Defensive Ball Curl (thorns)",
           "parts": [
-            "DamagePart(magic, amount=27.4, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
           ],
           "rank": 3,
           "resource_cost": 40.0,
@@ -21852,13 +21852,18 @@
         },
         "passive": {
           "cooldown": 0.0,
-          "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "damage_type": "physical",
+          "detail": "+18.60 bonus attack damage: 15% total armor (74.0) + 15% total magic resistance (50.0); Spiked Shell deals no damage of its own",
           "name": "Spiked Shell",
-          "parts": [],
+          "parts": [
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+          ],
           "rank": 0,
           "resource_cost": 0.0,
           "resource_type": "MANA",
+          "stat_buff": {
+            "bonus_attack_damage": 18.6
+          },
           "total_raw": 0.0
         }
       },
@@ -23230,10 +23235,12 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-          "name": "Junkyard Titan",
-          "parts": [],
-          "rank": 0,
+          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); the 4-second Overheat window's attack-speed bonus and its ability lockout are both unmodeled state, and the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
+          "name": "Junkyard Titan (Overheated)",
+          "parts": [
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+          ],
+          "rank": 11,
           "total_raw": 0.0
         }
       },
@@ -24268,10 +24275,12 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
-          "name": "Stage Presence",
-          "parts": [],
-          "rank": 0,
+          "detail": "empowered basic attack fires 0 Note(s) at 16.35 magic damage each (level-11 flat + 4% AP); Notes from allies (25% damage) are outside the 1v1 surface and the empowered attack's bonus attack range and uncancellable windup are unmodeled state",
+          "name": "Stage Presence (Notes)",
+          "parts": [
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+          ],
+          "rank": 11,
           "resource_cost": 0.0,
           "resource_type": "MANA",
           "skillshot": true,
@@ -26908,9 +26917,15 @@
           "total_raw": 145.0
         },
         "passive": {
+          "auto_attack_conversion": {
+            "bonus_raw": 26.1,
+            "count": 0,
+            "damage_type": "magic",
+            "name": "Petricite Burst"
+          },
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "0 empowered basic attack(s) REPLACE their ordinary swing with 113.10 magic damage (130% total AD + 30% AP), not bonus damage on top of it; the secondary-target whirl (40% AD + 20% AP), the nonstandard (175% + 30%) critical strike, the monster multiplier and the 125% bonus attack speed are all unmodeled",
           "name": "Petricite Burst",
           "parts": [],
           "rank": 0,
@@ -43085,7 +43100,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1787268652.393148,
-    "git_head": "dd2e9521606eed74a98ae92f071cb38b2240ce7d",
+    "git_head": "3e8193e591a744c7ba15362c2f394d5d8f6c5409",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
@@ -62465,41 +62480,41 @@
             "E": 0.0,
             "Q": 545.6,
             "R": 412.16,
-            "W": 21.92,
+            "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1135.04
+          "total_damage": 1113.12
         },
         "no_items": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 171.43,
             "R": 178.57,
-            "W": 19.57,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 369.57
+          "total_damage": 350.0
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 171.43,
             "R": 178.57,
-            "W": 19.57,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 369.57
+          "total_damage": 350.0
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 171.43,
             "R": 178.57,
-            "W": 19.57,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 369.57
+          "total_damage": 350.0
         },
         "sustained": {
           "magic_build": {
@@ -62507,43 +62522,43 @@
               "E": 0.0,
               "Q": 545.6,
               "R": 412.16,
-              "W": 21.92,
-              "auto_attacks": 237.33,
+              "W": 0.0,
+              "auto_attacks": 286.93,
               "proc_Luden's Echo": 155.36
             },
-            "total_damage": 1372.37
+            "total_damage": 1400.05
           },
           "no_items": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 171.43,
               "R": 178.57,
-              "W": 19.57,
-              "auto_attacks": 237.33
+              "W": 0.0,
+              "auto_attacks": 286.93
             },
-            "total_damage": 606.9
+            "total_damage": 636.93
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 171.43,
               "R": 178.57,
-              "W": 19.57,
-              "auto_attacks": 1342.0,
-              "on_hit_Kraken Slayer": 132.14
+              "W": 0.0,
+              "auto_attacks": 1444.3,
+              "on_hit_Kraken Slayer": 133.83
             },
-            "total_damage": 1843.71
+            "total_damage": 1928.13
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 171.43,
               "R": 178.57,
-              "W": 19.57,
-              "auto_attacks": 883.33,
+              "W": 0.0,
+              "auto_attacks": 965.48,
               "spellblade_Trinity Force": 237.33
             },
-            "total_damage": 1490.24
+            "total_damage": 1552.82
           }
         }
       },
@@ -62553,41 +62568,41 @@
             "E": 0.0,
             "Q": 545.6,
             "R": 492.16,
-            "W": 26.32,
+            "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1219.44
+          "total_damage": 1193.12
         },
         "no_items": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 171.43,
             "R": 250.0,
-            "W": 23.5,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 444.93
+          "total_damage": 421.43
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 171.43,
             "R": 250.0,
-            "W": 23.5,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 444.93
+          "total_damage": 421.43
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 171.43,
             "R": 250.0,
-            "W": 23.5,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 444.93
+          "total_damage": 421.43
         },
         "sustained": {
           "magic_build": {
@@ -62595,43 +62610,43 @@
               "E": 0.0,
               "Q": 545.6,
               "R": 492.16,
-              "W": 26.32,
-              "auto_attacks": 298.67,
+              "W": 0.0,
+              "auto_attacks": 370.27,
               "proc_Luden's Echo": 155.36
             },
-            "total_damage": 1518.11
+            "total_damage": 1563.39
           },
           "no_items": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 171.43,
               "R": 250.0,
-              "W": 23.5,
-              "auto_attacks": 298.67
+              "W": 0.0,
+              "auto_attacks": 370.27
             },
-            "total_damage": 743.6
+            "total_damage": 791.7
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 171.43,
               "R": 250.0,
-              "W": 23.5,
-              "auto_attacks": 1468.5,
-              "on_hit_Kraken Slayer": 162.7
+              "W": 0.0,
+              "auto_attacks": 1616.18,
+              "on_hit_Kraken Slayer": 165.66
             },
-            "total_damage": 2076.13
+            "total_damage": 2203.26
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 171.43,
               "R": 250.0,
-              "W": 23.5,
-              "auto_attacks": 1181.9,
+              "W": 0.0,
+              "auto_attacks": 1324.2,
               "spellblade_Trinity Force": 298.67
             },
-            "total_damage": 1925.5
+            "total_damage": 2044.3
           }
         }
       }
