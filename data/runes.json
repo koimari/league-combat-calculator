@@ -757,7 +757,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png",
     "description": "Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31 at 5 stacks.\nEarn a ''Bounty Hunter'' stack whenever scoring a {{tip|takedown}} against an enemy {{tip|champion}}, up to one per unique champion.",
-    "effects": {}
+    "effects": {
+      "ultimate_haste": 6.0,
+      "ultimate_haste_per_stack": 5.0,
+      "max_stacks": 5
+    }
   },
   "Summon Aery": {
     "name": "Summon Aery",

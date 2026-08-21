@@ -34,7 +34,12 @@ from .ability_spec import Disposition, ZeroPolicy
 from .data_fetcher import fetch_rune_data
 from .item_effects import DamageInputs
 from .request_parsing import request_positional_string_list, request_string_list
-from .rune_parser import ADAPTIVE_FORCE_KEY, RESERVED_CACHE_KEYS, SHARDS_KEY
+from .rune_parser import (
+    ADAPTIVE_FORCE_KEY,
+    DEFAULT_LEVEL_COUNT,
+    RESERVED_CACHE_KEYS,
+    SHARDS_KEY,
+)
 
 
 def _load_rune_cache() -> dict[str, Any]:
@@ -335,6 +340,14 @@ class RuneStat(Enum):
     ADAPTIVE_FORCE = "adaptive_force"
     ATTACK_SPEED_PERCENT = "attack_speed_percent"
     ABILITY_HASTE = "ability_haste"
+    #: Haste on the basic abilities alone (Q/W/E), the channel Spear of
+    #: Shojin feeds. Separate from ``ABILITY_HASTE`` because the ultimate
+    #: reads that one: granting Legend: Haste there would shorten a cooldown
+    #: the rune does not touch.
+    BASIC_ABILITY_HASTE = "basic_ability_haste"
+    #: Haste on the ultimate alone, the channel Malignance and its siblings
+    #: feed, and the mirror of the one above.
+    ULTIMATE_HASTE = "ultimate_haste"
     MOVE_SPEED_PERCENT = "move_speed_percent"
     BONUS_HEALTH = "bonus_health"
     LETHALITY = "lethality"
@@ -582,13 +595,39 @@ class RuneValues:
         return float(self.value(key))
 
 
+#: The column count of a level table stating every level of the game's cap.
+_FULL_LEVEL_COUNT = 20
+
+#: The two widths the wiki's own rendering gives a level table. A formula
+#: with an explicit ``1 to 20 by 1`` range states all twenty; a stepless
+#: ``A to B`` (Sudden Impact's "20 to 80") renders Module:Ability
+#: progression's ``defaultSize`` of eighteen with its endpoints anchored at
+#: levels 1 and 18. Both are complete statements of what the wiki says, and
+#: a table of any *other* width is a degraded parse — which is the check
+#: this pair keeps: admitting the short rendering must not admit a
+#: twenty-level table that lost two of its columns.
+LEVEL_TABLE_SIZES = (DEFAULT_LEVEL_COUNT, _FULL_LEVEL_COUNT)
+
+
+def _certified_level_table(name: str, key: str, values: Sequence[Any]) -> list[float]:
+    """One per-level table, certified as a width the wiki renders."""
+    by_level = [float(value) for value in values]
+    if len(by_level) not in LEVEL_TABLE_SIZES:
+        widths = " or ".join(str(size) for size in LEVEL_TABLE_SIZES)
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} covers {len(by_level)} "
+            f"levels; the wiki renders {widths} — wiki parse degraded"
+        )
+    return by_level
+
+
 def required_leveling(
     name: str,
     effects: RuneValues,
     key: str = "leveling",
     index: int = 0,
 ) -> list[float]:
-    """Read one of a rune's per-level tables, requiring all 20 levels.
+    """Read one of a rune's per-level tables, at a width the wiki renders.
 
     ``key`` and ``index`` because a rune record states several tables under
     several names — a melee and a ranged one, a base and an escalated one —
@@ -600,28 +639,54 @@ def required_leveling(
             f"RUNE_EFFECTS[{name!r}] {key} holds {len(tables)} tables and "
             f"table {index} was required — wiki parse degraded"
         )
-    by_level = [float(value) for value in tables[index]]
-    if len(by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} covers {len(by_level)} "
-            "levels; expected 20 — wiki parse degraded"
-        )
-    return by_level
+    return _certified_level_table(name, key, tables[index])
 
 
 def required_level_table(name: str, effects: RuneValues, key: str) -> list[float]:
-    """Read one flat per-level table, requiring all 20 levels.
+    """Read one flat per-level table, at a width the wiki renders.
 
     The sibling of :func:`required_leveling` for the keys the parser records
     as a single table rather than a list of them (``adaptive_force_leveling``).
     """
-    by_level = [float(value) for value in effects.value(key)]
-    if len(by_level) < 20:
+    return _certified_level_table(name, key, effects.value(key))
+
+
+def keyed_columns(
+    name: str, effects: RuneValues, key: str, index: int
+) -> tuple[float, ...]:
+    """Read one table whose columns are not champion levels.
+
+    :func:`required_leveling` certifies a width the wiki renders *levels*
+    at, which is the right door for a level table and the wrong one for a
+    table keyed by game minutes: Gathering Storm states eight columns and
+    would fail a level check that is not its rule.
+    """
+    tables = effects.value(key)
+    if index >= len(tables):
         raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} covers {len(by_level)} "
-            "levels; expected 20 — wiki parse degraded"
+            f"RUNE_EFFECTS[{name!r}] {key} holds {len(tables)} tables and "
+            f"table {index} was required — wiki parse degraded"
         )
-    return by_level
+    columns = tuple(float(value) for value in tables[index])
+    if len(columns) < 2:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} table {index} holds {len(columns)} "
+            "columns; a keyed table needs at least two to state its step — "
+            "wiki parse degraded"
+        )
+    return columns
+
+
+def level_gates(
+    name: str, effects: RuneValues, key: str
+) -> tuple[tuple[int, float], ...]:
+    """Read a rune's ``level, bonus`` gates, requiring at least one."""
+    gates = tuple((int(level), float(bonus)) for level, bonus in effects.value(key))
+    if not gates:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} states no gates — wiki parse degraded"
+        )
+    return gates
 
 
 def required_pair(name: str, effects: RuneValues, key: str) -> tuple[float, float]:
@@ -1660,6 +1725,16 @@ class RuneStatGrants:
     ability_power: float = 0.0
     attack_speed_percent: float = 0.0
     ability_haste: float = 0.0
+    basic_ability_haste: float = 0.0
+    #: Neutral as ``int`` zero, not ``0.0``, and that is load-bearing: the
+    #: item side of this one stat sums *terms* (``item_effects``'s declared
+    #: sibling read), so a build holding no registry item totals to ``int``
+    #: 0 and ``views.publish`` gives an int leaf no disposition entry where
+    #: it gives a float one. A neutral ``0.0`` here would publish a leaf
+    #: that was not there, moving the coupled golden with no number
+    #: changing. A rune that actually grants contributes a float, as an
+    #: item's declared read does.
+    ultimate_haste: float = 0
     move_speed_percent: float = 0.0
     bonus_health: float = 0.0
     lethality: float = 0.0
@@ -1671,6 +1746,8 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
     {
         RuneStat.ATTACK_SPEED_PERCENT: "attack_speed_percent",
         RuneStat.ABILITY_HASTE: "ability_haste",
+        RuneStat.BASIC_ABILITY_HASTE: "basic_ability_haste",
+        RuneStat.ULTIMATE_HASTE: "ultimate_haste",
         RuneStat.MOVE_SPEED_PERCENT: "move_speed_percent",
         RuneStat.BONUS_HEALTH: "bonus_health",
         RuneStat.LETHALITY: "lethality",

@@ -3,11 +3,10 @@
 Precision's rows split three ways and each half of the split is pinned here.
 Row 1 pays on an event the pair engine never produces, so all three compile
 to receipted refusals. Row 2 grows with a game-long ``Legend`` counter, which
-becomes a declared option: Alacrity's attack speed and Bloodline's bonus
-health are real grants read through the real pipeline, while Haste's *basic*
-ability haste has no rune channel and is refused with its number quoted. Row
-3's Coup de Grace is pinned in ``test_rune_paths.py`` beside the other
-exemplars.
+becomes a declared option: Alacrity's attack speed, Bloodline's bonus health
+and Haste's *basic* ability haste are all real grants read through the real
+pipeline, each into the channel its own sentence names. Row 3's Coup de Grace
+is pinned in ``test_rune_paths.py`` beside the other exemplars.
 """
 
 import pytest
@@ -100,19 +99,79 @@ class TestLegendBloodline:
 
 
 class TestLegendHaste:
-    """Row 2: a real stat, refused because the rune channels would misplace it."""
+    """Row 2: basic ability haste, in its own channel rather than the general one."""
 
-    def test_it_is_withheld_and_names_the_haste_it_would_have_granted(self):
+    def test_it_grants_its_cached_step_per_stack_into_the_basic_channel(self):
+        """1.5 per stack, 15 at the ten-stack maximum — Q/W/E only."""
         effect = rune_effects.resolve_rune("Legend: Haste")
-        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert "1.5 basic ability haste per Legend stack (15 at its" in (
-            effect.zero_policy.reason
-        )
-        assert "which the ultimate reads as well" in effect.zero_policy.reason
+        assert isinstance(effect, rune_effects.RuneStatGrantEffect)
+        assert effect.stat is rune_effects.RuneStat.BASIC_ABILITY_HASTE
+        assert effect.amount(_context()) == 0.0
+        assert effect.amount(_context(stacks=1)) == pytest.approx(1.5)
+        assert effect.amount(_context(stacks=10)) == pytest.approx(15.0)
 
-    def test_it_declares_no_option_because_it_prices_nothing(self):
-        assert "Legend: Haste" not in precision.OPTIONS
+    def test_the_channel_is_not_the_one_the_ultimate_reads(self):
+        """The whole reason for a second haste channel, pinned."""
+        assert (
+            rune_effects.RuneStat.BASIC_ABILITY_HASTE
+            is not rune_effects.RuneStat.ABILITY_HASTE
+        )
+        effect = rune_effects.resolve_rune("Legend: Haste")
+        assert "15 at its 10-stack maximum" in effect.disclosures[0]
+        assert "basic abilities' cooldowns and nothing else" in effect.disclosures[1]
+
+    def test_it_declares_the_same_stack_option_its_row_siblings_do(self):
+        option = precision.OPTIONS["Legend: Haste"][0]
+        assert option.key == "legend_stacks"
+        assert (option.default, option.bounds) == (0.0, (0.0, 10.0))
+
+    def test_the_stacks_shorten_the_basic_cooldowns_and_buy_another_cast(self):
+        """15 basic ability haste: Ahri's Q and W each land a fourth cast.
+
+        The channel's whole point, priced through the real pipeline: the
+        ultimate's cooldown is untouched (one cast either way) while Q and W
+        each gain one, and the total moves by exactly those two casts.
+        """
+        request = {
+            "champion": "Ahri",
+            "level": 11,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 20.0,
+        }
+        bare = calculate_payload(dict(request))
+        stacked = calculate_payload(
+            {
+                **request,
+                "minor_runes": ["Legend: Haste"],
+                "rune_options": {"Legend: Haste": {"legend_stacks": 10}},
+            }
+        )
+        assert bare["champion_stats"]["basic_ability_haste"] == 0.0
+        assert stacked["champion_stats"]["basic_ability_haste"] == pytest.approx(15.0)
+        assert bare["champion_stats"]["ability_haste"] == (
+            stacked["champion_stats"]["ability_haste"]
+        )
+        casts = lambda result: {  # noqa: E731
+            slot: result["breakdown"][slot]["casts"] for slot in ("Q", "W", "E", "R")
+        }
+        assert casts(bare) == {"Q": 3, "W": 3, "E": 2, "R": 1}
+        assert casts(stacked) == {"Q": 4, "W": 4, "E": 2, "R": 1}
+        assert bare["total_damage"] == pytest.approx(1091.0, abs=0.05)
+        assert stacked["total_damage"] == pytest.approx(1365.5, abs=0.05)
+
+    def test_without_stacks_it_grants_nothing_and_the_fight_is_unchanged(self):
+        request = {
+            "champion": "Ahri",
+            "level": 11,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 20.0,
+        }
+        bare = calculate_payload(dict(request))
+        unstacked = calculate_payload({**request, "minor_runes": ["Legend: Haste"]})
+        assert unstacked["champion_stats"] == bare["champion_stats"]
+        assert unstacked["total_damage"] == pytest.approx(bare["total_damage"])
 
 
 class TestTheRowThatPaysOnATakedown:
@@ -199,12 +258,13 @@ class TestTheGrantsReachTheRealPipeline:
     def test_a_withheld_rune_publishes_its_receipt_and_moves_no_number(self):
         bare = calculate_payload(dict(_HEALTH_PROBE))
         withheld = calculate_payload(
-            {**_HEALTH_PROBE, "minor_runes": ["Triumph", "Legend: Haste"]}
+            {**_HEALTH_PROBE, "minor_runes": ["Presence of Mind"]}
         )
         assert withheld["total_damage"] == pytest.approx(bare["total_damage"])
         assert withheld["champion_stats"] == bare["champion_stats"]
-        assert any("Triumph is not priced" in note for note in withheld["notes"])
-        assert any("Legend: Haste is not priced" in note for note in withheld["notes"])
+        assert any(
+            "Presence of Mind is not priced" in note for note in withheld["notes"]
+        )
 
 
 class TestThePathIsCovered:
@@ -233,7 +293,7 @@ def _context(*, stacks=None):
     if stacks is not None:
         options = {
             name: {"legend_stacks": stacks}
-            for name in ("Legend: Alacrity", "Legend: Bloodline")
+            for name in ("Legend: Alacrity", "Legend: Bloodline", "Legend: Haste")
         }
     return rune_effects.RuneStatContext(
         level=18,

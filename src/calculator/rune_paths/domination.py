@@ -19,9 +19,14 @@ from ..rune_effects import (
     RuneEffect,
     RuneNoDamageEffect,
     RuneOption,
+    RuneOptionKind,
+    RuneStat,
+    RuneStatContext,
+    RuneStatGrantEffect,
     RuneValues,
     at_level,
     no_damage_compiler,
+    rune_effect_value,
 )
 
 #: The two levels a withheld damage table is quoted at: the fight's floor and
@@ -130,6 +135,50 @@ def _compile_sudden_impact(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
     )
 
 
+#: Ultimate Hunter's stacks are unique enemy champions taken down over a
+#: whole game, and one simulated fight scores none — so the count is a
+#: declared option (decision 5) whose default is the un-stacked state. Its
+#: base grant is unconditional and lands whatever the count says.
+_HUNTER_STACKS = "hunter_stacks"
+
+
+def _compile_ultimate_hunter(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Ultimate Hunter: ultimate haste, a base plus a per-stack step.
+
+    Ultimate haste is a channel of its own in the fight's stat block — the
+    engine shortens R's cooldown with it and Q/W/E's with a different one —
+    so the grant lands where the rune's own sentence puts it rather than in
+    the general haste every ability reads.
+    """
+    name = "Ultimate Hunter"
+    effects = RuneValues(name, entry.get("effects", {}))
+    base = effects.number("ultimate_haste")
+    per_stack = effects.number("ultimate_haste_per_stack")
+    ceiling = effects.number("max_stacks")
+
+    def amount(context: RuneStatContext) -> float:
+        return base + per_stack * context.option(name, _HUNTER_STACKS, 0.0)
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.ULTIMATE_HASTE,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {base:g} ultimate haste plus {per_stack:g} per "
+            f"Bounty Hunter stack, {base + per_stack * ceiling:g} at its "
+            f"{ceiling:g}-stack maximum. The fight reads the "
+            f"{_HUNTER_STACKS!r} option, whose default is no stacks: a stack "
+            "is a takedown against a champion this engine never scores.",
+            f"{name} shortens the ultimate's cooldown and nothing else, and "
+            "the timed scheduler casts the ultimate exactly once whatever "
+            "its cooldown is — so the grant reaches the stat card and no "
+            "damage row. Every ultimate-haste source the engine carries is "
+            "in that same position; the floor is the scheduler's, not this "
+            "rune's.",
+        ),
+    )
+
+
 #: Domination's utility runes: disposition, the reason that becomes the
 #: receipt, and any further half this engine refuses.  A structural zero is a
 #: rune with no combat damage in any source; a withheld one has a real number
@@ -170,16 +219,6 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         "fight prices combat",
         (),
     ),
-    "Ultimate Hunter": (
-        Disposition.WITHHELD,
-        "it grants ultimate haste — a stat the engine does read, for the "
-        "ultimate's cooldown — and the rune stat channels have no "
-        "ultimate-haste field to grant into",
-        (
-            "Ultimate Hunter shortens the ultimate's cooldown alone, so a "
-            "timed rotation without it is a floor rather than a wrong total.",
-        ),
-    ),
 }
 
 
@@ -187,10 +226,29 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Cheap Shot": _compile_cheap_shot,
     "Taste of Blood": _compile_taste_of_blood,
     "Sudden Impact": _compile_sudden_impact,
+    "Ultimate Hunter": _compile_ultimate_hunter,
     **{
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()
     },
 }
 
-OPTIONS: dict[str, tuple[RuneOption, ...]] = {}
+OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Ultimate Hunter": (
+        RuneOption(
+            key=_HUNTER_STACKS,
+            label="Bounty Hunter stacks",
+            kind=RuneOptionKind.COUNT,
+            default=0.0,
+            bounds=(
+                0.0,
+                rune_effect_value("Ultimate Hunter", "max_stacks"),
+            ),
+            disclosure=(
+                "How many unique enemy champions Ultimate Hunter's holder "
+                "has taken down when the fight opens. 0 is the default: the "
+                "engine simulates one fight and scores no takedown in it."
+            ),
+        ),
+    ),
+}

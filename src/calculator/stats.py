@@ -680,8 +680,8 @@ def calculate_total_stats(
             + bonuses.ability_haste
             + runes.ability_haste
         ),
-        "basic_ability_haste": bonuses.basic_ability_haste,
-        "ultimate_haste": bonuses.ultimate_haste,
+        "basic_ability_haste": bonuses.basic_ability_haste + runes.basic_ability_haste,
+        "ultimate_haste": bonuses.ultimate_haste + runes.ultimate_haste,
         "level": level,
         "is_melee": is_melee,
         "move_speed": final_move_speed,

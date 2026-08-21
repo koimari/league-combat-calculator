@@ -125,6 +125,16 @@ _PER_STACK_RULES: tuple[tuple[str, re.Pattern], ...] = (
         re.compile(r"\{\{fd\|([\d.]+)% life steal\}\}+" + _PER_STACK_TAIL),
     ),
 )
+#: "Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31
+#: at 5 stacks." — Ultimate Hunter states its base, its step, its ceiling and
+#: the total they make in one sentence, so one rule reads all four and
+#: :func:`_parse_per_stack_grants` certifies the total against the other
+#: three.  Splitting them would let a reworded page keep one and drop the
+#: rest without any of them looking wrong.
+_ULTIMATE_HASTE_PER_STACK = re.compile(
+    r"Gain ([\d.]+) \(\+ ([\d.]+) per ''\w[^']*'' \[\[stack\]\]\) "
+    r"\[\[ultimate haste\]\], up to ([\d.]+) at (\d+) stacks"
+)
 #: "Gain ''Legend'' stacks for every 100 points earned, up to 10:" — the
 #: ceiling that bounds a per-stack grant's option.
 _STACK_CEILING = re.compile(r"stacks for every \d+ points earned, up to (\d+):")
@@ -294,7 +304,9 @@ _UNCLAIMED_RD = re.compile(r"\{\{rd\|(?:[^{}]|\{\{(?:[^{}]|\{\{[^{}]*\}\})*\}\})
 
 #: Module:Ability progression's ``defaultSize``: a stepless ``A to B`` with
 #: no explicit range renders 18 columns, endpoints anchored at levels 1/18.
-_DEFAULT_LEVEL_COUNT = 18
+#: Public because it is the width of a legitimately short level table, and
+#: ``rune_effects`` must admit one rather than call it a degraded parse.
+DEFAULT_LEVEL_COUNT = 18
 
 _ALLOWED_PP_NODES = (
     ast.Expression,
@@ -425,7 +437,7 @@ def _interpolate_endpoints(match: re.Match, range_spec: str | None) -> list[floa
             raise ValueError(f"Unsupported pp range spec {range_spec!r}")
         count = len(_enumerate_range(spec))
     else:
-        count = _DEFAULT_LEVEL_COUNT
+        count = DEFAULT_LEVEL_COUNT
     if count < 2:
         raise ValueError(f"pp span {match.group(0)!r} needs at least two levels")
     step = (finish_value - start_value) / (count - 1)
@@ -719,9 +731,34 @@ def _parse_per_stack_grants(text: str, recorder: _EffectRecorder) -> None:
     if base_and_step:
         recorder.record("attack_speed_percent", float(base_and_step.group(1)))
         recorder.record("attack_speed_percent_per_stack", float(base_and_step.group(2)))
+    _parse_ultimate_haste_stacks(text, recorder)
     for key, pattern in _PER_STACK_RULES:
         for amount in pattern.findall(text):
             recorder.record(key, float(amount))
+
+
+def _parse_ultimate_haste_stacks(text: str, recorder: _EffectRecorder) -> None:
+    """Read a base ultimate-haste grant, its per-stack step and its ceiling.
+
+    The sentence states the total as well, and it is read to *certify* the
+    other three rather than recorded: base + step × ceiling is the total, so
+    a page whose four numbers stop agreeing is a rewording the compiler must
+    not price through.  Nothing is recorded in that case — absence, never a
+    plausible-looking wrong number.
+    """
+    match = _ULTIMATE_HASTE_PER_STACK.search(text)
+    if not match:
+        return
+    base, step, total, ceiling = (float(value) for value in match.groups())
+    if abs(base + step * ceiling - total) > 1e-9:
+        recorder.warn(
+            f"ultimate haste states {base:g} + {step:g} per stack up to "
+            f"{total:g} at {ceiling:g} stacks, which do not agree; dropped"
+        )
+        return
+    recorder.record("ultimate_haste", base)
+    recorder.record("ultimate_haste_per_stack", step)
+    recorder.record("max_stacks", int(ceiling))
 
 
 def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None:

@@ -78,7 +78,7 @@ class TestTheThreeCombatRunes:
         )
 
 
-class TestTheSixUtilityRunes:
+class TestTheFiveUtilityRunes:
     @pytest.mark.parametrize(
         "name,disposition,phrase",
         [
@@ -87,7 +87,6 @@ class TestTheSixUtilityRunes:
             ("Relentless Hunter", "STRUCTURAL_ZERO", "only while out of combat"),
             ("Grisly Mementos", "WITHHELD", "the engine reads no trinket"),
             ("Treasure Hunter", "WITHHELD", "gold is not damage"),
-            ("Ultimate Hunter", "WITHHELD", "no ultimate-haste field to grant into"),
         ],
     )
     def test_each_declares_its_disposition_and_its_reason(
@@ -110,20 +109,82 @@ class TestTheSixUtilityRunes:
         assert not isinstance(effect, rune_effects.RuneStatGrantEffect)
 
     def test_the_two_hunter_hastes_are_told_apart(self):
-        """Trinket haste and ultimate haste are refused for different reasons.
+        """Trinket haste is refused; ultimate haste has a channel of its own.
 
-        Ultimate haste is a stat the engine reads and no rune can reach;
-        trinket haste is a stat the engine does not read at all.
+        Ultimate haste is a stat the engine's stat block carries, so the rune
+        grants into it; trinket haste is a stat the engine does not read at
+        all, so the rune states what it would have granted and stops.
         """
         trinket = rune_effects.resolve_rune("Grisly Mementos")
         ultimate = rune_effects.resolve_rune("Ultimate Hunter")
         assert "grants no ability haste" in trinket.disclosures[0]
-        assert "a stat the engine does read" in ultimate.zero_policy.reason
+        assert ultimate.stat is rune_effects.RuneStat.ULTIMATE_HASTE
+
+
+class TestUltimateHunter:
+    """Row 3: ultimate haste, a cached base plus a cached per-stack step."""
+
+    def test_the_base_and_the_step_come_out_of_the_cache(self):
+        """6 flat, 5 per Bounty Hunter stack, 31 at the five-stack maximum."""
+        effect = rune_effects.resolve_rune("Ultimate Hunter")
+        assert isinstance(effect, rune_effects.RuneStatGrantEffect)
+        assert effect.amount(_stat_context()) == pytest.approx(6.0)
+        assert effect.amount(_stat_context(stacks=1)) == pytest.approx(11.0)
+        assert effect.amount(_stat_context(stacks=5)) == pytest.approx(31.0)
+
+    def test_its_option_is_a_count_bounded_by_the_cached_ceiling(self):
+        option = domination.OPTIONS["Ultimate Hunter"][0]
+        assert option.key == "hunter_stacks"
+        assert option.kind is rune_effects.RuneOptionKind.COUNT
+        assert (option.default, option.bounds) == (0.0, (0.0, 5.0))
+        with pytest.raises(ValueError, match="between 0 and 5"):
+            option.validated(6)
+
+    def test_the_grant_reaches_the_stat_card_and_says_the_scheduler_caps_it(self):
+        """0 -> 6 -> 31 ultimate haste, and no damage row moves.
+
+        The timed scheduler casts the ultimate exactly once whatever its
+        cooldown is (``damage._schedule_shared_casts``), which is a floor
+        every ultimate-haste source in the engine shares. The rune says so
+        rather than letting the reader read a zero as "no haste".
+        """
+        request = {**_PROBE, "fight_mode": "time_based", "fight_duration": 30.0}
+        bare = calculate_payload(dict(request))
+        unstacked = calculate_payload({**request, "minor_runes": ["Ultimate Hunter"]})
+        stacked = calculate_payload(
+            {
+                **request,
+                "minor_runes": ["Ultimate Hunter"],
+                "rune_options": {"Ultimate Hunter": {"hunter_stacks": 5}},
+            }
+        )
+        hastes = [
+            result["champion_stats"]["ultimate_haste"]
+            for result in (bare, unstacked, stacked)
+        ]
+        assert hastes == [0, pytest.approx(6.0), pytest.approx(31.0)]
+        assert stacked["total_damage"] == pytest.approx(bare["total_damage"])
+        assert any(
+            "casts the ultimate exactly once" in note for note in stacked["notes"]
+        )
+
+    def test_a_build_with_no_haste_item_still_publishes_an_integer_zero(self):
+        """A published zero's *type* is load-bearing (CLAUDE.md).
+
+        ``views.publish`` gives a float leaf a disposition entry and an int
+        leaf none, and the item side of this stat sums no terms for a build
+        holding no registry item. The rune channel joins as a term, so a page
+        that grants nothing must not turn that int into a float.
+        """
+        bare = calculate_payload(dict(_PROBE))
+        assert isinstance(bare["champion_stats"]["ultimate_haste"], int)
+        other = calculate_payload({**_PROBE, "minor_runes": ["Cheap Shot"]})
+        assert isinstance(other["champion_stats"]["ultimate_haste"], int)
 
 
 class TestThePathThroughTheRealPipeline:
     def test_a_full_domination_row_prices_nothing_and_receipts_everything(self):
-        names = ["Cheap Shot", "Grisly Mementos", "Ultimate Hunter"]
+        names = ["Cheap Shot", "Grisly Mementos", "Treasure Hunter"]
         bare = calculate_payload(dict(_PROBE))
         with_runes = calculate_payload({**_PROBE, "minor_runes": names})
         assert with_runes["total_damage"] == pytest.approx(bare["total_damage"])
@@ -153,5 +214,18 @@ class TestThePathIsCovered:
         assert all(catalog.values())
         assert set(domination.COMPILERS) == set(catalog)
 
-    def test_none_of_them_declares_an_option_because_none_prices_anything(self):
-        assert domination.OPTIONS == {}
+    def test_only_the_rune_with_a_stack_count_declares_an_option(self):
+        assert set(domination.OPTIONS) == {"Ultimate Hunter"}
+
+
+def _stat_context(*, stacks=None):
+    """A stat context at level 18, optionally carrying a Hunter stack count."""
+    return rune_effects.RuneStatContext(
+        level=18,
+        is_melee=False,
+        bonus_attack_damage=0.0,
+        ability_power=0.0,
+        options=(
+            {} if stacks is None else {"Ultimate Hunter": {"hunter_stacks": stacks}}
+        ),
+    )

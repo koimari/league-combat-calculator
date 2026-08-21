@@ -127,31 +127,34 @@ def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
-def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
-    """Compile Legend: Haste: basic ability haste with no rune channel to land in.
+def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Legend: Haste: basic ability haste, one step per Legend stack.
 
-    The haste is real and the engine does read a ``basic_ability_haste`` stat
-    for the Q/W/E cooldowns it walks — but that stat is fed by items, and the
-    rune stat channels carry general ability haste, which the ultimate reads
-    too. Granting it there would shorten a cooldown this rune does not touch,
-    so the number is refused rather than misplaced.
+    Its own channel, not the general one: the engine reads a
+    ``basic_ability_haste`` stat for the Q/W/E cooldowns it walks and a
+    separate ultimate haste for R, and granting this rune's haste into the
+    general channel would shorten a cooldown it does not touch.
     """
     name = "Legend: Haste"
     effects = RuneValues(name, entry.get("effects", {}))
     per_stack = effects.number("basic_ability_haste_per_stack")
     ceiling = effects.number("max_stacks")
-    return RuneNoDamageEffect(
+
+    def amount(context: RuneStatContext) -> float:
+        return per_stack * context.option(name, _LEGEND_STACKS, 0.0)
+
+    return RuneStatGrantEffect(
         rune_name=name,
-        zero_policy=ZeroPolicy(
-            Disposition.WITHHELD,
-            f"it grants {per_stack:g} basic ability haste per Legend stack "
-            f"({per_stack * ceiling:g} at its {ceiling:g}-stack maximum), and "
-            "the rune stat channels carry only general ability haste, which "
-            "the ultimate reads as well",
-        ),
+        stat=RuneStat.BASIC_ABILITY_HASTE,
+        amount=amount,
         disclosures=(
-            f"{name} shortens basic-ability cooldowns alone, so a timed "
-            "rotation without it is a floor rather than a wrong total.",
+            f"{name} grants {per_stack:g} basic ability haste per Legend "
+            f"stack, {per_stack * ceiling:g} at its {ceiling:g}-stack "
+            f"maximum; the fight reads the {_LEGEND_STACKS!r} option, whose "
+            "default is no stacks.",
+            f"{name} shortens the basic abilities' cooldowns and nothing "
+            "else, so it moves a number only in a fight long enough to "
+            "recast one: a single rotation casts each ability once.",
         ),
     )
 
@@ -344,7 +347,7 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
     **{
         name: (_legend_stack_option(name),)
-        for name in ("Legend: Alacrity", "Legend: Bloodline")
+        for name in ("Legend: Alacrity", "Legend: Bloodline", "Legend: Haste")
     },
     "Last Stand": (
         RuneOption(

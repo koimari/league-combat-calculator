@@ -839,3 +839,64 @@ class TestRefreshRuneEffects:
         assert "Electrocute" in rune_effects.RUNE_EFFECTS
         assert rune_effects.RUNE_SHARDS["slots"]
         assert rune_effects.ADAPTIVE_FORCE["attack_damage_ratio"] == 0.6
+
+
+class TestTheSharedTableAccessors:
+    """The doors every compiler reads a table through, and what each refuses.
+
+    Three of them, and the difference between them is what a table's columns
+    *are*: ``required_leveling`` and ``required_level_table`` read champion
+    levels, ``keyed_columns`` reads a table keyed by something else, and
+    ``level_gates`` reads a list of (level, bonus) pairs. They live in
+    ``rune_effects`` rather than in one path module because runes from three
+    paths read them.
+    """
+
+    def test_a_level_table_may_be_either_width_the_wiki_renders(self):
+        """Twenty columns from an explicit range, eighteen from a stepless one.
+
+        Cheap Shot's table states ``1 to 20 by 1`` and renders twenty;
+        Sudden Impact's states ``20 to 80`` and renders Module:Ability
+        progression's default eighteen. Both are complete.
+        """
+        assert rune_effects.LEVEL_TABLE_SIZES == (18, 20)
+        widths = {
+            name: len(
+                rune_effects.required_leveling(
+                    name, rune_effects.RuneValues(name, _cached(name))
+                )
+            )
+            for name in ("Cheap Shot", "Sudden Impact")
+        }
+        assert widths == {"Cheap Shot": 20, "Sudden Impact": 18}
+
+    @pytest.mark.parametrize("width", [17, 19, 21])
+    def test_any_other_width_is_still_a_degraded_parse(self, width):
+        """The relaxation must not admit a twenty-level table missing columns."""
+        values = rune_effects.RuneValues("Synthetic", {"leveling": [[1.0] * width]})
+        with pytest.raises(KeyError, match="Synthetic.*18 or 20"):
+            rune_effects.required_leveling("Synthetic", values)
+
+    def test_a_keyed_table_is_read_by_its_own_rule_not_the_level_one(self):
+        """Gathering Storm states eight minute columns, and eight is enough."""
+        name = "Gathering Storm"
+        values = rune_effects.RuneValues(name, _cached(name))
+        assert len(rune_effects.keyed_columns(name, values, "leveling", 1)) == 8
+        with pytest.raises(KeyError, match="18 or 20"):
+            rune_effects.required_leveling(name, values, "leveling", 1)
+
+    def test_a_keyed_table_of_one_column_states_no_step(self):
+        values = rune_effects.RuneValues("Synthetic", {"leveling": [[3.0]]})
+        with pytest.raises(KeyError, match="needs at least two"):
+            rune_effects.keyed_columns("Synthetic", values, "leveling", 0)
+
+    def test_level_gates_read_both_halves_of_each_pair(self):
+        name = "Transcendence"
+        values = rune_effects.RuneValues(name, _cached(name))
+        gates = rune_effects.level_gates(name, values, "ability_haste_level_gates")
+        assert gates == ((5, 5.0), (8, 5.0))
+
+    def test_an_empty_gate_list_is_a_degraded_parse(self):
+        values = rune_effects.RuneValues("Synthetic", {"gates": []})
+        with pytest.raises(KeyError, match="states no gates"):
+            rune_effects.level_gates("Synthetic", values, "gates")
