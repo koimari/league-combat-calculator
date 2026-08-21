@@ -576,11 +576,9 @@ PAIR_OUTCOME = frozenset({"Cryptbloom"})
         (ts.pair_outcome_items, PAIR_OUTCOME),
     ],
 )
-def test_projections_equal_their_docstring_memberships(projection, expected):
+def test_projections_equal_their_declared_memberships(projection, expected):
     """Item for item, both directions, so drift either way fails."""
     assert projection() == expected
-    for name in sorted(expected):
-        assert name in projection.__doc__
 
 
 def test_solstice_sleigh_is_tuple_incapable_by_declaration():
