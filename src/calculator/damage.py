@@ -1806,7 +1806,7 @@ def _damage_event_row(  # pylint: disable=too-many-arguments,too-many-positional
     shield = fields.get("self_shield")
     if shield is None and shield_events is not None and ordinal <= len(shield_events):
         shield = shield_events[ordinal - 1]
-    if isinstance(shield, Mapping):
+    if isinstance(shield, (dict, Mapping)):
         row["self_shield"] = dict(shield)
     if raw_damage is not None:
         row["raw_damage"] = float(raw_damage)
@@ -15123,13 +15123,13 @@ def _target_health_before_timestamp(state: FightState, timestamp: float) -> floa
     """
     dealt = 0.0
     for row in state.breakdown.values():
-        if not isinstance(row, Mapping):
+        if not isinstance(row, (dict, Mapping)):
             continue
         events = row.get("damage_events")
         if not isinstance(events, list):
             continue
         for event in events:
-            if not isinstance(event, Mapping):
+            if not isinstance(event, (dict, Mapping)):
                 continue
             event_time = _finite_numeric_receipt(event.get("time"))
             damage = _finite_numeric_receipt(event.get("damage"))
