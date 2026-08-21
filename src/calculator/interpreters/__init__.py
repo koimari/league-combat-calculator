@@ -498,14 +498,11 @@ _COMPILED_PAIR_PRICED_OR_PACKET_FED = (
     " — two routes, neither of them the rule"
 )
 
-# One row per unserved pair a declaration reaches, carrying no stage — see
-# UnservedLane.  ``delta_amp``'s compiled lane is all that stands between that
-# lane and an unreceipted zero since H5's stage made those rules compilable
-# (D-101, D-92).  Its receipt-walk twin is gone — Amendment M, Ruling 1 rules
-# this family first of the fourteen and its act to be the walk-side delivery
-# of the holder's static amps, which ``DeltaAmpWalkInterpreter`` performs —
-# and the shared reason went with it, since it opened "neither walk reads an
-# amp declaration" and a row leaving that behind would contradict the tree.
+# One row per unserved pair a declaration reaches — see UnservedLane.
+# ``delta_amp``'s compiled lane is all that stands between that lane and an
+# unreceipted zero, since every amp rule is compilable.  Its receipt-walk twin
+# has no row: the walk reads the amp declaration through ``delta_amp``'s own
+# registration.
 _AMP_LANE = UnservedLane(_COMPILED_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
@@ -518,17 +515,13 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
     ),
-    # Eight families' receipt-walk twins are gone — the walk reads each item
+    # Eight families have no receipt-walk row: the walk reads each item
     # active, each cast-triggered proc, each charged strike, every routing
     # rule, every on-hit strike, every periodic cadence, every stacking
     # resistance shred and every spellblade from its own declaration, through
-    # ``ActiveCastWalkInterpreter``, ``CastProcWalkInterpreter``,
-    # ``ChargedStrikeWalkInterpreter``, ``DamageRoutingWalkInterpreter``,
-    # ``OnHitStrikeWalkInterpreter``, ``PeriodicWalkInterpreter``,
-    # ``ResistanceShredWalkInterpreter`` and ``SpellbladeWalkInterpreter``,
-    # which is Amendment F's act in the lane Amendment K rules — so only the
-    # compiled lane defers for them, and it says so in its own words rather
-    # than inheriting a sentence about both walks.  Two of the eight hand the
+    # each family's own receipt-walk registration — so only the compiled lane
+    # defers for them, and it says so in its own words rather than inheriting
+    # a sentence about both walks.  Two of the eight hand the
     # walk no price and for two different reasons.  ``damage_routing``'s
     # delivery is the rider and kernel-state paths umbrella Amendment P names,
     # already in the tree.  ``resistance_shred``'s is the cross-participant

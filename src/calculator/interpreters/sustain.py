@@ -260,9 +260,9 @@ def walk_slot(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     What the walk's boundary holds instead of an item name: the caller that
     builds a walk context compiles the declaration here and hands the numbers
     over as kernel data, because ``survival/`` may not reach a declaration
-    itself.  Field for field this is
-    :meth:`SustainWalkInterpreter.compile` — one arithmetic home, so the
-    registered interpreter and the accessor cannot answer differently.
+    itself.  Field for field this is :func:`walk_fields` — one arithmetic
+    home, so the registered reading and the accessor cannot answer
+    differently.
     """
     rule = _sole_rule(owners, payload_type)
     if rule is None:

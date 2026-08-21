@@ -28,9 +28,8 @@ resolved form, and the engine asks for one by the attack class it is about
 to price rather than by an item's name.
 
 Everything the engine takes from a declaration comes through
-:meth:`DeltaAmpPairInterpreter.compile` — the fraction, the window bounds —
-and everything it *asks* of one comes through :class:`AmpSlot` or
-:class:`PartAmp`.  A question a rule does not answer raises; it never
+:func:`amp_fields` — the fraction, the window bounds — and everything it
+*asks* of one comes through :class:`AmpSlot` or :class:`PartAmp`.  A question a rule does not answer raises; it never
 resolves to a zero.
 """
 

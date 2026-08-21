@@ -279,7 +279,7 @@ class TestTheCompiledLaneAnswerIsDerived:
         assert "temporary_health" in compilability.reason
 
 
-class TestTheWalkInterpreterCompilesTheDeclaredNumbers:
+class TestTheWalkLaneCompilesTheDeclaredNumbers:
     """One value-typed field per declared reference, and no walk state."""
 
     def test_the_family_is_served_on_the_walk_lane_only(self) -> None:
