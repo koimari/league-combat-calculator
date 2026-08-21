@@ -183,9 +183,10 @@ class TestPageValidation:
         with pytest.raises(ValueError, match="stat_shards\\[0\\] names shard row 1"):
             rune_effects.validate_rune_page("", None, ["Health"])
 
-    def test_no_shard_compiles_yet_so_every_shard_is_refused(self):
-        with pytest.raises(ValueError, match="not modeled yet"):
-            rune_effects.validate_rune_page("", None, ["Adaptive Force"])
+    def test_every_offered_shard_compiles(self):
+        assert rune_effects.validate_rune_page(
+            "", None, ["Adaptive Force"]
+        ).stat_shards == ("Adaptive Force",)
 
     def test_too_many_shards_are_refused(self):
         with pytest.raises(ValueError, match="stat_shards may contain at most 3"):
@@ -193,10 +194,10 @@ class TestPageValidation:
 
     def test_the_same_shard_in_two_rows_is_legal(self):
         """Adaptive Force is offered in rows 1 and 2; positions tell them apart."""
-        with pytest.raises(ValueError, match="not modeled yet"):
-            rune_effects.validate_rune_page(
-                "", None, ["Adaptive Force", "Adaptive Force", ""]
-            )
+        page = rune_effects.validate_rune_page(
+            "", None, ["Adaptive Force", "Adaptive Force", ""]
+        )
+        assert page.stat_shards == ("Adaptive Force", "Adaptive Force", "")
 
     def test_an_option_for_an_unselected_rune_is_refused(self):
         with pytest.raises(ValueError, match="this rune page does not select"):
@@ -520,10 +521,11 @@ class TestThePickerBuildsTheRequestTheServerValidates:
         page = rune_effects.validate_rune_page(
             payload["keystone"],
             payload["minor_runes"],
-            None,  # no shard compiles yet, so the shard half cannot be replayed
+            payload["stat_shards"],
             payload["rune_options"],
         )
         assert page.minor_runes == tuple(payload["minor_runes"])
+        assert page.stat_shards == tuple(payload["stat_shards"])
 
     def test_each_slot_offers_only_what_that_slot_may_legally_hold(self, rune_page_ui):
         primary, secondary = rune_page_ui["choices"][:3], rune_page_ui["choices"][3:]
