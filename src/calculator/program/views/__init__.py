@@ -315,16 +315,22 @@ class LeafBlock:
         A quantity gets a leaf and an entry, a nested shape is walked, and
         anything else is a label, so an assembler classifies nothing itself.
         """
-        if isinstance(value, (Mapping, list, tuple)):
-            self.structure(key, value)
-        elif isinstance(value, float) and not isinstance(value, bool):
+        # ``float`` leads and ``dict`` precedes ``Mapping`` for the same
+        # reason: three quarters of the members reaching here are bare
+        # numbers and almost all the rest are plain dicts, and an
+        # ``isinstance`` against an abstract base runs Python where one
+        # against a concrete type runs C.  ``bool`` needs no exclusion --
+        # it derives from ``int``, not from ``float``.
+        if isinstance(value, float):
             self.measured(key, value)
+        elif isinstance(value, (dict, list, tuple, Mapping)):
+            self.structure(key, value)
         else:
             self.raw(key, value)
 
     def _walk(self, value: object, path: str) -> object:
         """One nested value, rebuilt with every float written as a leaf."""
-        if isinstance(value, Mapping):
+        if isinstance(value, (dict, Mapping)):
             out: dict[str, object] = {}
             block = LeafBlock(self._writer, out, path, self._tag)
             for key, member in value.items():
