@@ -3824,8 +3824,6 @@ def _context_setup(
             if attacker.team == "ally"
             else 1 + ally_index.get(defender.participant_id, -1)
         )
-        live_amps = _live_amps_of(attacker, defender, params)
-        holder_amps = _holder_amps_of(attacker, defender, params)
         wounds = _roster_champion_wounds(context, attacker)
         view = pair_result_cache.get(cache_key)
         if view is None:
@@ -3842,8 +3840,8 @@ def _context_setup(
                 defender.participant_id,
                 defender_index,
                 champion_wounds=wounds,
-                live_amps=live_amps,
-                holder_amps=holder_amps,
+                live_amps=_live_amps_of(attacker, defender, params),
+                holder_amps=_holder_amps_of(attacker, defender, params),
             )
             pair_result_cache[cache_key] = view
         attacker_i = context.index_of[attacker.participant_id]
@@ -3859,8 +3857,8 @@ def _context_setup(
             context.panel_id_strings[pair_id],
             defender_index,
             champion_wounds=wounds,
-            live_amps=live_amps,
-            holder_amps=holder_amps,
+            live_amps=view.live_amps,
+            holder_amps=view.holder_amps,
             # An enemy attacker's ordered pair list is [main, *allies], so
             # the legacy dedup always keeps its main-pair copy — which
             # lives in the signature panel, not here.  Skip the ally-pair
@@ -3972,8 +3970,6 @@ def _build_signature_panel(
         cache_key = _pair_cache_key(
             attacker.participant_id, "main", signature, _UNPATCHED_RESTORES
         )
-        live_amps = _live_amps_of(attacker, main, params)
-        holder_amps = _holder_amps_of(attacker, main, params)
         wounds = _roster_champion_wounds(context, attacker)
         view = pair_result_cache.get(cache_key)
         if view is None:
@@ -3997,8 +3993,8 @@ def _build_signature_panel(
                 attacker.participant_id,
                 "main",
                 champion_wounds=wounds,
-                live_amps=live_amps,
-                holder_amps=holder_amps,
+                live_amps=_live_amps_of(attacker, main, params),
+                holder_amps=_holder_amps_of(attacker, main, params),
             )
             pair_result_cache[cache_key] = view
         attacker_i = context.index_of[attacker.participant_id]
@@ -4018,8 +4014,8 @@ def _build_signature_panel(
             dict(context.base_heal_dedup.get(attacker_i) or {}),
             context.panel_id_strings[(attacker.participant_id, "main")],
             champion_wounds=wounds,
-            live_amps=live_amps,
-            holder_amps=holder_amps,
+            live_amps=view.live_amps,
+            holder_amps=view.holder_amps,
         )
         if view.support is None:
             view.support = _support_effect_templates(

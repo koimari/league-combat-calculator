@@ -138,6 +138,11 @@ class PairView:
     ``support`` and ``support_denials`` are the attacker's resolved support
     templates, memoized by the composition on first use; a cached fight
     serves them to every later evaluation.
+
+    ``live_amps`` and ``holder_amps`` travel with the fight because they are
+    facts about this pair, and resolving them is not free: a search that
+    re-compiles one cached fight into a panel per defensive signature would
+    otherwise pay for them once per signature instead of once per pair.
     """
 
     __slots__ = (
@@ -145,6 +150,8 @@ class PairView:
         # receipt publishes and what the score panels compile.
         "engine",
         "result",
+        "live_amps",
+        "holder_amps",
         "events",
         "heals",
         "source_names",
@@ -157,9 +164,16 @@ class PairView:
         "event_id_by_aidx",
     )
 
-    def __init__(self, result: Mapping[str, Any]) -> None:
+    def __init__(
+        self,
+        result: Mapping[str, Any],
+        live_amps: Sequence[LiveAmpRider] = (),
+        holder_amps: Any = None,
+    ) -> None:
         self.engine: Mapping[str, Any] = result
         self.result: Mapping[str, Any] = result
+        self.live_amps = live_amps
+        self.holder_amps = holder_amps
         self.events: list[dict[str, Any]] = []
         self.heals: list[dict[str, Any]] = []
         self.source_names: dict[str, dict[str, Any]] = {}
@@ -273,7 +287,7 @@ def pair_view(
     and no cross-fight heal dedup to replay.  The composition owns that
     dedup itself, over the copies this view publishes.
     """
-    view = PairView(result)
+    view = PairView(result, live_amps, holder_amps)
     WalkCompiler(0).add_engine_result(
         result,
         attacker_id,
