@@ -101,21 +101,23 @@ def _enclosing(tree: ast.AST) -> dict[int, str]:
     return scope
 
 
+def _indexing(get_call: ast.Call, key: ast.AST | None, default: ast.AST) -> bool:
+    """True when the read is an index into an accumulator, not a field read."""
+    named = isinstance(key, ast.Constant) and isinstance(key.value, str)
+    return (
+        not named
+        and _identity_element(default)
+        and _receiver_name(get_call.func) not in _PAYLOAD_RECEIVERS
+    )
+
+
 def _flagged(node: ast.AST) -> tuple[str, ast.AST | None, ast.AST] | None:
     """The (kind, key, default) this node reads behind a literal fallback."""
     if _is_get_call(node) and len(node.args) == 2 and not node.keywords:
         key, default = node.args
-        named = isinstance(key, ast.Constant) and isinstance(key.value, str)
-        indexing = (
-            not named
-            and _identity_element(default)
-            and _receiver_name(node.func) not in _PAYLOAD_RECEIVERS
-        )
-        return (
-            ("dict.get", key, default)
-            if _is_literal(default) and not indexing
-            else None
-        )
+        if _is_literal(default) and not _indexing(node, key, default):
+            return "dict.get", key, default
+        return None
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
         if (
             node.func.id == "getattr"
@@ -130,7 +132,10 @@ def _flagged(node: ast.AST) -> tuple[str, ast.AST | None, ast.AST] | None:
         and _is_literal(node.values[-1])
         and _is_get_call(node.values[-2])
     ):
-        return "or-default", None, node.values[-1]
+        coalesced = node.values[-2]
+        key = coalesced.args[0] if coalesced.args else None
+        if not _indexing(coalesced, key, node.values[-1]):
+            return "or-default", key, node.values[-1]
     return None
 
 

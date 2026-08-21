@@ -254,6 +254,12 @@ BASE_CRIT_MULTIPLIER = 2.0
 # fight can never mutate the shared default; use sites materialize a list.
 DEFAULT_CAST_ORDER = ("Q", "Q2", "W", "E", "R")
 
+
+def _declared_options(meta: Mapping[str, Any], owner: str) -> Mapping[str, Any]:
+    """The option block one meta provider declares for an owner."""
+    return meta[owner]["options"] if owner in meta else {}
+
+
 # Where each family of user options declares its own spec.  The engine never
 # restates an option's default: it reads the one the spec declares.
 _OPTION_SPECS: dict[str, Callable[[str], Mapping[str, Any]]] = {
@@ -261,12 +267,12 @@ _OPTION_SPECS: dict[str, Callable[[str], Mapping[str, Any]]] = {
         str(option["key"]): option
         for option in get_champion_options_meta(owner)["options"]
     },
-    "item": lambda owner: item_effects.item_input_options_meta()
-    .get(owner, {})
-    .get("options", {}),
-    "keystone": lambda owner: rune_effects.keystone_input_options_meta()
-    .get(owner, {})
-    .get("options", {}),
+    "item": lambda owner: _declared_options(
+        item_effects.item_input_options_meta(), owner
+    ),
+    "keystone": lambda owner: _declared_options(
+        rune_effects.keystone_input_options_meta(), owner
+    ),
 }
 
 
