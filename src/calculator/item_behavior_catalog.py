@@ -9,9 +9,9 @@ from the live registries on every call, so a ``refresh_item_effects()`` moves
 the declarations too — a catalog that cached its rules would be the stale
 literal one layer up.
 
-It is modelled on ``rune_effects._KEYSTONE_COMPILERS`` + ``resolve_keystone``
-— the one existing compile-fresh, fail-closed registry in the repository —
-rather than inventing a second idiom for the same job.
+It is modelled on ``rune_effects._compilers()`` + ``resolve_rune`` — the one
+existing compile-fresh, fail-closed registry in the repository — rather than
+inventing a second idiom for the same job.
 
 **Closure is enforced at import.**  :func:`validate_catalog` runs when this
 module loads, so a new ``item_effects._KNOWN_EFFECT_TYPES`` member, a new
@@ -1495,8 +1495,14 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
 # Which keystones declare an amp-chain slot, and which slot.  A rune record
 # carries no effect tag — the shape *is* the keystone — so this is the closed
 # key set that makes the name dispatch total, exactly as
-# ``rune_effects._KEYSTONE_COMPILERS`` is for the runes themselves.  Rule 5
-# reaches keystones (D-46), so their numbers are references like any other.
+# ``rune_effects._compilers()`` is for the runes themselves.  Rule 5 reaches
+# keystones (D-46), so their numbers are references like any other.  Two of
+# the rune page's amplifiers are *not* here: the health-gated one (Coup de
+# Grace, Cut Down) and the flat one (Last Stand, Axiom Arcanist) walk their
+# own ledger in ``damage.py`` and keep their ratios in their compiled
+# effects, because a rule for either needs vocabulary the chain does not
+# have yet — a live predicate on the holder's health, and a magnitude keyed
+# on a declared rune option.
 KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
     "First Strike": AmpChainSlot.OPENING_WINDOW,
     "Press the Attack": AmpChainSlot.LASTING_PROC_AMP,
@@ -2456,8 +2462,8 @@ def _compile_keystone_amp(owner: str) -> tuple[BehaviorRule, ...]:
 
     Dispatch is on the keystone's name because a rune record has no effect
     tag to dispatch on — the shape *is* the keystone.  That is
-    ``rune_effects._KEYSTONE_COMPILERS``' own idiom, and :data:`KEYSTONE_AMPS`
-    is the closed key set that makes it total.
+    ``rune_effects._compilers()``' own idiom, and :data:`KEYSTONE_AMPS` is
+    the closed key set that makes it total.
     """
     slot = KEYSTONE_AMPS[owner]
     if slot is AmpChainSlot.OPENING_WINDOW:
