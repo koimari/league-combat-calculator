@@ -131,11 +131,6 @@ class Outcome:
     overkill: float = 0.0
     skipped_reason: str | None = None
 
-    @property
-    def was_skipped(self) -> bool:
-        """Whether the walk refused this transition rather than pricing it."""
-        return self.skipped_reason is not None
-
 
 class OutcomeLedger:
     """Write-once observation of the shared kernel, projected at end of walk.
@@ -353,10 +348,6 @@ class OutcomeLedger:
             for field in OUTCOME_FIELDS
             if field != "skipped_reason"
         }
-
-    def applied_contributions(self) -> Mapping[tuple[Any, ...], int]:
-        """Every applied-contribution key, mapped to the slot that produced it."""
-        return dict(self._applied_by)
 
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""

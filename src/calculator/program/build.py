@@ -227,22 +227,6 @@ class CapabilityView:
             if not isinstance(view.compilability, Compilable)
         )
 
-    def lanes_declaring(
-        self, tag: ViewTag
-    ) -> tuple[tuple[MechanicId, EngineLane], ...]:
-        """Every ``(mechanic, lane)`` whose numbers carry *tag*.
-
-        The question a view asks before folding anything: a ``THEORETICAL``
-        pair-authored preview may never be summed into a coupled total, and asking
-        the declaration makes that a lookup rather than a convention.
-        """
-        return tuple(
-            (mechanic, lane)
-            for mechanic, view in sorted(self.mechanics.items())
-            for lane in sorted(view.view_tags, key=lambda member: member.value)
-            if view.tag_for(lane) is tag
-        )
-
 
 #: How one declared engine half widens into the lanes that read its numbers.
 #: A pair half is read by the pair engine; a walk half is read by both walks,
@@ -439,16 +423,6 @@ class ParamPatch:
 
     overrides: Mapping[str, Any]
     reason: str
-
-    def applied_to(self, params: Any) -> dict[str, Any]:
-        """The patched parameter fields, as a plain mapping of overrides.
-
-        Overrides rather than a mutated ``params``, so pass 1's inputs survive.
-        """
-        return {
-            field: self.overrides.get(field, getattr(params, field, None))
-            for field in self.overrides
-        }
 
 
 @dataclass(frozen=True, slots=True)

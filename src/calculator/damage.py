@@ -2223,7 +2223,7 @@ def _control_armed_holder_shields(
     return tuple(
         slot
         for slots in ally_packet.resolve_slots(
-            [str(item.get("name", "")) for item in items]
+            [item_effects.resolved_item_name(item) for item in items]
         ).values()
         for slot in slots
         if slot.trigger is PacketTrigger.CROWD_CONTROL
@@ -2602,7 +2602,7 @@ def _shred_slot(
     context's requiredness exists to prevent.
     """
     return resistance_shred.resolve_slot(
-        [str(item.get("name", "")) for item in items],
+        [item_effects.resolved_item_name(item) for item in items],
         resistance,
         level=level,
         fight_duration_seconds=config.fight_duration_seconds,
@@ -2713,7 +2713,7 @@ def _resolve_combat_state(
     auto_attack_uptime = config.auto_attack_uptime
     is_melee = champion_stats["is_melee"]
     saturated_omnivamp = saturating_stat_percent(
-        [str(item.get("name", "")) for item in items],
+        [item_effects.resolved_item_name(item) for item in items],
         SustainStat.OMNIVAMP_PERCENT,
         fight_duration_seconds=fight_duration_seconds,
         holder_is_melee=bool(is_melee),
@@ -2732,7 +2732,7 @@ def _resolve_combat_state(
     # The declared families this build brings.  Resolved before the
     # resistances, because Malignance's magic-resistance shred is one of the
     # numbers the resistance ladder is built from.
-    owners = [str(item.get("name", "")) for item in items]
+    owners = [item_effects.resolved_item_name(item) for item in items]
     item_cast_procs = cast_proc.resolve_slots(
         owners,
         level=level,
@@ -4465,7 +4465,9 @@ def _apply_resource_limits_legacy(
     # (``roster_composition.resource_restores``) rather than spelled.  Empty
     # where this build declares none, which is the case where the rows came
     # from a caller staging them directly.
-    schedule_owners = sorted({str(item.get("name", "")) for item in state.items})
+    schedule_owners = sorted(
+        {item_effects.resolved_item_name(item) for item in state.items}
+    )
     restore_slot = declared_sustain(schedule_owners, ManaSpentHealRule)
     restore_producer = "" if restore_slot is None else restore_slot.owner
     # The casting trade an open active window makes, resolved once rather
@@ -16679,7 +16681,7 @@ def _amp_slot(
     """The declared amp occupying one chain slot for this build.  ``None``
     means nothing the build holds declares the slot, an answer and not a zero.
     ``extra_owners`` carries the keystone, an owner the item list cannot hold."""
-    owners = [str(item.get("name", "")) for item in state.items]
+    owners = [item_effects.resolved_item_name(item) for item in state.items]
     owners.extend(extra_owners)
     return _amp_slot_for(state, slot, owners)
 
@@ -17690,7 +17692,7 @@ def _apply_shield_reaver_venom(
     """
     is_melee = bool(champion_stats["is_melee"])
     bypass = damage_routing.resolve_shield_bypass(
-        [str(item.get("name", "")) for item in items],
+        [item_effects.resolved_item_name(item) for item in items],
         level=int(champion_stats["level"]),
         fight_duration_seconds=config.fight_duration_seconds,
         target_bonus_health=max(0.0, config.target_bonus_health),
@@ -17736,7 +17738,7 @@ def shield_outcome_inputs(
 ) -> ShieldOutcomeInputs:
     """One fight's facts, as the shield outcome's readers are decided by."""
     return ShieldOutcomeInputs(
-        item_names=tuple(str(item.get("name", "")) for item in items),
+        item_names=tuple(item_effects.resolved_item_name(item) for item in items),
         target_threshold_health_heal=config.target_threshold_health_heal,
     )
 

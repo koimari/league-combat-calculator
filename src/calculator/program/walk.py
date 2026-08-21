@@ -423,10 +423,6 @@ class WalkResult:
     item_denial_receipts: tuple[Mapping[str, Any], ...] = ()
     objective: ObjectiveFold | None = None
 
-    def action_count(self) -> int:
-        """How many transitions this walk consumed — the one-walk counter."""
-        return len(self.actions)
-
     def projected(self, **folds: Any) -> "WalkResult":
         """The same walk, carrying a fold the composition derived from it.
 

@@ -2337,7 +2337,6 @@ _PYKE_P_STORE_MULTI_PER_LETHALITY = 0.004
 _PYKE_P_STORE_FLAT_CAP = 80.0
 _PYKE_P_STORE_BONUS_AD_CAP_RATIO = 8.0  # "80 (+ 800% bonus AD)"
 _PYKE_P_STORE_MAX_HEALTH_CAP_RATIO = 0.55
-_PYKE_P_CONSUME_HEAL_RATIO = 1.0  # out-of-vision consume heals the pool
 # Rengar W (Battle Roar) — data/champions.json W prose only (the W
 # leveling rows carry the ability's magic damage, not a heal amount):
 #   "Rengar stores 50% of the post-mitigation damage he has taken in the

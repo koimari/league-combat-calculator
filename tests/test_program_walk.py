@@ -80,7 +80,6 @@ class TestTheSeamRunsTheKernelAndNothingElse:
         actions = [damage_action(30.0)]
         result = walk_module.walk(actions, ctx)
         assert result.actions == tuple(actions)
-        assert result.action_count() == 1
 
     def test_the_kernel_actually_ran(self) -> None:
         """The one number the fixture asserts: 30 damage was applied."""
