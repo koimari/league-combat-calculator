@@ -401,6 +401,21 @@ class RuneOption:
         return number
 
 
+def _option_value(
+    options: Mapping[str, Mapping[str, float]],
+    rune_name: str,
+    key: str,
+    default: float,
+) -> float:
+    """One declared option of one rune, or its disclosed default.
+
+    Shared by the two contexts a rune formula reads, so "what this option is
+    worth" has one implementation whether a stat grant or an amplifier asks.
+    """
+    value = options.get(rune_name, {}).get(key)
+    return default if value is None else float(value)
+
+
 @dataclass(frozen=True, slots=True)
 class RuneStatContext:
     """What a stat grant is allowed to read when it resolves its amount.
@@ -419,8 +434,7 @@ class RuneStatContext:
 
     def option(self, rune_name: str, key: str, default: float) -> float:
         """One declared option of one rune, or its disclosed default."""
-        value = self.options.get(rune_name, {}).get(key)
-        return default if value is None else float(value)
+        return _option_value(self.options, rune_name, key, default)
 
 
 @dataclass(frozen=True, slots=True)
@@ -447,11 +461,13 @@ class AmpCondition(Enum):
     ``damage_amp_health_gate``, so a compiler reads the condition instead of
     translating it — one fact, one spelling, no mapping table to drift.
 
-    Only the gates the engine can *evaluate* are members. The cache also
+    Only the gates the ledger walk can *evaluate* are members. The cache also
     records ``self_below`` (Last Stand's gate on the holder's own health),
     and it is deliberately absent: the pair engine prices outgoing damage
     and carries no holder-health track, so a compiler naming it fails here
-    rather than compiling into a walker branch that would book nothing.
+    rather than compiling into a walker branch that would book nothing. That
+    rune is a :class:`RuneFlatAmpEffect` instead, where the holder's health
+    is a declared option rather than a track the fight does not have.
     """
 
     TARGET_BELOW = "target_below"
@@ -477,6 +493,62 @@ class RuneConditionalAmpEffect:
     disclosures: tuple[str, ...] = ()
 
 
+#: The cast-order key of the ultimate slot — the one slot a rune's filter
+#: names today (Axiom Arcanist).  It lives beside :class:`RuneAmpContext`
+#: because the context's ``slot`` is what a filter compares against; the
+#: champion contract's own five slots are ``REQUIRED_CHAMPION_SLOTS``.
+ULTIMATE_SLOT = "R"
+
+
+@dataclass(frozen=True, slots=True)
+class RuneAmpContext:
+    """What a flat amplifier is allowed to read when it prices one instance.
+
+    The union of every fact the three roster runes of this shape decide from:
+    the holder's level and stat block, the target's maximum health (a rune
+    that amplifies the bigger target compares the two), the page's declared
+    options, and ``slot`` — the cast-order key of the ability whose ledger
+    row is being priced, empty for a row no ability cast (an auto, an item
+    proc, an earlier amplifier's delta).
+    """
+
+    level: int
+    is_melee: bool
+    champion_stats: Mapping[str, float]
+    target_max_health: float
+    options: Mapping[str, Mapping[str, float]]
+    slot: str = ""
+
+    def option(self, rune_name: str, key: str, default: float) -> float:
+        """One declared option of one rune, or its disclosed default."""
+        return _option_value(self.options, rune_name, key, default)
+
+
+@dataclass(frozen=True, slots=True)
+class RuneFlatAmpEffect:
+    """A constant ratio over a filtered set of the fight's damage instances.
+
+    The kind for an amplifier whose condition the ledger's health walk
+    cannot express: Last Stand reads the *holder's* health (which the pair
+    engine does not track, so it is a declared option), Axiom Arcanist reads
+    which slot cast the damage. ``amp_ratio`` answers both halves at once —
+    the ratio for the instances it amplifies, zero for the rest — so the
+    filter and the number are one declaration instead of two that can
+    disagree about which instances the number covers.
+
+    The ratio must be the *same* for every instance the rune amplifies. One
+    breakdown row publishes one multiplier, so a rune answering with two
+    would make that row a fiction; the walker refuses it rather than
+    picking one.
+    """
+
+    rune_name: str
+    breakdown_key: str
+    display_name: str
+    amp_ratio: Callable[[RuneAmpContext], float]
+    disclosures: tuple[str, ...] = ()
+
+
 RuneEffect = (
     RuneProcEffect
     | RuneWindowAmpEffect
@@ -485,6 +557,7 @@ RuneEffect = (
     | RuneNoDamageEffect
     | RuneStatGrantEffect
     | RuneConditionalAmpEffect
+    | RuneFlatAmpEffect
 )
 
 

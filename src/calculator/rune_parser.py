@@ -31,7 +31,10 @@ numbers appear in a small set of template forms:
 - prose damage amps — "grant you 8% increased damage against champions"
 - ``every {{fd|0.5}} seconds`` — a damage-over-time tick interval
 - ``8% increased damage to champions below {{as|40% '''maximum''' health}}`` —
-  a conditional damage amplifier and the health gate it reads
+  a conditional damage amplifier and the health gate it reads; a second such
+  sentence is the same amplifier's escalated end (Last Stand's 11% at 30%)
+- ``Your ultimate has 12% increased damage (reduced to 8% for ...)`` — an amp
+  that reaches the ultimate alone, with its area-of-effect reduction
 - ``while above {{as|70% of your '''maximum''' health}}`` — a self-health gate
 - flat stat grants: ``{{as|10% '''bonus''' attack speed}}``,
   ``{{as|65 '''bonus''' health}}``, ``8 ability haste``,
@@ -100,11 +103,37 @@ _AFTER_DELAY = re.compile(r"damage(?:\}\})? after ([\d.]+) seconds?")
 # and its gate in one sentence.  ``while`` marks the holder's own health as
 # the subject (Last Stand); without it the gate reads the target's.
 _CONDITIONAL_DAMAGE_AMP = re.compile(
-    r"([\d.]+)% increased damage to champions (?P<subject>while )?"
-    r"(?P<side>above|below) \{\{as\|([\d.]+)% '''maximum''' health\}\}"
+    r"(?P<ratio>[\d.]+)% increased damage to champions (?P<subject>while )?"
+    r"(?P<side>above|below) \{\{as\|(?P<health>[\d.]+)% '''maximum''' health\}\}"
+)
+# The escalated end of a ramping amplifier: "…This increases further based on
+# your missing health, up to 11% increased damage while below 30% maximum
+# health."  A continuation sentence, so it names neither the verb nor the
+# subject the first one did — "up to" is what marks it as the same
+# amplifier's other end rather than a second amplifier.
+_ESCALATED_DAMAGE_AMP = re.compile(
+    r"up to (?P<ratio>[\d.]+)% increased damage (?:to champions )?"
+    r"(?P<subject>while )?(?P<side>above|below) "
+    r"\{\{as\|(?P<health>[\d.]+)% '''maximum''' health\}\}"
 )
 _SELF_HEALTH_GATE = re.compile(
     r"while (above|below) \{\{as\|([\d.]+)% of your '''maximum''' health\}\}"
+)
+# "Your ultimate has 12% increased damage (reduced to 8% for area of effect
+# abilities)" — an amplifier that reaches one ability slot rather than the
+# holder's whole output.  Both ends are matched in one pattern because the
+# reduction is stated only as a parenthetical of the headline number: a
+# description that dropped the parenthetical would otherwise leave the
+# reduced rate silently absent while the headline stayed.
+_ULTIMATE_DAMAGE_AMP = re.compile(
+    r"ultimate has ([\d.]+)% increased damage \(reduced to ([\d.]+)% for "
+    r"\[\[area of effect\]\] abilities\)"
+)
+#: A conditional amp's two ends and the key prefix each is recorded under:
+#: the gate that arms the amplifier, then the escalated gate it ramps to.
+_AMP_RAMP_ENDS: tuple[tuple[str, re.Pattern], ...] = (
+    ("", _CONDITIONAL_DAMAGE_AMP),
+    ("escalated_", _ESCALATED_DAMAGE_AMP),
 )
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
@@ -683,18 +712,39 @@ def _parse_conditional_amp(description: str, recorder: _EffectRecorder) -> None:
     ``damage_amp_health_ratio`` is amplifying unconditionally, and the
     subject says whose health the gate measures — the target's (Coup de
     Grace, Cut Down) or the holder's own (Last Stand).
+
+    A rune stating the amp twice states a *ramp*: Last Stand's 5% arms below
+    60% health and reaches 11% below 30%.  The second sentence is recorded
+    under its own escalated keys rather than as a second value for the first
+    ones, which the recorder would (rightly) drop as a conflict.
     """
     amp_match = _DAMAGE_AMP.search(description)
     if amp_match:
         recorder.record("damage_amp_ratio", float(amp_match.group(1)) / 100.0)
 
-    gate_match = _CONDITIONAL_DAMAGE_AMP.search(description)
-    if gate_match:
-        recorder.record("damage_amp_ratio", float(gate_match.group(1)) / 100.0)
-        recorder.record("damage_amp_health_ratio", float(gate_match.group(4)) / 100.0)
+    for prefix, pattern in _AMP_RAMP_ENDS:
+        gate_match = pattern.search(description)
+        if not gate_match:
+            continue
+        recorder.record(
+            f"{prefix}damage_amp_ratio", float(gate_match.group("ratio")) / 100.0
+        )
+        recorder.record(
+            f"{prefix}damage_amp_health_ratio",
+            float(gate_match.group("health")) / 100.0,
+        )
         subject = "self" if gate_match.group("subject") else "target"
         recorder.record(
-            "damage_amp_health_gate", f"{subject}_{gate_match.group('side')}"
+            f"{prefix}damage_amp_health_gate", f"{subject}_{gate_match.group('side')}"
+        )
+
+    ultimate_match = _ULTIMATE_DAMAGE_AMP.search(description)
+    if ultimate_match:
+        recorder.record(
+            "ultimate_damage_amp_ratio", float(ultimate_match.group(1)) / 100.0
+        )
+        recorder.record(
+            "ultimate_aoe_damage_amp_ratio", float(ultimate_match.group(2)) / 100.0
         )
 
     self_gate = _SELF_HEALTH_GATE.search(description)
