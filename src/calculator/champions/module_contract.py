@@ -327,7 +327,7 @@ def _module_cc(
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_CC has invalid cc kind(s) {invalid} "
             "(known kinds are defined by ability_spec.CC_KIND_VOCABULARY, "
-            f"plus engine.CC_PER_PART for a slot whose kind varies)"
+            "plus engine.CC_PER_PART for a slot whose kind varies)"
         )
     wired = getattr(parser, "cc_kinds", None)
     if declared and wired is None:
