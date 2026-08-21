@@ -29,9 +29,9 @@ EVIDENCE = re.compile(
     r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar", re.I
 )
 HISTORY = re.compile(
-    r"\bretired\b|\bused to\b|\bpreviously\b|\blegacy\b|\bno longer\b"
+    r"\bretired\b|\bused to\b|\bpreviously\b|\b(?-i:legacy)\b|\bno longer\b"
     r"|\b(?:issue|PR) #\d+"
-    r"|\b(?=[0-9a-f]{7,40}\b)(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b",
+    r"|\b(?<!\{)(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)(?:[0-9a-f]{7,8}|[0-9a-f]{40})\b",
     re.I,
 )
 POINTER = re.compile(
