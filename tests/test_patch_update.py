@@ -221,17 +221,6 @@ class TestEconomicsLines:
 
         return json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8"))
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "MERGE: data/economics-sourced.json is ours' 16.15.1 asset "
-            "while the merged cache is main's 16.16.1, so Sunfire Aegis "
-            "prices 2800 against DDragon's 2700 and blocks even when the "
-            "release pin is handed in.  The fix is the patch-day refresh "
-            "on the merged tree (scripts/refresh_economics_data.py), not "
-            "a test change."
-        ),
-    )
     def test_a_current_table_says_so_and_does_not_block(self) -> None:
         tables = self._tables()
         lines, ok = economics_lines(

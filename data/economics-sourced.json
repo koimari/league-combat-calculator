@@ -1,8 +1,8 @@
 {
  "generated": "refresh",
  "patch": {
-  "cdragon": "16.15.1",
-  "ddragon": "16.15.1",
+  "cdragon": "16.16.1",
+  "ddragon": "16.16.1",
   "repo_cache_fetched": null
  },
  "groups_26_12": {
@@ -1685,9 +1685,9 @@
   {
    "id": 3068,
    "name": "Sunfire Aegis",
-   "total": 2700,
+   "total": 2800,
    "cache_sell": null,
-   "ddragon_sell": 1890,
+   "ddragon_sell": 1960,
    "ratio": 0.7,
    "rank": [
     "LEGENDARY"
@@ -5034,14 +5034,14 @@
   {
    "id": 3068,
    "name": "Sunfire Aegis",
-   "total": 2700,
+   "total": 2800,
    "components": [
     "Bami's Cinder",
     "Chain Vest",
     "Ruby Crystal"
    ],
    "component_total": 2100,
-   "derived_combine": 600,
+   "derived_combine": 700,
    "cache_combine": 0
   },
   {
@@ -6191,11 +6191,10 @@
    "total": 3100,
    "components": [
     "Tunneler",
-    "Caulfield's Warhammer",
-    "Ruby Crystal"
+    "Caulfield's Warhammer"
    ],
-   "component_total": 2600,
-   "derived_combine": 500,
+   "component_total": 2200,
+   "derived_combine": 900,
    "cache_combine": 0
   },
   {
@@ -6599,7 +6598,7 @@
   ]
  },
  "provenance": {
-  "source_url": "https://ddragon.leagueoflegends.com/cdn/16.15.1/data/en_US/item.json",
-  "patch": "16.15.1"
+  "source_url": "https://ddragon.leagueoflegends.com/cdn/16.16.1/data/en_US/item.json",
+  "patch": "16.16.1"
  }
 }

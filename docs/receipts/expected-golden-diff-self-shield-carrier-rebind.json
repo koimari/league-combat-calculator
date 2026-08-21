@@ -1,0 +1,69 @@
+{
+  "slice": "self-shield-carrier-rebind",
+  "dated": "2026-08-21",
+  "receipt": "docs/receipts/self-shield-carrier-rebind-2026-08-21.md",
+  "correction": {
+    "one_sentence": "D-VI-1's detector (participant_timeline._self_shield_carrier_denials) is generic over every attach_self_shield rider, not Vi-specific: catalyst_roster's Malphite (enemy) has its Granite Shield rider refused as trigger_event_skipped on the same shape, so combat.item_denial_receipts gains two new denial rows for that scenario and combat.dispositions gains the matching disposition entries for their fields.",
+    "why_it_had_no_symptom_elsewhere": "The audit only fires when all three of the receipt doc's conditions hold (rider refused as trigger_event_skipped, that carrier genuinely skipped in the published ledger, and the holder lands at least one ability packet at or after the carrier's timestamp). catalyst_roster is the only committed coupled scenario where an enemy's self-shield rider hits that exact shape; no damage, healing, or survival number moves anywhere -- the receipt is additive per docs/receipts/self-shield-carrier-rebind-2026-08-21.md section 5's golden note."
+  },
+  "landed_against": {
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17 -- the unit declares its moved leaves; the boundary re-capture is separate"
+  },
+  "expected_diff_paths": {
+    "coupled_golden": [
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[0].rebind_time",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[0].time",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[0].withheld_amount",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[1].rebind_time",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[1].time",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[1].withheld_amount",
+      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[0]",
+      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[1]"
+    ],
+    "coupled_golden_shape_counters": []
+  },
+  "measured": {
+    "coupled_golden": "10 differing leaves: the eight enumerated above plus /metadata/fingerprint/leaves and /metadata/fingerprint/numeric_leaves, both disowned counters (umbrella criterion 4) claimed by no allowlist by design.",
+    "command": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json",
+    "quoted_values": {
+      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[0]": [
+        null,
+        {
+          "time": 0.0,
+          "kind": "item_denial",
+          "source": "Granite Shield",
+          "reason": "self_shield_carrier_skipped",
+          "attacker": "enemy:Malphite",
+          "target": "enemy:Malphite",
+          "event_id": "enemy:Malphite:ally:Pantheon:0:shield",
+          "carrier_event_id": "enemy:Malphite:ally:Pantheon:0",
+          "carrier_skipped_reason": "attacker_state_blocked",
+          "rebind_time": 7.49,
+          "withheld_amount": 243.3
+        }
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[1]": [
+        null,
+        {
+          "time": 0.0,
+          "kind": "item_denial",
+          "source": "Granite Shield",
+          "reason": "self_shield_carrier_skipped",
+          "attacker": "enemy:Malphite",
+          "target": "enemy:Malphite",
+          "event_id": "enemy:Malphite:main:0:shield",
+          "carrier_event_id": "enemy:Malphite:main:0",
+          "carrier_skipped_reason": "attacker_state_blocked",
+          "rebind_time": 7.49,
+          "withheld_amount": 243.3
+        }
+      ]
+    },
+    "fingerprint_leaves": [78253, 78287],
+    "fingerprint_numeric_leaves": [26416, 26422]
+  },
+  "numbers_that_did_not_move": {
+    "damage_healing_survival": "combat.item_denial_receipts is a detector-only channel (docs/receipts/self-shield-carrier-rebind-2026-08-21.md section 4): shield_absorbed and every damage/healing/survival leaf in catalyst_roster is unchanged. Only the new receipt rows and their disposition entries appear."
+  }
+}

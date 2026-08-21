@@ -28023,6 +28023,18 @@
           "skillshot": true,
           "total_raw": 325.0
         },
+        "R": {
+          "cooldown": 150.0,
+          "damage_type": "magic",
+          "detail": "Terrain wall plus a knockback on champions hit: no damage row exists in the slot, and the knockback has no sourced duration attribute to author a control event from.",
+          "name": "Weaver's Wall",
+          "parts": [],
+          "rank": 2,
+          "resource_cost": 100.0,
+          "resource_type": "MANA",
+          "skillshot": true,
+          "total_raw": 0.0
+        },
         "W": {
           "cast_time": 0.25,
           "cooldown": 11.0,
@@ -28032,6 +28044,17 @@
           "parts": [],
           "rank": 3,
           "resource_cost": 20.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
+        },
+        "passive": {
+          "cooldown": 2.0,
+          "damage_type": "magic",
+          "detail": "Innate: 10% / 15% / 25% / 40% (based on level) bonus movement speed near terrain \u2014 self movement state with no damage instance, and it is suppressed while casting or in champion combat.",
+          "name": "Rock Surfing",
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
           "resource_type": "MANA",
           "total_raw": 0.0
         }
@@ -28641,7 +28664,7 @@
         "W": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Movement only: 20% bonus movement speed after 5s undamaged, doubled to 40% for 3s on cast. No enemy-damage clause exists in the slot; the percent movement grant is not published as a stat_buff (the named percent-movement boundary).",
           "name": "Move Quick",
           "parts": [],
           "rank": 3,
@@ -28652,7 +28675,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Stealth (utility) plus Element of Surprise: 20% / 40% / 60% / 80% (based on level) bonus attack speed for 5s on breaking stealth. Not modeled and not called no_damage. (1) The trigger is unreachable: the cached innate grants the stealth only 'after 1.5 seconds without moving, taking non-over-time damage, performing actions that break stealth' \u2014 a state a modeled fight never enters, which is what separates this from Twitch Q, an active cast the rotation does break. (2) The magnitude has no cached ability atom: both P effect rows carry an empty leveling array, so the ladder exists only as wiki prose plus the binary's TeemoPassive BonusAttackSpeed level breakpoints (0.20 at level 1, +0.20 at 5/10/15) and would have to be republished as a module constant with no cached accessor behind it.",
           "name": "Guerrilla Warfare",
           "parts": [],
           "rank": 0,
@@ -29012,9 +29035,12 @@
           "total_raw": 120.0
         },
         "Q": {
+          "auto_attack_override": {
+            "active_duration": 7.0
+          },
           "cooldown": 16.0,
           "damage_type": "physical",
-          "detail": "+120% bonus attack speed for 7s (120% over the fight window); no enemy damage",
+          "detail": "Self buff, no enemy damage: +120% bonus attack speed for 7s from the Q cast. The autos ride the base rate before the cast, the buffed rate inside the window, and the base rate again after it.",
           "name": "Rapid Fire",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -29060,7 +29086,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "physical",
-          "detail": "Ranged auto-attack bonus: range/on-hit state only, no separate damage.",
+          "detail": "Innate: +88.24 bonus attack range at level 11 (0 : 167.65 by level) on basic attacks, Explosive Charge and Buster Shot. Range is positioning state with no damage instance and no damage channel in this model.",
           "name": "Draw a Bead",
           "parts": [],
           "rank": 11,
@@ -29802,7 +29828,7 @@
         "Q": {
           "cooldown": 16.0,
           "damage_type": "physical",
-          "detail": "+60% bonus attack speed for 6s on breaking stealth (broken: 60% applied); the camouflage and its movement speed have no channel",
+          "detail": "Camouflage and post-stealth attack speed: self buffs only, no enemy damage. Element of Surprise (+40/45/50/55/60% bonus attack speed for 6s) is NOT applied: it needs Twitch to break an existing Ambush, which the fight model does not otherwise enter. Enable the 'opens the fight by breaking Ambush' option to assert that state.",
           "name": "Ambush",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -29810,9 +29836,6 @@
           "rank": 5,
           "resource_cost": 40.0,
           "resource_type": "MANA",
-          "stat_buff": {
-            "bonus_attack_speed": 60.0
-          },
           "total_raw": 0.0
         },
         "R": {
@@ -29835,7 +29858,7 @@
           "cast_time": 0.25,
           "cooldown": 11.0,
           "damage_type": "magic",
-          "detail": "Contaminated zone applies Deadly Venom stacks and slows; stack applications are covered by the poison_stacks option.",
+          "detail": "Movement slow only: 40% (+6% per 100 AP) in the contaminated zone, which also applies a Deadly Venom stack each second. No enemy-damage clause exists in the slot; the stack applications are already priced by the poison_stacks option, and the slow carries no sourced duration to publish as a control event.",
           "name": "Venom Cask",
           "parts": [],
           "rank": 3,
@@ -30002,9 +30025,29 @@
     "Udyr": {
       "abilities_level_11": {
         "E": {
+          "control_events": [
+            "ControlEvent('stun', duration=0.75)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "timing.control_duration",
+              "behavior": "timing",
+              "evidence": [
+                "control duration@effects[0].description"
+              ],
+              "hash": "5269b5d492e051e1",
+              "source": "Udyr.E[0].effects[0].description",
+              "units": [
+                "s"
+              ],
+              "values": [
+                0.75
+              ]
+            }
+          ],
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The percent movement grants are not published as a stat_buff (the named percent-movement boundary).",
           "name": "Blazing Stampede",
           "parts": [],
           "rank": 1,
@@ -30058,7 +30101,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Awakened Spirit (stance swaps, a 1.5s global cooldown and the Awaken recast window) carries no damage instance. Monk Training does move damage and is NOT modeled: after any cast, the next two basic attacks within 4s gain 30% bonus attack speed and refund 5% of Awakened Spirit's cooldown (wiki prose plus the binary's UdyrPassive AttackSpeed calculation 0.30, AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, not called no_damage, on three counts. The engine's only WINDOWED attack-speed path resolves its window start by walking cast_order to the Q slot, so it is Q-slot-only (the Miss Fortune W precedent) and a P-slot steroid cannot reach it. The unwindowed self-buff channel (module_helpers.buff_window_share) weights a bonus purely by TIME, while this window is bounded by attack count as well as time \u2014 it closes on the second empowered attack or at 4s, whichever comes first \u2014 so a time-weighted share would over-credit it whenever the attacks land early. And the cooldown refund has no engine channel at all (the one per-attack refund path is item_effects' CooldownProcEffect, read only by the item-proc scheduler).",
           "name": "Bridge Between",
           "parts": [],
           "rank": 0,
@@ -51082,18 +51125,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58418,
-      "numeric_leaves": 44820,
+      "leaves": 58443,
+      "numeric_leaves": 44829,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "f90e9b55559d7117902ec91cb4c3394a287b1b49",
+    "git_head": "2bcd0bf4d89db96ec8613d55d342d2475a660897",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "923e30479f18effd811fe0cd5363206b0146f01d"
+    "src_tree_sha": "42cc5e721829128580a11d5d134ba4ad9d6e0e9e"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -77441,12 +77484,12 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 520.0,
+              "auto_attacks": 346.67,
               "passive": 585.36,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 117.07
             },
-            "total_damage": 2256.69
+            "total_damage": 2083.35
           },
           "no_items": {
             "breakdown_totals": {
@@ -77454,10 +77497,10 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 520.0,
+              "auto_attacks": 346.67,
               "passive": 108.0
             },
-            "total_damage": 764.33
+            "total_damage": 591.0
           },
           "physical_build": {
             "breakdown_totals": {
@@ -77465,11 +77508,11 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 2194.5,
-              "on_hit_Kraken Slayer": 252.01,
+              "auto_attacks": 1567.5,
+              "on_hit_Kraken Slayer": 108.69,
               "passive": 108.0
             },
-            "total_damage": 2907.84
+            "total_damage": 2137.52
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -77477,11 +77520,11 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 1703.07,
+              "auto_attacks": 1277.3,
               "passive": 108.0,
               "spellblade_Trinity Force": 226.67
             },
-            "total_damage": 2329.47
+            "total_damage": 1903.7
           }
         }
       },
@@ -77538,12 +77581,12 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 793.33,
+              "auto_attacks": 566.67,
               "passive": 657.36,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 131.47
             },
-            "total_damage": 2744.09
+            "total_damage": 2517.42
           },
           "no_items": {
             "breakdown_totals": {
@@ -77551,10 +77594,10 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 793.33,
+              "auto_attacks": 566.67,
               "passive": 180.0
             },
-            "total_damage": 1237.33
+            "total_damage": 1010.67
           },
           "physical_build": {
             "breakdown_totals": {
@@ -77562,11 +77605,11 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 2860.0,
+              "auto_attacks": 2145.0,
               "on_hit_Kraken Slayer": 318.84,
               "passive": 180.0
             },
-            "total_damage": 3839.84
+            "total_damage": 3124.84
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -77574,11 +77617,11 @@
               "Q": 0.0,
               "R": 0.0,
               "W": 0.0,
-              "auto_attacks": 2233.95,
+              "auto_attacks": 1737.52,
               "passive": 180.0,
               "spellblade_Trinity Force": 293.33
             },
-            "total_damage": 3126.68
+            "total_damage": 2630.25
           }
         }
       }

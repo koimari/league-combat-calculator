@@ -289,20 +289,76 @@ class TestViBlastShield:
         assert shield["amount"] == pytest.approx(0.12 * max_health, abs=0.05)
         assert shield["amount"] == pytest.approx(292.8, abs=0.1)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "the Blast Shield payload rides the FIRST Q event unconditionally. "
-            "In this fight Ahri charms Vi at 0.0, so that Q is published with "
-            "skipped_reason='attacker_state_blocked' and the shield inherits "
-            "'trigger_event_skipped' (applied_amount 0.0) — while Vi's Q at "
-            "8.971 lands for 156.2 and authors no shield at all.  A rider on a "
-            "cast that never happened should move to the cast that did.  "
-            "Owner: survival/pipeline.  See TEST-SWEEP-FINDINGS 'Final sweep'."
-        ),
-    )
-    def test_the_granted_shield_absorbs_something(self):
-        assert _main_survival(_fight("Vi"))["shield_absorbed"] > 0.0
+    def test_the_granted_shield_absorbs_something_when_its_carrier_lands(self):
+        """The mechanism itself is sound: an unimpeded Q pays the shield.
+
+        This is the control for the defect pinned below.  Ahri with no
+        ranked abilities never charms Vi, so the carrier Q lands, the rider
+        arms at its timestamp, and the shield absorbs.  Nothing about the
+        rider is broken -- only its binding to a carrier chosen before the
+        walk knew which packets land.
+        """
+        payload = _fight("Vi", enemy_ranks={"Q": 0, "W": 0, "E": 0, "R": 0})
+        assert _main_survival(payload)["shield_absorbed"] > 0.0
+        assert payload["combat"]["item_denial_receipts"] == []
+
+    def test_a_charmed_carrier_withholds_the_shield_with_a_named_receipt(self):
+        """Defect D-VI-1, pinned fail-closed rather than tolerated.
+
+        Ahri charms Vi at 0.0, so the Q the Blast Shield rider was nailed to
+        is published with ``skipped_reason='attacker_state_blocked'`` and
+        the rider inherits ``trigger_event_skipped`` -- while Vi's E at
+        3.221 and Q at 8.971 both land and author no shield at all.  A rider
+        on a cast that never happened should move to the cast that did, and
+        it cannot: ``damage._damage_event_row`` binds the payload to one
+        carrier by ORDINAL, before the ordered survival walk decides what
+        lands, and re-binding is a kernel change across the rider/trigger
+        surface (three ledger implementations plus the compiled path).
+
+        So the zero is not published as a fact.  It is published beside a
+        named denial receipt that says the amount was withheld, which
+        carrier failed and when a re-bind would have landed.  Both halves
+        are asserted here: closing D-VI-1 must flip the absorbed figure AND
+        drop the receipt, and this test is what will fail if only one of the
+        two moves.
+
+        Owner: survival/pipeline.  Writeup:
+        ``docs/receipts/self-shield-carrier-rebind-2026-08-21.md``.
+        """
+        payload = _fight("Vi")
+        survival = _main_survival(payload)
+        (rider,) = [
+            event
+            for event in payload["combat"]["support_events"]
+            if event["source"] == "Blast Shield"
+        ]
+        (denial,) = payload["combat"]["item_denial_receipts"]
+        assert rider["amount"] == pytest.approx(0.12 * survival["max_health"], abs=0.05)
+        assert rider["applied_amount"] == pytest.approx(0.0)
+        assert rider["skipped_reason"] == "trigger_event_skipped"
+        assert survival["shield_absorbed"] == pytest.approx(0.0)
+        assert denial == {
+            "time": pytest.approx(1.721),
+            "kind": "item_denial",
+            "source": "Blast Shield",
+            "reason": "self_shield_carrier_skipped",
+            "attacker": "main",
+            "target": "main",
+            "event_id": "main:enemy:Ahri:2:shield",
+            "carrier_event_id": "main:enemy:Ahri:2",
+            "carrier_skipped_reason": "attacker_state_blocked",
+            # The earliest ability packet Vi landed at or after the skip:
+            # E at 3.221.  The game grants Blast Shield on that hit.
+            "rebind_time": pytest.approx(3.221),
+            "withheld_amount": pytest.approx(292.8),
+        }
+        # The re-bind candidate the receipt names really did land.
+        assert any(
+            event["time"] == pytest.approx(denial["rebind_time"])
+            and event["attacker"] == "main"
+            and not event.get("skipped_reason")
+            for event in payload["combat"]["events"]
+        )
 
     def test_the_slot_declares_the_channel_that_pays_it(self):
         contract = get_champion_module_contract("Vi")
