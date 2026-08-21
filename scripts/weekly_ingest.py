@@ -98,11 +98,11 @@ USER_AGENT = patch_regression.USER_AGENT
 # protected-access exemption lives in exactly one place.
 _champion_dir = patch_regression._champion_dir  # pylint: disable=protected-access
 
-# Tracked game-file authority pair (commit 58ce29e): force-added despite the
-# `data/bin/` gitignore rule so the Gnar Mega-form gate has committed ground
-# truth (data/bin/README.md). `renata.bin.json` is documented in that README
-# as a one-off provenance spot-check but is deliberately NOT git-tracked --
-# fetched here for the same spot-check, reported separately, never committed.
+# Tracked game-file authority pair: force-added despite the `data/bin/`
+# gitignore rule so the Gnar Mega-form gate has committed ground truth
+# (data/bin/README.md). `renata.bin.json` is a one-off provenance spot-check
+# documented in that README and deliberately NOT git-tracked -- fetched here
+# for the same spot-check, reported separately, never committed.
 AUTHORITY_FILES: dict[str, dict[str, Any]] = {
     "gnar": {
         "url": "https://raw.communitydragon.org/{patch}/game/data/characters/gnar/gnar.bin.json",
@@ -286,13 +286,9 @@ def resolve_live_patch(
     cdragon_fetch: Callable[[], bytes] | None = None,
     cdtb_resolver: Callable[..., str] | None = None,
 ) -> tuple[str, str]:
-    """Resolve the live client patch: cdtb first, CDragon content-metadata as fallback.
-
-    Returns (patch, source) where source names which path answered.
-    ``cdtb_resolver`` is the injectable seam for the cdtb probe (defaults to
-    ``patch_regression.resolve_patch``); tests supply their own callable
-    rather than monkeypatching the sibling module.
-    """
+    """The live client patch as ``(patch, source)``, cdtb first and CDragon
+    content-metadata as the fallback.  ``cdtb_resolver`` is the injectable
+    seam for the cdtb probe, so tests need no monkeypatching."""
     resolver = cdtb_resolver or patch_regression.resolve_patch
     try:
         return resolver(cdtb_bin), "cdtb"
@@ -765,10 +761,9 @@ def run_packets(
 ) -> dict[str, Any]:
     """Regenerate reviewed packets to a scratch path and report drift.
 
-    Never writes ``static_path`` -- splicing a drifted champion's sub-object
-    back in stays a human, build_reviewed_modules.py-by-hand step (the Poppy
-    16.16.1 precedent: commit 3137da9 spliced one champion after re-checking
-    the other suspected drifts by hand).
+    Never writes ``static_path``: splicing a drifted champion's sub-object
+    back in stays a human step through build_reviewed_modules.py, because the
+    other suspected drifts have to be re-checked by hand first.
     """
     build = packet_builder or build_reviewed_packets
     axword_source = Path(axword_source) if axword_source else resolve_axword_source()

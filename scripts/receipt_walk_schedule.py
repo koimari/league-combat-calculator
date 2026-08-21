@@ -161,8 +161,8 @@ LANE = "receipt_walk"
 #: cites it, and a citation nobody can resolve is the thing this file avoids.
 RULING = "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
 
-#: The lane whose interpreter Amendment F named, and the only lane the eleven
-#: pair-engine-fed rows are retired by.
+#: The lane whose interpreter Amendment F named, and the only lane that closes
+#: the eleven pair-engine-fed rows.
 PAIR_ENGINE = "pair_engine"
 
 #: Umbrella Amendment O's two rulings, cited by every row the triage below
@@ -205,9 +205,9 @@ AMENDMENT_P_DELIVERY: dict[str, tuple[str, ...]] = {
 #: :func:`_reclassification_failures` refuses a name the tree does not agree
 #: with -- a family still declaring the lane, or one an interpreter serves,
 #: is not a family this ruling closed.  ``crit_profile`` is here because
-#: Ruling 1 names it and the tree agrees: ``_FAMILY_LANES`` no longer declares
-#: its receipt-walk lane, no interpreter serves one, and the frontier no
-#: longer defers the row.  Measuring is one act and closing is another, so a
+#: Ruling 1 names it and the tree agrees: ``_FAMILY_LANES`` declares no
+#: receipt-walk lane for it, no interpreter serves one, and the frontier does
+#: not defer the row.  Measuring is one act and closing is another, so a
 #: name arrives here in the commit that drops the lane and never before it.
 RECLASSIFIED: tuple[str, ...] = ("crit_profile",)
 
@@ -387,14 +387,11 @@ def deferral_rows() -> dict[str, Mapping[str, Any]]:
     joined here rather than one being read without the other.
 
     **An empty result is the DISCHARGED state, not a failed read**, and the
-    two are told apart structurally rather than by a flag.  This refused an
-    empty set while a debt stood, on the reasoning that a schedule for a debt
-    the tree no longer carries is a plan for nothing -- and umbrella
-    Amendment F's fourteenth row retired on 2026-08-17, which turned that
-    refusal into an instrument that stops working on the commit its own debt
-    reaches zero.  What the refusal was ever worth is catching a read that
-    found no rows *because it read the wrong thing*, so that is what it
-    checks now: the frontier's deferral block has to be present and
+    two are told apart structurally rather than by a flag.  Refusing an empty
+    set would be an instrument that stops working on the commit the debt
+    reaches zero.  What such a refusal is worth is catching a read that found
+    no rows *because it read the wrong thing*, so that is what it
+    checks: the frontier's deferral block has to be present and
     well-formed, and an empty ``rows`` inside a present block is the tree
     saying the debt is paid.
     """
@@ -455,9 +452,7 @@ def population_size(node: Any) -> int:
 def registered_lanes(family: str) -> set[str]:
     """The lanes ``INTERPRETERS`` already holds an interpreter of *family* in.
 
-    Read from the registry rather than from a list here: whether a family's
-    ruled retiring act has been performed is a fact about the tree, and the
-    one place it is written is the registration table itself.
+    Read from the registry, the one place a family's served lanes are written.
     """
     return {
         lane.value
@@ -469,18 +464,10 @@ def registered_lanes(family: str) -> set[str]:
 def priced_rows(result: Mapping[str, Any]) -> frozenset[str]:
     """The breakdown rows a fight's own ``total_damage`` holds.
 
-    This is the predicate umbrella Amendment O, Ruling 1 turns on, and it is
-    exact rather than a heuristic: summing ``total_damage`` over the rows this
-    returns reproduces the fight's ``total_damage`` to the last bit, which
-    :mod:`tests.test_receipt_walk_schedule` asserts rather than assumes.  Two
-    kinds of row are outside it and both are outside it for the ruling's own
-    stated reason.  A row carrying ``informational`` publishes a *difference*
-    a priced row already holds and is summed into no total -- Sundered Sky's
-    forced crit and The Collector's execute are both that shape.  A row with
-    no ``total_damage`` at all is not damage: the heal rows carry
-    ``total_amount`` and a ``unit``.  A family whose only rows are those two
-    kinds authors nothing a roster total holds, which is what "authors no pair
-    row" means.
+    Exact rather than heuristic: summing ``total_damage`` over these rows
+    reproduces the fight's own, which :mod:`tests.test_receipt_walk_schedule`
+    asserts.  An ``informational`` row publishes a difference a priced row
+    already holds; a row with no ``total_damage`` is not damage.
     """
     return frozenset(
         key
@@ -568,12 +555,11 @@ def authored_rows(
     items on and off.  A row present with them and absent without them is a
     row this family authors.
 
-    The second is one probe per owner, on a ranged and a melee champion, and
-    it is what makes the zero a claim about the FAMILY rather than about the
-    scenarios that happen to hold it.  Two of ``crit_profile``'s three owners
-    are equipped by no covering scenario; without the probes, a mechanic of
-    theirs that authored a row would be invisible to the check that is
-    supposed to reopen the closed row when one does.
+    The second is one probe per owner, on a ranged and a melee champion, which
+    makes a zero a claim about the FAMILY rather than about the scenarios that
+    happen to hold it.  Two of ``crit_profile``'s three owners are equipped by
+    no covering scenario, so without the probes a row they authored would be
+    invisible to the check meant to reopen the closed row.
     """
     held = frozenset(owners)
     found: set[str] = set()
@@ -696,7 +682,7 @@ def _amendment_named_delivery(
 
     Returns the resolved mechanisms keyed by mechanic id, and the declarations
     the ruling leaves unanswered -- a shape it does not name, or one whose
-    named mechanism no longer stands in the kernel.  A non-empty second half
+    named mechanism is absent from the kernel.  A non-empty second half
     is the ruling's own conditional stop firing: *if any owner's effect has no
     existing rider or state path the kernel can express, the implementing lane
     STOPS blocked naming exactly which*.  It is returned rather than raised
@@ -729,11 +715,11 @@ def _named_delivery_resolution(
 ) -> dict[str, Any]:
     """Amendment P's mapping, resolved whether or not the row is still open.
 
-    The row it was written for retired on 2026-08-16, and the resolution
-    outlives it deliberately.  A named delivery that stopped being checked the
-    moment its row left would be a ruling that held exactly as long as nobody
-    depended on it: what the walk now stages for this family IS those
-    mechanisms, so a fourth mechanic whose payload shape the amendment does
+    The resolution outlives the row it was written for, deliberately.  A named
+    delivery checked only while its row stood would be a ruling that held
+    exactly as long as nobody depended on it: what the walk stages for this
+    family IS those mechanisms, so a fourth mechanic whose payload shape the
+    amendment does
     not name, or a named mechanism that leaves the kernel, has to go red here
     as well as in the interpreter's own branch table.  ``covers_every_declaration``
     is the totality half and ``unanswered`` names which, because the ruling's
@@ -1467,12 +1453,11 @@ def _retiring_act(family: str, route: Sequence[str]) -> dict[str, Any]:
     prose: Amendment K observes that ``INTERPRETERS`` already holds the ruled
     key for the three rows the defence resolver feeds, so their act is done
     and what stands is the receipt-walk lane the table still declares.  It is
-    derived from the registry, which is what makes it a fact that can be false
-    -- the field it replaces said ``settled`` on both branches of this
-    function and so could no longer discriminate anything, while the ruling it
-    reported had already made every act settled.  That the acts are settled is
-    said once, in this file's own words; per row, what is worth publishing is
-    which of them still need performing.
+    derived from the registry, which is what makes it a fact that can be false.
+    A field saying ``settled`` on both branches of this function would
+    discriminate nothing.  That the acts are settled is said once, in this
+    file's own words; per row, what is worth publishing is which of them still
+    need performing.
     """
     lanes = [LANE] if tuple(route) == (PAIR_ENGINE,) else list(route)
     performed = bool(lanes) and set(lanes) <= registered_lanes(family)

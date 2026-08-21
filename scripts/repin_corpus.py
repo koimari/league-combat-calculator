@@ -1,14 +1,15 @@
 """The E9 practice corpus and its one writer.
 
-Every non-legacy scenario is asserted on every run.  A receipt the engine no
-longer reproduces fails on its own numbers, which is the whole gate; there is
-no selection that could quietly shrink to nothing, and nothing here reads
-repository history.  A scenario's ``sha`` records the commit its receipt was
-last probed at -- provenance a reader can follow, never a filter.
+Every scenario outside ``LEGACY_SCENARIO_IDS`` is asserted on every run.  A
+receipt the engine stops reproducing fails on its own numbers, which is the
+whole gate; there is no selection that could quietly shrink to nothing, and
+nothing here reads repository history.  A scenario's ``sha`` records the
+commit its receipt was last probed at, which is provenance a reader can
+follow, never a filter.
 
-Re-pinning re-probes: ``repin`` drives every non-legacy scenario through
-``/api/calculate`` and refuses to stamp a scenario whose receipt no longer
-reproduces, so the writer can never launder a broken receipt into a fresh pin.
+Re-pinning re-probes: ``repin`` drives every such scenario through
+``/api/calculate`` and refuses to stamp a scenario whose receipt fails to
+reproduce, so the writer can never launder a broken receipt into a fresh pin.
 
 ``--check`` is the commit gate.  It fails on a missing pin and on a corpus that
 has shrunk away from the count ``docs/receipts/campaign-fingerprints.json``
@@ -65,12 +66,12 @@ def write_corpus(corpus: Mapping[str, Any], path: Path = CORPUS_PATH) -> None:
 
 
 def non_legacy_scenarios(corpus: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Every scenario the suite executes — the four legacy receipts excluded."""
+    """Every scenario the suite executes, minus ``LEGACY_SCENARIO_IDS``."""
     return [s for s in corpus["scenarios"] if s["id"] not in LEGACY_SCENARIO_IDS]
 
 
 def parametrized_ids() -> tuple[str, ...]:
-    """The scenario ids ``tests/test_e9_corpus.py`` parametrizes (R-22)."""
+    """The scenario ids ``tests/test_e9_corpus.py`` parametrizes."""
     from tests.test_e9_corpus import _EXECUTED  # local: keeps the import edge one-way
 
     return tuple(s["id"] for s in _EXECUTED)
@@ -79,9 +80,8 @@ def parametrized_ids() -> tuple[str, ...]:
 def expected_non_legacy_count() -> int | None:
     """``corpus.non_legacy_count`` from the fingerprints receipt, or ``None``.
 
-    The receipt is captured by slice 0A.2.  Until it exists the count clause
-    falls through to the parametrized-set equality below, which pins the same
-    number by identity.
+    ``None`` falls through to the parametrized-set equality below, which
+    pins the same number by identity.
     """
     if not FINGERPRINTS_PATH.exists():
         return None
@@ -160,7 +160,7 @@ def _head_commit() -> str:
 def reprobe_failures(
     scenarios: Iterable[Mapping[str, Any]],
 ) -> tuple[tuple[str, str], ...]:
-    """``(id, message)`` for every scenario whose receipt no longer reproduces.
+    """``(id, message)`` for every scenario whose receipt fails to reproduce.
 
     The receipt kinds live once, in ``tests/test_e9_corpus.py``; the writer
     borrows them rather than growing a second copy that could disagree.
@@ -190,7 +190,7 @@ def repin(
     corpus_path: Path = CORPUS_PATH,
     parametrized: Sequence[str] | None = None,
 ) -> int:
-    """Re-probe and rewrite every non-legacy sha; ``check`` verifies and writes nothing."""
+    """Re-probe and rewrite every executed sha; ``check`` writes nothing."""
     corpus = load_corpus(corpus_path)
 
     if check:

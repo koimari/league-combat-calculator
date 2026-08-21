@@ -110,12 +110,11 @@ def _cached_producer_passive(
 def _stat_effect(passive: Mapping[str, Any], slot: AllyPacketSlot) -> AllyStatEffect:
     """One declared producer, checked against the record it cites.
 
-    Every number comes from the declaration — the same three references the
-    walk's ``stat_buff`` emitter reads — so the two surfaces that price this
-    buff can no longer hold different numbers.  The cached passive is still
-    parsed, and now for the reason it is worth parsing: it is the half that
-    moves on patch day, and a move it does not share with the declaration is
-    a named stop rather than a number only one engine sees.
+    Every number comes from the declaration, the same three references the
+    walk's ``stat_buff`` emitter reads, so the two surfaces that price this
+    buff cannot hold different numbers.  The cached passive is parsed because
+    it is the half that moves on patch day, and a move it does not share with
+    the declaration is a named stop rather than a number one engine sees alone.
     """
     owner = slot.owner
     for stat_name, key in _CACHED_STATS:
@@ -151,9 +150,9 @@ def resolve_ally_stat_effects(
     reaches its own reader instead.
 
     Declaration and cached record are required to agree on *presence* as well
-    as on numbers.  Either one alone is a stop, because a source that grew
-    the mechanic nothing declares and a declaration whose source no longer
-    describes it are both the ally buff quietly costing zero.
+    as on numbers.  Either one alone is a stop, because a source that grew a
+    mechanic nothing declares, and a declaration its source does not describe,
+    are both the ally buff quietly costing zero.
     """
     by_name = {str(item.get("name", "")): item for item in items}
     declared: dict[str, AllyPacketSlot] = {
