@@ -17,10 +17,10 @@ champion package owning the generic resolver's taxonomy. It is the
 rotation-side sibling of ``ability_spec.py``.
 
 Recast parentage has exactly one authority: ``recast_of`` on the parsed
-ability entry. There is deliberately **no** parent-slot table here — a hand
-table restating a fact the parse already carries is the failure this
-campaign exists to kill. ``orderable_slots`` reads the stamp, and a
-synthetic slot carrying none *raises* rather than being linked by name.
+ability entry. There is deliberately **no** parent-slot table here: a hand
+table restating a fact the parse already carries is a second authority.
+``orderable_slots`` reads the stamp, and a synthetic slot carrying none
+*raises* rather than being linked by name.
 """
 
 from collections.abc import Collection, Iterable, Mapping, Sequence
@@ -82,8 +82,7 @@ class UnknownSlotError(CastDependencyError):
     """A declaration names a slot this module's own slot map does not have.
 
     Also raised for a synthetic slot that is neither a base cast slot nor
-    stamped ``recast_of`` — the campaign refuses to guess parentage from a
-    name (D-11).
+    stamped ``recast_of``: parentage is never guessed from a name.
     """
 
 
@@ -108,8 +107,8 @@ class UnsourcedDependencyError(CastDependencyError):
 
     An empty ``reason``, an empty ``source``, or a ``source`` that is not
     ``"<wiki url>@<revision_id>"``. A free-text string checked only for
-    non-emptiness would let a retired hand seed come back as four
-    plausible sentences, so the shape is checked here.  The shape is all
+    non-emptiness would accept four plausible sentences, so the shape is
+    checked here.  The shape is all
     a stdlib leaf can check: resolving the revision itself against the
     committed wiki audit is
     ``scripts/cast_dependency_audit.py``'s, gated by
@@ -122,7 +121,7 @@ class SuppressionScopeError(CastDependencyError):
 
     From ``CastDependency(slot="E", requires="Q")`` it must be impossible
     to express a suppression of ``E→W``; structure, not review, is what
-    prevents a silently broadened suppression (D-81).
+    prevents a silently broadened suppression.
     """
 
 
@@ -152,7 +151,7 @@ class ConflictingInferenceError(CastDependencyError):
     """An inferred edge opposes an active declaration with no suppression.
 
     "Declared always wins" would resolve a real modelling disagreement
-    silently in the module's favour (D-82).
+    silently in the module's favour.
     """
 
 
@@ -221,8 +220,8 @@ class CastDependency:
         kind: A member of ``DEPENDENCY_KINDS``.
         reason: The mechanic, in prose, as reviewed.
         source: ``"<wiki url>@<revision_id>"``, shape-validated at import.
-        suppresses: Inferred edges this declaration overrides — each one
-            structurally the exact reverse pair (D-81).
+        suppresses: Inferred edges this declaration overrides, each one
+            structurally the exact reverse pair.
     """
 
     slot: str
@@ -290,17 +289,14 @@ def validate_cast_order_declaration(
 ) -> None:
     """Import gate for a module's ``CAST_ORDER``.
 
-    A subset permutation of the module's own slot surface that satisfies
-    the module's own declarations. A module declaring an order that
-    contradicts a dependency it also declares should fail at import, not
-    surprise at runtime.
+    A subset permutation of the module's own slot surface satisfying the
+    module's own declarations, so a contradiction fails at import.
 
     Raises:
         UnknownSlotError: The order names a slot outside the surface.
         DuplicateDependencyError: The order repeats a slot.
         CustomOrderViolatesDependencyError: The order inverts one of the
-            module's own declarations — the same defect as a user order
-            inverting one, so the same type.
+            module's own declarations.
     """
     seen: set[str] = set()
     for slot in order:
@@ -319,12 +315,7 @@ def active_dependencies(
     deps: Iterable[CastDependency],
     live_slots: Collection[str],
 ) -> tuple[CastDependency, ...]:
-    """The declarations both of whose endpoints exist in this parse.
-
-    A dependency whose endpoint is absent — Syndra's Q2 below 40 splinters
-    — constrains nothing. It is not a failure; the receipt names the
-    absent endpoint.
-    """
+    """The declarations both of whose endpoints exist in this parse."""
     return tuple(
         dep for dep in deps if dep.slot in live_slots and dep.requires in live_slots
     )
@@ -333,18 +324,12 @@ def active_dependencies(
 def orderable_slots(slot_surface: Mapping[str, Mapping[str, Any]]) -> tuple[str, ...]:
     """What a request may name: the surface minus P, minus every recast slot.
 
-    Recast slots are excluded because they ride their parent's casts —
-    naming one in a requested order would schedule it independently. The
-    parentage comes from ``recast_of`` on the parsed entry and nowhere
-    else, so a slot that is neither a base cast slot nor ``recast_of``-
-    stamped raises rather than being linked by name (D-11).
-
-    Args:
-        slot_surface: Parsed ability entries by slot.
-
-    Returns:
-        The orderable slots in ``BASE_CAST_SLOTS`` order, so the result
-        does not depend on parse order.
+    Recast slots ride their parent's casts, so naming one in a requested
+    order would schedule it independently. Parentage comes from
+    ``recast_of`` on the parsed entry and nowhere else, so a slot that is
+    neither a base cast slot nor ``recast_of``-stamped raises rather than
+    being linked by name. Returned in ``BASE_CAST_SLOTS`` order, so the
+    result never depends on parse order.
 
     Raises:
         UnknownSlotError: A synthetic slot carries no ``recast_of`` stamp.
@@ -411,10 +396,8 @@ def check_order_satisfies_dependencies(
 ) -> None:
     """Reject an order that inverts an active declared dependency.
 
-    Raises:
-        CustomOrderViolatesDependencyError: Quoting the dependency's own
-            ``reason`` and ``source``, so the refusal names the mechanic
-            rather than the rule that caught it.
+    The refusal quotes the dependency's own ``reason`` and ``source``, so it
+    names the mechanic rather than the rule that caught it.
     """
     position = {slot: index for index, slot in enumerate(order)}
     for dep in active_dependencies(deps, live_slots):

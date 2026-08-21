@@ -228,13 +228,7 @@ _R_FOLLOWUP_DELAY = 0.3  # "After 0.3 seconds of the illumination"
 
 
 def _r_followup_expected_crit(ctx: SlotCtx) -> float:
-    """Expected crit multiplier of one follow-up attack at this build.
-
-    The sourced crit ("100% : 130% (+ 0% : 9%) based on critical strike
-    chance") is an expected value (the Caitlyn Headshot convention):
-    P(crit) = crit, crit damage = 1 + 0.39 x crit, so E = 1 + 0.39 x
-    crit^2.
-    """
+    """Expected crit multiplier of one follow-up attack at this build."""
     crit = min(max(ctx.stat("critical_strike_chance") / 100.0, 0.0), 1.0)
     return 1.0 + (_R_FOLLOWUP_CRIT_EXTRA + _R_FOLLOWUP_CRIT_CHANCE_BONUS) * (
         crit * crit

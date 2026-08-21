@@ -294,22 +294,7 @@ _BLOCKS_CARRYING_THEIR_OWN_MAP = frozenset({"combat"})
 def _name_the_response(response: dict) -> None:
     """Give the response its own ``dispositions`` map, keyed by leaf path.
 
-    The endpoint's headline ``total_damage``, all ninety-odd
-    ``champion_stats``, the top-level ``breakdown``, every ``cast_timeline``
-    and ``damage_events`` row, each target's fight and each roster member's
-    starting defenses are published numbers, and until now none of them
-    carried an entry: the map lived on the ``combat`` sub-object alone, which
-    is a little under half of what this endpoint serves.  Criterion 5 says
-    *every numeric leaf of the /api/calculate payload*, so the rest of the
-    payload gets the same treatment ``/api/bis`` and ``/api/optimize``
-    already had -- re-written through the one writer at the path it lives at,
-    so the entry is produced beside its leaf by ``serialize_leaf`` rather
-    than by a second pass describing numbers it did not write.
-
-    The pass itself, and the two properties of it worth stating, belong to
-    ``name_every_number`` -- the one function all three served payloads are
-    named by.  What is this module's to say is which block it skips and why.
-    """
+    ``combat`` is skipped because it carries a map of its own."""
     response["dispositions"] = name_every_number(
         response, LeafWriter(), skip=_BLOCKS_CARRYING_THEIR_OWN_MAP
     )
@@ -320,10 +305,9 @@ def calculate_payload(
 ) -> dict:
     """Return the complete JSON-safe calculate payload without Flask state.
 
-    ``headline_total`` is the one published answer to "which number does
-    this result headline": the attacker's own coupled combat row when the
-    fight has one, else the rotation total.  ``displayed_prediction`` is the
-    rule; the browser reads the leaf instead of re-deriving it.
+    ``headline_total`` is the one published answer to "which number does this
+    result headline": the attacker's own coupled combat row when the fight has
+    one, else the rotation total.  The browser reads the leaf.
     """
     request = parse_scenario_request(data, deterministic=deterministic)
     resolved = resolve_scenario(request)
