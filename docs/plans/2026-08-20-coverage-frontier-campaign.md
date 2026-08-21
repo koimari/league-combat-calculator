@@ -97,6 +97,32 @@ Measured at `5af69843`. Frontier page: `docs/coverage-frontier.md`; machine trut
 7. `docs/coverage-frontier.md` re-measured and rewritten; `docs/surface-area-backlog.md`
    gains any aside a unit surfaces.
 
+## Results
+
+Range `5af69843..` the merge head of `fc/integration`; sixteen Opus units, one worktree each,
+file-ownership slices, every report reconciled against its branch before merging. Numbers
+in this table are each unit's runtime probe.
+
+| Unit | Landed | Decisive finding |
+|---|---|---|
+| H0 | utility-axis census (136 rows) | `out_of_scope` was the *default* for any slot absent from `SLOTS`; only 55 of 136 had no axis |
+| G | GW proof; Lifeline heal wounded | all four items already bit (Morello on Ziggs: Mundo's healing 1465 → 941); a Protoplasm Lifeline heal escaped (400 → 240) |
+| F | ally-ramp level subject | decision 7's premise was stale: Mandate already priced (×1.07), Helia has no damage row; ramps read the recipient's level where the wiki says `your level` (80 → 232.65) |
+| E | nine maps, Rumble P, Mel P | `b03bbad9` rewrote three coverage sets; Rumble overheated autos 295 → 601 |
+| RELABEL | `COVERAGE_CHANNELS` | a slot with no row can be `modeled` by naming the channel that pays it; six mislabels, thirty axis clauses |
+| RIDERS | five passives, two steroids | Warwick 10 s total 762 → 1226 |
+| SUSTAIN | six heal rules, Vi P, grey health, Trundle W | Trundle 1134 → 1422 |
+| STATBUFF | nineteen stat grants | Tristana autos 4 → 8; 85 slots with zero `out_of_scope` |
+| SUPPORT | scanner scopes rows by their sentence | four fabricated packets killed; 36/70 → 60/70 modeled |
+| SCANNER | recipient from the sentence | six more fabricated ally packets gone (Bel'Veth R, Ekko W, Vladimir R, Zilean R, …) |
+| A1 · B · C · D · A2 · A3 | the rune page | 62/62 runes compile, 31 price, 9 shards price; `/api/loadout-stats` and focused BIS carry the page |
+
+Frontier moved: champion slots 693 / 23 / 150 → 762 / 38 / 65 (modeled / no_damage /
+out_of_scope); runes 17 of 17 keystones → 62 of 62 compiled; items: no unpriced damage
+packet remains. Decisions overturned by probe: 7 (Mandate/Helia) and the GW row; decision 6
+gained the channel vocabulary. Left on the table: `docs/surface-area-backlog.md` CF1–CF17
+and the rune refusals by axis on `docs/coverage-frontier.md`.
+
 ## Banned shortcuts
 
 - No rune number outside `rune_effects.py` / `rune_paths/`; no `.get(key, literal)`.
