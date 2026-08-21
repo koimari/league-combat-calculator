@@ -101,11 +101,10 @@ class SourceReceipt:
 # ---------------------------------------------------------------------------
 
 # Ordered tiers mirror the survival walk's phase ordering at one timestamp:
-# scheduled expiry applies before readiness unlocks, readiness before new
-# state, consume/reset after the gains they depend on, and cooldown start
-# after the proc that triggers it.  A lower tier sorts first.
+# scheduled expiry applies before new state, consume/reset after the gains
+# they depend on, and cooldown start after the proc that triggers it.  A
+# lower tier sorts first.
 TIER_EXPIRE = -2.0
-TIER_READY = -1.0
 TIER_GAIN = 0.0
 TIER_CONSUME = 0.5
 TIER_COOLDOWN_START = 1.0
