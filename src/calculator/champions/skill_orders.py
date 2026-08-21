@@ -132,15 +132,7 @@ _SKILL_ORDERS: dict[str, list[str]] = {
 
 
 def get_skill_order(champion_name: str) -> list[str]:
-    """Return the skill leveling order for a champion.
-
-    Args:
-        champion_name: Display name of the champion.
-
-    Returns:
-        List of 18 ability keys (Q/W/E/R) representing what is leveled
-        at each champion level.
-    """
+    """The 18-entry Q/W/E/R leveling order for *champion_name*."""
     return _SKILL_ORDERS.get(champion_name, DEFAULT_SKILL_ORDER)
 
 
@@ -149,16 +141,7 @@ def get_ability_rank(
     champion_level: int,
     champion_name: str = "",
 ) -> int:
-    """Calculate ability rank at a given champion level.
-
-    Args:
-        ability_key: One of ``"Q"``, ``"W"``, ``"E"``, ``"R"``.
-        champion_level: Champion level (1-18).
-        champion_name: Champion name for skill order lookup.
-
-    Returns:
-        Ability rank (1-5 for basic abilities, 1-3 for R).
-    """
+    """*ability_key*'s rank at *champion_level*: 1-5 basic, 1-3 for R."""
     order = get_skill_order(champion_name)
     rank = 0
     for i in range(min(champion_level, len(order))):

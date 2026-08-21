@@ -137,8 +137,7 @@ def _is_hammer(ctx: SlotCtx) -> bool:
 
 
 def _level_tier(level: int) -> int:
-    """Index into R's per-level tables: 0 for 1-5, 1 for 6-10, 2 for
-    11-15, 3 for 16+ — R's values step at champion level, not rank."""
+    """Index into R's per-level tables, which step at level, not rank."""
     return sum(1 for breakpoint in TRANSFORM_BREAKPOINTS if level >= breakpoint)
 
 
@@ -234,13 +233,9 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _burst_attack_speed(ctx: SlotCtx) -> float:
-    """Attacks per second while Hyper Charge's 3 attacks are firing.
-
-    "Maximum Attack Speed" in the in-game tooltip: +360% on Jayce's 0.658
-    ratio reaches 3.027, just past the game's 3.003 clamp, so the burst
-    sits AT the cap for any build. Bonus attack speed from items is
-    therefore wasted during the burst — it only speeds his ordinary autos.
-    """
+    """Attacks per second while Hyper Charge's 3 attacks fire.  +360% on the
+    0.658 ratio reaches 3.027, past the 3.003 clamp, so the burst sits at the
+    cap for any build and item attack speed is wasted during it."""
     attack_speed = ctx.stat("attack_speed")
     as_ratio = ctx.stat("attack_speed_ratio")
     burst = attack_speed + as_ratio * (HYPER_CHARGE_BONUS_ATTACK_SPEED / 100.0)
@@ -308,14 +303,14 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 def _w_mana_restore(ctx: SlotCtx) -> dict[str, Any] | None:
     """The W-slot passive's per-basic-attack mana restore (15-25 by W rank).
 
-    Sourced from the cached "Mana Restored" leveling row — the atom
-    ``ability.mana _restored`` (hash bfeb0d88945a263e) — and corroborated
-    by the game binary's ManaGain ranks 1-6 (index 0 is the unleveled
-    placeholder 13, never a fight value).  The passive text lives only on
-    the hammer-form entry (Lightning Field), but the W slot is shared and
-    Jayce keeps the passive in BOTH stances — an explicit module
-    interpretation (neither the cache nor the binary states stance gating
-    either way; see ASSUMPTIONS).
+    Sourced from the cached "Mana Restored" leveling row, which is
+    wiki atom ``ability.mana _restored`` hash bfeb0d88945a263e, and
+    corroborated by the game binary's ManaGain ranks 1-6 (index 0 is the
+    unleveled placeholder 13, never a fight value).  The text sits only on
+    the hammer-form entry (Lightning Field), but the W slot is shared, so
+    this module reads Jayce as keeping the passive in BOTH stances.  That
+    is an interpretation: neither the cache nor the binary states stance
+    gating either way (see ASSUMPTIONS).
     """
     rank = ctx.rank_for("W")
     if rank < 1:

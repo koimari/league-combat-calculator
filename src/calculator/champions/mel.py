@@ -70,8 +70,8 @@ _R_PER_STACK_AP_RATIO = 0.04
 
 # ---------------------------------------------------------------------------
 # P (Searing Brilliance) — HARDCODED game-file rule declaration.
-# Verify on patch updates against data/bin/characters/mel.bin.json,
-# object {64e86cf4} ("MelPassive"):
+# Verify on patch updates against "MelPassive" {64e86cf4} in the game file
+# data/bin/characters/mel.bin.json:
 #   mSpell.DataValues       PassiveBonusMissiles      3.0 (every rank)
 #                           MaxPassiveBonusMissiles   9.0 (every rank)
 #                           BonusAttackDuration       5.0 (every rank)
@@ -234,37 +234,26 @@ _searing_brilliance.phase = ONHIT
 
 
 def _rebuttal(ctx: SlotCtx):
-    """W: shield + conditional projectile reflection — ``no_damage``.
+    """W: shield + conditional projectile reflection, priced ``no_damage``.
 
-    Rebuttal owns no damage of its own on any cached source, which is
-    why the slot is ``no_damage`` rather than a gap awaiting a kernel:
+    Rebuttal owns no damage on any cached source, so the slot is
+    ``no_damage`` rather than a gap awaiting a kernel:
 
-    * Wiki (data/champions.json Mel W): all three leveling rows are
-      "Shield" (80-200 + 70% AP), "Replicated Projectile Magic Damage
-      Modifier" (40-60% + 5% per 100 AP) and "Replicated Projectile
-      Physical Damage Modifier" (28-42% + 3.5% per 100 AP). Both
-      modifiers carry the unit "% of the original damage" — a
-      PERCENTAGE OF THE ORIGINAL enemy projectile, not a damage amount.
+    * Wiki (data/champions.json Mel W): "Shield" (80-200 + 70% AP), plus two
+      "Replicated Projectile ... Modifier" rows (40-60% magic, 28-42%
+      physical) whose unit is "% of the original damage" of an enemy
+      projectile, not a damage amount.
     * Game binary (data/bin/characters/mel.bin.json,
-      Characters/Mel/Spells/MelWAbility/MelW): mSpellCalculations holds
-      exactly two nodes — ``DamagePercent`` (BaseDamagePercent, ranks
-      1-5 == 0.40/0.45/0.50/0.55/0.60, + 0.0005 per AP, with
-      ``mDisplayAsPercent`` true) and ``ShieldAmount`` (BaseShieldAmount
-      80-200 + 0.7 AP). There is no damage node; the percent node has
-      nothing to multiply until an enemy projectile exists, and
-      ``PhysDamageMod`` 0.30 is the 70%-before-conversion step the wiki
-      prose describes (0.7 x 40% == the cached 28%).
-    * Atoms (data/atoms/mel.atoms.json): the three MelW atoms are
-      ``crowd-control-mobility.cc-immunity``, ``heal-shield.shield`` and
-      ``interaction.projectile-destruction``. No ``damage.*`` atom is
-      emitted for MelW at all (contrast MelQ/MelE/MelR, which each carry
-      ``damage.damage-instance``).
+      Characters/Mel/Spells/MelWAbility/MelW): mSpellCalculations holds only
+      ``DamagePercent`` (0.40/0.45/0.50/0.55/0.60, + 0.0005 per AP) and
+      ``ShieldAmount`` (80-200 + 0.7 AP).  ``PhysDamageMod`` 0.30 is the
+      conversion step behind the cached 28% (0.7 x 40%).
+    * Atoms (data/atoms/mel.atoms.json): MelW emits ``cc-immunity``,
+      ``shield`` and ``projectile-destruction``, and no ``damage.*`` atom.
 
-    The multiplicand is structurally absent, not merely unimplemented:
-    this calculator models one attacker against a target that never
-    casts, so no enemy projectile can exist for any build, and no
-    spell-reflect kernel would change that without a target kit. Pricing
-    the modifier as flat damage (the E5-2 bug) invented damage.
+    The multiplicand is structurally absent: this calculator models one
+    attacker against a target that never casts, so no enemy projectile can
+    exist for any build.
     """
     ability = ctx.ability("W", 0)
     if ability is None:

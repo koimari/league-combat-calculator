@@ -88,10 +88,8 @@ _VOIDLING_ATTACK_ATTR = "Magic Damage"
 
 def _voidling_attack_speed(level: int) -> float:
     """One Voidling's attacks per second at champion level (wiki pets).
-
-    Relative growth reuses the canonical ``stats.growth_multiplier`` so the
-    level 1-20 contract is enforced in one place (issue #164).
-    """
+    Relative growth reuses ``stats.growth_multiplier``, so one place holds
+    the level 1-20 contract."""
     return _VOIDLING_AS_BASE * (
         1.0 + _VOIDLING_AS_GROWTH * (level - 1) * growth_multiplier(level)
     )

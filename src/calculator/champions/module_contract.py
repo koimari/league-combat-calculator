@@ -51,13 +51,9 @@ _RESTATED_FACTS = ("REVIEW_STATUS", "PACKET_SPEC")
 
 
 def default_coverage(slots: dict[str, Any]) -> dict[str, str]:
-    """The five-slot coverage a module's ``SLOTS`` map implies.
-
-    A slot the module emits is ``modeled``; one it does not is
-    ``out_of_scope``.  A module whose emitted slots include a declared
-    zero-damage or partial slot states that itself with ``MODULE_COVERAGE``,
-    as does one whose unemitted slot is priced through a
-    ``COVERAGE_CHANNELS`` channel.
+    """The five-slot coverage ``SLOTS`` implies: an emitted slot is
+    ``modeled``, an unemitted one ``out_of_scope``.  Any other reading is
+    the module's own, stated through ``MODULE_COVERAGE``.
     """
     return {
         slot: ("modeled" if slot in slots else "out_of_scope")
@@ -91,19 +87,10 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
 
 
 def _present(carriers: tuple[tuple[str, Any, str], ...]) -> list[tuple[str, Any]]:
-    """The carriers that hold something, as ``(label, value)`` rows.
-
-    A packet champion carries its declarations on the artifacts
-    ``build_packet_module`` compiled as well as on the module itself, so
-    one fact can have three carriers.  A chain of ``getattr`` defaults is
-    the wrong way to read them: Python evaluates a default *eagerly*, so a
-    carrier that is present but empty wins over a non-empty one further
-    down the chain and the declaration is discarded with no error — the
-    silent shadowing this contract exists to kill.  So the carriers are
-    surveyed instead: an empty carrier declares nothing and shadows
-    nothing, and :func:`_agreeing` stops the import when two carriers that
-    both declare something disagree, rather than one quietly winning.
-    """
+    """The carriers that hold something, as ``(label, value)`` rows.  One fact
+    can have three carriers, and surveying them beats a ``getattr`` default
+    chain, whose eager default lets a present-but-empty carrier silently
+    discard a non-empty one further down."""
     return [
         (label, getattr(carrier, attribute))
         for label, carrier, attribute in carriers
@@ -231,20 +218,13 @@ def _cast_dependencies(
 ) -> tuple[CastDependency, ...]:
     """The module's declared ordering prerequisites, validated at import.
 
-    Both validators run against *this module's own* slot surface, never a
-    global slot list: a synthetic key like Syndra's ``Q2`` is legal
-    because the module declares it.  ``CAST_ORDER`` is validated by the
-    same gate (P5-d) rather than by the bare ``getattr`` that reads it at
-    runtime, so a module declaring an order contradicting a dependency it
-    also declares fails at import instead of surprising later.
-
-    Every check is gated on the module declaring something (D-85): a
-    champion that declares no dependency reaches no new failure mode.
-
-    Raises:
-        ChampionModuleContractError: The declaration is malformed or the
-            carriers disagree.
-        CastDependencyError: One of the typed import-time failures.
+    Both validators run against this module's own slot surface, never a
+    global slot list, so a synthetic key like Syndra's ``Q2`` is legal
+    because the module declares it.  ``CAST_ORDER`` goes through the same
+    gate, so an order contradicting a dependency the module also declares
+    fails at import.  Every check is gated on the module declaring
+    something, so a champion that declares no dependency reaches no new
+    failure mode.
     """
     dependencies = _declared_cast_dependencies(module, parser, slots)
     if not dependencies:
