@@ -26,7 +26,7 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 | # | Decision | Why |
 |---|---|---|
 | D1 | The compiled path (`program/`, `add_engine_result`) is the survivor; `_pair_packet` + `add_packet` are retired. | `compile.py:852` already documents `add_engine_result` as equivalent-minus-enrichment; the receipt's enrichment becomes a view of compiled actions, not a second compiler. |
-| D2 | Interpreters become one `(family, lane, fields_fn)` table. | 35 classes whose Pair/Walk bodies differ by a lane constant; the lane set is restated in 4 places. |
+| D2 | Interpreters become one `(family, lane, fields_fn)` table. | 33 classes whose Pair/Walk bodies differ by a lane constant; the lane set is restated in 4 places. |
 | D3 | Rule 5 applies to every cached-data read: a `.get(key, literal)` on wiki/cache data either becomes a typed accessor that raises naming item+key, or is proven unreachable and deleted. | `item_effects.py:4567` is the exact shape that hid the 3× Statikk Shiv overstatement. |
 | D4 | `trigger_stream.CAPABILITIES` is the only item→stream declaration; hand-kept item name sets become projections of it or are deleted. | `architecture.md:30` already claims this; the tree has two survivors. |
 | D5 | `MODULE_CC` is the one CC declaration; parts-level `cc_kind` stamps in modules are moved into it and the contract refuses the parts-level form. | 164/177 declare; 6 stamp parts directly; 3 declare nothing. |
