@@ -1254,8 +1254,8 @@ def test_frontend_round_trips_all_backend_champion_options():
         '$("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";'
         in source
     )
-    assert 'data-ability-hits="${ability.slot}"' in source
-    assert 'data-ability-variant="${ability.slot}"' in source
+    assert 'data-ability-rank="${slot}"' in source
+    assert 'data-ability-variant="${slot}"' in source
     assert "function abilityBindsChampionOption(key)" in source
     assert "!abilityBindsChampionOption(option.key)" in source
 
@@ -1963,7 +1963,8 @@ def test_frontend_exposes_calculated_uptime_mode_and_policy_receipt():
 
     assert 'aaUptimeMode: "calculated"' in source
     assert "payload.auto_attack_uptime_mode = state.fight.aaUptimeMode" in source
-    assert "rotations: state.fight.rotations" in source
+    assert "rotations: 1," in source
+    assert 'state.fight.autosOnly\n    ? "auto_only"' in source
     assert "auto_attack_schedule" in source
     assert "aResult?.auto_attack_policy" in source
     assert 'id="uptimeModeToggle"' in template

@@ -302,7 +302,12 @@ def test_practice_target_is_the_passive_dummy_with_exact_stat_inputs():
 
 def test_ability_variant_buttons_write_the_declared_backend_option():
     source = _source()
-    assert 'data-ability-variant="${ability.slot}"' in source
+    assert 'data-ability-variant="${slot}"' in source
+    # A Variant row renders only when the slot has a bound module option.
+    assert (
+        'const bound = ability.variants?.length > 1 && abilityOptionBinding(slot, "ability_variants");'
+        in source
+    )
     assert (
         'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
         in source
@@ -562,8 +567,7 @@ def test_manual_package_bindings_are_null_safe():
 def test_range_sliders_have_accessible_names():
     soup = _soup()
     for slider_id, label in (
-        ("rotationRange", "Rotations"),
-        ("durationRange", "Window per rotation"),
+        ("durationRange", "Fight length"),
         ("uptimeRange", "Auto attack uptime percent"),
     ):
         node = soup.select_one(f"#{slider_id}")

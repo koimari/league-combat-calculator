@@ -174,6 +174,7 @@ COLLISION_ALLOWLIST: tuple[Allowance, ...] = tuple(
         "phase-3-behavior-rules.md",
         "phase-4-program-engine.md",
         "phase-5-cast-dependency.md",
+        "2026-08-20-ui-audit-and-click-pass.md",
     )
 ) + (
     Allowance(

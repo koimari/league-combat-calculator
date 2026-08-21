@@ -123,7 +123,6 @@ from src.calculator.pipeline import (
     DEFAULT_FIGHT_MODE,
     DEFAULT_TARGET,
     ONE_ROTATION_DURATION,
-    MAX_ROTATIONS,
     PUBLIC_INPUT_LIMITS,
     rank_allocation_contract,
 )
@@ -1220,7 +1219,6 @@ def api_config():
             },
             "capabilities": public_capability_contract(
                 input_limits=PUBLIC_INPUT_LIMITS,
-                max_rotations=MAX_ROTATIONS,
                 champion_option_count=len(champion_options_meta_map()),
                 item_option_count=len(item_input_options_meta()),
             ),

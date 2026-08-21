@@ -118,7 +118,7 @@ const state = {
   },
   targets: [],
   allies: [],
-  fight: { rotations: 1, duration: 10, aaUptime: 0, aaUptimeMode: "calculated", enemiesAttack: true },
+  fight: { duration: 10, autosOnly: false, aaUptime: 0, aaUptimeMode: "calculated", enemiesAttack: true },
   optimizer: { running: false, summary: null, scope: null, rosterErrors: {}, availableGold: 0 },
 };
 
@@ -566,10 +566,12 @@ function championOptionCapability(kind, championName) {
 
 // One ability control bound to one sourced module option key.
 const SLOT_OPTION_BINDINGS = {
-  "P:ability_casts": "passive_procs",
-  "E:ability_hits": "mines_hit",
   "R:ability_variants": "r_sweet_spot",
 };
+
+// Count options a module declares by a fixed name, and the slot they belong
+// to; every other option finds its slot by the name it carries (optionSlot).
+const SLOT_COUNT_OPTIONS = { passive_procs: "P", mines_hit: "E" };
 
 // Champion options the Variant buttons write, mapped to the variant index
 // that means `true`.  The backend types these as booleans, so the payload
@@ -704,8 +706,6 @@ function resetAbilityInputs() {
   });
   state.attacker.abilityInputs = Object.fromEntries(activeAbilityKit().map((ability) => [ability.slot, {
     rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
-    casts: 1,
-    hits: 1,
     variant: defaultFormVariantIndex(ability.slot),
   }]));
 }
@@ -735,7 +735,65 @@ function syncAbilityInputsToLevel() {
 }
 
 function abilityInput(slot) {
-  return state.attacker.abilityInputs[slot] || { rank: 0, casts: 0, hits: 1, variant: 0 };
+  return state.attacker.abilityInputs[slot] || { rank: 0, variant: 0 };
+}
+
+/** The highest rank a slot may hold at a level: R at 6/11/16, basics every other level. */
+function rankCapForLevel(slot, level) {
+  const lv = Number(level) || 1;
+  return slot === "R" ? (lv >= 16 ? 3 : lv >= 11 ? 2 : lv >= 6 ? 1 : 0) : Math.min(5, Math.floor((lv + 1) / 2));
+}
+
+/** Skill points the main champion has spent across Q/W/E/R. */
+function spentRankPoints() {
+  return ["Q", "W", "E", "R"].reduce((sum, slot) => sum + (Number(abilityInput(slot).rank) || 0), 0);
+}
+
+/**
+ * A level slider with the breakpoints that matter (1, 6, 11, 16, 18 and the
+ * role cap when it is higher). One component for the main champion and every
+ * roster card; the ± stepper beside it stays for single steps.
+ */
+function levelMarksHtml(path, level, cap, capabilityAttrs = "") {
+  const marks = [1, 6, 11, 16, 18, cap].filter((mark, index, all) => mark <= cap && all.indexOf(mark) === index);
+  return marks.map((mark) =>
+    `<button type="button" ${capabilityAttrs} data-level-set="${path}" data-value="${mark}" class="${Number(level) === mark ? "is-on" : ""}" aria-label="Set level ${mark}">${mark}</button>`).join("");
+}
+
+function levelQuickHtml(path, level, cap, capabilityAttrs = "") {
+  return `<input type="range" class="level-range" min="1" max="${cap}" step="1" value="${Number(level) || 1}" ${capabilityAttrs} data-level-range="${path}" aria-label="Level slider" /><div class="level-marks">${levelMarksHtml(path, level, cap, capabilityAttrs)}</div>`;
+}
+
+/** Set one participant's level: clamp, re-derive its ability ranks, recalc. */
+function setParticipantLevel(levelPath, value) {
+  const rosterMatch = levelPath.match(/^(targets|allies)\.(\d+)\.level$/);
+  const rosterLoadout = rosterMatch ? state[rosterMatch[1]]?.[Number(rosterMatch[2])] : null;
+  const cap = levelPath === "attacker.level"
+    ? attackerLevelCap()
+    : roleLevelCap(rosterLoadout?.role, Boolean(rosterLoadout?.roleQuestComplete), rosterLoadout?.level);
+  setPath(levelPath, Math.max(1, Math.min(cap, Number(value) || 1)));
+  if (levelPath === "attacker.level") syncAbilityInputsToLevel();
+  else if (rosterLoadout) rosterLoadout.abilityRanks = defaultAbilityRanks(rosterLoadout);
+  invalidateOptimization();
+}
+
+/** A fresh roster participant, at the main champion's level. */
+function newRosterLoadout(kind) {
+  const loadout = {
+    champion: null,
+    level: Math.max(1, Math.min(18, Number(state.attacker.level) || 1)),
+    role: "",
+    roleQuestComplete: false,
+    items: [0, 0, 0, 0, 0, 0],
+    itemStacks: [0, 0, 0, 0, 0, 0],
+    itemOptions: [{}, {}, {}, {}, {}, {}],
+    boots: 0,
+    includeBoots: true,
+    abilityRanks: {},
+    championOptions: {},
+  };
+  if (kind === "ally") loadout.allyEffectsEnabled = false;
+  return loadout;
 }
 
 function championImage(name) {
@@ -1446,37 +1504,73 @@ function stackControl(path, id, compact = false) {
 }
 
 
+/**
+ * The ability card a champion option renders on, or null for the shared
+ * Scenario options block: a declared count option (passive procs), the
+ * option a slot's Variant control writes, or an option whose key or label
+ * names a slot ("Q Sweetspot hits", "q_sweet_spot", "passive_stacks").
+ */
+function optionSlot(option) {
+  const kit = activeAbilityKit();
+  const has = (slot) => kit.some((ability) => ability.slot === slot);
+  const key = String(option?.key || "");
+  if (SLOT_COUNT_OPTIONS[key] && has(SLOT_COUNT_OPTIONS[key])) return SLOT_COUNT_OPTIONS[key];
+  const variantSlot = kit.find((ability) =>
+    ability.variants?.length > 1 && abilityOptionBinding(ability.slot, "ability_variants") === key);
+  if (variantSlot) return variantSlot.slot;
+  const byLabel = String(option?.label || "").match(/^([PQWER])\b/);
+  if (byLabel && has(byLabel[1])) return byLabel[1];
+  const byKey = key.match(/^(passive|[qwer])(?:_|$)/i);
+  if (byKey) {
+    const slot = byKey[1].length === 1 ? byKey[1].toUpperCase() : "P";
+    if (has(slot)) return slot;
+  }
+  return null;
+}
+
 function abilityBindsChampionOption(key) {
-  const abilities = activeAbilityKit();
-  if (key === "passive_procs") return abilities.some((ability) => ability.slot === "P");
-  if (key === "mines_hit") return abilities.some((ability) => ability.slot === "E" && Number(ability.maxHits) > 1);
-  return abilities.some((ability) =>
-    ability.variants?.length > 1
-      && abilityOptionBinding(ability.slot, "ability_variants") === key
-  );
+  const option = (engine.championOptions[state.attacker.champion]?.options || [])
+    .find((entry) => entry.key === key);
+  return Boolean(option && optionSlot(option));
+}
+
+/**
+ * One main-champion option in the ability card's own idiom — the same row
+ * grammar as Rank and Variant: a micro-label, then segmented buttons (a
+ * switch is On/Off, a select is one button per choice) or the −/n/+ stepper
+ * for a number. The card and the Scenario options block share it, so an
+ * option reads the same wherever it lands.
+ */
+function championOptionControlHtml(option, slot = "") {
+  const capability = championOptionCapability("main", state.attacker.champion);
+  const optionAttributes = capabilityDescriptorAttributes("champion_options", capability);
+  const value = state.attacker.championOptions[option.key] ?? option.default;
+  const key = escapeHtml(option.key);
+  // On its own card the slot letter is already the heading.
+  const rawLabel = String(option.label || option.key);
+  const label = escapeHtml(slot ? rawLabel.replace(new RegExp(`^${slot}\\s+`), "") : rawLabel);
+  const segment = (choiceValue, choiceLabel, on) =>
+    `<button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-value="${escapeHtml(choiceValue)}" class="${on ? "active" : ""}" aria-pressed="${on}">${escapeHtml(choiceLabel)}</button>`;
+  if (option.type === "bool") {
+    return `<span class="ability-variants ability-option"><small>${label}</small>${segment("1", "On", Boolean(value))}${segment("0", "Off", !value)}</span>`;
+  }
+  if (option.type === "select") {
+    const choices = (option.choices || []).map((choice) =>
+      segment(choice.value, choice.label || choice.value, String(value) === String(choice.value))).join("");
+    return `<span class="ability-variants ability-option"><small>${label}</small>${choices}</span>`;
+  }
+  const step = Number(option.step ?? 1) || 1;
+  const number = Number(value) || 0;
+  const atMin = option.min != null && number <= Number(option.min);
+  const atMax = option.max != null && number >= Number(option.max);
+  return `<span class="ability-rank ability-option"><small>${label}</small><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${-step}" ${atMin ? "disabled" : ""} aria-label="Decrease ${label}">−</button><output>${escapeHtml(number)}${option.max != null ? `<i>/${escapeHtml(option.max)}</i>` : ""}</output><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${step}" ${atMax ? "disabled" : ""} aria-label="Increase ${label}">+</button></span>`;
 }
 
 function renderChampionOptions() {
-  const capability = championOptionCapability("main", state.attacker.champion);
-  const optionAttributes = capabilityDescriptorAttributes("champion_options", capability);
   const definitions = (engine.championOptions[state.attacker.champion]?.options || [])
     .filter((option) => !abilityBindsChampionOption(option.key));
   if (!definitions.length) return "";
-  const controls = definitions.map((option) => {
-    const value = state.attacker.championOptions[option.key] ?? option.default;
-    const label = escapeHtml(option.label || option.key);
-    if (option.type === "bool") {
-      return `<label class="champion-option-toggle"><input type="checkbox" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" ${value ? "checked" : ""} /><span>${label}</span></label>`;
-    }
-    if (option.type === "select") {
-      const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
-      return `<label class="champion-option-field"><span>${label}</span><select ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="select">${choices}</select></label>`;
-    }
-    const step = option.step ?? (option.type === "int" ? 1 : "any");
-    const min = option.min == null ? "" : ` min="${option.min}"`;
-    const max = option.max == null ? "" : ` max="${option.max}"`;
-    return `<label class="champion-option-field"><span>${label}</span><input type="number" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="${escapeHtml(option.type)}" value="${escapeHtml(value)}" step="${step}"${min}${max} /></label>`;
-  }).join("");
+  const controls = definitions.map((option) => championOptionControlHtml(option)).join("");
   return `<div class="champion-options"><div class="champion-options-head"><strong>Scenario options</strong><span>These inputs are shared with the reviewed engine.</span></div><div class="champion-options-grid">${controls}</div></div>`;
 }
 
@@ -1653,11 +1747,6 @@ function engineChampionOptions() {
     ]),
   );
   definition.options.forEach((option) => {
-    if (option.key === "passive_procs" && abilityBindsChampionOption(option.key)) {
-      options[option.key] = abilityInput("P").casts;
-    } else if (option.key === "mines_hit" && abilityBindsChampionOption(option.key)) {
-      options[option.key] = abilityInput("E").hits;
-    }
     const variantAbility = activeAbilityKit().find((ability) =>
       ability.variants?.length > 1
         && abilityOptionBinding(ability.slot, "ability_variants") === option.key
@@ -1683,9 +1772,7 @@ function engineAbilityRanks() {
   activeAbilityKit().forEach((ability) => {
     if (ability.slot === "P") return;
     const input = abilityInput(ability.slot);
-    const levelCap = ability.slot === "R"
-      ? (state.attacker.level >= 16 ? 3 : state.attacker.level >= 11 ? 2 : state.attacker.level >= 6 ? 1 : 0)
-      : Math.min(5, Math.floor((state.attacker.level + 1) / 2));
+    const levelCap = rankCapForLevel(ability.slot, state.attacker.level);
     requested[ability.slot] = Math.max(0, Math.min(ability.maxRank, levelCap, Number(input.rank) || 0));
   });
   let remaining = Math.min(state.attacker.level, attackerLevelCap());
@@ -1762,10 +1849,12 @@ function engineFightPayload(side) {
     role: state.attacker.role || "",
     role_quest_complete: state.attacker.roleQuestComplete,
     include_actives: true,
-    include_crossover: state.attacker.comparisonEnabled || state.fight.rotations > 1,
+    include_crossover: state.attacker.comparisonEnabled,
     champion_options: engineChampionOptions(),
     ability_ranks: engineAbilityRanks(),
-    rotations: state.fight.rotations,
+    // The engine's rotation count is not a public control: the window is
+    // the one number a user sets (the Fight length slider).
+    rotations: 1,
   };
   payload.auto_attack_uptime_mode = state.fight.aaUptimeMode || "calculated";
   // The Enemy Hits constraint: unchecked, every enemy deals zero damage.
@@ -1774,9 +1863,12 @@ function engineFightPayload(side) {
   // is back up inside it (the engine's shared cast schedule). one_rotation —
   // a fixed 5s window where every ability casts exactly once — is only sent
   // for the few champions whose module certifies nothing else.
-  const timedMode = championSupportsTimedWindow(state.attacker.champion)
-    ? "time_based"
-    : "one_rotation";
+  // "Autos only" is the engine's own public mode: no casts, no summons.
+  const timedMode = state.fight.autosOnly
+    ? "auto_only"
+    : championSupportsTimedWindow(state.attacker.champion)
+      ? "time_based"
+      : "one_rotation";
   if (state.fight.aaUptimeMode === "calculated") {
     payload.fight_mode = timedMode;
     payload.fight_duration = configuredFightWindow();
@@ -1808,14 +1900,14 @@ function championSupportsTimedWindow(championName) {
 }
 
 /**
- * The fight window the constraints bar configures: rotations × seconds per
- * rotation, capped by the engine's fight-duration limit. This is the same
- * number engineFightPayload requests, so the fight timeline's x-axis and the
- * calculation window can never disagree.
+ * The fight window the constraints bar configures, inside the engine's
+ * fight-duration limits. This is the same number engineFightPayload
+ * requests, so the fight timeline's x-axis and the calculation window can
+ * never disagree.
  */
 function configuredFightWindow() {
-  const maxWindow = Number(engine.fightLimits.fight_duration?.[1] || 30);
-  return Math.min(maxWindow, Math.max(1, state.fight.duration * state.fight.rotations));
+  const [minWindow, maxWindow] = engine.fightLimits.fight_duration || [1, 30];
+  return Math.min(Number(maxWindow || 30), Math.max(Number(minWindow || 1), state.fight.duration));
 }
 
 
@@ -2023,7 +2115,7 @@ function renderExactBreakdown(aResult, bResult) {
   const allocationNote = targetAllocation && targetAllocation.secondary_packet_count ? `<p class="utility-target-allocation" role="status">Target allocation: ${targetAllocation.complete ? "complete" : "withheld"} · ${fmt(targetAllocation.allocated_secondary_packet_count || 0)}/${fmt(targetAllocation.secondary_packet_count || 0)} secondary packets use the authored roster-index policy.</p>` : "";
   const eventSection = eventRows || healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery · support</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
-  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${one(configuredFightWindow())}s window</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
 }
 
 
@@ -2191,8 +2283,8 @@ function renderChampionBrief() {
   if (chips) {
     chips.innerHTML = activeAbilityKit().map((ability) => {
       const input = abilityInput(ability.slot);
-      const rank = ability.slot === "P" ? "—" : String(Number(input.rank) || 0);
-      return `<div class="brief-chip"><b>${escapeHtml(ability.slot)}</b><span>${escapeHtml(rank)}·${Number(input.casts) || 0}</span></div>`;
+      const rank = ability.slot === "P" ? `Lv${state.attacker.level}` : String(Math.min(Number(input.rank) || 0, rankCapForLevel(ability.slot, state.attacker.level)));
+      return `<div class="brief-chip"><b>${escapeHtml(ability.slot)}</b><span>${escapeHtml(rank)}</span></div>`;
     }).join("");
   }
   const summary = $("championSummary");
@@ -2228,6 +2320,7 @@ function windowSummary() {
   const uptime = state.fight.aaUptimeMode === "calculated"
     ? "AA calc"
     : `${Math.round(state.fight.aaUptime * 100)}% AA`;
+  if (state.fight.autosOnly) return `${one(configuredFightWindow())}s · autos only · ${uptime}`;
   // A restricted module runs the engine's fixed one-cast rotation instead of
   // the timed window; say so where the window is read, not just in the body.
   if (state.attacker.champion && !championSupportsTimedWindow(state.attacker.champion)) {
@@ -2435,15 +2528,49 @@ function prototypeStats(stats) {
   return rows.map(([label, value, icon]) => `<div class="stat"><span><i class="stat-icon" aria-hidden="true">${escapeHtml(icon)}</i>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join("");
 }
 
+/** How many times the engine cast each slot in the displayed window. */
+function castCountsFromResult() {
+  const counts = new Map();
+  (engine.responses?.a?.cast_timeline || []).forEach((cast) => {
+    counts.set(cast.slot, (counts.get(cast.slot) || 0) + 1);
+  });
+  return counts;
+}
+
 function prototypeAbilityCards(champion) {
+  const casts = castCountsFromResult();
+  const level = state.attacker.level;
+  const spent = spentRankPoints();
+  const options = engine.championOptions[state.attacker.champion]?.options || [];
   return (champion?.abilities || []).map((ability) => {
     const input = abilityInput(ability.slot);
-    const rank = ability.slot === "P" ? 1 : input.rank;
-    const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
-    const hitControl = ability.maxHits ? `<span class="ability-casts ability-hits"><small>Hits</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="-1" ${input.hits <= 1 ? "disabled" : ""}>−</button><output>${input.hits}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="1" ${input.hits >= ability.maxHits ? "disabled" : ""}>+</button></span>` : "";
-    const variantControl = ability.variants?.length > 1 ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_variants")} data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
-    const castAttributes = `${abilityCapabilityAttributes(ability.slot, "ability_casts")} data-ability-casts="${ability.slot}"`;
-    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" ${castAttributes} data-delta="-1">−</button><output>${input.casts}</output><button type="button" ${castAttributes} data-delta="1">+</button></span>${hitControl}${variantControl}</article>`;
+    const slot = ability.slot;
+    let rankControl;
+    if (slot === "P") {
+      rankControl = `<span class="ability-rank"><small>Level scales</small><output>Lv ${level}</output></span>`;
+    } else {
+      const cap = Math.min(ability.maxRank, rankCapForLevel(slot, level));
+      const rank = Math.min(input.rank, cap);
+      const atCap = rank >= cap;
+      const noPoints = spent >= level;
+      const plusReason = atCap
+        ? (rank >= ability.maxRank ? "Max rank" : `Rank ${rank + 1} needs level ${slot === "R" ? [6, 11, 16][rank] : rank * 2 + 1}`)
+        : noPoints ? `No skill points left at level ${level}` : "";
+      rankControl = `<span class="ability-rank"><small>Rank</small><button type="button" ${abilityCapabilityAttributes(slot, "ability_ranks")} data-ability-rank="${slot}" data-delta="-1" ${rank <= 0 ? "disabled" : ""}>−</button><output>${rank}<i>/${cap}</i></output><button type="button" ${abilityCapabilityAttributes(slot, "ability_ranks")} data-ability-rank="${slot}" data-delta="1" ${plusReason ? `disabled title="${escapeHtml(plusReason)}"` : ""}>+</button></span>`;
+    }
+    const bound = ability.variants?.length > 1 && abilityOptionBinding(slot, "ability_variants");
+    const variantControl = bound
+      ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(slot, "ability_variants")} data-ability-variant="${slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>`
+      : "";
+    const optionControls = options
+      .filter((option) => optionSlot(option) === slot && !(bound && option.key === bound))
+      .map((option) => championOptionControlHtml(option, slot))
+      .join("");
+    const castCount = casts.get(slot);
+    const readout = slot !== "P" && engine.responses?.a
+      ? `<span class="ability-readout">${castCount ? `${castCount}× cast in ${one(Number(engine.responses.a.combat?.duration || configuredFightWindow()))}s` : "not cast in window"}</span>`
+      : "";
+    return `<article class="ability-card" data-ability-slot="${slot}"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong><b class="ability-key">${slot}</b> ${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}${readout}${variantControl}${optionControls}</article>`;
   }).join("");
 }
 
@@ -2626,6 +2753,16 @@ function renderPrototypeChampion() {
     button.dataset.capabilityField = "level";
   });
   $("levelOutput").textContent = state.attacker.level;
+  const levelRange = $("levelRange");
+  if (levelRange) {
+    levelRange.max = attackerLevelCap();
+    levelRange.value = state.attacker.level;
+    levelRange.disabled = levelCapability.supported === false;
+  }
+  const levelMarks = $("levelMarks");
+  if (levelMarks) {
+    levelMarks.innerHTML = levelMarksHtml("attacker.level", state.attacker.level, attackerLevelCap(), capabilityAttributes("main", "level"));
+  }
   const questCapability = capabilityFor("main", "role_quest_complete");
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
   $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
@@ -2679,7 +2816,7 @@ function renderPrototypeRoster(kind) {
     const effectToggle = kind === "allies"
       ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${effectsCapability} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
       : "";
-    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
+    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button>${levelQuickHtml(`${root}.${index}.level`, loadout.level, roleLevelCap(loadout.role, Boolean(loadout.roleQuestComplete), loadout.level), levelCapability)}</div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
   }).join("") || `<p class="roster-empty">${kind === "targets" ? "No enemies yet — the coupled timeline needs at least one." : "No allies in context."}</p>`;
   // The 2b mock shows a "…pushes your best fifth slot from X to Y" callout
   // here. No backend receipt produces that sentence today, and the renderer
@@ -2695,12 +2832,20 @@ function renderPrototypeBuilder() {
   $("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";
   renderPrototypeRoster("targets");
   renderPrototypeRoster("allies");
-  $("rotationOutput").textContent = state.fight.rotations;
-  $("rotationRange").value = state.fight.rotations;
-  const rotationCapability = scenarioCapabilityFor("rotations");
-  $("rotationRange").disabled = rotationCapability.supported === false;
-  $("rotationRange").title = capabilityTitle(rotationCapability);
-  $("rotationRange").dataset.capabilityField = "rotations";
+  const levelAll = $("rosterLevelAll");
+  if (levelAll) {
+    levelAll.hidden = ![...state.targets, ...state.allies].some((loadout) => loadout.champion && !isPracticeDummy(loadout));
+    const mainButton = $("rosterLevelMain");
+    if (mainButton) mainButton.textContent = `= main (Lv ${state.attacker.level})`;
+  }
+  const actionsCapability = scenarioCapabilityFor("actions");
+  document.querySelectorAll("[data-fight-mode]").forEach((button) => {
+    const selected = (button.dataset.fightMode === "autos") === Boolean(state.fight.autosOnly);
+    button.classList.toggle("is-on", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    button.disabled = actionsCapability.supported === false;
+    button.dataset.capabilityField = "actions";
+  });
   const durationRange = $("durationRange");
   const durationOutput = $("durationOutput");
   const durationCapability = scenarioCapabilityFor("window");
@@ -2762,25 +2907,39 @@ const TIMELINE_EVENT_LIMIT = 60;
  * The proportional tick keeps the at-a-glance sense of when it landed, and
  * data-event-index ties each lane to the matching ledger-table line.
  */
-function renderEventTimeline(combatEvents, duration, eventLabel) {
+function renderEventTimeline(combatEvents, duration, eventLabel, sourceLabel = (event) => event.source || "event", defeatedAt = null) {
   const timed = combatEvents
     .map((event, index) => ({ event, index, time: eventTime(event) }))
     .filter(({ time }) => time !== null);
   if (!timed.length) return `<p class="roster-empty">No participant event ledger returned.</p>`;
-  const shown = timed.slice(0, TIMELINE_EVENT_LIMIT);
+  // Once every enemy is down, the engine keeps scheduling swings that land
+  // for nothing. One lane says so instead of a column of "no damage".
+  const spent = defeatedAt == null
+    ? []
+    : timed.filter(({ event, time }) => time >= defeatedAt && !(Number(event.damage || 0) > 0));
+  const spentIndexes = new Set(spent.map(({ index }) => index));
+  const live = timed.filter(({ index }) => !spentIndexes.has(index));
+  const shown = live.slice(0, TIMELINE_EVENT_LIMIT);
   const lanes = shown.map(({ event, index, time }) => {
     const position = Math.min(100, Math.max(0, time / duration * 100));
     const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
     const damage = Number(event.damage || 0);
-    const value = damage > 0 ? `${fmt(damage)} damage` : event.skipped_reason || "no damage";
+    const value = damage > 0 ? `${fmt(damage)} damage` : String(event.skipped_reason || "no damage").replace(/_/g, " ");
     return `<li class="timeline-event" data-event-index="${index}">
       <span class="timeline-time">${one(time)}s</span>
-      <span class="timeline-what"><b>${escapeHtml(eventLabel(event.attacker))}</b> → ${escapeHtml(eventLabel(event.target))} · ${escapeHtml(event.source || "event")}${escapeHtml(precision)}</span>
+      <span class="timeline-what"><b>${escapeHtml(eventLabel(event.attacker))}</b> → ${escapeHtml(eventLabel(event.target))} · ${escapeHtml(sourceLabel(event))}${escapeHtml(precision)}</span>
       <b class="timeline-value">${escapeHtml(value)}</b>
       <span class="timeline-tick" style="--at:${position}%" aria-hidden="true"></span>
     </li>`;
-  }).join("");
-  const note = shown.length === combatEvents.length
+  }).join("") + (spent.length
+    ? `<li class="timeline-event is-collapsed">
+      <span class="timeline-time">${one(defeatedAt)}s</span>
+      <span class="timeline-what"><b>Every enemy is down</b> · ${spent.length} later ${plural(spent.length, "event")} landed on nobody</span>
+      <b class="timeline-value">no damage</b>
+      <span class="timeline-tick" style="--at:${Math.min(100, Math.max(0, defeatedAt / duration * 100))}%" aria-hidden="true"></span>
+    </li>`
+    : "");
+  const note = shown.length === live.length
     ? `${combatEvents.length} ordered ${plural(combatEvents.length, "event")}, oldest first`
     : `First ${shown.length} of ${combatEvents.length} ordered events — the full sequence is in the ledger below`;
   return `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div>
@@ -2892,13 +3051,136 @@ function renderDuelSide(side) {
     rows.push(duelRowHtml(state.attacker[`questBoot${side}`], questBootPath(side)));
   }
   const keystoneRow = `<button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="${escapeHtml(keystone.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>`;
+  const runeHead = `<div class="duel-side-head duel-rune-head"><span class="duel-side-kicker">Runes</span><span class="duel-side-note">any row opens the page</span></div>`;
   const invite = filled.length || keystone
     ? ""
     : `<p class="duel-empty">Build ${side} is empty<small>click any slot below to add an item</small></p>`;
   const foot = filled.length
     ? `<p class="duel-foot">${filled.length} ${plural(filled.length, "item")} · ${fmt(buildListPrice(side))}g list price</p>`
     : "";
-  host.innerHTML = `${head}${invite}${rows.join("")}${keystoneRow}${runePageRows(side)}${foot}`;
+  host.innerHTML = `${head}${invite}${rows.join("")}${runeHead}${keystoneRow}${runePageRows(side)}${foot}`;
+}
+
+// --- The rune page dialog -------------------------------------------------
+// One dialog for the whole page: keystone, the primary path's three rows,
+// two rows from one other path, three shards, and every rune option. The
+// per-row duel pickers stay for changing one rune; this is the one-open way
+// to set the page. The server's validate_rune_page remains the authority.
+let runePageSide = null;
+
+function runePaths() {
+  return [...new Set((engine.runes || []).map((rune) => rune.path).filter(Boolean))];
+}
+
+function secondaryPath(side) {
+  return (state.attacker[`minorRunes${side}`] || []).slice(3).map(getRune).find(Boolean)?.path || "";
+}
+
+function pickKeystone(side, name) {
+  const previous = getKeystone(state.attacker[`keystone${side}`]);
+  const next = getKeystone(name);
+  state.attacker[`keystone${side}`] = previous?.name === name ? "" : name;
+  const minors = [...(state.attacker[`minorRunes${side}`] || ["", "", "", "", ""])];
+  if (!next || previous?.path !== next.path) minors.fill("", 0, 3);
+  if (next && secondaryPath(side) === next.path) minors.fill("", 3, 5);
+  state.attacker[`minorRunes${side}`] = minors;
+}
+
+function pickMinorRune(side, name) {
+  const rune = getRune(name);
+  if (!rune) return;
+  const primary = getKeystone(state.attacker[`keystone${side}`])?.path || "";
+  const minors = [...(state.attacker[`minorRunes${side}`] || ["", "", "", "", ""])];
+  if (rune.path === primary) {
+    minors[rune.row - 1] = minors[rune.row - 1] === name ? "" : name;
+  } else {
+    // Two runes of one other path, different rows: a new path restarts the
+    // pair, a same-row pick replaces, a third pick drops the oldest.
+    let taken = minors.slice(3).map(getRune).filter(Boolean);
+    if (taken.some((entry) => entry.path !== rune.path)) taken = [];
+    if (taken.some((entry) => entry.name === name)) taken = taken.filter((entry) => entry.name !== name);
+    else taken = [...taken.filter((entry) => entry.row !== rune.row), rune].slice(-2);
+    minors[3] = taken[0]?.name || "";
+    minors[4] = taken[1]?.name || "";
+  }
+  state.attacker[`minorRunes${side}`] = minors;
+}
+
+function pickStatShard(side, row, name) {
+  const shards = [...(state.attacker[`statShards${side}`] || ["", "", ""])];
+  shards[row] = shards[row] === name ? "" : name;
+  state.attacker[`statShards${side}`] = shards;
+}
+
+function runePickButton(kind, side, rune, selected, row = "") {
+  const locked = rune.implemented === false;
+  return `<button type="button" class="rune-pick ${selected ? "is-on" : ""} ${locked ? "locked" : ""}" data-rune-pick="${kind}" data-rune-side="${side}" data-rune-name="${escapeHtml(rune.name)}" data-rune-row="${row}" ${locked ? 'disabled title="This rune is not modeled yet; its numbers would be estimates."' : ""} aria-pressed="${selected}">${rune.icon ? `<img src="${escapeHtml(rune.icon)}" alt="" loading="lazy" />` : ""}<span>${escapeHtml(rune.name)}</span></button>`;
+}
+
+function renderRunePage() {
+  const side = runePageSide;
+  const body = $("runePageBody");
+  if (!side || !body) return;
+  const runes = engine.runes || [];
+  const keystoneName = state.attacker[`keystone${side}`] || "";
+  const primary = getKeystone(keystoneName)?.path || "";
+  const minors = state.attacker[`minorRunes${side}`] || ["", "", "", "", ""];
+  const shards = state.attacker[`statShards${side}`] || ["", "", ""];
+  const secondary = secondaryPath(side);
+  const group = (title, note, inner, focus = "") => `<section class="rune-group" ${focus ? `data-rune-focus="${focus}"` : ""}><h3>${title}<small>${note}</small></h3>${inner}</section>`;
+  const pathRows = (path, rows, kind, focusPrefix = "") => rows.map((row) =>
+    `<div class="rune-row" ${focusPrefix ? `data-rune-focus="${focusPrefix}-${row}"` : ""}><b>Row ${row}</b>${runes.filter((rune) => rune.path === path && rune.row === row).map((rune) =>
+      runePickButton(kind, side, rune, minors.includes(rune.name))).join("")}</div>`).join("");
+  const keystones = runePaths().map((path) =>
+    `<div class="rune-row"><b>${escapeHtml(path)}</b>${runes.filter((rune) => rune.path === path && rune.row === 0).map((rune) =>
+      runePickButton("keystone", side, rune, rune.name === keystoneName)).join("")}</div>`).join("");
+  const primaryRows = primary
+    ? pathRows(primary, [1, 2, 3], "minor", "primary")
+    : `<p class="rune-note">Choose a keystone first — it sets the primary path.</p>`;
+  const secondaryRows = runePaths().filter((path) => path !== primary).map((path) =>
+    `<div class="rune-path ${secondary === path ? "is-on" : ""}"><b>${escapeHtml(path)}</b>${pathRows(path, [1, 2, 3], "minor")}</div>`).join("");
+  const shardRows = (engine.runeShards || []).map((row, index) =>
+    `<div class="rune-row" data-rune-focus="shard-${index + 1}"><b>${escapeHtml(row.name || `Row ${index + 1}`)}</b>${(row.options || []).map((option) =>
+      runePickButton("shard", side, { ...option, implemented: option.implemented !== false }, shards[index] === option.name, index)).join("")}</div>`).join("");
+  const chosen = [keystoneName, ...minors].filter(Boolean).length + shards.filter(Boolean).length;
+  $("runePageTitle").textContent = `Build ${side} runes`;
+  $("runePageKicker").textContent = `Rune page · ${chosen} of 9 chosen${primary ? ` · ${primary}${secondary ? ` + ${secondary}` : ""}` : ""}`;
+  body.innerHTML = group("Keystone", "sets the primary path", keystones, "keystone")
+    + group("Primary", primary ? `one rune per row of ${escapeHtml(primary)}` : "", primaryRows, "primary")
+    + group("Secondary", "two runes from one other path, different rows", secondaryRows, "secondary")
+    + group("Shards", "one per row", shardRows)
+    + runeOptionControls(side);
+}
+
+/** The dialog section a duel rune row points at: keystone, primary-n, secondary, shard-n. */
+function runeFocusFor(type, path) {
+  const index = Number(path.split(".").pop());
+  if (type === "keystone") return "keystone";
+  if (type === "stat-shard") return `shard-${index + 1}`;
+  return index < 3 ? `primary-${index + 1}` : "secondary";
+}
+
+function openRunePage(side, focus = "") {
+  runePageSide = side;
+  if (side === "B") state.attacker.comparisonEnabled = true;
+  renderRunePage();
+  const dialog = $("runePage");
+  dialog.showModal();
+  // A row that does not exist yet (primary rows before a keystone) lands on
+  // its section instead.
+  const target = focus
+    ? dialog.querySelector(`[data-rune-focus="${focus}"]`) || dialog.querySelector(`[data-rune-focus="${focus.split("-")[0]}"]`)
+    : null;
+  if (target) {
+    target.scrollIntoView({ block: "start" });
+    target.classList.add("is-focus");
+    target.querySelector("button:not([disabled])")?.focus({ preventScroll: true });
+  }
+}
+
+function closeRunePage() {
+  $("runePage").close();
+  runePageSide = null;
 }
 
 /** Copy one side's whole rune page onto the other. */
@@ -3001,6 +3283,54 @@ function enemyParticipants(result) {
   return enemyRows(result).map(({ row }) => row);
 }
 
+/**
+ * A ledger event's source as a person reads it: the ability's name for a
+ * slot key, the item for an on-hit key, the keystone for a rune key, plain
+ * words for the engine's snake_case channels. One home for every key.
+ */
+function eventSourceLabel(event, result) {
+  const source = String(event?.source || "");
+  if (!source) return "event";
+  if (source === "auto_attacks") return "Auto attack";
+  if (source === "on_hit_ability_passive") return "On-hit passive";
+  const slot = source.match(/^([PQWER])(\d*)$/);
+  if (slot) {
+    const participant = (result?.combat?.participants || []).find((row) => row.participant_id === event.attacker);
+    const champion = participant?.champion || (event.attacker === "main" ? state.attacker.champion : "");
+    const ability = (getChampion(champion)?.abilities || []).find((entry) => entry.slot === slot[1]);
+    return ability ? `${slot[1]}${slot[2]} · ${ability.name}` : source;
+  }
+  const onHit = source.match(/^on_hit_(.+)$/);
+  if (onHit) return `${onHit[1]} on-hit`;
+  const proc = source.match(/^proc_(.+)$/);
+  if (proc) return `${proc[1]} proc`;
+  const rune = source.match(/^rune_(.+)$/);
+  if (rune) return `${rune[1]} (rune)`;
+  const keystone = source.match(/^keystone_(.+?)( amp)?$/);
+  if (keystone) return keystone[2] ? `${keystone[1]} amp` : keystone[1];
+  const words = source.replace(/_/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * When every enemy died inside the window: the moment the last one fell,
+ * the attacker's raw output and the overkill the headline leaves out. Null
+ * while any enemy is standing.
+ */
+function enemyDefeat(result) {
+  const enemies = enemyParticipants(result);
+  if (!enemies.length || !enemies.every((row) => row.survival?.survived_window === false)) return null;
+  const times = enemies
+    .map((row) => Number(row.survival?.first_death_time ?? row.survival?.death_time))
+    .filter(Number.isFinite);
+  return {
+    count: enemies.length,
+    time: times.length ? Math.max(...times) : null,
+    raw: Number(result?.total_damage || 0),
+    overkill: Number(result?.overkill || 0),
+  };
+}
+
 function enemyEffectiveHealth(result) {
   const enemies = enemyParticipants(result);
   if (enemies.length) {
@@ -3094,10 +3424,16 @@ function castMarkIcons(slots) {
  * stay readable even when their timestamps interleave.
  */
 function chartMarksHtml(result, side, duration) {
-  return castMarkers(result).map((mark) =>
-    `<span class="chart-mark mark-${side}${mark.ultimate ? " is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%">
-      <i></i><span class="mark-icons">${castMarkIcons(mark.slots)}</span>${side === "a" ? `<span class="mark-time">${one(mark.time)}s</span>` : ""}
-    </span>`).join("");
+  // A timestamp label needs ~4% of the axis; closer marks keep their tick
+  // and icons and drop the label rather than print over the last one.
+  let lastLabelled = -Infinity;
+  return castMarkers(result).map((mark) => {
+    const labelled = side === "a" && (mark.time - lastLabelled) / duration >= 0.045;
+    if (labelled) lastLabelled = mark.time;
+    return `<span class="chart-mark mark-${side}${mark.ultimate ? " is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%">
+      <i></i><span class="mark-icons">${castMarkIcons(mark.slots)}</span>${labelled ? `<span class="mark-time">${one(mark.time)}s</span>` : ""}
+    </span>`;
+  }).join("");
 }
 
 /** Round an axis top up to a readable 1/2/5-family value. */
@@ -3391,6 +3727,20 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   };
   $("verdictSubA").textContent = sideSummary("A");
   $("verdictSubB").textContent = duelling ? sideSummary("B") : "";
+  // The headline is damage dealt before the enemy dies; once it dies the
+  // number is the enemy's health, not the build's output. Say so where the
+  // number is read, with the raw output the cap hides.
+  const defeatA = enemyDefeat(aResult);
+  const defeatB = bResult ? enemyDefeat(bResult) : null;
+  const defeatLine = (defeat) => defeat
+    ? `${defeat.count > 1 ? "ALL ENEMIES" : "ENEMY"} DOWN${defeat.time == null ? "" : ` AT ${one(defeat.time)} S`} · ${fmt(defeat.raw)} RAW${defeat.overkill > 0 ? ` · ${fmt(defeat.overkill)} OVERKILL` : ""}`
+    : "";
+  [["verdictNoteA", defeatA], ["verdictNoteB", duelling ? defeatB : null]].forEach(([id, defeat]) => {
+    const note = $(id);
+    if (!note) return;
+    note.textContent = defeatLine(defeat);
+    note.hidden = !defeat;
+  });
   document.querySelector(".verdict")?.classList.toggle("is-solo", !duelling);
 
   $("resultSummary").textContent = !aResult
@@ -3400,7 +3750,9 @@ function renderPrototypeResult(aResult = null, bResult = null) {
         ? "Build A is the selected build for this scenario. Enable Build B to compare a second build."
         : `${objective.label} is unavailable until the reviewed event ledger supplies that outcome.`
       : outcome.winner === "tie"
-        ? `Build A and Build B are level on ${objective.label.toLowerCase()} against this roster.`
+        ? (defeatA && defeatB && ["overall", "damage"].includes(state.ui.objective)
+          ? `Both builds kill every enemy inside the window, so damage dealt is capped at their health — compare Kill time, or raise the enemy level.`
+          : `Build A and Build B are level on ${objective.label.toLowerCase()} against this roster.`)
         : outcome.winner
           ? `${outcome.winner === "A" ? "Build A" : "Build B"} carries the strongest ${objective.label.toLowerCase()} package against this roster.`
           : "The selected objective is unavailable for this comparison.";
@@ -3472,29 +3824,30 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const supportEvents = Array.isArray(aResult?.combat?.support_events) ? aResult.combat.support_events : [];
   const duration = Math.max(1, Number(aResult?.combat?.duration || state.fight.duration));
   const eventLabel = (participantId) => participantLabels.get(participantId) || participantId || "Participant";
-  $("timeline").innerHTML = renderEventTimeline(combatEvents, duration, eventLabel);
-  // data-event-index matches the timeline lane above, so a row and its lane
-  // are traceably the same event (#155).
-  const eventRows = combatEvents.slice(0, 24).map((event, index) => {
-    const time = eventTime(event);
-    const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
-    const value = Number(event.damage || 0);
-    const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
-    const source = `${eventLabel(event.attacker)} → ${eventLabel(event.target)} · ${event.source || "event"}${precision}`;
-    return `<div class="ledger-line" data-event-index="${index}"><span>${escapeHtml(timeLabel)} · ${escapeHtml(source)}</span><strong>${value > 0 ? `${fmt(value)} damage` : escapeHtml(event.skipped_reason || "No damage")}</strong></div>`;
-  });
-  const healingRows = healingEvents.slice(0, 12).map((event) => {
+  const defeat = enemyDefeat(aResult);
+  $("timeline").innerHTML = renderEventTimeline(
+    combatEvents,
+    duration,
+    eventLabel,
+    (event) => eventSourceLabel(event, aResult),
+    defeat?.time ?? null,
+  );
+  // A heal that healed nothing is noise in a receipt list; count them instead.
+  const healingShown = healingEvents.filter((event) => Number(event.applied_amount ?? event.amount ?? 0) > 0 || Number(event.temporary_health || 0) > 0);
+  const healingSkipped = healingEvents.length - healingShown.length;
+  const healingRows = healingShown.slice(0, 12).map((event) => {
     const time = eventTime(event);
     const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const temporaryHealth = Number(event.temporary_health || 0);
     const value = `${fmt(Number(event.applied_amount ?? event.amount ?? 0))} healing${temporaryHealth ? ` + ${fmt(temporaryHealth)} temporary health` : ""}`;
-    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} · ${escapeHtml(event.source || "healing")}</span><strong>${value}</strong></div>`;
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} · ${escapeHtml(eventSourceLabel(event, aResult))}</span><strong>${value}</strong></div>`;
   });
+  if (healingSkipped > 0) healingRows.push(`<div class="ledger-line"><span>Heals that restored nothing (full health or no trigger)</span><strong>${healingSkipped}</strong></div>`);
   const supportRows = supportEvents.slice(0, 12).map((event) => {
     const time = eventTime(event);
     const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const recipient = eventLabel(event.target || event.recipient);
-    const policy = event.target_policy || event.target_scope || "explicit recipient";
+    const policy = String(event.target_policy || event.target_scope || "explicit recipient").replace(/_/g, " ");
     const details = [
       Number.isFinite(Number(event.bonus_attack_speed_percent)) ? `${fmt(event.bonus_attack_speed_percent)}% AS` : "",
       Number.isFinite(Number(event.on_hit_magic_damage)) ? `${fmt(event.on_hit_magic_damage)} on-hit magic` : "",
@@ -3509,14 +3862,16 @@ function renderPrototypeResult(aResult = null, bResult = null) {
       Number.isFinite(Number(event.ward_uses)) && Number(event.ward_uses) ? `${fmt(event.ward_uses)} wards` : "",
       event.cleanse ? "cleanse" : "",
     ].filter(Boolean).join(" · ");
-    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
+    const kind = String(event.kind || "support").replace(/_/g, " ");
+    const amount = Number(event.applied_amount ?? event.amount ?? 0);
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(eventSourceLabel(event, aResult))}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${amount ? `${fmt(amount)} ` : ""}${escapeHtml(kind)} · ${escapeHtml(policy)}</strong></div>`;
   });
-  const overflow = combatEvents.length > 24 || healingEvents.length > 12 || supportEvents.length > 12
-    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${combatEvents.length > 24 ? combatEvents.length - 24 : 0} damage · ${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
+  const overflow = healingShown.length > 12 || supportEvents.length > 12
+    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${healingShown.length > 12 ? healingShown.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
     : "";
   const enemyEhp = enemyEffectiveHealth(aResult);
   const overkill = aTotal == null ? 0 : enemyOverkill(aResult, aTotal);
-  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${eventRows.join("")}${healingRows.join("")}${supportRows.join("")}${overflow}`;
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${defeat ? `<div class="ledger-line"><span>Enemy defeated</span><strong>${defeat.time == null ? "inside the window" : `${one(defeat.time)}s`}${defeat.overkill > 0 ? ` · ${fmt(defeat.overkill)} overkill` : ""}</strong></div>` : ""}${healingRows.join("")}${supportRows.join("")}${overflow}`;
   // P4: the per-ability damage table carries a certainty chip next to every
   // sourced number. It re-renders on every result so chips track the loaded
   // /api/certainty contract.
@@ -3542,24 +3897,53 @@ function render() {
 /** What each picker calls its catalogue, and what it asks for. */
 const PICKER_KIND = {
   champion: "Champion roster",
-  keystone: "Rune keystones",
-  "minor-rune": "Minor runes",
-  "stat-shard": "Stat shards",
   item: "Item catalogue",
 };
 const PICKER_TITLE = {
   champion: "Choose a champion",
-  keystone: "Choose a keystone",
-  "minor-rune": "Choose a rune",
-  "stat-shard": "Choose a shard",
   item: "Choose an item",
 };
-/** The picker types whose entries are runes: named, iconed, path-scoped. */
+/** The picker types that are rune rows; they open the rune page, not this dialog. */
 const RUNE_PICKERS = new Set(["keystone", "minor-rune", "stat-shard"]);
+
+/**
+ * The next empty ordinary slot after ``path`` in the same build, or null.
+ * Picking an item then continues there, so a six-item build is one open and
+ * six picks rather than six opens.
+ */
+function nextEmptyItemPath(path) {
+  const main = path.match(/^(attacker\.build[AB])\.(\d+)$/);
+  const roster = path.match(/^((targets|allies)\.\d+\.items)\.(\d+)$/);
+  if (!main && !roster) return null;
+  const prefix = main ? main[1] : roster[1];
+  const index = Number(main ? main[2] : roster[3]);
+  const slots = pathValue(prefix) || [];
+  const count = main
+    ? ordinarySlotCount(main[1].endsWith("B") ? "B" : "A")
+    : rosterOrdinarySlotCount(pathValue(roster[1].replace(/\.items$/, "")));
+  for (let next = index + 1; next < Math.min(count, slots.length); next += 1) {
+    if (!slots[next]) return `${prefix}.${next}`;
+  }
+  return null;
+}
+
+function pickerSlotLabel(path) {
+  const main = path.match(/^attacker\.build([AB])\.(\d+)$/);
+  const roster = path.match(/^(targets|allies)\.(\d+)\.items\.(\d+)$/);
+  if (main) return `Build ${main[1]} · slot ${Number(main[2]) + 1} of ${ordinarySlotCount(main[1])}`;
+  if (roster) {
+    const loadout = state[roster[1]]?.[Number(roster[2])];
+    return `${loadout?.champion || (roster[1] === "targets" ? "Enemy" : "Ally")} · slot ${Number(roster[3]) + 1} of ${rosterOrdinarySlotCount(loadout)}`;
+  }
+  return "";
+}
 
 function openPicker(type, path) {
   pickerContext = { type, path, side: pickerSide(path) };
-  $("pickerKind").textContent = PICKER_KIND[type] || "Item catalogue";
+  const slotLabel = type === "item" ? pickerSlotLabel(path) : "";
+  $("pickerKind").textContent = slotLabel
+    ? `${slotLabel}${nextEmptyItemPath(path) ? " · picking continues to the next empty slot · Esc to stop" : ""}`
+    : (PICKER_KIND[type] || "Item catalogue");
   $("pickerTitle").textContent = PICKER_TITLE[type] || "Choose an item";
   $("pickerSearch").value = "";
   renderPicker("");
@@ -3580,22 +3964,20 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   };
 
   if (includeEmpty) {
-    const isRune = RUNE_PICKERS.has(pickerContext.type);
     const button = document.createElement("button");
     const icon = document.createElement("span");
     button.type = "button";
-    button.className = `picker-option ${(isRune ? !selected : Number(selected) === 0) ? "selected" : ""}`;
-    button.dataset.pickerValue = isRune ? "" : "0";
+    button.className = `picker-option ${Number(selected) === 0 ? "selected" : ""}`;
+    button.dataset.pickerValue = "0";
     icon.className = "empty-icon";
     icon.textContent = "×";
-    button.append(icon, makeText(isRune ? "Empty rune slot" : "Empty slot", isRune ? "Remove this rune" : "Remove item"));
+    button.append(icon, makeText("Empty slot", "Remove item"));
     fragment.append(button);
   }
 
   entries.forEach((entry) => {
-    const isRune = RUNE_PICKERS.has(pickerContext.type);
     const value = pickerContext.type === "item" ? entry.id : entry.name;
-    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : isRune ? (entry.icon || "") : itemImage(entry.id);
+    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : itemImage(entry.id);
     const targetItem = pickerContext.type === "item" && pickerContext.path.startsWith("targets.");
     const itemCoverage = pickerContext.type === "item"
       ? (targetItem ? entry.targetModelCoverage : entry.modelCoverage)
@@ -3610,20 +3992,16 @@ function createPickerContent(entries, selected, query, includeEmpty) {
     );
     const detail = pickerContext.type === "champion"
       ? `${entry.tags.join(" · ")} · ${entry.resource}`
-      : isRune
-        ? `${runeSlotLabel(entry)}${entry.implemented ? "" : " · not modeled yet"}`
-        : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
+      : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
     const button = document.createElement("button");
     const image = document.createElement("img");
     button.type = "button";
-    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${(isRune && !entry.implemented) || itemBlocked ? "locked" : ""}`;
+    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${itemBlocked ? "locked" : ""}`;
     button.dataset.pickerValue = String(value);
     if (pickerContext.type === "item") button.dataset.itemTooltip = String(entry.id);
-    if ((isRune && !entry.implemented) || itemBlocked) {
+    if (itemBlocked) {
       button.disabled = true;
-      button.title = itemBlocked
-        ? (roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.")
-        : "This rune is not modeled yet; its numbers would be estimates.";
+      button.title = roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.";
     }
     image.src = imageUrl;
     image.alt = "";
@@ -3641,12 +4019,6 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   return fragment;
 }
 
-/** How a rune picker's entry names its slot. */
-function runeSlotLabel(entry) {
-  if (pickerContext.type === "stat-shard") return `${entry.path} shard`;
-  return entry.row === 0 ? `${entry.path} keystone` : `${entry.path} row ${entry.row}`;
-}
-
 /**
  * Which build a picker path belongs to. The rune paths spell the side in
  * the state key itself (`attacker.minorRunesB.2`), so it is read once here
@@ -3661,9 +4033,6 @@ function pickerSource() {
   const index = Number(pickerContext.path.split(".").pop());
   const side = pickerContext.side;
   if (pickerContext.type === "champion") return DATA.champions;
-  if (pickerContext.type === "keystone") return engine.keystones;
-  if (pickerContext.type === "minor-rune") return minorRuneChoices(side, index);
-  if (pickerContext.type === "stat-shard") return statShardChoices(index);
   return DATA.items;
 }
 
@@ -4272,6 +4641,12 @@ document.addEventListener("click", (event) => {
     applyRailDisclosure();
     return;
   }
+  const fightModeButton = event.target.closest("[data-fight-mode]");
+  if (fightModeButton) {
+    invalidateOptimization();
+    state.fight.autosOnly = fightModeButton.dataset.fightMode === "autos";
+    return render();
+  }
   if (event.target.closest("#uptimeModeToggle")) {
     invalidateOptimization();
     if (state.fight.aaUptimeMode === "calculated") {
@@ -4297,7 +4672,21 @@ document.addEventListener("click", (event) => {
       );
     setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))));
     if (levelPath === "attacker.level") syncAbilityInputsToLevel();
+    else if (rosterLoadout) rosterLoadout.abilityRanks = defaultAbilityRanks(rosterLoadout);
     invalidateOptimization();
+    return render();
+  }
+  const levelSet = event.target.closest("[data-level-set]");
+  if (levelSet) {
+    setParticipantLevel(levelSet.dataset.levelSet, levelSet.dataset.value);
+    return render();
+  }
+  const levelAll = event.target.closest("[data-roster-level-all]");
+  if (levelAll) {
+    const value = levelAll.dataset.rosterLevelAll === "main" ? state.attacker.level : Number(levelAll.dataset.rosterLevelAll);
+    ["targets", "allies"].forEach((root) => state[root].forEach((loadout, index) => {
+      if (loadout.champion && !isPracticeDummy(loadout)) setParticipantLevel(`${root}.${index}.level`, value);
+    }));
     return render();
   }
   const bisObjectiveButton = event.target.closest("[data-bis-objective]");
@@ -4353,7 +4742,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#addEnemy")) {
     if (state.targets.length >= 5) return;
     const index = state.targets.length;
-    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+    state.targets.push(newRosterLoadout("enemy"));
     render();
     return openPicker("champion", `targets.${index}.champion`);
   }
@@ -4385,7 +4774,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#addAlly")) {
     if (state.allies.length >= 4) return;
     const index = state.allies.length;
-    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
+    state.allies.push(newRosterLoadout("ally"));
     render();
     return openPicker("champion", `allies.${index}.champion`);
   }
@@ -4447,8 +4836,11 @@ document.addEventListener("click", (event) => {
   }
   const pickerButton = event.target.closest("[data-picker]");
   if (pickerButton) {
-    if (pickerButton.dataset.path?.startsWith("attacker.buildB")) state.attacker.comparisonEnabled = true;
-    return openPicker(pickerButton.dataset.picker, pickerButton.dataset.path);
+    const { picker: type, path } = pickerButton.dataset;
+    if (path?.startsWith("attacker.buildB")) state.attacker.comparisonEnabled = true;
+    // A rune row opens the whole page, scrolled to that row's choices.
+    if (RUNE_PICKERS.has(type)) return openRunePage(pickerSide(path), runeFocusFor(type, path));
+    return openPicker(type, path);
   }
   const bisButton = event.target.closest("[data-bis-path]");
   if (bisButton) return openBis(bisButton.dataset.bisPath);
@@ -4493,7 +4885,7 @@ document.addEventListener("click", (event) => {
     const forms = BIS_PROFILES[loadout?.champion]?.abilities?.[slot] || [];
     const maxRank = Math.max(...forms.map((ability) => ability.maxRank || (slot === "R" ? 3 : 5)), slot === "R" ? 3 : 5);
     const current = bisRankFor(loadout, slot, maxRank);
-    const cap = slot === "R" ? ((loadout.level >= 16 ? 3 : loadout.level >= 11 ? 2 : loadout.level >= 6 ? 1 : 0)) : Math.min(5, Math.floor((loadout.level + 1) / 2));
+    const cap = rankCapForLevel(slot, loadout.level);
     const next = { ...defaultAbilityRanks(loadout), ...(loadout.abilityRanks || {}) };
     next[slot] = Math.max(0, Math.min(maxRank, cap, current + Number(rosterRankButton.dataset.delta)));
     const total = () => ["Q", "W", "E", "R"].reduce((sum, key) => sum + Number(next[key] || 0), 0);
@@ -4543,32 +4935,39 @@ document.addEventListener("click", (event) => {
     setItemOptionValue(path, key, next);
     return render();
   }
+  const optionButton = event.target.closest("button[data-champion-option]");
+  if (optionButton) {
+    const { championOption: key, optionType: type } = optionButton.dataset;
+    const definition = (engine.championOptions[state.attacker.champion]?.options || [])
+      .find((option) => option.key === key);
+    if (!definition) return;
+    if (type === "bool") {
+      state.attacker.championOptions[key] = optionButton.dataset.value === "1";
+    } else if (type === "select") {
+      state.attacker.championOptions[key] = optionButton.dataset.value;
+    } else {
+      const current = Number(state.attacker.championOptions[key] ?? definition.default) || 0;
+      let next = current + Number(optionButton.dataset.delta || 0);
+      if (definition.min != null) next = Math.max(Number(definition.min), next);
+      if (definition.max != null) next = Math.min(Number(definition.max), next);
+      state.attacker.championOptions[key] = type === "int" ? Math.round(next) : Number(next.toFixed(4));
+    }
+    invalidateOptimization();
+    return render();
+  }
   const abilityRankButton = event.target.closest("[data-ability-rank]");
   if (abilityRankButton) {
     invalidateOptimization();
     const slot = abilityRankButton.dataset.abilityRank;
     const ability = activeAbilityKit().find((entry) => entry.slot === slot);
     const input = abilityInput(slot);
-    input.rank = Math.max(0, Math.min(ability.maxRank, input.rank + Number(abilityRankButton.dataset.delta)));
-    state.attacker.abilityInputs[slot] = input;
-    return render();
-  }
-  const abilityCastButton = event.target.closest("[data-ability-casts]");
-  if (abilityCastButton) {
-    invalidateOptimization();
-    const slot = abilityCastButton.dataset.abilityCasts;
-    const input = abilityInput(slot);
-    input.casts = Math.max(0, Math.min(10, input.casts + Number(abilityCastButton.dataset.delta)));
-    state.attacker.abilityInputs[slot] = input;
-    return render();
-  }
-  const abilityHitButton = event.target.closest("[data-ability-hits]");
-  if (abilityHitButton) {
-    invalidateOptimization();
-    const slot = abilityHitButton.dataset.abilityHits;
-    const ability = activeAbilityKit().find((entry) => entry.slot === slot);
-    const input = abilityInput(slot);
-    input.hits = Math.max(1, Math.min(ability.maxHits, input.hits + Number(abilityHitButton.dataset.delta)));
+    const delta = Number(abilityRankButton.dataset.delta);
+    const cap = Math.min(ability.maxRank, rankCapForLevel(slot, state.attacker.level));
+    const current = Math.min(Number(input.rank) || 0, cap);
+    // A rank the level cannot hold, or a point the level has not earned,
+    // is refused here rather than trimmed silently on the way out.
+    if (delta > 0 && (current >= cap || spentRankPoints() >= state.attacker.level)) return;
+    input.rank = Math.max(0, Math.min(cap, current + delta));
     state.attacker.abilityInputs[slot] = input;
     return render();
   }
@@ -4591,13 +4990,6 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     return render();
   }
-  const fightButton = event.target.closest("[data-fight]");
-  if (fightButton) {
-    invalidateOptimization();
-    const key = fightButton.dataset.fight;
-    state.fight[key] = Number(fightButton.dataset.value);
-    return render();
-  }
   const removeButton = event.target.closest("[data-remove-target]");
   if (removeButton) {
     invalidateOptimization();
@@ -4608,7 +5000,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+      state.targets.push(newRosterLoadout("enemy"));
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -4624,7 +5016,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
+      state.allies.push(newRosterLoadout("ally"));
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }
@@ -4660,9 +5052,27 @@ document.addEventListener("click", (event) => {
       loadout.abilityRanks = defaultAbilityRanks(loadout);
       resetRosterChampionOptions(loadout);
     }
+    // An item pick walks on to the next empty slot of the same build; the
+    // "Empty slot" choice (0) and a full build end the run.
+    const next = pickerContext.type === "item" && Number(option.dataset.pickerValue) > 0
+      ? nextEmptyItemPath(selectedPath)
+      : null;
     closePicker();
-    return render();
+    render();
+    if (next) openPicker("item", next);
+    return undefined;
   }
+  const runePick = event.target.closest("[data-rune-pick]");
+  if (runePick) {
+    const { runePick: kind, runeSide: side, runeName: name, runeRow: row } = runePick.dataset;
+    if (kind === "keystone") pickKeystone(side, name);
+    else if (kind === "minor") pickMinorRune(side, name);
+    else if (kind === "shard") pickStatShard(side, Number(row), name);
+    invalidateOptimization();
+    render();
+    return renderRunePage();
+  }
+
   const bisOption = event.target.closest("[data-bis-value]");
   if (bisOption && bisContext) {
     setStackValue(bisContext.path, 0);
@@ -4673,6 +5083,22 @@ document.addEventListener("click", (event) => {
 }, true);
 
 document.addEventListener("input", (event) => {
+  const levelRange = event.target.closest("[data-level-range]");
+  if (levelRange) {
+    const path = levelRange.dataset.levelRange;
+    setParticipantLevel(path, levelRange.value);
+    if (path === "attacker.level") return render();
+    // A roster slider lives inside a card that render() rebuilds, and
+    // rebuilding it mid-drag drops the thumb. Update the card's readout in
+    // place and leave the rebuild (and the recalculation) to "change".
+    const control = levelRange.closest(".roster-level-control");
+    const level = pathValue(path);
+    control?.querySelector("output")?.replaceChildren(`Lv ${level}`);
+    control?.querySelectorAll("[data-level-set]").forEach((button) => {
+      button.classList.toggle("is-on", Number(button.dataset.value) === Number(level));
+    });
+    return undefined;
+  }
   const protoRange = event.target.closest("[data-proto-range]");
   if (protoRange) {
     invalidateOptimization();
@@ -4681,20 +5107,10 @@ document.addEventListener("input", (event) => {
     state.fight[key] = key === "aaUptime" ? Number(protoRange.value) / 100 : Number(protoRange.value);
     return render();
   }
-  const range = event.target.closest("[data-fight-range]");
-  if (!range) return;
-  invalidateOptimization();
-  const key = range.dataset.fightRange;
-  if (key === "aaUptime") state.fight.aaUptimeMode = "explicit";
-  state.fight[key] = key === "aaUptime" ? Number(range.value) / 100 : Number(range.value);
-  const output = range.parentElement.querySelector("output");
-  if (output) output.textContent = key === "aaUptime" ? `${Math.round(state.fight.aaUptime * 100)}%` : `${one(state.fight.duration)}s`;
-  render();
-  $("scenarioSentence").innerHTML = scenarioSentence();
-  scheduleEngineCalculation();
 });
 
 document.addEventListener("change", (event) => {
+  if (event.target.closest("[data-level-range]")) return render();
   const dummyStat = event.target.closest("[data-dummy-stat]");
   if (dummyStat) {
     const parts = dummyStat.dataset.dummyStat.split(".");
@@ -4722,29 +5138,6 @@ document.addEventListener("change", (event) => {
   const enemyHits = event.target.closest("#enemyHitsToggle");
   if (enemyHits) {
     state.fight.enemiesAttack = Boolean(enemyHits.checked);
-    invalidateOptimization();
-    return render();
-  }
-  const championOption = event.target.closest("[data-champion-option]");
-  if (championOption) {
-    const key = championOption.dataset.championOption;
-    const type = championOption.dataset.optionType || "bool";
-    const definition = (engine.championOptions[state.attacker.champion]?.options || [])
-      .find((option) => option.key === key);
-    if (type === "bool") {
-      state.attacker.championOptions[key] = Boolean(championOption.checked);
-    } else if (type === "select") {
-      state.attacker.championOptions[key] = championOption.value;
-    } else {
-      const parsed = type === "int"
-        ? Number.parseInt(championOption.value, 10)
-        : Number(championOption.value);
-      const fallback = Number(definition?.default ?? 0);
-      const bounded = Number.isFinite(parsed) ? parsed : fallback;
-      const minimum = definition?.min == null ? bounded : Math.max(Number(definition.min), bounded);
-      const maximum = definition?.max == null ? minimum : Math.min(Number(definition.max), minimum);
-      state.attacker.championOptions[key] = type === "int" ? Math.round(maximum) : maximum;
-    }
     invalidateOptimization();
     return render();
   }
@@ -4804,10 +5197,6 @@ document.addEventListener("change", (event) => {
   render();
 });
 
-document.addEventListener("change", (event) => {
-  if (event.target.closest("[data-fight-range]")) render();
-});
-
 // Hovering a build's cumulative-damage label spotlights its curve on the
 // fight timeline and greys the other one out (CSS owns the treatment).
 {
@@ -4831,6 +5220,9 @@ $("pickerSearch").addEventListener("input", (event) => renderPicker(event.target
 $("pickerClose").addEventListener("click", closePicker);
 $("picker").addEventListener("click", (event) => { if (event.target === $("picker")) closePicker(); });
 $("bisClose").addEventListener("click", closeBis);
+$("runePageClose").addEventListener("click", closeRunePage);
+$("runePage").addEventListener("click", (event) => { if (event.target === $("runePage")) closeRunePage(); });
+$("runePage").addEventListener("close", () => { runePageSide = null; });
 $("bis").addEventListener("click", (event) => { if (event.target === $("bis")) closeBis(); });
 for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) {
     const element = $(id);
@@ -5206,8 +5598,8 @@ function loadSharedBuildIntoAnalyst(payload) {
   fillSide(state.targets, request.enemies || []);
   fillSide(state.allies, request.allies || []);
   const fightParams = request.fight_params || request;
-  state.fight.rotations = Number(fightParams.rotations || 1);
   state.fight.duration = Number(fightParams.fight_duration || 10);
+  state.fight.autosOnly = fightParams.fight_mode === "auto_only" || fightParams.auto_attacks_only === true;
   state.fight.aaUptimeMode = fightParams.auto_attack_uptime_mode || "calculated";
   state.fight.aaUptime = Number(fightParams.auto_attack_uptime || 0);
   state.fight.enemiesAttack = fightParams.enemies_attack !== false;

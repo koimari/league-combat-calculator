@@ -193,6 +193,8 @@
                     <button type="button" data-level-path="attacker.level" data-level-delta="1" aria-label="Increase level">+</button>
                   </div>
                   <input id="levelInput" class="visually-hidden" type="number" min="1" max="18" value="1" aria-label="Level" />
+                  <input id="levelRange" class="level-range" type="range" min="1" max="18" step="1" value="1" data-level-range="attacker.level" aria-label="Level slider" />
+                  <div class="level-marks" id="levelMarks" aria-label="Level breakpoints"></div>
                 </div>
               </div>
 
@@ -230,6 +232,14 @@
             <div class="step-body" id="stepRosterBody" hidden>
               <div class="roster-list" id="enemies" aria-label="Enemies"></div>
               <div class="roster-list" id="allies" aria-label="Allies"></div>
+              <div class="roster-level-all" id="rosterLevelAll" hidden role="group" aria-label="Set every roster level">
+                <span>Everyone to</span>
+                <button type="button" data-roster-level-all="6">6</button>
+                <button type="button" data-roster-level-all="11">11</button>
+                <button type="button" data-roster-level-all="16">16</button>
+                <button type="button" data-roster-level-all="18">18</button>
+                <button type="button" data-roster-level-all="main" id="rosterLevelMain">= main</button>
+              </div>
               <div class="add-row">
                 <button class="add-button" id="addEnemy" type="button">+ Add enemy</button>
                 <button class="add-button" id="addAlly" type="button">+ Add ally</button>
@@ -266,6 +276,7 @@
             <p class="verdict-kicker">Build A · baseline</p>
             <p class="verdict-number"><span id="scoreA">—</span></p>
             <p class="verdict-sub" id="verdictSubA"></p>
+            <p class="verdict-note" id="verdictNoteA" hidden></p>
           </div>
           <div class="verdict-mid">
             <p class="verdict-kicker" id="resultStatus">waiting</p>
@@ -277,6 +288,7 @@
             <p class="verdict-kicker">Build B · challenger</p>
             <p class="verdict-number"><span id="scoreB">—</span></p>
             <p class="verdict-sub" id="verdictSubB"></p>
+            <p class="verdict-note" id="verdictNoteB" hidden></p>
             <button class="verdict-enable" id="enableBuildB" type="button" data-toggle-compare>Enable Build B</button>
             <button class="verdict-disable" id="disableBuildB" type="button" data-toggle-compare>Disable Build B · solo view</button>
           </div>
@@ -299,7 +311,7 @@
             </button>
             <button class="constraint-row" type="button" data-constraint-toggle="window" aria-expanded="false" aria-controls="constraintWindowBody">
               <span class="constraint-name">Window</span>
-              <span class="constraint-value" id="windowValue">1 rotation</span>
+              <span class="constraint-value" id="windowValue">10s window</span>
             </button>
             <button class="constraint-row" type="button" data-constraint-toggle="state" aria-expanded="false" aria-controls="constraintStateBody">
               <span class="constraint-name" id="gameStateLabel">State</span>
@@ -335,13 +347,13 @@
 
           <div class="constraint-body" id="constraintWindowBody" hidden>
             <label class="range-field">
-              <span class="field-label">Rotations <output id="rotationOutput">1</output></span>
-              <input id="rotationRange" type="range" min="1" max="6" value="1" data-proto-range="rotations" aria-label="Rotations" />
+              <span class="field-label">Fight length <output id="durationOutput">10s</output></span>
+              <input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" aria-label="Fight length" />
             </label>
-            <label class="range-field">
-              <span class="field-label">Window per rotation <output id="durationOutput">10s</output></span>
-              <input id="durationRange" type="range" min="1" max="30" step="0.5" value="10" data-proto-range="duration" aria-label="Window per rotation" />
-            </label>
+            <div class="segmented" role="group" aria-label="Actions">
+              <button class="segment is-on" type="button" data-fight-mode="kit" aria-pressed="true" title="Abilities recast whenever their cooldown is up inside the window, with autos between casts">Full kit</button>
+              <button class="segment" type="button" data-fight-mode="autos" aria-pressed="false" title="Auto attacks only: no ability casts, no summons">Autos only</button>
+            </div>
             <label class="range-field">
               <span class="field-label">Auto uptime <output id="uptimeOutput">CALCULATED</output></span>
               <input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled />
@@ -552,6 +564,16 @@
       </header>
       <label class="search-box"><span aria-hidden="true">⌕</span><input id="pickerSearch" type="search" autocomplete="off" placeholder="Search" aria-label="Search choices" /></label>
       <div id="pickerGrid" class="picker-grid"></div>
+    </div>
+  </dialog>
+
+  <dialog id="runePage" class="dialog rune-dialog">
+    <div class="dialog-shell">
+      <header class="dialog-head">
+        <div><p class="dialog-kicker" id="runePageKicker">Rune page</p><h2 id="runePageTitle">Build A runes</h2></div>
+        <button class="dialog-close" id="runePageClose" type="button" aria-label="Close rune page">×</button>
+      </header>
+      <div id="runePageBody" class="rune-page"></div>
     </div>
   </dialog>
 

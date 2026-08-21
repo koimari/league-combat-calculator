@@ -488,12 +488,14 @@ def test_timeline_labels_are_not_truncated_to_fragments(source: str):
     assert ".slice(0, 3)" not in block, "3-character source fragments are unreadable"
 
 
-def test_timeline_rows_are_keyed_to_the_ledger_table(source: str):
-    assert "data-event-index" in source
-    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]
+def test_timeline_lanes_are_the_one_home_for_events(source: str):
+    """Each lane carries the event's ledger index; the ledger table below keeps
+    the summaries (objective, event order, healing, support) and no longer
+    repeats the event rows."""
     timeline = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
     assert "data-event-index" in timeline
-    assert "data-event-index" in ledger or "eventRows" in ledger
+    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]
+    assert "eventRows" not in ledger
 
 
 def test_timeline_label_size_meets_the_legibility_floor(css: str):

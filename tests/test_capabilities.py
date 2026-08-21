@@ -41,7 +41,6 @@ PUBLISHED_PHASES = [
 def test_capability_contract_exposes_named_participant_and_catalogue_fields() -> None:
     contract = public_capability_contract(
         input_limits={"level": (1.0, 18.0)},
-        max_rotations=6,
         champion_option_count=2,
         item_option_count=3,
     )

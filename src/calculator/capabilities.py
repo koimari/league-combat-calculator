@@ -282,20 +282,10 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
     if is_main:
         fields.update(
             {
-                "ability_casts": _field(
-                    payload_field="champion_options",
-                    state_path="attacker.abilityInputs.*.casts",
-                    frontend_token='data-ability-casts="',
-                    conditional=True,
-                    availability="champion_option_binding",
-                ),
-                "ability_hits": _field(
-                    payload_field="champion_options",
-                    state_path="attacker.abilityInputs.*.hits",
-                    frontend_token='data-ability-hits="',
-                    conditional=True,
-                    availability="champion_option_binding",
-                ),
+                # A module's count options (passive procs, mines hit) are
+                # champion_options rendered on the ability card they name;
+                # the engine schedules casts itself, so there is no cast
+                # count control.
                 "ability_variants": _field(
                     payload_field="champion_options",
                     state_path="attacker.abilityInputs.*.variant",
@@ -432,7 +422,6 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
 def public_capability_contract(
     *,
     input_limits: Mapping[str, tuple[float, float]],
-    max_rotations: int,
     champion_option_count: int,
     item_option_count: int,
 ) -> dict[str, Any]:
@@ -445,11 +434,8 @@ def public_capability_contract(
         for kind in ("main", "enemy", "ally")
     }
     scenario_fields = {
-        "rotations": _field(
-            payload_field="rotations",
-            state_path="fight.rotations",
-            frontend_token='data-proto-range="rotations"',
-        ),
+        # One fight-length slider. The engine's rotation count is not a public
+        # control: the window is the one number a user sets.
         "window": _field(
             payload_field="fight_duration",
             state_path="fight.duration",
@@ -464,6 +450,13 @@ def public_capability_contract(
             payload_field="auto_attack_uptime_mode",
             state_path="fight.aaUptimeMode",
             frontend_token="uptimeModeToggle",
+        ),
+        # Full kit or autos only: ``fight_mode`` is ``auto_only`` when the
+        # Actions control says so, the module's timed mode otherwise.
+        "actions": _field(
+            payload_field="fight_mode",
+            state_path="fight.autosOnly",
+            frontend_token="data-fight-mode",
         ),
         # The Enemy Hits constraint: unchecked, enemies deal zero damage in
         # the coupled timeline (participant_timeline owns the semantics).
@@ -482,7 +475,6 @@ def public_capability_contract(
             "supported": True,
             "fields": scenario_fields,
             "limits": {key: list(value) for key, value in input_limits.items()},
-            "rotations": {"min": 1, "max": max_rotations},
         },
         "controls": {
             "supported": True,
