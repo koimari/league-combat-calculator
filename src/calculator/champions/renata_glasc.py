@@ -91,8 +91,8 @@ _W_ALLY_CAST = "ally"
 #   * cadence — SETTLED, binary.  The Wiki's lethal sentence says one tick
 #     every 0.264s (2.64s across the ten ticks it also states).  The binary's
 #     RenataW DataValues carry TicksPerSecond = 4.0 (0.25s) with
-#     TicksBeforeDeath = 10.0, and the spell's own {85d7d7f0} calculation is
-#     literally 0.25 x TicksBeforeDeath — the 2.5s burn window, encoded in
+#     TicksBeforeDeath = 10.0, and the binary's own {85d7d7f0} calculation
+#     is literally 0.25 x TicksBeforeDeath — the 2.5s burn window, in
 #     the file.  The Wiki corroborates the 4/s clock against itself: the same
 #     sentence that says 0.264s also says "Bailout's duration is reset every
 #     0.25 seconds" while burning, which is TicksPerSecond = 4 surfacing.

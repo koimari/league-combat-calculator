@@ -259,7 +259,7 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
         # The widened bolt reaches its secondary targets in the same
         # instant as the primary, so both parts are timed at the cast
         # boundary — the timing that carries Q's reviewed no-control
-        # answer into the event ledger once the row is no longer one hit.
+        # answer into the event ledger once the row is more than one hit.
         parts = [
             DamagePart("physical", primary, time_offset=0.0),
             DamagePart(

@@ -6,7 +6,7 @@ A rune-parser fix reaches the cache without a wiki pull:
     python scripts/reparse_runes.py [--check]
 
 ``--check`` reparses into a scratch directory and reports the runes whose
-committed effects are no longer what the parser produces, writing nothing.
+committed effects disagree with what the parser produces, writing nothing.
 Without it the cache is rewritten in place.
 """
 

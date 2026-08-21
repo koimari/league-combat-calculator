@@ -15,7 +15,7 @@ P1-2 fixes:
 - E (Full Tilt) coverage flag: the packet manifest carries E as a
   formula slot and the module prices it (Bonus Magic Damage 5% : 7% by
   rank of the target's maximum health + 3% per 100 AP); MODULE_COVERAGE
-  now marks it modeled (it previously said out_of_scope — inconsistent).
+  marks it modeled.
 """
 
 from typing import Any

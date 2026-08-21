@@ -18,7 +18,7 @@ everywhere else emptiness means the context was wrong.
 :class:`RouteAnnotation` is the other half.  Twelve labels in the live
 support layer read like scopes and are not: they are disclosures a receipt
 prints beside a number ("this figure assumes the aura reached every enemy in
-range"). ``TODO(issue #142)`` says so in the tree today.  Modelling them as
+range").  Modelling them as
 policies would let a disclosure silently change who gets an event, so they
 ride a *resolved* route rather than deciding one.
 """

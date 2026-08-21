@@ -9,9 +9,7 @@ Why each slot is non-generic:
   on-hit. This is a total-attribute read plus an add-once on-hit addend,
   so the mechanic stays champion-local.
 - Q (Pulverize) / W (Headbutt) are fully generic single-hit magic
-  damage — auto-mode ``simple_damage``, exactly the generic path the
-  legacy module reached by calling the generic parser and patching its
-  output.
+  damage — auto-mode ``simple_damage``.
 - P (Triumphant Roar) is healing only: its slot is a zero-damage
   receipt carrying the Triumph stacks Alistar walks in with, so
   ``derive_self_healing`` can complete the seven-stack set inside the

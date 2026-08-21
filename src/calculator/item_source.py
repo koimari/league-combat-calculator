@@ -649,7 +649,7 @@ def branch_losses(
     previous_items: Mapping[str, Any],
     current_items: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
-    """Effect branches the new cache no longer carries.
+    """Effect branches the previous cache carried and the new one does not.
 
     A branch vanishing usually means ingestion broke, not that Riot deleted a
     mechanic, so patch day stops on it.  Once the loss is verified against the

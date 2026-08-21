@@ -6,8 +6,7 @@ no_damage although the wiki cache carries "Total Magic Damage"
 wiki notes the channel deals magic damage every 0.25 seconds and that
 on-hit/on-attack effects apply 3 times over its duration).  This
 module prices the total as the R cast, which also lets healing.py's
-existing 100%-of-R-damage self-heal rule fire (it previously could
-never trigger because the module emitted no R damage events).
+100%-of-R-damage self-heal rule fire.
 
 The coverage-frontier riders close P and W:
 

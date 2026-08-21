@@ -1,4 +1,4 @@
-"""Run the backend acceptance matrix from issue #20.
+"""Run the backend acceptance matrix.
 
 The matrix is intentionally API-level: it can run against the local Flask
 application or a deployed origin and records the same evidence for either

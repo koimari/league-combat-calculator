@@ -1,13 +1,11 @@
 """Sylas — CP10.8 full-entry-reviewed packet module, plus the P1 E-shield note.
 
 The CP-era "SylasEShield" atom (Abscond/Abduct shield, 80/115/150/185/220
-+ 100% AP for 2s) is HISTORICAL: the wiki patch history records it as
-removed — "Abscond Removed: ... No longer shields for 80 / 115 / 150 /
-185 / 220 (+ 100% AP) against magic damage for 2 seconds upon dashing"
-(V10.2 patch note).  The pinned cached data (patch 16.15) carries no
-shield row on either E entry, matching the live kit, so the module's E
-packet (Abduct magic damage) is complete — the shield atom is documented
-as a stale receipt, not a missing mechanic.
++ 100% AP for 2s) is not part of the live kit: the wiki patch history
+records its removal in V10.2, and the pinned cached data (patch 16.15)
+carries no shield row on either E entry.  The module's E packet (Abduct
+magic damage) is therefore complete, and the shield atom is a stale
+receipt rather than a missing mechanic.
 
 E1-b2: Sylas is in HEALING_RULE_CHAMPIONS — W Kingslayer's
 missing-health-scaled heal (Minimum/Maximum Heal rows) is authored by

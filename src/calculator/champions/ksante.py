@@ -214,8 +214,8 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
         high = max_flat + (max_pct + max_resist_pct) / 100.0 * max_health
         true_value = low + (high - low) * charge
         # Both packets are the one dash, so the physical half lands at the
-        # same authored instant as the true half.  In All Out "Path Maker
-        # no longer applies its knock back and stun".
+        # same authored instant as the true half.  All Out's Path Maker
+        # applies no knock back and no stun.
         parts = (
             DamagePart("physical", physical, time_offset=charge, cc_kind="none"),
             DamagePart("true", true_value, time_offset=charge, cc_kind="none"),
