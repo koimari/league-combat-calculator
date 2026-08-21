@@ -38,7 +38,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
 
 from ..ability_spec import DamageClass
 from ..item_behavior import (
@@ -98,19 +97,19 @@ def event_damage_classes(damage_type: str) -> frozenset[DamageClass]:
     )
 
 
-def _ramp_fields(
+def ramp_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One shred's compiled ramp numbers for *lane*.
+    """One shred's compiled ramp numbers, stamped with *lane*.
 
     The three sourced numbers a shred's ramp resolves to.  The *model* is not
     a field: it is a policy the slot branches on, and compiling it to a value
     would let a caller read a summation rule off a number.
 
-    The lane is the only thing that varies between the two interpreters below.
-    Sharing the body rather than spelling it twice is what makes "the walk
+    Registered for both the pair engine and the receipt walk: the lane is the
+    only thing that differs between them, so one body is what makes "the walk
     reads the same declaration the pair engine reads" a property of the tree
-    instead of a claim two functions could drift out of.
+    rather than a claim two functions could drift out of.
     """
     payload = rule.payload
     if not isinstance(payload, ResistanceShredRule):
@@ -127,71 +126,6 @@ def _ramp_fields(
         field(SHRED_MAX_STACKS_FIELD, resolve(ramp.max_stacks, ctx.level)),
         field(SHRED_LEADING_STACKS_FIELD, resolve(ramp.leading_stacks, ctx.level)),
     )
-
-
-class ResistanceShredPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``resistance_shred`` family.
-
-    Its number is **not** a preview.  The pair engine resolves this family's
-    cut into its own combat state (``damage._resolve_combat_state``), which is
-    the pair-local half of a ``SPLIT`` the campaign's authority table leaves
-    standing under H1, and the walk skips the holder rather than re-pricing
-    it.  The triage measured this family authoring no priced pair row at all,
-    so there is nothing here for a ``pair_preview_of`` stamp to describe.
-    """
-
-    FAMILY = RuleFamily.RESISTANCE_SHRED
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This shred's ramp, resolved for the one-attacker engine."""
-        return _ramp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-class ResistanceShredWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the ``resistance_shred`` family.
-
-    The half that retires ``resistance_shred/receipt_walk`` (umbrella
-    Amendment F's act, in the lane Amendment K rules, with the shape Amendment
-    L, Ruling 1 requires and the substitution Amendment P makes to it for a
-    family whose delivery is not a price).
-
-    **It hands the walk no price**, and unlike ``damage_routing`` — the other
-    such family — that is not because the effect is a rider.  A shred is not
-    damage at all: it moves the *target's* resistance before penetration is
-    applied, so every number it changes belongs to some other family's packet.
-    ``survival.pricing`` gains no term here and no ``DeclaredPacket`` is
-    touched.
-
-    What it hands the walk is the **ramp**, and what consumes it is the
-    cross-participant half the walk already stages: ``black_cleaver.carve``
-    and ``bloodletters_curse.vile_decay`` emit this family's cut as a
-    ``damage_modifier`` packet through
-    ``item_support_effects.derive_item_support_effects``, which is the named
-    walk-side delivery term umbrella Amendment O, Ruling 2 requires of a
-    class-(c) row.  Before this interpreter that emitter read the ramp off the
-    *ally-packet* declaration's own copy of the two numbers — a second
-    declaration of one ramp, which is how a score and a receipt come to
-    disagree about it, and exactly the shape Serpent's Fang's venom had before
-    ``damage_routing`` retired.  Now both sides read this one.
-
-    The stack **ledger** stays where it is.  Which authored events apply a
-    stack, to which target, and in what order is a roster fact the emitter
-    already walks; moving it in here would be a second producer of the count
-    (D-60).  What this supplies is the two sourced numbers that count is
-    multiplied and capped by.
-    """
-
-    FAMILY = RuleFamily.RESISTANCE_SHRED
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This shred's ramp, resolved for the coupled roster walk."""
-        return _ramp_fields(rule, ctx, EngineLane.RECEIPT_WALK)
-
-
-PAIR_INTERPRETER = ResistanceShredPairInterpreter()
-WALK_INTERPRETER = ResistanceShredWalkInterpreter()
 
 
 @dataclass(frozen=True, slots=True)
@@ -312,14 +246,14 @@ def shred_rules(
 def _resolve_slot(  # pylint: disable=too-many-arguments
     owners: Sequence[str],
     resistance: Resistance,
-    interpreter: Any,
+    lane: EngineLane,
     *,
     level: int,
     fight_duration_seconds: float,
     target_bonus_health: float,
     holder_is_melee: bool,
 ) -> ShredSlot | None:
-    """This build's shred of one resistance, compiled by *interpreter*.
+    """This build's shred of one resistance, compiled for *lane*.
 
     One body for both lanes, so "the walk reads the declaration the pair
     engine reads" is a property of the tree rather than of two functions
@@ -339,7 +273,7 @@ def _resolve_slot(  # pylint: disable=too-many-arguments
     return ShredSlot(
         resistance=resistance,
         rule=rule,
-        fields=interpreter.compile(
+        fields=ramp_fields(
             rule,
             build_context(
                 rule.owner,
@@ -348,6 +282,7 @@ def _resolve_slot(  # pylint: disable=too-many-arguments
                 target_bonus_health=target_bonus_health,
                 holder_is_melee=holder_is_melee,
             ),
+            lane,
         ),
     )
 
@@ -369,7 +304,7 @@ def resolve_slot(
     return _resolve_slot(
         owners,
         resistance,
-        PAIR_INTERPRETER,
+        EngineLane.PAIR_ENGINE,
         level=level,
         fight_duration_seconds=fight_duration_seconds,
         target_bonus_health=target_bonus_health,
@@ -402,7 +337,7 @@ def walk_slot(  # pylint: disable=too-many-arguments
     return _resolve_slot(
         owners,
         resistance,
-        WALK_INTERPRETER,
+        EngineLane.RECEIPT_WALK,
         level=level,
         fight_duration_seconds=fight_duration_seconds,
         target_bonus_health=target_bonus_health,
@@ -415,13 +350,10 @@ __all__ = [
     "SHRED_LEADING_STACKS_FIELD",
     "SHRED_MAX_STACKS_FIELD",
     "SHRED_PER_STACK_FIELD",
-    "PAIR_INTERPRETER",
-    "WALK_INTERPRETER",
     "ResistanceShredInterpretationError",
-    "ResistanceShredPairInterpreter",
-    "ResistanceShredWalkInterpreter",
     "ShredSlot",
     "event_damage_classes",
+    "ramp_fields",
     "resolve_slot",
     "shred_rules",
     "walk_slot",

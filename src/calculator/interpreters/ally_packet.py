@@ -60,8 +60,10 @@ def _payload(rule: BehaviorRule) -> AllyPacketRule:
     return payload
 
 
-class AllyPacketWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The roster walk's answer for the ``ally_packet`` family.
+def packet_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """Every number this producer declares, read live from its registry.
 
     One field per declared value, named by the registry key it reads, so the
     compiled form of a producer is exactly "the numbers this mechanic is
@@ -71,36 +73,22 @@ class AllyPacketWalkInterpreter:  # pylint: disable=too-few-public-methods
     ramp is a fact the source states per item and not a property of the
     packet's direction.
     """
-
-    FAMILY = RuleFamily.ALLY_PACKET
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """Every number this producer declares, read live from its registry."""
-        payload = _payload(rule)
-        fields: list[KernelField] = []
-        for reference in payload.values:
-            if isinstance(reference, ValueRef):
-                name, value = reference.key, reference.get()
-            elif isinstance(reference, LevelValueRef):
-                name, value = reference.min_key, reference.get(ctx.level)
-            else:
-                raise AllyPacketInterpretationError(
-                    f"{rule.mechanic_id} declares {reference!r}, which names no "
-                    "registry key for the walk to read it back by"
-                )
-            fields.append(
-                KernelField(
-                    name=name,
-                    value=value,
-                    lane=EngineLane.RECEIPT_WALK,
-                    rule_id=rule.mechanic_id,
-                )
+    payload = _payload(rule)
+    fields: list[KernelField] = []
+    for reference in payload.values:
+        if isinstance(reference, ValueRef):
+            name, value = reference.key, reference.get()
+        elif isinstance(reference, LevelValueRef):
+            name, value = reference.min_key, reference.get(ctx.level)
+        else:
+            raise AllyPacketInterpretationError(
+                f"{rule.mechanic_id} declares {reference!r}, which names no "
+                "registry key for the walk to read it back by"
             )
-        return tuple(fields)
-
-
-WALK_INTERPRETER = AllyPacketWalkInterpreter()
+        fields.append(
+            KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        )
+    return tuple(fields)
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,7 +211,6 @@ def resolve_slots(
 __all__ = [
     "AllyPacketInterpretationError",
     "AllyPacketSlot",
-    "AllyPacketWalkInterpreter",
-    "WALK_INTERPRETER",
+    "packet_fields",
     "resolve_slots",
 ]

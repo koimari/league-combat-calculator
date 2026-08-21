@@ -20,17 +20,12 @@ from collections.abc import Mapping
 
 from ..item_behavior import (
     BehaviorRule,
-    BuildContext,
     DefenseField,
     DefenseMechanic,
     DefenseOption,
     DefenseOutcome,
     DefenseSubject,
-    EngineLane,
-    KernelField,
-    RuleFamily,
 )
-from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 NOTES: Mapping[DefenseMechanic, str] = {
@@ -105,34 +100,21 @@ _INTEGER_FIELDS = frozenset(
 )
 
 
-class CombatStateResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the ``combat_state`` family."""
-
-    FAMILY = RuleFamily.COMBAT_STATE
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape a combat state compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """One combat state, against the subject it is defending."""
-        slot = DefenseSlot(rule)
-        mechanic = slot.mechanic
-        if mechanic is DefenseMechanic.ANNUL:
-            return _annul(slot)
-        if mechanic is DefenseMechanic.TIME_STOP:
-            return _time_stop(slot, subject)
-        if mechanic in _STACK_SCHEDULE:
-            return _stack_schedule(slot)
-        raise DefenseInterpretationError(
-            f"{rule.mechanic_id} declares combat_state and this interpreter "
-            "has no branch for it; a state with no arithmetic is a mechanic "
-            "that would silently do nothing"
-        )
-
-
-RESOLVER_INTERPRETER = CombatStateResolverInterpreter()
+def resolve_combat_state(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
+    """One combat state, against the subject it is defending."""
+    slot = DefenseSlot(rule)
+    mechanic = slot.mechanic
+    if mechanic is DefenseMechanic.ANNUL:
+        return _annul(slot)
+    if mechanic is DefenseMechanic.TIME_STOP:
+        return _time_stop(slot, subject)
+    if mechanic in _STACK_SCHEDULE:
+        return _stack_schedule(slot)
+    raise DefenseInterpretationError(
+        f"{rule.mechanic_id} declares combat_state and this family has no "
+        "branch for it; a state with no arithmetic is a mechanic that would "
+        "silently do nothing"
+    )
 
 
 def _annul(slot: DefenseSlot) -> DefenseOutcome:
@@ -189,9 +171,8 @@ def _stack_schedule(slot: DefenseSlot) -> DefenseOutcome:
 
 __all__ = [
     "ANNUL_SOURCE",
-    "CombatStateResolverInterpreter",
     "NOTES",
-    "RESOLVER_INTERPRETER",
     "TIME_STOP_SOURCE",
     "VOIDBORN_NOTE",
+    "resolve_combat_state",
 ]

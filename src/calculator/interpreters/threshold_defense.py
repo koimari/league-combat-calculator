@@ -21,13 +21,10 @@ from collections.abc import Mapping
 from ..data_registry import data_version, store_for_generation
 from ..item_behavior import (
     BehaviorRule,
-    BuildContext,
     DefenseField,
     DefenseMechanic,
     DefenseOutcome,
     DefenseSubject,
-    EngineLane,
-    KernelField,
     RuleFamily,
 )
 from ..item_behavior_catalog import behavior_rules, declared_owners
@@ -157,34 +154,24 @@ def threshold_health_coverage_source() -> str:
     return COVERAGE_SOURCE.format(owner=threshold_health_owner())
 
 
-class ThresholdDefenseResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the ``threshold_defense`` family."""
+def resolve_threshold_defense(
+    rule: BehaviorRule, subject: DefenseSubject
+) -> DefenseOutcome:
+    """One threshold defence, against the subject it is defending."""
+    slot = DefenseSlot(rule)
+    mechanic = slot.mechanic
+    if mechanic is DefenseMechanic.LIFELINE_PROTOPLASM:
+        return _protoplasm(slot, subject)
+    if mechanic is DefenseMechanic.REBIRTH:
+        return _rebirth(slot, subject)
+    if mechanic in _LIFELINE_SHIELDS:
+        return _lifeline_shield(slot, subject)
+    raise DefenseInterpretationError(
+        f"{rule.mechanic_id} declares threshold_defense and this family has "
+        "no branch for it; a defence with no arithmetic is a mechanic that "
+        "would silently grant nothing"
+    )
 
-    FAMILY = RuleFamily.THRESHOLD_DEFENSE
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape a threshold defence compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """One threshold defence, against the subject it is defending."""
-        slot = DefenseSlot(rule)
-        mechanic = slot.mechanic
-        if mechanic is DefenseMechanic.LIFELINE_PROTOPLASM:
-            return _protoplasm(slot, subject)
-        if mechanic is DefenseMechanic.REBIRTH:
-            return _rebirth(slot, subject)
-        if mechanic in _LIFELINE_SHIELDS:
-            return _lifeline_shield(slot, subject)
-        raise DefenseInterpretationError(
-            f"{rule.mechanic_id} declares threshold_defense and this "
-            "interpreter has no branch for it; a defence with no arithmetic "
-            "is a mechanic that would silently grant nothing"
-        )
-
-
-RESOLVER_INTERPRETER = ThresholdDefenseResolverInterpreter()
 
 _LIFELINE_SHIELDS = frozenset(
     {
@@ -284,10 +271,9 @@ __all__ = [
     "MAW_OMNIVAMP_NOTE",
     "NOTES",
     "REBIRTH_SOURCE",
-    "RESOLVER_INTERPRETER",
     "THRESHOLD_HEALTH_MECHANIC",
     "TICK_INTERVAL_KEY",
-    "ThresholdDefenseResolverInterpreter",
+    "resolve_threshold_defense",
     "threshold_health_coverage_source",
     "threshold_health_owner",
     "threshold_health_tick_interval",
