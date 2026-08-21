@@ -26,6 +26,17 @@ wiki's Malzahar pets entry and the ability JSON:
 - Summoning: the first Voidling appears after a 0.5s delay, each extra
   Voidling 0.5s later (the ability description); voidlings attack the
   target from their summon time.
+
+P (Void Shift) periodically grants brief spell-untargetability — pure
+defensive state, no enemy damage. The pinned packet already declares it
+``kind: "no_damage"`` (a sourced zero-damage row), so it was never a
+gap in enemy-damage coverage; MODULE_COVERAGE was simply stale, still
+reading "out_of_scope" for a slot that already emits its state row.
+Roadmap session 4 batch D (2026-08-21) reclassifies P to "no_damage"
+(the Cassiopeia/Cho'Gath/Jarvan precedent) rather than leaving an
+already-covered passive misreported as a gap. P is not a cast slot
+(``rotation_resolver`` only schedules Q/Q2/W/E/R), so this is a
+documentation-only fix with zero fight-computation change.
 """
 
 from __future__ import annotations
@@ -300,10 +311,14 @@ ASSUMPTIONS = [
     "One summon wave per fight window; re-casting W refreshes the swarm "
     "in-game, modeled by the voidling_count option (up to 4) instead of "
     "multiplying the proc row by W casts",
+    "P (Void Shift) grants brief periodic spell-untargetability; it is "
+    "pure defensive state with no enemy damage, so it emits the packet's "
+    "sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
+    "out_of_scope). P is not a cast slot in this engine's rotation.",
 ]
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

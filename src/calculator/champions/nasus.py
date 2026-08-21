@@ -18,6 +18,15 @@ Why each slot is non-generic:
   resistances are self-stats and the Siphoning Strike cooldown halving
   is not modeled.
 - P (Soul Eater) and W (Wither) deal no enemy damage: zero-damage rows.
+
+W (Wither) is already a cast slot in this module (SLOTS["W"] =
+_wither) emitting the pinned packet's sourced zero-damage row; the
+pinned packet (reviewed-packets.json) declares W in no_damage_slots
+alongside P. MODULE_COVERAGE was simply stale, still reading
+"out_of_scope" for an already-covered slot. Roadmap session 4 batch D
+(2026-08-21) reclassifies W to "no_damage" (the Cassiopeia/Cho'Gath/
+Jarvan precedent) — a documentation-only fix with zero
+fight-computation change.
 """
 
 from typing import Any
@@ -245,6 +254,10 @@ ASSUMPTIONS = [
     "12% / 18% / 24% (based on level; game-file breakpoints at 7/13) of the "
     "post-mitigation physical basic-attack/on-hit damage dealt; W (Wither) "
     "slow/cripple is a zero-damage row",
+    "W (Wither) is CC-only (slow + attack-speed cripple) with no enemy "
+    "damage formula in the pinned packet; it emits the sourced "
+    "zero-damage row (MODULE_COVERAGE: no_damage, not out_of_scope). W "
+    'is already a cast slot in this module (SLOTS["W"] = _wither).',
 ]
 
 SLOTS = {
@@ -258,7 +271,7 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Nasus")
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

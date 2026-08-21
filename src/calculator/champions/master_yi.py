@@ -18,6 +18,18 @@ channel, each tick interpolated between the Minimum Heal Per Tick and
 Maximum Heal Per Tick rows by the fighter's live missing health.  W's
 damage-reduction window is a defensive state the damage model does not
 stage.
+
+R (Highlander) is a self-buff (unbounded movement speed, bonus attack
+speed, ability haste, tenacity while active) with no enemy-damage
+formula anywhere in the cached packet — the pinned packet already
+declares it ``kind: "no_damage"`` (a sourced zero-damage cast row), so
+it was never an enemy-damage gap; MODULE_COVERAGE was simply stale,
+still reading "out_of_scope" for a slot that already casts its state
+row (it is in ``DEFAULT_CAST_ORDER`` and already appears in the fight
+breakdown at zero damage). Roadmap session 4 batch D (2026-08-21)
+reclassifies R to "no_damage" (the Cassiopeia/Cho'Gath/Jarvan
+precedent) — a documentation-only fix with zero fight-computation
+change.
 """
 
 from typing import Any
@@ -107,10 +119,14 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "Maximum Heal Per Tick by the fighter's live missing health "
     "(healing.py 'Master Yi' rule); the channel's damage reduction is "
     "a defensive state not staged by the damage model.",
+    "R (Highlander) is a self-buff (unbounded move speed, attack speed, "
+    "ability haste, tenacity) with no enemy-damage formula; it emits "
+    "the packet's sourced zero-damage row (MODULE_COVERAGE: no_damage, "
+    "not out_of_scope). R is in DEFAULT_CAST_ORDER and already casts.",
 ]
 SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

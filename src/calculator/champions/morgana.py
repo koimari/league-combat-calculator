@@ -15,6 +15,18 @@ E9-1 closes the three remaining audit gaps over the CP10.4 packet:
 
 Q (Dark Binding) packet is a correct single-instance read; E (Black
 Shield) is a documented no-damage shield.
+
+P (Soul Siphon) is the self-heal passive: no enemy-damage formula exists
+anywhere in the cached packet (the pinned packet already declares P
+``kind: "no_damage"``, and this module's ``_soul_siphon`` override emits
+the same sourced zero-damage row so the heal rule has a P entry to
+attach to). It was never an enemy-damage gap; MODULE_COVERAGE was
+simply stale, still reading "out_of_scope" for an already-covered
+passive. Roadmap session 4 batch D (2026-08-21) reclassifies P to
+"no_damage" (the Cassiopeia/Cho'Gath/Jarvan precedent) — a
+documentation-only fix with zero fight-computation change. P is not a
+cast slot in this engine (``rotation_resolver`` only schedules
+Q/Q2/W/E/R).
 """
 
 from typing import Any
@@ -172,9 +184,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Black Shield) emits the selected recipient's magic shield from the "
     "typed Magic Shield Strength atom. Its typed active-duration atom keeps "
     "crowd control from adding action downtime while the shield holds.",
+    "P (Soul Siphon) has no enemy-damage formula anywhere in the cached "
+    "packet; it emits a sourced zero-damage row (MODULE_COVERAGE: "
+    "no_damage, not out_of_scope). P is not a cast slot in this engine's "
+    "rotation.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

@@ -18,6 +18,17 @@ the same teammate in a two-champion lane (the cached notes allow the final
 bounce to re-target an already-affected champion), so the return-bounce
 packet uses the same one_teammate scope with its own selection key
 (``heal:W:<cast>:bounce``).
+
+P (Surging Tides) grants nearby allies bonus movement speed after Nami
+casts an ability — pure ally-utility state, no enemy-damage formula
+anywhere in the cached packet. The pinned packet already declares P
+``kind: "no_damage"`` (a sourced zero-damage row), so it was never an
+enemy-damage gap; MODULE_COVERAGE was simply stale, still reading
+"out_of_scope" for an already-covered passive. Roadmap session 4 batch
+D (2026-08-21) reclassifies P to "no_damage" (the Cassiopeia/Cho'Gath/
+Jarvan precedent) — a documentation-only fix with zero fight-
+computation change. P is not a cast slot in this engine
+(``rotation_resolver`` only schedules Q/Q2/W/E/R).
 """
 
 from .packet_module import build_packet_module
@@ -46,10 +57,15 @@ ASSUMPTIONS = [
     "every rank.  The bounce damage against the enemy keeps the module's "
     "full Magic Damage row (the first-bounce reduction of the damage "
     "half is not separately priced).",
+    "P (Surging Tides) grants nearby allies bonus movement speed after "
+    "an ability cast; it is pure ally-utility state with no enemy "
+    "damage, so it emits the packet's sourced zero-damage row "
+    "(MODULE_COVERAGE: no_damage, not out_of_scope). P is not a cast "
+    "slot in this engine's rotation.",
 ]
 PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
