@@ -21,7 +21,7 @@ import copy
 import pytest
 
 from src.calculator.ability_spec import parts_raw_total
-from src.calculator.champions import get_champion_options_meta
+from src.calculator.champions import get_champion_module_meta, get_champion_options_meta
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
@@ -238,8 +238,24 @@ class TestQContinuousFightMode:
 class TestWAstralFlight:
     """W is a dash/utility; its only calc effect is Q's beam modifier."""
 
-    def test_w_not_in_results(self, aurelion_sol_data, parse_at) -> None:
+    def test_w_is_explicit_zero_damage_row(self, aurelion_sol_data, parse_at) -> None:
+        """W carries no damage attribute of its own — documented zero-damage
+        row (module_helpers.no_damage), not a silent absence (roadmap
+        session 3)."""
         _, abilities = parse_at(aurelion_sol_data, 18)
+        entry = abilities["W"]
+        assert entry["name"] == "Astral Flight"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert "damage-less dash" in entry["detail"].lower()
+
+    def test_w_absent_when_unlearned(self, aurelion_sol_data, parse_at) -> None:
+        """The state row is rank-gated like every other slot."""
+        _, abilities = parse_at(
+            aurelion_sol_data,
+            18,
+            ability_ranks={"Q": 5, "W": 0, "E": 5, "R": 3},
+        )
         assert "W" not in abilities
 
 
@@ -391,9 +407,18 @@ class TestRFallingStar:
 class TestPassiveCosmicCreator:
     """The passive is the Stardust stack mechanic — no damage of its own."""
 
-    def test_passive_not_in_results(self, aurelion_sol_data, parse_at) -> None:
+    def test_passive_is_explicit_zero_damage_row(
+        self, aurelion_sol_data, parse_at
+    ) -> None:
+        """P feeds Q/E's Stardust math but prices nothing itself —
+        documented zero-damage row (module_helpers.no_damage), not a
+        silent absence (roadmap session 3)."""
         _, abilities = parse_at(aurelion_sol_data, 18)
-        assert "passive" not in abilities
+        entry = abilities["passive"]
+        assert entry["name"] == "Cosmic Creator"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert "stardust" in entry["detail"].lower()
         assert "P" not in abilities
 
 
@@ -418,6 +443,20 @@ class TestOptionsMeta:
         meta = get_champion_options_meta("Aurelion Sol")
         assert any("3.25" in text for text in meta["assumptions"])
         assert any("continuous" in text.lower() for text in meta["assumptions"])
+
+
+class TestModuleCoverage:
+    """Roadmap session 3: P and W close from out_of_scope to no_damage."""
+
+    def test_module_coverage_reflects_p_w_no_damage(self) -> None:
+        coverage = get_champion_module_meta("Aurelion Sol")["coverage"]
+        assert coverage == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }
 
 
 # ---------------------------------------------------------------------------

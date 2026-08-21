@@ -708,6 +708,16 @@ class TestDefaultAbsentParity:
                         for key, row in result["breakdown"].items()
                         if isinstance(row, dict)
                     }
+                    # Roadmap session 3 (2026-08-20): W is reclassified from
+                    # out_of_scope to no_damage and now surfaces its own
+                    # zero-valued breakdown row (module_helpers.no_damage) —
+                    # W is in DEFAULT_CAST_ORDER, so the row appears here (and
+                    # in the re-pinned golden) even though W carries no damage.
+                    # Guard the row explicitly: it must never leak real damage
+                    # in ANY of the 16 scenarios.  The full totals — W row
+                    # included — are then compared byte-identical against the
+                    # re-pinned fixture, so nothing is stripped from the pin.
+                    assert totals.get("W", 0.0) == 0.0
                     got = {
                         "breakdown_totals": totals,
                         "total_damage": round(float(result["total_damage"]), 2),

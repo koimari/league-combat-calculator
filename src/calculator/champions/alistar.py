@@ -13,8 +13,66 @@ Why each slot is non-generic:
   legacy module reached by calling the generic parser and patching its
   output.
 - R (Unbreakable Will) is damage reduction only and P (Triumphant
-  Roar) is healing only — neither is modeled, both absent from the
-  slot map.
+  Roar) is healing only — neither deals cast damage, so neither is in
+  the SLOTS map (see the Roadmap session note below for each one's
+  MODULE_COVERAGE classification).
+
+Roadmap session 3 (2026-08-20): closes one of Alistar's two out_of_scope
+slots (P); R stays open with a named receipt.
+
+  - P (Triumphant Roar): already fully modeled as a sourced self-heal via
+    ``derive_self_healing`` below (5% of Alistar's maximum health per
+    completed 7-stack window, cached passive prose: "heal himself for 5%
+    of his maximum health"), wired through ``SELF_HEALING_RULE`` (the
+    same runtime path Taric's Q and Zac/Zilean's revive-adjacent heals
+    use) and live-tested end to end (``tests/test_e1_healing_b3.py::
+    test_alistar_triumphant_roar_heals_five_percent_max_health_per_seven_stacks``).
+    ``MODULE_COVERAGE`` was simply stale, still reading "out_of_scope" for
+    a slot the self-heal ledger had already closed — the identical
+    stale-label pattern Shen P/Taric P/Zilean R were already corrected
+    under in earlier roadmap sessions. Reclassified from out_of_scope to
+    modeled; no behavior change.
+
+    The same cached passive prose also grants a second, larger heal to
+    "nearby allied champions for 7% of his maximum health" on the same
+    7-stack trigger — a DIFFERENT amount than Alistar's own 5%. That ally
+    heal is NOT modeled and stays a documented gap, not a silent one: the
+    engine's only fan-out mechanism for a champion-authored
+    ``SELF_HEALING_RULE`` heal (``participant_timeline.py``, the
+    ``self_and_all_teammates``/``self_and_one_teammate`` clone loop that
+    Taric's Q ally heal rides) clones the SAME event dict — same
+    ``amount`` key — to every recipient; it has no support for a
+    self-amount that differs from the ally-amount on one trigger. Wiring
+    a correctly-differentiated 5%-self/7%-ally split would need a new
+    fan-out shape in ``participant_timeline.py``, which is outside this
+    session's alistar.py/anivia.py-only scope. Documented in
+    ASSUMPTIONS rather than fabricated or silently dropped.
+  - R (Unbreakable Will): stays out_of_scope. The number IS sourced
+    (``data/champions.json`` Alistar R "Damage Reduction" leveling row:
+    55/65/75% by rank, 7s duration, cleanses Alistar's own CC on cast) —
+    but wiring it is structurally blocked, not missing sourcing.
+    Every per-champion-authored non-damage hook this engine's runtime
+    actually reads is enumerated by three call sites (grepped
+    ``getattr(module, "..."...)`` across ``src/calculator/*.py``):
+    ``SELF_HEALING_RULE`` (healing.py), ``starting_revive_defense``
+    (defensive_effects.py), and ``GRIEVOUS_WOUNDS_SOURCES``
+    (healing_reduction.py). None of the three accepts an "incoming
+    damage reduction while active" contract. The nearest existing
+    mechanism, ``StartingDefenses.incoming_damage_multiplier``
+    (defensive_effects.py), is real and already consumed by the fight
+    engine — but every producer of it today is an ITEM effect wired
+    inline inside ``resolve_starting_defenses`` (Celestial Opposition,
+    Armored Advance's ``basic_damage_multiplier``), keyed by item name,
+    not by a champion-module resolver function; there is no
+    ``_champion_incoming_damage_reduction``-style lookup the way
+    ``_champion_starting_revive`` exists for revives. Adding one is a new
+    hook in ``defensive_effects.py`` (plus deciding how a MID-fight,
+    player-triggered 7s active window should be represented against a
+    module whose name is literally ``StartingDefenses`` — Unbreakable
+    Will is not "ready at fight start" the way a passive shield or a
+    revive is), which is outside this session's alistar.py/anivia.py-only
+    scope. Named here so a session with defensive_effects.py in scope can
+    close it without re-deriving the audit.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -143,8 +201,18 @@ OPTIONS: list[dict[str, Any]] = []
 ASSUMPTIONS = [
     "E Trample deals full duration damage (10 ticks over 5 seconds)",
     "E empowered auto always procs once per cast (5 stacks reached)",
-    "Passive (Triumphant Roar) healing is ignored",
-    "R (Unbreakable Will) damage reduction is ignored",
+    "P (Triumphant Roar) is modeled as a sourced self-heal: 5% of "
+    "Alistar's maximum health per completed 7-stack window (cached "
+    "passive prose), via SELF_HEALING_RULE. The same passive's 7%-of-"
+    "maximum-health heal to nearby allies on the same trigger is a "
+    "different amount than the 5% self heal and is NOT modeled — the "
+    "engine's champion-authored heal fan-out clones one shared amount to "
+    "every recipient, with no differentiated self/ally split.",
+    "R (Unbreakable Will) damage reduction (55/65/75% for 7s, cleanses "
+    "Alistar's own CC) is sourced but unmodeled: no champion-authored "
+    "hook for a mid-fight incoming-damage-reduction window exists in "
+    "this engine today (only SELF_HEALING_RULE, starting_revive_defense, "
+    "and GRIEVOUS_WOUNDS_SOURCES are read from a champion module).",
 ]
 
 SLOTS = {
@@ -166,7 +234,11 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "out_of_scope",
 }
 REVIEW_STATUS = "reviewed_module"
 

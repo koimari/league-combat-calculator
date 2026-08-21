@@ -183,6 +183,18 @@ class TestFiddlesticksIrrelevantOption:
 
 
 class TestKalistaSoulMarkProc:
+    # Roadmap session 3 (2026-08-20): Kalista R (Fate's Call) is reclassified
+    # from out_of_scope to no_damage and now emits an explicit zero-damage row
+    # (module_helpers.no_damage).  R is in DEFAULT_CAST_ORDER and the resolver's
+    # base order admits any slot with a parsed row -- damage or not
+    # (rotation_resolver.derive_champion_rule: the filter is
+    # `isinstance(ability_damages.get(s), Mapping)`) -- so R now appears in the
+    # derived order.  That is the established convention, not a regression:
+    # Bard (R no_damage), Tryndamere (R no_damage), Twisted Fate (R no_damage),
+    # Singed (R zero-total) and Olaf (R _rank_gated_no_damage) all already carry
+    # a zero-damage R in their derived level-11 order in the committed baseline.
+    # R stays correctly rank-gated -- absent at levels 1 and 5, present at 11.
+    # These tests pin W's OPTION-GATING semantics, which are unchanged.
     def test_w_absent_when_unarmed_and_present_when_armed(
         self, champion_by_name, items_by_name
     ) -> None:
@@ -190,7 +202,7 @@ class TestKalistaSoulMarkProc:
         parsed_off = _parse(data, 11, (), items_by_name)
         order_off, _ = _resolve(data, parsed_off)
         assert "W" not in order_off
-        assert order_off == ["Q", "E"]
+        assert order_off == ["Q", "E", "R"]
 
         parsed_on = _parse(
             data, 11, (), items_by_name, champion_options={"soul_mark_proc": True}
@@ -199,7 +211,7 @@ class TestKalistaSoulMarkProc:
             data, parsed_on, champion_options={"soul_mark_proc": True}
         )
         assert "W" in order_on
-        assert order_on == ["Q", "W", "E"]
+        assert order_on == ["Q", "W", "E", "R"]
         assert "soul_mark_proc" in _receipt_text(rule_on)
 
     def test_option_gated_w_is_deterministic_across_cache_warmth(
@@ -217,7 +229,9 @@ class TestKalistaSoulMarkProc:
         order_warm, rule_warm = _resolve(
             data, parsed_on, champion_options={"soul_mark_proc": True}
         )
-        assert order_cold == order_warm == ["Q", "W", "E"]
+        # "R" is the session-3 zero-damage Fate's Call row (see the class
+        # comment); W's option-gated presence is what this test pins.
+        assert order_cold == order_warm == ["Q", "W", "E", "R"]
         assert "W" in order_cold
         assert "soul_mark_proc" in _receipt_text(rule_cold)
         assert "soul_mark_proc" in _receipt_text(rule_warm)

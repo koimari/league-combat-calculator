@@ -3,6 +3,7 @@
 import pytest
 
 from src.calculator.ability_spec import parts_raw_total
+from src.calculator.champions import get_champion_module_meta
 
 # ---------------------------------------------------------------------------
 # Q — Flash Frost
@@ -53,10 +54,25 @@ class TestQFlashFrost:
 
 
 class TestWCrystallize:
-    """W is a utility wall — should not appear in results."""
+    """W is a knockback wall with no sourced damage/heal/shield number —
+    documented zero-damage row (module_helpers.no_damage), not a silent
+    absence (roadmap session 3)."""
 
-    def test_w_not_in_results(self, anivia_data, parse_at) -> None:
+    def test_w_is_explicit_zero_damage_row(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 9)
+        entry = abilities["W"]
+        assert entry["name"] == "Crystallize"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert "knockback wall" in entry["detail"].lower()
+
+    def test_w_absent_when_unlearned(self, anivia_data, parse_at) -> None:
+        """The state row is rank-gated like every other slot."""
+        _, abilities = parse_at(
+            anivia_data,
+            9,
+            ability_ranks={"Q": 5, "W": 0, "E": 1, "R": 1},
+        )
         assert "W" not in abilities
 
 
@@ -200,11 +216,20 @@ class TestRGlacialStorm:
 
 
 class TestPassiveRebirth:
-    """Passive is resurrection only — no damage, not in results."""
+    """Passive is the sourced revive state (StartingDefenses.revive_*) —
+    it prices no cast damage of its own, so it stays absent from the
+    parsed abilities dict even though MODULE_COVERAGE now reads
+    "modeled" (roadmap session 3: tests/test_e8_support.py exercises the
+    revive kernel end to end)."""
 
     def test_passive_not_in_results(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 9)
         assert "P" not in abilities
+
+    def test_passive_not_in_slot_map(self) -> None:
+        """P has no cast-damage SLOTS entry; it is wired through
+        starting_revive_defense instead."""
+        assert "P" not in get_champion_module_meta("Anivia")["slots"]
 
 
 # ---------------------------------------------------------------------------
@@ -232,3 +257,24 @@ class TestFullCombo:
             + abilities["R"]["total_raw"]
         )
         assert total == pytest.approx(1690.0)
+
+
+# ---------------------------------------------------------------------------
+# Module coverage metadata
+# ---------------------------------------------------------------------------
+
+
+class TestModuleCoverage:
+    """Roadmap session 3: P and W close from out_of_scope (P -> modeled via
+    the sourced revive kernel, W -> no_damage via the explicit zero-damage
+    row)."""
+
+    def test_module_coverage_reflects_p_w_dispositions(self) -> None:
+        coverage = get_champion_module_meta("Anivia")["coverage"]
+        assert coverage == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }

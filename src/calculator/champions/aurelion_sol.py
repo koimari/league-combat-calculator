@@ -21,12 +21,41 @@ Why each slot is non-generic:
   is excluded: a target hit by the star is immune to the shockwave.
 - P (Cosmic Creator) is the Stardust stack mechanic — no damage row; it
   exists as the ``stardust_stacks`` option feeding Q and E.
+
+Roadmap session 3 (2026-08-20): P and W are reclassified from
+out_of_scope to no_damage. Both now emit an explicit, user-visible
+zero-damage row (``module_helpers.no_damage``) instead of staying
+silently absent from the parse output.
+
+  - P (Cosmic Creator): the cached entry's own leveling is empty
+    (``data/champions.json`` AurelionSol P: single effect row,
+    ``"leveling": []``) — P grants no damage of its own; it is the
+    permanent Stardust counter that parameterizes Q's burst and E's
+    execute threshold (both already modeled above via
+    ``AURELION_SOL_STARDUST_RULE`` / the ``stardust_stacks`` option).
+    Corroborated by the game binary
+    (``data/bin/characters/aurelionsol.bin.json``,
+    ``Characters/AurelionSol/Spells/AurelionSolPassiveAbility/
+    AurelionSolPassive``): its ``mSpell`` carries no damage-type field,
+    and its only ``mSpellCalculations`` entries (``QPassiveScaling``,
+    ``EPassiveScalingExecute``) are the shared scaling formulas Q/E
+    already read — P itself computes nothing.
+  - W (Astral Flight): the cached entry's only leveling row is "Breath
+    of Light Flat Damage Modifier" (108-112%), a multiplier consumed by
+    Q's beam (``_w_beam_modifier`` above) — W carries no damage
+    attribute of its own. Corroborated by the game binary
+    (``Characters/AurelionSol/Spells/AurelionSolWAbility/AurelionSolW``):
+    its ``mSpellCalculations`` are ``DashSpeed`` and two dash-speed/
+    level-interpolation helpers, no damage node. W stays gated behind
+    the existing ``w_active`` option for its Q-modifier effect; the new
+    slot only makes W's own zero-damage state visible.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     by_option,
     damage_entry,
@@ -397,6 +426,58 @@ def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _cosmic_creator(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the permanent Stardust counter — documented zero-damage row.
+
+    P grants no damage of its own; it only parameterizes Q's burst and
+    E's execute threshold through the ``stardust_stacks`` option, both
+    priced above via ``AURELION_SOL_STARDUST_RULE``.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Cosmic Creator"),
+        reason=(
+            "Cosmic Creator grants Aurelion Sol permanent Stardust stacks "
+            "from his damaging abilities; the cached entry's own leveling "
+            "is empty (data/champions.json AurelionSol P) and the game "
+            "binary's passive spell record carries no damage-type field "
+            "(data/bin/characters/aurelionsol.bin.json, "
+            "AurelionSolPassiveAbility) — its only mSpellCalculations "
+            "(QPassiveScaling, EPassiveScalingExecute) are the shared "
+            "scaling formulas Q's burst and E's execute threshold already "
+            "read via stardust_stacks. P itself prices nothing."
+        ),
+    )
+
+
+def _astral_flight(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the damage-less dash — documented zero-damage row.
+
+    W's only calc effect is Q's beam flat-damage modifier
+    (``_w_beam_modifier`` above), already gated by the ``w_active``
+    option; W itself carries no damage attribute.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Astral Flight"),
+        reason=(
+            "Astral Flight is a damage-less dash; its only cached "
+            "leveling row is the 'Breath of Light Flat Damage Modifier' "
+            "(108-112%) already consumed as Q's beam multiplier "
+            "(_w_beam_modifier, gated by w_active) — no damage attribute "
+            "belongs to W itself. Corroborated by the game binary "
+            "(AurelionSolWAbility): its mSpellCalculations are DashSpeed "
+            "and dash-speed/level-interpolation helpers only."
+        ),
+    )
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "stardust_stacks",
@@ -461,10 +542,17 @@ ASSUMPTIONS = [
     "aurelionsol.bin.json + ddragon AurelionSol.json). resource_cost is "
     "not stamped for Q's channel (no per-cast test asserts it), so no "
     "runtime behavior is affected either way.",
+    "P (Cosmic Creator) and W (Astral Flight) carry no sourced "
+    "damage/heal/shield row of their own (P's leveling is empty; W's "
+    "only leveling row is the Q beam multiplier already priced above) "
+    "— both are no_damage, not out_of_scope, and each emits an explicit "
+    "zero-damage state row rather than staying silently absent.",
 ]
 
 SLOTS = {
+    "P": _cosmic_creator,
     "Q": _breath_of_light,
+    "W": _astral_flight,
     "E": _singularity,
     "R": by_option(
         "r_empowered",
@@ -494,6 +582,10 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
