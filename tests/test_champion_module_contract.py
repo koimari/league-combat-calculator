@@ -81,6 +81,23 @@ def _channel_receipts(name: str, slot: str, channel: str) -> list[tuple[str, flo
             for entry in parsed.values()
             for payload in entry.get("self_shield_events", ())
         ]
+    if channel == "post_hit_proc":
+        payload = calculate_payload(
+            {
+                "champion": name,
+                "level": 18,
+                "fight_mode": "time_based",
+                "fight_duration": 6,
+                "include_auto_attacks": False,
+                "deterministic": True,
+                "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+            }
+        )
+        return [
+            (row["name"], float(row.get("total_damage") or 0.0))
+            for key, row in payload["breakdown"].items()
+            if key.startswith("passive")
+        ]
     # The coupled walk, not the one-pair fight: a heal the rule prices with
     # a formula (Zac's Goo chunk) resolves against running health there and
     # publishes zero in the one-pair receipt.
@@ -126,7 +143,8 @@ def test_a_declared_coverage_channel_pays_its_slot(name, slot, channel):
     paid = [
         amount
         for source, amount in _channel_receipts(name, slot, channel)
-        if source == ability
+        # A proc row may qualify the ability name: "Second Skin (Plasma)".
+        if source == ability or source.startswith(f"{ability} (")
     ]
     assert paid, f"{name} {slot}: {channel} paid nothing named {ability!r}"
     assert max(paid) > 0.0, f"{name} {slot}: {channel} paid only zero"

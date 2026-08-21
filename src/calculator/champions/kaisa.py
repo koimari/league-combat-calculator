@@ -29,13 +29,10 @@ declares it:
 - E (Supercharge) and R (Killer Instinct) are ``no_damage``: the first is
   an attack-speed grant, the second a shield plus a dash whose row exists
   only to anchor the Plasma ledger.  Q and W price their own damage.
-- P (Second Skin) is the one slot the coverage vocabulary cannot state.
-  Plasma **is** priced — it publishes its own breakdown row,
-  ``passive_plasma``, carried by W's ``post_hit_proc`` in one-rotation
-  and by R's in timed — but P has no ``SLOTS`` entry, and the contract
-  reserves every status except ``out_of_scope`` for slots that emit one
-  (``tests/test_champion_module_contract.py``).  So P reads
-  ``out_of_scope`` while being modeled; do not read it as a damage gap.
+- P (Second Skin) is ``modeled`` through the ``post_hit_proc`` coverage
+  channel: Plasma publishes its own breakdown row, ``passive_plasma``,
+  carried by W's ``post_hit_proc`` in one-rotation and by R's in timed,
+  so P has no ``SLOTS`` entry of its own and names the channel instead.
 """
 
 import math
@@ -680,9 +677,11 @@ parse_abilities = build_parser(SLOTS, "Kai'Sa", cc_kinds=MODULE_CC)
 # P has no slot of its own and can therefore only read ``out_of_scope``,
 # which under-reports it — see the module docstring.
 MODULE_COVERAGE = {
-    "P": "out_of_scope",
+    "P": "modeled",
     "Q": "modeled",
     "W": "modeled",
     "E": "no_damage",
     "R": "no_damage",
 }
+
+COVERAGE_CHANNELS = {"P": ("post_hit_proc",)}

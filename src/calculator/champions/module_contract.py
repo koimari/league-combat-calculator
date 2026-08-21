@@ -31,7 +31,15 @@ REVIEW_STATUS = "reviewed_module"
 #: module claiming ``modeled`` for such a slot names the channel here so
 #: the claim resolves to a receipt instead of to prose.
 COVERAGE_CHANNELS = frozenset(
-    {"starting_revive_defense", "self_shield_events", "self_healing_rule"}
+    {
+        "starting_revive_defense",
+        "self_shield_events",
+        "self_healing_rule",
+        # A passive priced as its own breakdown row by another slot's
+        # ``post_hit_proc`` (Kai'Sa's Plasma rides W in one-rotation, R in
+        # timed): the row is published under the passive's name.
+        "post_hit_proc",
+    }
 )
 
 # Facts with one home outside the module: the review status is this

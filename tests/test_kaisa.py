@@ -572,15 +572,13 @@ class TestReviewedCrowdControl:
 
 
 class TestCoverageMap:
-    """E and R price nothing, and P prices damage the map cannot say so.
+    """E and R price nothing; P prices Plasma through a coverage channel.
 
     Second Skin's Plasma is a real, published damage row — the breakdown
-    key ``passive_plasma`` — but it rides W's (one-rotation) or R's
-    (timed) ``post_hit_proc`` instead of a ``SLOTS`` entry of its own, and
-    the module contract reserves every status except ``out_of_scope`` for
-    slots that emit a row.  So P reads ``out_of_scope`` while being
-    modeled; this test pins the runtime row so the reading stays a
-    vocabulary limit and not a real gap.
+    key ``passive_plasma`` — riding W's (one-rotation) or R's (timed)
+    ``post_hit_proc`` instead of a ``SLOTS`` entry of its own, so the map
+    names the ``post_hit_proc`` channel and the contract's channel test
+    checks the row pays under the passive's name.
     """
 
     _PROBE = {
@@ -593,7 +591,7 @@ class TestCoverageMap:
 
     def test_the_map_is_the_rows_the_module_prices(self):
         assert get_champion_module_contract("Kai'Sa").coverage == {
-            "P": "out_of_scope",
+            "P": "modeled",
             "Q": "modeled",
             "W": "modeled",
             "E": "no_damage",
