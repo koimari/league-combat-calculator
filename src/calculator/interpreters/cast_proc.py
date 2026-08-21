@@ -114,17 +114,9 @@ def proc_fields(
 def proc_mechanic_id(owner: str) -> str:
     """*owner*'s cast-proc mechanic id, or a stop.
 
-    What the pair engine needs to stamp the rows it authors with the mechanic
-    each row previews: ``damage._add_item_proc_damage`` walks
-    :class:`~..item_effects.DamageSource` rows, which carry an item name and
-    no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
-    A stop rather than a default: an unstamped proc row would keep the pair
-    engine's number in every roster total *and* leave the walk pricing the
-    declaration, which is the double count this family's retirement exists to
-    make unrepresentable.
+    A stop rather than a default: an unstamped proc row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
     """
     rules = cast_proc_rules([owner])
     if not rules:
@@ -136,13 +128,7 @@ def proc_mechanic_id(owner: str) -> str:
 
 
 def repeated_target_multiplier(charges: int, single_target: float) -> float:
-    """What a *second* target takes, as a share of one charge.
-
-    The registry compiler's own arithmetic, given a home: a proc that pays
-    ``single_target`` when every charge lands on one enemy pays the remainder
-    spread across the other ``charges - 1``.  Declaring it as a third number
-    would let it disagree with the two it is derived from.
-    """
+    """A second target's share of one charge: what ``single_target`` leaves over."""
     return (single_target - UNSPLIT_MULTIPLIER) / max(1, charges - 1)
 
 
@@ -287,11 +273,8 @@ def cast_proc_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
     """Every held owner whose cast proc attaches a self shield to its event.
 
-    Answered from the declarations alone, with no build context: the tuple
-    ledger's adequacy question is "could this build attach a self shield to
-    a damage event", which is a property of what the items declare and not
-    of the fight that resolves their magnitudes.  Owners come back in build
-    order so a receipt names them the way the caller supplied the build.
+    Answered from the declarations alone, with no build context, and in build
+    order so a receipt names the owners the way the caller supplied them.
     """
     return tuple(
         rule.owner

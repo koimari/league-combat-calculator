@@ -319,12 +319,9 @@ def _process_champions(
 
 
 def _wiki_item_table() -> dict[str, Any]:
-    """Decode the Wiki's ``Module:ItemData/data`` table, keyed by item name.
-
-    The generator reads the same page but keeps only the first description of
-    each effect and drops mode availability entirely, so ``item_source`` needs
-    the raw table to record what the cache would otherwise lose.
-    """
+    """The Wiki's ``Module:ItemData/data`` table, keyed by item name.
+    The generator keeps only each effect's first description and drops mode
+    availability, so ``item_source`` needs the raw table."""
     from lolstaticdata.items.pull_items_wiki import get_item_urls
 
     return get_item_urls(False)
@@ -523,11 +520,9 @@ def _ordered_roster(
 ) -> list[dict[str, Any]]:
     """Sort the roster into the Rune page's own path order, then by row.
 
-    Data Dragon returns the paths in its own order; the cache is written in
-    the order the game shows them so a picker can render the file as it
-    stands. Within a path the roster's own order survives — the sort is
-    stable and a rune's position in its row is Data Dragon's fact.
-    """
+    Data Dragon returns paths in its own order; the cache is written in the
+    order the game shows them.  The sort is stable, so within a path a rune's
+    position stays Data Dragon's fact."""
     rank = {name: index for index, name in enumerate(path_order(wikitext))}
     unknown = len(rank)
     return sorted(

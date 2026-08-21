@@ -122,14 +122,8 @@ class AllyPacketSlot:
     def emits(self, kind: PacketKind, recipients: Recipients) -> bool:
         """Whether this producer declares a packet of *kind* to *recipients*.
 
-        The question an engine asks when it wants to know whether a mechanic
-        lands inside its own jurisdiction — a shield the *holder* receives is
-        priced by the pair engine, while the same producer's packet to an ally
-        is the roster walk's.  Answered off the declared
-        :class:`~..item_behavior.PacketSpec`s, so a producer that grows or
-        loses a recipient reaches every such reader on the commit its
-        declaration changes.
-        """
+        An engine asks this to know its own jurisdiction: the holder's shield
+        is the pair engine's, the packet to an ally is the roster walk's."""
         return any(
             spec.kind is kind and spec.recipients is recipients
             for spec in _payload(self.rule).packets
@@ -148,10 +142,9 @@ class AllyPacketSlot:
     def level_value(self, key: str, level: int) -> float:
         """One declared level ramp, read at *level*.
 
-        *key* is the ramp's low key, which is how the declaration names it —
-        a ramp is one number with two ends, not two numbers.  *level* is the
-        level of whichever participant :meth:`level_subject` names, which is
-        the source's answer rather than the call site's.
+        *key* is the ramp's low key, the way the declaration names it: a ramp
+        is one number with two ends.  *level* is whichever participant
+        :meth:`level_subject` names, so the source answers, not the caller.
         """
         for reference in _payload(self.rule).values:
             if isinstance(reference, LevelValueRef) and reference.min_key == key:

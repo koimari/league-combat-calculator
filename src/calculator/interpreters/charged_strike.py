@@ -3,16 +3,11 @@
 Eleven items strike harder than an on-hit does, and none of them strikes on
 every hit.  A charge is spent on one attack, or a strike lands every Nth
 application, or an ability arms a shaped charge, or an ultimate empowers a
-run of the holder's own attacks.  Until this module the four shapes reached
-the engine through four registry tags and four compilers, and two of those
-compilers decided what an item carried by comparing its name: Voltaic
-Cyclosword's temporary lethality was an ``item_name == ...`` branch, and
-Fiendhunter Bolts' window was assembled inline in the projection loop.
-
-The declaration says all four now.  Every optional mechanic — Energized
-stacks, the lethality window, Statikk's arc — is a declared record or a
-declared ``None``, chosen by the registry's own schema so a dropped parse
-raises rather than being read as an absence.
+run of the holder's own attacks.  The declaration says which shape an item
+takes.  Every optional mechanic (Energized stacks, the lethality window,
+Statikk's arc) is a declared record or a declared ``None``, chosen by the
+registry's own schema so a dropped parse raises rather than being read as an
+absence.
 
 **"This fires once" is a declaration.**  ``max_procs`` is always present and
 is ``Const(1, "count")`` where the strike fires once, rather than being the
@@ -126,23 +121,15 @@ def strike_fields(
 def strike_mechanic_id(owner: str) -> str:
     """*owner*'s damage-authoring charged-strike mechanic id, or a stop.
 
-    What the pair engine needs to stamp the rows it authors with the
-    mechanic each row previews: the five authoring sites walk
-    :class:`~..item_effects.DamageSource` rows, which carry an item name and
-    no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
     A **swing schedule** is skipped rather than returned: Guinsoo's Rageblade
     declares one beside its on-hit strike and Yun Tal Wildarrows declares one
-    alone, and neither authors a damage row — a schedule changes how often
-    the holder swings, which the pair engine applies and no walk re-prices.
-    Returning one here would stamp somebody else's row as a preview of it.
+    alone, and neither authors a damage row.  A schedule changes how often the
+    holder swings, which the pair engine applies and no walk re-prices, so
+    returning one here would stamp somebody else's row as a preview of it.
 
-    A stop rather than a default: an unstamped strike row would keep the
-    pair engine's number in every roster total *and* leave the walk pricing
-    the declaration, which is the double count this family's retirement
-    exists to make unrepresentable.
+    A stop rather than a default: an unstamped strike row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
     """
     rules = [
         rule
@@ -161,9 +148,8 @@ def strike_mechanic_id(owner: str) -> str:
 def _payload_of(rule: BehaviorRule, shape: type) -> object:
     """*rule*'s payload if it is of *shape*, or a stop.
 
-    The dispatch above has already chosen the branch; this is what keeps that
-    choice checkable rather than assumed, and it raises under ``-O`` where an
-    assertion would vanish.
+    The dispatch above has already chosen the branch; this keeps that choice
+    checkable, and it raises under ``-O`` where an assertion would vanish.
     """
     if not isinstance(rule.payload, shape):
         raise ChargedStrikeInterpretationError(
@@ -312,10 +298,7 @@ class RearmedWindow:
     def refund(self, critical_chance: float) -> float:
         """What one attack pays down this window's cooldown by.
 
-        The critical share is weighted by the holder's chance rather than
-        rolled, which is the model the whole engine uses for a crit-scaled
-        rate, and the chance is clamped to the unit interval because a
-        declaration cannot stop a caller handing it 1.4.
+        The critical share is weighted by the holder's chance, clamped to [0, 1].
         """
         return (
             self.refund_per_attack
