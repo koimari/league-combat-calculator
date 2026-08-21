@@ -1,542 +1,542 @@
 {
-  "patch": "16.15",
-  "checked_at": "2026-08-06T12:36:09.630672+00:00",
+  "patch": "16.16",
+  "checked_at": "2026-08-20T23:23:48.104128+00:00",
   "champions": {
     "Aatrox": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 10,
       "ability_rows_stale": 0,
-      "note": "12 ability row(s) unchecked (no game mapping); Q[0] First Cast Damage matched QBaseDamage; Q[0] First Cast Damage matched QTotalADRatio; W[0] Physical Damage matched WBaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 12 ability row(s) unchecked (no game mapping); Q[0] First Cast Damage matched QBaseDamage; Q[0] First Cast Damage matched QTotalADRatio; W[0] Physical Damage matched WBaseDamage"
     },
     "Ahri": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Damage Per Pass matched BaseDamage; W[0] Primary Magic Damage matched BaseDamage; W[0] Primary Magic Damage matched MovementSpeed"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Damage Per Pass matched BaseDamage; W[0] Primary Magic Damage matched BaseDamage; W[0] Primary Magic Damage matched MovementSpeed"
     },
     "Akali": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 17,
+      "stats_checked": 16,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched PassiveBADRatio; P[0] Bonus Magic Damage matched PassiveAPRatio; Q[0] Magic Damage matched BaseDamageNamed"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched PassiveBADRatio; P[0] Bonus Magic Damage matched PassiveAPRatio; Q[0] Magic Damage matched BaseDamageNamed"
     },
     "Akshan": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); P[0] Bonus Damage matched ShieldBADRatio; Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); P[0] Bonus Damage matched ShieldBADRatio; Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio"
     },
     "Alistar": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched Damage"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched Damage"
     },
     "Ambessa": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 17,
+      "stats_checked": 16,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "9 ability row(s) unchecked (no game mapping); Q[0] Increased Physical Damage matched Damage_1_Base; Q[0] Increased Physical Damage matched Damage_1_BAD_Ratio; Q[0] Increased Physical Damage matched Damage_1_Percent"
+      "note": "1 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Increased Physical Damage matched Damage_1_Base; Q[0] Increased Physical Damage matched Damage_1_BAD_Ratio; Q[0] Increased Physical Damage matched Damage_1_Percent"
     },
     "Amumu": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; E[0] Physical Damage Reduction matched BaseDamageReduction; E[0] Physical Damage Reduction matched PassiveScaling"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; E[0] Physical Damage Reduction matched BaseDamageReduction; E[0] Physical Damage Reduction matched PassiveScaling"
     },
     "Anivia": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched PassthroughBaseDamage; Q[0] Magic Damage matched ExplosionBaseDamage; Q[0] Stun Duration matched StunDuration"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched PassthroughBaseDamage; Q[0] Magic Damage matched ExplosionBaseDamage; Q[0] Stun Duration matched StunDuration"
     },
     "Annie": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
     },
     "Aphelios": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 2,
       "ability_rows_stale": 0,
-      "note": "31 ability row(s) unchecked (no game mapping); P[1] no game spell; P[2] no game spell; P[3] no game spell"
+      "note": "1 stat(s) unchecked (no game field); 31 ability row(s) unchecked (no game mapping); P[1] no game spell; P[2] no game spell; P[3] no game spell"
     },
     "Ashe": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 11,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Bonus Attack Speed matched BonusAS; Q[0] Total Damage Per Flurry matched DamagePerStrike; W[0] Arrows matched NumberOfArrowsTooltip"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Bonus Attack Speed matched BonusAS; Q[0] Total Damage Per Flurry matched DamagePerStrike; W[0] Arrows matched NumberOfArrowsTooltip"
     },
     "AurelionSol": {
       "stale": true,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 1,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] cost drifted (bin and ddragon: [35.0, 40.0, 45.0]...); Q[0] Magic Damage per Second matched RankDamagePerSecond; Q[0] Magic Damage per Second matched APPerSecond"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] cost drifted (bin and ddragon: [35.0, 40.0, 45.0]...); Q[0] Magic Damage per Second matched RankDamagePerSecond; Q[0] Magic Damage per Second matched APPerSecond"
     },
     "Aurora": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 18,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); P[0] Heal matched BonusMsIncrease; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched Q2MinionMod"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); P[0] Heal matched BonusMsIncrease; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched Q2MinionMod"
     },
     "Azir": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
     },
     "Bard": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Disable Duration matched SlowDuration"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Disable Duration matched SlowDuration"
     },
     "Belveth": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 14,
+      "stats_checked": 13,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched Damage; Q[0] Physical Damage matched ADRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched Damage; Q[0] Physical Damage matched ADRatio; W[0] Magic Damage matched BaseDamage"
     },
     "Blitzcrank": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Bonus Attack Speed matched AttackSpeedMod"
+      "note": "1 stat(s) unchecked (no game field); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Bonus Attack Speed matched AttackSpeedMod"
     },
     "Brand": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); P[0] Max Health Damage matched PercentHealthDamage; Q[0] Magic Damage matched SpellBaseDamage; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Per-Level Scaling matched ManaRestoration; P[0] Max Health Damage matched PercentHealthDamage; Q[0] Magic Damage matched SpellBaseDamage"
     },
     "Braum": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 18,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched MaxHPDamageValue; W[0] Ally Bonus Armor matched BaseResists"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched MaxHPDamageValue; W[0] Ally Bonus Armor matched BaseResists"
     },
     "Briar": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 14,
+      "stats_checked": 13,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "18 ability row(s) unchecked (no game mapping); P[0] Bonus Damage matched HealPercent; P[0] Bonus Damage matched PercentOfBleedHealedOnKill; P[0] Per-Level Scaling matched BleedTickRate"
+      "note": "1 stat(s) unchecked (no game field); 18 ability row(s) unchecked (no game mapping); P[0] Bonus Damage matched HealPercent; P[0] Bonus Damage matched PercentOfBleedHealedOnKill; P[0] Per-Level Scaling matched BleedTickRate"
     },
     "Caitlyn": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched tADRatio; W[0] Trap Duration matched TrapDuration"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched tADRatio; W[0] Trap Duration matched TrapDuration"
     },
     "Camille": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched TADRatio; Q[0] Bonus Movement Speed matched TADRatio; W[0] Physical Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched TADRatio; Q[0] Bonus Movement Speed matched TADRatio; W[0] cooldown matched ddragon tooltip"
     },
     "Cassiopeia": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Total Magic Damage matched BaseDamage; Q[0] Bonus Movement Speed matched ChampHitMSBonus; W[0] Magic Damage Per Second matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Total Magic Damage matched BaseDamage; Q[0] Bonus Movement Speed matched ChampHitMSBonus; W[0] Magic Damage Per Second matched BaseDamage"
     },
     "Chogath": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Magic damage matched BaseDamage; E[0] Magic Damage matched BaseDamage; E[0] Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Magic damage matched BaseDamage; E[0] Magic Damage matched BaseDamage; E[0] Magic Damage matched APRatio"
     },
     "Corki": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched ADRatio; Q[0] Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched ADRatio; Q[0] Magic Damage matched APRatio"
     },
     "Darius": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 11,
       "ability_rows_stale": 0,
-      "note": "9 ability row(s) unchecked (no game mapping); Q[0] Physical Damage (Blade) matched BaseDamage; Q[0] Physical Damage (Blade) matched TotalADRatio; E[0] Armor Penetration matched PassivePercentArmorPen"
+      "note": "1 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Physical Damage (Blade) matched BaseDamage; Q[0] Physical Damage (Blade) matched TotalADRatio; E[0] Armor Penetration matched PassivePercentArmorPen"
     },
     "Diana": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched APRatio; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched APRatio; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
     },
     "DrMundo": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "15 ability row(s) unchecked (no game mapping); Q[0] cost unchecked (game files: no mana cost); Q[0] Magic Damage matched CurrentHealthDamage; Q[0] Minimum Damage matched MinimumDamage"
+      "note": "1 stat(s) unchecked (no game field); 15 ability row(s) unchecked (no game mapping); Q[0] cost unchecked (game files: no mana cost); Q[0] Magic Damage matched CurrentHealthDamage; Q[0] Minimum Damage matched MinimumDamage"
     },
     "Draven": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched ADScaling; W[0] Bonus Attack Speed matched AttackSpeed"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched ADScaling; W[0] Bonus Attack Speed matched AttackSpeed"
     },
     "Ekko": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Initial Magic Damage matched OutgoingDamage; Q[0] Slow matched SlowPercent; Q[0] Return Magic Damage matched ReturnDamage"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Initial Magic Damage matched OutgoingDamage; Q[0] Slow matched SlowPercent; Q[0] Return Magic Damage matched ReturnDamage"
     },
     "Elise": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 11,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched TargetHPDamage; Q[0] Capped Monster Damage matched MonsterCapDamage"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched TargetHPDamage; Q[0] Capped Monster Damage matched MonsterCapDamage"
     },
     "Evelynn": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
+      "stats_checked": 18,
+      "ability_rows_checked": 18,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched MissileBaseDamage; Q[0] Magic Damage matched BonusDamageAPRatio; Q[0] Bonus Magic Damage matched BonusDamageBase"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched MissileBaseDamage; Q[0] Magic Damage matched BonusDamageAPRatio; Q[0] Bonus Magic Damage matched BonusDamageBase"
     },
     "Ezreal": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BaseDamageADRatio; Q[0] Physical Damage matched BaseDamageAPRatio"
+      "note": "1 stat(s) unchecked (no game field); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BaseDamageADRatio; Q[0] Physical Damage matched BaseDamageAPRatio"
     },
     "Fiddlesticks": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Fear Duration matched FearDuration; Q[0] Magic Damage matched MaxHealthDamage; Q[0] Minimum Damage matched MinimumDamage"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Fear Duration matched FearDuration; Q[0] Magic Damage matched MaxHealthDamage; Q[0] Minimum Damage matched MinimumDamage"
     },
     "Fiora": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched Damage; Q[0] Physical Damage matched bADRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched Damage; Q[0] Physical Damage matched bADRatio; W[0] Magic Damage matched BaseDamage"
     },
     "Fizz": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); W[0] Total Passive Magic Damage matched DoTBaseDamage; W[0] Total Passive Magic Damage matched DoTRatio; W[0] Passive Magic Damage per Tick matched ActiveDuration"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); W[0] Total Passive Magic Damage matched DoTBaseDamage; W[0] Total Passive Magic Damage matched DoTRatio; W[0] Passive Magic Damage per Tick matched ActiveDuration"
     },
     "Galio": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Magic Shield Strength matched PassiveShieldHealthRatio; W[0] Physical Damage Reduction matched MaxChargeDuration"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Magic Shield Strength matched PassiveShieldHealthRatio; W[0] Physical Damage Reduction matched MaxChargeDuration"
     },
     "Gangplank": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); P[0] Bonus True Damage matched ADRatio; Q[0] Physical Damage matched SpellDamage; Q[0] Physical Damage matched ADRatio"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); P[0] Bonus True Damage matched ADRatio; Q[0] Physical Damage matched SpellDamage; Q[0] Physical Damage matched ADRatio"
     },
     "Garen": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 10,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Movement Speed Duration matched MovementSpeedDuration; Q[0] Bonus Physical Damage matched BaseDamage; W[0] Damage Reduction matched DRPercent"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Movement Speed Duration matched MovementSpeedDuration; Q[0] Bonus Physical Damage matched BaseDamage; W[0] Damage Reduction matched DRPercent"
     },
     "Gnar": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched MiniBaseDamage; Q[0] Slow matched SlowAmount; Q[1] no game spell"
+      "note": "2 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched MiniBaseDamage; Q[0] Slow matched SlowAmount; Q[1] no game spell"
     },
     "Gragas": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Minimum Magic Damage matched BaseDamage; Q[0] Minimum Slow matched SlowPercent; W[0] Damage Reduction matched BaseDamageReduction"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Minimum Magic Damage matched BaseDamage; Q[0] Minimum Slow matched SlowPercent; W[0] Damage Reduction matched BaseDamageReduction"
     },
     "Graves": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "9 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched FirstADRatio; Q[0] Physical Damage matched BaseDetonationDamage"
+      "note": "1 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched FirstADRatio; Q[0] Physical Damage matched BaseDetonationDamage"
     },
     "Gwen": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "9 ability row(s) unchecked (no game mapping); Q[0] Damage per Snip matched MiniSwipeBaseDamage; Q[0] Damage per Snip matched MiniSwipeAPRatio; Q[0] Center Damage per Snip matched MiniSwipeBaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Damage per Snip matched MiniSwipeBaseDamage; Q[0] Damage per Snip matched MiniSwipeAPRatio; Q[0] Center Damage per Snip matched MiniSwipeBaseDamage"
     },
     "Hecarim": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BaseDamageBonusAD; W[0] Bonus Resistances matched ResistAmount"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BaseDamageBonusAD; W[0] Bonus Resistances matched ResistAmount"
     },
     "Heimerdinger": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "14 ability row(s) unchecked (no game mapping); Q[1] no game spell; W[0] Initial Rocket Magic Damage matched BaseDamage; W[0] Initial Rocket Magic Damage matched InitialDamageAPRatio"
+      "note": "1 stat(s) unchecked (no game field); 14 ability row(s) unchecked (no game mapping); Q[1] no game spell; W[0] Initial Rocket Magic Damage matched BaseDamage; W[0] Initial Rocket Magic Damage matched InitialDamageAPRatio"
     },
     "Hwei": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 9,
       "ability_rows_stale": 0,
-      "note": "30 ability row(s) unchecked (no game mapping); Q[1] no game spell; Q[2] no game spell; Q[3] no game spell"
+      "note": "1 stat(s) unchecked (no game field); 30 ability row(s) unchecked (no game mapping); Q[1] no game spell; Q[2] no game spell; Q[3] no game spell"
     },
     "Illaoi": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Damage Increase matched TentacleDamageAmp; W[0] Additional Physical Damage matched HealthPercentDamage; W[0] Additional Physical Damage matched HealthDamageADRatio"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Damage Increase matched TentacleDamageAmp; W[0] Additional Physical Damage matched HealthPercentDamage; W[0] Additional Physical Damage matched HealthDamageADRatio"
     },
     "Irelia": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Heal matched HealTADCoefficient; W[0] Minimum Physical Damage matched MinDamage"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Heal matched HealTADCoefficient; W[0] Minimum Physical Damage matched MinDamage"
     },
     "Ivern": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Root Duration matched RootDuration"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Root Duration matched RootDuration"
     },
     "Janna": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Minimum Magic Damage matched MinDamage; Q[0] Minimum Magic Damage matched MinimumRatio; Q[0] Bonus Damage Per Second matched BonusDamage"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Minimum Magic Damage matched MinDamage; Q[0] Minimum Magic Damage matched MinimumRatio; Q[0] Bonus Damage Per Second matched BonusDamage"
     },
     "JarvanIV": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Armor Reduction matched BaseARShred; W[0] Slow matched BaseSlowAmount"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Armor Reduction matched BaseARShred; W[0] Slow matched BaseSlowAmount"
     },
     "Jax": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] cost matched ddragon tooltip; Q[0] Physical Damage matched Damage; W[0] Additional Magic Damage matched Damage"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] cost matched ddragon tooltip; Q[0] Physical Damage matched Damage; W[0] Additional Magic Damage matched Damage"
     },
     "Jayce": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "13 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Slow matched Slow; Q[1] no game spell"
+      "note": "1 stat(s) unchecked (no game field); 13 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Slow matched Slow; Q[1] no game spell"
     },
     "Jhin": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 18,
+      "stats_checked": 17,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; W[0] Physical Damage matched BaseDamage"
+      "note": "2 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; W[0] Physical Damage matched BaseDamage"
     },
     "Jinx": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Maximum Attack Speed matched MinigunAttackSpeedMax; Q[0] Bonus Range matched RocketBonusRange; W[0] Physical Damage matched Damage"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Maximum Attack Speed matched MinigunAttackSpeedMax; Q[0] Bonus Range matched RocketBonusRange; W[0] Physical Damage matched Damage"
     },
     "KSante": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched FlatDamage; W[0] Physical Damage matched BaseDamage; W[0] Physical Damage matched MaxHealthDamage"
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched FlatDamage; W[0] Physical Damage matched BaseDamage; W[0] Physical Damage matched MaxHealthDamage"
     },
     "Kaisa": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched PAPRatioBase; P[0] Bonus Magic Damage matched PAPRatioPerStack; Q[0] Physical Damage Per Missile matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched PAPRatioBase; P[0] Bonus Magic Damage matched PAPRatioPerStack; Q[0] Physical Damage Per Missile matched BaseDamage"
     },
     "Kalista": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched TotalADRatio; W[0] Bonus Magic Damage matched MaxHealthDamage"
-    },
-    "Karma": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 12,
-      "ability_rows_stale": 0,
-      "note": "10 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[1] no game spell"
-    },
-    "Karthus": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
-      "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] cooldown unchecked (game files: no cooldown); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
-    },
-    "Kassadin": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Shield Strength matched ShieldAmount; W[0] Increased Bonus Magic Damage matched ActiveBaseDamage"
-    },
-    "Katarina": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 9,
-      "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched BonusADRatio; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched QAPRatio"
-    },
-    "Kayle": {
       "stale": false,
       "stat_drift": {},
       "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); P[0] Bonus Magic Damage matched MSTowardsEnemy; P[0] Bonus Magic Damage matched PassiveWaveAPRatio; Q[0] Magic Damage matched Damage"
+      "note": "1 stat(s) unchecked (no game field); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched TotalADRatio; W[0] Bonus Magic Damage matched MaxHealthDamage"
+    },
+    "Karma": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 12,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 10 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[1] no game spell"
+    },
+    "Karthus": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 13,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] cooldown unchecked (game files: no cooldown); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+    },
+    "Kassadin": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Shield Strength matched ShieldAmount; W[0] Increased Bonus Magic Damage matched ActiveBaseDamage"
+    },
+    "Katarina": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 10,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched BonusADRatio; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched QAPRatio"
+    },
+    "Kayle": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 17,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); P[0] Bonus Magic Damage matched MSTowardsEnemy; P[0] Bonus Magic Damage matched PassiveWaveAPRatio; Q[0] Magic Damage matched Damage"
     },
     "Kayn": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; Q[0] Non-Champion Damage matched BonusADRatio"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; Q[0] Non-Champion Damage matched BonusADRatio"
     },
     "Kennen": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 17,
+      "stats_checked": 16,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Bonus Magic Damage matched BaseOnHitDamage; W[0] Bonus Magic Damage matched bADRatio"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Bonus Magic Damage matched BaseOnHitDamage; W[0] Bonus Magic Damage matched bADRatio"
     },
     "Khazix": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched BonusADRatio; Q[0] Physical Damage matched BonusADRatio; W[0] Heal matched BaseHeal"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched BonusADRatio; Q[0] Physical Damage matched BonusADRatio; W[0] Heal matched BaseHeal"
     },
     "Kindred": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Static Cooldown matched CDNewValue; W[0] Magic Damage matched CloneDamageFlat"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Static Cooldown matched CDNewValue; W[0] Magic Damage matched CloneDamageFlat"
     },
     "Kled": {
       "stale": true,
@@ -550,850 +550,850 @@
           "game": 125.0
         }
       },
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 10,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 16 ability row(s) unchecked (no game mapping); P[1] no game spell; Q[0] Physical Damage matched FirstHitBaseDamage; Q[0] Physical Damage matched MissileSpawnCheckRadius"
+      "note": "2 stat(s) unchecked (no game field); 16 ability row(s) unchecked (no game mapping); P[1] no game spell; Q[0] Physical Damage matched FirstHitBaseDamage; Q[0] Physical Damage matched MissileSpawnCheckRadius"
     },
     "KogMaw": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Bonus Attack Speed matched AttackSpeed; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Bonus Attack Speed matched AttackSpeed; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
     },
     "Leblanc": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
     },
     "LeeSin": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 17,
+      "stats_checked": 16,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched Q1BaseDamage; Q[0] Physical Damage matched Q1ADRatio; Q[1] no game spell"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched Q1BaseDamage; Q[0] Physical Damage matched Q1ADRatio; Q[1] no game spell"
     },
     "Leona": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Bonus Magic Damage matched BaseDamage; W[0] Flat Damage Reduction matched FlatDamageReduction; W[0] Bonus Armor matched MRBaseBonus"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Bonus Magic Damage matched BaseDamage; W[0] Flat Damage Reduction matched FlatDamageReduction; W[0] Bonus Armor matched MRBaseBonus"
     },
     "Lillia": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); P[0] Per-Level Scaling matched DotDamagePercent; Q[0] Bonus Movement Speed per Stack matched PranceBonusPerStack; Q[0] Magic Damage matched FlatDamageBase"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); P[0] Per-Level Scaling matched DotDamagePercent; Q[0] Bonus Movement Speed per Stack matched PranceBonusPerStack; Q[0] Magic Damage matched FlatDamageBase"
     },
     "Lissandra": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched damage; Q[0] Slow matched slowPercentage; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched damage; Q[0] Slow matched slowPercentage; W[0] Magic Damage matched BaseDamage"
     },
     "Locke": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched MaxOnHitStartValue; Q[0] Magic Damage per Nail matched BaseMissileDamage; Q[0] Magic Damage per Nail matched TwoMarkBonusPercent"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched MaxOnHitStartValue; Q[0] Magic Damage per Nail matched BaseMissileDamage; Q[0] Magic Damage per Nail matched TwoMarkBonusPercent"
     },
     "Lucian": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; W[0] Magic Damage matched BaseDamage"
     },
     "Lulu": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
+      "stats_checked": 18,
+      "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "10 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched DoubleHitBonus; E[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched DoubleHitBonus; W[0] Disable Duration matched CCDuration"
     },
     "Lux": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] cooldown matched ddragon tooltip; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] cooldown matched ddragon tooltip; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
     },
     "Malphite": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Slow matched SpeedSteal; W[0] Bonus Armor matched BonusArmorPassive"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Slow matched SpeedSteal; W[0] Bonus Armor matched BonusArmorPassive"
     },
     "Malzahar": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Silence Duration matched SilenceDuration; W[0] Voidling Duration matched VoidlingDuration"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Silence Duration matched SilenceDuration; W[0] Voidling Duration matched VoidlingDuration"
     },
     "Maokai": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 18,
+      "stats_checked": 17,
       "ability_rows_checked": 18,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched BasePercentHealth; Q[0] Magic Damage matched APRatio"
+      "note": "2 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched BasePercentHealth; Q[0] Magic Damage matched APRatio"
     },
     "MasterYi": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] Primary Physical Damage matched BaseDamage; Q[0] Primary Physical Damage matched AttackDamageRatio; Q[0] Primary Bonus Monster Damage matched BonusMonsterDamage"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Primary Physical Damage matched BaseDamage; Q[0] Primary Physical Damage matched AttackDamageRatio; Q[0] Primary Bonus Monster Damage matched BonusMonsterDamage"
     },
     "Mel": {
       "stale": true,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 1,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] Initial Explosion Magic Damage matched InitialDamage; Q[0] Magic Damage per Subsequent Explosion matched ExplosionDamage; Q[0] Number of Bolts matched ExplosionCount"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Initial Explosion Magic Damage matched InitialDamage; Q[0] Magic Damage per Subsequent Explosion matched ExplosionDamage; Q[0] Number of Bolts matched ExplosionCount"
     },
     "Milio": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 18,
+      "stats_checked": 17,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] cooldown matched ddragon tooltip; Q[0] Magic Damage matched FallDamage; Q[0] Slow matched SlowAmount"
+      "note": "2 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] cooldown matched ddragon tooltip; Q[0] Magic Damage matched FallDamage; Q[0] Slow matched SlowAmount"
     },
     "MissFortune": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Physical Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Physical Damage matched APRatio"
     },
     "Mordekaiser": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 14,
+      "stats_checked": 13,
       "ability_rows_checked": 9,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched QBaseDamage; Q[0] Magic Damage matched ADRatio; Q[0] Magic Damage matched APRatio"
+      "note": "2 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched QBaseDamage; Q[0] Magic Damage matched ADRatio; Q[0] Magic Damage matched APRatio"
     },
     "Morgana": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] cooldown matched ddragon tooltip; Q[0] Magic Damage matched Damage; Q[0] Root Duration matched RootDuration"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] cooldown matched ddragon tooltip; Q[0] Magic Damage matched Damage; Q[0] Root Duration matched RootDuration"
     },
     "Naafiri": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "11 ability row(s) unchecked (no game mapping); Q[0] Initial Physical Damage matched BaseDamageFirstCast; Q[0] Initial Physical Damage matched FirstCastBonusADRatio; Q[0] Total Bleed Physical Damage matched BleedBaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 11 ability row(s) unchecked (no game mapping); Q[0] Initial Physical Damage matched BaseDamageFirstCast; Q[0] Initial Physical Damage matched FirstCastBonusADRatio; Q[0] Total Bleed Physical Damage matched BleedBaseDamage"
     },
     "Nami": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] cooldown matched ddragon tooltip"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] cooldown matched ddragon tooltip"
     },
     "Nasus": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BonusDamage; W[0] Maximum Slow matched MaxSlowTooltipOnly; W[0] Additional Slow Per Second matched SlowPerTick"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BonusDamage; W[0] Maximum Slow matched MaxSlowTooltipOnly; W[0] Additional Slow Per Second matched SlowPerTick"
     },
     "Nautilus": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 18,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Shield Strength matched ShieldBase; W[0] Shield Strength matched ShieldHealthRatio"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Shield Strength matched ShieldBase; W[0] Shield Strength matched ShieldHealthRatio"
     },
     "Neeko": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Initial Magic Damage matched ZoneDamage; Q[0] Subsequent Magic Damage matched SecondaryDamage; Q[0] Bonus Monster Damage matched MonsterBonus"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Initial Magic Damage matched ZoneDamage; Q[0] Subsequent Magic Damage matched SecondaryDamage; Q[0] Bonus Monster Damage matched MonsterBonus"
     },
     "Nidalee": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 12,
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "14 ability row(s) unchecked (no game mapping); Q[0] Minimum Magic Damage matched SpearMinimumDamage; Q[0] Minimum Magic Damage matched SpearMinimumAPRatio; Q[0] Maximum Magic Damage matched SpearMaximumDamage"
+      "note": "1 stat(s) unchecked (no game field); 12 ability row(s) unchecked (no game mapping); Q[0] Minimum Magic Damage matched SpearMinimumDamage; Q[0] Minimum Magic Damage matched SpearMinimumAPRatio; Q[0] Maximum Magic Damage matched SpearMaximumDamage"
     },
     "Nilah": {
       "stale": true,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 1,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Minimum Physical Damage matched BaseDamage; Q[0] Minimum Physical Damage matched QADRatio; W[0] Bonus Movement Speed matched MoveSpeedPercent"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Minimum Physical Damage matched BaseDamage; Q[0] Minimum Physical Damage matched QADRatio; W[0] Bonus Movement Speed matched MoveSpeedPercent"
     },
     "Nocturne": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Damage matched HealingAPRatio; Q[0] Physical damage matched BaseDamage; Q[0] Bonus Attack Damage matched BonusTrailAD"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Damage matched HealingAPRatio; Q[0] Physical damage matched BaseDamage; Q[0] Bonus Attack Damage matched BonusTrailAD"
     },
     "Nunu": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 18,
+      "stats_checked": 17,
       "ability_rows_checked": 19,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Non-Champion True Damage matched MonsterMinionDamage; Q[0] Base Non-Champion Heal matched BaseHealing; Q[0] Base Non-Champion Heal matched MonsterHealingAPRatio"
+      "note": "2 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); Q[0] Non-Champion True Damage matched MonsterMinionDamage; Q[0] Base Non-Champion Heal matched BaseHealing; Q[0] Base Non-Champion Heal matched MonsterHealingAPRatio"
     },
     "Olaf": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched MinSlowDuration; Q[0] Slow matched SlowAmount"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched MinSlowDuration; Q[0] Slow matched SlowAmount"
     },
     "Orianna": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 17,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched StackMult; P[0] Per-Level Scaling matched StackCount; Q[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched StackMult; P[0] Per-Level Scaling matched StackCount; Q[0] Magic Damage matched BaseDamage"
     },
     "Ornn": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; W[0] Total Magic Damage matched MaxPercentHPPerTickTooltip; W[0] Magic Damage Per Tick matched PercentHPPerTick"
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; W[0] Total Magic Damage matched MaxPercentHPPerTickTooltip; W[0] Magic Damage Per Tick matched PercentHPPerTick"
     },
     "Pantheon": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 18,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Hurl Physical Damage matched HoldDamage; Q[0] Hurl Physical Damage matched DamageFalloff; Q[0] Increased Hurl Damage matched ExecuteBaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Hurl Physical Damage matched HoldDamage; Q[0] Hurl Physical Damage matched DamageFalloff; Q[0] Increased Hurl Damage matched ExecuteBaseDamage"
     },
     "Poppy": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamageValue; Q[0] Physical Damage matched DelayBetweenTwoHits; Q[0] Physical Damage matched HealthDamagePercent"
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamageValue; Q[0] Physical Damage matched HealthDamagePercent; Q[0] Capped Minion/Monster Health Damage matched MaxHealthDamageToNonHeroes"
     },
     "Pyke": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 10,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ManaRefund; E[0] Physical Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ManaRefund; E[0] Physical Damage matched BaseDamage"
     },
     "Qiyana": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); P[0] Bonus Physical Damage matched BonusADRatio; P[0] Bonus Physical Damage matched APRatio; Q[0] Physical Damage matched VanillaBase"
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); P[0] Bonus Physical Damage matched BonusADRatio; P[0] Bonus Physical Damage matched APRatio; Q[0] Physical Damage matched VanillaBase"
     },
     "Quinn": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Physical Damage matched ADRatio; Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Physical Damage matched ADRatio; Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio"
     },
     "Rakan": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 18,
+      "stats_checked": 17,
       "ability_rows_checked": 14,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched DamageAPRatio; Q[0] Heal matched HealAPRatio"
+      "note": "2 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched DamageAPRatio; Q[0] Heal matched HealAPRatio"
     },
     "Rammus": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched QBaseDamage; Q[0] Magic Damage matched MSMultiplier; Q[0] Slow matched SlowPercent"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched QBaseDamage; Q[0] Magic Damage matched MSMultiplier; Q[0] Slow matched SlowPercent"
     },
     "RekSai": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 8,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched UnburrowedADRatio; Q[1] no game spell; W[0] Bonus Movement Speed matched BurrowedMoveSpeed"
+      "note": "2 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched UnburrowedADRatio; Q[1] no game spell; W[0] Bonus Movement Speed matched BurrowedMoveSpeed"
     },
     "Rell": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] cooldown matched ddragon tooltip; W[0] Bonus Movement Speed matched MountedMoveSpeed"
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] cooldown matched ddragon tooltip; W[0] Bonus Movement Speed matched MountedMoveSpeed"
     },
     "Renata": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched Damage; Q[0] Magic Damage matched APRatio; W[0] Bonus Attack Speed matched BonusAttackSpeed"
-    },
-    "Renekton": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BaseADRatio; Q[0] Enhanced Damage matched EmpoweredBaseDamage"
-    },
-    "Rengar": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 11,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] cooldown unchecked (game files: no cooldown); Q[0] Additional Physical Damage matched BaseDamage; Q[0] Additional Physical Damage matched BaseADRatio"
-    },
-    "Riven": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 7,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; W[0] Physical Damage matched BaseDamage"
-    },
-    "Rumble": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 20,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 23 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched OverheatDuration; Q[0] Minimum Magic Damage matched OverheatMulti; Q[0] Magic Damage per Tick matched MinionMod"
-    },
-    "Ryze": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
-      "ability_rows_stale": 0,
-      "note": "Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched MovementSpeedDuration; Q[0] Bonus Movement Speed matched MovementSpeedAmount"
-    },
-    "Samira": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 12,
-      "ability_rows_stale": 0,
-      "note": "9 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched QADRatio; W[0] Physical Damage per Hit matched BaseDamage"
-    },
-    "Sejuani": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Physical Damage matched BaseDamageOne"
-    },
-    "Senna": {
       "stale": false,
       "stat_drift": {},
       "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Slow Duration matched SlowDuration; Q[0] Healing matched BaseHeal"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched Damage; Q[0] Magic Damage matched APRatio; W[0] Bonus Attack Speed matched BonusAttackSpeed"
+    },
+    "Renekton": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BaseADRatio; Q[0] Enhanced Damage matched EmpoweredBaseDamage"
+    },
+    "Rengar": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 11,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] cooldown unchecked (game files: no cooldown); Q[0] Additional Physical Damage matched BaseDamage; Q[0] Additional Physical Damage matched BaseADRatio"
+    },
+    "Riven": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 7,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; W[0] Physical Damage matched BaseDamage"
+    },
+    "Rumble": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 20,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 23 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched OverheatDuration; Q[0] Minimum Magic Damage matched OverheatMulti; Q[0] Magic Damage per Tick matched MinionMod"
+    },
+    "Ryze": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 13,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched MovementSpeedDuration; Q[0] Bonus Movement Speed matched MovementSpeedAmount"
+    },
+    "Samira": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 12,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched QADRatio; W[0] Physical Damage per Hit matched BaseDamage"
+    },
+    "Sejuani": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Physical Damage matched BaseDamageOne"
+    },
+    "Senna": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 17,
+      "ability_rows_checked": 16,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Slow Duration matched SlowDuration; Q[0] Healing matched BaseHeal"
     },
     "Seraphine": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched MaxNotes; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched MaxNotes; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
     },
     "Sett": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 15,
+      "stats_checked": 14,
       "ability_rows_checked": 9,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched StackCount; Q[0] Total Bonus Physical Damage matched MSDuration"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched StackCount; Q[0] Total Bonus Physical Damage matched MSDuration"
     },
     "Shaco": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 24,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Invisibility Duration matched StealthDuration; Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched BonusADRatio"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Invisibility Duration matched StealthDuration; Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched BonusADRatio"
     },
     "Shen": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 16,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); P[0] Shield matched PassiveCDFlexAmount; Q[0] Slow matched SlowPercent; Q[0] Bonus Magic Damage matched BasePercentDamage"
+    },
+    "Shyvana": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Area Physical Damage matched Base_Damage; Q[0] Area Physical Damage matched Damage_AD_Ratio; W[0] Shield Strength matched Shield"
+    },
+    "Singed": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 13,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage per Second matched BaseDamagePerSecond; Q[0] Magic Damage per Second matched APRatioPerSecond; W[0] Slow matched SlowPercent"
+    },
+    "Sion": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); P[1] no game spell; Q[0] Minimum Physical Damage matched LowDamage; Q[0] Minimum Physical Damage matched ADRatioMin"
+    },
+    "Sivir": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 13,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Physical Damage matched QAttackSpeedCastReductionMax"
+    },
+    "Skarner": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage per Hit matched BaseDamage; Q[0] Bonus Physical Damage per Hit matched ADRatio; Q[0] Bonus Physical Damage per Hit matched BonusHealthRatio"
+    },
+    "Smolder": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; W[0] Glob Physical Damage matched BaseDamage"
+    },
+    "Sona": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Bonus Magic Damage matched BaseOnHitDamage; Q[0] Bonus Magic Damage matched BaseOnHitDamage"
+    },
+    "Soraka": {
+      "stale": true,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 16,
+      "ability_rows_stale": 1,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Total Heal matched BaseHoT; Q[0] Total Heal matched MoveSpeedSlow"
+    },
+    "Swain": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched FirstBoltAPRatio; W[0] Magic Damage matched BaseDamage"
+    },
+    "Sylas": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio1; Q[0] Slow matched SlowAmount"
+    },
+    "Syndra": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Magic Damage matched BaseDamage; W[0] Bonus True Damage matched SlowDuration"
+    },
+    "TahmKench": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched StunDuration; Q[0] Heal matched BaseHeal"
+    },
+    "Taliyah": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); P[0] cooldown unchecked (mechanic field); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched WorkedGroundCDR"
+    },
+    "Talon": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 13,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; Q[0] Critical Physical Damage matched EnhancedDamageMod"
+    },
+    "Taric": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 12,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Maximum Charges matched MaxCharges; W[0] Bonus Armor matched ArmorBonusPercentage; W[0] Shield Strength matched ArmorBonusPercentage"
+    },
+    "Teemo": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Blind Duration matched BlindDuration"
+    },
+    "Thresh": {
       "stale": false,
       "stat_drift": {},
       "stats_checked": 17,
       "ability_rows_checked": 15,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); P[0] Shield matched PassiveCDFlexAmount; Q[0] Slow matched SlowPercent; Q[0] Bonus Magic Damage matched BasePercentDamage"
-    },
-    "Shyvana": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Area Physical Damage matched Base_Damage; Q[0] Area Physical Damage matched Damage_AD_Ratio; W[0] Shield Strength matched Shield"
-    },
-    "Singed": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
-      "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage per Second matched BaseDamagePerSecond; Q[0] Magic Damage per Second matched APRatioPerSecond; W[0] Slow matched SlowPercent"
-    },
-    "Sion": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); P[1] no game spell; Q[0] Minimum Physical Damage matched LowDamage; Q[0] Minimum Physical Damage matched ADRatioMin"
-    },
-    "Sivir": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
-      "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Physical Damage matched QAttackSpeedCastReductionMax"
-    },
-    "Skarner": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "8 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage per Hit matched BaseDamage; Q[0] Bonus Physical Damage per Hit matched ADRatio; Q[0] Bonus Physical Damage per Hit matched BonusHealthRatio"
-    },
-    "Smolder": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 15,
-      "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; W[0] Glob Physical Damage matched BaseDamage"
-    },
-    "Sona": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 15,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Bonus Magic Damage matched BaseOnHitDamage; Q[0] Bonus Magic Damage matched BaseOnHitDamage"
-    },
-    "Soraka": {
-      "stale": true,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
-      "ability_rows_stale": 1,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Total Heal matched BaseHoT; Q[0] Total Heal matched MoveSpeedSlow"
-    },
-    "Swain": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched FirstBoltAPRatio; W[0] Magic Damage matched BaseDamage"
-    },
-    "Sylas": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio1; Q[0] Slow matched SlowAmount"
-    },
-    "Syndra": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 15,
-      "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] Magic Damage matched BaseDamage; W[0] Bonus True Damage matched SlowDuration"
-    },
-    "TahmKench": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched StunDuration; Q[0] Heal matched BaseHeal"
-    },
-    "Taliyah": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 15,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); P[0] cooldown unchecked (mechanic field); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched WorkedGroundCDR"
-    },
-    "Talon": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
-      "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; Q[0] Critical Physical Damage matched EnhancedDamageMod"
-    },
-    "Taric": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 10,
-      "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); W[0] Bonus Armor matched ArmorBonusPercentage; W[0] Shield Strength matched ArmorBonusPercentage"
-    },
-    "Teemo": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Blind Duration matched BlindDuration"
-    },
-    "Thresh": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 18,
-      "ability_rows_checked": 15,
-      "ability_rows_stale": 0,
-      "note": "Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Shield Strength matched BaseShieldValue"
+      "note": "1 stat(s) unchecked (no game field); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Shield Strength matched BaseShieldValue"
     },
     "Tristana": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] cost matched ddragon tooltip; Q[0] Bonus Attack Speed matched AttackSpeedMod; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] cost matched ddragon tooltip; Q[0] Bonus Attack Speed matched AttackSpeedMod; W[0] Magic Damage matched BaseDamage"
     },
     "Trundle": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 20,
       "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BonusDamage; Q[0] Bonus Physical Damage matched TooltipQADRatio; Q[0] Bonus Attack Damage matched BonusAD"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BonusDamage; Q[0] Bonus Physical Damage matched TooltipQADRatio; Q[0] Bonus Attack Damage matched BonusAD"
     },
     "Tryndamere": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 12,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] cost unchecked (game files: no mana cost); Q[0] Maximum Bonus Attack Damage matched MaximumBonusAD; Q[0] Minimum Heal matched BaseHealing"
-    },
-    "TwistedFate": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 13,
-      "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched BonusADRatio; Q[0] Magic Damage matched APRatio"
-    },
-    "Twitch": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 15,
-      "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Stealth Duration matched StealthDuration; Q[0] Bonus Attack Speed matched AttackSpeedMod; W[0] Slow matched BaseSlowAmount"
-    },
-    "Udyr": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "20 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched MaxHPOnHitBase; Q[0] Bonus Physical Damage matched AttackSpeedDurationBase; Q[0] Bonus Attack Speed matched AttackSpeedBase"
-    },
-    "Urgot": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Slow matched SlowAmount; W[0] Modified Physical Damage matched BaseDamage"
-    },
-    "Varus": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Maximum Physical Damage matched BaseDamageMax; Q[0] Maximum Physical Damage matched tADRatioMax; W[0] Bonus Magic Damage matched VarusWOnHitDamage"
-    },
-    "Vayne": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched TotalADRatio; Q[0] Bonus Physical Damage matched APRatio; W[0] Bonus True Damage matched MaxHealthRatio"
-    },
-    "Veigar": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 11,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
-    },
-    "Velkoz": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Slow Duration matched SlowDuration; Q[0] Mana Restored per Kill matched TooltipManaRefund"
-    },
-    "Vex": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched GloomCDChamp; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
-    },
-    "Vi": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 11,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Minimum Physical Damage matched MinDamage; Q[0] Minimum Physical Damage matched ADRatio; W[0] Bonus Physical Damage matched MaxHealthDamage"
-    },
-    "Viego": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 11,
-      "ability_rows_stale": 0,
-      "note": "Q[0] Bonus Physical Damage matched PercentHealthOnHit; Q[0] Minimum Bonus Damage matched MinDamageOnHit; Q[0] Physical Damage matched Damage"
-    },
-    "Viktor": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 18,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched MissileDamage; Q[0] Magic Damage matched MissileAPRatio; Q[0] Bonus Damage matched ShieldAPRatio"
-    },
-    "Vladimir": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 7,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 13 ability row(s) unchecked (no game mapping); Q[0] Heal matched HealAPRatio; W[0] cost unchecked (game files: no mana cost); W[0] Total Magic Damage matched BaseDamage"
-    },
-    "Volibear": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 19,
-      "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched APRatio; Q[0] cooldown matched ddragon tooltip; Q[0] Bonus Movement Speed matched MinSpeed"
-    },
-    "Warwick": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); P[0] Per-Level Scaling matched ADRatio; P[0] Per-Level Scaling matched APRatio; Q[0] Magic Damage matched TargetPercentHPDamage"
-    },
-    "MonkeyKing": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "6 ability row(s) unchecked (no game mapping); Q[0] Bonus Range matched AttackRangeBonus; Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched ADRatio"
-    },
-    "Xayah": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage Per Hit matched BaseDamage; Q[0] Physical Damage Per Hit matched MultiHitRatio; Q[0] Reduced Damage per Hit matched StartingCastTime"
-    },
-    "Xerath": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 16,
-      "ability_rows_stale": 0,
-      "note": "7 ability row(s) unchecked (no game mapping); P[0] cooldown unchecked (mechanic field); Q[0] Magic Damage matched BaseDamage; W[0] Magic Damage matched BaseDamage"
-    },
-    "XinZhao": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 14,
-      "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched BADRatio; W[0] cost matched ddragon tooltip"
-    },
-    "Yasuo": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 11,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Critical Strike Damage matched BaseDamage"
-    },
-    "Yone": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 15,
-      "ability_rows_checked": 10,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Critical Strike Damage matched BaseDamage"
-    },
-    "Yorick": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "1 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched HealReduction; Q[0] Heal matched MissingHealthRatio"
-    },
-    "Yunara": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Passive Bonus Magic Damage matched Damage; Q[0] Bonus Attack Speed matched Attack_Speed; Q[0] Active Bonus Magic Damage matched Damage"
-    },
-    "Yuumi": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 18,
-      "ability_rows_checked": 17,
-      "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched MissileDamage; Q[0] Magic Damage matched SlowAmount; Q[0] Increased Damage matched EmpoweredMissileDamage"
-    },
-    "Zaahen": {
-      "stale": false,
-      "stat_drift": {},
-      "stats_checked": 19,
-      "ability_rows_checked": 19,
-      "ability_rows_stale": 0,
-      "note": "5 ability row(s) unchecked (no game mapping); Q[0] Total Physical Damage matched Q1BaseDamage; Q[0] Total Physical Damage matched MonsterDamagePercent; Q[0] Total Physical Damage matched QCoeff"
-    },
-    "Zac": {
       "stale": false,
       "stat_drift": {},
       "stats_checked": 14,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] cost unchecked (game files: no mana cost); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+      "note": "2 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] cost unchecked (game files: no mana cost); Q[0] Maximum Bonus Attack Damage matched MaximumBonusAD; Q[0] Minimum Heal matched BaseHealing"
+    },
+    "TwistedFate": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 13,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched BonusADRatio; Q[0] Magic Damage matched APRatio"
+    },
+    "Twitch": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 15,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Stealth Duration matched StealthDuration; Q[0] Bonus Attack Speed matched AttackSpeedMod; W[0] Slow matched BaseSlowAmount"
+    },
+    "Udyr": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 20 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched MaxHPOnHitBase; Q[0] Bonus Physical Damage matched AttackSpeedDurationBase; Q[0] Bonus Attack Speed matched AttackSpeedBase"
+    },
+    "Urgot": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 3 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Slow matched SlowAmount; W[0] Modified Physical Damage matched BaseDamage"
+    },
+    "Varus": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 16,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Maximum Physical Damage matched BaseDamageMax; Q[0] Maximum Physical Damage matched tADRatioMax; W[0] Bonus Magic Damage matched VarusWOnHitDamage"
+    },
+    "Vayne": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched TotalADRatio; Q[0] Bonus Physical Damage matched APRatio; W[0] Bonus True Damage matched MaxHealthRatio"
+    },
+    "Veigar": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 11,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
+    },
+    "Velkoz": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Slow Duration matched SlowDuration; Q[0] Mana Restored per Kill matched TooltipManaRefund"
+    },
+    "Vex": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 16,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched GloomCDChamp; Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
+    },
+    "Vi": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 11,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Minimum Physical Damage matched MinDamage; Q[0] Minimum Physical Damage matched ADRatio; W[0] Bonus Physical Damage matched MaxHealthDamage"
+    },
+    "Viego": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 11,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); Q[0] Bonus Physical Damage matched PercentHealthOnHit; Q[0] Minimum Bonus Damage matched MinDamageOnHit; Q[0] Physical Damage matched Damage"
+    },
+    "Viktor": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 18,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched MissileDamage; Q[0] Magic Damage matched MissileAPRatio; Q[0] Bonus Damage matched ShieldAPRatio"
+    },
+    "Vladimir": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 12,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 8 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Heal matched BaseHeal; Q[0] Heal matched HealAPRatio"
+    },
+    "Volibear": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 19,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched APRatio; Q[0] cooldown matched ddragon tooltip; Q[0] Bonus Movement Speed matched MinSpeed"
+    },
+    "Warwick": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 16,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); P[0] Per-Level Scaling matched ADRatio; P[0] Per-Level Scaling matched APRatio; Q[0] Magic Damage matched TargetPercentHPDamage"
+    },
+    "MonkeyKing": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Bonus Range matched AttackRangeBonus; Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched ADRatio"
+    },
+    "Xayah": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage Per Hit matched BaseDamage; Q[0] Physical Damage Per Hit matched MultiHitRatio; Q[0] Reduced Damage per Hit matched StartingCastTime"
+    },
+    "Xerath": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 16,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 7 ability row(s) unchecked (no game mapping); P[0] cooldown unchecked (mechanic field); Q[0] Magic Damage matched BaseDamage; W[0] Magic Damage matched BaseDamage"
+    },
+    "XinZhao": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 14,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched BADRatio; W[0] cost matched ddragon tooltip"
+    },
+    "Yasuo": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 11,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Critical Strike Damage matched BaseDamage"
+    },
+    "Yone": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 14,
+      "ability_rows_checked": 10,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched ADRatio; Q[0] Critical Strike Damage matched BaseDamage"
+    },
+    "Yorick": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Bonus Physical Damage matched BaseDamage; Q[0] Bonus Physical Damage matched HealReduction; Q[0] Heal matched MissingHealthRatio"
+    },
+    "Yunara": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Passive Bonus Magic Damage matched Damage; Q[0] Bonus Attack Speed matched Attack_Speed; Q[0] Active Bonus Magic Damage matched Damage"
+    },
+    "Yuumi": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 17,
+      "ability_rows_checked": 17,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 9 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched MissileDamage; Q[0] Magic Damage matched SlowAmount; Q[0] Increased Damage matched EmpoweredMissileDamage"
+    },
+    "Zaahen": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 18,
+      "ability_rows_checked": 19,
+      "ability_rows_stale": 0,
+      "note": "1 stat(s) unchecked (no game field); 5 ability row(s) unchecked (no game mapping); Q[0] Total Physical Damage matched Q1BaseDamage; Q[0] Total Physical Damage matched MonsterDamagePercent; Q[0] Total Physical Damage matched QCoeff"
+    },
+    "Zac": {
+      "stale": false,
+      "stat_drift": {},
+      "stats_checked": 13,
+      "ability_rows_checked": 12,
+      "ability_rows_stale": 0,
+      "note": "2 stat(s) unchecked (no game field); 6 ability row(s) unchecked (no game mapping); Q[0] cost unchecked (game files: no mana cost); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio"
     },
     "Zed": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 17,
-      "ability_rows_checked": 12,
+      "stats_checked": 16,
+      "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; E[0] Physical Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 1 ability row(s) unchecked (no game mapping); Q[0] Physical Damage matched BaseDamage; Q[0] Physical Damage matched BonusADRatio; W[0] Energy Restored matched EnergyRestoreDoubleHit"
     },
     "Zeri": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 12,
       "ability_rows_stale": 0,
-      "note": "14 ability row(s) unchecked (no game mapping); Q[0] cooldown unchecked (game files: no cooldown); Q[0] Total Physical Damage matched BaseDamage; Q[0] Total Physical Damage matched ActiveADRatio"
+      "note": "1 stat(s) unchecked (no game field); 14 ability row(s) unchecked (no game mapping); Q[0] cooldown unchecked (game files: no cooldown); Q[0] Total Physical Damage matched BaseDamage; Q[0] Total Physical Damage matched ActiveADRatio"
     },
     "Ziggs": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; Q[0] Magic Damage matched APRatio; W[0] Magic Damage matched BaseDamage"
     },
     "Zilean": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 13,
       "ability_rows_stale": 0,
-      "note": "Q[0] Magic Damage matched BombBaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Stun Duration matched StunDuration"
+      "note": "1 stat(s) unchecked (no game field); Q[0] Magic Damage matched BombBaseDamage; Q[0] Magic Damage matched APRatio; Q[0] Stun Duration matched StunDuration"
     },
     "Zoe": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 16,
       "ability_rows_stale": 0,
-      "note": "4 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched APRatio; Q[0] Minimum Magic Damage matched BaseDamage; Q[0] Minimum Magic Damage matched APRatio"
+      "note": "1 stat(s) unchecked (no game field); 4 ability row(s) unchecked (no game mapping); P[0] Bonus Magic Damage matched APRatio; Q[0] Minimum Magic Damage matched BaseDamage; Q[0] Minimum Magic Damage matched APRatio"
     },
     "Zyra": {
       "stale": false,
       "stat_drift": {},
-      "stats_checked": 19,
+      "stats_checked": 18,
       "ability_rows_checked": 10,
       "ability_rows_stale": 0,
-      "note": "2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] cost unchecked (game files: no mana cost); E[0] Magic Damage matched BaseDamage"
+      "note": "1 stat(s) unchecked (no game field); 2 ability row(s) unchecked (no game mapping); Q[0] Magic Damage matched BaseDamage; W[0] cost unchecked (game files: no mana cost); E[0] Magic Damage matched BaseDamage"
     }
   },
   "items": {
