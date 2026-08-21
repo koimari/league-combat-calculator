@@ -32,7 +32,7 @@
       "sample_author": "Alistar"
     },
     "on_hit": {
-      "authors": 54,
+      "authors": 53,
       "negative_test": "test_withholding_on_hit_changes_the_edge_citation",
       "sample_author": "Aatrox"
     },

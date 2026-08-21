@@ -20,31 +20,86 @@ Magic Damage; this module prices the "Maximum Magic Damage" row
 the target's maximum health), which is the whole 3-second flamethrower
 — 15 ticks of "Magic Damage per Tick" at every rank.
 
+
 The Danger Zone half of the heat system stays unpriced: rotation
 numbers assume no heat state (the CP-era review boundary), so Q/E/R
 price their base rows and the Enhanced rows go unread.
 
-Overheated, the other half, is now priced.  At 150 Heat Rumble's mech
-"empowers his basic attacks to deal 5 : 44.12 (based on level) (+ 25%
-AP) (+ 4% of the target's maximum health) bonus magic damage on-hit" —
-a complete sourced on-hit row, gated by the explicit ``p_overheated``
-option (default off, so a default request is unchanged).  What the
-option does NOT price is the rest of the state: the 50% : 142.54%
-bonus attack speed and the ability lockout arrive together, and the
-engine can express the first but not the second, so pricing the attack
-speed alone would make Overheating a free upgrade.  W (Scrap Shield) is
-``no_damage`` — a shield and a movement-speed burst.
+Roadmap session (2026-08-21): closes both of Rumble's remaining
+out_of_scope slots (P, W).
+
+  - P (Junkyard Titan) is NOT a no-damage slot. Its third effect row,
+    Overheated, carries a real sourced on-hit damage formula: "empowers
+    his basic attacks to deal 5 : 44.12 (based on level) (+ 25% AP)
+    (+ 4% of the target's maximum health) bonus magic damage on-hit"
+    (``data/champions.json`` Rumble P, effect 3, leveling attribute
+    "Bonus Magic Damage" — a 20-entry per-LEVEL array, one 25% AP
+    modifier, one 4% target-max-health modifier). The game binary
+    agrees exactly (``data/bin/characters/rumble.bin.json``, record
+    ``RumbleHeatSystem``: ``TotalBaseDamage`` ByCharLevel 5 -> 40 with
+    the level-20 extrapolation to 44.12, ``+ 0.25`` AP coefficient, and
+    ``OverheatPercBonusDamage`` 0.04). The packet's ``no_damage`` label
+    was therefore INCOMPLETE, not merely stale.
+
+    Overheat is a heat-state window the fight engine does not simulate,
+    so the number of empowered autos is explicit state: the
+    ``overheat_autos`` option (0 by default), exactly the Rammus
+    ``w_thorns_autos`` template for a proc whose trigger count the
+    engine cannot derive.
+
+    Two sourced rows in the same effect are deliberately NOT modeled:
+      * The 50% : 142.54% bonus attack speed. It is inseparable from
+        the very cost the same sentence states — "disabling his
+        abilities as his Heat decays back down to 0 over 4 seconds".
+        This engine has no ability-lockout channel, so importing the
+        upside without the downside would systematically overstate
+        Rumble. Both halves stay state (see ASSUMPTIONS).
+      * The "Bonus Damage" leveling row (65 : 163.32 by level). Read in
+        context it is not a damage source at all — it is the cap on the
+        %max-health term, "capped at 65 : 163.32 (based on level)
+        against monsters". It is monster-only and this engine's
+        ``target_class`` has no monster value, so it never binds on the
+        champion-target surface and is documented, never added.
+
+  - W (Scrap Shield) is a sourced self-shield with no damage row of any
+    kind: "Rumble generates 20 Heat to grant himself a shield for 1.5
+    seconds", Shield Strength 25/55/85/115/145 (+ 30% AP) (+ 4% of
+    maximum health). Being shield-only it cannot carry
+    ``attach_self_shield`` (that payload rides damage-event rows), so it
+    stays priced by the ally-support scanner, which already derives it
+    at target scope "self" (pinned by tests/test_support_effects.py).
+    Reclassified out_of_scope -> modeled, the Ekko-W precedent for a
+    scanner-priced shield-only slot.
+
+    NOTE: closing this slot required a genuine kernel repair. The 4%
+    max-health term uses the wiki spelling "% of maximum health", which
+    was absent from ``champions/scaling.py``'s ``_SIMPLE_UNITS`` table
+    (only the "% maximum health" spelling was mapped), so
+    ``resolve_scaling`` fell through to its unrecognized-unit ``0.0``
+    and SILENTLY dropped the term — the exact fail-open this codebase
+    bans. The alias is now mapped; see that module's comment for the
+    full blast radius (it also zeroed Galio's W shield outright).
+
+    Danger Zone Bonus (+50% shield strength and bonus movement speed)
+    is heat state and is not applied: the scanner prices the base
+    "Shield Strength" row, the conservative no-heat reading this module
+    has always taken for Q/E/R.
 """
 
 import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import extract_named, simple_damage
+from .slotlib import extract_named, on_hit_entry, simple_damage
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
+
+# Upper bound on the explicit Overheated auto count. Overheat lasts a
+# sourced 4 seconds; the bound is a sanity rail on user input, not a
+# modeled game value (the Rammus w_thorns_autos rail).
+_MAX_OVERHEAT_AUTOS = 30
 
 # Flamespitter's cadence is the cache's own, and it is stated twice.  The
 # entry reads "Rumble generates 20 Heat to activate his flamethrower for 3
@@ -107,43 +162,54 @@ def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
 _flamespitter_full_channel.phase = "damage"
 
 
-def _junkyard_titan(packet_passive):
-    """P: the packet's Heat row, plus the Overheated on-hit rider.
+def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the Overheated on-hit bonus magic damage, per empowered auto.
 
-    The compiled row is kept whole — with the option off this returns
-    exactly what the packet compiled — and the rider is added on top, so
-    the sourced "Bonus Magic Damage" leveling (flat by level + 25% AP +
-    4% of the target's maximum health) reaches the fight through the same
-    ability-on-hit channel Kog'Maw W uses.  The monster cap on the health
-    share ("Bonus Damage", 65 : 163.32 by level) is not read: this
-    calculator's target is a champion.
+    The "Bonus Magic Damage" leveling row is a per-LEVEL array (20
+    entries), so it is read at ``ctx.level``, not at an ability rank —
+    Junkyard Titan is an innate with no rank of its own.  ``extract_named``
+    resolves all three modifiers together: the flat per-level term,
+    "% AP", and "% of the target's maximum health".
+
+    The row rides the basic-attack stream, because that is where the game
+    puts it and the only channel a passive slot has: ``passive`` is not an
+    orderable cast (``pipeline.validate_cast_order_for_kit`` refuses it),
+    so a ``parts``-priced passive row parses and then never lands.
+    ``max_procs`` is what keeps that channel honest — Overheat is a
+    four-second window the fight engine does not simulate, so riding every
+    swing of the fight would price the window for the fight's whole
+    duration.  ``overheat_autos`` is therefore the explicit count of
+    empowered swings, 0 by default.
     """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    autos = min(max(int(ctx.option("overheat_autos")), 0), _MAX_OVERHEAT_AUTOS)
+    per_auto = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
+    )
+    entry = on_hit_entry(ability.get("name", "Junkyard Titan"), per_auto, "magic")
+    if autos:
+        entry["on_hit"]["max_procs"] = autos
+    else:
+        # Zero empowered swings must cost zero, and must READ as zero: a
+        # rider payload with a max of 0 still reads as a priced slot to
+        # ``coverage_truth``.  No declared swing, no rider (the
+        # phantom-proc rule this batch applied to Rammus' thorns).
+        del entry["on_hit"]
+    entry["target_max_health_sensitive"] = True
+    entry["detail"] = (
+        f"Overheated: {per_auto:.2f} bonus magic damage on-hit "
+        f"(level-{ctx.level} flat + 25% AP + 4% target maximum health) "
+        f"x {autos} empowered auto(s); the 4-second Overheat window's "
+        "attack-speed bonus and its ability lockout are both unmodeled "
+        "state, and the 'Bonus Damage' row is the monster-only cap on "
+        "the %max-health term, not a damage source"
+    )
+    return entry
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_passive(ctx)
-        if entry is None or not ctx.options.get("p_overheated", False):
-            return entry
-        ability = ctx.ability()
-        if ability is None:
-            return entry
-        per_hit = extract_named(
-            ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-        )
-        entry["on_hit"] = {
-            "name": "Junkyard Titan (Overheated)",
-            "damage_per_hit": per_hit,
-            "damage_type": "magic",
-        }
-        entry["target_max_health_sensitive"] = True
-        entry["detail"] = (
-            f"Overheated: every basic attack deals {per_hit:.2f} bonus "
-            "magic damage on-hit (5 : 44.12 by level + 25% AP + 4% of the "
-            "target's maximum health).  Overheating's bonus attack speed "
-            "and its ability lockout are both unmodeled."
-        )
-        return entry
 
-    return parse
+_junkyard_titan.phase = ONHIT
 
 
 # Cached kit review.  E's harpoon deals magic damage while "inflicting them
@@ -153,9 +219,9 @@ def _junkyard_titan(packet_passive):
 # by 35%".  Q's flames only scorch: the entry's damage clauses carry no
 # control word, so the answer is a reviewed "none", and the fifteen ticks
 # authored above are what carries it to the event ledger.  W is a shield,
-# and P authors no ability damage part either: the Overheated rider is an
-# on-hit that rides the basic-attack stream, which carries no ability
-# event for a kind to answer for.
+# and P answers per part (``_junkyard_titan``): the Overheated row can only
+# carry a reviewed kind when it prices a single empowered swing, because
+# nothing sources the arrival times a multi-auto row aggregates.
 MODULE_CC = {"E": "slow", "Q": "none", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -173,16 +239,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # boundary claim that carries MODULE_CC's reviewed answer for E into
     # the event ledger.  R already authors its own twenty-tick timing.
     single_hit_slots=frozenset({"E"}),
-    slot_parsers={"Q": _flamespitter_full_channel},
-    slot_wrappers={"P": _junkyard_titan},
+    slot_parsers={"Q": _flamespitter_full_channel, "P": _junkyard_titan},
     cc_kinds=MODULE_CC,
 )
 OPTIONS = list(OPTIONS) + [
     {
-        "key": "p_overheated",
-        "type": "bool",
-        "default": False,
-        "label": "Overheated (150 Heat): basic attacks deal bonus magic damage",
+        "key": "overheat_autos",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": _MAX_OVERHEAT_AUTOS,
+        "label": "Basic attacks landed while Overheated",
         "rotation": {"role": "self_state", "slot": "P"},
     },
 ]
@@ -202,18 +269,38 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "0.25-second intervals over up to 5 seconds (packet_module "
     "local packet timing declaration). The initial rocket impact has no separate "
     "damage row in the cache.",
-    "The Danger Zone (50+ Heat) empower is state outside the damage "
-    "model: Q/E/R rotation numbers assume no heat state (the CP-era "
-    "review boundary).",
-    "P (Junkyard Titan) prices the Overheated rider behind the explicit "
-    "p_overheated option (default off): the sourced Bonus Magic Damage "
-    "leveling (5 : 44.12 by level + 25% AP + 4% of the target's maximum "
-    "health) on every basic attack of the fight.  Overheating's real 4s "
-    "window, its Heat cost, its 50% : 142.54% bonus attack speed and its "
-    "ability lockout are not modeled — the attack speed is left out "
-    "deliberately, because granting it without the lockout would price "
-    "Overheating as a pure gain.",
+    "The heat/Danger Zone system is state outside the damage model: "
+    "Q/E/R rotation numbers assume no heat state (the CP-era review "
+    "boundary), and W's Danger Zone Bonus (+50% shield strength) is not "
+    "applied - the base Shield Strength row is priced.",
+    "P (Junkyard Titan) prices the Overheated on-hit bonus magic damage - "
+    "5:44.12 by level + 25% AP + 4% of the target's maximum health per "
+    "empowered basic attack (cached P effect 3, leveling attribute 'Bonus "
+    "Magic Damage', a per-level array; corroborated by the game binary's "
+    "RumbleHeatSystem TotalBaseDamage / 0.25 AP coefficient / "
+    "OverheatPercBonusDamage 0.04). The fight engine does not simulate "
+    "heat, so overheat_autos is the explicit count of empowered autos "
+    "(0 = none, the default). The same effect's 50%:142.54% bonus attack "
+    "speed is NOT modeled: it is inseparable from the ability lockout "
+    "stated in the same sentence ('disabling his abilities as his Heat "
+    "decays back down to 0 over 4 seconds') and this engine has no "
+    "ability-lockout channel, so pricing the upside alone would overstate "
+    "Rumble. The 'Bonus Damage' leveling row (65:163.32 by level) is the "
+    "monster-only cap on the %max-health term, not a damage source, and "
+    "never binds against a champion target. Reclassified from "
+    "out_of_scope to modeled; the packet's no_damage label was incomplete, "
+    "not stale.",
+    "W (Scrap Shield) is a sourced self-shield with no damage row: 25/55/"
+    "85/115/145 + 30% AP + 4% of maximum health for 1.5 seconds. Shield-"
+    "only abilities cannot carry attach_self_shield (that payload rides "
+    "damage-event rows), so W stays priced by the ally-support scanner, "
+    "which derives it at target scope 'self'. Its 4% max-health term was "
+    "silently dropped until this session: the wiki spelling '% of maximum "
+    "health' was missing from the scaling unit table and resolved to 0.0; "
+    "the alias is now mapped. The bonus movement speed row is not damage "
+    "and remains state. Reclassified from out_of_scope to modeled (the "
+    "Ekko-W precedent for a scanner-priced shield-only slot).",
 ]
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
-}
+# No MODULE_COVERAGE: every slot is emitted and priced, which is exactly
+# what ``module_contract.default_coverage`` derives from SLOTS.  Restating
+# it is refused as a second home for the same fact.

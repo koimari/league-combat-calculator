@@ -14,10 +14,55 @@ the sourced 1.5s shield blocks one hostile effect and, after the sourced
 rank), scoped to herself — "she heals herself and activates Fleet of
 Foot" names no ally.
 
-P (Fleet of Foot) and R (On The Hunt) stay ``out_of_scope`` on the
-movement-speed axis: ``slotlib``'s ``stat_buff`` dispatch has no
-movement-speed key at all, and R's "-0.5s basic-ability cooldown per
-attack" needs a cooldown-refund channel a champion module cannot author.
+Roadmap session (2026-08-21): adjudicates Sivir's two remaining
+out_of_scope slots.  They resolve DIFFERENTLY, and the difference is the
+point.
+
+  - P (Fleet of Foot) closes as ``no_damage``.  Its single cached effect
+    is a self movement-speed buff — "basic attacks on-attack and ability
+    hits against enemy champions grant her 55 : 75 (based on level) bonus
+    movement speed decaying over 1.5 seconds" — with no enemy-damage row
+    anywhere in the entry, and the game binary agrees: the
+    ``SivirPassive`` record's ONLY calculation is ``FlatMS`` (plus a
+    ``HasteDuration`` of 1.5), with no damage formula at all.  The label
+    was a stale ``out_of_scope`` for a slot that is sourced-non-damaging
+    (the Vayne-P / Kalista-P / Pyke-P precedent).
+
+    The flat grant is deliberately NOT converted into a ``stat_buff``.
+    Naafiri's W established the boundary for a PERCENT movement buff;
+    the flat case fails for a sharper, arithmetic reason.
+    ``_apply_stat_buff_ultimates`` adds the buff value straight onto
+    ``champion_stats["move_speed"]`` and never re-runs
+    ``stats.apply_movement_speed_soft_caps``, which has already been
+    applied — so above 415 raw movement speed the in-game grant is worth
+    0.8x what the channel would credit (and 0.5x above 490).  The one
+    live consumer of that stat is ``item_effects``'
+    ``adaptive_force_per_total_move_speed`` (Swiftmarch), i.e. an
+    over-credited movement number would become DAMAGE.  The buff is also
+    transient (1.5s, refreshing on hit), so its uptime is not derivable
+    either.  It stays state.
+
+  - R (On the Hunt) stays OPEN ``out_of_scope`` with a receipt.  It is a
+    real, sourced, unmodeled mechanic, so the Olaf-R rule applies: it is
+    NOT ``no_damage``.  The binary confirms there is no damage to miss
+    (``SivirR``'s ``mSpellCalculations`` is empty), but both of its two
+    sourced combat effects hit a named kernel gap:
+      * the bonus movement speed (20/25/30% by rank) is an additive
+        PERCENT, and ``calculate_total_stats`` exposes only the final
+        soft-capped ``move_speed`` scalar — there is no
+        ``move_speed_flat`` / ``move_speed_percent`` pair to compose
+        against — so a percent-to-flat decomposition would have to be
+        invented.  Same Swiftmarch damage path as P.
+      * "Sivir's basic attacks on-attack reduce her basic abilities'
+        current cooldowns by 0.5 seconds each" has no channel:
+        ``on_attack_cooldown_refund`` is a field of
+        ``item_effects.CooldownProcEffect`` (Scout's Slingshot) read only
+        by the item-proc scheduler, so there is no ability-cooldown
+        refund surface for a champion to author.
+    One further binary row is a genuine SOURCE CONFLICT and is recorded
+    rather than used: ``SivirR`` carries ``HuntAttackSpeed`` (rank 1-3 =
+    5%/6%/7%) that the cached wiki text does not mention at all.
+    Fail-closed: an uncorroborated attack-speed steroid is not modeled.
 """
 
 from typing import Any
@@ -177,7 +222,44 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "after the sourced 0.25 second delay (prose-only — no catalog atom "
     "exists; recorded SOURCE GAP). Fleet of Foot is state and stays "
     "outside the damage ledger.",
+    "P (Fleet of Foot) has no enemy-damage clause anywhere in its cached "
+    "entry: the single effect grants Sivir 55:75 (based on level) bonus "
+    "movement speed decaying over 1.5 seconds on her own attacks and "
+    "ability hits, and the game binary's SivirPassive record carries only "
+    "FlatMS and HasteDuration 1.5 with no damage formula at all. The slot "
+    "emits a sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
+    "out_of_scope; the Vayne-P / Kalista-P / Pyke-P precedent). The flat "
+    "movement grant is NOT modeled as a stat_buff: that channel adds the "
+    "value straight onto champion_stats['move_speed'] without re-running "
+    "stats.apply_movement_speed_soft_caps, so above 415 raw movement "
+    "speed it would over-credit the in-game grant, and the one live "
+    "consumer of that stat is item_effects' "
+    "adaptive_force_per_total_move_speed (Swiftmarch) - an over-credited "
+    "movement number would become damage. Its 1.5 second refreshing "
+    "window also has no derivable uptime, so it stays state.",
+    "R (On the Hunt) stays out_of_scope, NOT no_damage (the Olaf-R rule: "
+    "a real, sourced, unmodeled mechanic is out_of_scope). There is no "
+    "damage to miss - the binary's SivirR carries an empty "
+    "mSpellCalculations - but both of its sourced combat effects hit a "
+    "named kernel gap. (1) The bonus movement speed (20/25/30% by rank) "
+    "is an additive PERCENT and calculate_total_stats exposes only the "
+    "final soft-capped move_speed scalar, with no move_speed_flat / "
+    "move_speed_percent pair to compose against, so a percent-to-flat "
+    "decomposition would have to be invented (the same Swiftmarch damage "
+    "path as P). (2) 'Sivir's basic attacks on-attack reduce her basic "
+    "abilities' current cooldowns by 0.5 seconds each' has no channel: "
+    "on_attack_cooldown_refund is a field of "
+    "item_effects.CooldownProcEffect read only by the item-proc "
+    "scheduler, so no ability-cooldown-refund surface exists for a "
+    "champion to author. SOURCE CONFLICT recorded, not used: SivirR also "
+    "carries HuntAttackSpeed (rank 1-3 = 5%/6%/7%) that the cached wiki "
+    "text does not mention at all; fail-closed, an uncorroborated "
+    "attack-speed steroid is not modeled.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "out_of_scope",
 }

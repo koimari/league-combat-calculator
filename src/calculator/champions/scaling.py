@@ -23,6 +23,17 @@ _SIMPLE_UNITS: dict[str, tuple[str, float]] = {
     "% total AD": ("attack_damage", 100.0),
     "% bonus health": ("bonus_health", 100.0),
     "% maximum health": ("health", 100.0),
+    # Wiki prose alias for the line above.  The scraper preserves whichever
+    # preposition the article used, so the SAME self-max-health scaling
+    # reaches us under two spellings; every cached use of this spelling is
+    # the caster's own maximum health (Galio W "Magic Shield Strength",
+    # Rumble W "Shield Strength"/"Enhanced Shield Strength", Soraka W
+    # "Reduced Health Cost"), never the target's — the target forms all
+    # carry an explicit "target's" and are mapped separately below.
+    # Without the alias ``resolve_scaling`` fell through to its
+    # unrecognized-unit return of 0.0 and SILENTLY dropped the term, which
+    # zeroed Galio's W shield outright (it has no flat term at all).
+    "% of maximum health": ("health", 100.0),
     "% bonus armor": ("bonus_armor", 100.0),
     "% total armor": ("armor", 100.0),
     "% armor": ("armor", 100.0),

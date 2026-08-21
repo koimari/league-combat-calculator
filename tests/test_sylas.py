@@ -67,24 +67,42 @@ class TestPetriciteBurst:
         assert "130% ad (+ 30% ap) magic damage to the primary target" in text
         assert "stacking up to 3 times" in text
 
-    def test_the_per_hit_damage_is_that_sentence(self):
-        """130% of 200 AD + 30% of 200 AP = 320.0 magic."""
-        on_hit = row_review.entry("Sylas", "passive")["on_hit"]
-        assert on_hit["damage_type"] == "magic"
-        assert on_hit["damage_per_hit"] == pytest.approx(1.30 * 200 + 0.30 * 200)
-        assert on_hit["max_procs"] == 3
+    def test_the_empowered_swing_is_a_conversion_not_a_bonus_row(self):
+        """130% AD + 30% AP REPLACES the swing; the module owns the remainder.
+
+        Batch K's evidence: the ratio is 130% of a whole auto, and the
+        cached note "Spellblade damage does not get converted to magic
+        damage" only parses if the attack's own damage IS converted.
+        Pricing it as an added magic row would invent roughly one whole
+        auto per stack AND mitigate the real swing against armor instead
+        of magic resistance, so P rides ``auto_attack_conversion`` (the
+        Galio Colossal Smash channel) and supplies only
+        ``1.30 x AD + 0.30 x AP - AD``.
+        """
+        entry = row_review.entry("Sylas", "passive", passive_procs=3)
+        assert "on_hit" not in entry
+        assert entry["parts"] == ()
+        conversion = entry["auto_attack_conversion"]
+        assert conversion["damage_type"] == "magic"
+        assert conversion["count"] == 3
+        assert conversion["bonus_raw"] == pytest.approx(1.30 * 200 + 0.30 * 200 - 200)
 
     def test_three_stocked_attacks_reach_the_fight_total(self):
-        result = rider_probe.fight("Sylas")
-        row = result["breakdown"][rider_probe.RIDER_ROW]
-        assert row["name"] == "Petricite Burst (on-hit)"
-        assert row["count"] == 3
-        assert row["total_damage"] == pytest.approx(218.4, abs=0.05)
-        assert row["total_damage"] < result["total_damage"]
+        result = rider_probe.fight("Sylas", champion_options={"passive_procs": 3})
+        plain = rider_probe.fight("Sylas", champion_options={"passive_procs": 0})
+        # The converted swings raise the AUTO stream, not the ability ledger.
+        assert result["ability_damage"] == pytest.approx(plain["ability_damage"])
+        assert result["auto_attack_damage"] > plain["auto_attack_damage"]
+        assert result["total_damage"] > plain["total_damage"]
 
     def test_spending_no_stack_prices_nothing(self):
-        result = rider_probe.fight("Sylas", champion_options={"p_procs": 0})
-        assert rider_probe.RIDER_ROW not in result["breakdown"]
+        """The default: Unshackled stacks are caster state, so 0 by default."""
+        default = rider_probe.fight("Sylas")
+        explicit = rider_probe.fight("Sylas", champion_options={"passive_procs": 0})
+        assert default["total_damage"] == pytest.approx(explicit["total_damage"])
+        entry = row_review.entry("Sylas", "passive")
+        assert entry["auto_attack_conversion"]["count"] == 0
+        assert entry["auto_attack_conversion"]["bonus_raw"] > 0.0
 
 
 class TestTheSlotThatStaysOutOfScope:
@@ -98,5 +116,5 @@ class TestTheSlotThatStaysOutOfScope:
             "E": "modeled",
             "R": "out_of_scope",
         }
-        assert "casts a copy of another champion's" in sylas.__doc__
-        assert "an axis the engine has no surface for" in sylas.__doc__
+        assert "another champion's ultimate" in sylas.__doc__
+        assert "cross-champion ultimate-import kernel" in sylas.__doc__

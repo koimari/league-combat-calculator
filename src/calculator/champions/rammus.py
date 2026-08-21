@@ -13,11 +13,43 @@ fight engine has no incoming-auto hook, so the enemy's auto count is
 explicit state); the stance's bonus armor/MR rows are the defensive
 buff, not damage, and remain state.
 
-P (Spiked Shell) is a plain conversion: "Rammus gains bonus attack
-damage equal to the sum of 15% total armor and 15% total magic
-resistance".  ``stat_buff``'s percent_of mode reads one stat, never a
-sum, so the addition is written here, in a BUFF-phase row every later
-slot parses against.
+Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
+(P, E).
+
+  - P (Spiked Shell) is NOT the thorns reflect (that is W, above) — it is
+    a pure bonus-AD conversion: "Rammus gains bonus attack damage equal to
+    the sum of 15% total armor and 15% total magic resistance"
+    (``data/champions.json`` Rammus P, one effect row, ``leveling: []``).
+    Both ratios are corroborated by the game binary
+    (``data/bin/characters/rammus.bin.json``, record
+    ``Characters/Rammus/Spells/RammusPAbility/RammusP``): ``ArmorRatio``
+    and ``MagicResistRatio`` are 0.15 at every rank index, and the spell's
+    only calculation, ``TotalDamage``, is exactly the two
+    ``StatByNamedDataValueCalculationPart`` terms (armor stat + magic
+    resist stat) with no third part — so the record's stray
+    ``BaseDamage`` DataValue (10.0) is NOT in the formula and is not
+    modeled here (the wiki text carries no flat term either). Modeled as
+    a BUFF-phase ``stat_buff`` on ``bonus_attack_damage`` (the Dr. Mundo
+    ``_passive_bonus_ad`` precedent for a percent-of-a-stat passive
+    steroid), so autos and every bonus-AD-scaling item see it.
+    ``stat_buff``'s percent_of mode reads one stat, never a sum, so
+    the addition is written in the module rather than declared.
+    Reclassified out_of_scope -> modeled; this one IS a behavior change
+    (see the golden receipt), not a stale label.
+  - E (Frenzying Taunt): the taunt itself is already modeled (the
+    ``with_control_event`` wrapper below emits the sourced 1.2-2.0s taunt),
+    and the packet declares E ``kind: "no_damage"``. The cached entry does
+    carry one damage row — "Monster Magic Damage" (80-160 + 70% AP) — but
+    the sourced description restricts it by target class: "Monsters are
+    additionally dealt magic damage upon being affected." Against this
+    engine's fight target it is exactly zero: ``FightConfig.target_class``
+    is a two-value label (``"champion"`` default / ``"minion"``, roadmap
+    §3.1) with no monster class at all, and champion-ability class clauses
+    are a named, still-open kernel boundary of that same slice (§3.1 item
+    3), not a Rammus gap. Reclassified out_of_scope -> no_damage on the
+    champion-target surface, with the monster row documented in
+    ASSUMPTIONS rather than silently priced against a champion (the Lulu W
+    control-only precedent plus the Doran's Helm minion-only boundary).
 """
 
 from typing import Any
@@ -40,15 +72,28 @@ _THORNS_BASE = 15.0
 _THORNS_ARMOR_RATIO = 0.10
 _THORNS_MAGIC_RESISTANCE_RATIO = 0.10
 
-# HARDCODED: verify on patch updates — Spiked Shell's two ratios are
-# cached P prose only ("the sum of 15% total armor and 15% total magic
-# resistance"); the passive carries no leveling row.
+# HARDCODED: verify on patch updates — Spiked Shell (P) has an EMPTY
+# leveling array in the cache, so its two ratios live only in the cached P
+# description prose ("bonus attack damage equal to the sum of 15% total
+# armor and 15% total magic resistance").  Both are corroborated by the
+# game binary's RammusP DataValues (ArmorRatio / MagicResistRatio = 0.15);
+# the binary's unused BaseDamage (10.0) is deliberately not modeled — the
+# spell's own TotalDamage calculation does not reference it.
 _SPIKED_SHELL_ARMOR_RATIO = 0.15
 _SPIKED_SHELL_MAGIC_RESISTANCE_RATIO = 0.15
 
 
 def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: bonus AD equal to 15% total armour plus 15% total magic resist."""
+    """P: bonus AD equal to 15% total armour plus 15% total magic resist.
+
+    BUFF phase so the grant lands in ``ctx.stats`` before any later slot
+    reads AD, and echoed in ``stat_buff`` so the fight engine applies it
+    to the auto-attack stream and to every bonus-AD item conversion (the
+    Dr. Mundo ``_passive_bonus_ad`` precedent).  Spiked Shell is an innate
+    with no cast, no cooldown row, and no rank of its own — the entry is a
+    zero-damage carrier for the buff, exactly like the packet ``no_damage``
+    row it replaces.
+    """
     ability = ctx.ability("P")
     if ability is None:
         return None
@@ -74,9 +119,10 @@ def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:
         f"+{bonus_ad:.2f} bonus attack damage = "
         f"{_SPIKED_SHELL_ARMOR_RATIO * 100:g}% of {armor:.1f} armour + "
         f"{_SPIKED_SHELL_MAGIC_RESISTANCE_RATIO * 100:g}% of "
-        f"{magic_resistance:.1f} magic resistance; the build's "
-        "resistances, not the stance's, since W's bonus armour is a "
-        "state row rather than a stat_buff"
+        f"{magic_resistance:.1f} magic resistance; Spiked Shell deals no "
+        "damage of its own, and reads the build's resistances rather than "
+        "the stance's, since W's bonus armour is a state row rather than "
+        "a stat_buff"
     )
     return entry
 
@@ -109,21 +155,25 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
     # nothing sources, so a row of several of them is one aggregate with no
     # per-hit boundary for the marker to ride.  The stance applies no
     # control either way, and says so wherever the ledger can hear it.
-    count = max(autos, 1)
-    certified = count <= 1
+    certified = autos <= 1
     entry = damage_entry(
         "Defensive Ball Curl (thorns)",
         rank,
         extract_cooldown(ability, rank),
         total,
         "magic",
+        cc_kind="none" if certified else None,
         event_order_certified="single_hit" if certified else None,
     )
-    entry["parts"] = (
-        DamagePart(
-            "magic", per_auto, count=count, cc_kind="none" if certified else None
-        ),
-    )
+    # The fight engine reads ONLY ``parts`` (damage_entry's contract), so
+    # the count here is the real one: a ``count=max(autos, 1)`` floor priced
+    # ONE full thorns proc at the DEFAULT ``w_thorns_autos`` of 0 - 23.50
+    # phantom mitigated damage in a no-item level-18 fight, with autos=0 and
+    # autos=1 scoring identically.  Zero enemy autos must cost zero, so at
+    # autos <= 1 the entry keeps damage_entry's own single part (amount ==
+    # total, so 0 when no auto landed) and only a multi-auto row overrides.
+    if autos > 1:
+        entry["parts"] = (DamagePart("magic", per_auto, count=autos),)
     entry["detail"] = (
         f"thorns: {per_auto:.2f} magic damage per enemy basic attack "
         f"(15 + 10% total armor ({armor:.1f}) + 10% total magic "
@@ -189,17 +239,34 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "enemy autos (0 = none). The reviewed packet's misread of the "
     "'Bonus Armor' row as magic damage is removed; the stance's bonus "
     "armor/MR rows are the defensive buff and remain state.",
-    "P (Spiked Shell) grants bonus attack damage equal to 15% of total "
-    "armour plus 15% of total magic resistance (cached P prose; the "
-    "passive has no leveling row).  It reads the BUILD's resistances: "
-    "W's stance bonus is a state row rather than a stat_buff, so the "
-    "in-game dynamic update from Defensive Ball Curl is not modelled.",
-    "E (Frenzying Taunt) is an emitted zero-damage row: its only damage "
-    "row is monsters-only, and its sourced 1.2-2s taunt is authored as a "
-    "typed control interval at the cast.",
+    "P (Spiked Shell) grants bonus attack damage equal to 15% total armor "
+    "+ 15% total magic resistance (cached P description prose; the P "
+    "leveling array is empty, and both ratios are corroborated by the game "
+    "binary's RammusP ArmorRatio/MagicResistRatio DataValues). It is "
+    "emitted as a BUFF-phase stat_buff on bonus_attack_damage, so the auto "
+    "stream and bonus-AD item conversions see it. The armor/MR read is the "
+    "pre-fight total: Defensive Ball Curl's own bonus armor/MR (W) are "
+    "state, not stats, so the in-stance AD spike is a documented boundary. "
+    "The binary's unused BaseDamage DataValue (10.0) is not modeled - the "
+    "spell's own TotalDamage calculation does not reference it and the "
+    "wiki text carries no flat term.",
+    "E (Frenzying Taunt) deals no damage to a champion target: its one "
+    "sourced damage row is 'Monster Magic Damage' (80-160 + 70% AP), "
+    "restricted by the cached description to monsters ('Monsters are "
+    "additionally dealt magic damage upon being affected'). This engine's "
+    "target_class label has no monster value (champion/minion only) and "
+    "champion-ability target-class clauses are a named open kernel "
+    "boundary, so the row is documented rather than priced against a "
+    "champion. The sourced taunt (1.2-2.0s by rank) is already emitted as "
+    "a control event. Reclassified from out_of_scope to no_damage on the "
+    "champion-target surface.",
 ]
 
 # E is emitted and grants nothing the engine prices against a champion.
 MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "E" else "modeled") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
 }

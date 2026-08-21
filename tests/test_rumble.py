@@ -82,8 +82,9 @@ class TestOverheatedOnHit:
     At 150 Heat the cached entry says Rumble "empowers his basic attacks
     to deal 5 : 44.12 (based on level) (+ 25% AP) (+ 4% of the target's
     maximum health) bonus magic damage on-hit" — a complete sourced row.
-    It rides the ``p_overheated`` option, off by default, so a default
-    request is the number it always was.
+    Overheat is a 4-second heat-state window the fight engine does not
+    simulate, so ``overheat_autos`` is the explicit count of empowered
+    swings, 0 by default — a default request is the number it always was.
     """
 
     def test_the_default_request_prices_no_rider(self):
@@ -103,11 +104,12 @@ class TestOverheatedOnHit:
         )
         # 40 (level 18) + 25% of 200 AP + 4% of a 2500 HP target.
         assert expected == pytest.approx(40.0 + 50.0 + 100.0)
-        entry = row_review.entry("Rumble", "passive", p_overheated=True)
+        entry = row_review.entry("Rumble", "passive", overheat_autos=3)
         assert entry["on_hit"] == {
-            "name": "Junkyard Titan (Overheated)",
+            "name": "Junkyard Titan (on-hit)",
             "damage_per_hit": pytest.approx(expected),
             "damage_type": "magic",
+            "max_procs": 3,
         }
         assert entry["total_raw"] == 0.0
 
@@ -120,12 +122,11 @@ class TestOverheatedOnHit:
             "include_auto_attacks": True,
         }
         off = calculate_payload({**probe, "champion_options": {}})
-        on = calculate_payload({**probe, "champion_options": {"p_overheated": True}})
+        on = calculate_payload({**probe, "champion_options": {"overheat_autos": 3}})
 
         assert "on_hit_ability_passive" not in off["breakdown"]
         row = on["breakdown"]["on_hit_ability_passive"]
-        assert row["name"] == "Junkyard Titan (Overheated)"
-        assert row["count"] == off["breakdown"]["auto_attacks"]["count"]
+        assert row["name"] == "Junkyard Titan (on-hit)"
         assert row["total_damage"] == pytest.approx(
             row["damage_per_hit"] * row["count"], rel=1e-2
         )
@@ -133,30 +134,59 @@ class TestOverheatedOnHit:
         assert on["ability_damage"] == pytest.approx(off["ability_damage"])
         assert on["auto_attack_damage"] > off["auto_attack_damage"]
 
+    def test_the_empowered_swing_count_is_bounded_by_the_option(self):
+        """Overheat is a 4-second window, so the count cannot be inferred.
+
+        Batch K's fail-closed reading (``overheat_autos``, 0 by default)
+        is carried on the on-hit channel rather than as a ``parts``-priced
+        passive row: ``passive`` is not an orderable cast
+        (``pipeline.validate_cast_order_for_kit`` refuses it), so a
+        parts-priced passive row never reaches the fight at all.
+        ``max_procs`` is what stops the rider from charging every swing of
+        a long fight as Overheated.
+        """
+        probe = {
+            "champion": "Rumble",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+        one = calculate_payload({**probe, "champion_options": {"overheat_autos": 1}})
+        three = calculate_payload({**probe, "champion_options": {"overheat_autos": 3}})
+        autos = one["breakdown"]["auto_attacks"]["count"]
+        assert autos > 3, "the probe must outlast the empowered swings"
+        assert one["breakdown"]["on_hit_ability_passive"]["count"] == 1
+        assert three["breakdown"]["on_hit_ability_passive"]["count"] == 3
+
     def test_the_attack_speed_half_of_overheating_is_left_out(self):
         """Granting it without the ability lockout would be a free upgrade."""
         assert "bonus attack speed" in cc_review.slot_text(cc_review.kit("Rumble"), "P")
-        entry = row_review.entry("Rumble", "passive", p_overheated=True)
+        entry = row_review.entry("Rumble", "passive", overheat_autos=1)
         assert "stat_buff" not in entry
         assert "ability lockout are both unmodeled" in entry["detail"]
 
 
 class TestCoverageMap:
-    """P now prices a row; W never will.
+    """Every slot is priced; W is priced outside the damage ledger.
 
-    Scrap Shield is a shield and a movement-speed burst — ``no_damage``,
-    not ``out_of_scope`` — and the Overheated rider closes P.
+    Scrap Shield books no damage row, but it is not unpriced: the
+    ally-support scanner derives the sourced self-shield (25/55/85/115/145
+    + 30% AP + 4% maximum health) at target scope "self", so the slot is
+    ``modeled`` rather than ``no_damage`` — a priced slot is never labelled
+    for the ledger it does not ride.  The Overheated row closes P.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
         assert get_champion_module_contract("Rumble").coverage == {
             "P": "modeled",
             "Q": "modeled",
-            "W": "no_damage",
+            "W": "modeled",
             "E": "modeled",
             "R": "modeled",
         }
-        assert coverage_truth.emitted("Rumble", p_overheated=True) == {
+        # W's shield is not damage, so the damage ledger still reads zero.
+        assert coverage_truth.emitted("Rumble", overheat_autos=1) == {
             "P": coverage_truth.PRICED,
             "Q": coverage_truth.PRICED,
             "W": coverage_truth.ZERO,
