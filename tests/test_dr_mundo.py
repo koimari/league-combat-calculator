@@ -55,6 +55,11 @@ R_RANK_3_PERCENT = 0.25
 def _stats(bonus_health: float = BONUS_HEALTH) -> dict[str, float]:
     """Champion stats matching the module docstring's reference build."""
     return {
+        "armor_penetration_bonus_percent": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "level": float(LEVEL),
         "health": BASE_HEALTH + bonus_health,
         "bonus_health": bonus_health,

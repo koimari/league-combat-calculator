@@ -30,6 +30,12 @@ from tests import cc_review
 # is 0 by default so the passive's AS buff doesn't move the auto-count
 # math; the buff-feeds-the-count test overrides it.
 _STATS = {
+    "armor_penetration_bonus_percent": 0.0,
+    "lethality": 0.0,
+    "move_speed": 0.0,
+    "omnivamp_percent": 0.0,
+    "resource_regen_per_second": 0.0,
+    "ultimate_haste": 0.0,
     "attack_damage": 100.0,
     "base_attack_damage": 100.0,
     "bonus_attack_damage": 0.0,

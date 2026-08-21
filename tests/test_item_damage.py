@@ -373,6 +373,19 @@ class TestSpellbladeSiblingParsing:
         from src.calculator.resistance import apply_resistance
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "base_attack_damage": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "ability_power": 0.0,
             "attack_speed": 1.0,
@@ -412,6 +425,19 @@ class TestSpellbladeSiblingParsing:
         from src.calculator.damage import calculate_fight_damage
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "base_attack_damage": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "ability_power": 0.0,
             "attack_speed": 1.0,
@@ -660,6 +686,20 @@ class TestBloodlettersCurseVileDecay:
         """Stacking MR reduction should not affect physical-only abilities."""
         # Craft a minimal physical-only scenario
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "base_attack_damage": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "attack_speed": 0.625,
@@ -1266,6 +1306,19 @@ class TestBurnRefreshWindow:
     """
 
     _STATS = {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_attack_damage": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "flat_armor_penetration": 0.0,
+        "health": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 60.0,
         "base_attack_damage": 60.0,
         "attack_speed": 0.7,
@@ -1422,6 +1475,19 @@ class TestBurnTimedModeUptime:
     """
 
     _STATS = {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_attack_damage": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "flat_armor_penetration": 0.0,
+        "health": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 60.0,
         "base_attack_damage": 60.0,
         "attack_speed": 0.7,
@@ -1682,6 +1748,19 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     def test_expose_weakness_melee_uses_eight_percent(self) -> None:
         """Melee champions should use the 8% Expose Weakness rate."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -1921,6 +2000,19 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_double_on_hit_with_wits_end(self) -> None:
         """Double on-hit should also work with Wit's End."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -1966,6 +2058,19 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_double_on_hit_with_bork(self) -> None:
         """Double on-hit should work with Blade of the Ruined King."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2022,6 +2127,19 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_kraken_extra_hits_from_double_on_hit(self) -> None:
         """Double on-hit procs should count as extra hits for Kraken Slayer."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2233,6 +2351,19 @@ class TestEclipseEverRisingMoon:
     def test_eclipse_appears_in_fight_breakdown(self) -> None:
         """Eclipse proc should appear in fight breakdown when item is present."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2305,6 +2436,19 @@ class TestEclipseEverRisingMoon:
     def test_eclipse_damage_mitigated_by_armor(self) -> None:
         """Eclipse physical damage should be reduced by target armor."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2409,6 +2553,19 @@ class TestEclipseEverRisingMoon:
     def test_no_eclipse_when_item_not_present(self) -> None:
         """Eclipse proc should not appear when item is not equipped."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2465,6 +2622,19 @@ class TestExperimentalHexplate:
     def test_hexplate_increases_auto_count(self) -> None:
         """Hexplate bonus AS (from stats) should yield more autos than without."""
         base_stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2524,6 +2694,19 @@ class TestExperimentalHexplate:
     def test_hexplate_auto_count_5s_fight(self) -> None:
         """With buffed AS=1.3125 (from stats), 5s => 6 autos."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2568,6 +2751,19 @@ class TestExperimentalHexplate:
     def test_hexplate_full_fight_duration(self) -> None:
         """With buffed AS=1.3125 for full 15s fight: floor(1.3125 * 15) = 19."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2612,6 +2808,19 @@ class TestExperimentalHexplate:
     def test_hexplate_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2656,6 +2865,19 @@ class TestExperimentalHexplate:
     def test_no_note_without_hexplate(self) -> None:
         """No notes when Hexplate is not equipped."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2718,6 +2940,19 @@ class TestFiendhunterBolts:
         No true damage (0% natural crit chance).
         """
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2776,6 +3011,19 @@ class TestFiendhunterBolts:
         True: 200 * 0.15 = 30 per hit.
         """
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -2830,6 +3078,19 @@ class TestFiendhunterBolts:
         from unittest.mock import patch
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 104,
             "ability_power": 0,
             "base_attack_damage": 104,
@@ -2871,6 +3132,19 @@ class TestFiendhunterBolts:
         from unittest.mock import patch
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 104,
             "ability_power": 0,
             "base_attack_damage": 104,
@@ -2916,6 +3190,19 @@ class TestFiendhunterBolts:
         from unittest.mock import patch
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 104,
             "ability_power": 0,
             "base_attack_damage": 104,
@@ -2958,6 +3245,19 @@ class TestFiendhunterBolts:
         from unittest.mock import patch
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 104,
             "ability_power": 0,
             "base_attack_damage": 104,
@@ -2998,6 +3298,19 @@ class TestFiendhunterBolts:
     def test_correct_total_auto_count(self) -> None:
         """3 empowered autos + remaining normal autos at base AS."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -3047,6 +3360,19 @@ class TestFiendhunterBolts:
     def test_fiendhunter_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -3093,6 +3419,19 @@ class TestFiendhunterBolts:
         from unittest.mock import patch
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -3150,6 +3489,19 @@ class TestFiendhunterBolts:
     def test_no_empowered_autos_at_zero_uptime(self) -> None:
         """With 0% auto uptime, no empowered autos and no Fiendhunter effect."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -3195,6 +3547,19 @@ class TestFiendhunterBolts:
         from unittest.mock import patch
 
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "base_attack_damage": 100,
@@ -3243,6 +3608,20 @@ class TestRagebladeOnHitAllItems:
     """Tests that phantom hits apply ALL on-hit effects, not just Rageblade."""
 
     BASE_STATS: dict = {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "base_attack_damage": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_attack_damage": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "health": 0.0,
+        "lethality": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 100,
         "ability_power": 0,
         "magic_penetration_flat": 0,
@@ -3459,6 +3838,20 @@ class TestKrakenSlayerPhantomHitStacking:
     def test_full_fight_kraken_plus_rageblade(self) -> None:
         """Integration test: Kraken + Rageblade in full fight shows correct procs."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "base_attack_damage": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "lethality": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100,
             "ability_power": 0,
             "magic_penetration_flat": 0,
@@ -3655,6 +4048,18 @@ class TestUmbralGlaiveNightstalker:
     @staticmethod
     def _stats() -> dict[str, float]:
         return {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 100.0,
             "ability_power": 0.0,
@@ -3717,6 +4122,19 @@ class TestHexopticsC44BasicDamageAmp:
     def test_fight_damage_auto_attacks_amplified(self) -> None:
         """Auto attack damage should be 10% higher with Hexoptics C44."""
         champion_stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.0,
@@ -3769,6 +4187,19 @@ class TestHexopticsC44BasicDamageAmp:
     def test_fight_damage_melee_gets_reduced_amp(self) -> None:
         """A melee champion fights inside ~100 units, so the amp is ~2%."""
         champion_stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.0,
@@ -3803,6 +4234,19 @@ class TestHexopticsC44BasicDamageAmp:
     def test_breakdown_shows_amplification(self) -> None:
         """Breakdown should include a 'Damage Amplification' entry."""
         champion_stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.0,
@@ -3862,6 +4306,19 @@ class TestHorizonFocusHypershotAmp:
     def test_first_ability_not_amped(self) -> None:
         """First ability triggers the mark and should NOT be amplified."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 60.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.6,
@@ -3951,6 +4408,19 @@ class TestHorizonFocusHypershotAmp:
         outgoing hit triggers Hypershot; the true return hit should be amped.
         """
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 60.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.6,
@@ -4014,6 +4484,19 @@ class TestHorizonFocusHypershotAmp:
     def test_zero_damage_opener_does_not_block_hypershot_receipts(self) -> None:
         """A utility opener must not become Horizon Focus's trigger cast."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 60.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.6,
@@ -4130,6 +4613,18 @@ class TestHullbreakerSkipper:
     def test_fight_damage_with_hullbreaker(self) -> None:
         """Integration: Hullbreaker procs appear in fight breakdown."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 80.0,
             "attack_speed": 1.0,
@@ -4171,6 +4666,18 @@ class TestMuramanaMultiCastR:
     def test_r_procs_muramana_per_dash(self) -> None:
         """Ahri R has 3 dashes — Muramana should proc 3 times, not 1."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 80.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.7,
@@ -4231,6 +4738,18 @@ class TestMuramanaMultiCastR:
     def test_single_cast_ability_procs_once(self) -> None:
         """A normal single-cast ability should proc Muramana once."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 80.0,
             "base_attack_damage": 60.0,
             "attack_speed": 0.7,
@@ -4283,6 +4802,19 @@ class TestNavoriFlickerbladeFight:
     def test_more_casts_with_navori(self) -> None:
         """Navori should produce more ability casts than without."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
@@ -4341,6 +4873,19 @@ class TestNavoriFlickerbladeFight:
     def test_r_not_affected(self) -> None:
         """R is always 1 cast — Navori should not change it."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
@@ -4383,6 +4928,19 @@ class TestNavoriFlickerbladeFight:
     def test_no_effect_in_one_rotation(self) -> None:
         """In one-rotation mode, Navori should not add extra casts."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,
@@ -4426,6 +4984,19 @@ class TestNavoriFlickerbladeFight:
     def test_no_effect_without_autos(self) -> None:
         """With 0 uptime, Navori has no autos to refund with."""
         stats = {
+            "ability_haste": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "basic_ability_haste": 0.0,
+            "bonus_attack_damage": 0.0,
+            "bonus_health": 0.0,
+            "bonus_mana": 0.0,
+            "flat_armor_penetration": 0.0,
+            "health": 0.0,
+            "max_mana": 0.0,
+            "move_speed": 0.0,
+            "omnivamp_percent": 0.0,
+            "resource_regen_per_second": 0.0,
+            "ultimate_haste": 0.0,
             "attack_damage": 100.0,
             "base_attack_damage": 70.0,
             "attack_speed": 1.5,

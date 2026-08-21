@@ -2725,7 +2725,7 @@ def _resolve_combat_state(
     """
     fight_duration_seconds = config.fight_duration_seconds
     auto_attack_uptime = config.auto_attack_uptime
-    is_melee = champion_stats.get("is_melee", True)
+    is_melee = champion_stats["is_melee"]
     saturated_omnivamp = saturating_stat_percent(
         [str(item.get("name", "")) for item in items],
         SustainStat.OMNIVAMP_PERCENT,
@@ -2739,9 +2739,9 @@ def _resolve_combat_state(
         # fast-path decision reads the resolved stats.
         champion_stats = dict(champion_stats)
         champion_stats["omnivamp_percent"] = (
-            champion_stats.get("omnivamp_percent", 0.0) + saturated_omnivamp
+            champion_stats["omnivamp_percent"] + saturated_omnivamp
         )
-    level = int(champion_stats.get("level", 1))
+    level = int(champion_stats["level"])
     damage_effects = item_effects.resolve_damage_effects(items)
     # The declared families this build brings.  Resolved before the
     # resistances, because Malignance's magic-resistance shred is one of the
@@ -2811,8 +2811,8 @@ def _resolve_combat_state(
         holder_stats=champion_stats,
     )
 
-    magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
-    magic_pen_percent = champion_stats.get("magic_penetration_percent", 0.0) / 100.0
+    magic_pen_flat = champion_stats["magic_penetration_flat"]
+    magic_pen_percent = champion_stats["magic_penetration_percent"] / 100.0
 
     # Hatefog's flat reduction is the item's magnitude; whether it applies
     # is the rotation's R outcome (``Resists.ult_cast``): abilities before
@@ -2832,11 +2832,9 @@ def _resolve_combat_state(
     )
 
     # Armor penetration: percent pen + lethality (flat)
-    armor_pen_percent = champion_stats.get("armor_penetration_percent", 0.0) / 100.0
-    armor_pen_bonus_percent = (
-        champion_stats.get("armor_penetration_bonus_percent", 0.0) / 100.0
-    )
-    flat_armor_pen = champion_stats.get("flat_armor_penetration", 0.0)
+    armor_pen_percent = champion_stats["armor_penetration_percent"] / 100.0
+    armor_pen_bonus_percent = champion_stats["armor_penetration_bonus_percent"] / 100.0
+    flat_armor_pen = champion_stats["flat_armor_penetration"]
 
     as_ratio = champion_stats["attack_speed_ratio"]
     attack_speed = champion_stats["attack_speed"]
@@ -2903,8 +2901,7 @@ def _resolve_combat_state(
                     attack_speed_ratio=as_ratio,
                     duration_seconds=fight_duration_seconds,
                     uptime=auto_attack_uptime,
-                    critical_chance=champion_stats.get("critical_strike_chance", 0.0)
-                    / 100.0,
+                    critical_chance=champion_stats["critical_strike_chance"] / 100.0,
                 )
             )
         else:
@@ -3017,7 +3014,7 @@ def _resolve_combat_state(
         champion_options=dict(champion_options or {}),
         actualizer_active_until=actualizer_active_until,
         actualizer_basic_cooldown_multiplier=actualizer_basic_cooldown_multiplier,
-        ability_haste=champion_stats.get("ability_haste", 0.0),
+        ability_haste=champion_stats["ability_haste"],
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
         auto_attacks_only=config.auto_attacks_only,
@@ -3119,27 +3116,23 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             )
             if steraks_delta:
                 stats["bonus_attack_damage"] = (
-                    stats.get("bonus_attack_damage", 0.0) + steraks_delta
+                    stats["bonus_attack_damage"] + steraks_delta
                 )
         if "bonus_attack_damage" in stat_buff or "base_attack_damage" in stat_buff:
-            stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
-                "bonus_attack_damage", 0.0
+            stats["attack_damage"] = (
+                stats["base_attack_damage"] + stats["bonus_attack_damage"]
             )
         # Recalculate magic penetration if it was buffed
         if "magic_penetration_percent" in stat_buff:
-            resists.magic_pen_percent = (
-                stats.get("magic_penetration_percent", 0.0) / 100.0
-            )
+            resists.magic_pen_percent = stats["magic_penetration_percent"] / 100.0
             resists.resolve_magic()
         # Recalculate armor penetration if it was buffed
         if "armor_penetration_percent" in stat_buff:
-            resists.armor_pen_percent = (
-                stats.get("armor_penetration_percent", 0.0) / 100.0
-            )
+            resists.armor_pen_percent = stats["armor_penetration_percent"] / 100.0
             resists.resolve_armor()
         if "armor_penetration_bonus_percent" in stat_buff:
             resists.armor_pen_bonus_percent = (
-                stats.get("armor_penetration_bonus_percent", 0.0) / 100.0
+                stats["armor_penetration_bonus_percent"] / 100.0
             )
             resists.resolve_armor()
         # Bonus health raises max health, and items converting bonus
@@ -3148,24 +3141,24 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         # delta composes with the item-health conversion already in the
         # build stats.
         if "bonus_health" in stat_buff:
-            stats["health"] = stats.get("health", 0.0) + stat_buff["bonus_health"]
+            stats["health"] = stats["health"] + stat_buff["bonus_health"]
             bloodmail_delta = item_effects.bloodmail_bonus_ad(
                 state.items, stat_buff["bonus_health"]
             )
             if bloodmail_delta:
                 stats["bonus_attack_damage"] = (
-                    stats.get("bonus_attack_damage", 0.0) + bloodmail_delta
+                    stats["bonus_attack_damage"] + bloodmail_delta
                 )
-                stats["attack_damage"] = stats.get(
-                    "base_attack_damage", 0.0
-                ) + stats.get("bonus_attack_damage", 0.0)
+                stats["attack_damage"] = (
+                    stats["base_attack_damage"] + stats["bonus_attack_damage"]
+                )
         # A BASE-health grant (Dr. Mundo R) raises max health exactly like
         # a bonus-health one — so %maximum-health mechanics grow with it —
         # but items converting BONUS health to a stat (Overlord's
         # Bloodmail) must NOT see it. That base-vs-bonus split is the
         # whole reason the two keys are separate (the Gnar rule).
         if "base_health" in stat_buff:
-            stats["health"] = stats.get("health", 0.0) + stat_buff["base_health"]
+            stats["health"] = stats["health"] + stat_buff["base_health"]
         # Recalculate attack speed and auto count if AS was buffed
         if "bonus_attack_speed" in stat_buff:
             bonus_as_pct = stat_buff["bonus_attack_speed"]
@@ -3238,7 +3231,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.
-    state.crit_chance = min(stats.get("critical_strike_chance", 0) / 100.0, 1.0)
+    state.crit_chance = min(stats["critical_strike_chance"] / 100.0, 1.0)
     state.crit_multiplier = (
         BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
     )
@@ -3260,7 +3253,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         if not crit_modifier:
             continue
         chance_multiplier = float(crit_modifier.get("crit_chance_multiplier", 1.0))
-        raw_crit_percent = float(stats.get("critical_strike_chance", 0.0) or 0.0)
+        raw_crit_percent = float(stats["critical_strike_chance"])
         state.crit_chance = min(raw_crit_percent / 100.0 * chance_multiplier, 1.0)
         damage_factor = float(crit_modifier.get("crit_damage_multiplier_factor", 1.0))
         state.crit_multiplier = (
@@ -3272,10 +3265,10 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         )
         if excess_percent > 0.0 and per_percent > 0.0:
             stats["bonus_attack_damage"] = (
-                stats.get("bonus_attack_damage", 0.0) + excess_percent * per_percent
+                stats["bonus_attack_damage"] + excess_percent * per_percent
             )
-            stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
-                "bonus_attack_damage", 0.0
+            stats["attack_damage"] = (
+                stats["base_attack_damage"] + stats["bonus_attack_damage"]
             )
         break
 
@@ -4030,7 +4023,7 @@ def _effective_timed_cooldown(
     if ability_key in ("Q", "W", "E"):
         total_haste += basic_ability_haste
     elif ability_key == "R":
-        total_haste += float(state.champion_stats.get("ultimate_haste", 0.0) or 0.0)
+        total_haste += float(state.champion_stats["ultimate_haste"])
     total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
@@ -4420,9 +4413,9 @@ def _apply_resource_limits_legacy(
     state: FightState, plan: CastPlan, resource_type: str
 ) -> CastPlan:
     """Legacy admission walk (ENERGY resources; unchanged behavior)."""
-    base_maximum = float(state.champion_stats.get("max_mana", 0.0))
+    base_maximum = float(state.champion_stats["max_mana"])
     remaining = base_maximum
-    regen = float(state.champion_stats.get("resource_regen_per_second", 0.0))
+    regen = float(state.champion_stats["resource_regen_per_second"])
     events: list[tuple[float, int, int, str]] = []
     order = {key: index for index, key in enumerate(state.cast_order)}
     for key, times in plan.times.items():
@@ -4472,8 +4465,8 @@ def _apply_resource_limits_legacy(
     ):
         stats = state.champion_stats
         mana_restore_per_proc = item_effects.essence_reaver_mana_restore_per_proc(
-            base_attack_damage=stats.get("base_attack_damage", 0.0),
-            critical_strike_chance=stats.get("critical_strike_chance", 0.0),
+            base_attack_damage=stats["base_attack_damage"],
+            critical_strike_chance=stats["critical_strike_chance"],
             item_name=spellblade.source.item_name,
         )
 
@@ -5132,8 +5125,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     on the restore tier (0) before a simultaneous cast's spend tier (1),
     and a denied cast never arms, detonates, or restores anything.
     """
-    base_maximum = float(state.champion_stats.get("max_mana", 0.0))
-    regen = float(state.champion_stats.get("resource_regen_per_second", 0.0))
+    base_maximum = float(state.champion_stats["max_mana"])
+    regen = float(state.champion_stats["resource_regen_per_second"])
     owner = str(getattr(state, "resource_ledger_owner", "") or "main")
     ledger = resource_ledger.ResourceLedger(
         owner,
@@ -5190,8 +5183,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     ):
         stats = state.champion_stats
         mana_restore_per_proc = item_effects.essence_reaver_mana_restore_per_proc(
-            base_attack_damage=stats.get("base_attack_damage", 0.0),
-            critical_strike_chance=stats.get("critical_strike_chance", 0.0),
+            base_attack_damage=stats["base_attack_damage"],
+            critical_strike_chance=stats["critical_strike_chance"],
             item_name=spellblade.source.item_name,
         )
 
@@ -6202,7 +6195,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         else 0.0
     )
 
-    basic_ability_haste = state.champion_stats.get("basic_ability_haste", 0.0)
+    basic_ability_haste = state.champion_stats["basic_ability_haste"]
 
     # Timed mode: all abilities share one cast timeline (cast times lock
     # out other casts). One-rotation and autos-only modes never recast,
@@ -6417,7 +6410,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     first_delay, attack_interval = authored_timing
                 swing = DamagePart(
                     "physical",
-                    state.champion_stats.get("attack_damage", 0.0),
+                    state.champion_stats["attack_damage"],
                     count=hits,
                     crit_effectiveness=1.0,
                     basic_damage=True,
@@ -7744,9 +7737,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
                     attack_speed_ratio=state.attack_speed_ratio,
                     duration_seconds=state.fight_duration_seconds,
                     uptime=state.auto_attack_uptime,
-                    critical_chance=state.champion_stats.get(
-                        "critical_strike_chance", 0.0
-                    )
+                    critical_chance=state.champion_stats["critical_strike_chance"]
                     / 100.0,
                 )
             )
@@ -10020,10 +10011,10 @@ def _add_spellblade_damage(
         # dropped from the item packet.
         stats = state.champion_stats
         if effect.mana_restore_base_ad_ratio or effect.mana_restore_crit_ratio:
-            mana_per_proc = effect.mana_restore_base_ad_ratio * stats.get(
-                "base_attack_damage", 0.0
-            ) + effect.mana_restore_crit_ratio * min(
-                stats.get("critical_strike_chance", 0.0) / 100.0, 1.0
+            mana_per_proc = effect.mana_restore_base_ad_ratio * stats[
+                "base_attack_damage"
+            ] + effect.mana_restore_crit_ratio * min(
+                stats["critical_strike_chance"] / 100.0, 1.0
             )
             result.mana_restored = mana_per_proc * result.procs
             state.breakdown[f"mana_{result.item}"] = {
@@ -10035,9 +10026,10 @@ def _add_spellblade_damage(
                 "unit": "mana",
             }
         if effect.self_heal_ap_ratio or effect.self_heal_bonus_health_ratio:
-            heal_per_proc = effect.self_heal_ap_ratio * stats.get(
-                "ability_power", 0.0
-            ) + effect.self_heal_bonus_health_ratio * stats.get("bonus_health", 0.0)
+            heal_per_proc = (
+                effect.self_heal_ap_ratio * stats["ability_power"]
+                + effect.self_heal_bonus_health_ratio * stats["bonus_health"]
+            )
             result.self_healing = heal_per_proc * result.procs
             state.breakdown[f"heal_{result.item}"] = {
                 "name": f"{result.item} (self-heal)",
@@ -12072,7 +12064,7 @@ def _add_keystone_grasp_damage(state: FightState, rotation: RotationResult) -> N
 
     stats = state.champion_stats
     damage_type = "magic"
-    raw_health = float(stats.get("health", 0.0) or 0.0)
+    raw_health = float(stats["health"])
     raw_damage_events: list[dict[str, float | int | str]] = []
     heal_events: list[dict[str, float | str | bool]] = []
     bonus_health_events: list[dict[str, float | str]] = []
@@ -13570,7 +13562,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     stock = _tier_value(_MEEP_STOCK_TIERS, seeded)
     recharge = _tier_value(_MEEP_RECHARGE_TIERS, seeded)
     recharges = max(0, opening - stock)
-    ap = float(state.champion_stats.get("ability_power", 0.0) or 0.0)
+    ap = float(state.champion_stats["ability_power"])
     per_meep = (
         _MEEP_BASE + _MEEP_PER_TIER * (seeded // _CHIMES_PER_TIER) + _MEEP_AP_RATIO * ap
     )
@@ -14573,7 +14565,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
             and 1 <= state.roster_target_index <= secondary_target_count
         ):
             raw_secondary = item_effects.hydra_cleave_secondary_ad_damage(
-                total_attack_damage=state.champion_stats.get("attack_damage", 0.0),
+                total_attack_damage=state.champion_stats["attack_damage"],
                 is_melee=state.is_melee,
                 item_name=source.item_name,
             )
@@ -15674,9 +15666,7 @@ def _add_single_proc_on_hits(
             cleave_damages = [
                 _mitigate(
                     item_effects.hydra_cleave_secondary_ad_damage(
-                        total_attack_damage=state.champion_stats.get(
-                            "attack_damage", 0.0
-                        ),
+                        total_attack_damage=state.champion_stats["attack_damage"],
                         is_melee=state.is_melee,
                         item_name=cleave_item_name,
                     )
@@ -16031,7 +16021,7 @@ def _add_single_proc_on_hits(
             for auto_index in range(num_auto_attacks):
                 raw_cone = (
                     item_effects.hydra_secondary_target_damage(
-                        max_health=state.champion_stats.get("health", 0.0),
+                        max_health=state.champion_stats["health"],
                         is_melee=state.is_melee,
                         empowered=auto_index in active_indices,
                         item_name=secondary_item_name,
@@ -16341,9 +16331,7 @@ def _add_single_proc_on_hits(
                                 0.0,
                                 shield_base
                                 + shield_ratio
-                                * float(
-                                    state.champion_stats.get("bonus_attack_damage", 0.0)
-                                ),
+                                * float(state.champion_stats["bonus_attack_damage"]),
                             ),
                             "duration": effect.self_shield_duration,
                             "source": source.display_name,
@@ -16482,7 +16470,7 @@ def _add_first_auto_healing(state: FightState) -> None:
         event_time = float(damage_events[0]["time"])
     except (KeyError, TypeError, ValueError):
         return
-    base_ad = float(state.champion_stats.get("base_attack_damage", 0.0))
+    base_ad = float(state.champion_stats["base_attack_damage"])
     # Lightshield Strike heals 100% bAD (melee) / 50% bAD (ranged) — the
     # ranged variant is sourced from the wiki's {{rd|100%|50%}} (pass 17).
     heal_ratio = (
@@ -17942,10 +17930,10 @@ def _apply_shield_reaver_venom(
     are all read off the declaration: the holder's own ``damage_routing``
     rule, resolved for the holder's range class.
     """
-    is_melee = bool(champion_stats.get("is_melee", True))
+    is_melee = bool(champion_stats["is_melee"])
     bypass = damage_routing.resolve_shield_bypass(
         [str(item.get("name", "")) for item in items],
-        level=int(champion_stats.get("level", 1)),
+        level=int(champion_stats["level"]),
         fight_duration_seconds=config.fight_duration_seconds,
         target_bonus_health=max(0.0, config.target_bonus_health),
         holder_is_melee=is_melee,
@@ -18319,12 +18307,12 @@ def calculate_fight_damage(
             item_options,
             fight_duration_seconds=config.fight_duration_seconds,
             is_melee=state.is_melee,
-            bonus_health=float(champion_stats.get("bonus_health", 0.0) or 0.0),
-            bonus_mana=float(champion_stats.get("bonus_mana", 0.0) or 0.0),
-            max_mana=float(champion_stats.get("max_mana", 0.0) or 0.0),
-            total_attack_damage=float(champion_stats.get("attack_damage", 0.0) or 0.0),
-            total_move_speed=float(champion_stats.get("move_speed", 0.0) or 0.0),
-            lethality=float(champion_stats.get("lethality", 0.0) or 0.0),
+            bonus_health=float(champion_stats["bonus_health"]),
+            bonus_mana=float(champion_stats["bonus_mana"]),
+            max_mana=float(champion_stats["max_mana"]),
+            total_attack_damage=float(champion_stats["attack_damage"]),
+            total_move_speed=float(champion_stats["move_speed"]),
+            lethality=float(champion_stats["lethality"]),
         ),
     }
 
