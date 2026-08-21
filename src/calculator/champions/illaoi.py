@@ -23,14 +23,20 @@ def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
     q = ctx.ability("Q")
     increase = extract_value(q, "Damage Increase", ctx.rank_for("Q")) if q else 0.0
     value *= 1.0 + increase / 100.0
+    # ``proc_count`` is the number of DISCRETE proc instances and
+    # ``DamagePart.count`` is the number of hits INSIDE one instance;
+    # ``_add_precomputed_proc_damage`` prices
+    # ``sum(part.amount * part.count) * proc_count``, so carrying the
+    # tentacle count in both fields multiplies it in twice (a
+    # count-squared overstatement, and ``_apply_basic_amp`` would also be
+    # told about ``count x proc_count`` damage instances). One Tentacle
+    # strike is one part; the tentacle count is the proc count.
     return {
         "name": ability.get("name", "Prophet of an Elder God"),
         "damage_type": "physical",
         "total_raw": value * count,
         "parts": (
-            DamagePart(
-                "physical", value, count=count, time_offset=0.0, hit_interval=0.5
-            ),
+            DamagePart("physical", value, count=1, time_offset=0.0, hit_interval=0.5),
         ),
         "proc_count": count,
         "event_phase": "effect",
