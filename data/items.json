@@ -37611,7 +37611,9 @@
         "sell": 1160
       },
       "purchasable": false,
-      "tags": []
+      "tags": [
+        "MAGE"
+      ]
     },
     "iconOverlay": false,
     "modes": {

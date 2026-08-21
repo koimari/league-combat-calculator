@@ -5,15 +5,15 @@
    "verdict": "ok"
   },
   "Ahri": {
-   "atoms": 29,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Akali": {
-   "atoms": 55,
+   "atoms": 51,
    "verdict": "ok"
   },
   "Akshan": {
-   "atoms": 32,
+   "atoms": 31,
    "verdict": "ok"
   },
   "Alistar": {
@@ -21,7 +21,7 @@
    "verdict": "ok"
   },
   "Ambessa": {
-   "atoms": 41,
+   "atoms": 39,
    "verdict": "ok"
   },
   "Amumu": {
@@ -33,15 +33,15 @@
    "verdict": "ok"
   },
   "Annie": {
-   "atoms": 32,
+   "atoms": 26,
    "verdict": "ok"
   },
   "Aphelios": {
-   "atoms": 35,
+   "atoms": 26,
    "verdict": "ok"
   },
   "Ashe": {
-   "atoms": 33,
+   "atoms": 30,
    "verdict": "ok"
   },
   "AurelionSol": {
@@ -49,15 +49,15 @@
    "verdict": null
   },
   "Aurora": {
-   "atoms": 22,
+   "atoms": 17,
    "verdict": "ok"
   },
   "Azir": {
-   "atoms": 30,
+   "atoms": 23,
    "verdict": "ok"
   },
   "Bard": {
-   "atoms": 35,
+   "atoms": 30,
    "verdict": "ok"
   },
   "Belveth": {
@@ -65,27 +65,27 @@
    "verdict": null
   },
   "Blitzcrank": {
-   "atoms": 27,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Brand": {
-   "atoms": 23,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Braum": {
-   "atoms": 36,
+   "atoms": 34,
    "verdict": "ok"
   },
   "Briar": {
-   "atoms": 71,
+   "atoms": 68,
    "verdict": "ok"
   },
   "Caitlyn": {
-   "atoms": 25,
+   "atoms": 23,
    "verdict": "ok"
   },
   "Camille": {
-   "atoms": 52,
+   "atoms": 51,
    "verdict": "ok"
   },
   "Cassiopeia": {
@@ -97,15 +97,15 @@
    "verdict": null
   },
   "Corki": {
-   "atoms": 37,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Darius": {
-   "atoms": 34,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Diana": {
-   "atoms": 25,
+   "atoms": 23,
    "verdict": "ok"
   },
   "DrMundo": {
@@ -113,91 +113,91 @@
    "verdict": null
   },
   "Draven": {
-   "atoms": 29,
+   "atoms": 26,
    "verdict": "ok"
   },
   "Ekko": {
-   "atoms": 58,
+   "atoms": 53,
    "verdict": "ok"
   },
   "Elise": {
-   "atoms": 46,
+   "atoms": 45,
    "verdict": "ok"
   },
   "Evelynn": {
-   "atoms": 28,
+   "atoms": 26,
    "verdict": "ok"
   },
   "Ezreal": {
-   "atoms": 17,
+   "atoms": 15,
    "verdict": "ok"
   },
   "Fiddlesticks": {
-   "atoms": 30,
-   "verdict": "ok"
-  },
-  "Fiora": {
-   "atoms": 47,
-   "verdict": "ok"
-  },
-  "Fizz": {
-   "atoms": 46,
-   "verdict": "ok"
-  },
-  "Galio": {
-   "atoms": 44,
-   "verdict": "ok"
-  },
-  "Gangplank": {
-   "atoms": 31,
-   "verdict": "ok"
-  },
-  "Garen": {
-   "atoms": 34,
-   "verdict": "ok"
-  },
-  "Gnar": {
-   "atoms": 50,
-   "verdict": "ok"
-  },
-  "Gragas": {
-   "atoms": 37,
-   "verdict": "ok"
-  },
-  "Graves": {
-   "atoms": 37,
-   "verdict": "ok"
-  },
-  "Gwen": {
    "atoms": 28,
    "verdict": "ok"
   },
-  "Hecarim": {
-   "atoms": 41,
+  "Fiora": {
+   "atoms": 45,
    "verdict": "ok"
   },
-  "Heimerdinger": {
-   "atoms": 34,
+  "Fizz": {
+   "atoms": 39,
    "verdict": "ok"
   },
-  "Hwei": {
-   "atoms": 31,
+  "Galio": {
+   "atoms": 36,
    "verdict": "ok"
   },
-  "Illaoi": {
+  "Gangplank": {
+   "atoms": 21,
+   "verdict": "ok"
+  },
+  "Garen": {
+   "atoms": 30,
+   "verdict": "ok"
+  },
+  "Gnar": {
+   "atoms": 48,
+   "verdict": "ok"
+  },
+  "Gragas": {
    "atoms": 32,
    "verdict": "ok"
   },
+  "Graves": {
+   "atoms": 29,
+   "verdict": "ok"
+  },
+  "Gwen": {
+   "atoms": 25,
+   "verdict": "ok"
+  },
+  "Hecarim": {
+   "atoms": 39,
+   "verdict": "ok"
+  },
+  "Heimerdinger": {
+   "atoms": 23,
+   "verdict": "ok"
+  },
+  "Hwei": {
+   "atoms": 18,
+   "verdict": "ok"
+  },
+  "Illaoi": {
+   "atoms": 31,
+   "verdict": "ok"
+  },
   "Irelia": {
-   "atoms": 34,
+   "atoms": 32,
    "verdict": "ok"
   },
   "Ivern": {
-   "atoms": 35,
+   "atoms": 33,
    "verdict": "ok"
   },
   "Janna": {
-   "atoms": 21,
+   "atoms": 18,
    "verdict": "ok"
   },
   "JarvanIV": {
@@ -205,7 +205,7 @@
    "verdict": null
   },
   "Jax": {
-   "atoms": 34,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Jayce": {
@@ -213,11 +213,11 @@
    "verdict": "ok"
   },
   "Jhin": {
-   "atoms": 35,
+   "atoms": 32,
    "verdict": "ok"
   },
   "Jinx": {
-   "atoms": 47,
+   "atoms": 44,
    "verdict": "ok"
   },
   "KSante": {
@@ -229,23 +229,23 @@
    "verdict": null
   },
   "Kalista": {
-   "atoms": 63,
+   "atoms": 49,
    "verdict": "ok"
   },
   "Karma": {
-   "atoms": 25,
+   "atoms": 21,
    "verdict": "ok"
   },
   "Karthus": {
-   "atoms": 43,
+   "atoms": 32,
    "verdict": "ok"
   },
   "Kassadin": {
-   "atoms": 23,
+   "atoms": 20,
    "verdict": "ok"
   },
   "Katarina": {
-   "atoms": 29,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Kayle": {
@@ -253,11 +253,11 @@
    "verdict": "ok"
   },
   "Kayn": {
-   "atoms": 39,
+   "atoms": 30,
    "verdict": "ok"
   },
   "Kennen": {
-   "atoms": 23,
+   "atoms": 21,
    "verdict": "ok"
   },
   "Khazix": {
@@ -265,11 +265,11 @@
    "verdict": null
   },
   "Kindred": {
-   "atoms": 56,
+   "atoms": 50,
    "verdict": "ok"
   },
   "Kled": {
-   "atoms": 63,
+   "atoms": 64,
    "verdict": "ok"
   },
   "KogMaw": {
@@ -277,7 +277,7 @@
    "verdict": null
   },
   "Leblanc": {
-   "atoms": 48,
+   "atoms": 47,
    "verdict": null
   },
   "LeeSin": {
@@ -285,43 +285,43 @@
    "verdict": null
   },
   "Leona": {
-   "atoms": 34,
+   "atoms": 33,
    "verdict": "ok"
   },
   "Lillia": {
-   "atoms": 30,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Lissandra": {
-   "atoms": 36,
+   "atoms": 33,
    "verdict": "ok"
   },
   "Locke": {
-   "atoms": 34,
-   "verdict": "ok"
-  },
-  "Lucian": {
-   "atoms": 30,
-   "verdict": "ok"
-  },
-  "Lulu": {
-   "atoms": 26,
-   "verdict": "ok"
-  },
-  "Lux": {
    "atoms": 31,
    "verdict": "ok"
   },
+  "Lucian": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
+  "Lulu": {
+   "atoms": 22,
+   "verdict": "ok"
+  },
+  "Lux": {
+   "atoms": 29,
+   "verdict": "ok"
+  },
   "Malphite": {
-   "atoms": 36,
+   "atoms": 34,
    "verdict": "ok"
   },
   "Malzahar": {
-   "atoms": 30,
+   "atoms": 29,
    "verdict": "ok"
   },
   "Maokai": {
-   "atoms": 44,
+   "atoms": 46,
    "verdict": "ok"
   },
   "MasterYi": {
@@ -329,11 +329,11 @@
    "verdict": null
   },
   "Mel": {
-   "atoms": 45,
+   "atoms": 40,
    "verdict": "ok"
   },
   "Milio": {
-   "atoms": 25,
+   "atoms": 23,
    "verdict": "ok"
   },
   "MissFortune": {
@@ -341,7 +341,7 @@
    "verdict": null
   },
   "Mordekaiser": {
-   "atoms": 28,
+   "atoms": 20,
    "verdict": "ok"
   },
   "Morgana": {
@@ -349,15 +349,15 @@
    "verdict": "ok"
   },
   "Naafiri": {
-   "atoms": 34,
+   "atoms": 30,
    "verdict": "ok"
   },
   "Nami": {
-   "atoms": 27,
+   "atoms": 26,
    "verdict": "ok"
   },
   "Nasus": {
-   "atoms": 25,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Nautilus": {
@@ -373,11 +373,11 @@
    "verdict": "ok"
   },
   "Nilah": {
-   "atoms": 48,
+   "atoms": 45,
    "verdict": "ok"
   },
   "Nocturne": {
-   "atoms": 23,
+   "atoms": 17,
    "verdict": "ok"
   },
   "Nunu": {
@@ -385,43 +385,43 @@
    "verdict": null
   },
   "Olaf": {
-   "atoms": 27,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Orianna": {
-   "atoms": 28,
+   "atoms": 24,
    "verdict": "ok"
   },
   "Ornn": {
-   "atoms": 32,
-   "verdict": "ok"
-  },
-  "Pantheon": {
-   "atoms": 50,
-   "verdict": "ok"
-  },
-  "Poppy": {
-   "atoms": 35,
-   "verdict": "ok"
-  },
-  "Pyke": {
-   "atoms": 29,
-   "verdict": "ok"
-  },
-  "Qiyana": {
-   "atoms": 52,
-   "verdict": "ok"
-  },
-  "Quinn": {
    "atoms": 27,
    "verdict": "ok"
   },
+  "Pantheon": {
+   "atoms": 37,
+   "verdict": "ok"
+  },
+  "Poppy": {
+   "atoms": 31,
+   "verdict": "ok"
+  },
+  "Pyke": {
+   "atoms": 26,
+   "verdict": "ok"
+  },
+  "Qiyana": {
+   "atoms": 48,
+   "verdict": "ok"
+  },
+  "Quinn": {
+   "atoms": 20,
+   "verdict": "ok"
+  },
   "Rakan": {
-   "atoms": 42,
+   "atoms": 40,
    "verdict": "ok"
   },
   "Rammus": {
-   "atoms": 20,
+   "atoms": 22,
    "verdict": "ok"
   },
   "RekSai": {
@@ -429,7 +429,7 @@
    "verdict": null
   },
   "Rell": {
-   "atoms": 35,
+   "atoms": 33,
    "verdict": "ok"
   },
   "Renata": {
@@ -437,31 +437,31 @@
    "verdict": null
   },
   "Renekton": {
-   "atoms": 33,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Rengar": {
-   "atoms": 59,
+   "atoms": 53,
    "verdict": "ok"
   },
   "Riven": {
-   "atoms": 31,
+   "atoms": 30,
    "verdict": "ok"
   },
   "Rumble": {
-   "atoms": 33,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Ryze": {
-   "atoms": 24,
+   "atoms": 20,
    "verdict": "ok"
   },
   "Samira": {
-   "atoms": 40,
+   "atoms": 33,
    "verdict": "ok"
   },
   "Sejuani": {
-   "atoms": 32,
+   "atoms": 27,
    "verdict": "ok"
   },
   "Senna": {
@@ -469,63 +469,63 @@
    "verdict": "ok"
   },
   "Seraphine": {
-   "atoms": 43,
+   "atoms": 31,
    "verdict": "ok"
   },
   "Sett": {
-   "atoms": 42,
+   "atoms": 40,
    "verdict": "ok"
   },
   "Shaco": {
-   "atoms": 37,
-   "verdict": "ok"
-  },
-  "Shen": {
    "atoms": 32,
    "verdict": "ok"
   },
+  "Shen": {
+   "atoms": 31,
+   "verdict": "ok"
+  },
   "Shyvana": {
-   "atoms": 44,
+   "atoms": 41,
    "verdict": "ok"
   },
   "Singed": {
-   "atoms": 18,
+   "atoms": 14,
    "verdict": "ok"
   },
   "Sion": {
-   "atoms": 55,
+   "atoms": 44,
    "verdict": "ok"
   },
   "Sivir": {
-   "atoms": 35,
+   "atoms": 32,
    "verdict": "ok"
   },
   "Skarner": {
-   "atoms": 26,
+   "atoms": 21,
    "verdict": "ok"
   },
   "Smolder": {
-   "atoms": 26,
+   "atoms": 25,
    "verdict": "ok"
   },
   "Sona": {
-   "atoms": 37,
+   "atoms": 26,
    "verdict": "ok"
   },
   "Soraka": {
-   "atoms": 30,
+   "atoms": 28,
    "verdict": "ok"
   },
   "Swain": {
-   "atoms": 34,
+   "atoms": 29,
    "verdict": "ok"
   },
   "Sylas": {
-   "atoms": 27,
+   "atoms": 25,
    "verdict": "ok"
   },
   "Syndra": {
-   "atoms": 44,
+   "atoms": 43,
    "verdict": "ok"
   },
   "TahmKench": {
@@ -533,19 +533,19 @@
    "verdict": null
   },
   "Taliyah": {
-   "atoms": 39,
+   "atoms": 38,
    "verdict": "ok"
   },
   "Talon": {
-   "atoms": 30,
+   "atoms": 29,
    "verdict": "ok"
   },
   "Taric": {
-   "atoms": 25,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Teemo": {
-   "atoms": 28,
+   "atoms": 29,
    "verdict": "ok"
   },
   "Thresh": {
@@ -553,15 +553,15 @@
    "verdict": "ok"
   },
   "Tristana": {
-   "atoms": 19,
+   "atoms": 18,
    "verdict": "ok"
   },
   "Trundle": {
-   "atoms": 28,
+   "atoms": 27,
    "verdict": "ok"
   },
   "Tryndamere": {
-   "atoms": 15,
+   "atoms": 13,
    "verdict": "ok"
   },
   "TwistedFate": {
@@ -569,27 +569,27 @@
    "verdict": null
   },
   "Twitch": {
-   "atoms": 23,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Udyr": {
-   "atoms": 37,
+   "atoms": 25,
    "verdict": "ok"
   },
   "Urgot": {
-   "atoms": 40,
-   "verdict": "ok"
-  },
-  "Varus": {
    "atoms": 35,
    "verdict": "ok"
   },
+  "Varus": {
+   "atoms": 28,
+   "verdict": "ok"
+  },
   "Vayne": {
-   "atoms": 48,
+   "atoms": 37,
    "verdict": "ok"
   },
   "Veigar": {
-   "atoms": 20,
+   "atoms": 18,
    "verdict": "ok"
   },
   "Velkoz": {
@@ -597,11 +597,11 @@
    "verdict": null
   },
   "Vex": {
-   "atoms": 25,
+   "atoms": 21,
    "verdict": "ok"
   },
   "Vi": {
-   "atoms": 33,
+   "atoms": 32,
    "verdict": "ok"
   },
   "Viego": {
@@ -609,7 +609,7 @@
    "verdict": "ok"
   },
   "Viktor": {
-   "atoms": 36,
+   "atoms": 25,
    "verdict": "ok"
   },
   "Vladimir": {
@@ -617,11 +617,11 @@
    "verdict": "ok"
   },
   "Volibear": {
-   "atoms": 39,
+   "atoms": 30,
    "verdict": "ok"
   },
   "Warwick": {
-   "atoms": 55,
+   "atoms": 40,
    "verdict": "ok"
   },
   "MonkeyKing": {
@@ -629,11 +629,11 @@
    "verdict": null
   },
   "Xayah": {
-   "atoms": 28,
+   "atoms": 23,
    "verdict": "ok"
   },
   "Xerath": {
-   "atoms": 29,
+   "atoms": 24,
    "verdict": "ok"
   },
   "XinZhao": {
@@ -641,23 +641,23 @@
    "verdict": null
   },
   "Yasuo": {
-   "atoms": 48,
+   "atoms": 60,
    "verdict": "ok"
   },
   "Yone": {
-   "atoms": 35,
+   "atoms": 34,
    "verdict": "ok"
   },
   "Yorick": {
-   "atoms": 30,
+   "atoms": 29,
    "verdict": "ok"
   },
   "Yunara": {
-   "atoms": 53,
+   "atoms": 45,
    "verdict": "ok"
   },
   "Yuumi": {
-   "atoms": 45,
+   "atoms": 40,
    "verdict": "ok"
   },
   "Zaahen": {
@@ -669,27 +669,27 @@
    "verdict": "ok"
   },
   "Zed": {
-   "atoms": 37,
+   "atoms": 39,
    "verdict": "ok"
   },
   "Zeri": {
-   "atoms": 29,
+   "atoms": 27,
    "verdict": "ok"
   },
   "Ziggs": {
-   "atoms": 43,
+   "atoms": 22,
    "verdict": "ok"
   },
   "Zilean": {
-   "atoms": 35,
+   "atoms": 23,
    "verdict": "ok"
   },
   "Zoe": {
-   "atoms": 74,
+   "atoms": 62,
    "verdict": "ok"
   },
   "Zyra": {
-   "atoms": 24,
+   "atoms": 29,
    "verdict": "ok"
   }
  },
@@ -1096,8 +1096,8 @@
   },
   "Actualizer": {
    "id": "2522",
-   "atoms": 8,
-   "effects": 5
+   "atoms": 9,
+   "effects": 6
   },
   "Hexoptics C44": {
    "id": "2523",
@@ -1261,8 +1261,8 @@
   },
   "Tear of the Goddess": {
    "id": "3070",
-   "atoms": 5,
-   "effects": 4
+   "atoms": 6,
+   "effects": 5
   },
   "Black Cleaver": {
    "id": "3071",
@@ -1876,8 +1876,8 @@
   },
   "Liandry's Torment": {
    "id": "6653",
-   "atoms": 9,
-   "effects": 7
+   "atoms": 10,
+   "effects": 8
   },
   "Luden's Echo": {
    "id": "6655",

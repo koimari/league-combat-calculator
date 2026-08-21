@@ -1,7 +1,7 @@
 {
  "domain": "stats",
- "generated_at": 1787171591.583454,
- "source_ref": "data/champions.json@sha256:77f8cce3fae087dc",
+ "generated_at": 1787266958.856797,
+ "source_ref": "data/champions.json@sha256:777d9b85e2ed96d0",
  "objects": {
   "Aatrox": [
    {
@@ -2256,7 +2256,7 @@
     "source": "Akshan.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -2264,7 +2264,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "309767d89d52cf4a"
+    "hash": "cd729b6ed880fa32"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -2272,7 +2272,7 @@
     "source": "Akshan.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -2280,7 +2280,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "bb8573da9f8b8464"
+    "hash": "95b22abbd141808b"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -6028,7 +6028,7 @@
     "source": "Aphelios.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -6036,7 +6036,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "3e1930428d9addd5"
+    "hash": "39dc0f90db3f883c"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -6044,7 +6044,7 @@
     "source": "Aphelios.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -6052,7 +6052,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "bfafde1371a78268"
+    "hash": "57faf7c19145cae9"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -6670,7 +6670,7 @@
     "source": "Ashe.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -6678,7 +6678,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "aade65c057af8bbe"
+    "hash": "5b1ec5cdecb1940a"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -6686,7 +6686,7 @@
     "source": "Ashe.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -6694,7 +6694,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "dd47df8f7286daf7"
+    "hash": "b9305d49a829b494"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -9816,7 +9816,7 @@
     "source": "Bel'Veth.stats.health.perLevel",
     "name": "health",
     "values": [
-     110.0
+     105.0
     ],
     "units": [
      "per_level"
@@ -9824,7 +9824,7 @@
     "evidence": [
      "stats.health.perLevel"
     ],
-    "hash": "df9a15cc8c601152"
+    "hash": "60934ea34469e7e3"
    },
    {
     "atom_id": "stat.health_regen.flat",
@@ -12898,7 +12898,7 @@
     "source": "Caitlyn.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -12906,7 +12906,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "8e7296b3550e1fc3"
+    "hash": "d11f485437118e5a"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -12914,7 +12914,7 @@
     "source": "Caitlyn.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -12922,7 +12922,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "b9a83f0bad008979"
+    "hash": "427c9409ee744985"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -13556,7 +13556,7 @@
     "source": "Camille.stats.mana.flat",
     "name": "mana",
     "values": [
-     339.0
+     375.0
     ],
     "units": [
      "flat"
@@ -13564,7 +13564,7 @@
     "evidence": [
      "stats.mana.flat"
     ],
-    "hash": "dc2c8e546f05eae1"
+    "hash": "a4ad11668f9d58ca"
    },
    {
     "atom_id": "stat.mana.per_level",
@@ -15450,7 +15450,7 @@
     "source": "Corki.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -15458,7 +15458,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "58e346edae893e4c"
+    "hash": "36d3748b31734c55"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -15466,7 +15466,7 @@
     "source": "Corki.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -15474,7 +15474,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "8a93e8373155ce6e"
+    "hash": "bee3b5591cbffd64"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -17954,7 +17954,7 @@
     "source": "Draven.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -17962,7 +17962,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "ce1b050e0b38457f"
+    "hash": "fc20fae0520a1e0b"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -17970,7 +17970,7 @@
     "source": "Draven.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -17978,7 +17978,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "56200ac628caadb3"
+    "hash": "5091cf4cd48e6178"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -20490,7 +20490,7 @@
     "source": "Ezreal.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -20498,7 +20498,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "5a1f4a8c0f4e312b"
+    "hash": "6e703a1d35a89a18"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -20506,7 +20506,7 @@
     "source": "Ezreal.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -20514,7 +20514,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "cff0b288d1874623"
+    "hash": "796bf7bca6ad34c3"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -26108,7 +26108,7 @@
     "source": "Graves.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -26116,7 +26116,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "db314b7231b22429"
+    "hash": "84ffc4b93b80b01f"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -26124,7 +26124,7 @@
     "source": "Graves.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -26132,7 +26132,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "2aaf1630660964fb"
+    "hash": "2b386d006b403b43"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -33716,7 +33716,7 @@
     "source": "Jhin.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -33724,7 +33724,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "fb74788e60bfe867"
+    "hash": "b1143bbd0cce7913"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -33732,7 +33732,7 @@
     "source": "Jhin.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -33740,7 +33740,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "5ab33cb3d28c6c51"
+    "hash": "d7f328ac3bbdb174"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -34342,7 +34342,7 @@
     "source": "Jinx.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -34350,7 +34350,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "c94edf7a68225e86"
+    "hash": "ca198c18e07ded47"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -34358,7 +34358,7 @@
     "source": "Jinx.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -34366,7 +34366,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "e596a30b90c2aee9"
+    "hash": "73fd130c94fa01ea"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -35610,7 +35610,7 @@
     "source": "Kai'Sa.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -35618,7 +35618,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "ed8956fde3028e9b"
+    "hash": "bf4142140358ec54"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -35626,7 +35626,7 @@
     "source": "Kai'Sa.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -35634,7 +35634,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "c4bfbbe72e7f9703"
+    "hash": "11e64c224c17728a"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -36252,7 +36252,7 @@
     "source": "Kalista.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -36260,7 +36260,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "395044a42acd5a6a"
+    "hash": "0e5381940a1f384d"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -36268,7 +36268,7 @@
     "source": "Kalista.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -36276,7 +36276,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "e669485ee1379397"
+    "hash": "0ce54636a95c9aaa"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -41918,7 +41918,7 @@
     "source": "Kindred.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -41926,7 +41926,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "d7a294b98fa93b8d"
+    "hash": "24f32e0f6f6d05e3"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -41934,7 +41934,7 @@
     "source": "Kindred.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -41942,7 +41942,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "cfffbf14f7a30749"
+    "hash": "08d70cab99d84788"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -43138,7 +43138,7 @@
     "source": "Kog'Maw.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -43146,7 +43146,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "8cbf5b537ca05b56"
+    "hash": "bf535c3b8938e8b9"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -43154,7 +43154,7 @@
     "source": "Kog'Maw.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -43162,7 +43162,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "59816f2fc7438eea"
+    "hash": "1f294702c19595c6"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -47584,7 +47584,7 @@
     "source": "Lucian.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -47592,7 +47592,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "db548d958ad2a6a7"
+    "hash": "186abccb3379da1c"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -47600,7 +47600,7 @@
     "source": "Lucian.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -47608,7 +47608,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "d53576dd387d8ef2"
+    "hash": "070059bd5eeef4b2"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -53330,7 +53330,7 @@
     "source": "Miss Fortune.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -53338,7 +53338,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "860190a10e68b143"
+    "hash": "39fa48a072dead1d"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -53346,7 +53346,7 @@
     "source": "Miss Fortune.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -53354,7 +53354,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "76b35361509dee17"
+    "hash": "4506aeca032282c4"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -66026,7 +66026,7 @@
     "source": "Quinn.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -66034,7 +66034,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "9eb9f54793896b72"
+    "hash": "085ad798a5c88236"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -66042,7 +66042,7 @@
     "source": "Quinn.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -66050,7 +66050,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "a9496cb503ac01e9"
+    "hash": "24e9085467bf5bf7"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -72784,7 +72784,7 @@
     "source": "Samira.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -72792,7 +72792,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "6a8d1969b22ec124"
+    "hash": "740090c5c8214858"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -72800,7 +72800,7 @@
     "source": "Samira.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -72808,7 +72808,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "db7bf22f012002c0"
+    "hash": "535fb35a2f8e4410"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -74020,7 +74020,7 @@
     "source": "Senna.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -74028,7 +74028,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "5b7167950baaa9f5"
+    "hash": "6786d5aac8b3c493"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -74036,7 +74036,7 @@
     "source": "Senna.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -74044,7 +74044,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "570aeff1894c23a7"
+    "hash": "b9c5ea2225944241"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -78996,7 +78996,7 @@
     "source": "Sivir.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -79004,7 +79004,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "5f1b1a7c527776a6"
+    "hash": "bef13ef952bc411f"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -79012,7 +79012,7 @@
     "source": "Sivir.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -79020,7 +79020,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "b1e6eb72dabb3388"
+    "hash": "f0d96a595dddb36e"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -80264,7 +80264,7 @@
     "source": "Smolder.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -80272,7 +80272,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "c31e4874ba82b9bc"
+    "hash": "f51d36a3b9dbbbad"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -80280,7 +80280,7 @@
     "source": "Smolder.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -80288,7 +80288,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "5ac39b9a13cf29e0"
+    "hash": "039b07ae208b0815"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -87920,7 +87920,7 @@
     "source": "Tristana.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     28.0
+     33.0
     ],
     "units": [
      "flat"
@@ -87928,7 +87928,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "521ad3b380dfb915"
+    "hash": "c3e5caadd1dfeba8"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -87936,7 +87936,7 @@
     "source": "Tristana.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -87944,7 +87944,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "3699999c694de104"
+    "hash": "61bc887ad9011b46"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -90440,7 +90440,7 @@
     "source": "Twitch.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -90448,7 +90448,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "cc681517895e6594"
+    "hash": "d665fa9e0c22a8c4"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -90456,7 +90456,7 @@
     "source": "Twitch.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -90464,7 +90464,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "93dd019d87855053"
+    "hash": "ecedea64f6f25107"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -92366,7 +92366,7 @@
     "source": "Varus.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -92374,7 +92374,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "c135e3ef4688e6c7"
+    "hash": "16710de26325a26b"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -92382,7 +92382,7 @@
     "source": "Varus.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -92390,7 +92390,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "4dc602ff18d3e550"
+    "hash": "a409e7df49916aab"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -93008,7 +93008,7 @@
     "source": "Vayne.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -93016,7 +93016,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "440044bb1da361f3"
+    "hash": "68cd06467a1aa3f6"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -93024,7 +93024,7 @@
     "source": "Vayne.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -93032,7 +93032,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "07fa0a532cdf0219"
+    "hash": "bb595e475b409dfa"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -99268,7 +99268,7 @@
     "source": "Xayah.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -99276,7 +99276,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "692713870c14b78e"
+    "hash": "460d5b7bd7c0a049"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -99284,7 +99284,7 @@
     "source": "Xayah.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -99292,7 +99292,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "0d9e232bd3a6a641"
+    "hash": "ccf45b7e4750256d"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -102976,7 +102976,7 @@
     "source": "Yunara.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -102984,7 +102984,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "b204a84baaa332ad"
+    "hash": "75873db21b1ae9af"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -102992,7 +102992,7 @@
     "source": "Yunara.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -103000,7 +103000,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "47a288720543dbe2"
+    "hash": "e6015497a4a191c3"
    },
    {
     "atom_id": "stat.mana.flat",
@@ -106042,7 +106042,7 @@
     "source": "Zeri.stats.magicResistance.flat",
     "name": "magicResistance",
     "values": [
-     30.0
+     33.0
     ],
     "units": [
      "flat"
@@ -106050,7 +106050,7 @@
     "evidence": [
      "stats.magicResistance.flat"
     ],
-    "hash": "f63ee20f03693427"
+    "hash": "0efa8db998ed0049"
    },
    {
     "atom_id": "stat.magic_resistance.per_level",
@@ -106058,7 +106058,7 @@
     "source": "Zeri.stats.magicResistance.perLevel",
     "name": "magicResistance",
     "values": [
-     1.3
+     1.1
     ],
     "units": [
      "per_level"
@@ -106066,7 +106066,7 @@
     "evidence": [
      "stats.magicResistance.perLevel"
     ],
-    "hash": "b3b2fc84127b32d6"
+    "hash": "ddebb09dee096663"
    },
    {
     "atom_id": "stat.mana.flat",

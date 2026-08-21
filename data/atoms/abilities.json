@@ -1,7 +1,7 @@
 {
  "domain": "abilities",
- "generated_at": 1787171591.51013,
- "source_ref": "data/champions.json@sha256:77f8cce3fae087dc",
+ "generated_at": 1787266958.7202759,
+ "source_ref": "data/champions.json@sha256:777d9b85e2ed96d0",
  "objects": {
   "Aatrox": [
    {
@@ -22608,7 +22608,7 @@
     "source": "Fiddlesticks.Q[0].effects[0].description",
     "name": "Terrify",
     "values": [
-     2.5
+     2.25
     ],
     "units": [
      "s"
@@ -22616,7 +22616,7 @@
     "evidence": [
      "active duration@effects[0].description"
     ],
-    "hash": "a5e74838b53957a2"
+    "hash": "7108e61e3f39723a"
    },
    {
     "atom_id": "timing.cooldown",

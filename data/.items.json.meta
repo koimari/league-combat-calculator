@@ -1,7 +1,14 @@
 {
-  "fetched_at": 1786665149.310242,
+  "fetched_at": 1787268672.008812,
   "filename": "items.json",
   "source_url": "https://wiki.leagueoflegends.com/en-us/Item",
   "source_version": "16.16.1",
-  "source_hash": null
+  "source_hash": null,
+  "public_patch": "26.16",
+  "client_patch": "16.16",
+  "patch_namespace": {
+    "public_patch": "26.16",
+    "client_patch": "16.16",
+    "source_version": "16.16.1"
+  }
 }

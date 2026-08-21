@@ -1,7 +1,7 @@
 {
  "domain": "champions",
- "generated_at": 1787171598.95184,
- "source_ref": "data/champions.json@sha256:77f8cce3fae087dc;data/bin/characters",
+ "generated_at": 1787266971.674187,
+ "source_ref": "data/champions.json@sha256:777d9b85e2ed96d0;data/bin/characters",
  "objects": {
   "Aatrox": [
    {

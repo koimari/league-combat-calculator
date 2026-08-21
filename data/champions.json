@@ -3510,9 +3510,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -4619,7 +4619,7 @@
     },
     "releaseDate": "2021-07-22",
     "releasePatch": "11.15",
-    "patchLastChanged": "26.09",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -6961,7 +6961,7 @@
     },
     "releaseDate": "2024-11-06",
     "releasePatch": "14.22",
-    "patchLastChanged": "26.10",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 3150,
       "rp": 975,
@@ -9733,9 +9733,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -11521,7 +11521,7 @@
     },
     "releaseDate": "2019-12-11",
     "releasePatch": "9.24",
-    "patchLastChanged": "26.13",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -11570,9 +11570,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -12437,7 +12437,7 @@
     },
     "releaseDate": "2009-02-21",
     "releasePatch": "Alpha Week 2",
-    "patchLastChanged": "26.10",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 225,
       "rp": 260,
@@ -15743,7 +15743,7 @@
     },
     "releaseDate": "2014-09-16",
     "releasePatch": "4.16",
-    "patchLastChanged": "26.14",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -16534,7 +16534,7 @@
       "health": {
         "flat": 580,
         "percent": 0.0,
-        "perLevel": 110,
+        "perLevel": 105,
         "percentPerLevel": 0.0
       },
       "healthRegen": {
@@ -17682,7 +17682,7 @@
     },
     "releaseDate": "2022-06-09",
     "releasePatch": "12.11",
-    "patchLastChanged": "26.15",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -18699,7 +18699,7 @@
               "leveling": []
             },
             {
-              "description": "Upon applying 3 stacks of Ablaze to a large monster or enemy champion, the fire becomes unstable, causing it form a fiery ring around the target that grants sight within its radius and, after 2 seconds, consumes their stacks to explode. All enemies within the detonation are applied a stack of Ablaze and dealt magic damage equal to 6% : 12% (based on level) (+ 2% per 100 AP) of their maximum health, capped at 270 / 355 / 440 / 525 (based on level) against monsters.",
+              "description": "Upon applying 3 stacks of Ablaze to a large monster or enemy champion, the fire becomes unstable, causing it to form a fiery ring around the target that grants sight within its radius and, after 2 seconds, consumes their stacks to explode. All enemies within the detonation are applied a stack of Ablaze and dealt magic damage equal to 6% : 12% (based on level) (+ 2% per 100 AP) of their maximum health, capped at 270 / 355 / 440 / 525 (based on level) against monsters.",
               "leveling": [
                 {
                   "attribute": "Max Health Damage",
@@ -22074,7 +22074,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Blood Frenzy acquires targets regardless of if they are visible or not.\nThis does not apply to  stealthed targets.\nIt cannot acquire  wards or jungle plants, however.\nIf the main attack  critically strikes, the cleave damage will do so as well.\nBriar uses  Frenzy as a resource to indicate the remaining duration of the frenzy, in seconds.\nThe following table refers for interactions while Briar is in her frenzy:\nWhile in the frenzy, Briar cannot control her movement nor declare who she attacks. She will automatically acquire a nearby enemy as her attack target based on a priority system, becoming forced to basic attack the target and consequently move into her attack range of them to do so.\n Disarming crowd control as well as any other lockout that would disable basic attacking will disable the forced attacks.\n Forced action crowd control will cause her forced attacks to be either overridden or disabled, depending on the actions being forced by the debuff.\n\n\nAttacking\n\nUncontrollable\n\n\nAbilities\n\n Head Rush can only be cast on targets within its radius.  Chilling Scream interrupts the frenzy.  Certain Death can be cast during the frenzy without interrupting it.\n\n\nMovement\n\nUncontrollable\n\n\nItems\n\nUsable\n\nAll items are usable\n\n\nDisabled\n\nN/A\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nUsable\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite  Flash\n\n\nDisabled\n\n Teleport  Recall\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nDeath",
+          "notes": "Blood Frenzy acquires targets regardless of if they are visible or not.\nThis does not apply to  stealthed targets.\nIt cannot acquire  wards, jungle plants, or structures however.\nIf the main attack  critically strikes, the cleave damage will do so as well.\nBriar uses  Frenzy as a resource to indicate the remaining duration of the frenzy, in seconds.\nThe following table refers for interactions while Briar is in her frenzy:\nWhile in the frenzy, Briar cannot control her movement nor declare who she attacks. She will automatically acquire a nearby enemy as her attack target based on a priority system, becoming forced to basic attack the target and consequently move into her attack range of them to do so.\n Disarming crowd control as well as any other lockout that would disable basic attacking will disable the forced attacks.\n Forced action crowd control will cause her forced attacks to be either overridden or disabled, depending on the actions being forced by the debuff.\n\n\nAttacking\n\nUncontrollable\n\n\nAbilities\n\n Head Rush can only be cast on targets within its radius.  Chilling Scream interrupts the frenzy.  Certain Death can be cast during the frenzy without interrupting it.\n\n\nMovement\n\nUncontrollable\n\n\nItems\n\nUsable\n\nAll items are usable\n\n\nDisabled\n\nN/A\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nUsable\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite  Flash\n\n\nDisabled\n\n Teleport  Recall\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nDeath",
           "blurb": "Active:  Briar  dashes and senses her surroundings. If there is a nearby enemy upon her arrival, she gains Blood Frenzy for a few seconds, during which she can cast  Snack Attack.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -22808,9 +22808,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -23585,7 +23585,7 @@
     },
     "releaseDate": "2011-01-04",
     "releasePatch": "1.0.0.108",
-    "patchLastChanged": "26.14",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 225,
       "rp": 260,
@@ -23616,7 +23616,7 @@
         "percentPerLevel": 0.0
       },
       "mana": {
-        "flat": 339,
+        "flat": 375,
         "percent": 0.0,
         "perLevel": 52,
         "percentPerLevel": 0.0
@@ -24608,7 +24608,7 @@
     },
     "releaseDate": "2016-12-07",
     "releasePatch": "6.24",
-    "patchLastChanged": "26.04",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -25739,7 +25739,7 @@
           "projectile": "FALSE",
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "This ability will cast from wherever the caster is at the end of the cast time.\nCassiopeia will turn to face the target direction over the cast time.\nPetrifying Gaze's target direction will change if Cassiopeia's facing direction changes during the cast time (i.e. through  knockbacks).\nThe visual effect will not follow changes in Cassiopeia's facing direction and may not portray Petrifying Gaze's target direction accurately.(bug)\nThe facing direction of champions whose abilities/animations cause them to lock their facing or spin is always the direction they are moving in. For abilities that cause the champion to spin in place (e.g.  Death Lotus,  Judgment) it will factor the direction they were facing on cast.\n Lucian's  The Culling is an exception and his facing direction is actually considered to be the direction he is facing.",
+          "notes": "This ability will cast from wherever the caster is at the end of the cast time.\nRegarding Petrifying Gaze applying the  stun, facing Cassiopeia means facing the opposite general direction (angle) as her; this direction bisects an 180 degree arc of a radius through her and her enemy. In other words, effectively, she must be \"looking\" toward the enemy.\nCassiopeia will turn to face the target direction over the cast time.\nPetrifying Gaze's target direction will change if Cassiopeia's facing direction changes during the cast time (i.e. through  knockbacks).\nThe visual effect will not follow changes in Cassiopeia's facing direction and may not portray Petrifying Gaze's target direction accurately.(bug)\nThe facing direction of champions whose abilities/animations cause them to lock their facing or spin is always the direction they are moving in. For abilities that cause the champion to spin in place (e.g.  Death Lotus,  Judgment) it will factor the direction they were facing on cast.\n Lucian's  The Culling is an exception and his facing direction is actually considered to be the direction he is facing.",
           "blurb": "Active:  Cassiopeia blasts in a cone, dealing magic damage to enemies hit and  stunning any that are facing her, while  slowing any others with their back turned.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -27010,9 +27010,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -27896,7 +27896,7 @@
     },
     "releaseDate": "2009-09-19",
     "releasePatch": "0.9.25.21",
-    "patchLastChanged": "26.14",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -31808,9 +31808,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -32616,7 +32616,7 @@
     },
     "releaseDate": "2012-06-06",
     "releasePatch": "1.0.0.140b",
-    "patchLastChanged": "26.13",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -36020,9 +36020,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -36809,7 +36809,7 @@
     },
     "releaseDate": "2010-03-16",
     "releasePatch": "1.0.0.79",
-    "patchLastChanged": "26.09",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 675,
       "rp": 585,
@@ -37063,7 +37063,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Scarecrow Effigies are unavailable on  Howling Abyss until Fiddlesticks uses or sells its  Poro-Snax.\nThe process of or the act of pretending to be an Effigy will be interrupted if Fiddlesticks:\nMoves.\nTakes damage.\nDeclares an attack.\nCasts any ability or spell.\nStarts  channeling.\nIs hit by an ability.\nIs affected by a  crowd control effect.\nEffigies will mimic Fiddlesticks'  idle animations and their health bars are hidden until they fake an action.\nWhile pretending to be an effigy, when standing within a 225 radius of a  faelight, Fiddlesticks imitates superward visual effects for 39 seconds or until interrupted.\nWhile within 75-225 radius of a faelight, Fiddlesticks will  blink into a 75 radius of the faelight's location.\nEffigies are considered  clones.\nThey are not valid targets to  direction,  ground, and  auto-targeted effects for first 1.5 seconds of their lifespan.\nThe trinket slot can still be temporarily replaced by  Eye of the Herald.\nFiddlesticks can still purchase Support Quest items, as they do not affect the trinket slot.\n -  Surprise Party Fiddlesticks has a special icon for this ability.",
+          "notes": "For details on  Scarecrow Effigy's effects and interactions, see the linked page.\nThe 2-second duration stated in the ability description is not accurate. The actual time required is slightly longer and appears to be inconsistent. It usually takes approximately 2.2 seconds, but may take up to 4.4 seconds after casting a spell for unknown reasons.\nAttempting to impersonate an Effigy, or maintaining the impersonation, will be interrupted if Fiddlesticks:\nMoves.\nFiddlesticks can move a very short distance without immediately breaking the state, but repeated movement will eventually end it.\nTakes damage.\nDamage from non-champion units only breaks the impersonation once it has been established, and does not reset the preparation time beforehand. As a result, Fiddlesticks can still enter the impersonation state while continuously taking damage from non-champion units.\n Ocean Drake and  Hextech Drake are exceptions, as their attacks apply crowd control effects that interfere with the impersonation.\nDeclares an attack.\nCasts an ability or summoner spell.\nUses an item's active effect, potion, or consumable, including Support Quest items and  Control Ward.\nUsing  Scarecrow Effigy does not interrupt the impersonation.\nBegins  channeling.\nIs hit by an ability.\nIs affected by a  crowd control effect.\nWhile pretending to be an effigy, when standing within a 225 radius of a  faelight, Fiddlesticks imitates superward visual effects for 39 seconds or until interrupted.\nWhile within 75-225 radius of a faelight, Fiddlesticks will  blink into a 75 radius of the faelight's location.\nThe trinket slot can still be temporarily replaced by  Eye of the Herald.\nFiddlesticks can still purchase Support Quest items, as they do not affect the trinket slot.\n -  Surprise Party Fiddlesticks has a special icon for this ability.",
           "blurb": "Innate:  Fiddlesticks has a  Scarecrow Effigy in place of a trinket, which will imitate Fiddlesticks. Fiddlesticks can impersonate an effigy by remaining idle out of combat.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -37085,7 +37085,7 @@
           "icon": "https://cdn.communitydragon.org/latest/champion/Fiddlesticks/ability-icon/q",
           "effects": [
             {
-              "description": "Passive: While Fiddlesticks has been out of combat for at least 2.5 seconds and is not visible to the enemy team, or is pretending to be an Effigy, its next damaging ability will additionally fear targets hit for a duration.",
+              "description": "Passive: While Fiddlesticks has been out of combat for at least 2.25 seconds and is not visible to the enemy team, or is impersonating an Effigy, its damaging ability will additionally fear targets hit for a duration.",
               "leveling": [
                 {
                   "attribute": "Fear Duration",
@@ -37312,7 +37312,7 @@
           "projectile": "TRUE",
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "The fear-immunity timer is not refreshed by subsequent attempts to fear the target.\nThe  fear is applied at the end of the cast time, regardless of the target's distance.\nThe missile cannot be destroyed except by  projectile-interception effects.\nFiddlesticks is considered \"seen\" if it is visible and is inside an enemy champion's sight radius. Vision from  minions,  wards, and  turrets will not prevent Fiddlesticks from  fearing if there are no nearby enemy champions.\nThere is a very brief grace period after being seen or when entering combat. This can allow for multiple spells to inflict  fear.\n Monsters are feared by Fiddlesticks's abilities when Fiddlesticks is out of combat, with some exceptions.\nIf Fiddlesticks has recently damaged a monster from a camp with a basic attack or abilities (including  Smite but not item active abilities), monsters in that camp will not be feared by his other abilities.\n Bountiful Harvest will not fear monsters unless Fiddlesticks is pretending to be an  Effigy or is not visible to them.\n Minions are always feared if Fiddlesticks is not attacking them and there is no enemy champion in its view.\nThe passive portion does not currently communicate any information to Fiddlesticks, its allies nor its enemies. There is no indicator to say that Fiddlesticks is out of combat; and no indicator or debuff icon on affected enemies.\nA visual indicator will circle around all enemy champions while Fiddlesticks is channeling  Crowstorm if it is unseen. This is only visible to Fiddlesticks.\nThe fear immunity applies even if the target is  crowd control immune. It is not applied if it is blocked by  spell shield.\nTerrify will still cast and affect the target even if Fiddlesticks dies or loses  sight of them during the cast time.\nTerrify will still cast but not affect the target if they die or become  untargetable during the cast time. There is no compensation.\nThe player's screen will have a visual effect when successfully  feared by Terrify.\n -  Surprise Party Fiddlesticks has a special icon for this ability.\n Crowstorm will not fear enemy champions if cast while they have vision of Fiddlesticks, even if Fiddlesticks is pretending to be an  Effigy.",
+          "notes": "The fear-immunity timer is not refreshed by subsequent attempts to  fear the target.\nThe timer remains active for a short period after the initial fear ends, allowing one ability to apply the crowd control and a subsequent Terrify to deal its doubled damage.\nWhen the  fear is applied by another ability through Terrify's passive, the fear-immunity timer lasts 1 seconds longer.\nEpic monsters are immune to the crowd control effect of  fear, but are still affected by the fear-immunity timer. Terrify will therefore deal doubled damage to them while the timer is active, although the damage is still limited by its 400 damage cap against monsters.\nThe fear-immunity timer is applied even if the target is  crowd control immune. It is not applied if the effect is blocked by a  spell shield.\nThe  fear from Terrify is applied at the end of the cast time, regardless of the target's distance.\nSince V14.14, the missile can be destroyed by  projectile-interception effects.\nTerrify will still cast and affect the target even if Fiddlesticks dies or loses  sight of them during the cast time.\nTerrify will still cast but will not affect the target if they die, become  untargetable, or enter  stasis before the missile reaches them. Its mana cost and cooldown are not refunded.\nThe meaning of \"out of combat\" in Terrify's description is somewhat imprecise. For the purposes of its passive, Fiddlesticks becomes eligible to fear approximately 2.25 seconds after it has stopped dealing damage, provided it has also not taken damage from an enemy champion or been affected by crowd control during that time.\nDealing damage to any unit counts for this purpose, including  champions,  minions,  monsters,  turrets, inhibitors, jungle plants,  wards, and summoned units.\nDamage from item effects such as  Liandry's Torment, as well as Crest of Cinders, Aspect of the Dragon,  Smite, and  Ignite, also counts as dealing damage and resets the timer.\nUsing  Exhaust on an enemy champion also breaks this state despite dealing no damage. Other non-damaging summoner spells do not.\nThe active slow from  Randuin's Omen does not break this state. Damage dealt to monsters by Jungle Companions also does not reset the timer.\nDamage from non-champion units does not break this state. However, crowd control from non-champion units still does, which is especially relevant when fighting  Ocean Drake and  Hextech Drake.\nOnce the out-of-combat requirement is satisfied, Fiddlesticks becomes eligible to apply Terrify's passive while unseen by the enemy team, causing its other damaging abilities to additionally  fear affected targets. Pretending to be an  Effigy can also enable the passive.\nEnemy  sight from any source can prevent the unseen condition from being satisfied. See Sight for further details.\nThe passive portion does not normally communicate its current state to Fiddlesticks, its allies, or its enemies. There is no indicator or buff icon showing that Fiddlesticks is currently eligible to apply  fear.\nWhile Fiddlesticks is channeling  Crowstorm, a visual indicator will circle around enemy champions if the unseen requirement was satisfied when the channel began. This indicator is visible only to Fiddlesticks, but does not guarantee that Crowstorm will apply  fear, as gaining enemy  sight or taking champion damage during the channel can invalidate the passive before Crowstorm deals damage.\nThe indicator briefly appears when  Crowstorm is cast even if Terrify has not been learned, but disappears almost immediately.\nThere is a very brief grace period after Fiddlesticks becomes visible or enters combat during which Terrify's passive can remain active.\nThis allows Fiddlesticks to move slightly out of vision-blocking terrain, such as brush, or immediately retaliate after being revealed and still apply  fear.\nThis grace period is shorter than the cast times of Fiddlesticks's basic abilities, and therefore normally cannot be used to cast one fear-applying ability and then follow it with another.\n Crowstorm is an exception. After Fiddlesticks relocates from an unseen location into enemy vision, an ability cast immediately after arriving can still apply  fear before the grace period expires. This allows interactions such as Crowstorm into  Reap, as well as the Crowstorm: Bountiful Harvest: Flash interaction.\n Flashing into enemy vision immediately removes Terrify's passive eligibility, rather than benefiting from the normal grace period.\nThis prevents most attempts to  Flash into  Bountiful Harvest or  Reap from applying  fear, and prevents Fiddlesticks from fearing nearby enemies with  Crowstorm and then  Flashing to fear more distant enemies.\nHowever, if an ability that is already eligible to apply  fear is cast before  Flash, that cast retains its fear effect. Combined with the brief grace period after Crowstorm completes, this is the basis of the Crowstorm:Bountiful Harvest:Flash interaction.\nThe interaction between Terrify's passive and  monsters differs from its interaction with enemy champions.\nFor monsters, the fear condition can be satisfied either through the normal enemy-team visibility condition or through Fiddlesticks's visibility relative to the individual monster.\nWhile Fiddlesticks is pretending to be an  Effigy,  Bountiful Harvest and  Reap will apply  fear to monsters.\nWhile Fiddlesticks satisfies the out-of-combat condition and is unseen by the enemy team,  Reap and  Crowstorm will apply  fear to monsters.\nThis interaction can be used to determine whether the enemy team currently has  sight of Fiddlesticks.\nIf Fiddlesticks is not visible to a particular monster,  Bountiful Harvest,  Reap, and  Crowstorm can apply  fear to that monster even if Fiddlesticks is visible to the enemy team.\nMonsters follow the same vision-blocking rules as champions and minions for the purposes of this check. Although monsters can continue to track and attack an aggroed target through vision-blocking terrain or brush, they are still considered unable to see Fiddlesticks while their  sight of it is obstructed.\nVisibility is checked individually for each monster. Fiddlesticks may therefore be visible to other monsters, including monsters from the same camp, without preventing fear against a monster whose sight of it is obstructed.\n Crowstorm behaves differently against monsters than against champions. To fear a monster through the monster-specific visibility condition, the first damage instance of Crowstorm must occur while Fiddlesticks is not visible to that monster. The location from which Crowstorm is initially channeled may still be visible to the monster.\nSubsequent damage instances of Crowstorm cannot independently satisfy the out-of-combat condition because the first instance has already caused Fiddlesticks to enter combat.\n Minions use the same fear conditions as enemy champions.\nThe player's screen will have a visual effect when successfully  feared by Terrify.\n -  Surprise Party Fiddlesticks has a special icon for this ability.",
           "blurb": "Passive: While  Fiddlesticks is unseen or impersonating an  effigy, its next damaging ability will briefly  fear targets hit.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -41704,7 +41704,7 @@
           "icon": "https://cdn.communitydragon.org/latest/champion/Gangplank/ability-icon/q",
           "effects": [
             {
-              "description": "Active: Gangplank fires a shot at the target enemy that deals physical damage, applies on-hit effects as a ranged attack, and triggers on-attack effects. Parrrley can critically strike for (200% + 30%) damage.",
+              "description": "Active: Gangplank fires a shot at the target enemy that deals physical damage, applies on-hit effects as a ranged attack, and triggers on-attack effects. Parrrley can critically strike.",
               "leveling": [
                 {
                   "attribute": "Physical Damage",
@@ -45693,9 +45693,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -47005,7 +47005,7 @@
     },
     "releaseDate": "2011-10-19",
     "releasePatch": "1.0.0.127",
-    "patchLastChanged": "26.07",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -48480,7 +48480,7 @@
     },
     "releaseDate": "2021-04-15",
     "releasePatch": "11.8",
-    "patchLastChanged": "26.12",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -60157,9 +60157,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -61258,7 +61258,7 @@
     },
     "releaseDate": "2016-02-01",
     "releasePatch": "6.2",
-    "patchLastChanged": "26.05",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1234,
       "rp": 880,
@@ -61307,9 +61307,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -61688,7 +61688,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Toggle abilities do not count as ability activations for the purposes of on-cast effects such as  Spellblade and triggering  Force Pulse's passive.\nDespite Jinx starting the game using  Pow-Pow she doesn't receive any bonus attack speed until Switcheroo! has been learned.\n Fishbones splash damage affects structures (minions will target Jinx) but does not affect targets if Jinx's attacks are  blocked,  dodged, or  missed.\n Runaan's Hurricane's Wind's Fury bolts are special-cased to generate one  Pow-Pow stack per enemy hit.\nEach of  Runaan's Hurricane's additional bolts apply  Fishbones' splash damage, which stacks with each other.\nBoth weapons deal  basic damage to their primary target (this includes the increased damage of  Fishbones), which applies  life steal based on the damage dealt (post-mitigation) as usual.\nThe splash damage of  Fishbones is based on the pre-mitigation damage done to the primary target (which includes critical strikes), and is not considered modified physical damage. It deals  default damage and thus doesn't apply  life steal or  on-hit effects.\n Fishbones' damage calculations:\nBasic attack damage: 110% AD\nCritical strike damage: 220% AD\nCritical strike damage with  Infinity Edge: 253% AD\n Runaan's Hurricane's bolt damage: 60.5% AD\nBolt critical strike damage: 121% AD\nBolt critical strike damage with  Infinity Edge: 139.15% AD\nMaximum potential damage with  Runaan's Hurricane: 231% AD\nMaximum potential critical strike damage with  Runaan's Hurricane: 462% AD\nMaximum potential critical strike damage with  Runaan's Hurricane and  Infinity Edge: 531.3% AD",
+          "notes": "Toggle abilities do not count as ability activations for the purposes of on-cast effects such as  Spellblade and triggering  Force Pulse's passive.\nDespite Jinx starting the game using  Pow-Pow she doesn't receive any bonus attack speed until Switcheroo! has been learned.\n Fishbones splash damage affects structures (minions will target Jinx) but does not affect targets if Jinx's attacks are  blocked,  dodged, or  missed.\n Runaan's Hurricane's Wind's Fury bolts are special-cased to generate one  Pow-Pow stack per enemy hit.\nEach of  Runaan's Hurricane's additional bolts apply  Fishbones' splash damage, which stacks with each other.\nBoth weapons deal  basic damage to their primary target (this includes the increased damage of  Fishbones), which applies  life steal based on the damage dealt (post-mitigation) as usual.\nThe splash damage of  Fishbones is based on the pre-mitigation damage done to the primary target (which includes critical strikes), and is not considered modified physical damage. It deals  default damage and thus doesn't apply  life steal or  on-hit effects.\nSimilarly, the splash damage of  Fishbones will not apply the additional damage from  Hexoptics C44's Magnification.\n Fishbones' damage calculations:\nBasic attack damage: 110% AD\nCritical strike damage: 220% AD\nCritical strike damage with  Infinity Edge: 253% AD\n Runaan's Hurricane's bolt damage: 60.5% AD\nBolt critical strike damage: 121% AD\nBolt critical strike damage with  Infinity Edge: 139.15% AD\nMaximum potential damage with  Runaan's Hurricane: 231% AD\nMaximum potential critical strike damage with  Runaan's Hurricane: 462% AD\nMaximum potential critical strike damage with  Runaan's Hurricane and  Infinity Edge: 531.3% AD",
           "blurb": "Toggle:  Jinx switches between Pow-Pow, her minigun, and Fishbones, her rocket launcher.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -62202,7 +62202,7 @@
     },
     "releaseDate": "2013-10-10",
     "releasePatch": "3.12",
-    "patchLastChanged": "26.04",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -63513,9 +63513,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -64925,7 +64925,7 @@
     },
     "releaseDate": "2018-03-07",
     "releasePatch": "8.5",
-    "patchLastChanged": "26.15",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 675,
       "rp": 585,
@@ -64974,9 +64974,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -65796,7 +65796,7 @@
     },
     "releaseDate": "2014-11-20",
     "releasePatch": "4.20",
-    "patchLastChanged": "26.07",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -72496,7 +72496,7 @@
     },
     "releaseDate": "2010-04-08",
     "releasePatch": "1.0.0.82",
-    "patchLastChanged": "26.09",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -73565,9 +73565,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -74482,7 +74482,7 @@
     },
     "releaseDate": "2015-10-14",
     "releasePatch": "5.20",
-    "patchLastChanged": "26.11",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -76075,7 +76075,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "The Charge\n\nWhile charging, if any out of  sight enemy  champions were within 500 range of Kled during the last second, Kled locks on to the closest visible enemy champion within 800 range in his facing direction, and begins dashing toward them.\nDuring the charge the duo gain (950 \u2212 (starting movement speed)) \u00f7 12 \u00d7 (time \u00f7 0.25) bonus movement speed\nThe bonus movement speed is not affected by movement speed caps.\nThe charge will not give any movement speed to the duo if they have more than [ 1440 raw movement speed ][ 950 after movement speed soft caps ].\nThe trail will not give Kled and his allies any movement speed out-of-champion-combat if they have more than [ 840 raw movement speed ][ 650 after movement speed soft caps ].\nMovement speed is granted by facing the direction of the draft and lasts for 0.528 seconds upon exiting the trail or facing another direction.\n Voidmites, and  Bel'Veth's  Void Remora are considered to be lane  minions for the purpose of Mr. Kled's Wild Ride.\nKled will re-path if his current path is blocked by a newly created terrain (either player created or by the  Mountainous Rift).\nThe charge will continue towards the target location even if Kled's location changes drastically.\nKled will mark his path with an indicator visible to him and his allies.\nKled's pathing indicator will not account for changes in Kled's pathing.\nKled's pathing indicator will sometimes display a path different from his real path.(bug) [4]\nKled's  shield generation is based upon a global 0.25 second timer, not based on when the ability is cast or when it ends.(unexpected)\nFor example, this means that Kled will take an additional 0.25 seconds to generate the maximum shield amount if the ability was cast immediately after the last tick of the global timer.\nFor example, this means that Kled's shield will expire 0.25 seconds sooner if his charge ends immediately before the next tick of the global timer.\n Axiom Arcanist only increases the first instance of shield gained.(bug)\nThe Dash\n\nIf Kled passes over the charge's target location, the charge will end even during the dash.(bug)\nIf the charge ends before, or during the dash, the dash will not:\nGenerate a shield;\nTrail a directional draft, applying Mr. Kled's Wild Ride;\nDisable summoner spells and items.\nKled sometimes fails to lock on to valid targets in range.(bug) [5]\n Experimental Hexplate's Overdrive,  Fiendhunter Bolts' Opening Barrage, and  Zeke's Convergence's Frostfire Tempest trigger at the end of the charge or at the end of the dash, whichever comes last, even if the charge ends before or during the dash.\nKled and  Skaarl will track the target if they change locations.\nThey will dash to the target's previous location if the target moves beyond 2500 units of the dash's beginning location.\nIf the target moves 2500 or more units away from Kled and  Skaarl during the dash, it will be interrupted.\nIf the dash does not complete within 9 seconds, Kled and  Skaarl will continue to track their target, but will be able to cast spells, and will not be able to collide with enemy champions.\nWhile dashing, Kled will mark his target with an indicator visible to both teams.\nThe damage dealt is based on time spent traveling before the beginning of the dash.\nIt is possible for Kled to briefly lose his  crowd control immunity while colliding with an enemy champion, which can cause the  dash, and its subsequent damage and  displacement to be interrupted.(bug) [6]\nUnits knocked back by Chaaaaaaaarge!!!  knockback can pass through terrain if it is player-generated, or if they are already inside it.(unexpected)\nThe  airborne debuff is removed early when the forced movement stops.\nBuffering Interactions\n\nNothing can be buffered during the charge.\nMovement and attack commands, as well as  Bear Trap on a Rope and  Jousting can be buffered during the dash.\nInteraction Tables\n\nThe following table refers for interactions while Kled is charging:\n Ghost is also disabled, contrary to the table below.\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nAllowed, but cannot input movement commands.\n\n\nItems\n\nUsable\n\nN/A\n\n\nDisabled\n\nAll items are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nDisabled\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite\n\n\nDisabled\n\n Flash  Teleport  Recall  Hexflash  Mark  Dash\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nN/A\n\nThe following table refers for interactions while Kled is dashing:\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nDisabled\n\n\nItems\n\nUsable\n\nN/A\n\n\nDisabled\n\nAll items are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nDisabled\n\n\nSpells\n\nUsable\n\nN/A\n\n\nDisabled\n\nAll summoner spells are disabled\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nN/A\n\nEvery summoner spell is disabled, but summoner spells that aren't disabled while Kled is charging will not visually appear disabled.(bug)\nNo summoner spells or items are disabled if the charge ends before or during the dash.(bug)",
+          "notes": "The Charge\n\nWhile charging, if any out of  sight enemy  champions were within 500 range of Kled during the last second, Kled locks on to the closest visible enemy champion within 800 range in his facing direction, and begins dashing toward them.\nDuring the charge the duo gain (950 \u2212 (starting movement speed)) \u00f7 12 \u00d7 (time \u00f7 0.25) bonus movement speed\nThe bonus movement speed is not affected by movement speed caps.\nThe charge will not give any movement speed to the duo if they have more than [ 1440 raw movement speed ][ 950 after movement speed soft caps ].\nThe trail will not give Kled and his allies any movement speed out-of-champion-combat if they have more than [ 840 raw movement speed ][ 650 after movement speed soft caps ].\nMovement speed is granted by facing the direction of the draft and lasts for 0.528 seconds upon exiting the trail or facing another direction.\n Voidmites, and  Bel'Veth's  Void Remora are considered to be lane  minions for the purpose of Mr. Kled's Wild Ride.\nKled will re-path if his current path is blocked by a newly created terrain (either player created or by the  Mountainous Rift).\nThe charge will continue towards the target location even if Kled's location changes drastically.\nKled will mark his path with an indicator visible to him and his allies.\nKled's pathing indicator will not account for changes in Kled's pathing.\nKled's pathing indicator will sometimes display a path different from his real path.(bug) [4]\nKled's  shield generation is based upon a global 0.25 second timer, not based on when the ability is cast or when it ends.(unexpected)\nFor example, this means that Kled will take an additional 0.25 seconds to generate the maximum shield amount if the ability was cast immediately after the last tick of the global timer.\nFor example, this means that Kled's shield will expire 0.25 seconds sooner if his charge ends immediately before the next tick of the global timer.\n Axiom Arcanist only increases the first instance of shield gained.(bug)\nThe Dash\n\nIf Kled passes over the charge's target location, the charge will end even during the dash.(bug)\nIf the charge ends before, or during the dash, the dash will not:\nGenerate a shield;\nTrail a directional draft, applying Mr. Kled's Wild Ride;\nDisable summoner spells and items.\nKled sometimes fails to lock on to valid targets in range.(bug) [5]\n Experimental Hexplate's Overdrive,  Fiendhunter Bolts' Opening Barrage, and  Zeke's Convergence's Frostfire Tempest trigger at the end of the charge or at the end of the dash, whichever comes last, even if the charge ends before or during the dash.\nKled and  Skaarl will track the target if they change locations.\nThey will dash to the target's previous location if the target moves beyond 2500 units of the dash's beginning location.\nIf the target moves 2500 or more units away from Kled and  Skaarl during the dash, it will be interrupted.\nIf the dash does not complete within 9 seconds, Kled and  Skaarl will continue to track their target, but will be able to cast spells, and will not be able to collide with enemy champions.\nWhile dashing, Kled will mark his target with an indicator visible to both teams.\nThe damage dealt is based on time spent traveling before the beginning of the dash.\nIt is possible for Kled to briefly lose his  crowd control immunity while colliding with an enemy champion, which can allow the  dash, and its subsequent damage and  displacement to get  interrupted.(bug) [6]\nUnits knocked back by Chaaaaaaaarge!!!  knockback can pass through terrain if it is player-generated, or if they are already inside it.(unexpected)\nThe  airborne debuff is removed early when the forced movement stops.\nBuffering Interactions\n\nNothing can be buffered during the charge.\nMovement and attack commands, as well as  Bear Trap on a Rope and  Jousting can be buffered during the dash.\nInteraction Tables\n\nThe following table refers for interactions while Kled is charging:\n Ghost is also disabled, contrary to the table below.\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nAllowed, but cannot input movement commands.\n\n\nItems\n\nUsable\n\nN/A\n\n\nDisabled\n\nAll items are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nDisabled\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite\n\n\nDisabled\n\n Flash  Teleport  Recall  Hexflash  Mark  Dash\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nN/A\n\nThe following table refers for interactions while Kled is dashing:\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nDisabled\n\n\nItems\n\nUsable\n\nN/A\n\n\nDisabled\n\nAll items are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nDisabled\n\n\nSpells\n\nUsable\n\nN/A\n\n\nDisabled\n\nAll summoner spells are disabled\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nN/A\n\nEvery summoner spell is disabled, but summoner spells that aren't disabled while Kled is charging will not visually appear disabled.(bug)\nNo summoner spells or items are disabled if the charge ends before or during the dash.(bug)",
           "blurb": "Active: Kled &  Skaarl become  ghosted and  unstoppably charge to a location, building up  bonus movement speed and  shield and leaving a draft in their wake that grants Mr. Kled's Wild Ride to allies that follow the draft.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -76178,9 +76178,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -77088,7 +77088,7 @@
     },
     "releaseDate": "2010-06-24",
     "releasePatch": "1.0.0.94",
-    "patchLastChanged": "26.10",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -83939,7 +83939,7 @@
           "projectile": "FALSE",
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Ashen Pursuit's damage types:\nThe blink deals  area damage.\nThe dash deals  spell damage to the primary target and  area damage to secondary targets.\nAshen's Pursuit's dash:\nDoes not count as a basic attack and will not trigger any basic attack-specific interactions (e.g.  on-attack effects, basic attack timer, etc) unless it is special cased to do so.\nIt is special cased to not deal damage to the primary target if Locke is  blinded or if the target was under the effect of a spell that granted them  dodging or  blocking effects.\nTravels a fixed distance towards the target except in cases where Locke would dash through the target and beyond his attack range. If such cases would occur, it will instead dash him to 125 units beyond their location (within attack range of the target).\nIs disabled if Locke is affected by any  immobilizing crowd control or if he is  grounded.\nHe loses the bonus attack range and is also completely unable to perform the empowered attack. If he can attack a target under this circumstance, he will basic attack them normally without consuming the empowered attack.\nFor the former case, the only exceptions are  berserk and  taunt. These crowd control types will  force Locke to perform the dash ability against the source of the disable.\nCan dash through terrain, provided the primary target is on the other side.\nIt will however fail to cast if the target is at the very edge of Locke's attack range and is over terrain (no terrain grace).(unexpected)\nOrders Locke to attack the primary target at its end.\nAllows  Soul Ignition to be cast during it.\nAll other abilities are buffered.\nCannot be performed while Locke is  disarmed, though he retains the bonus attack range.\nIf a champion  takedown is scored while Ashen Pursuit is active, the ability's cooldown will be reset in addition to allowing Locke to cast Ashen Pursuit even while it is already active.\nIf cast while the effect is already active, Ashen Pursuit's duration for the dash attack is refreshed after the blink.\n Spell shield can block either the blink damage or the dash damage, but not both.",
+          "notes": "Ashen Pursuit's damage types:\nThe blink deals  area damage.\nThe dash deals  spell damage to the primary target and  area damage to secondary targets.\nAshen's Pursuit's dash:\nDoes not count as a basic attack and will not trigger any basic attack-specific interactions (e.g.  on-attack effects, basic attack timer, etc) unless it is special cased to do so.\nIt is special cased to not deal damage to the primary target if Locke is  blinded or if the target was under the effect of a spell that granted them  dodging or  blocking effects.\nTravels a fixed distance towards the target except in cases where Locke would dash through the target and beyond his attack range. If such cases would occur, it will instead dash him to 125 units beyond their location (within attack range of the target).\nIs disabled if Locke is affected by any  immobilizing crowd control or if he is  grounded.\nHe loses the bonus attack range and is also completely unable to perform the empowered attack. If he can attack a target under this circumstance, he will basic attack them normally without consuming the empowered attack.\nFor the former case, the only exceptions are  berserk and  taunt. These crowd control types will  force Locke to perform the dash ability against the source of the disable.\nCan dash through terrain, provided the primary target is on the other side.\nIt will however fail to cast if the target is at the very edge of Locke's attack range and is over terrain (no terrain grace).(unexpected)\nOrders Locke to attack the primary target at its end.\nCannot be performed while Locke is  disarmed, though he retains the bonus attack range.\nIf a champion  takedown is scored while Ashen Pursuit is active, the ability's cooldown will be reset in addition to allowing Locke to cast Ashen Pursuit even while it is already active.\nIf cast while the effect is already active, Ashen Pursuit's duration for the dash attack is refreshed after the blink.\n Spell shield can block either the blink damage or the dash damage, but not both.\n Soul Ignition can be cast during Ashen Pursuit's dash.\nAny other ability is queued instead.",
           "blurb": "Active:  Locke  blinks to the target location, dealing magic damage to nearby enemies upon arrival.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -84089,7 +84089,7 @@
     },
     "releaseDate": "2026-06-24",
     "releasePatch": "26.13",
-    "patchLastChanged": "26.15",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -84138,9 +84138,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -84866,7 +84866,7 @@
     },
     "releaseDate": "2013-08-22",
     "releasePatch": "3.10a",
-    "patchLastChanged": "26.11",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 675,
       "rp": 585,
@@ -93733,9 +93733,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -94626,7 +94626,7 @@
     },
     "releaseDate": "2010-09-08",
     "releasePatch": "1.0.0.100",
-    "patchLastChanged": "26.01",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 225,
       "rp": 260,
@@ -95715,7 +95715,7 @@
     },
     "releaseDate": "2010-02-24",
     "releasePatch": "1.0.0.75",
-    "patchLastChanged": "26.15",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 675,
       "rp": 585,
@@ -99074,7 +99074,7 @@
           "icon": "https://cdn.communitydragon.org/latest/champion/Nasus/ability-icon/q",
           "effects": [
             {
-              "description": "Active: Nasus empowers his next basic attack within 10 seconds to have an uncancellable windup, gain 50 bonus range, and deal bonus physical damage. Siphoning Strike's base damage is affected by critical strike modifiers.",
+              "description": "Active: Nasus empowers his next basic attack within 10 seconds to have an uncancellable windup, gain 50 bonus range, and deal bonus physical damage. Siphoning Strike's flat bonus damage is affected by critical strike modifiers.",
               "leveling": [
                 {
                   "attribute": "Bonus Physical Damage",
@@ -99751,7 +99751,7 @@
     },
     "releaseDate": "2009-10-01",
     "releasePatch": "0.9.25.24",
-    "patchLastChanged": "25.24",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 675,
       "rp": 585,
@@ -111544,7 +111544,7 @@
     },
     "releaseDate": "2010-01-13",
     "releasePatch": "1.0.0.70",
-    "patchLastChanged": "26.13",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 225,
       "rp": 260,
@@ -113287,7 +113287,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Audacity only damages targets if within 250 range upon completion of the dash.",
+          "notes": "Audacity only damages targets if within 250 range upon completion of the dash.\nQiyana will automatically be ordered to acquire and attack Audacity's target as soon as the dash completes.",
           "blurb": "Active:  Qiyana  dashes toward the target enemy and deals physical damage upon arrival.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -113498,9 +113498,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -114329,7 +114329,7 @@
     },
     "releaseDate": "2013-03-01",
     "releasePatch": "3.03",
-    "patchLastChanged": "26.11",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -116046,7 +116046,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Frenzying Taunt, despite being usable on  monsters, does not force them to attack Rammus. He does not draw aggro since the ability does not deal damage.\nIf the target becomes  untargetable,  dies, or is too far away or no longer in  sight during the cast time, this ability will cancel but does not go on  cooldown nor pay its cost (if applicable).",
+          "notes": "If the target becomes  untargetable,  dies, or is too far away or no longer in  sight during the cast time, this ability will cancel but does not go on  cooldown nor pay its cost (if applicable).",
           "blurb": "Active:  Rammus briefly  taunts the target enemy  champion or  monster.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -120693,7 +120693,7 @@
               "leveling": []
             },
             {
-              "description": "His first attack on-hit is empowered to stab the target, having an uncancellable windup, gaining 25 bonus range, and dealing additional physical damage. The attack can critically strike for (100% + 30%) AD bonus physical damage.",
+              "description": "His first attack on-hit is empowered to stab the target, having an uncancellable windup, gaining 25 bonus range, and dealing additional physical damage.",
               "leveling": [
                 {
                   "attribute": "Additional Physical Damage",
@@ -121405,7 +121405,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Thrill of the Hunt's duration starts on-cast.\nIt is not expected for the camouflage duration to be lower than the total effect duration. [10] (unexpected)\nIf a  revealed enemy  stealths, their  true sight debuff will be removed, dropping aggro. [11] [12] (unexpected)\nThe debuff will be reapplied after 0.033s if they get back in range.\nUsing a basic attack  breaks the stealth at the start of the attack windup.\nUnlike other champions that break the stealth at the start of attack windup, Rengar may automatically start attacking a nearby target if the player's \"Auto Attack\" setting is turned on. [13] (unexpected)\nThe ability applies a mark on the target at the start of attack windup that is successively consumed when the basic attack hits to apply the effect.\nIf the attack is prevented or blocked (e.g. by  knocking down Rengar when  leaping) then the effect will not be applied.\nThe mark will however still linger for a very short period after that, allowing Rengar to consume it with a quick basic attack. [14]\nThe ability deals  basic damage.\nUnlike other ability empowered attacks (i.e  Kled's  Violent Tendencies,  Malphite's  Thunderclap), the additional damage is also tagged as  proc damage - preventing triggering certain effects (e.g  Malignance). [15] (unexpected)\nIt is also part of a separate cast instance - potentially allowing an extra stack of  Eclipse and  Electrocute (e.g while using  Black Cleaver). [16] (unexpected)\nThe Unseen Predator buff may randomly end before a melee attack hits, causing the ability's effects to go through but without generating Ferocity. [17] (unexpected)\nRengar may sometimes be able to still leap away after consuming the ability with a melee basic attack. [18] (unexpected)\nRengar discerns a distinct  heart beat instead of the usual  true sight indicator. This indicator will be removed when out of range, but the target will remain revealed.\nThrill of the Hunt has an indicator that appears above the target(s) when Rengar is nearby. Some skins have a unique indicator.\n\n\n\n Headhunter\n\n\n\n Night Hunter\n\n\n\n Mecha\n\n\n\n Pretty Kitty\n\n\n\n Guardian of the Sands\n\n\n\n Sentinel\n\n\n\n Street Demons",
+          "notes": "Thrill of the Hunt's duration starts on-cast.\nIt is not expected for the camouflage duration to be lower than the total effect duration. [10] (unexpected)\nIf a  revealed enemy  stealths, their  true sight debuff will be removed, dropping aggro. [11] [12] (unexpected)\nThe debuff will be reapplied after 0.033s if they get back in range.\nUsing a basic attack  breaks the stealth at the start of the attack windup.\nUnlike other champions that break the stealth at the start of attack windup, Rengar may automatically start attacking a nearby target if the player's \"Auto Attack\" setting is turned on. [13] (unexpected)\nThe ability applies a mark on the target at the start of attack windup that is successively consumed when the basic attack hits to apply the effect.\nIf the attack is prevented or blocked (e.g. by  knocking down Rengar when  leaping) then the effect will not be applied.\nThe mark will however still linger for a very short period after that, allowing Rengar to consume it with a quick basic attack. [14]\nThe ability deals  basic damage.\nUnlike other ability empowered attacks (i.e  Kled's  Violent Tendencies,  Malphite's  Thunderclap), the additional damage is also tagged as  proc damage - preventing triggering certain effects (e.g  Malignance). [15] (unexpected)\nIt is also part of a separate cast instance - potentially allowing an extra stack of  Eclipse and  Electrocute (e.g while using  Black Cleaver). [16] (unexpected)\nThe Unseen Predator buff may randomly end before a melee attack hits, causing the ability's effects to go through but without generating Ferocity. [17] (unexpected)\nRengar may sometimes be able to still leap away after consuming the ability with a melee basic attack. [18] (unexpected)\nRengar discerns a distinct  heart beat instead of the usual  true sight indicator. This indicator will be removed when out of range, but the target will remain revealed.\nThrill of the Hunt has an indicator that appears above the target(s) when Rengar is nearby. Some skins have a unique indicator.\n\n\n\n Headhunter\n\n\n\n Night Hunter\n\n\n\n Mecha\n\n\n\n Pretty Kitty\n\n\n\n Guardian of the Sands\n\n\n\n Sentinel\n\n\n\n Street Demons\n\n\n\n VIctorious",
           "blurb": "Passive:  Rengar also gains  Unseen Predator while  camouflaged.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -125297,9 +125297,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -126378,7 +126378,7 @@
     },
     "releaseDate": "2020-09-21",
     "releasePatch": "10.19",
-    "patchLastChanged": "26.06",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -127381,9 +127381,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -128261,7 +128261,7 @@
     },
     "releaseDate": "2019-11-10",
     "releasePatch": "9.22",
-    "patchLastChanged": "26.14",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -133266,7 +133266,7 @@
           "icon": "https://cdn.communitydragon.org/latest/champion/Shyvana/ability-icon/e",
           "effects": [
             {
-              "description": "Active: Shyvana launches a fireball in the target direction that explodes upon colliding with the first enemy or reaching maximum range, dealing magic damage to enemies hit and slowing by 30% them for 2 seconds.",
+              "description": "Active: Shyvana launches a fireball in the target direction that explodes upon colliding with the first enemy or reaching maximum range, dealing magic damage to enemies hit and slowing them by 30% for 2 seconds.",
               "leveling": [
                 {
                   "attribute": "Magic Damage",
@@ -135830,9 +135830,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -136716,7 +136716,7 @@
     },
     "releaseDate": "2009-02-21",
     "releasePatch": "Alpha Week 2",
-    "patchLastChanged": "26.02",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 225,
       "rp": 260,
@@ -138014,9 +138014,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -138974,7 +138974,7 @@
     },
     "releaseDate": "2024-01-31",
     "releasePatch": "14.2",
-    "patchLastChanged": "26.11",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 3150,
       "rp": 975,
@@ -149667,9 +149667,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 28,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -150710,7 +150710,7 @@
     },
     "releaseDate": "2009-02-21",
     "releasePatch": "Alpha Week 2",
-    "patchLastChanged": "26.12",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 675,
       "rp": 585,
@@ -152203,7 +152203,7 @@
               ]
             },
             {
-              "description": "Tryndamere also applies a curse to all nearby enemy champions for 3.25 seconds. While accursed, they become slowed while facing in the opposite direction of Tryndamere.",
+              "description": "Tryndamere also applies a curse to all nearby enemy champions for 3.25 seconds. While accursed, they become slowed while facing away from Tryndamere.",
               "leveling": [
                 {
                   "attribute": "Slow",
@@ -152264,7 +152264,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Mocking Shout very briefly  reveals Tryndamere if he uses it while in the fog of war to enemies.\nMocking Shout prevents Tryndamere from using Undying Rage during its cast time.\nIf the attack damage reduction would reduce the target's bonus attack damage below 0, the target's base attack damage value is unaffected, but their total attack damage will still be reduced. The target will however retain a bonus attack damage value of 0.\nEffects that scale with total attack damage, such as basic attacks, will take the attack damage reduction into account for their calculations.\nThose that have a ratio for base attack damage or bonus attack damage do not take the reduction into account.\nMocking Shout's  attack damage reduction is worth   \u2212 700 / 1225 / 1750 / 2275 / 2800 per enemy hit.",
+          "notes": "Regarding Mocking Shout applying the  slow, facing away from Tryndamere means facing the same general direction (angle) as him; this direction bisects an 180 degree arc of a radius through him and his enemy. In other words, effectively, he must be \"looking\" at the enemy's back.\nMocking Shout very briefly  reveals Tryndamere if he uses it while in the Fog of War to enemies.\nMocking Shout prevents Tryndamere from using Undying Rage during its cast time.\nIf the attack damage reduction would reduce the target's bonus attack damage below 0, the target's base attack damage value is unaffected, but their total attack damage will still be reduced. The target will however retain a bonus attack damage value of 0.\nEffects that scale with total attack damage, such as basic attacks, will take the attack damage reduction into account for their calculations.\nThose that have a ratio for base attack damage or bonus attack damage do not take the reduction into account.\nMocking Shout's  attack damage reduction is worth   \u2212 700 / 1225 / 1750 / 2275 / 2800 per enemy hit.",
           "blurb": "Active:  Tryndamere reduces the  attack damage of nearby champions for a few seconds. Targets facing away from him are also  slowed.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -153471,9 +153471,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -154285,7 +154285,7 @@
     },
     "releaseDate": "2009-05-01",
     "releasePatch": "May 1, 2009 Patch",
-    "patchLastChanged": "26.09",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -155916,7 +155916,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Udyr cannot dash while  grounded or  rooted, but he will still declare the empowered attack.\nThe empowered attack will still apply its effects even if the dash is interrupted.\nThe empowered attacks will not trigger nor be consumed if they hit a structure or ward or are parried.\nThe immunity to the stun is not applied in any case.",
+          "notes": "Udyr cannot dash while  grounded or  rooted, but he will still declare the empowered attack.\nThe empowered attack will still apply its effects even if the dash is interrupted.\nThe empowered attacks will not trigger nor be consumed if they hit a structure or ward or are parried.\nEach empowered attack is considered to belong to its own cast instance.\nThe immunity to the stun is not applied in any case.",
           "blurb": "Stampede Stance:  Udyr gains  ghosting and a burst of  movement speed that decays over a few seconds. His attacks in this stance briefly  stun his target, but this cannot affect them more than once every few seconds.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -157516,9 +157516,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -158542,7 +158542,7 @@
     },
     "releaseDate": "2012-05-08",
     "releasePatch": "1.0.0.139",
-    "patchLastChanged": "26.12",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -158591,9 +158591,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -159361,7 +159361,7 @@
     },
     "releaseDate": "2011-05-10",
     "releasePatch": "1.0.0.118",
-    "patchLastChanged": "25.17",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 1575,
       "rp": 790,
@@ -163596,7 +163596,7 @@
     },
     "releaseDate": "2021-01-21",
     "releasePatch": "11.2",
-    "patchLastChanged": "26.10",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -164684,7 +164684,7 @@
     },
     "releaseDate": "2011-12-29",
     "releasePatch": "1.0.0.131",
-    "patchLastChanged": "25.24",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -167176,7 +167176,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Eternal Hunger's damage is applied before the damage of the effect that triggers it.\nEternal Hunger does not affect:\n structures\n wards (except  effigies)\nJungle plants\n Gangplank's  kegs\nEternal Hunger does affect:\n Illaoi's  Tentacles\nPENDING FOR TEST: Other units with modified health behaviour.",
+          "notes": "Eternal Hunger's damage is applied before the damage of the effect that triggers it.\nEternal Hunger does not affect:\n structures\n wards (except  effigies)\nJungle plants\n Gangplank's  kegs\nEternal Hunger does affect:\n Illaoi's  Tentacles\n Yorick's  Dark Procession\nPENDING FOR TEST: Other units with modified health behaviour.",
           "blurb": "Innate:  Warwick deals bonus magic damage on-hit.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -167567,7 +167567,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "The initiation of the attack windup to gain the bonus attack speed is only for gaining the bonus; it does not refresh the duration of the attack speed buff if Warwick has it already.\nBlood Hunt is a form of  obscured vision.\nIf Blood Hunt was cast with no enemy champions within range, the ability incurs its cast time then goes on cooldown without marking any target.\nAs mentioned by the description, Blood Hunt only marks enemy champions if they are damaged below the thresholds by an allied source. This includes Warwick himself, champions,  minions, and  turrets.\nThe only exception is the allied  Nexus Obelisk, because that deals  internalraw damage, which does not trigger damage-related events such as Blood Hunt's marking.\nNote that  monsters are neutral units.\nBlood Hunt can detect and target decoys.\nBlood Hunt will occur from wherever Warwick was at the start of the cast time.\nBlood Hunt has an indicator that appears above the target(s) when they are being hunted. Some skins have a unique indicator.\n\n\n\n Classic\n\n\n\n PROJECT\n\n\n\n Lunar Guardian\n\n\n\n Old God\n\n\n\n Winterblessed\n\n\n\n Prestige Winterblessed\n\n\n\n Arcane Vander\n\n\nSome of Warwick's  Chromas have a unique color variation:\n\n\n\n\n\n\n Ruby\n\n\n\n Citrine\n\n\n\n Emerald\n\n\n\n Sapphire\n\n\n\n Rose Quartz\n\n\n\n Obsidian\n\n\n\n Aquamarine\n\n\n\n Pearl\n\n\n\n Dark Ritual\n\n\n\n\n\n\n\n\n Paragon\n\n\n\nEditor's Note: It should be noted that as of right now, skins that use the  original's assets are all using a purple-blueish indicator that was undocumentedly introduced. It was possibly meant for color blind mode, based on the color. It is unknown whether the change was intentional or is a wrongly implemented feature.",
+          "notes": "The initiation of the attack windup to gain the bonus attack speed is only for gaining the bonus; it does not refresh the duration of the attack speed buff if Warwick has it already.\nBlood Hunt is a form of  obscured vision.\nIf Blood Hunt was cast with no enemy champions within range, the ability incurs its cast time then goes on cooldown without marking any target.\nAs mentioned by the description, Blood Hunt only marks enemy champions if they are damaged below the thresholds by an allied source. This includes Warwick himself, champions,  minions, and  turrets.\nThe only exception is the allied  Nexus Obelisk, because that deals  internalraw damage, which does not trigger damage-related events such as Blood Hunt's marking.\nNote that  monsters are neutral units.\nBlood Hunt can detect and target decoys.\nBlood Hunt will occur from wherever Warwick was at the start of the cast time.\nBlood Hunt has an indicator that appears above the target(s) when they are being hunted. Some skins have a unique indicator.\n\n\n\n Classic\n\n\n\n PROJECT\n\n\n\n Lunar Guardian\n\n\n\n Old God\n\n\n\n Winterblessed\n\n\n\n Prestige Winterblessed\n\n\n\n Arcane Vander\n\n\n\n Warhound\n\n\nSome of Warwick's  Chromas have a unique color variation:\n\n\n\n\n\n\n Ruby\n\n\n\n Citrine\n\n\n\n Emerald\n\n\n\n Sapphire\n\n\n\n Rose Quartz\n\n\n\n Obsidian\n\n\n\n Aquamarine\n\n\n\n Pearl\n\n\n\n Dark Ritual\n\n\n\n\n\n\n\n\n Paragon\n\n\n\nEditor's Note: It should be noted that as of right now, skins that use the  original's assets are all using a purple-blueish indicator that was undocumentedly introduced. It was possibly meant for color blind mode, based on the color. It is unknown whether the change was intentional or is a wrongly implemented feature.",
           "blurb": "Passive:  Warwick gains  attack speed against targets below 50% of their maximum health. Against champions, he also gains out of combat  movement speed. These bonuses are massively increased if the target is below 20% of their maximum health.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -167787,7 +167787,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Infinite Duress deals  basic damage, but also triggers spell effects by also being tagged as  spell damage.\nThe minimum range of the ability is 275 units, based on the minimum movement speed that a champion can have (110) while still being able to move. The \"base\" range of this ability is 837.5 because of his 335 base movement speed.\nConsidering movement speed soft caps, with  Blood Hunt, this range increases to 1112 / 1162.25 / 1203.125 / 1234.53125 / 1265.9375, further increased to 1286.875 / 1349.6875 / 1412.5 / 1475.3125 / 1538.125 toward enemy champions below 25% health.\nInfinite Duress deals a total of 6 damage instances:\nThe 1st, 3rd, and 5th ticks deals 2/9ths of the total damage as a single instance while applying both spell and on-hit effects, and triggering on-attack effects.\nThe 2nd, 4th, and 6th ticks deal 1/9ths of the total damage as a single instance while applying spell effects but not on-hit effects.\nIf Warwick does not collide with a champion, he will slide a fixed distance past the maximum range during which he is no longer crowd control immune and unable to declare basic attacks or cast movement abilities, including  Flash, but being able to cast  Jaws of the Beast and  Blood Hunt, with the former also interrupting the slide.\nWarwick is able to cast  Primal Howl at any time during the dash.\nActivating  Zhonya's Hourglass during the dash interrupts it.\nEach hit counts as a separate cast instance for effects such as  Electrocute and  Eclipse's Ever Rising Moon.\nWarwick gains the  cc-immunity at the start of the cast time.\n Cleansing the  suppression does not interrupt the  channel and Warwick will continue to strike but not deal any damage.\nInfinite Duress is special cased to have its channel interrupted by  Fate's Call.\nIf the target is  crowd control immune or protected by  spell shield upon collision, Warwick will not start the  channel.\n Spell shield will not prevent the effects of Infinite Duress if Warwick is already channeling.\nIf the target is in a  zombie state, Warwick will stop the channel after ~0.5 seconds of hitting them.(bug)\nInfinite Duress covers Warwick's hitbox, meaning he will collide with enemy champions that are particularly close to him.\n Experimental Hexplate's Overdrive,  Fiendhunter Bolts' Opening Barrage, and  Zeke's Convergence's Frostfire Tempest will activate at the end of the dash. If the dash collides with an enemy, the items are instead activated after 0.45 seconds into the  channel, and the buff's duration is refreshed at the end of the channel.\nThe following table refers for interactions while Warwick is in cast time:\n\n\nType\n\nCast time\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nDisabled\n\n\nItems\n\nUsable\n\n Shurelya's Battlesong  Youmuu's Ghostblade  Randuin's Omen\n\n\nDisabled\n\nAll the other item-actives are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nUsable\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite\n\n\nDisabled\n\n Flash  Teleport  Recall  Hexflash\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nDeath, unless protected by  Resurrection\n\nThe following table refers for interactions while Warwick is  channeling:\n\n\nType\n\nChannel\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nDisabled\n\n\nItems\n\nUsable\n\n Shurelya's Battlesong  Youmuu's Ghostblade  Randuin's Omen\n\n\nDisabled\n\nAll the other item-actives are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nUsable\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite\n\n\nDisabled\n\n Flash  Teleport  Recall  Hexflash\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nDeath Cast-inhibiting effects",
+          "notes": "Infinite Duress deals  basic damage, but also triggers spell effects by also being tagged as  spell damage.\nThe minimum range of the ability is 275 units, based on the minimum movement speed that a champion can have (110) while still being able to move. The \"base\" range of this ability is 837.5 because of his 335 base movement speed.\nConsidering movement speed soft caps, with  Blood Hunt, this range increases to 1112 / 1162.25 / 1203.125 / 1234.53125 / 1265.9375, further increased to 1286.875 / 1349.6875 / 1412.5 / 1475.3125 / 1538.125 toward enemy champions below 25% health.\nInfinite Duress deals a total of 6 damage instances:\nThe 1st, 3rd, and 5th ticks deals 2/9ths of the total damage as a single instance while applying both spell and on-hit effects, and triggering on-attack effects.\nThe 2nd, 4th, and 6th ticks deal 1/9ths of the total damage as a single instance while applying spell effects but not on-hit effects.\nIf Warwick does not collide with a champion, he will slide a fixed distance past the maximum range during which he is no longer crowd control immune and unable to declare basic attacks or cast movement abilities, including  Flash, but being able to cast  Jaws of the Beast and  Blood Hunt, with the former also interrupting the slide.\nWarwick is able to cast  Primal Howl at any time during the dash.\nActivating  Zhonya's Hourglass during the dash interrupts it.\nEach hit counts as a separate cast instance for effects such as  Electrocute and  Eclipse's Ever Rising Moon.\nWarwick gains the  cc-immunity at the start of the cast time.\n Cleansing the  suppression does not interrupt the  channel and Warwick will continue to strike but not deal any damage.\nInfinite Duress is special cased to have its channel interrupted by  Fate's Call.\nDuring the suppresion, Warwick is  cc-immune to  Singed's  Fling, however, he is not immune to  Urgot's  Fling,  Rell's  Fling or other effects. (unexpected)\nIf the target is  crowd control immune or protected by  spell shield upon collision, Warwick will not start the  channel.\n Spell shield will not prevent the effects of Infinite Duress if Warwick is already channeling.\nIf the target is in a  zombie state, Warwick will stop the channel after ~0.5 seconds of hitting them.(bug)\nInfinite Duress covers Warwick's hitbox, meaning he will collide with enemy champions that are particularly close to him.\n Experimental Hexplate's Overdrive,  Fiendhunter Bolts' Opening Barrage, and  Zeke's Convergence's Frostfire Tempest will activate at the end of the dash. If the dash collides with an enemy, the items are instead activated after 0.45 seconds into the  channel, and the buff's duration is refreshed at the end of the channel.\nThe following table refers for interactions while Warwick is in cast time:\n\n\nType\n\nCast time\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nDisabled\n\n\nItems\n\nUsable\n\n Shurelya's Battlesong  Youmuu's Ghostblade  Randuin's Omen\n\n\nDisabled\n\nAll the other item-actives are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nUsable\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite\n\n\nDisabled\n\n Flash  Teleport  Recall  Hexflash\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nDeath, unless protected by  Resurrection\n\nThe following table refers for interactions while Warwick is  channeling:\n\n\nType\n\nChannel\n\n\nAttacking\n\nDisabled\n\n\nAbilities\n\nDisabled\n\n\nMovement\n\nDisabled\n\n\nItems\n\nUsable\n\n Shurelya's Battlesong  Youmuu's Ghostblade  Randuin's Omen\n\n\nDisabled\n\nAll the other item-actives are disabled\n\n\nInterrupted by\n\nN/A\n\n\nConsumables\n\nUsable\n\n\nSpells\n\nUsable\n\n Barrier  Clarity  Cleanse  Exhaust  Ghost  Heal  Ignite  Smite\n\n\nDisabled\n\n Flash  Teleport  Recall  Hexflash\n\n\nInterrupted by\n\nN/A\n\n\nInterrupted by\n\nDeath Cast-inhibiting effects",
           "blurb": null,
           "missileSpeed": null,
           "rechargeRate": null,
@@ -168871,9 +168871,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -169698,7 +169698,7 @@
     },
     "releaseDate": "2017-04-19",
     "releasePatch": "7.8",
-    "patchLastChanged": "26.04",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
@@ -172115,7 +172115,7 @@
           "onHitEffects": null,
           "occurrence": null,
           "notes": "Yasuo gains the shield before the damage instance; the shield will mitigate the damage that triggered it.\nYasuo is able to reach 100% critical strike chance with Way of the Wanderer's multiplier after obtaining a total of  50% critical strike chance.\nYasuo's secondary resource bar will display the amount of shield stored as an equivalent percentage to his Flow stacks. (Each Flow stack will add 1.25 : 6.74 (based on level) to the bar)\nUpon taking damage, the bar will display his current shield strength.",
-          "blurb": "Innate - Intent:  Yasuo gains increased  critical strike chance.",
+          "blurb": "Innate - Intent:  Yasuo gains increased  critical strike chance. He also gains  attack damage from excess  critical strike chance. However, his critical strikes deal reduced damage.",
           "missileSpeed": null,
           "rechargeRate": null,
           "collisionRadius": null,
@@ -173006,7 +173006,7 @@
           "onHitEffects": null,
           "occurrence": null,
           "notes": "There is no attack time-out between alternating swords. It will persist through  death.\n50% of  Spellblade and  Demolish damage will be converted to magic damage if applied by the Azakana Sword.\nThis will also occur if applied by  Guinsoo's Rageblade's Phantom Hit after having last attacked with the Azakana Sword.\nThis will also occur if applied by  Mortal Steel after having last attacked with the Azakana Sword.(bug)\nThe mixed damage is dealt in two simultaneous instances of damage, but will pretend to be a single instance for most effects (such as  Conqueror's stacks).\nBoth instances deal  basic damage and thus natively apply  life steal.\nThe attack applies on-hit effects only once, right at the start.\nEven if the target dies from the magic damage, the physical damage will still be applied to it.\nIf the target dies from on-hit damage, the magic damage portion will be skipped and only the physical damage applied.(bug)\nYone requires at least  50% critical strike chance in order to reach 100% critical strike chance from Way of the Hunter's multiplier.",
-          "blurb": "Innate - Intent:  Yone gains increased  critical strike chance.",
+          "blurb": "Innate - Intent:  Yone gains increased  critical strike chance. He also gains  attack damage from excess  critical strike chance. However, his critical strikes deal reduced damage.",
           "missileSpeed": null,
           "rechargeRate": null,
           "collisionRadius": null,
@@ -174410,7 +174410,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "Dark Procession has a  turret prioritization value of 6, equal to that of  super minions.\nYorick's other  pets each have a lower prioritization value, allowing him to delay the turret from targeting the  The Maiden or a Mist Walker for one attack.\nDark Procession deals 0  proc  true damage to enemies it knocks aside, which triggers in-combat effects such as drawing turret and monster aggression,  Sudden Impact or applying  Elixir of Sorcery.\nThe perimeter is made up of 18 units with 100  pathing radius and 20  gameplay radius each.\nYorick marks any enemy champion within repeatedly while the cage persists in order to gain assist credit, lasting for the standard credit timer.",
+          "notes": "Dark Procession has a  turret prioritization value of 6, equal to that of  super minions.\nYorick's other  pets each have a lower prioritization value, allowing him to delay the turret from targeting the  The Maiden or a Mist Walker for one attack.\nDark Procession deals 0  proc  true damage to enemies it knocks aside, which triggers in-combat effects such as drawing turret and monster aggression,  Sudden Impact or applying  Elixir of Sorcery.\nThe perimeter is made up of 18 units with 100  pathing radius and 20  gameplay radius each, which interact with effects like  Warwick's  Eternal Hunger. [2]\nYorick marks any enemy champion within repeatedly while the cage persists in order to gain assist credit, lasting for the standard credit timer.",
           "blurb": "Active:  Yorick summons a destructible ring of spirits at the target location that  knocks aside enemies hit. It remains as terrain against enemies for a few seconds.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -174807,9 +174807,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -175006,7 +175006,7 @@
           "projectile": null,
           "onHitEffects": null,
           "occurrence": null,
-          "notes": "The bonus damage is calculated based on the total damage of the critical strike pre-mitigation.\nIf Yunara critically strikes against a champion that has  Randuin's Omen, the bonus magic damage from Vow of the First Lands and the bonus magic damage on-hit from  Cultivation of Spirit will both be reduced by 30%.(unexpected)\nThis can result in a critical strike yielding less bonus magic damage than if the basic attack had not critically struck.",
+          "notes": "The bonus damage is calculated based on the total damage of the critical strike pre-mitigation.\nIf Yunara critically strikes against a champion that has  Randuin's Omen, the bonus magic damage from Vow of the First Lands and the bonus magic damage on-hit from  Cultivation of Spirit will both be reduced by 30%.(unexpected)",
           "blurb": "Innate:  Yunara's  critical strikes deal bonus magic damage.",
           "missileSpeed": null,
           "rechargeRate": null,
@@ -175070,7 +175070,7 @@
               ]
             },
             {
-              "description": "Active: Yunara unleashes for 5 seconds: gaining bonus attack speed, dealing additional bonus magic damage on-hit, and augmenting her basic attacks to have increased missile speed, a 40% lower windup time, and an uncancellable windup. Her basic attacks are also empowered to spread to each enemy near the target, dealing 30% AD physical damage.Each spread attack applies life steal and on-hit effects, with on-hit damage reduced to 30% effectiveness, and will critically strike for (200% + 30%) damage if the triggering attack does. Spread attacks deal 250% damage against minions below 30% maximum health.",
+              "description": "Active: Yunara unleashes for 5 seconds: gaining bonus attack speed, dealing additional bonus magic damage on-hit, and augmenting her basic attacks to have increased missile speed, a 40% lower windup time, and an uncancellable windup. Her basic attacks are also empowered to spread to each enemy near the target, dealing 30% AD physical damage.Each spread attack applies life steal and on-hit effects, with on-hit damage reduced to 30% effectiveness, and will critically strike if the triggering attack does. Spread attacks deal 250% damage against minions below 30% maximum health.",
               "leveling": [
                 {
                   "attribute": "Bonus Attack Speed",
@@ -175877,7 +175877,7 @@
     },
     "releaseDate": "2025-07-16",
     "releasePatch": "25.14",
-    "patchLastChanged": "26.14",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 3150,
       "rp": 975,
@@ -180142,9 +180142,9 @@
         "percentPerLevel": 0.0
       },
       "magicResistance": {
-        "flat": 30,
+        "flat": 33,
         "percent": 0.0,
-        "perLevel": 1.3,
+        "perLevel": 1.1,
         "percentPerLevel": 0.0
       },
       "attackDamage": {
@@ -181434,7 +181434,7 @@
     },
     "releaseDate": "2022-01-20",
     "releasePatch": "12.2",
-    "patchLastChanged": "26.10",
+    "patchLastChanged": "26.16",
     "price": {
       "blueEssence": 2400,
       "rp": 880,
