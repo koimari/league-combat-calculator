@@ -101,13 +101,15 @@ class TestReviewedCrowdControl:
 
 
 class TestCoverageMap:
-    """Q prices a row; P and R price nothing and never could.
+    """Q prices a row; P prices nothing; R prices a heal, not damage.
 
     ``b03bbad9`` rewrote the set as ``{P, E}`` while adding the Mark stack
     row, turning Dance of Arrows into a reported gap and losing the
     ``no_damage`` reading the map had before it.  Mark of the Kindred is
-    range and scaling state, and Lamb's Respite is a minimum-health floor
-    plus a heal — neither deals damage, so neither is ``out_of_scope``.
+    range and scaling state.  Lamb's Respite is a minimum-health floor plus
+    a heal the ally scanner pays (375 to each teammate in the zone and to
+    Kindred), so its zero damage row is ``modeled`` — a state row the engine
+    consumes — while ``coverage_truth`` still reads it as a zero.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
@@ -116,7 +118,7 @@ class TestCoverageMap:
             "Q": "modeled",
             "W": "modeled",
             "E": "modeled",
-            "R": "no_damage",
+            "R": "modeled",
         }
         assert coverage_truth.emitted("Kindred") == {
             "P": coverage_truth.ZERO,

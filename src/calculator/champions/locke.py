@@ -181,11 +181,6 @@ def parse_abilities(*args, **kwargs):
 parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
-
 ASSUMPTIONS += [
     "W (Soul Ignition) recast heal is authored by the grey-health "
     "primitive: 100% of the post-mitigation champion damage taken during "
