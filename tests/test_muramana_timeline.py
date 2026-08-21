@@ -89,6 +89,8 @@ def test_muramana_event_builder_withholds_incomplete_cast_receipt() -> None:
                 "parts": (DamagePart("magic", 100.0),),
             }
         },
+        breakdown={},
+        cast_order=None,
     )
     rotation = RotationResult(
         total_muramana_procs=1,
@@ -107,6 +109,8 @@ def test_muramana_event_builder_withholds_count_mismatch() -> None:
                 "parts": (DamagePart("magic", 100.0),),
             }
         },
+        breakdown={},
+        cast_order=None,
     )
     rotation = RotationResult(
         total_muramana_procs=1,
@@ -132,6 +136,7 @@ def test_muramana_prefers_authored_ability_hit_time() -> None:
                 ]
             }
         },
+        cast_order=None,
     )
     rotation = RotationResult(
         total_muramana_procs=1,

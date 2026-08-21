@@ -194,7 +194,7 @@ def _receipt_state(*, damage_events=None, ability_parts=None, cast_order=None):
     """A unit-level FightState stand-in for ``_shaped_charge_proc_receipts``.
 
     Matches the SimpleNamespace states ``tests/test_bastionbreaker_timeline.py``
-    feeds ``_shaped_charge_proc_times``; omitting ``cast_order`` is exactly
+    feeds ``_shaped_charge_proc_times``; a ``None`` ``cast_order`` is exactly
     the "no authored hit exists" condition that falls back to
     ``cast_boundary`` precision.
     """
@@ -207,8 +207,7 @@ def _receipt_state(*, damage_events=None, ability_parts=None, cast_order=None):
         },
         breakdown=breakdown,
     )
-    if cast_order is not None:
-        state.cast_order = cast_order
+    state.cast_order = cast_order
     return state
 
 

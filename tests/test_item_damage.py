@@ -164,7 +164,12 @@ def _simulate_bork_damage(
         num_auto_attacks,
         auto_damage_per_hit,
         other_on_hit_per_hit,
-        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+        SimpleNamespace(
+            effective_armor=effective_armor,
+            effective_mr=0.0,
+            physical_damage_flat_reduction=0.0,
+            physical_damage_flat_reduction_cap=0.0,
+        ),
         1.0,
         phantom_hit_autos,
         double_hit_all,
@@ -223,7 +228,12 @@ def _simulate_kraken_damage(
             num_auto_attacks,
             auto_damage_per_hit,
             other_on_hit_per_hit,
-            SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+            SimpleNamespace(
+                effective_armor=effective_armor,
+                effective_mr=0.0,
+                physical_damage_flat_reduction=0.0,
+                physical_damage_flat_reduction_cap=0.0,
+            ),
             1.0,
             kraken_proc_autos,
         )

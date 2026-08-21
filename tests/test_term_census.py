@@ -316,6 +316,17 @@ AMENDMENT_R_TERMS = {
         "target_term",
         "transported",
     ),
+    # Both read through `getattr(resists, "...", 0.0)` until the rule-5 pass
+    # spelled them as the declared fields they are, which is why a census over
+    # the syntax tree could not see them before.
+    ("_apply_physical_damage_reduction", "physical_damage_flat_reduction"): (
+        "resistance",
+        "transported",
+    ),
+    ("_apply_physical_damage_reduction", "physical_damage_flat_reduction_cap"): (
+        "resistance",
+        "transported",
+    ),
 }
 
 

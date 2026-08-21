@@ -234,6 +234,7 @@ def _proc_state(*, cast_instances: int = 1, damage_events=None):
             }
         },
         breakdown=breakdown,
+        cast_order=None,
     )
 
 

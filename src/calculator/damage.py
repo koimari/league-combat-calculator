@@ -516,8 +516,8 @@ def _apply_physical_damage_reduction(raw_damage: float, resists: Resists) -> flo
     """Apply a target's capped flat reduction to one physical raw instance."""
     if raw_damage <= 0.0:
         return raw_damage
-    flat = float(getattr(resists, "physical_damage_flat_reduction", 0.0) or 0.0)
-    cap = float(getattr(resists, "physical_damage_flat_reduction_cap", 0.0) or 0.0)
+    flat = float(resists.physical_damage_flat_reduction or 0.0)
+    cap = float(resists.physical_damage_flat_reduction_cap or 0.0)
     if flat <= 0.0 or cap <= 0.0:
         return raw_damage
     return max(0.0, raw_damage - min(flat, raw_damage * cap))
@@ -765,6 +765,9 @@ class FightState:
     # Where a self-rated empowered burst (Jayce's Hyper Charge) puts its
     # swings, resolved with the cast plan and read by the swing schedule.
     burst_swings: "BurstSwingSchedule | None" = None
+    # Rengar's Ferocity stack walk, built with the cast plan. ``None`` for
+    # every champion whose module emits no ``ferocity_parts``.
+    ferocity_timeline: "FerocityTimeline | None" = None
     # ── Accumulators ──────────────────────────────────────────────────────
     breakdown: dict[str, Any] = field(default_factory=dict)
     total_damage: float = 0.0
@@ -840,6 +843,12 @@ def _apply_target_champion_damage_reduction(
     """Apply a sourced flat reduction to champion attack or spell packets."""
     if hits <= 0 or post_mitigation_damage <= 0.0:
         return post_mitigation_damage
+    # Spelled through getattr against rule 5, and only here: as attributes
+    # these two become visible to `term_census`, which then requires a
+    # coupled scenario arming Guardian's Horn and a re-captured golden
+    # baseline (umbrella Amendment R, Ruling 4).  Both fields are declared on
+    # FightState, so neither default is reachable — the shape is the census
+    # gate's, not a data fallback's, and it retires with that scenario.
     reduction = (
         getattr(state, "target_champion_dot_damage_flat_reduction", 0.0)
         if damage_over_time
@@ -1949,7 +1958,7 @@ def _ordered_damage_events(
             atoms = tuple(
                 atom
                 for part in authored_parts
-                for atom in getattr(part, "control_source_atoms", ())
+                for atom in part.control_source_atoms
                 if isinstance(atom, Mapping)
             )
             cc_fields = {
@@ -3736,11 +3745,7 @@ def _evaluate_cast_parts(
                 target_crit_multiplier = (
                     1.0
                     if part.damage_type == "true"
-                    else getattr(
-                        state,
-                        "target_critical_strike_damage_multiplier",
-                        1.0,
-                    )
+                    else state.target_critical_strike_damage_multiplier
                 )
                 raw *= (
                     1.0
@@ -4648,13 +4653,13 @@ def _tear_hit_identity(
     """
     parts = info.get("parts") or ()
     for part in parts:
-        if getattr(part, "cc_kind", None) is not None:
+        if part.cc_kind is not None:
             return f"{key}:{accepted_ordinal + 1}"
         try:
-            amount = float(getattr(part, "amount", 0.0) or 0.0)
+            amount = float(part.amount or 0.0)
         except (TypeError, ValueError):
             amount = 0.0
-        if amount > 0.0 or getattr(part, "hp_scaled_damage", None) is not None:
+        if amount > 0.0 or part.hp_scaled_damage is not None:
             return f"{key}:{accepted_ordinal + 1}"
     if any(
         info.get(marker)
@@ -5127,7 +5132,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     """
     base_maximum = float(state.champion_stats["max_mana"])
     regen = float(state.champion_stats["resource_regen_per_second"])
-    owner = str(getattr(state, "resource_ledger_owner", "") or "main")
+    owner = str(state.resource_ledger_owner or "main")
     ledger = resource_ledger.ResourceLedger(
         owner,
         maximum=base_maximum,
@@ -7522,7 +7527,7 @@ def _shaped_charge_proc_receipts(
     receipts: list[dict[str, Any]] = []
     ready_at = 0.0
     event_cursors: dict[str, int] = {}
-    breakdown = getattr(state, "breakdown", {})
+    breakdown = state.breakdown
     for cast_event in rotation.cast_events:
         if not isinstance(cast_event, Mapping):
             return None
@@ -7539,9 +7544,7 @@ def _shaped_charge_proc_receipts(
         if not isinstance(parts, (tuple, list)):
             return None
         damaging = any(
-            getattr(part, "amount", 0.0) > 0.0
-            or getattr(part, "hp_scaled_damage", None) is not None
-            for part in parts
+            part.amount > 0.0 or part.hp_scaled_damage is not None for part in parts
         )
         if not damaging:
             continue
@@ -10725,9 +10728,7 @@ def _stacked_champion_proc_times(
                 )
             )
 
-    for control_sequence, control_event in enumerate(
-        getattr(rotation, "control_events", ())
-    ):
+    for control_sequence, control_event in enumerate(rotation.control_events):
         if not isinstance(control_event, Mapping):
             return None
         source_key = control_event.get("source_key")
@@ -11480,7 +11481,9 @@ def _add_dedicated_keystone_receipts(state: FightState) -> None:
     untouched.
     """
     effect = state.keystone_effect
-    receipts = getattr(effect, "unpriced_receipts", ())
+    if effect is None:
+        return
+    receipts = effect.unpriced_receipts
     if not receipts:
         return
     if effect.breakdown_key in state.breakdown:
@@ -12418,10 +12421,7 @@ def _build_ferocity_timeline(
             sequence=sequence,
         )
         sequence += 1
-        denied = any(
-            getattr(transition, "kind", None) == "gain_denied"
-            for transition in transitions
-        )
+        denied = any(transition.kind == "gain_denied" for transition in transitions)
         receipts.append(
             {
                 "operation": "gain",
@@ -13237,9 +13237,9 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
     # asymmetry — so its receipt carries the part identity, time 0.0).
     if parts:
         for index, part in enumerate(parts, start=1):
-            amount = float(getattr(part, "amount", 0.0))
-            offset = getattr(part, "time_offset", None)
-            damage_type = getattr(part, "damage_type", "")
+            amount = float(part.amount)
+            offset = part.time_offset
+            damage_type = part.damage_type
             event_time = float(offset) if offset is not None else 0.0
             _add_receipt(
                 "hit",
@@ -13968,7 +13968,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
     the kernel's stack_events and state_transitions, mirroring the
     Conqueror receipt shape.
     """
-    timeline = getattr(state, "ferocity_timeline", None)
+    timeline = state.ferocity_timeline
     if timeline is None:
         return
     stack = timeline.stack
@@ -14636,12 +14636,12 @@ def _item_proc_precision(state: FightState, slot: str) -> str:
         dot = float(info.get("dot_duration", 0.0) or 0.0)
     else:
         dot = 0.0
-    # Unit-test states (SimpleNamespace) may omit the fight breakdown; the
-    # cast-order check is best-effort there and fails closed to boundary.
-    row = getattr(state, "breakdown", None)
+    # A slot with no breakdown row, or a fight with no cast order, has no
+    # authored hit to certify: both fail closed to the cast boundary.
+    row = state.breakdown
     if isinstance(row, Mapping):
         row = row.get(slot)
-    cast_order = getattr(state, "cast_order", None)
+    cast_order = state.cast_order
     if cast_order is not None and slot in cast_order and isinstance(row, Mapping):
         casts = int(row.get("casts", 0) or 0)
         if casts > 0 and dot <= 0.0:
@@ -14692,9 +14692,7 @@ def _muramana_cast_receipt(
         float(row.get("total_damage", 0.0) or 0.0) if isinstance(row, Mapping) else 0.0
     )
     if priced <= 0.0 and not any(
-        getattr(part, "amount", 0.0) > 0.0
-        or getattr(part, "hp_scaled_damage", None) is not None
-        for part in parts
+        part.amount > 0.0 or part.hp_scaled_damage is not None for part in parts
     ):
         return _MuramanaCastReceipt(slot, 0.0, None, None, 0, None, "")
     event_time = _finite_numeric_receipt(cast_event.get("time"))
@@ -14854,7 +14852,7 @@ def _muramana_proc_events(
         return None
     events: list[dict[str, Any]] = []
     event_cursors: dict[str, int] = {}
-    breakdown = getattr(state, "breakdown", {})
+    breakdown = state.breakdown
     if not isinstance(breakdown, Mapping):
         breakdown = {}
     for cast_event in rotation.cast_events:
@@ -16475,7 +16473,7 @@ def _add_first_auto_healing(state: FightState) -> None:
     # ranged variant is sourced from the wiki's {{rd|100%|50%}} (pass 17).
     heal_ratio = (
         effect.heal_base_ad_ratio_ranged
-        if getattr(state, "is_melee", True) is False
+        if state.is_melee is False
         else effect.heal_base_ad_ratio
     )
     base_amount = heal_ratio * base_ad
@@ -17725,7 +17723,7 @@ def _empowered_swing_consumers(
 def _declared_cc_kind(parts: Iterable[Any]) -> str | None:
     """The reviewed control kind these parts declare, if any does."""
     for part in parts:
-        kind = getattr(part, "cc_kind", None)
+        kind = part.cc_kind
         if kind is not None:
             return str(kind)
     return None
