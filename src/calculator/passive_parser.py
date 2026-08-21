@@ -2744,12 +2744,6 @@ def parse_all_item_effects(
     A configured item that parses to nothing is a cache or parser break, not
     an absence: dropped silently it becomes a missing registry entry that
     only surfaces on a downstream read.
-
-    Args:
-        items_data: Full items.json data dict (keyed by item ID).
-
-    Returns:
-        Dict mapping item code names to parsed effect values.
     """
     results: dict[str, dict[str, Any]] = {}
     for item_name in _ITEM_PARSE_CONFIG:

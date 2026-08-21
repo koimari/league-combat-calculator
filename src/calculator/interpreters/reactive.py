@@ -75,18 +75,8 @@ def resolve_reactive(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutc
 def thorns_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One Thorns declaration's numbers, on the lane that pays them.
-
-    Thorns is the one reactive mechanic the walk pays itself: the coupled
-    timeline compiles the declaration at its own boundary — one profile per
-    roster actor, per fight — before scheduling a strike-back event against
-    whoever swung.  Field for field this is :func:`thorns_effects`' own
-    arithmetic, shared through :func:`_thorns_fields`, so the registered
-    reading and the accessor the timeline calls cannot answer differently.
-
-    ``ctx`` is unread: every reference a strike-back declares is flat, and the
-    boundary that builds a walk has no level to resolve a ramp against.
-    """
+    """One Thorns declaration's numbers, on the lane that pays them.  ``ctx``
+    is unread: every strike-back reference is flat."""
     del ctx
     return _thorns_fields(rule, lane)
 

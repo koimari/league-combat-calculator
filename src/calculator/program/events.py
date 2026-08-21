@@ -333,13 +333,7 @@ _UTILITY_PACKET_KINDS = frozenset({"movement", "cleanse", "slow", "economy", "vi
 
 
 def _float(packet: Mapping[str, Any], key: str, default: float = 0.0) -> float:
-    """One packet field as a float, with an absent field meaning *default*.
-
-    Absent is not zero here — the default is the caller's declared neutral —
-    but an unparseable value is a packet defect and raises through
-    ``float``.  Fail loud beats a silent ``0.0`` that reads as a computed
-    answer.
-    """
+    """One packet field as a float: absent means *default*, unparseable raises."""
     value = packet.get(key)
     return default if value is None else float(value)
 

@@ -96,14 +96,9 @@ class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
 
 def record_rung(sink: WorkCounterSink | None, rung: Rung, receipt: str = "") -> None:
     """Attribute one coupled evaluation to the engine that priced it, and why.
-
-    ``receipt`` is the named cause a failure rung carries and the empty
-    string for a compiled one — ``program.rung.counter_entry`` produces the
-    pair, so the label and the reason come off one decision rather than
-    being spelled twice at a call site.  An empty receipt records nothing:
-    a compiled evaluation has no cause to name, and a key for it would make
-    ``rung_receipts`` total the evaluations rather than the fallbacks.
-    """
+    ``receipt`` is the named cause a failure rung carries, empty for a
+    compiled one.  An empty receipt records nothing, so ``rung_receipts``
+    totals the fallbacks rather than the evaluations."""
     if sink is not None:
         sink.rungs[str(rung)] += 1
         if receipt:
