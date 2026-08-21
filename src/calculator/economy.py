@@ -15,7 +15,6 @@ from typing import Any, Iterable
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
 from .economics_data import sourced_combine_cost, sourced_sell_value, sourced_total
-from .loadout_rules import ITEM_TO_EXCLUSIVITY_GROUPS, inventory_capacity
 
 BASIC = "BASIC"
 EPIC = "EPIC"
@@ -446,10 +445,3 @@ def plan_incomplete_combine(plan: PurchasePlan) -> bool:
     """Recompute the incomplete_combine receipt for a priced plan's inventory."""
     inventory = collections.Counter(int(item["id"]) for item in plan.final_items)
     return bool(combine_candidates(inventory, _item_by_id()))
-
-
-def _find_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any]:
-    for item in items:
-        if item["name"] == name:
-            return item
-    raise LookupError(name)

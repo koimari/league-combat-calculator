@@ -1182,30 +1182,6 @@ class CleanseDecision:
             "use_consumed": self.use_consumed,
         }
 
-    def survival_receipt(
-        self,
-        *,
-        heal: dict[str, Any] | None = None,
-        movement: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """The recipient survival-row ``cleanse`` receipt (decision fields
-        plus the heal/movement entries, which stay SEPARATE effects with
-        their own atoms)."""
-        return {**self.public_receipt(), "heal": heal, "movement": movement}
-
-    def use_receipt(self) -> dict[str, Any]:
-        """The caster survival-row ``cleanse_use`` receipt."""
-        return {
-            "item": self.item,
-            "uses_before": 1,
-            "uses_after": 0 if self.use_consumed else 1,
-            "cooldown_seconds": self.declaration.get("cooldown_seconds"),
-            "cooldown_source_gap": bool(
-                self.declaration.get("cooldown_source_gap", False)
-            ),
-            "activations": 1,
-        }
-
 
 # ---------------------------------------------------------------------------
 # Score-path representation gate (contract-owned mirror)

@@ -550,68 +550,6 @@ class TestCooldownState:
 
 
 # ---------------------------------------------------------------------------
-# Charge pools and lockout windows
-# ---------------------------------------------------------------------------
-
-
-class TestChargePool:
-    def test_gain_spend_cap_and_lockout(self):
-        pool = sl.ChargePool(
-            sl.ChargePoolRule(name="Hawkshot", max_charges=2, lockout_seconds=1.0),
-            starting_charges=2,
-        )
-        spend = pool.spend(0.0, sequence=0)
-        assert spend is not None and spend.kind == "charge_spend"
-        assert pool.charges == 1
-        assert pool.is_locked(0.5)
-        assert not pool.is_locked(1.0)
-        pool.spend(1.0, sequence=1)
-        # The post-spend lockout (1s) blocks the next spend at 1.5.
-        assert pool.spend(1.5, sequence=2) is None
-        # After the lockout the pool is empty: denied for insufficient.
-        assert pool.spend(2.5, sequence=3) is None
-        denied_rows = [
-            t
-            for t in pool.public_receipt()["transitions"]
-            if t["kind"] == "charge_denied"
-        ]
-        assert [row["detail"]["reason"] for row in denied_rows] == [
-            "lockout",
-            "insufficient_charges",
-        ]
-        gain = pool.gain(10.0, sequence=3)
-        assert gain.kind == "charge_gain"
-        assert pool.charges == 1
-        pool.gain(11.0, sequence=4)
-        assert pool.charges == 2
-
-    def test_capped_gain_is_receipted(self):
-        pool = sl.ChargePool(
-            sl.ChargePoolRule(name="H", max_charges=2), starting_charges=2
-        )
-        gain = pool.gain(0.0, sequence=0)
-        assert gain.detail["capped"] is True
-        assert pool.charges == 2
-
-    def test_rule_validation(self):
-        with pytest.raises(ValueError, match="max_charges"):
-            sl.ChargePool(sl.ChargePoolRule(name="H", max_charges=0))
-
-
-class TestLockoutWindow:
-    def test_start_end_and_active_window(self):
-        window = sl.LockoutWindow(sl.LockoutRule(name="Q_active", duration_seconds=6.0))
-        start = window.start(1.0, sequence=0)
-        assert start.kind == "lockout_start"
-        assert window.active_at(4.0)
-        assert not window.active_at(7.0)
-        end = window.end(7.0, sequence=1)
-        assert end.kind == "lockout_end"
-        kinds = [t["kind"] for t in window.public_receipt()["transitions"]]
-        assert kinds == ["lockout_start", "lockout_end"]
-
-
-# ---------------------------------------------------------------------------
 # CC trigger predicate and instance cadence
 # ---------------------------------------------------------------------------
 

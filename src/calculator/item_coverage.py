@@ -1510,9 +1510,6 @@ def require_calculation_item_coverage(
 # the resolution tier asserts the two agree for every cached item, and no
 # ``src`` module reads the corpus at all.
 
-# The umbrella issue every unrouted review gap falls back to.
-_UMBRELLA_ISSUE = 40
-
 # The two H4 reasons stood here, one for each half of the ten tags no engine
 # dispatched on.  The stat-derivation migration gave the last three of them a
 # real dispatch, so the frontier holds no ``tag:`` claim at all and neither

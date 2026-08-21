@@ -807,14 +807,16 @@ def test_the_walk_venom_equals_the_registry_accessor_it_replaced(
 ) -> None:
     """Serpent's Fang: the barrier-state adjustment, on both range classes.
 
-    ``item_effects.serpents_fang_venom`` is what the walk read before this
-    family retired, and it returns the SURVIVING share.  So does the
-    interpreter, and that is the whole hazard the fixture guards: the
-    declaration carries the cut, the ledger multiplies by its complement, and
-    a subtraction on the wrong side is off by the entire effect.
+    The registry declares the CUT; the interpreter returns the SURVIVING
+    share.  That is the whole hazard the fixture guards: the declaration
+    carries the cut, the ledger multiplies by its complement, and a
+    subtraction on the wrong side is off by the entire effect.
     """
-    item = data_fetcher.get_item_by_name("Serpent's Fang")
-    before = item_effects.serpents_fang_venom([item], is_melee=holder_is_melee)
+    key = "shield_reduction_melee" if holder_is_melee else "shield_reduction_ranged"
+    before = (
+        1.0 - item_effects.required_effect_value("Serpent's Fang", key),
+        item_effects.sustain_effect_value("Serpent's Fang", "venom_duration"),
+    )
     after = damage_routing.walk_venom(
         ["Serpent's Fang"],
         level=13,
@@ -822,7 +824,7 @@ def test_the_walk_venom_equals_the_registry_accessor_it_replaced(
         target_bonus_health=0.0,
         holder_is_melee=holder_is_melee,
     )
-    assert before is not None and after is not None
+    assert after is not None
     assert (after.keep, after.duration) == before
     assert after.owner == "Serpent's Fang"
 

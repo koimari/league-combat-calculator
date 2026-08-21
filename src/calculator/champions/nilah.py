@@ -53,7 +53,6 @@ _Q_CRIT_MULTIPLIER_AT_MAX = 1.91
 # the excess is a live healing state, not a parse-time value.
 _NILAH_Q_HEAL_TO_SHIELD_MAX_RATIO = 0.20  # Q autos: 0% : 20% by crit
 _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO = 0.20  # R: 20% : 50% by crit
-_NILAH_R_HEAL_TO_SHIELD_MAX_RATIO = 0.50
 _NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 

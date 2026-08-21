@@ -37,7 +37,7 @@ from src.calculator.healing_reduction import (
     healing_reduction_profiles,
 )
 from src.calculator.survival import resolve_grievous
-from src.calculator.item_effects import serpents_fang_venom
+from src.calculator.interpreters.damage_routing import walk_venom
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
@@ -395,10 +395,21 @@ def test_champion_wounds_and_venom_compiled_walk_matches_legacy_walk():
 
 def test_serpents_fang_venom_typed_accessor():
     """The venom values come from the item-effects registry, not literals."""
-    item = get_item_by_name("Serpent's Fang")
-    assert serpents_fang_venom([item], is_melee=True) == (0.5, 3.0)
-    assert serpents_fang_venom([item], is_melee=False) == (0.65, 3.0)
-    assert serpents_fang_venom([], is_melee=True) is None
+
+    def venom(owners, *, is_melee):
+        return walk_venom(
+            owners,
+            level=13,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        )
+
+    melee = venom(["Serpent's Fang"], is_melee=True)
+    ranged = venom(["Serpent's Fang"], is_melee=False)
+    assert (melee.keep, melee.duration) == (0.5, 3.0)
+    assert (ranged.keep, ranged.duration) == (0.65, 3.0)
+    assert venom([], is_melee=True) is None
 
 
 def test_serpents_fang_venom_cuts_shield_at_grant_time_melee():

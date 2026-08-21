@@ -12,7 +12,6 @@ from typing import Any, Callable, Mapping
 from ..ability_spec import Disposition
 from ..rune_effects import (
     cached_effects,
-    RUNE_EFFECTS,
     RuneEffect,
     ULTIMATE_SLOT,
     RuneAmpContext,
