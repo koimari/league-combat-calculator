@@ -897,6 +897,73 @@
           "resource_type": "MANA",
           "total_raw": 220.0
         },
+        "R": {
+          "cast_time": 0.25,
+          "cooldown": 100.0,
+          "damage_type": "magic",
+          "detail": "Unbreakable Will reduces incoming physical/magic damage by 65% for 7s (true damage is not reduced).",
+          "name": "Unbreakable Will",
+          "parts": [],
+          "rank": 2,
+          "resource_cost": 100.0,
+          "resource_type": "MANA",
+          "self_state_events": [
+            {
+              "_rank": 2,
+              "all_sources": true,
+              "attack_classes": [
+                "<AttackClass.ABILITY: 'ability'>",
+                "<AttackClass.BASIC_ATTACK: 'basic_attack'>",
+                "<AttackClass.OTHER: 'other'>"
+              ],
+              "damage_classes": [
+                "<DamageClass.MAGIC: 'magic'>",
+                "<DamageClass.PHYSICAL: 'physical'>"
+              ],
+              "duration": 7.0,
+              "kind": "damage_modifier",
+              "multiplier": 0.35,
+              "source": "Unbreakable Will \u00b7 damage reduction",
+              "source_atoms": [
+                {
+                  "atom_id": "ability.damage _reduction",
+                  "behavior": "ability",
+                  "evidence": [
+                    "Damage Reduction@effects[0]"
+                  ],
+                  "hash": "3fc93d3724ce4e51",
+                  "source": "Alistar.R[0].effects[0].leveling[0].modifiers[0]",
+                  "units": [
+                    "%",
+                    "%",
+                    "%"
+                  ],
+                  "values": [
+                    55.0,
+                    65.0,
+                    75.0
+                  ]
+                },
+                {
+                  "atom_id": "timing.active_duration",
+                  "behavior": "timing",
+                  "evidence": [
+                    "active duration@effects[0].description"
+                  ],
+                  "hash": "593df8854bd0832d",
+                  "source": "Alistar.R[0].effects[0].description",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    7.0
+                  ]
+                }
+              ]
+            }
+          ],
+          "total_raw": 0.0
+        },
         "W": {
           "cooldown": 12.0,
           "damage_type": "magic",
@@ -51135,18 +51202,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58453,
-      "numeric_leaves": 44829,
+      "leaves": 58507,
+      "numeric_leaves": 44857,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "87d1f4fe76457596cba1ebd862302af235db3b67",
+    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
+    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -51931,6 +51998,7 @@
           "breakdown_totals": {
             "E": 447.52,
             "Q": 458.88,
+            "R": 0.0,
             "W": 485.6,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36,
@@ -51942,6 +52010,7 @@
           "breakdown_totals": {
             "E": 178.57,
             "Q": 157.14,
+            "R": 0.0,
             "W": 117.86,
             "auto_attacks": 0.0
           },
@@ -51951,6 +52020,7 @@
           "breakdown_totals": {
             "E": 178.57,
             "Q": 157.14,
+            "R": 0.0,
             "W": 117.86,
             "auto_attacks": 0.0
           },
@@ -51960,6 +52030,7 @@
           "breakdown_totals": {
             "E": 178.57,
             "Q": 157.14,
+            "R": 0.0,
             "W": 117.86,
             "auto_attacks": 0.0
           },
@@ -51970,6 +52041,7 @@
             "breakdown_totals": {
               "E": 447.52,
               "Q": 458.88,
+              "R": 0.0,
               "W": 485.6,
               "auto_attacks": 190.0,
               "proc_Luden's Echo": 155.36,
@@ -51981,6 +52053,7 @@
             "breakdown_totals": {
               "E": 178.57,
               "Q": 157.14,
+              "R": 0.0,
               "W": 117.86,
               "auto_attacks": 190.0
             },
@@ -51990,6 +52063,7 @@
             "breakdown_totals": {
               "E": 178.57,
               "Q": 157.14,
+              "R": 0.0,
               "W": 117.86,
               "auto_attacks": 1100.0,
               "on_hit_Kraken Slayer": 132.69
@@ -52000,6 +52074,7 @@
             "breakdown_totals": {
               "E": 178.57,
               "Q": 157.14,
+              "R": 0.0,
               "W": 117.86,
               "auto_attacks": 909.83,
               "spellblade_Trinity Force": 253.33
@@ -52013,6 +52088,7 @@
           "breakdown_totals": {
             "E": 627.52,
             "Q": 458.88,
+            "R": 0.0,
             "W": 573.6,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36,
@@ -52024,6 +52100,7 @@
           "breakdown_totals": {
             "E": 339.29,
             "Q": 157.14,
+            "R": 0.0,
             "W": 196.43,
             "auto_attacks": 0.0
           },
@@ -52033,6 +52110,7 @@
           "breakdown_totals": {
             "E": 339.29,
             "Q": 157.14,
+            "R": 0.0,
             "W": 196.43,
             "auto_attacks": 0.0
           },
@@ -52042,6 +52120,7 @@
           "breakdown_totals": {
             "E": 339.29,
             "Q": 157.14,
+            "R": 0.0,
             "W": 196.43,
             "auto_attacks": 0.0
           },
@@ -52052,6 +52131,7 @@
             "breakdown_totals": {
               "E": 627.52,
               "Q": 458.88,
+              "R": 0.0,
               "W": 573.6,
               "auto_attacks": 336.0,
               "proc_Luden's Echo": 155.36,
@@ -52063,6 +52143,7 @@
             "breakdown_totals": {
               "E": 339.29,
               "Q": 157.14,
+              "R": 0.0,
               "W": 196.43,
               "auto_attacks": 336.0
             },
@@ -52072,6 +52153,7 @@
             "breakdown_totals": {
               "E": 339.29,
               "Q": 157.14,
+              "R": 0.0,
               "W": 196.43,
               "auto_attacks": 1545.5,
               "on_hit_Kraken Slayer": 164.24
@@ -52082,6 +52164,7 @@
             "breakdown_totals": {
               "E": 339.29,
               "Q": 157.14,
+              "R": 0.0,
               "W": 196.43,
               "auto_attacks": 1256.1,
               "spellblade_Trinity Force": 336.0

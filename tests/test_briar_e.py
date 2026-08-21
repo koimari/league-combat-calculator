@@ -1171,7 +1171,14 @@ class TestDeterministicReceipts:
         one, two = modifiers(first), modifiers(second)
         assert len(one) == len(two) == 1  # exactly one packet, no duplicate
         assert one == two  # byte-identical receipts across identical fights
-        assert one[0]["event_id"] == "self_state:E:0:0"
+        # The published id names its owner.  The champion module authors
+        # ``self_state:E:0:0`` out of what Briar knows -- slot, cast
+        # ordinal, packet ordinal -- which is the same spelling for every
+        # actor holding the mechanic; the roster fold that first knows
+        # WHICH actor cast it prefixes the participant id, so a roster
+        # holding one champion twice publishes two distinct ids instead of
+        # one id twice.  Briar is the enemy here, hence ``enemy:Briar:``.
+        assert one[0]["event_id"] == "enemy:Briar:self_state:E:0:0"
         # The ordering float is transport between the author and the walk;
         # the published receipt serializes an explicit key list and never
         # sees it (``survival.actions.SUPPORT_RANK_KEY``).

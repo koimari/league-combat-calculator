@@ -1338,6 +1338,23 @@ def _aery_support_templates(
     return templates
 
 
+def _owned_state_event_id(
+    participant_id: str, effect: Mapping[str, Any], state_index: int
+) -> str:
+    """Re-key a self-state packet's id to its owner, once, at the fold.
+
+    Modules and keystones author champion-local ids (``self_state:R:0:0``),
+    so two actors holding one mechanic collide on a panel and cross-link as
+    walk join keys; an id already naming this actor is left verbatim.
+    """
+    authored = effect.get("_event_id")
+    if authored is None:
+        return f"{participant_id}:state:{state_index}"
+    text = str(authored)
+    prefix = f"{participant_id}:"
+    return text if text.startswith(prefix) else f"{prefix}{text}"
+
+
 def _support_effect_templates(
     attacker: Combatant,
     result: Mapping[str, Any],
@@ -1389,11 +1406,8 @@ def _support_effect_templates(
                 "target": attacker.participant_id,
                 "target_scope": "self",
                 "target_policy": "self",
-                "_event_id": str(
-                    effect.get(
-                        "_event_id",
-                        f"{attacker.participant_id}:state:{state_index}",
-                    )
+                "_event_id": _owned_state_event_id(
+                    attacker.participant_id, effect, state_index
                 ),
             }
         )
