@@ -177,9 +177,8 @@ from .program.views import survival as _survival_view
 from .program.walk import AttackerOutcome, ObjectiveFold, walk as _walk
 from .work_counters import WorkCounterSink, record_rung
 
-# Issue #137: the survival kernel lives in ``src/calculator/survival``; the
-# underscored name below is kept as an alias so the public surface of this
-# module (and existing tests importing it here) stays stable.
+# The survival kernel's compiler, aliased here because importers reach it
+# through this module.
 _WalkCompiler = WalkCompiler
 
 # The receipt an already-poisoned search context raises with.  A later
@@ -207,13 +206,8 @@ def _pair_run_fight(
 ) -> dict[str, Any]:
     """Run one composed pair fight, counted on the search's work counters.
 
-    Every ``run_fight`` call this module makes is a *pair* fight — one
-    attacker into one defender — and the campaign's residual instrument
-    (runbook R-25) is defined over their count.  Routing all of them through
-    one wrapper is what keeps that count a property of this module rather
-    than of whoever remembered to increment a counter beside their call, and
-    is also the one place that can tell the engine its result is about to be
-    composed (``FightConfig.roster_composed``).
+    One wrapper keeps the pair-fight count a property of this module, and
+    is the one place that tells the engine its result will be composed.
     """
     if work_counters is not None:
         work_counters.pair_run_fight_calls += 1
@@ -238,12 +232,8 @@ _RESOURCE_RESTORES = "resource_restores"
 def _cross_pass_dependency(slot: SustainSlot) -> CrossPassDependency:
     """The two-pass declaration one mana-spent heal carries.
 
-    Built from the slot rather than named by item, because "which item is
-    the mana-spent heal" is a question ``item_behavior`` already answers and
-    a second spelling here would be the item-name list rule 6 exists to
-    remove.  ``slot`` is never ``None`` at the two call sites: a build
-    declaring no such rule produces an empty, complete restore ledger, so
-    neither the request nor the refusal below is reachable without one.
+    Built from the slot rather than named by item: which item is the
+    mana-spent heal is a question ``item_behavior`` already answers.
     """
     return CrossPassDependency(
         mechanic=MechanicId(slot.rule.mechanic_id),
@@ -259,11 +249,8 @@ def _cross_pass_dependencies(
 ) -> tuple[CrossPassDependency, ...]:
     """Every cross-pass dependency this roster's builds declare.
 
-    The pass budget is sized from the declarations and never from what a
-    pass asks for, so this is the list that decides whether a second pass
-    exists at all.  A roster holding no mana-spent heal declares nothing and
-    gets one pass — which is every roster in the four bench scenarios, and
-    the reason de-recursing costs them zero.
+    The pass budget is sized from these declarations and never from what a
+    pass asks for, so this list decides whether a second pass exists.
     """
     builds = [items, *(loadout.item_data for loadout in (*enemies, *allies))]
     slots = [
@@ -283,40 +270,12 @@ def _compiled_lane_is_open(
 ) -> bool:
     """Whether this pass may be priced by the compiled panel walk.
 
-    Seven clauses, grouped below into the five reasons they encode and
-    gathered here so those reasons read as a list rather than as a comment
-    stack inside a condition.
-
-    * ``patch is None`` — a pass carrying a cross-pass patch is a second
-      pricing of a fight the first pass already walked, and the compiled
-      score kernel stages no external resource ledger: ``ManaSpentHealRule``
-      declares ``ReceiptOnly`` and S8 does not flip it, because a flip is
-      owed a pass-2-compiled-equals-pass-2-receipt proof and no such fixture
-      exists (Phase 4 criterion 13).  A patched pass therefore takes the
-      receipt walk **by declaration**.  The recursive repass reached the
-      same answer by handing itself a null search context, which also put
-      its pair fights outside the work counters — a measurement hole rather
-      than a rule.
-    * A search context, with the compiled walk enabled, is what holds the
-      presorted invariant actions the lane replays.
-    * ``include_receipt`` — the compiled lane produces the scoring subset;
-      a request that displays a timeline needs the receipt walk.
-    * A pair cache and a non-empty enemy roster are what the panels are
-      built over.
-    * ``params.enemies_attack`` — the Enemy Hits constraint is enforced by
-      the receipt walk's composition gates; rather than teach the compiled
-      panels a second copy of that rule, flag-off scoring takes the receipt
-      walk.
-
-    Issue #137: the dispatch no longer names items and no longer scans
-    defense objects — the kernel is one implementation, so a defense-armed
-    mechanic (threshold lifelines, reactive shields, stasis, FoN/Jak'Sho
-    stacks, deferral/Defy, ...) rides the compiled walk exactly like the
-    receipt walk.  Grievous Wounds builds ride it too (issue #169): the
-    panel compiles the candidate's and the roster's packs from the same
-    ``resolve_grievous`` the receipt walk resolves per event.  Every
-    unrepresentable mechanic fails closed INSIDE the compiler, which raises
-    ``UncompilableActionError`` and falls back to the walk.
+    Seven clauses for five reasons: a cross-pass patch needs a resource
+    ledger the compiled kernel does not stage; the search context holds the
+    presorted invariant actions the lane replays; a displayed timeline needs
+    the receipt walk; the panels are built over a pair cache and a non-empty
+    enemy roster; Enemy Hits is enforced by the receipt walk's gates.  What
+    the compiler cannot represent falls back to the walk.
     """
     return bool(
         patch is None
@@ -335,22 +294,7 @@ def _pair_cache_key(
     defensive: tuple[Any, ...],
     restores: tuple[tuple[float, float], ...],
 ) -> tuple[Any, ...]:
-    """The identity of one cached pair packet — every input that priced it.
-
-    A cached packet is replayed for any later evaluation whose key matches,
-    so the key has to carry everything that could have priced it
-    differently.  The defender's defensive signature is one such input.  The
-    attacker's **external resource ledger** is the other, and it is the one
-    a cross-pass dependency changes between passes: pass 2 prices the
-    attacker's fight with the restores pass 1 derived, so without the ledger
-    in the key it would be served pass 1's restore-free packet and Catalyst's
-    Eternity heals would silently disappear into a cache hit.
-
-    That is why the recursive repass gives itself a fresh cache today.
-    Carrying the ledger here is what lets the two passes share one — and
-    sharing it is what makes "caches stay live across passes" a property of
-    the code rather than a sentence beside it.
-    """
+    """Every input that priced one cached pair packet, restores included."""
     return (attacker_id, defender_id, defensive, restores)
 
 
@@ -414,13 +358,10 @@ def _live_amps_of(
 ) -> tuple[LiveAmpRider, ...]:
     """The live-predicate amplifiers *attacker*'s build declares, resolved.
 
-    One reader of :func:`~.program.amp.live_amp_riders`, so every
-    composition site resolves them from the same three inputs: the
-    attacker's own owners and level, and the defender's bonus health, which
-    is the pool a magnitude may be declared per hundred of.  The defender is
-    an argument for exactly that reason — the rider is a fact about one
-    pair, not about the attacker alone, and a call site that could not see
-    the target would have to guess a value for it.
+    One reader of :func:`~.program.amp.live_amp_riders`, so every site
+    resolves them from the same inputs: the attacker's owners and level, and
+    the defender's bonus health.  The rider is a fact about one pair, which
+    is why the defender is an argument.
     """
     return live_amp_riders(
         [str(item.get("name", "")) for item in attacker.items],
@@ -500,7 +441,7 @@ def _warmog_heart_tick_events(
     declared, sourced number and is intentionally not guessed for an
     unqualified loadout.  Both walks author through this one function: the
     receipt composition schedules the events per call, and the compiled base
-    panel converts them into typed actions once per search (issue #169).
+    panel converts them into typed actions once per search.
 
     Read through the declaration rather than by item name, so the shape is
     what decides — a second item growing a threshold regeneration is
@@ -611,12 +552,11 @@ def _support_target_ids(
     choice was observed.
     """
     target_scope = effect.get("target_scope")
-    # Issue #142: fail closed BEFORE any team/roster branching.  Every
-    # unrecognized / missing / structurally invalid scope used to land in the
-    # terminal catch-all and silently redirect the packet to teammate zero
-    # (or drop it entirely for an enemy attacker) — contradicting the
-    # published ``fail_closed: True`` contract.  Main, ally, and enemy actors
-    # must fail identically, so this check runs before the no-teammate block.
+    # Fail closed BEFORE any team/roster branching.  An unrecognized,
+    # missing or structurally invalid scope raises rather than redirecting
+    # the packet, which is the published ``fail_closed: True`` contract.
+    # Main, ally and enemy actors must fail identically, so this check runs
+    # before the no-teammate block.
     if target_scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
         raise ValueError(
             "Unsupported support target_scope "
@@ -673,10 +613,9 @@ def _support_target_ids(
     if target_scope == "all_teammates":
         return [actor.participant_id for actor in teammates], "all_selected_teammates"
     if target_scope == "one_teammate":
-        # The one-teammate scope (Karma E, Orianna E, Yuumi E, Lulu E — the
-        # self-or-target default) used to be resolved ONLY by the terminal
-        # catch-all.  It is now an explicit branch, so the terminal default
-        # can be an unreachable exhaustiveness guard.
+        # The one-teammate scope (Karma E, Orianna E, Yuumi E, Lulu E, the
+        # self-or-target default) is an explicit branch, which is what lets
+        # the terminal default be an unreachable exhaustiveness guard.
         selected_index, selected_explicit = _support_selection(attacker, effect)
         if not selected_explicit:
             return [teammates[0].participant_id], "first_selected_teammate"
@@ -927,10 +866,8 @@ def _immobilizing_controls(
 def _sequence_reading_order(event: Mapping[str, Any]) -> tuple[float, int, str]:
     """One reading order for rows no rank applies to.
 
-    Time, then the engine's own per-fight sequence, then the event id.  NOT a
-    transition sort key — ``action_key`` is that, and its element 1 is a
-    :class:`TransitionRank` — which is why this is a named function: the two
-    orders answer different questions and must not be read as one.
+    Time, then sequence, then event id.  NOT a transition sort key:
+    ``action_key`` is that, and the two answer different questions.
     """
     return (
         float(event.get("time", 0.0) or 0.0),
@@ -1421,11 +1358,9 @@ def _support_effect_templates(
     ``pair_defender_id`` is required and has no default: it names the pair
     fight ``result`` was priced in, which every caller already knows, and the
     heal fan-out below needs it to rebuild the pair-enriched id of the
-    attacker's applied self-heal copy.  It used to be re-derived here by
-    scanning the roster for the first enemy — a second derivation of a fact
-    the caller was holding, that nothing forced to agree with it.  ``None``
-    is the honest answer for an actor with no opponents and is why the
-    annotation is optional while the argument is not.
+    attacker's applied self-heal copy.  ``None`` is the honest answer for an
+    actor with no opponents, which is why the annotation is optional while
+    the argument is not.
     """
     if attacker.team == "ally" and not attacker.request.ally_effects_enabled:
         return []
@@ -1492,16 +1427,16 @@ def _support_effect_templates(
                     denial_receipts.append(resolved_template)
                 continue
             templates.append(resolved_template)
-    # Issue #143: fan out champion-owned heal events (authored by the E1
-    # self-heal rule for slots in ``_MODULE_AUTHORED_HEAL_SLOTS`` — Taric Q
-    # today) to the attacker's selected teammates.  The self copy stays in
-    # the attacker's healing ledger at its original event id; each ally copy
-    # is one support heal template with the same time/amount/source/kind,
+    # Fan out champion-owned heal events (authored by the E1 self-heal rule
+    # for slots in ``_MODULE_AUTHORED_HEAL_SLOTS``, Taric Q today) to the
+    # attacker's selected teammates.  The self copy stays in the attacker's
+    # healing ledger at its original event id; each ally copy is one support
+    # heal template with the same time/amount/source/kind,
     # ``_event_id = f"{self_id}:ally:{i}"`` and ``_source_event_id`` = the
     # self copy's id, so the receipt can prove one formula priced every
     # recipient.  The clones are added BEFORE item support effects so item
     # passives that trigger off ally heals/shields (Moonstone Renewer) see
-    # them, exactly like the scanner packets they replace.
+    # them.
     applied_pair_defender = _routed_pair_defender_id(pair_defender_id, all_actors)
     for heal_index, heal_event in enumerate(result.get("self_healing_events", [])):
         if not isinstance(heal_event, Mapping):
@@ -1870,15 +1805,12 @@ def _roster_actors(loadouts: Sequence[ResolvedLoadout], team: str) -> list[Comba
 
     The id rule lives here and nowhere else, because it is load-bearing
     rather than cosmetic: ``index_of`` maps participant id to walk slot, so
-    two actors sharing an id share a slot.  A roster holding two Aatrox
-    enemies used to map both to the last one, and every packet aimed at
-    either landed on that slot -- the first Aatrox took no damage at all,
-    and the outcome ledger reported the second applied twice.
+    two actors sharing an id would share a slot, and every packet aimed at
+    either would land on one of them.
 
-    A champion appearing once keeps ``team:Name``, which is the id every
-    golden, receipt and UI selector already holds.  Only a repeat is
-    suffixed, counting from 2 in roster order, so the fix is invisible to
-    every roster that never had the collision.
+    A champion appearing once keeps ``team:Name``, the id every golden,
+    receipt and UI selector holds.  Only a repeat is suffixed, counting from
+    2 in roster order.
     """
     seen: dict[str, int] = {}
     actors: list[Combatant] = []
@@ -1962,8 +1894,8 @@ def _utility_outcome_receipt(
     ]
     # A damage modifier is an outcome whether or not it applied an amount:
     # the window it opened is the fact.  ``ratio_seconds`` prices only the
-    # ones carrying a positive share, which keeps the legacy semantics of
-    # that number while the event count stays honest about the windows.
+    # ones carrying a positive share, while the event count stays honest
+    # about the windows.
     damage_modifiers = [
         event for event in authored if event.get("kind") == "damage_modifier"
     ]
@@ -2167,17 +2099,12 @@ def _utility_outcome_receipt(
 def _annotate_overheal(healing_events: Iterable[MutableMapping[str, Any]]) -> None:
     """Give every published recovery row the overheal figure it publishes.
 
-    The walk's own annotator writes ``overheal`` for a recovery it applied --
-    the excess that neither temporary health, Ichorshield nor an overheal
-    shield absorbed.  A recovery the walk *skipped* never reaches that line,
-    and its published overheal is a different quantity: everything the heal
-    would have restored and did not.
-
-    Both are the composition's answer, and this is where the second one is
-    given.  The receipt view read the field with the second expression
-    spelled inline as a default, which made a published number have two
-    producers -- a projection quietly computing what the walk had not.  The
-    number is unchanged; what moves is who says it.
+    The walk's annotator writes ``overheal`` for a recovery it applied: the
+    excess that neither temporary health, Ichorshield nor an overheal shield
+    absorbed.  A recovery the walk *skipped* never reaches that line, and
+    its published overheal is a different quantity, everything the heal
+    would have restored and did not.  Both are the composition's answer, and
+    this is the one producer of the second, so no projection computes it.
     """
     for event in healing_events:
         if event.get("overheal") is not None:
@@ -2806,12 +2733,9 @@ def _routing_build(
 ) -> tuple[list[str], dict[str, Any]]:
     """One participant's item names and the build facts a routing rule reads.
 
-    The three fight facts a :class:`~.item_behavior.BuildContext` requires are
-    keyword-only and defaultless on purpose, so this assembles them once for
-    the three walk-lane resolvers rather than three times.  ``target_bonus_health``
-    is 0.0 because no ``damage_routing`` declaration reads it — a routing rule
-    moves a packet rather than scaling one — and the resolvers are the only
-    callers, so this is a fact about the family rather than a defaulted zero.
+    ``BuildContext``'s fight facts are keyword-only and defaultless, so this
+    assembles them once for the three walk-lane resolvers.  A routing rule
+    moves a packet rather than scaling one, so ``target_bonus_health`` is 0.
     """
     return [str(item.get("name", "")) for item in combatant.items], {
         "level": int(combatant.stats.get("level", 1) or 1),
@@ -2822,12 +2746,7 @@ def _routing_build(
 
 
 def _venom_profile(combatant: Combatant, duration: float) -> tuple[float, float] | None:
-    """The ``(keep, duration)`` pair the kernel's shield ledger reads.
-
-    ``keep`` is the surviving share of a granted shield and the interpreter
-    is what turns the declared cut into it, so no caller here does the
-    subtraction and the two spellings cannot swap.
-    """
+    """The ``(keep, duration)`` pair the kernel's shield ledger reads."""
     owners, facts = _routing_build(combatant, duration)
     venom = _walk_venom(owners, **facts)
     return None if venom is None else (venom.keep, venom.duration)
@@ -2880,11 +2799,8 @@ def _simulate_survival(
     # holds the item wounds every target it damages for ``venom_duration``
     # seconds, cutting shields that target gains.  ``None`` fails closed.
     #
-    # Read from the declaration through this family's own walk interpreter
-    # since ``damage_routing`` retired (umbrella Amendment P): it used to
-    # come from the name-keyed effects registry, which is not an interpreter
-    # of this family in any lane, so the walk's barrier-state adjustment had
-    # no declared producer at all.
+    # Read from the declaration through this family's own walk interpreter,
+    # so the walk's barrier-state adjustment has one declared producer.
     venom_profiles = {
         participant_id: _venom_profile(combatant, duration)
         for participant_id, combatant in combatant_by_id.items()
@@ -2950,8 +2866,7 @@ def _simulate_survival(
     # the holders once keeps the per-event loop below to plain marker checks.
     #
     # The rider is read from the declaration through this family's own walk
-    # interpreter since ``damage_routing`` retired (umbrella Amendment P).
-    # The resolver still builds the same schedule and still publishes it as
+    # interpreter.  The resolver builds the same schedule and publishes it as
     # the holder's opening defensive state, which is the block a receipt
     # reader sees; this is the rider on the events the walk stages, a
     # different consumer of one declaration rather than a second producer of
@@ -2970,14 +2885,11 @@ def _simulate_survival(
                 "damage no declaration priced"
             )
         deferral_riders[participant_id] = rider
-    # The Execute rider, read from the attacker's own declaration through this
-    # family's walk interpreter since ``damage_routing`` retired (umbrella
-    # Amendment P).  It used to arrive stamped on the pair engine's own events
-    # by ``damage.py``, which is the shape Amendment K's property is about: the
-    # walk consumed a number the other engine had already decided.  Resolved
-    # once per attacker, then written onto every packet that attacker authored
-    # -- and *removed* from packets whose attacker declares none, so the stamp
-    # the pair engine leaves behind can no longer decide a roster execution.
+    # The Execute rider, read from the attacker's own declaration through
+    # this family's walk interpreter.  Resolved once per attacker, then
+    # written onto every packet that attacker authored -- and *removed* from
+    # packets whose attacker declares none, so a stamp the pair engine leaves
+    # behind cannot decide a roster execution.
     #
     # This rider owns the ITEM execute only.  An ability execute belongs to
     # the cast that authored it -- a champion module states it on its own
@@ -3443,9 +3355,7 @@ def _simulate_survival(
     # timestamp, while shields remain before damage above. Reactive
     # strike-back damage (Thorns) resolves after the strikes that
     # triggered it but still before same-timestamp healing.  Every event
-    # converts here, once: the packet-side typed-action map that used to
-    # pre-convert a cached packet's rows was keyed on ``id(template)`` and
-    # is gone with the rest of Phase 4's deletion frontier.
+    # converts here, once.
     for participant_id, events in incoming.items():
         subject = index_of[participant_id]
         for event in events:
@@ -3525,13 +3435,13 @@ def _simulate_survival(
         ],
         redirect_children=redirect_children_actions,
     )
-    # Issue #137: one kernel, two adapters.  This walk is the receipt
-    # adapter (annotating events, scheduling walk-authored recovery); the
-    # optimizer score path drives the identical kernel through
-    # ``ScoreLedger`` with no annotations and parallel-array accumulation.
-    # Both now enter through ``program.walk.walk`` -- one call site in
-    # ``src/``, so "one walk per pass" is a number a counter reads rather
-    # than two composition bodies agreeing by hand (criterion 1).
+    # One kernel, two adapters.  This walk is the receipt adapter
+    # (annotating events, scheduling walk-authored recovery); the optimizer
+    # score path drives the identical kernel through ``ScoreLedger`` with no
+    # annotations and parallel-array accumulation.  Both enter through
+    # ``program.walk.walk``, the one call site in ``src/``, so one walk per
+    # pass is a number a counter reads rather than two composition bodies
+    # agreeing by hand.
     return _walk(actions, ctx, counters=work_counters)
 
 
@@ -3575,9 +3485,9 @@ class CoupledSearchContext:
         # The main champion's wound-declaring sources are champion-fixed;
         # derived once per search instead of once per evaluation.
         "main_champion_wounds",
-        # Issue #137: set when search-invariant compilation (roster pairs or
-        # a signature panel) hit an unrepresentable transition; the compiled
-        # path is then skipped for the rest of the search.
+        # Set when search-invariant compilation (roster pairs or a signature
+        # panel) hit an unrepresentable transition; the compiled path is then
+        # skipped for the rest of the search.
         "uncompilable",
         # The benchmark harness's counter sink, and its switch for forcing
         # every evaluation onto the receipt walk (runbook R-24, R-01 row 11).
@@ -3645,9 +3555,7 @@ class _SignaturePanel:  # pylint: disable=too-few-public-methods
 def _champion_wounds_of(champion_data: Mapping[str, Any]) -> dict[str, Any]:
     """One champion's wound-declaring sources, keyed by the source they ride.
 
-    A champion-applied Grievous Wounds hit (Katarina R, Varus E) rides its
-    damage event as the same wound receipt an item or a thorns strike
-    carries; the compiler joins the two by source key.
+    Katarina R and Varus E ride the wound receipt an item's wound carries.
     """
     return {
         str(packet.get("source_key", "")): packet
@@ -3702,13 +3610,12 @@ def _context_setup(
     if not context.validated_roster_window:
         require_roster_fight_window_support(params, enemies=enemies, allies=allies)
         context.validated_roster_window = True
-    # Issue #137: the roster is search-invariant, so a loadout the compiled
-    # kernel cannot represent poisons the whole context.  Checked BEFORE any
-    # pair fight runs so the fallback costs nothing beyond the capability
-    # scan.  (Defense fields are already excluded by the dispatch
-    # pre-check; this covers walk-authored item mechanics.)  Warmog's Heart
-    # is exempt: the roster holder's ticks compile into the base panel
-    # below (issue #169).
+    # The roster is search-invariant, so a loadout the compiled kernel
+    # cannot represent poisons the whole context.  Checked BEFORE any pair
+    # fight runs so the fallback costs nothing beyond the capability scan.
+    # (Defense fields are already excluded by the dispatch pre-check; this
+    # covers walk-authored item mechanics.)  Warmog's Heart is exempt: the
+    # roster holder's ticks compile into the base panel below.
     for loadout in (*enemies, *allies):
         if loadout.is_practice_dummy:
             continue
@@ -3749,12 +3656,12 @@ def _context_setup(
         ),
     )
     context.actor_params["main"] = main_params
-    # Every pair fight carries its legacy roster-target allocation: the
-    # ordered defender lists are [*enemies] for main/ally attackers and
+    # Every pair fight carries its roster-target allocation: the ordered
+    # defender lists are [*enemies] for main/ally attackers and
     # [main, *allies] for enemy attackers, exactly like the receipt
-    # composition's attack groups.  Secondary-target item branches
-    # (cleaves, actives) price against these fields, and both paths share
-    # one pair cache, so the params must be identical (issue #169).
+    # composition's attack groups.  Secondary-target item branches (cleaves,
+    # actives) price against these fields, and both paths share one pair
+    # cache, so the params must be identical.
     for defender_index, defender in enumerate(enemy_actors):
         pair_params = replace(
             main_params,
@@ -3807,9 +3714,10 @@ def _context_setup(
     ] + [
         (attacker, defender) for attacker in enemy_attackers for defender in ally_actors
     ]
-    # Roster position mirrors the legacy attack groups: enemies are indexed
-    # from 0 for allied attackers, while an enemy attacker's ordered
-    # defenders are [main, *allies], so the first ally sits at index 1.
+    # Roster position mirrors the receipt composition's attack groups:
+    # enemies are indexed from 0 for allied attackers, while an enemy
+    # attacker's ordered defenders are [main, *allies], so the first ally
+    # sits at index 1.
     enemy_index = {
         defender.participant_id: index for index, defender in enumerate(enemy_actors)
     }
@@ -3860,10 +3768,10 @@ def _context_setup(
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
             # An enemy attacker's ordered pair list is [main, *allies], so
-            # the legacy dedup always keeps its main-pair copy — which
-            # lives in the signature panel, not here.  Skip the ally-pair
-            # copies; the engine may price them differently per defender
-            # (issue #169, Dr. Mundo's Maximum Dosage).
+            # the dedup always keeps its main-pair copy, which lives in the
+            # signature panel, not here.  Skip the ally-pair copies; the
+            # engine may price them differently per defender (Dr. Mundo's
+            # Maximum Dosage).
             suppress_actor_wide_heals=attacker.team == "enemy",
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
@@ -3950,10 +3858,10 @@ def _build_signature_panel(
     """Compile every roster pair fight for one main defensive signature.
 
     Pair packets come from (or land in) the shared ``pair_result_cache``
-    with the same keys the legacy path uses, so both paths interoperate.
-    Compilation order mirrors the legacy attack-group order with the main
-    attacker's fresh pairs skipped: allies into enemies, then enemies into
-    the main and allies.
+    under the same keys the receipt composition uses, so the two interoperate.
+    Compilation order mirrors the attack-group order with the main attacker's
+    fresh pairs skipped: allies into enemies, then enemies into the main and
+    allies.
     """
     duration = params.fight_duration_seconds
     base = context.base_compiler
@@ -3982,8 +3890,8 @@ def _build_signature_panel(
                     replace(
                         context.actor_params[attacker.participant_id],
                         enforce_resource_limits=True,
-                        # The legacy attack group's ordered defenders for an
-                        # enemy attacker are [main, *allies] (issue #169).
+                        # An enemy attacker's ordered defenders are
+                        # [main, *allies].
                         roster_target_index=0,
                         roster_target_count=1 + ally_count,
                         **_target_overrides(main),
@@ -3998,11 +3906,11 @@ def _build_signature_panel(
             )
             pair_result_cache[cache_key] = view
         attacker_i = context.index_of[attacker.participant_id]
-        # This main-pair fight carries the attacker's legacy-kept actor-wide
-        # heal copies (the ally-pair copies were suppressed in the base
-        # panel).  The dedup map is a per-signature copy: a sig build may
-        # never grow the shared base sets, or a key recorded by one
-        # signature would silently drop another signature's only copy.
+        # This main-pair fight carries the attacker's kept actor-wide heal
+        # copies; the ally-pair copies are suppressed in the base panel.  The
+        # dedup map is a per-signature copy: a sig build may never grow the
+        # shared base sets, or a key recorded by one signature would silently
+        # drop another signature's only copy.
         sig.add_engine_result(
             view.engine,
             attacker.participant_id,
@@ -4068,9 +3976,9 @@ def _score_with_search_context(
     total — while compiling only the main champion's fresh outgoing
     fights.
     """
-    # Issue #137: a search-invariant compilation failure (roster pair or
-    # signature panel) poisons the context; every later evaluation raises
-    # immediately instead of re-attempting the compiled path.
+    # A search-invariant compilation failure (roster pair or signature
+    # panel) poisons the context; every later evaluation raises immediately
+    # instead of re-attempting the compiled path.
     if context.uncompilable:
         raise UncompilableActionError(
             receipt=_CONTEXT_POISONED_RECEIPT,
@@ -4166,11 +4074,9 @@ def _score_with_search_context(
     reusable_stats = main.stats if reuse_main_stats else None
     heal_dedup: dict[tuple[str, float], float] = {}
     first_result = None
-    # The defender ``first_result`` was priced against, captured beside it in
-    # the loop that produces it.  The score path used to re-read it as
-    # ``context.main_pair_params[0][0]`` — a second index into the same list,
-    # in a branch a hundred lines away from the loop, which nothing forced to
-    # stay pointing at the pair the result actually came from.
+    # The defender ``first_result`` was priced against, captured beside it
+    # in the loop that produces it, so nothing has to index back into
+    # ``context.main_pair_params`` from a branch far from the loop.
     first_defender: Combatant | None = None
     enemy_actors = [actor for actor in roster if actor.team == "enemy"]
     for defender_index, (defender, pair_params) in enumerate(context.main_pair_params):
@@ -4210,8 +4116,8 @@ def _score_with_search_context(
         # The item support scan reads per-event target/id fields that only
         # pair enrichment adds (Black Cleaver Carve, Bloodsong), plus the
         # first pair's takedown synthesis.  Give it the same view the
-        # receipt composition passes — a template it authors either
-        # compiles or fails closed, never silently vanishes (issue #169).
+        # receipt composition passes: a template it authors either compiles
+        # or fails closed, never silently vanishes.
         # ``enriched_view_items()`` is the projection of which holders
         # declare one of those two fields in ``needs``, so the copy is made
         # for a holder that reads it and for nobody else.
@@ -4419,9 +4325,9 @@ def _score_with_search_context(
     if revive_actions:
         actions = actions + revive_actions
     actions.sort(key=itemgetter(0))
-    # Issue #137: the score adapter arms the same canonical state dicts as
-    # the receipt walk and drives the identical kernel; the only difference
-    # is the ledger's parallel-array observation below.
+    # The score adapter arms the same canonical state dicts as the receipt
+    # walk and drives the identical kernel; the only difference is the
+    # ledger's parallel-array observation below.
     states = build_states(all_actors, _below_half_healing_bonuses(all_actors))
     # The kernel authors Maw's post-Lifeline omnivamp heals mid-walk through
     # ``ledger.schedule_heal``, which needs the same three injections the
@@ -4503,15 +4409,14 @@ def _score_with_search_context(
         base_thorns_order=base.thorns_order,
         count=count,
     )
-    # Per-attacker float-sum order replays the legacy outgoing list: pair
-    # fights in defender order (enemies hit the main first, then allies),
-    # then thorns in strike order (fresh strikes precede the roster's).
-    # One running total over the ordered parts keeps the exact same
-    # addition sequence without building a concat list.  A dead attacker's
-    # total also replays the legacy cutoff against its ROUNDED death time:
-    # the walk applies an attacker's own event at the exact death instant,
-    # but the legacy sum excludes it whenever the true death time rounds
-    # down past it.
+    # Per-attacker float-sum order replays the receipt composition's
+    # outgoing list: pair fights in defender order (enemies hit the main
+    # first, then allies), then thorns in strike order (fresh strikes precede
+    # the roster's).  One running total over the ordered parts keeps the
+    # exact same addition sequence without building a concat list.  A dead
+    # attacker's total is cut against its ROUNDED death time: the walk
+    # applies an attacker's own event at the exact death instant, and the sum
+    # excludes it whenever the true death time rounds down past it.
     return _score_view.score_leaves(
         program,
         walk_result.projected(
@@ -4586,16 +4491,8 @@ def _attacker_outcome(
 def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
     """Where one support packet sits in the *published* support list.
 
-    Deliberately not :func:`support_transition_rank`.  This orders the
-    receipt the API serializes, and it classifies on kind alone, so a
-    packet that declares ``LATE_BARRIER`` (Eclipse's self-shield,
-    Fimbulwinter's Everlasting) is still published beside the other
-    barriers rather than after the damage it followed, and a state grant is
-    published with the recoveries rather than first.  The walk's arming
-    order is the packet's own ``_sk``; this is the reading order, and the
-    two have never agreed for a declared rank.  Naming that divergence is
-    all this stage does about it: closing it moves published output, which
-    is a correction, not a rename.
+    Not :func:`support_transition_rank`: this classifies on kind alone, so a
+    ``LATE_BARRIER`` publishes beside the barriers the walk arms it after.
     """
     return (
         TransitionRank.BARRIER_GRANT
@@ -4624,46 +4521,24 @@ def build_participant_timeline(
     """Compose all selected actors and return the coupled combat receipt.
 
     One composition, driven across as many passes as this roster's builds
-    declare (D-70).  Almost every roster declares one; a build carrying a
-    mana-spent heal declares two, because its restore ledger is a function
-    of the incoming damage the fight itself produces.  The passes are
-    siblings in :func:`~.program.dependency.run_passes`' loop rather than
-    ancestors on a stack, so "one walk per pass" is a number a counter can
-    read instead of a recursion whose depth nobody can see.
+    declare.  A build carrying a mana-spent heal declares two, because its
+    restore ledger is a function of the damage the fight itself produces.
 
-    ``focus_participant_id`` is used by BIS candidate evaluation.  The
-    visible calculate response keeps the default focus on the main champion,
-    while ally/enemy slot optimization can score the selected roster member
-    without creating a fake one-attacker scenario.
+    ``focus_participant_id`` scores the selected roster member, so ally and
+    enemy slot optimization needs no fake one-attacker scenario.
 
-    ``include_receipt=False`` returns the scoring subset only — survival,
-    per-actor breakdown, and the ordering receipt — with identical numbers;
-    optimizer candidate evaluation uses it because nothing ever displays a
-    candidate's serialized timeline.
+    ``include_receipt=False`` returns the scoring subset with identical
+    numbers, for candidates whose timeline nothing displays.
 
-    ``reuse_main_stats=True`` is a caller-owned claim that ``main_stats``
-    was calculated with exactly the configuration a main pair fight would
-    use (same role, item options, and no external ally bonuses), letting
-    those fights skip one identical stat calculation per enemy.  Leave it
-    False when the main stats came from a loadout whose role or options can
-    differ from ``params`` (the roster BIS path).
+    ``reuse_main_stats=True`` claims ``main_stats`` was calculated with the
+    configuration a main pair fight uses (same role and item options, no
+    external ally bonuses).  The roster BIS path cannot claim it.
 
-    ``published=False`` says nobody will read the payload this returns.  The
-    optimizer scores thousands of candidates and shows none of them, and a
-    ``dispositions`` map for a payload that is compared and thrown away is a
-    few hundred dict entries per evaluation on the hot path -- which the
-    phase's allocation gate measures and refuses.  It defaults to True so a
-    new caller gets the map, and the one caller that opts out says so at its
-    own call site rather than having the decision made for it inside a view.
+    ``published=False`` says nobody will read the payload, so the view skips
+    the ``dispositions`` map the optimizer would build and throw away.
 
-    ``search_context`` opts scoring into the compiled panel walk: the
-    optimizer creates one :class:`CoupledSearchContext` per search (fixed
-    params and roster) and every score-mode evaluation then replays the
-    presorted invariant actions instead of re-enriching them.  Identical
-    numbers by construction and by test; ignored outside score mode.  It is
-    carried into every pass, along with the caller's pair cache: a later
-    pass is the same evaluation priced again, and a cold restart would put
-    its pair fights outside the work counters that measure the request.
+    ``search_context`` replays one search's presorted invariant actions in
+    the compiled panel walk.  Ignored outside score mode.
     """
 
     def compose(pass_index: int, patch: ParamPatch | None) -> Any:
@@ -4753,9 +4628,9 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             )
         except UncompilableActionError as exc:
             # A transition the score kernel cannot represent must never be
-            # silently dropped (issue #137).  Mark search-invariant failures
-            # so later evaluations skip the compiled path; candidate-local
-            # failures fall back per evaluation.
+            # silently dropped.  Mark search-invariant failures so later
+            # evaluations skip the compiled path; candidate-local failures
+            # fall back per evaluation.
             if exc.invariant:
                 search_context.uncompilable = True
             # The rung is a *decision* with a reason, and the published

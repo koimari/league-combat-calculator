@@ -22,10 +22,9 @@ from .ability_spec import (
 )
 
 # The typed bus: one home for "what does this raw row mean?" and one for
-# "which streams does this holder read?".  Both used to be answered here, by
-# four scanners and five hand-maintained name sets that could drift from the
-# branches they gated (D-30, D-32).  ``trigger_stream``'s only intra-package
-# import is ``ability_spec``, so this edge adds no cycle.
+# "which streams does this holder read?".  A hand name set drifts from the
+# branch it gates.  ``trigger_stream``'s only intra-package import is
+# ``ability_spec``, so this edge adds no cycle.
 from .trigger_stream import (
     CAPABILITIES,
     RAW_STREAMS,
@@ -152,26 +151,18 @@ def _shred_ramp(
 ) -> ShredSlot:
     """This holder's declared shred of *resistance*, on the receipt-walk lane.
 
-    The walk's cross-participant emitter used to read the ramp off the
-    *ally-packet* declaration's own copy of the two numbers, which made the
-    shred a mechanic with two declarations — the shape Serpent's Fang's venom
-    had before ``damage_routing`` retired, and the shape a score and a receipt
-    come to disagree about.  Since ``resistance_shred`` retired off the pair
-    engine (2026-08-16) both sides read the family's own declaration, through
-    the interpreter registered in the lane the family declares.
+    Both sides read the family's own declaration, through the interpreter
+    registered in the lane the family declares, so the shred is one mechanic
+    with one declaration and a score and a receipt cannot disagree.
 
     A holder of the cross-participant half whose build declares no shred is a
     **stop**: the packet would otherwise be emitted with no ramp behind it,
-    which is a modifier nobody declared rather than a modifier measuring zero.
+    which is a modifier nobody declared rather than one measuring zero.
 
     Two of the four :class:`~.item_behavior.BuildContext` facts are stated
-    rather than passed through, and stating them is the point of the
-    defaultless keywords: no ``resistance_shred`` declaration reads a fight
-    duration or a target's bonus health — a shred is a per-stack fraction and
-    a stack cap, both plain registry references — so this is a fact about the
-    family and not a defaulted zero flattening a ramp nobody looked at, the
-    same way ``participant_timeline._routing_build`` states it for
-    ``damage_routing``.
+    rather than passed through: a shred is a per-stack fraction and a stack
+    cap, so no ``resistance_shred`` declaration reads a fight duration or a
+    target's bonus health.
     """
     slot = _shred_walk_slot(
         sorted(frozenset(names)),
@@ -191,15 +182,7 @@ def _shred_ramp(
 
 
 def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
-    """When the scenario cast *slot*'s active, or ``0.0`` if it never did.
-
-    An explicit non-zero timestamp is the whole trigger contract for an
-    item-active: the packet is never emitted at ``t = 0`` by default.  The
-    option is read under the declaration's owner, so a build that declares no
-    active reads nothing — the option's own type checking lives at the request
-    boundary (``scenario.py`` -> ``item_effects.validate_item_input_options``)
-    and covers every named item whether the build holds it or not.
-    """
+    """When the scenario cast *slot*'s active, or ``0.0`` if it never did."""
     if slot is None:
         return 0.0
     return _active_seconds_for(attacker, slot.owner)
@@ -351,14 +334,7 @@ _CHAIN_FRACTION_KEYS: Mapping[PacketKind, str] = MappingProxyType(
 def _ramp_value(
     slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any
 ) -> float:
-    """One declared level ramp, read at the level its declaration names.
-
-    Every call site used to pass the recipient's level, which is right for
-    the three actives the Wiki qualifies ``type=target's level`` and wrong
-    for the four it qualifies ``type=your level`` — Soul Siphon's charge cap
-    tracked whoever got healed instead of the holder who stored the charges.
-    The subject is declared beside the ramp, so no emitter chooses again.
-    """
+    """One declared level ramp, read at the level its declaration names."""
     subject = slot.level_subject(key)
     level = holder.level if subject is LevelSubject.HOLDER else recipient.level
     return slot.level_value(key, level)
@@ -445,11 +421,7 @@ def _mana_input(
 def _stack_triggers(triggers: Iterable[Trigger]) -> Iterator[Trigger]:
     """Non-reactive champion damage that landed on a named target.
 
-    The bus emits a damage trigger for every authored row, because its
-    consumers disagree about which damage matters and one that pre-filtered
-    would have to pick a side.  This is the stack ledgers' own side — "a hit
-    that stacked" — stated where the ledgers read it instead of inside the
-    transport.
+    The bus triggers on every authored row; this is the stack ledgers' side.
     """
     for trigger in triggers:
         if trigger.damage <= 0.0 or trigger.reactive or not trigger.target_id:
@@ -617,11 +589,8 @@ def resolve_knights_vow_tether(
 def _starved_streams(names: Collection[str]) -> list[tuple[str, str]]:
     """Each held holder that reads a raw stream, paired with that stream.
 
-    The holder-to-stream fact has exactly one home — every mechanic's
-    declared ``reads`` in ``trigger_stream.CAPABILITIES`` — so this is a
-    projection of the registry and not the second name list it replaced.
-    The label is the raw ledger key the stream is parsed off, derived from
-    the stream's own value rather than tabulated beside it.
+    A projection of every mechanic's declared ``reads`` in
+    ``trigger_stream.CAPABILITIES``.  The label is the raw ledger key.
     """
     return sorted(
         (item, f"{stream.value}_events")
@@ -922,8 +891,8 @@ def derive_item_support_effects(
     # hit (a denied cast can never trigger Tear, and a missing hit identity
     # fails closed), and applies each granted bonus max-mana to the same
     # account.  This layer only shapes the accepted hit receipts into the
-    # public kind="resource" packet schema — it never recomputes cadence,
-    # charges, or caps (the retired duplicate state).  A fight result
+    # public kind="resource" packet schema.  It never recomputes cadence,
+    # charges, or caps.  A fight result
     # without a ledger section has no Manaflow activity by construction, and
     # that section IS the guard: damage._tear_manaflow_for builds one for no
     # other holder, so this branch asks the typed ledger whether Manaflow ran
@@ -1429,7 +1398,7 @@ def derive_item_support_effects(
     if carve is not None or vile_decay is not None:
         # The ramp both branches multiply and cap by, read once through the
         # family's own receipt-walk interpreter rather than off each ally
-        # packet's second copy of it (``resistance_shred`` retired 2026-08-16).
+        # packet.
         armor_shred = (
             None
             if carve is None
@@ -1589,10 +1558,9 @@ def derive_item_support_effects(
                 if actor.participant_id != target.participant_id
             ]
             chain_target = candidates[0] if candidates else target
-            # D-50: the chained packet's kind used to be computed from the
-            # trigger at runtime, which no static reader could resolve — not
-            # Phase 1's ``PacketSource``, not a family assignment.  Starlit
-            # Grace declares *two* packets instead, one per kind it chains,
+            # A kind computed from the trigger at runtime is a kind no
+            # static reader can resolve.  Starlit Grace declares *two*
+            # packets, one per kind it chains,
             # and the trigger selects between them.  A third kind is a stop
             # rather than a packet nothing declared; ``_support_triggers``
             # admits only heal and shield, so no live trigger can reach it.
@@ -1970,10 +1938,9 @@ def derive_item_support_effects(
         # Intervention grants sight of the target area for the beam
         # call-down ("granting sight of the area for the duration"): one
         # vision receipt per selected enemy, window [cast, impact] =
-        # the sourced 2.5s beam_delay.  The registry previously carried a
-        # 3.0s reveal duration with NO local source (wiki text names no
-        # number, the binary has no reveal value) — removed in P3-3H; the
-        # sourced call-down window is the receipt.
+        # the sourced 2.5s beam_delay.  The sourced call-down window is
+        # the receipt: neither the wiki text nor the binary names a separate
+        # reveal duration.
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):
@@ -2147,7 +2114,7 @@ def schedule_knights_vow(
 
 
 def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any build requires the legacy event walk for team packets."""
+    """Whether any build requires the ordered event walk for team packets."""
     return any(str(item.get("name", "")) in ALLY_ITEM_EFFECTS for item in items)
 
 
@@ -2163,10 +2130,9 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
 # reads to prove its scenario set covers every producer (runbook R-12).
 #
 # There is exactly one authority table in the repo and it is
-# ``trigger_stream.CAPABILITIES``.  This module used to derive a second one
-# by reading its own ``_packet(...)`` call sites with ``ast``; two tables
-# that agree today are two tables that can disagree tomorrow, which is the
-# whole thesis of the campaign, so the derivation below reads the registry
+# ``trigger_stream.CAPABILITIES``.  Two tables that agree today are two
+# tables that can disagree tomorrow, so the derivation below reads the
+# registry
 # and the call sites are bound to it by the check underneath.  A seventh
 # producer therefore fails to resolve — loudly, on its first packet — until
 # it is declared, and the same registry is what the coupled golden baseline
@@ -2179,12 +2145,7 @@ def _declared_authorities() -> Mapping[str, Authority]:
 
     The key is the walk packet's ``source`` literal and the value the
     ``Authority`` that capability declares.  Which halves qualify is
-    ``trigger_stream.cross_participant_packet_source``'s answer and not this
-    module's: D-07's semantic is *every packet modifying another
-    participant's damage*, and a half that delivers a rider onto its own
-    holder's event modifies nobody else's (Amendment C).  Naming the
-    condition in one place is what stops the baseline instrument and this
-    table disagreeing about who the producers are.
+    ``trigger_stream.cross_participant_packet_source``'s answer.
 
     Cached because ``_packet`` consults it on every cross-participant packet
     it builds and the stack-ledger producers build one per damage event.
@@ -2278,19 +2239,12 @@ def _check_aura_arming(
 ) -> None:
     """A persistent cross-participant modifier is an aura, and arms as one.
 
-    A ``damage_modifier`` some trigger armed is a debuff: it resolves after
-    the damage at its own timestamp, because the packet that triggered it
-    landed first.  A *persistent* one was already in force when the fight
-    opened, so the same ordering makes the opening exchange the one
-    exchange the aura does not price — Abyssal Mask's Unmake curses an
-    enemy from t = 0 and priced nothing at t = 0 (C4).
-
-    The kind cannot tell the two apart, so the aura declares
-    ``AURA_ARM`` on its packet and this refuses a persistent modifier that
-    does not.  Fail closed rather than classify on ``persistent`` in the
-    walk's kind ladder: a declared rank is greppable, is enumerated by the
-    ladder's own source audit, and cannot silently re-order a packet whose
-    author never considered the question.
+    A ``damage_modifier`` some trigger armed is a debuff, resolving after the
+    damage at its own timestamp.  A *persistent* one was in force when the
+    fight opened, so that ordering would make the opening exchange the one
+    exchange the aura does not price.  The kind cannot tell the two apart, so
+    the aura declares ``AURA_ARM`` and this refuses a persistent modifier that
+    does not.
     """
     if not persistent:
         return
@@ -2304,12 +2258,7 @@ def _check_aura_arming(
 
 
 def producer_item(source: str) -> str:
-    """The item name a producer's ``source`` literal names.
-
-    Every packet source is spelled ``"<item> — <effect>"``, so the item a
-    scenario must equip to reach a producer is derivable from the producer
-    itself rather than tabulated beside it.
-    """
+    """The item name a producer's ``source`` literal names."""
     return source.split(" — ", 1)[0].strip()
 
 

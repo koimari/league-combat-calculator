@@ -1257,10 +1257,10 @@ def actualizer_active_seconds(
     """Return the authored Mana Made Real window for one fight.
 
     The active is a temporary state, not an always-on item stat.  The public
-    control accepts either the legacy boolean (which means the complete
-    sourced eight-second window) or an explicit duration.  Direct engine
-    callers that do not provide an option map retain the historical
-    ``include_actives`` assumption and receive the full window clipped to the
+    control accepts either a boolean, meaning the complete sourced
+    eight-second window, or an explicit duration.  A direct engine caller
+    with no option map assumes ``include_actives`` and receives the full
+    window clipped to the
     fight; API callers always have the typed option map and therefore can
     explicitly request zero seconds.
     """
@@ -2741,9 +2741,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # Every cached item carrying the stat is here, not only the exceptional
     # three: an undeclared channel is a stop in
     # ``interpreters.stat_derivation``, so the two items no ordinary
-    # Summoner's Rift build can hold — Perplexity (Arena-only) and Ohmwrecker
-    # (Turret Item) (a map object) — say "total" rather than being routed
-    # there by the silence that used to carry them.
+    # Summoner's Rift build can hold, Perplexity (Arena-only) and Ohmwrecker
+    # (a Turret Item), say "total" rather than being routed there by silence.
     "Last Whisper": {
         "type": "armor_penetration_channel",
         "armor_penetration_bonus_only": True,
@@ -4002,14 +4001,8 @@ def _build_item_effects() -> dict[str, dict[str, Any]]:
 def refresh_item_effects() -> None:
     """Re-parse item effects from the latest cached JSON data.
 
-    Call this after the data updater has fetched fresh item data so
-    that ``ITEM_EFFECTS`` reflects the newest balance values.
-
-    Mutates ``ITEM_EFFECTS`` in place (clear + update) rather than
-    rebinding the module global, so modules that imported it via
-    ``from .item_effects import ITEM_EFFECTS`` (e.g. ``calculator/__init__.py``)
-    keep seeing the refreshed values through their existing binding.  A
-    rebuild that raises leaves the registry as it was.
+    Mutates ``ITEM_EFFECTS`` in place rather than rebinding the global, so
+    an importer's binding sees the refresh.  A failed rebuild is inert.
     """
     rebuilt = _build_item_effects()
     ITEM_EFFECTS.clear()
@@ -4040,14 +4033,7 @@ def required_effect_value(item_name: str, key: str) -> Any:
 
 
 def _declared_effect_value(item_name: str, key: str) -> float:
-    """Read a key an item's schema may or may not declare, failing closed.
-
-    Sibling keys a family carries unevenly (Awe converts mana to one stat per
-    item; two ultimate-haste items have no cooldown) are decided by
-    ``entry_schema_keys`` — the reviewed shape, never the live entry — so a
-    parse that dropped a declared key still raises naming item and key, while
-    an item whose schema never carried the key reads 0.0.
-    """
+    """Read a key an item's schema may or may not declare, failing closed."""
     if key in entry_schema_keys(item_name):
         return float(required_effect_value(item_name, key))
     return 0.0
@@ -4330,10 +4316,9 @@ def dorans_helm_helping_hand_minion_damage() -> float:
     """Doran's Helm's sourced 5 bonus physical damage vs minions.
 
     The registry value is validated against the catalog atoms so a stale
-    static literal fails closed instead of riding silently.  A
-    champion-class target can never receive the bonus; since P3-3M a
-    minion-class fight arms it as a real on-hit packet through
-    :data:`CLASS_RESTRICTED_ON_HITS`, so it is no longer receipt-only.
+    static literal fails closed instead of riding silently.  A champion-class
+    target can never receive the bonus; a minion-class fight arms it as a
+    real on-hit packet through :data:`CLASS_RESTRICTED_ON_HITS`.
     """
     value = sustain_effect_value("Doran's Helm", "helping_hand_minion_damage")
     for atom in _DORANS_HELM_HELPING_HAND_ATOMS.values():
@@ -4545,9 +4530,8 @@ def guardian_angel_rebirth_declaration() -> dict[str, float]:
 def override_item_stat(item_name: str, stat_key: str, value: float) -> float:
     """Apply a source-backed stat correction when the cache is stale.
 
-    A small number of item pages deliberately replace a stat passive with a
-    named effect (Doran's Blade's old omnivamp is one example).  The typed
-    registry owns that correction; callers never supply a fallback literal.
+    The typed registry owns the correction; callers supply no fallback
+    literal.
     """
     key = f"stat_override_{stat_key}"
     effect = ITEM_EFFECTS.get(item_name, {})
@@ -4620,8 +4604,7 @@ def grouped_sustain_stat_percent(items: list[dict[str, Any]], stat_key: str) -> 
     """Sum one sustain stat across a build from the typed effect registry.
 
     The typed registry is authoritative for the sustain stats it pins.  An
-    override key (``stat_override_<stat_key>`` — Doran's Blade's retired
-    omnivamp is the canonical example) wins when present.
+    override key (``stat_override_<stat_key>``) wins when present.
 
     Lifesteal is fail-closed: every cached item that carries life steal must
     have a typed entry, so a parser break cannot silently drop healing.  A
@@ -4657,11 +4640,7 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
 
 
 def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
-    """Return whether a resolved build contains one canonical item name.
-
-    Allocation-free on purpose: the fight engine asks this dozens of times
-    per optimizer evaluation, so it must not build a name set per call.
-    """
+    """Return whether a resolved build contains one canonical item name."""
     return any(item.get("name", "") == item_name for item in items)
 
 
@@ -4720,21 +4699,10 @@ RawDamageFormula = Callable[["DamageInputs"], float]
 def counter_trigger(item_name: str) -> str:
     """Trigger class of an item's counter/cadence mechanic.
 
-    ``"on_attack"`` for the wiki's On-Attacking items — effects triggered by
-    COMPLETING a basic attack's windup (Guinsoo's phantom-hit cadence,
-    energized stacking, ...) — and ``"on_hit"`` for everything else, which a
-    hit landing advances (Nashor's, Wit's End, BotRK, Kraken's and
-    Hullbreaker's counters).  The fight engine uses this to decide which
-    ability-carried applications advance a counter: a source that merely
-    APPLIES on-hit effects (Bel'Veth Q) never advances an on-attack
-    mechanic, while one that counts as an attack (autos, Bel'Veth E slashes)
-    advances both.
-
-    On-Attacking is a short closed taxonomy the wiki publishes
-    (https://wiki.leagueoflegends.com/en-us/Basic_attack), and each member
-    declares it as ``counter_trigger`` in its own registry entry — the same
-    place its other code-owned facts live.  An item declaring nothing is
-    on-hit, which is what the taxonomy's "everything else" means.
+    ``"on_attack"`` for the wiki's On-Attacking items, advanced by COMPLETING
+    a basic attack's windup, and ``"on_hit"`` for everything else, advanced
+    by a hit landing
+    (https://wiki.leagueoflegends.com/en-us/Basic_attack).
     """
     declared = ITEM_EFFECTS.get(item_name, {}).get("counter_trigger", "on_hit")
     if declared not in ("on_attack", "on_hit"):
@@ -5236,16 +5204,8 @@ def row_presentation(item_name: str) -> tuple[str, str] | None:
 def entry_schema_keys(item_name: str) -> frozenset[str]:
     """Which value keys this item's registry entry is *expected* to carry.
 
-    The schema, never the current parse.  A declaration deciding "does this
-    mechanic carry that sibling" must read the shape of the entry rather than
-    what happens to be in it today: keyed on the live entry, a parse that
-    dropped a key would make the declaration quietly conclude the mechanic
-    does not exist, while keyed on the schema the reference is still declared
-    and raises naming the item and the key.  That is the fail-closed contract
-    the registry's own compilers used to buy by comparing item names.
-
-    An item the reference table does not know has no schema but its live
-    entry, which is then the only shape there is.
+    The schema, never the current parse, so a dropped key raises naming item
+    and key instead of concluding the mechanic does not exist.
     """
     reference = _REFERENCE_ITEM_EFFECTS.get(item_name)
     if isinstance(reference, Mapping):
@@ -5255,12 +5215,7 @@ def entry_schema_keys(item_name: str) -> frozenset[str]:
 
 
 def known_effect_types() -> frozenset[str]:
-    """The closed set of effect tags an ``ITEM_EFFECTS`` entry may carry.
-
-    The public read behind ``item_behavior_catalog``'s closure test: a new
-    member here has to be given a rule family before the catalog will import,
-    so a tag can never arrive with no engine claiming it.
-    """
+    """The closed set of effect tags an ``ITEM_EFFECTS`` entry may carry."""
     return _KNOWN_EFFECT_TYPES
 
 
@@ -5458,13 +5413,7 @@ def ap_multiplier(items: list[dict[str, Any]]) -> float:
     """Return parser-owned additive AP multiplier from item passives.
 
     Rabadon's Deathcap (+30% AP) and Blackfire Torch (+4% AP per burning
-    champion, assumed 1 target) stack additively: 30% + 4% = ×1.34.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Multiplier applied to total AP (e.g. 1.30 with Rabadon's).
+    champion, assumed 1 target) stack additively: 30% + 4% = x1.34.
     """
     names = _item_names(items)
     bonus = 0.0
@@ -5476,26 +5425,14 @@ def ap_multiplier(items: list[dict[str, Any]]) -> float:
 
 
 def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Return parser-backed AP multiplier eligible as a permanent stat.
-
-    Rabadon's always applies. Blackfire Torch's per-burning-target increase is
-    a combat state and therefore cannot unlock Living Weapon.
-    """
+    """Return parser-backed AP multiplier eligible as a permanent stat."""
     if "Rabadon's Deathcap" not in _item_names(items):
         return 1.0
     return 1.0 + required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
 
 
 def mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
-    """Return parser-owned Awe bonus-mana-to-AP conversion.
-
-    Args:
-        items: List of item data dicts.
-        bonus_mana: Total bonus mana from items.
-
-    Returns:
-        Flat bonus AP from mana conversion.
-    """
+    """Return parser-owned Awe bonus-mana-to-AP conversion."""
     names = _item_names(items)
     total = 0.0
     for name in ("Archangel's Staff", "Seraph's Embrace"):
@@ -5520,15 +5457,7 @@ def dawncore_bonus_ap(
     items: list[dict[str, Any]],
     bonus_mana_regen_percent: float,
 ) -> float:
-    """Return parser-owned Dawncore AP from additional base mana regen.
-
-    Args:
-        items: List of item data dicts.
-        bonus_mana_regen_percent: Total bonus base mana regen (percent).
-
-    Returns:
-        Flat bonus AP from mana regen conversion.
-    """
+    """Return parser-owned Dawncore AP from additional base mana regen."""
     if "Dawncore" not in _item_names(items):
         return 0.0
     ap_per_unit = required_effect_value("Dawncore", "ap_per_mana_regen_unit")
@@ -5537,14 +5466,7 @@ def dawncore_bonus_ap(
 
 
 def flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
-    """Return parser-owned Staff of Flowing Water Rapids AP.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Flat bonus AP from Rapids.
-    """
+    """Return parser-owned Staff of Flowing Water Rapids AP."""
     if "Staff of Flowing Water" not in _item_names(items):
         return 0.0
     return required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
@@ -5667,9 +5589,7 @@ def statikk_chain_target_bounds(*, item_name: str = "Statikk Shiv") -> tuple[int
 def statikk_chain_target_count(level: int, *, item_name: str = "Statikk Shiv") -> int:
     """Return Electrospark's level-scaled chain target count.
 
-    The cached source gives 4 to 8 targets at levels 1/6/10/14/20.  The
-    selected roster may still contain fewer targets; the caller applies that
-    roster bound when allocating one proc across participants.
+    4 to 8 targets at levels 1/6/10/14/20; the caller applies the roster bound.
     """
     minimum, maximum = statikk_chain_target_bounds(item_name=item_name)
     breakpoints = (1, 6, 10, 14, 20)
@@ -5686,9 +5606,7 @@ def hydra_secondary_target_damage(
 ) -> float:
     """Return one Hydra Cleave cone packet for a secondary target.
 
-    The fight ledger currently prices only the selected primary target. This
-    typed accessor keeps the parser-owned cone ratio available for the future
-    multi-target ledger without inventing a fallback when a patch omits it.
+    The parser-owned cone ratio, with no fallback when a patch omits it.
     """
     prefix = "active_secondary_" if empowered else "secondary_"
     suffix = "max_hp_ratio_melee" if is_melee else "max_hp_ratio_ranged"
@@ -5752,15 +5670,7 @@ def item_bonus_health_multiplier(items: list[dict[str, Any]]) -> float:
 
 
 def muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
-    """Return Muramana's parser-owned maximum-mana-to-AD conversion.
-
-    Args:
-        items: List of item data dicts.
-        max_mana: Champion's total maximum mana (base + items).
-
-    Returns:
-        Flat bonus AD from Awe.
-    """
+    """Return Muramana's parser-owned maximum-mana-to-AD conversion."""
     if "Muramana" not in _item_names(items):
         return 0.0
     return required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
@@ -5794,16 +5704,7 @@ def bloodmail_bonus_ad(
 ) -> float:
     """Overlord's Bloodmail Tyranny passive: % of bonus health as bonus AD.
 
-    Public (like ``steraks_bonus_ad``): the fight engine re-applies it
-    for ability bonus-health buffs (Cho'Gath R's Feast stacks) — the
-    conversion is linear, so the delta composes.
-
-    Args:
-        items: List of item data dicts.
-        bonus_health: Bonus health to convert (items, or a buff delta).
-
-    Returns:
-        Flat bonus AD from Tyranny.
+    Linear, so the fight engine re-applies it for ability bonus-health buffs.
     """
     if "Overlord's Bloodmail" not in _item_names(items):
         return 0.0
@@ -5872,15 +5773,9 @@ def saturated_grant(
 ) -> float:
     """What a grant armed by a per-second ramp pays a fight this long.
 
-    Four numbers and no item name: the caller says which ramp and which
-    grant, and this says whether the ramp had time to top out.  It is the one
-    home of that question — the declared grant's interpreter resolves its own
-    references and asks here, and the registry's published state row asks the
-    same thing about the same entry, so the two can never answer differently.
-
-    A ramp with no rate or no ceiling arms nothing.  That is a refusal rather
-    than a division: a zero rate never saturates, and a zero ceiling would
-    saturate instantly and pay a grant whose sibling amplifier pays nothing.
+    Four numbers and no item name, and the one home of the question, so the
+    grant's interpreter and the registry's state row cannot answer
+    differently.  A ramp with no rate or no ceiling arms nothing.
     """
     if per_second <= 0.0 or maximum <= 0.0:
         return 0.0
@@ -5966,15 +5861,7 @@ class ThornsEffect:
 
 
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
-    """Return parser-backed Sterak's base-AD conversion.
-
-    Args:
-        items: List of item data dicts.
-        base_ad: Champion's base attack damage at the current level.
-
-    Returns:
-        Flat bonus AD from the passive.
-    """
+    """Return parser-backed Sterak's base-AD conversion."""
     if "Sterak's Gage" not in _item_names(items):
         return 0.0
     return required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
@@ -5986,18 +5873,11 @@ def terminus_max_stack_bonuses(
 ) -> tuple[float, float]:
     """Return parser-owned Terminus max-stack resist and pen state.
 
-    Light hits grant level-scaled bonus armor + MR per stack; dark hits
-    grant % armor and magic penetration per stack.  Both are assumed at
-    max stacks for the stat display; the fight engine consumes the compiled
-    ``StackingPenEffect`` to use a ramping per-auto average.
-
-    Args:
-        items: List of item data dicts.
-        level: Champion level (1-18).
-
-    Returns:
-        Tuple of (bonus armor and MR, penetration as a percentage such
-        as 30.0).  ``(0.0, 0.0)`` when Terminus is not in the build.
+    Light hits grant level-scaled bonus armor + MR per stack; dark hits grant
+    % armor and magic penetration per stack.  Both are assumed at max stacks
+    for the stat display; the fight engine consumes the compiled
+    ``StackingPenEffect`` to use a ramping per-auto average.  ``(0.0, 0.0)``
+    when Terminus is not in the build.
     """
     if "Terminus" not in _item_names(items):
         return 0.0, 0.0
@@ -6016,14 +5896,7 @@ def terminus_max_stack_bonuses(
 
 
 def basic_ability_haste(items: list[dict[str, Any]]) -> float:
-    """Return parser-backed Spear of Shojin basic ability haste.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Total basic ability haste.
-    """
+    """Return parser-backed Spear of Shojin basic ability haste."""
     if "Spear of Shojin" not in _item_names(items):
         return 0.0
     return required_effect_value("Spear of Shojin", "basic_ability_haste")
@@ -6039,17 +5912,8 @@ CONTROL_ABILITY_HASTE_KEY = "control_ability_haste"
 def immobilize_ability_haste(items: list[dict[str, Any]]) -> float:
     """Extra ability haste this build's *immobilizing* abilities are cast at.
 
-    Imperial Mandate's Control: "abilities with immobilizing effects have
-    their cooldown reduced equivalent to 20 ability haste".  It is not a
-    stat of the build — it reaches only the slots whose reviewed control
-    marker says they immobilize — so it is read here and applied at the
-    cooldown, beside the ultimate haste an ultimate alone reads.
-
-    Args:
-        items: List of item data dicts.
-
-    Returns:
-        Total immobilizing-ability haste this build carries.
+    Not a build stat: Imperial Mandate's Control reaches only the slots whose
+    reviewed control marker says they immobilize.
     """
     return sum(
         ally_item_effect_value(name, CONTROL_ABILITY_HASTE_KEY)
