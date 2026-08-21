@@ -25,7 +25,7 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 
 | # | Decision | Why |
 |---|---|---|
-| D1 | The compiled path (`program/`, `add_engine_result`) is the survivor; `_pair_packet` + `add_packet` are retired. | `compile.py:852` already documents `add_engine_result` as equivalent-minus-enrichment; the receipt's enrichment becomes a view of compiled actions, not a second compiler. |
+| D1 | The compiled path (`program/`, `add_engine_result`) is the survivor; `_pair_packet` + `add_packet` are retired. | `program/compile.py:852` already documents `add_engine_result` as equivalent-minus-enrichment; the receipt's enrichment becomes a view of compiled actions, not a second compiler. |
 | D2 | Interpreters become one `(family, lane, fields_fn)` table. | 33 classes whose Pair/Walk bodies differ by a lane constant; the lane set is restated in 4 places. |
 | D3 | Rule 5 applies to every cached-data read: a `.get(key, literal)` on wiki/cache data either becomes a typed accessor that raises naming item+key, or is proven unreachable and deleted. | `item_effects.py:4567` is the exact shape that hid the 3× Statikk Shiv overstatement. |
 | D4 | `trigger_stream.CAPABILITIES` is the only item→stream declaration; hand-kept item name sets become projections of it or are deleted. | `architecture.md:30` already claims this; the tree has two survivors. |
@@ -39,18 +39,18 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 
 | Unit | Wave | Owns | Done when |
 |---|---|---|---|
-| U01 bench home | 0 | `benchmarks.md`, `scripts/bench_request.py` | Script reproduces warm `calculate_payload` ms and a 20-call loop on pinned scenarios; numbers at `7bb9701e` committed. |
-| S1–S5 scouts | 0 | read-only | Inventories in scratchpad: packet-path call graph and enrichment diff (S1); interpreter/lane table (S2); `damage.py` literal-default classification (S3); bookkeeping-test census (S4); dead-code census per directory (S5). |
-| U02 one packet path | 1 | `participant_timeline.py`, `program/` | `_pair_packet`/`add_packet` gone; receipt enrichment derived from compiled actions; equivalence tests now test one path against goldens. |
-| U03 interpreter table | 1 | `interpreters/`, `item_behavior.py` lane/family tables | One table, lane set in one place; `reachability_report` output identical. |
-| U04 damage.py rule 5 | 1 | `damage.py` | Every cached-data `.get(key, literal)` typed-or-deleted; count pinned by test. |
-| U05 trigger bus + item_effects rule 5 | 1 | `trigger_stream.py`, `item_effects.py` | Name sets gone or derived from `CAPABILITIES`; raw `.get("kind")` only in `trigger_stream.py`; `_cached_sustain_stat` fails closed. |
-| U06 MODULE_CC | 1 | `champions/`, `module_contract.py` | 177/177 declare; contract refuses parts-level stamps; Fimbulwinter coverage cells unchanged. |
-| U07 test corpus | 2 | `tests/`, `docs/receipts/` | D6 applied; a pure-refactor probe (rename a private helper) turns nothing red. |
-| U08 prose | 2 | all `src/` (prose only) | D7 applied; lint test pins both counts at zero. |
-| U09 dead paths | 2 | per-directory slices from S5 | Every S5 row deleted or kept with a named live reader. |
-| U10 latency | 3 | hot path per profile | `bench_request.py` re-captured; `benchmarks.md` explains every delta. |
-| Close | 3 | — | Gate ladder fresh at merge head; blind `audit`; results table here; backlog/traps updated. |
+| U01 bench home | 1 | `benchmarks.md`, `scripts/bench_request.py` | Script reproduces warm `calculate_payload` ms and a 20-call loop on pinned scenarios; numbers at `7bb9701e` committed. |
+| S1–S5 scouts | 1 | read-only | Inventories in scratchpad: packet-path call graph and enrichment diff (S1); interpreter/lane table (S2); `damage.py` literal-default classification (S3); bookkeeping-test census (S4); dead-code census per directory (S5). |
+| U02 one packet path | 2 | `participant_timeline.py`, `program/` | `_pair_packet`/`add_packet` gone; receipt enrichment derived from compiled actions; equivalence tests now test one path against goldens. |
+| U03 interpreter table | 2 | `interpreters/`, `item_behavior.py` lane/family tables | One table, lane set in one place; `reachability_report` output identical. |
+| U04 damage.py rule 5 | 2 | `damage.py` | Every cached-data `.get(key, literal)` typed-or-deleted; count pinned by test. |
+| U05 trigger bus + item_effects rule 5 | 2 | `trigger_stream.py`, `item_effects.py` | Name sets gone or derived from `CAPABILITIES`; raw `.get("kind")` only in `trigger_stream.py`; `_cached_sustain_stat` fails closed. |
+| U06 MODULE_CC | 2 | `champions/`, `module_contract.py` | 177/177 declare; contract refuses parts-level stamps; Fimbulwinter coverage cells unchanged. |
+| U07 test corpus | 3 | `tests/`, `docs/receipts/` | D6 applied; a pure-refactor probe (rename a private helper) turns nothing red. |
+| U08 prose | 3 | all `src/` (prose only) | D7 applied; lint test pins both counts at zero. |
+| U09 dead paths | 3 | per-directory slices from S5 | Every S5 row deleted or kept with a named live reader. |
+| U10 latency | 4 | hot path per profile | `bench_request.py` re-captured; `benchmarks.md` explains every delta. |
+| Close | 4 | — | Gate ladder fresh at merge head; blind `audit`; results table here; backlog/traps updated. |
 
 ## Gate ladder (run once, fresh, at close)
 
@@ -68,5 +68,5 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 - `wc -l src` down by ≥5k with gate 4 identical.
 - `grep -c "_pair_packet\|add_packet\b" src` = 0.
 - `interpreters/` has no `*PairInterpreter`/`*WalkInterpreter` class pairs.
-- Lint tests pin: cached-data literal fallbacks 0; campaign-ID citations in `src` 0; docstring-longer-than-body 0; receipt-reading test files ≤ the declared gates.
+- Lint tests pin: cached-data literal fallbacks, campaign-ID citations in `src`, and docstrings longer than their body all at zero; receipt-reading test files ≤ the declared gates.
 - `benchmarks.md` exists, with the start and close numbers from the same script.
