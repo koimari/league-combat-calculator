@@ -8,6 +8,22 @@ P1 addition over the reviewed packet:
   state, so the fight is deterministic through the ``e_fury`` option
   (0-100, default 0 = no Fury): at 100 Fury the E packet prices the
   sourced true-damage row, otherwise the reviewed physical row.
+
+Roadmap session 4 batch F (2026-08-21): P (Fury of the Xer'Sai) is the
+Fury resource system plus a self-heal-on-Burrow, with no enemy-damage
+formula. Effect 0 (data/champions.json P) is pure Fury generation/decay
+prose with no leveling row; effect 1's "Max Health Damage" leveling
+attribute is the wiki parser's generic name for a self-percent-max-
+health term, not damage dealt to an enemy — it prices the Burrow heal
+(0-100% of 9-21.29% max health, already documented below as heal-only
+and out of the fight ledger's burrow-trigger scope). The pinned
+reviewed packet (static/reviewed-packets.json) independently declares P
+``kind: "no_damage"`` with a sourced reason, and P is not overridden
+away from ``build_packet_module``'s cast slots (only E is reassigned
+below), so it already emits the packet's sourced zero-damage row today
+— MODULE_COVERAGE was simply stale, still reading "out_of_scope" for
+an already-covered slot (the Malzahar/Nasus precedent, roadmap session
+4 batch D). Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from typing import Any
@@ -94,11 +110,20 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "not the burrow stance switch, so the ledger has no faithful burrow "
     "trigger for the heal; the e_fury option prices E's max-Fury bite "
     "but not a burrow state.",
+    "P (Fury of the Xer'Sai) has no enemy-damage formula: effect 0 is "
+    "Fury generation/decay prose with no leveling row, and effect 1's "
+    "'Max Health Damage' leveling attribute is the self-heal-on-Burrow "
+    "percentage above, not a term dealt to an enemy (confirmed by the "
+    "pinned reviewed packet's kind='no_damage' declaration for P). P is "
+    "a cast slot in this module (never overridden from "
+    "build_packet_module's no_damage branch), so MODULE_COVERAGE "
+    "reflects a sourced no-damage classification rather than an "
+    "unmodeled gap (no_damage, not out_of_scope).",
 ]
 
 VARIANT_OPTION_KEYS = ("q_variant", "e_fury")
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

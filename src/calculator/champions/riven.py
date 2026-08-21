@@ -21,6 +21,20 @@ the cached R[0] description reads "gaining 20% AD bonus attack
 damage").  The buff is a BUFF-phase stat entry (the Aatrox R
 precedent) so every later physical slot (Q/W/R) scales off the buffed
 AD; the amount is factored at cast and does not change (wiki note).
+
+Roadmap session 4 batch F (2026-08-21): E (Valor) is a mobility dash
+plus a self shield, with no enemy-damage formula. Both cached E
+effects (data/champions.json) are self-directed: effect 0's "Shield
+Strength" leveling row is the dash's own defensive shield, effect 1 is
+the cast-during-dash utility note — already documented below as
+"outside the packet's damage model." The pinned reviewed packet
+(static/reviewed-packets.json) independently declares E ``kind:
+"no_damage"`` with a sourced reason, and E is not overridden away from
+``build_packet_module``'s cast slots (only P and R_buff are reassigned
+below), so it already emits the packet's sourced zero-damage row today
+— MODULE_COVERAGE was simply stale, still reading "out_of_scope" for
+an already-covered slot (the Malzahar/Nasus precedent, roadmap session
+4 batch D). Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
@@ -117,9 +131,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Valor) shield is documented no_damage: 70-170 + 110% bonus AD "
     "for 1.5s is a defensive shield on a no-damage dash, outside the "
     "packet's damage model.",
+    "E (Valor) has no enemy-damage formula: both cached effects are "
+    "self-directed (the shield above; the cast-during-dash utility "
+    "note), confirmed by the pinned reviewed packet's kind='no_damage' "
+    "declaration for E. E is a cast slot in this module (never "
+    "reassigned away from build_packet_module's no_damage branch), so "
+    "MODULE_COVERAGE reflects a sourced no-damage classification "
+    "rather than an unmodeled gap (no_damage, not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

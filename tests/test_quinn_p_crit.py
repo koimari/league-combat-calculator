@@ -413,7 +413,12 @@ class TestSourceEvidence:
             "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
         )
         assert quinn_module.MODULE_COVERAGE["P"] == "modeled"
-        assert quinn_module.MODULE_COVERAGE["W"] == "out_of_scope"
+        # Roadmap session 4 batch F (2026-08-21): W (Heightened Senses) was
+        # a stale label — the pinned reviewed packet already declares W
+        # kind='no_damage' (pure AS/MS self-buff + vision reveal, no
+        # enemy-damage row) and W was already a cast slot emitting that
+        # zero-damage row; only the MODULE_COVERAGE label moved.
+        assert quinn_module.MODULE_COVERAGE["W"] == "no_damage"
         assert quinn_module.REVIEW_STATUS == "reviewed_module"
         assert quinn_module._harrier.phase == "onhit"
         meta = get_champion_options_meta("Quinn")

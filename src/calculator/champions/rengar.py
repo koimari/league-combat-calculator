@@ -20,6 +20,35 @@ Stack mechanics modeled (E3):
 R (Thrill of the Hunt) keeps the reviewed CP10.6 packet pricing
 (armor reduction and leap bonus are state). All numeric values are read
 from the champion JSON data.
+
+Roadmap session 4 batch F (2026-08-21) — R stays OPEN, NOT a stale-
+label fix: unlike this batch's other four champions (Quinn W, Rek'Sai
+P, Renekton P, Riven E, all reclassified out_of_scope -> no_damage on
+a verified zero-formula basis), Rengar R's cached effect 4 prose is NOT
+damage-free — "Rengar's next basic attack within 125 range against any
+enemy or with Unseen Predator to the marked enemy deals 100% AD
+additional physical damage, then inflicts armor reduction for 4
+seconds" (data/champions.json R) — and the game file corroborates a
+real, currently-unpriced formula: rengar.bin.json
+Characters/Rengar/Spells/RengarRAbility/RengarR carries
+mSpellCalculations.BonusDamage (StatByCoefficientCalculationPart,
+mStat=2 [bonus AD, the same stat code Quinn's binary uses], coefficient
+1.0) plus a 7-value ArmorShred DataValues array
+([10,15,20,25,30,35,40]) with a 4-second ArmorShredDuration. This is a
+genuine gap, not a documentation lag: (1) an authority conflict on the
+damage-stat basis (wiki prose reads "100% AD" — ambiguous between total
+and bonus AD — against the binary's explicit bonus-AD stat code); (2)
+an authority conflict on the armor-shred rank shape (the wiki's
+3-value leveling row [15, 20, 25] does not align 1:1 with the binary's
+7-value array, which is Riot's usual all-ranks-plus-padding container
+shape); (3) no marked-target / Unseen-Predator proc-condition kernel
+exists anywhere in this engine (P's own _unseen_predator row only
+tracks Ferocity stacks, never this ambush bonus) to gate a "next basic
+attack against the marked/proximate enemy" trigger. Reclassifying R to
+no_damage would misrepresent an ability that does deal real damage;
+MODULE_COVERAGE keeps R "out_of_scope" (the Dr. Mundo P precedent,
+roadmap session 4 batch B/slots7.md — a discovered-but-unresolved
+formula stays open rather than being mislabeled in either direction).
 """
 
 from __future__ import annotations
@@ -293,6 +322,18 @@ ASSUMPTIONS = [
     "(35 : 260 + 20% AD)",
     "R (Thrill of the Hunt) keeps the reviewed packet pricing; its armor "
     "reduction and leap bonus are target/state effects",
+    "R stays out_of_scope (roadmap session 4 batch F, 2026-08-21): the "
+    "cached R effect 4 prose ('next basic attack ... deals 100% AD "
+    "additional physical damage, then inflicts armor reduction') and "
+    "rengar.bin.json RengarR (mSpellCalculations.BonusDamage, mStat=2 "
+    "bonus-AD coefficient 1.0; ArmorShred 7-value DataValues array) "
+    "corroborate a real, unpriced ambush-attack formula, but a "
+    "wiki/binary authority conflict on the damage-stat basis (total vs "
+    "bonus AD) and the armor-shred rank shape (3-value wiki leveling "
+    "vs 7-value binary array), plus the absence of any marked-target / "
+    "Unseen-Predator proc-condition kernel in this engine, make this a "
+    "genuine unresolved gap, not a documentation-lag reclassification "
+    "(the Dr. Mundo P precedent, roadmap session 4 batch B).",
 ]
 
 SOURCES = load_champion_sources("Rengar")

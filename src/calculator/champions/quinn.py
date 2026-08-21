@@ -8,6 +8,20 @@ empowered to consume the mark to deal 15 : 132.35 (based on level)
 Physical Damage" row) — while equivalent on-hit passives (Nautilus P,
 Poppy P) are modeled.  Harrier is now an on-hit entry priced at the
 per-level flat plus 40% bonus AD per marked-target auto.
+
+Roadmap session 4 batch F (2026-08-21): W (Heightened Senses) is a pure
+attack-speed/movement-speed self-buff plus a vision-reveal active, with
+no enemy-damage formula anywhere in its two cached effect rows (data/
+champions.json W: effect 0 "Bonus Attack Speed"/"Bonus Movement Speed"
+self-buff on marked-target autos, effect 1 the Valor sight/reveal
+active). The pinned reviewed packet (static/reviewed-packets.json)
+independently declares W ``kind: "no_damage"`` with a sourced reason,
+and W is not overridden away from ``build_packet_module``'s cast slots
+(only P is reassigned below), so it already emits the packet's sourced
+zero-damage row today — MODULE_COVERAGE was simply stale, still
+reading "out_of_scope" for an already-covered slot (the Malzahar/
+Nasus precedent, roadmap session 4 batch D). Reclassified to
+"no_damage"; zero fight-computation change.
 """
 
 from .packet_module import build_packet_module
@@ -80,9 +94,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Behind Enemy Lines (R-active) disables Harrier and removes all "
     "marks (cached effects[3]) — not gated in the model (named "
     "boundary; the on-hit is unconditional).",
+    "W (Heightened Senses) has no enemy-damage formula: effect 0 is a "
+    "self attack-speed/movement-speed buff on marked-target autos, "
+    "effect 1 is the Valor sight/reveal active (confirmed by the pinned "
+    "reviewed packet's kind='no_damage' declaration for W). W is a cast "
+    "slot in this module (never overridden from build_packet_module's "
+    "no_damage branch), so MODULE_COVERAGE reflects a sourced no-damage "
+    "classification rather than an unmodeled gap (no_damage, not "
+    "out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
