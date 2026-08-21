@@ -1,29 +1,154 @@
 """Static guards for high-value module boundaries."""
 
 import ast
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
-from src.calculator.item_effects import _OFFLINE_ITEM_EFFECTS
+from src.calculator.item_effects import _REFERENCE_ITEM_EFFECTS
+from tests.coverage_resolver import front_door_report
 
 ROOT = Path(__file__).parents[1]
+SRC_ROOT = ROOT / "src" / "calculator"
+TEST_ROOT = ROOT / "tests"
 
-# These modules are large enough to need a named entry point.  The older
-# campaign suites remain in place because their issue history is useful when
-# a regression is investigated.
-SUBSTANTIAL_MODULE_FRONT_DOORS = (
-    "passive_parser",
-    "healing",
-    "rotation_resolver",
-    "capabilities",
-    "bis",
-    "public_response",
-    "atomizer_domains",
-    "loadout_rules",
-    "auto_attack_policy",
-    "data_registry",
-    "economics_data",
-)
 DAMAGE_PATH = ROOT / "src" / "calculator" / "damage.py"
+
+# The hand registry the derived report replaced (D-95), pinned at zero
+# occurrences.  The scan reads file *text* rather than a parsed tree, because
+# a retired name does its remaining damage as prose: it is what a reader
+# greps, and a comment discussing a registry reads as a registry that still
+# exists.  It is spelled in halves so this scanner is not itself the
+# occurrence it forbids — "zero" has to be literally true of every scanned
+# file, and the file this tuple used to live in is the one that matters most.
+# `docs/plans/` is out of scope by construction: the document that ordered
+# the deletion has to be able to name what it deleted.
+RETIRED_FRONT_DOOR_REGISTRY = "SUBSTANTIAL_MODULE" + "_FRONT_DOORS"
+SCANNED_TREES = ("src", "tests", "scripts")
+
+#: The phrase every `FRONT_DOOR_FRONTIER` departure comment carries.  One
+#: spelling, because the frontier's arithmetic is `six minus these`, and a
+#: departure written in a second phrase would be a member that left without
+#: the count noticing.  Split so this constant is not itself a match.
+DEPARTURE_MARKER = "left this " + "frontier at"
+
+#: The phrase every arrival comment carries, for the same reason: a module
+#: that lands on the frontier without one is a member the arithmetic below
+#: cannot see.  Split so this constant is not itself a match.
+ARRIVAL_MARKER = "joined this " + "frontier with"
+
+#: How a frontier comment spells a count, so both readers below resolve one.
+_NUMBER_WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class FrontierEntry:
+    """Why a module has no importing test module, and who owes it one."""
+
+    owning_phase: str
+    reason: str
+
+
+# The modules `front_door_report` finds today, each with the reason it has no
+# importing test module and the phase that owes it one.  The frontier lives
+# here, in the consumer, and never inside the tool that measures it — a
+# frontier the measuring tool owns can be driven to zero by editing the tool.
+#
+# It is pinned by **set equality**, so it shrinks by edit and never silently
+# grows.  The same derivation reports ten members against the pre-campaign
+# tree and **six** after Phase 0's and Phase 2's new suites imported
+# `survival/{accumulate, actions, compile, transitions}` directly.  Two have
+# left since, each with a departure comment at the foot of the dict --
+# `survival.receipt_state` at Phase 4 S4, `survival.score_state` at S10 and
+# `healing_legacy` at the heal-anchor slice -- and one arrived, `comparison`,
+# leaving the **four** below.  That is the frontier working, and it is why
+# neither the ten nor the six is written down anywhere as a target.
+#
+# Both counts above are facts about what follows, so both are asserted rather
+# than described -- `test_the_frontier_comment_counts_its_own_members` reads
+# the four against `len`, and the six against `six minus the departures named
+# below`.  The sentence used to say S10's departure "took the sixth", which
+# skipped S4's and made the arithmetic 10 -> 6 -> 4 with a member missing;
+# the guard checked only the word `four`, so the one number it did not read
+# was the one that was wrong.  A comment that outran its own table is the
+# shape this campaign is about, and a frontier's own file is the worst place
+# to leave one -- twice, one line apart.
+#
+# `DEPARTURE_MARKER` is the phrase those comments share and the thing the
+# arithmetic counts, so it is a constant rather than a spelling each comment
+# is trusted to repeat.
+FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
+    "application_errors": FrontierEntry(
+        owning_phase="none — pre-campaign debt",
+        reason=(
+            "the exception vocabulary src/app.py and optimizer.py raise; every "
+            "assertion about it runs through an app response instead"
+        ),
+    ),
+    # `comparison` joined this frontier with the one-request compare
+    # boundary: the module is new, and the two complete results it returns
+    # are asserted through `/api/compare` in `tests/test_app.py`, so it has
+    # behaviour coverage and no front door.  Recorded as an arrival for the
+    # reason the departures below are recorded: the set is the receipt.
+    "comparison": FrontierEntry(
+        owning_phase="none - arrived with the compare boundary",
+        reason=(
+            "the one-request build-comparison boundary, exercised only "
+            "through /api/compare in tests/test_app.py rather than through "
+            "its own module"
+        ),
+    ),
+    "practice_dummy": FrontierEntry(
+        owning_phase="none — pre-campaign debt",
+        reason=(
+            "the practice-target preset, reached only through scenario.py, "
+            "whose suite exercises it through a parsed scenario"
+        ),
+    ),
+    "request_parsing": FrontierEntry(
+        owning_phase="none — pre-campaign debt",
+        reason=(
+            "request coercion, exercised through the endpoints in "
+            "tests/test_app.py rather than through its own module"
+        ),
+    ),
+    # `survival.receipt_state` left this frontier at Phase 4 S4, which is what
+    # a member closing looks like: the stage that gave `ReceiptLedger` its
+    # injected `compile_event` also gave the module an importing test module
+    # (`tests/test_program_structure.py`, the one-direction assertions), so the
+    # derivation stopped reporting it and the row had to go in the same commit.
+    # It is recorded here as a comment rather than silently deleted because the
+    # set is the receipt: a member that leaves without a sentence saying why is
+    # indistinguishable from a member somebody deleted to make a gate pass.
+    # `healing_legacy` left this frontier at the heal-anchor slice, when the
+    # self-heal rules gained a declared anchor: `tests/test_healing.py` imports `HealAnchor` and
+    # `_payments` to pin what each rule pays on -- a cast, a hit that dealt
+    # damage, or a tick schedule of its own -- so the module that had been
+    # covered by behaviour without being named is named.
+    # `survival.score_state` left this frontier at Phase 4 S10, the last of
+    # the six `survival/` members the phase closes (criterion 18).  Its front
+    # door is `tests/test_score_state.py`, and writing one was the work: the
+    # score ledger's contract is almost entirely refusals -- it records one
+    # thing, annotates nothing, and raises rather than scheduling a
+    # walk-authored heal -- and a refusal exercised only through a coupled
+    # request is a refusal nobody has watched fire.  Recorded here as a
+    # comment rather than silently deleted, for the reason the receipt_state
+    # note above gives: the set is the receipt, and a member that leaves
+    # without a sentence saying why is indistinguishable from a member
+    # somebody deleted to make a gate pass.
+}
 
 
 def test_damage_engine_does_not_read_item_registry() -> None:
@@ -35,7 +160,7 @@ def test_damage_engine_does_not_read_item_registry() -> None:
 def test_damage_engine_does_not_dispatch_on_item_names() -> None:
     """Item identity compiles into typed effects before engine execution."""
     tree = ast.parse(DAMAGE_PATH.read_text(encoding="utf-8"))
-    item_names = frozenset(_OFFLINE_ITEM_EFFECTS)
+    item_names = frozenset(_REFERENCE_ITEM_EFFECTS)
     offenders: list[tuple[int, str]] = []
 
     for node in ast.walk(tree):
@@ -49,11 +174,123 @@ def test_damage_engine_does_not_dispatch_on_item_names() -> None:
     assert offenders == []
 
 
-def test_substantial_calculator_modules_have_named_test_front_doors() -> None:
-    """Production module names must lead maintainers to a test suite."""
-    missing = [
-        module
-        for module in SUBSTANTIAL_MODULE_FRONT_DOORS
-        if not (ROOT / "tests" / f"test_{module}.py").is_file()
-    ]
-    assert missing == []
+def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -> None:
+    """D-95: the front-door registry is derived, and this is what it says.
+
+    Set equality in both directions.  A module that gains a front door has to
+    leave the frontier in the same commit, and a module that loses one has to
+    be entered with a reason and an owner — the point of a derived registry is
+    that neither move can be silent.
+    """
+    report = front_door_report(SRC_ROOT, TEST_ROOT)
+    assert {missing.module for missing in report} == set(FRONT_DOOR_FRONTIER)
+    for missing in report:
+        assert (ROOT / missing.path).is_file(), missing.path
+
+
+def test_every_frontier_entry_carries_a_reason_and_an_owner() -> None:
+    """A frontier entry is a receipt, not a suppression."""
+    for module, entry in FRONT_DOOR_FRONTIER.items():
+        assert entry.reason.strip(), module
+        assert entry.owning_phase.strip(), module
+
+
+def test_the_frontier_comment_counts_its_own_members() -> None:
+    """The prose above the table is a claim about the table, so it is read.
+
+    S10 closed the score ledger's front door, wrote a careful departure
+    comment for the member it removed, and left the sentence above the dict
+    saying six -- prose outrunning its own table, in the file whose subject
+    is prose outrunning code.  The number is now resolved out of the source
+    text and compared against ``len``, so the sentence cannot drift again
+    without this failing.
+    """
+    words = _NUMBER_WORDS
+    source = Path(__file__).read_text(encoding="utf-8")
+    claim = re.search(r"leaving the \*\*(\w+)\*\*", source)
+    assert claim is not None, "the comment no longer states a count"
+    assert words[claim.group(1)] == len(FRONT_DOOR_FRONTIER)
+
+
+def test_the_frontier_comment_adds_up_from_its_own_departures() -> None:
+    """The other number in that comment, which nothing was reading.
+
+    The sentence states where the frontier stood after Phase 0's and Phase
+    2's suites and then names the members that left, one departure comment
+    each.  Those are three claims -- a starting count, a set of departures
+    and a remainder -- and only the remainder was checked, which is how the
+    starting count came to describe 10 -> 6 -> 4 while the tree walked
+    10 -> 6 -> 5 -> 4: `survival.receipt_state`'s S4 departure was skipped,
+    in the commit that fixed exactly this defect one line above.
+
+    So the arithmetic is the assertion: the stated six, minus the departures
+    the file actually names and plus the arrivals it names, is the length of
+    the dict.  Arrivals are counted the same way departures are, because a
+    member that lands with no sentence is as invisible as one that leaves
+    with none.
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+    stated = re.search(r"and \*\*(\w+)\*\* after Phase 0's", source)
+    assert stated is not None, "the comment no longer states where it started"
+    # The marker constant is spelled in halves, so it is not itself a match.
+    departures = source.count(DEPARTURE_MARKER)
+    arrivals = source.count(ARRIVAL_MARKER)
+    assert departures > 0, "no departure is named"
+    assert _NUMBER_WORDS[stated.group(1)] - departures + arrivals == len(
+        FRONT_DOOR_FRONTIER
+    )
+
+
+def scanned_sources() -> dict[str, str]:
+    """Every Python file in the three scanned trees, by repository path."""
+    return {
+        path.relative_to(ROOT).as_posix(): path.read_text(encoding="utf-8")
+        for tree in SCANNED_TREES
+        for path in sorted((ROOT / tree).rglob("*.py"))
+    }
+
+
+def retired_registry_sites(sources: Mapping[str, str] | None = None) -> tuple[str, ...]:
+    """Every scanned file naming the retired hand registry in its text."""
+    pattern = rf"\b{re.escape(RETIRED_FRONT_DOOR_REGISTRY)}\b"
+    return tuple(
+        path
+        for path, text in sorted((sources or scanned_sources()).items())
+        if re.search(pattern, text)
+    )
+
+
+def test_the_retired_front_door_registry_has_zero_occurrences() -> None:
+    """Criterion 13's first clause, read literally — comments included."""
+    assert retired_registry_sites() == ()
+
+
+def test_the_zero_occurrence_scan_has_a_permanent_injection_seam() -> None:
+    """R-05: the hand registry reappearing anywhere is a finding, on demand."""
+    injected = {
+        "tests/test_regrown.py": f"{RETIRED_FRONT_DOOR_REGISTRY} = ('healing',)\n"
+    }
+    assert retired_registry_sites(injected) == ("tests/test_regrown.py",)
+
+
+def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> None:
+    """The other half of D-95: a front door is an import, not a filename.
+
+    The registry this replaced was a tuple of eleven module names checked
+    against `tests/test_<module>.py` existing.  A file whose name matches
+    proves nothing about what it imports, and eleven hand-chosen names prove
+    nothing about the rest of the package — so the property asserted now is
+    the one the tuple could not state: every module outside `champions/` is
+    either imported by a test module or carries a frontier entry, with the
+    denominator read off the tree rather than typed.
+    """
+    surveyed = {
+        ".".join(path.relative_to(SRC_ROOT).with_suffix("").parts)
+        for path in SRC_ROOT.rglob("*.py")
+        if path.name != "__init__.py"
+        and path.relative_to(SRC_ROOT).parts[0] != "champions"
+    }
+    reported = {missing.module for missing in front_door_report(SRC_ROOT, TEST_ROOT)}
+    assert set(FRONT_DOOR_FRONTIER) <= surveyed
+    assert reported <= surveyed
+    assert surveyed - reported

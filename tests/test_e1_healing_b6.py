@@ -283,8 +283,17 @@ def test_zaahen_darkin_glaive_heals_percent_of_maximum_health():
 
 
 def test_zaahen_grim_deliverance_heals_flat_per_champion_hit():
-    """R rank 3: "Healing per Champion hit" = 181.5 (no bonus AD)."""
-    combat = _fight("Zaahen", role="top", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
+    """R rank 3: "Healing per Champion hit" = 181.5 (no bonus AD).
+
+    Determination is unstacked so the heal's 66%-bonus-AD term stays
+    zero; P's stack buff is exactly a bonus-AD grant.
+    """
+    combat = _fight(
+        "Zaahen",
+        role="top",
+        ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+        options={"p_determination_stacks": 0},
+    )
     heals = [h for h in _main_heals(combat) if h["source"] == "Grim Deliverance"]
     assert heals, "Grim Deliverance heal missing"
     assert all(h["amount"] == pytest.approx(181.5, rel=0.01) for h in heals)

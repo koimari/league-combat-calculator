@@ -1,14 +1,24 @@
 """Regression coverage for coupled participant combat receipts."""
 
 from dataclasses import replace
-from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.program.views import LeafWriter, name_every_number
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.defensive_effects import (
+    StartingDefenses,
+    resolve_starting_defenses,
+)
+from src.calculator.program.build import dropped_preview_mechanics
+from src.calculator.scenario import (
+    ChampionLoadout,
+    parse_scenario_request,
+    resolve_scenario,
+)
 from src.calculator.stats import calculate_total_stats
 from src.app import app
 import src.calculator.bis as bis_module
@@ -16,24 +26,45 @@ from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
+    ActorRequest,
     Combatant,
     CoupledSearchContext,
     _actor_params,
     _schedule_authored_reactive_events,
     _schedule_thorns_events,
+    _regeneration_windows,
     _simulate_survival,
     build_participant_timeline,
 )
+from src.calculator.program.build import roster_program
+from src.calculator.program.views.survival import survival
+from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.survival import (
+    EVENT_SLOTS,
+    SUPPORT_RANK_KEY,
     ActionKind,
     ScoreLedger,
     SurvivalAction,
     TransitionContext,
-    assemble_survival_rows,
+    TransitionRank,
     build_states,
     finalize_states,
     run_survival_walk,
 )
+
+
+def _simulated_rows(combatants, *args, **kwargs):
+    """The published survival rows for one simulated walk.
+
+    ``_simulate_survival`` returns the frozen walk result from S9 on, because
+    the composition hands that one result to five views.  These tests read the
+    published rows, so they project it through the survival view exactly as
+    the composition does.
+    """
+    return _survival_view(
+        _roster_program(combatants),
+        _simulate_survival(combatants, *args, **kwargs),
+    )
 
 
 def test_roster_actor_without_cast_order_uses_module_default_not_main_override():
@@ -52,18 +83,12 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
         level=18,
         items=(),
         stats={},
-        defenses=None,
-        request=type(
-            "RosterRequest",
-            (),
-            {
-                "role": "",
-                "role_quest_complete": False,
-                "ability_ranks": {},
-                "champion_options": {},
-                "item_options": {"Heartsteel": {"bonus_health": 700}},
-            },
-        )(),
+        defenses=StartingDefenses(),
+        request=ActorRequest(
+            ability_ranks={},
+            champion_options={},
+            item_options={"Heartsteel": {"bonus_health": 700}},
+        ),
     )
 
     assert _actor_params(base, actor).cast_order is None
@@ -77,12 +102,8 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
         level=18,
         items=(),
         stats={},
-        defenses=None,
-        request=type(
-            "RosterRequestWithoutOptions",
-            (),
-            {"role": "", "role_quest_complete": False},
-        )(),
+        defenses=StartingDefenses(),
+        request=ActorRequest(),
     )
     assert _actor_params(base, actor_without_options).item_options is None
 
@@ -176,8 +197,8 @@ def test_guardian_angel_revives_target_after_first_lethal_packet():
     assert survival["terminal_phase"] == "revived"
 
 
-def test_fimbulwinter_ahri_charm_reports_unavailable_mana_gate_authority():
-    """Ahri's reviewed Charm reaches the fail-closed mana-gate receipt."""
+def test_fimbulwinter_ahri_charm_arms_the_sourced_mana_gate():
+    """Ahri's reviewed Charm arms Everlasting through the sourced mana gate."""
     main = get_champion("Ahri")
     loadout = ChampionLoadout(
         champion="Ahri", level=18, items=("Fimbulwinter",)
@@ -204,25 +225,18 @@ def test_fimbulwinter_ahri_charm_reports_unavailable_mana_gate_authority():
         allies=[],
     )
 
-    assert not [
+    # Everlasting's mana gate is sourced (rev 3984419; surface-area U11a),
+    # so Ahri's reviewed Charm arms the shield at full mana instead of the
+    # named authority denial main's tests expected.
+    everlasting = [
         event
         for event in result["support_events"]
         if event["source"] == "Fimbulwinter — Everlasting"
     ]
-    everlasting = [
-        event
-        for event in result["item_denial_receipts"]
-        if event["source"] == "Fimbulwinter — Everlasting"
-    ]
-    assert everlasting
-    assert {event["reason"] for event in everlasting} == {
-        "mana_gate_authority_unavailable"
+    assert everlasting, result["item_denial_receipts"]
+    assert "mana_gate_authority_unavailable" not in {
+        event["reason"] for event in result["item_denial_receipts"]
     }
-    assert {event["mana_gate_status"] for event in everlasting} == {
-        "source_unavailable"
-    }
-    assert {event["source_revision_id"] for event in everlasting} == {3984419}
-    assert result["participants"][0]["survival"]["support_shield_received"] == 0.0
 
 
 def test_fimbulwinter_denial_receipts_are_split_from_applied_support_events():
@@ -1128,17 +1142,17 @@ def test_enemy_hits_off_composes_zero_enemy_damage():
     assert main["survival"]["survived_window"] is True
 
 
-def test_enemy_hits_off_keeps_shadowflame_packets_before_target_death():
-    """Cinderbloom keeps its trigger times in the coupled damage ledger."""
+def _shadowflame_scenario(items):
+    """The enemy-hits-off coupled fight this packet is measured on."""
     app.config["TESTING"] = True
-    response = app.test_client().post(
+    return app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Syndra",
             "level": 11,
             "role": "mid",
             "role_quest_complete": True,
-            "items": ["Doran's Ring", "Blackfire Torch", "Shadowflame"],
+            "items": items,
             "boots": "Spellslinger's Shoes",
             "fight_mode": "time_based",
             "fight_duration": 30,
@@ -1169,21 +1183,98 @@ def test_enemy_hits_off_keeps_shadowflame_packets_before_target_death():
         },
     )
 
-    assert response.status_code == 200
-    combat = response.get_json()["combat"]
-    target = next(row for row in combat["participants"] if row["team"] == "enemy")
-    death_time = target["survival"]["death_time"]
-    shadowflame = [
+
+def test_cinderbloom_is_priced_by_the_walk_not_as_a_coupled_source_row():
+    """Cinderbloom is a dropped preview: the walk rides it, no row carries it.
+
+    ``trigger_stream`` declares ``shadowflame.cinderbloom`` as a walk item
+    delivered by ``RiderDelivery`` at ``survival.transitions._apply_live_amp``,
+    and ``shadowflame.cinderbloom_preview`` as the pair-only,
+    ``ViewTag.THEORETICAL`` half at ``damage._add_shadowflame_cinderbloom``.
+    ``program.build.dropped_preview_mechanics`` therefore names the mechanic,
+    and a roster-composed fight skips computing the preview row entirely --
+    the predicate reads the target's health under the whole roster's fire, so
+    a one-attacker row would be the wrong number to place on a shared clock.
+
+    The bonus is not lost by being unnamed: it amplifies the packets it rides,
+    which is what the two runs below measure.
+    """
+    with_flame = _shadowflame_scenario(
+        ["Doran's Ring", "Blackfire Torch", "Shadowflame"]
+    )
+    without = _shadowflame_scenario(
+        ["Doran's Ring", "Blackfire Torch", "Verdant Barrier"]
+    )
+    assert with_flame.status_code == 200 and without.status_code == 200
+
+    assert "shadowflame.cinderbloom" in dropped_preview_mechanics()
+    combat = with_flame.get_json()["combat"]
+    assert not [
         event
         for event in combat["events"]
-        if event["attacker"] == "main" and event["source"] == "shadowflame_Shadowflame"
+        if event.get("source") == "shadowflame_Shadowflame"
     ]
 
-    assert death_time is not None
-    assert any(
-        event["damage"] > 0 and event["time"] < death_time for event in shadowflame
+    def death_time(response):
+        rows = response.get_json()["combat"]["participants"]
+        return next(row for row in rows if row["team"] == "enemy")["survival"][
+            "death_time"
+        ]
+
+    armed, bare = death_time(with_flame), death_time(without)
+    assert armed is not None and bare is not None
+    assert armed < bare
+
+
+def test_cinderbloom_preview_keeps_one_packet_per_trigger_time():
+    """The pair surface -- where the preview IS the answer -- stays timed.
+
+    The row's bonus packets each keep the timestamp of the hit they rode, so
+    a consumer that stops at a boundary (participant death, a window sum) can
+    stop the late ones and keep the early ones.  They ride the row's own
+    ``damage_events`` because that is the only key the ledger reconstruction
+    reads: under any other name it synthesizes ONE coarse packet at the last
+    ability time, which is the same total placed at the wrong instant.
+    """
+    request = parse_scenario_request(
+        {
+            "champion": "Syndra",
+            "level": 11,
+            "role": "mid",
+            "role_quest_complete": True,
+            "items": ["Doran's Ring", "Blackfire Torch", "Shadowflame"],
+            "boots": "Spellslinger's Shoes",
+            "fight_mode": "timed",
+            "fight_duration": 30,
+            "include_auto_attacks": True,
+            "ability_ranks": {"Q": 5, "W": 3, "E": 1, "R": 2},
+            "champion_options": {"splinters": 100, "r_spheres": 3},
+        },
+        deterministic=True,
     )
-    assert any(event.get("skipped_reason") == "target_dead" for event in shadowflame)
+    resolved = resolve_scenario(request)
+    result = run_fight(
+        resolved.champion_data,
+        request.level,
+        list(resolved.items),
+        resolved.fight_params,
+    )
+    key = next(k for k in result["breakdown"] if k.startswith("shadowflame_"))
+    row = result["breakdown"][key]
+    packets = [
+        event
+        for event in result["damage_events"]
+        if isinstance(event, dict) and event.get("source_key") == key
+    ]
+    assert len(packets) == len(row["damage_events"])
+    assert sum(event["damage"] for event in packets) == pytest.approx(
+        row["total_damage"]
+    )
+    # Many instants, not one lump at the end of the rotation.
+    assert len({round(event["time"], 6) for event in packets}) > 1
+    assert min(event["time"] for event in packets) < max(
+        event["time"] for event in packets
+    )
 
 
 def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
@@ -1550,11 +1641,12 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
     )
     assert response.status_code == 200
     combat = response.get_json()["combat"]
-    shield = next(
+    shields = [
         event
         for event in combat["support_events"]
         if event["attacker"] == "main" and event["source"].startswith("Help, Pix!")
-    )
+    ]
+    shield = shields[0]
     assert shield["target"] == "ally:Jinx"
     assert shield["recipient"] == "ally:Jinx"
     assert shield["event_id"].startswith("main:support:")
@@ -1564,7 +1656,9 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
     jinx = next(
         row for row in combat["participants"] if row["participant_id"] == "ally:Jinx"
     )
-    assert jinx["survival"]["support_shield_received"] == 230.0
+    # Every cast the window fits shields once; how many that is belongs to
+    # the cooldown, not to this receipt.
+    assert jinx["survival"]["support_shield_received"] == 230.0 * len(shields)
 
 
 def test_sona_aria_supports_sona_and_the_selected_ally():
@@ -2260,6 +2354,29 @@ def test_bis_rejects_an_unknown_objective():
     assert "objective must be one of" in response.get_json()["error"]
 
 
+def _named_like_the_real_timeline(payload):
+    """A fake timeline payload, carrying the map the real one publishes.
+
+    ``build_participant_timeline`` names every number it publishes, and the
+    BIS objective refuses to rank a number no entry names (D-62): a payload
+    with bare numbers is a payload nobody can ask what its numbers mean.  So
+    a fake that returned one would be a fake of a shape the tree no longer
+    has.  The map is built through the same writer the views use rather than
+    hand-listed, which is what keeps the fake honest as the writer changes.
+    """
+    payload["dispositions"] = name_every_number(payload, LeafWriter())
+    return payload
+
+
+def _naming(fake):
+    """One fake timeline, wrapped so its payload names its own numbers."""
+
+    def wrapped(*args, **kwargs):
+        return _named_like_the_real_timeline(fake(*args, **kwargs))
+
+    return wrapped
+
+
 def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch):
     """A failed candidate remains visible in the per-candidate audit receipt."""
 
@@ -2294,7 +2411,9 @@ def test_bis_reports_candidates_withheld_before_timeline_evaluation(monkeypatch)
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
 
     assert response.status_code == 200
@@ -2348,7 +2467,9 @@ def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
 
     assert response.status_code == 200
@@ -2422,7 +2543,9 @@ def test_enemy_bis_prioritizes_event_survival_before_outgoing_threat(monkeypatch
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
 
     assert response.status_code == 200
@@ -2479,7 +2602,9 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
             },
         }
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", fake_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(fake_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
 
     assert response.status_code == 200
@@ -2500,7 +2625,9 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
             result["objective"]["focus_damage_before_death"] = 5_000.0
         return result
 
-    monkeypatch.setattr(bis_module, "build_participant_timeline", glass_cannon_timeline)
+    monkeypatch.setattr(
+        bis_module, "build_participant_timeline", _naming(glass_cannon_timeline)
+    )
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
     assert response.get_json()["candidates"][0]["name"] == "Warmog's Armor"
@@ -2687,8 +2814,9 @@ def _dummy_combatant(
     team: str,
     health: float = 100.0,
     healing_received_multiplier: float = 1.0,
+    items: tuple[dict, ...] = (),
 ) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -2699,7 +2827,7 @@ def _dummy_combatant(
         team=team,
         champion_data={"name": participant_id},
         level=1,
-        items=(),
+        items=items,
         stats={"health": health},
         defenses=defenses,
     )
@@ -2708,7 +2836,7 @@ def _dummy_combatant(
 def test_simulator_amplifies_authored_support_shields_for_spirit_visage():
     source = _dummy_combatant("source", "ally")
     target = _dummy_combatant("target", "main", healing_received_multiplier=1.25)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {"target": []},
         {},
@@ -2781,9 +2909,9 @@ def test_simulator_reprices_damage_inside_aftershock_resistance_window():
         "_aftershock": True,
         "_trigger_event_id": "control",
         "_event_id": "aftershock",
-        "_priority": 0.0,
+        SUPPORT_RANK_KEY: TransitionRank.DAMAGE,
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {"source": [hit], "target": [control]},
         {},
@@ -2802,7 +2930,7 @@ def test_simulator_reprices_damage_inside_aftershock_resistance_window():
 def test_simulator_orders_same_timestamp_events_without_comparing_payloads():
     target = _dummy_combatant("target", "enemy")
     source = _dummy_combatant("source", "main")
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -2835,7 +2963,7 @@ def test_simulator_scores_only_applied_support_and_healing_amounts():
     source = _dummy_combatant("source", "main")
     target = _dummy_combatant("target", "ally")
     dead_target = _dummy_combatant("dead", "ally", health=50.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target, dead_target],
         {
             "dead": [
@@ -2892,7 +3020,7 @@ def test_simulator_applies_sourced_grievous_wounds_to_healing_in_event_order():
         defenses=source.defenses,
     )
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -2973,7 +3101,7 @@ def test_grievous_sources_reset_for_a_new_proc_after_expiry():
         defenses=second.defenses,
     )
     target = _dummy_combatant("target", "enemy", health=300.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [first, second, target],
         {
             "target": [
@@ -3033,7 +3161,7 @@ def test_overlapping_grievous_sources_share_one_sourced_reduction_window():
         defenses=source.defenses,
     )
     target = _dummy_combatant("target", "enemy", health=200.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3083,7 +3211,7 @@ def _thorns_combatant(
     bonus_armor: float = 0.0,
     items: tuple = (),
 ) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -3145,7 +3273,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
     assert thorns_events[0]["_wound_until"] == 3.0
     assert thorns_events[0] in outgoing["target"]
 
-    result = _simulate_survival(
+    result = _simulated_rows(
         [striker, wearer],
         incoming,
         {
@@ -3221,7 +3349,7 @@ def test_thorns_from_a_skipped_strike_never_fires():
     outgoing = {"source": list(incoming["target"]), "target": []}
     _schedule_thorns_events([striker, wearer], incoming, outgoing)
 
-    result = _simulate_survival([striker, wearer], incoming, {}, {}, 10.0)
+    result = _simulated_rows([striker, wearer], incoming, {}, {}, 10.0)
     assert result["target"]["survived_window"] is False
     # Only the killing blow's thorns lands: 10 magic vs 100 MR = 5.
     assert result["source"]["damage_taken"] == 5.0
@@ -3230,7 +3358,7 @@ def test_thorns_from_a_skipped_strike_never_fires():
 def test_survival_walk_applies_explicit_deferred_damage_in_equal_ticks():
     source = _dummy_combatant("source", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3298,7 +3426,7 @@ def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
         ],
     }
     healing = {}
-    result = _simulate_survival([holder, enemy], incoming, healing, {}, 5.0)
+    result = _simulated_rows([holder, enemy], incoming, healing, {}, 5.0)
 
     assert result["main"]["damage_deferral_fraction"] == pytest.approx(0.30)
     assert result["main"]["damage_deferral_cleared"] == pytest.approx(15.0)
@@ -3310,8 +3438,6 @@ def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
 
 
 def test_maw_lifeline_enables_post_trigger_omnivamp():
-    from src.calculator.defensive_effects import StartingDefenses
-
     holder = Combatant(
         participant_id="main",
         team="main",
@@ -3354,7 +3480,7 @@ def test_maw_lifeline_enables_post_trigger_omnivamp():
             }
         ],
     }
-    result = _simulate_survival([holder, enemy], incoming, {}, {}, 2.0)
+    result = _simulated_rows([holder, enemy], incoming, {}, {}, 2.0)
     assert result["main"]["threshold_shield_triggered"] is True
     assert result["main"]["healing_received"] == pytest.approx(2.0)
 
@@ -3367,7 +3493,7 @@ def test_immortal_path_below_half_amplifies_non_vamp_recovery():
         level=18,
         items=(get_item_by_name("Immortal Path"),),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -3375,7 +3501,7 @@ def test_immortal_path_below_half_amplifies_non_vamp_recovery():
         ),
     )
     enemy = _dummy_combatant("enemy", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder, enemy],
         {
             "main": [
@@ -3455,7 +3581,7 @@ def test_deaths_dance_defy_starts_heal_at_delayed_takedown_once():
         ],
     }
     healing = {}
-    result = _simulate_survival([holder, enemy], incoming, healing, {}, 5.0)
+    result = _simulated_rows([holder, enemy], incoming, healing, {}, 5.0)
 
     defy_heals = [
         event for event in healing["main"] if event["source"] == "Death's Dance (Defy)"
@@ -3482,7 +3608,7 @@ def test_eclipse_self_shield_is_triggered_and_expires_in_order():
                 "source": "Eclipse (Ever Rising Moon)",
                 "_event_id": "proc:shield",
                 "_trigger_event_id": "proc",
-                "_priority": 0.5,
+                SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
             }
         ]
     }
@@ -3510,7 +3636,7 @@ def test_eclipse_self_shield_is_triggered_and_expires_in_order():
             }
         ],
     }
-    result = _simulate_survival([source, target], incoming, {}, support, 4.0)
+    result = _simulated_rows([source, target], incoming, {}, support, 4.0)
 
     assert result["source"]["support_shield_received"] == pytest.approx(80.0)
     assert result["source"]["support_shield_expired"] == pytest.approx(80.0)
@@ -3534,7 +3660,7 @@ def test_deferred_ticks_are_mirrored_into_the_public_outgoing_receipt():
         "deferred_ticks": 3,
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [event]},
         {},
@@ -3560,7 +3686,7 @@ def test_survival_walk_redirects_an_authored_damage_fraction_to_holder():
     source = _dummy_combatant("source", "enemy", health=100.0)
     protected = _dummy_combatant("protected", "main", health=100.0)
     holder = _dummy_combatant("holder", "main", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, protected, holder],
         {
             "protected": [
@@ -3618,7 +3744,7 @@ def test_knights_vow_redirect_reprices_pre_mitigation_damage_for_holder_resistan
         "redirect_holder_health_ratio": 0.30,
         "_baseline_effective_armor": 0.0,
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, protected, holder],
         {"protected": [event]},
         {},
@@ -3663,7 +3789,7 @@ def test_knights_vow_cancels_redirect_when_holder_falls_below_health_gate():
             }
         ],
     }
-    result = _simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
+    result = _simulated_rows([source, protected, holder], incoming, {}, {}, 10.0)
     assert result["protected"]["health_damage"] == pytest.approx(40.0)
     assert result["holder"]["health_damage"] == pytest.approx(90.0)
 
@@ -3713,7 +3839,7 @@ def test_redirect_clone_is_mirrored_into_the_public_outgoing_receipt():
         "redirect_target": "holder",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, protected, holder],
         {"protected": [event]},
         {},
@@ -3735,7 +3861,7 @@ def test_redirect_clone_is_mirrored_into_the_public_outgoing_receipt():
 def test_survival_walk_blocks_stasis_damage_and_allows_explicit_revive():
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=50.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -3857,7 +3983,9 @@ def test_standalone_crowd_control_blocks_actions_and_merges_downtime():
         ],
         "source": outgoing,
     }
-    result = _simulate_survival(
+    # MERGE: the walk returns its frozen result now, so the published rows
+    # come from the survival view exactly as the composition builds them.
+    result = _simulated_rows(
         [source, target],
         incoming,
         {},
@@ -3897,7 +4025,7 @@ def test_revive_after_fight_window_cannot_change_terminal_state():
             }
         ]
     }
-    result = _simulate_survival([source, target], damage, {}, support, 10.0)
+    result = _simulated_rows([source, target], damage, {}, support, 10.0)
     assert result["target"]["first_death_time"] == 1.0
     assert result["target"]["revived"] is False
     assert result["target"]["terminal_phase"] == "dead"
@@ -3917,7 +4045,7 @@ def test_post_window_damage_receipt_preserves_pair_amount_and_skip_reason():
         "_event_id": "late-damage",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [event]},
         {},
@@ -3930,11 +4058,13 @@ def test_post_window_damage_receipt_preserves_pair_amount_and_skip_reason():
     assert event["skipped_reason"] == "outside_window"
 
 
-def test_survival_walk_applies_collector_execute_as_terminal_state():
-    """The Collector threshold kills without adding synthetic damage."""
-    source = _dummy_combatant("source", "main", health=100.0)
-    target = _dummy_combatant("target", "enemy", health=100.0)
-    execute_event = {
+def _collector_execute_event() -> dict:
+    """One packet that leaves the target inside The Collector's threshold.
+
+    It carries the pair engine's own stamp, because that is what the walk
+    used to read and what this pair of tests is about.
+    """
+    return {
         "time": 1.0,
         "damage": 96.0,
         "damage_type": "physical",
@@ -3945,7 +4075,16 @@ def test_survival_walk_applies_collector_execute_as_terminal_state():
         "sequence": 0,
         "_event_id": "collector",
     }
-    result = _simulate_survival(
+
+
+def test_survival_walk_applies_collector_execute_as_terminal_state():
+    """The Collector threshold kills without adding synthetic damage."""
+    source = _dummy_combatant(
+        "source", "main", health=100.0, items=({"name": "The Collector"},)
+    )
+    target = _dummy_combatant("target", "enemy", health=100.0)
+    execute_event = _collector_execute_event()
+    result = _simulated_rows(
         [source, target],
         {"target": [execute_event]},
         {},
@@ -3960,6 +4099,36 @@ def test_survival_walk_applies_collector_execute_as_terminal_state():
     assert execute_event["execute_triggered"] is True
 
 
+def test_the_walk_executes_off_the_declaration_and_not_off_the_pair_stamp():
+    """The equivalence fixture for The Collector, and the mutation behind it.
+
+    ``damage_routing`` retired off the pair engine (umbrella Amendment P), so
+    the walk reads the Execute rider from the attacker's own declaration
+    rather than from the ratio ``damage.py`` stamped on its own events.  The
+    same packet, carrying the same stamp, against an attacker whose build
+    declares no execution: the threshold does not fire, and the target lives
+    on the four health the previous test executes it out of.
+
+    That is the whole property the retirement bought, and it is unprovable
+    from the covering scenario -- no committed coupled roster holds The
+    Collector -- which is why Amendment P asks for a fixture per owner.
+    """
+    source = _dummy_combatant("source", "main", health=100.0)
+    target = _dummy_combatant("target", "enemy", health=100.0)
+    execute_event = _collector_execute_event()
+    result = _simulated_rows(
+        [source, target],
+        {"target": [execute_event]},
+        {},
+        {},
+        10.0,
+    )
+
+    assert result["target"]["ending_health"] == 4.0
+    assert result["target"]["execute_source"] == ""
+    assert "execute_threshold_ratio" not in execute_event
+
+
 def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=100.0)
@@ -3970,7 +4139,7 @@ def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():
         level=target.level,
         items=target.items,
         stats=target.stats,
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -3980,7 +4149,7 @@ def test_survival_walk_arms_threshold_shield_before_crossing_health_boundary():
             threshold_shield_damage_type="all",
         ),
     )
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4016,7 +4185,7 @@ def test_threshold_shield_stays_armed_past_duration_until_matching_type_hit():
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -4026,7 +4195,7 @@ def test_threshold_shield_stays_armed_past_duration_until_matching_type_hit():
             threshold_shield_damage_type="magic",
         ),
     )
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4059,7 +4228,7 @@ def test_threshold_shield_triggers_on_late_matching_type_hit_and_expires_after_d
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -4069,7 +4238,7 @@ def test_threshold_shield_triggers_on_late_matching_type_hit_and_expires_after_d
             threshold_shield_damage_type="magic",
         ),
     )
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4101,7 +4270,7 @@ def test_threshold_shield_trigger_is_preserved_on_damage_receipt():
         level=1,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -4120,7 +4289,7 @@ def test_threshold_shield_trigger_is_preserved_on_damage_receipt():
         "_event_id": "lifeline-receipt",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target], {"target": [event]}, {}, {}, 10.0, receipt_events=outgoing
     )
     assert event["threshold_shield_triggered"] is True
@@ -4197,7 +4366,7 @@ def test_authored_reactive_packet_with_wrong_trigger_is_ignored():
 def test_spell_shield_consumes_one_authored_ability_but_not_auto_attack():
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4290,7 +4459,7 @@ def test_opening_annul_from_item_blocks_first_canonical_ability():
             "_event_id": "auto",
         },
     ]
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = _simulated_rows([source, target], {"target": events}, {}, {}, 10.0)
 
     assert result["target"]["damage_taken"] == 20.0
     assert result["target"]["spell_shield_used"] is True
@@ -4312,7 +4481,7 @@ def test_spell_shield_block_receipt_preserves_authored_source():
         "_event_id": "spell-source",
     }
     outgoing = {"source": [event]}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [event]},
         {},
@@ -4336,7 +4505,7 @@ def test_spell_shield_block_receipt_preserves_authored_source():
 def test_stasis_blocks_the_stasis_holder_outgoing_packet_until_expiry():
     holder = _dummy_combatant("holder", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder, target],
         {
             "target": [
@@ -4382,7 +4551,7 @@ def test_stasis_blocks_the_stasis_holder_outgoing_packet_until_expiry():
 def test_stasis_receipt_carries_authored_source_and_start_time():
     holder = _dummy_combatant("holder", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder, target],
         {},
         {},
@@ -4440,7 +4609,7 @@ def test_force_of_nature_stacks_and_reprices_the_maximum_stack_packet():
         for index in range(8)
     ]
 
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = _simulated_rows([source, target], {"target": events}, {}, {}, 10.0)
 
     assert result["target"]["force_of_nature"]["stacks"] == 8
     assert result["target"]["force_of_nature"]["dynamic_bonus_magic_resistance"] == 70.0
@@ -4494,7 +4663,7 @@ def test_jaksho_multiplies_bonus_resistances_after_five_combat_seconds():
         },
     ]
 
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = _simulated_rows([source, target], {"target": events}, {}, {}, 10.0)
 
     assert result["target"]["jaksho"]["stacks"] == 5
     assert result["target"]["jaksho"]["dynamic_bonus_magic_resistance"] == 18.0
@@ -4543,7 +4712,7 @@ def test_explicit_time_stop_input_starts_stasis_and_blocks_until_expiry():
         ]
     }
 
-    result = _simulate_survival([source, target], incoming, {}, {}, 5.0)
+    result = _simulated_rows([source, target], incoming, {}, {}, 5.0)
 
     assert result["target"]["damage_taken"] == pytest.approx(30.0)
     assert result["target"]["stasis_until"] == pytest.approx(2.5)
@@ -4568,7 +4737,7 @@ def test_invulnerability_and_untargetability_receipts_expose_expiry_boundaries()
             {"time": 1.0, "kind": "untargetable", "duration": 2.0},
         ]
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [holder],
         {},
         {},
@@ -4596,7 +4765,7 @@ def test_healing_receipt_separates_applied_amount_from_overheal():
             }
         ]
     }
-    result = _simulate_survival([source, target], {}, healing, {}, 10.0)
+    result = _simulated_rows([source, target], {}, healing, {}, 10.0)
     assert result["target"]["healing_received"] == 0.0
     assert result["target"]["overhealing"] == 50.0
     assert healing["target"][0]["overheal"] == 50.0
@@ -4640,7 +4809,7 @@ def test_grievous_window_expiry_clears_stale_source_composition():
             }
         ]
     }
-    result = _simulate_survival([early, late, target], incoming, healing, {}, 10.0)
+    result = _simulated_rows([early, late, target], incoming, healing, {}, 10.0)
     assert result["target"]["healing_received"] == 6.0
     assert result["target"]["healing_reduction_events"][-1]["sources"] == ["Late Wound"]
 
@@ -4660,7 +4829,7 @@ def test_authored_temporary_health_support_expires_and_clamps_health():
             }
         ]
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -4704,7 +4873,7 @@ def test_heal_overflow_can_become_temporary_health_and_expires():
             }
         ]
     }
-    result = _simulate_survival([source, target], {"target": []}, healing, {}, 5.0)
+    result = _simulated_rows([source, target], {"target": []}, healing, {}, 5.0)
     event = healing["target"][0]
     assert result["target"]["healing_received"] == 0.0
     assert result["target"]["overhealing"] == 0.0
@@ -4720,7 +4889,6 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
     """The score adapter (parallel-array ledger) and the receipt adapter
     share one kernel: an overheal-to-temporary-health heal arms the window
     in the score walk exactly like the annotated walk."""
-    from types import SimpleNamespace
 
     combatants = [
         Combatant(
@@ -4730,7 +4898,7 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
             level=1,
             items=(),
             stats={"health": 100.0, "is_melee": True},
-            defenses=SimpleNamespace(
+            defenses=StartingDefenses(
                 magic_shield=0.0,
                 physical_shield=0.0,
                 general_shield=0.0,
@@ -4739,9 +4907,18 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         )
     ]
     action = SurvivalAction(
-        sort_key=(0.0, 1.0, 0, 0, 0, "target", "heal", "Sundered Sky"),
+        sort_key=(
+            0.0,
+            TransitionRank.DEBUFF_ARM,
+            0,
+            0,
+            0,
+            "target",
+            "heal",
+            "Sundered Sky",
+        ),
         time=0.0,
-        phase=1.0,
+        phase=TransitionRank.RECOVERY,
         kind=ActionKind.HEAL,
         subject=0,
         attacker=0,
@@ -4751,10 +4928,10 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         temporary_health_duration=2.0,
         source_key="heal",
         source="Sundered Sky (Lightshield Strike)",
-        event_id="heal",
+        event_slot=EVENT_SLOTS.slot("heal"),
         sequence=0,
     )
-    states = build_states(combatants)
+    states = build_states(combatants, (0.0,) * len(combatants))
     ledger = ScoreLedger(1)
     ctx = TransitionContext(
         duration=5.0,
@@ -4762,10 +4939,12 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
         combatants=combatants,
         index_of={"target": 0},
         ledger=ledger,
+        # No participant declares a regeneration window; the sequence is
+        # required rather than defaulted so "none declared" and "nobody
+        # compiled them" cannot be the same context.
+        regeneration_windows=(None,) * len(combatants),
     )
-    run_survival_walk([action], ctx)
-    finalize_states(states, 5.0)
-    rows = assemble_survival_rows(states, combatants)
+    rows = survival(roster_program(combatants), run_one_walk([action], ctx))
     assert ledger.applied == [0.0]
     assert rows["target"]["temporary_health_received"] == 50.0
     assert rows["target"]["temporary_health_expired_at"] == 2.0
@@ -4901,31 +5080,10 @@ def test_shared_pair_cache_replays_identical_coupled_receipts():
     assert cache, "the pair cache was never populated"
 
 
-def test_pair_packets_carry_reused_typed_actions():
-    """Issue #169: a cached pair packet compiles its typed actions once and
-    every later evaluation reuses them — the composition pairs each cached
-    action with that evaluation's event copy, and results stay identical to
-    a fresh no-cache computation."""
-    timeline = _coupled_fixture()
-    cache: dict = {}
-    items = [get_item_by_name("Rabadon's Deathcap")]
-    first = timeline(items, pair_result_cache=cache)
-    typed_maps = [packet["_typed"] for packet in cache.values() if packet.get("_typed")]
-    assert typed_maps, "cached packets carry no compiled typed actions"
-    assert any(by_template for _token, by_template in typed_maps)
-    second = timeline(items, pair_result_cache=cache)
-    assert second == first
-    assert timeline(items) == first
-    # The maps were compiled once: the same tuple objects are still on the
-    # packets after the second evaluation.
-    for packet, typed in zip(cache.values(), typed_maps):
-        assert packet["_typed"] is typed
-
-
-def test_typed_action_reuse_survives_redirect_expansion():
+def test_pair_packet_reuse_survives_redirect_expansion():
     """Knight's Vow rewrites incoming packets during the survival
-    composition; issue #169's cached typed actions must miss on every
-    replaced dict and the cached receipts must stay byte-identical."""
+    composition; a served pair packet's receipts must stay byte-identical
+    to a fresh no-cache computation across every rewrite."""
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
@@ -4968,69 +5126,6 @@ def test_typed_action_reuse_survives_redirect_expansion():
     cache: dict = {}
     assert timeline(pair_result_cache=cache) == fresh
     assert timeline(pair_result_cache=cache) == fresh
-
-
-def test_packet_typed_actions_match_fresh_conversion():
-    """The cached conversion is the per-event conversion: pairing a cached
-    action with its template must reproduce ``survival_action_from_event``
-    field-for-field."""
-    from src.calculator.participant_timeline import _packet_typed_actions
-    from src.calculator.survival import survival_action_from_event
-
-    timeline = _coupled_fixture()
-    cache: dict = {}
-    timeline([get_item_by_name("Rabadon's Deathcap")], pair_result_cache=cache)
-    index_of = {"main": 0, "enemy:Alistar": 1, "enemy:Dr. Mundo": 2}
-    checked = 0
-    for packet in cache.values():
-        typed = _packet_typed_actions(packet, index_of)
-        for template in packet["events"]:
-            cached = typed.get(id(template))
-            if cached is None:
-                continue
-            fresh = survival_action_from_event(
-                template,
-                0.0,
-                index_of[str(template["target"])],
-                index_of,
-                subject_id=str(template["target"]),
-            )
-            assert cached._replace(event=template) == fresh
-            checked += 1
-        for template in packet["heals"]:
-            cached = typed.get(id(template))
-            if cached is None:
-                continue
-            fresh = survival_action_from_event(
-                template,
-                1.0,
-                index_of[str(template["attacker"])],
-                index_of,
-                subject_id=str(template["attacker"]),
-            )
-            assert cached._replace(event=template) == fresh
-            checked += 1
-    assert checked > 0
-
-
-def test_packet_typed_actions_revalidate_on_index_change():
-    """A packet compiled under one participant order must recompile when the
-    composition's indices differ (the resolve_damage_effects re-verify
-    pattern), never serve stale subject indices."""
-    from src.calculator.participant_timeline import _packet_typed_actions
-
-    timeline = _coupled_fixture()
-    cache: dict = {}
-    timeline([get_item_by_name("Rabadon's Deathcap")], pair_result_cache=cache)
-    packet = next(packet for packet in cache.values() if packet["events"])
-    first_order = {"main": 0, "enemy:Alistar": 1, "enemy:Dr. Mundo": 2}
-    swapped_order = {"main": 0, "enemy:Alistar": 2, "enemy:Dr. Mundo": 1}
-    first = _packet_typed_actions(packet, first_order)
-    swapped = _packet_typed_actions(packet, swapped_order)
-    assert packet["_typed"][0] == tuple(swapped_order.items())
-    template = next(iter(packet["events"]))
-    if str(template["target"]) in ("enemy:Alistar", "enemy:Dr. Mundo"):
-        assert first[id(template)].subject != swapped[id(template)].subject
 
 
 def test_score_only_receipt_matches_full_receipt_numbers():
@@ -5093,7 +5188,7 @@ def test_noxian_reactive_shield_is_granted_after_matching_damage_only():
         level=18,
         items=(),
         stats={"health": 1000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -5121,7 +5216,7 @@ def test_noxian_reactive_shield_is_granted_after_matching_damage_only():
         "target": "target",
         "_event_id": "magic-hit",
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target],
         {
             "target": [
@@ -5150,7 +5245,7 @@ def test_celestial_opposition_reduction_lingers_two_seconds():
         level=1,
         items=(),
         stats={"health": 1000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -5171,7 +5266,7 @@ def test_celestial_opposition_reduction_lingers_two_seconds():
     }
     second = {**first, "time": 1.0, "_event_id": "second"}
     third = {**first, "time": 3.1, "_event_id": "third"}
-    _simulate_survival(
+    _simulated_rows(
         [source, target],
         {"target": [first, second, third]},
         {},
@@ -5193,7 +5288,7 @@ def test_bloodthirster_converts_explicit_lifesteal_excess_to_uncapped_duration_s
         level=18,
         items=(),
         stats={"health": 100.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -5219,7 +5314,7 @@ def test_bloodthirster_converts_explicit_lifesteal_excess_to_uncapped_duration_s
         "attacker": "target",
         "target": "target",
     }
-    result = _simulate_survival(
+    result = _simulated_rows(
         [source, target], {"target": [damage]}, {"target": [heal]}, {}, 10.0
     )
 
@@ -5356,8 +5451,10 @@ def test_support_attributes_match_the_profile_lookup_source():
 
     ``derive_ally_effects`` skips champions via ``_SUPPORT_ATTRIBUTES``;
     an attribute added to ``_support_profile``'s lookups without extending
-    that set would silently drop the champion's packets, so the set is
-    pinned to the ``_first_attribute`` tuples actually in the source.
+    that set would silently drop the champion's packets.  The gate is now
+    the union of the two declared lookup tuples, so what this asserts is
+    that the profile still reads THOSE tuples — an inline literal would
+    reopen the gap the union closes.
     """
     import inspect
     import re as re_module
@@ -5365,12 +5462,11 @@ def test_support_attributes_match_the_profile_lookup_source():
     from src.calculator import support_effects
 
     source = inspect.getsource(support_effects._support_profile)
-    lookups = re_module.findall(r"_first_attribute\(\s*ability,\s*\(([^)]*)\)", source)
-    assert lookups, "expected _first_attribute lookups in _support_profile"
-    named = set()
-    for group in lookups:
-        named.update(re_module.findall(r'"([^"]+)"', group))
-    assert named == set(support_effects._SUPPORT_ATTRIBUTES)
+    lookups = re_module.findall(r"_first_attribute\(ability, (\w+)\)", source)
+    assert sorted(lookups) == ["_HEAL_ATTRIBUTES", "_SHIELD_ATTRIBUTES"]
+    assert set(support_effects._SUPPORT_ATTRIBUTES) == set(
+        support_effects._SHIELD_ATTRIBUTES
+    ) | set(support_effects._HEAL_ATTRIBUTES)
 
 
 def test_healing_rule_champions_matches_the_dispatch_source():
@@ -5477,3 +5573,512 @@ def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():
         )
         legacy = timeline(items, include_receipt=False)
         assert fast == legacy
+
+
+# ── the regeneration window, compiled from the declaration (3.9) ─────────
+
+
+def _regen_combatant(*item_names: str) -> Combatant:
+    """A participant carrying only the items the window compiler reads."""
+    return Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": "Garen", "attackType": "MELEE"},
+        level=9,
+        items=tuple({"name": name} for name in item_names),
+        stats={"health": 1500.0},
+        defenses=StartingDefenses(),
+    )
+
+
+def test_the_regeneration_window_compiles_the_declarations_own_numbers():
+    """Every number the walk pays is the key the retired branch read.
+
+    Asserted against ``sustain_effect_value`` rather than literals: this
+    migration claims the declaration reproduces the five hand reads, and a
+    literal would still pass on the commit that broke the reference.
+    """
+    from src.calculator.item_effects import sustain_effect_value
+
+    (window,) = _regeneration_windows([_regen_combatant("Doran's Shield")])
+
+    assert window is not None
+    assert window.owner == "Doran's Shield"
+    for field_name, key in (
+        ("total_melee", "enduring_focus_total_melee"),
+        ("total_reduced", "enduring_focus_total_reduced"),
+        ("duration", "enduring_focus_duration"),
+        ("missing_health_cap", "enduring_focus_missing_health_cap"),
+        ("tick_interval", "health_regen_tick_interval"),
+    ):
+        assert getattr(window, field_name) == sustain_effect_value(
+            "Doran's Shield", key
+        )
+
+
+def test_a_participant_declaring_no_regeneration_compiles_none():
+    """An absent window is an answer; five defaulted zeros would not be."""
+    assert _regeneration_windows([_regen_combatant("Ruby Crystal")]) == (None,)
+
+
+def test_a_short_window_sequence_stops_rather_than_misaligning():
+    """R-05's red: the sequence is participant-index-aligned or it is wrong."""
+    combatants = [_regen_combatant("Doran's Shield"), _regen_combatant()]
+
+    with pytest.raises(ValueError, match="participant-index-aligned"):
+        TransitionContext(
+            duration=5.0,
+            # The alignment check runs before any state is read, which is the
+            # point: a misaligned context must not get as far as a walk.
+            states=[],
+            combatants=combatants,
+            index_of={"target": 0},
+            ledger=ScoreLedger(0),
+            regeneration_windows=(None,),
+        )
+
+
+def test_a_ledger_without_the_capability_flags_is_refused():
+    """The kernel reads ``SurvivalLedger``'s flags directly, never by default.
+
+    A silent ``True`` default let a stand-in ledger buy full observation it
+    never declared; the read now names the missing attribute.
+    """
+
+    class Bare:  # pylint: disable=too-few-public-methods
+        """A ledger-shaped object that declares no capability flags."""
+
+    with pytest.raises(AttributeError, match="records_annotations"):
+        TransitionContext(
+            duration=5.0,
+            states=[],
+            combatants=[],
+            index_of={},
+            ledger=Bare(),
+            regeneration_windows=(),
+        )
+
+
+def test_the_below_half_bonus_compiles_the_declarations_own_number():
+    """The walk's bonus is the key ``receipt_state`` read by item name.
+
+    Asserted against ``sustain_effect_value`` rather than a literal, for the
+    reason the regeneration window is: this migration's claim is that the
+    declaration reproduces the hand read exactly, and a literal would still
+    pass on the commit that broke the reference.
+    """
+    from src.calculator.item_effects import sustain_effect_value
+    from src.calculator.participant_timeline import _below_half_healing_bonuses
+
+    assert _below_half_healing_bonuses([_regen_combatant("Immortal Path")]) == (
+        sustain_effect_value(
+            "Immortal Path", "health_state_healing_multiplier_below_half"
+        ),
+    )
+
+
+def test_a_participant_declaring_no_below_half_bonus_compiles_zero():
+    """Nobody declares one, so the walk multiplies by nothing.
+
+    Zero rather than ``None`` here and ``None`` for the regeneration window,
+    because the two absences are different: a window is five numbers the walk
+    would otherwise have to invent, and this is one share the walk adds only
+    while it is positive — so an absent bonus and a sourced zero are the same
+    arithmetic and the same answer.
+    """
+    from src.calculator.participant_timeline import _below_half_healing_bonuses
+
+    assert _below_half_healing_bonuses([_regen_combatant("Ruby Crystal")]) == (0.0,)
+
+
+def test_a_short_bonus_sequence_stops_rather_than_misaligning():
+    """R-05's red: the state builder's sequence is aligned or it is wrong."""
+    from src.calculator.survival import build_states
+
+    combatants = [_regen_combatant("Immortal Path"), _regen_combatant()]
+
+    with pytest.raises(ValueError, match="participant-index-aligned"):
+        build_states(combatants, (0.0,))
+
+
+class TestThePairCacheKeyCarriesEveryInputThatPricedIt:
+    """Phase 4 S8 — one key function, and the resource ledger is in it.
+
+    A cached pair packet is replayed for every later evaluation whose key
+    matches, so a priced-in input missing from the key is a stale packet
+    served as a fresh one.  The cross-pass ledger is the input a second pass
+    changes, and it is the reason the recursive repass gives itself an empty
+    cache today.
+    """
+
+    def test_two_passes_of_one_pair_do_not_share_a_key(self):
+        from src.calculator.participant_timeline import _pair_cache_key
+
+        pass_one = _pair_cache_key("ally:Lulu", "enemy:Aatrox", (), ())
+        pass_two = _pair_cache_key(
+            "ally:Lulu", "enemy:Aatrox", (), ((1.5, 40.0), (3.0, 55.0))
+        )
+        assert pass_one != pass_two
+
+    def test_an_unpatched_pass_keys_identically_across_both_lanes(self):
+        """The compiled panel and the receipt walk share one cache.
+
+        Their docstrings say they interoperate; this is that claim as a
+        test rather than a sentence, and it is what makes the constant the
+        compiled lane passes checkable instead of assumed.
+        """
+        from src.calculator.participant_timeline import (
+            _UNPATCHED_RESTORES,
+            _pair_cache_key,
+        )
+
+        assert _pair_cache_key(
+            "enemy:Aatrox", "ally:Jax", (), _UNPATCHED_RESTORES
+        ) == _pair_cache_key("enemy:Aatrox", "ally:Jax", (), ())
+
+    def test_the_defensive_signature_still_separates_main_candidates(self):
+        from src.calculator.participant_timeline import _pair_cache_key
+
+        thin = _pair_cache_key("enemy:Aatrox", "main", (60.0, 30.0), ())
+        thick = _pair_cache_key("enemy:Aatrox", "main", (140.0, 30.0), ())
+        assert thin != thick
+
+    def test_a_defended_main_never_collides_with_a_roster_defender(self):
+        """The two key shapes the widening unified may not fold together."""
+        from src.calculator.participant_timeline import _pair_cache_key
+
+        assert _pair_cache_key(
+            "enemy:Aatrox", "main", (60.0, 30.0), ()
+        ) != _pair_cache_key("enemy:Aatrox", "main", (), ())
+
+
+class TestCatalystIsTwoPassesAndNotARecursion:
+    """Phase 4 S8 — D-70's four clauses, over the live mana-spent heal.
+
+    Catalyst of Aeons' Eternity restore is a function of the incoming damage
+    the fight itself produces, so the composition has to be priced twice.
+    Doing that by re-entering the composer from inside itself is what made
+    the path unrepresentable: a walk that can call the thing that called it
+    has no single invocation to count and no single result to project a view
+    from.
+    """
+
+    @staticmethod
+    def _catalyst_roster():
+        """Ahri holding Catalyst, two enemies who hit her, one ally."""
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Catalyst of Aeons",)
+        ).resolve()
+        enemies = [
+            ChampionLoadout(champion=name, level=13, role="top").resolve()
+            for name in ("Aatrox", "Malphite")
+        ]
+        allies = [ChampionLoadout(champion="Pantheon", level=13).resolve()]
+        return main, enemies, allies
+
+    @classmethod
+    def _timeline(cls, **overrides):
+        main, enemies, allies = cls._catalyst_roster()
+        params = FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        )
+        arguments = dict(
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=allies,
+        )
+        arguments.update(overrides)
+        return build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            params,
+            **arguments,
+        )
+
+    def test_the_composer_never_calls_itself(self):
+        """Criterion 13's first clause, read off source rather than claimed."""
+        import ast
+        from pathlib import Path
+
+        source = Path("src/calculator/participant_timeline.py").read_text(
+            encoding="utf-8"
+        )
+        calls = [
+            node
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "build_participant_timeline"
+        ]
+        assert calls == []
+
+    def test_a_catalyst_roster_declares_two_passes(self):
+        from src.calculator.participant_timeline import _cross_pass_dependencies
+
+        main, enemies, allies = self._catalyst_roster()
+        declared = _cross_pass_dependencies(list(main.item_data), enemies, allies)
+
+        assert [dep.max_passes for dep in declared] == [2]
+        assert declared[0].reads == "resource_restores"
+        assert "mana_spent_heal" in declared[0].mechanic
+
+    def test_a_roster_without_one_declares_nothing(self):
+        """One pass, and therefore zero cost, for every other roster."""
+        from src.calculator.participant_timeline import _cross_pass_dependencies
+
+        plain = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        assert _cross_pass_dependencies(list(plain.item_data), [], []) == ()
+
+    def test_the_second_pass_prices_the_restores_the_first_derived(self):
+        """Two passes, and the second differs from the first only by a patch.
+
+        Spying on the pass function rather than on a heal amount, because
+        the property under test is the shape -- pass 2 exists, it runs once,
+        and everything it knows that pass 1 did not arrived in a declared
+        ``ParamPatch`` under the dependency's own ``reads`` field.
+        """
+        from src.calculator import participant_timeline as timeline
+
+        seen = []
+        original = timeline._compose_pass
+
+        def spy(*args, **kwargs):
+            seen.append((kwargs["pass_index"], kwargs["patch"]))
+            return original(*args, **kwargs)
+
+        timeline._compose_pass = spy
+        try:
+            combat = self._timeline()
+        finally:
+            timeline._compose_pass = original
+
+        assert [index for index, _ in seen] == [1, 2]
+        assert seen[0][1] is None
+        assert set(seen[1][1].overrides) == {"resource_restores"}
+        assert seen[1][1].overrides["resource_restores"]["main"]
+        assert [
+            event
+            for event in combat["healing_events"]
+            if "Catalyst of Aeons" in str(event.get("source", ""))
+        ]
+
+    def test_the_second_pass_keeps_the_search_context_and_its_counters(self):
+        """Criterion 13's "caches and search context live" clause.
+
+        The recursive repass passed ``search_context=None``, which put every
+        pair fight of the second pricing outside the work counters -- a
+        measurement hole that read as a cheaper request than it was.
+        """
+        from collections import Counter
+        from dataclasses import dataclass, field
+
+        @dataclass(slots=True)
+        class Sink:
+            measured_proposals: int = 0
+            score_memo_misses: int = 0
+            pair_run_fight_calls: int = 0
+            walk_invocations: int = 0
+            rungs: Counter = field(default_factory=Counter)
+            rung_receipts: Counter = field(default_factory=Counter)
+
+        two_pass = Sink()
+        self._timeline(search_context=CoupledSearchContext(work_counters=two_pass))
+
+        one_pass = Sink()
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        params = FightParams.from_request(
+            {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+        )
+        _, enemies, allies = self._catalyst_roster()
+        build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            params,
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=allies,
+            search_context=CoupledSearchContext(work_counters=one_pass),
+        )
+
+        assert two_pass.pair_run_fight_calls > one_pass.pair_run_fight_calls
+        # ...and one evaluation still lands on exactly one rung, because the
+        # rung belongs to the evaluation and not to the pass.
+        assert sum(two_pass.rungs.values()) == sum(one_pass.rungs.values()) == 1
+
+    def test_both_passes_share_the_callers_one_cache(self):
+        """The other half of "caches live": one dict, two passes, no collision.
+
+        The recursive repass handed itself a fresh dict, so pass 2 re-priced
+        every pair fight in the roster.  The key now carries the ledger that
+        priced a packet, so the two passes share the caller's cache: the
+        fights whose inputs the patch did not change are *served* from pass
+        1, and only the holder's own fights get a second entry under their
+        own ledger.  An ally holds the Catalyst here so both halves of that
+        split are visible in one cache.
+        """
+        main = ChampionLoadout(
+            champion="Ahri", level=13, role="mid", items=("Luden's Echo",)
+        ).resolve()
+        _, enemies, _ = self._catalyst_roster()
+        holder = ChampionLoadout(
+            champion="Pantheon", level=13, items=("Catalyst of Aeons",)
+        ).resolve()
+        cache: dict = {}
+        build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            FightParams.from_request(
+                {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+            ),
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=[holder],
+            pair_result_cache=cache,
+        )
+
+        repriced = {key[:2] for key in cache if key[3]}
+        served = {key[:2] for key in cache if not key[3]}
+        assert repriced == {
+            ("ally:Pantheon", "enemy:Aatrox"),
+            ("ally:Pantheon", "enemy:Malphite"),
+        }
+        assert repriced <= served, "pass 2 re-priced a fight pass 1 never priced"
+        assert served - repriced, "pass 2 re-priced fights the patch did not change"
+
+    def test_an_unanswerable_ledger_raises_the_typed_failure(self):
+        """Criterion 13's third clause: not an untyped ValueError.
+
+        A caller could not previously tell "this needs another pass" from
+        "this request is malformed" -- both arrived as ValueError, and
+        /api/calculate turned both into a 400.
+        """
+        from src.calculator.program.dependency import IncompleteDependency
+        from src.calculator import participant_timeline as timeline
+
+        assert not issubclass(IncompleteDependency, ValueError)
+
+        broken = lambda actor, incoming, duration: ((), False)
+        original = timeline._declared_resource_restores
+        timeline._declared_resource_restores = broken
+        try:
+            with pytest.raises(IncompleteDependency) as raised:
+                self._timeline()
+        finally:
+            timeline._declared_resource_restores = original
+
+        assert "mana_spent_heal" in raised.value.dependency.mechanic
+        assert "restore ledger is unavailable" in str(raised.value)
+
+    def test_the_compiled_lane_is_closed_to_a_patched_pass(self):
+        """Criterion 13's fourth clause: the Compilability did not flip.
+
+        The declaration still refuses the compiled kernel, so the second
+        pass takes the receipt walk by declaration rather than by the
+        accident of a null search context.
+        """
+        from src.calculator.item_behavior import ReceiptOnly
+        from src.calculator.roster_composition import mana_spent_heal_slot
+
+        slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
+        assert isinstance(slot.rule.compilability, ReceiptOnly)
+        assert "second pass" in slot.rule.compilability.reason
+
+
+class TestThePublishedReceiptFieldsHaveOneProducer:
+    """Two fields the receipt view used to compute for itself (criterion 3).
+
+    Both were spelled as a *default* behind ``event.get(...)``, which is the
+    least visible way for a published number to acquire a second producer:
+    the walk annotates the field on the paths it reaches, and the projection
+    quietly answered for the paths it does not.  The composition answers for
+    both now, and the view reads the key by name.
+    """
+
+    def test_a_skipped_recovery_is_given_the_overheal_it_publishes(self) -> None:
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        skipped = {"amount": 31.5, "applied_amount": 0.0, "skipped_reason": "x"}
+        _annotate_overheal([skipped])
+        assert skipped["overheal"] == 31.5
+
+    def test_a_reduced_recovery_overheals_only_what_it_did_not_apply(self) -> None:
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        event = {"amount": 40.0, "reduced_amount": 24.0, "applied_amount": 10.0}
+        _annotate_overheal([event])
+        assert event["overheal"] == 14.0
+
+    def test_the_walks_own_annotation_is_never_overwritten(self) -> None:
+        """The applied path's overheal is a different, narrower quantity."""
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        event = {"amount": 40.0, "applied_amount": 10.0, "overheal": 0.0}
+        _annotate_overheal([event])
+        assert event["overheal"] == 0.0
+
+    def test_a_recovery_that_applied_everything_overheals_nothing(self) -> None:
+        from src.calculator.participant_timeline import _annotate_overheal
+
+        event = {"amount": 12.0, "applied_amount": 30.0}
+        _annotate_overheal([event])
+        assert event["overheal"] == 0.0
+
+    def test_the_receipt_view_reads_overheal_rather_than_deriving_it(self) -> None:
+        """A healing row with no annotated overheal is a composition bug."""
+        from src.calculator.program.views import LeafWriter
+        from src.calculator.program.views import receipt as receipt_view
+
+        with pytest.raises(KeyError):
+            # pylint: disable-next=protected-access
+            receipt_view._healing_event_rows(
+                [{"time": 0.0, "amount": 5.0}], LeafWriter(), "healing_events"
+            )
+
+    def test_the_receipt_view_reads_the_wound_window_rather_than_closing_it(
+        self,
+    ) -> None:
+        """A wounded damage row with no annotated window is a composition bug."""
+        from src.calculator.program.views import LeafWriter
+        from src.calculator.program.views import receipt as receipt_view
+
+        with pytest.raises(KeyError):
+            # pylint: disable-next=protected-access
+            receipt_view._damage_event_rows(
+                [{"time": 1.0, "grievous_duration": 3.0}], LeafWriter(), "events"
+            )
+
+    def test_a_champion_wound_publishes_the_instant_its_window_closes(self) -> None:
+        """Varus E is the third arming site, and it now annotates like the others."""
+        app.config["TESTING"] = True
+        response = app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Varus",
+                "level": 18,
+                "items": [],
+                "fight_mode": "time_based",
+                "fight_duration": 10,
+                "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+            },
+        )
+        assert response.status_code == 200
+        wounded = [
+            event
+            for event in response.get_json()["combat"]["events"]
+            if event.get("wound_duration")
+        ]
+        assert wounded, "Varus E arms no wound; the fixture no longer covers the site"
+        for event in wounded:
+            assert event["wound_until"] == pytest.approx(
+                event["time"] + event["wound_duration"], abs=1e-3
+            )

@@ -9,33 +9,20 @@ E3 addition over the CP10.8 packet module:
   feeds Q/W/E/R scaling because P runs first in the BUFF phase; the
   armor is published as a stat buff for the fight's defensive side.
 
-Roadmap session 4 batch H (2026-08-21): W (Dark Passage) has no
-enemy-damage formula: the pinned reviewed packet (static/reviewed-
-packets.json) independently declares W ``kind: "no_damage"`` with a
-sourced reason — the lantern/dash/ally-shield mechanic deals no damage to
-an enemy target. W is not reassigned by this module (only P is
-overridden below; W keeps the packet slot from ``build_packet_module``),
-so it already emits the packet's sourced zero-damage row today —
-MODULE_COVERAGE was simply stale, still reading "out_of_scope" for an
-already-covered slot (the Malzahar/Nasus precedent, roadmap session 4
-batch D; the Ryze/Senna/Swain/Tahm Kench precedent, batch G).
-Reclassified to "no_damage"; zero fight-computation change. (The
-separate ally-support Dark Passage shield priced through the
-ally-scanner in ASSUMPTIONS below is a different, already-modeled
-mechanism and is unaffected.)
+Coverage: W (Dark Passage) deals no enemy damage — the pinned reviewed
+packet declares it ``kind: "no_damage"`` and this module does not
+reassign the slot, so W emits that sourced zero row. The ally-support
+Dark Passage shield priced through the ally scanner (ASSUMPTIONS below)
+is a separate, already-modeled mechanism.
 """
 
 from typing import Any
 
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Thresh", PACKET_SHA256)
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Damnation's per-soul values
 # (1 AP, 1 bonus armor) are wiki prose; the JSON carries no leveling
@@ -69,7 +56,7 @@ def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_armor = _ARMOR_PER_SOUL * souls
 
     # BUFF phase guarantee: Q/W/E/R parse against the soul-buffed AP.
-    ctx.stats["ability_power"] = ctx.stats.get("ability_power", 0.0) + bonus_ap
+    ctx.stats["ability_power"] = ctx.stat("ability_power") + bonus_ap
 
     return {
         "name": ability.get("name", "Damnation"),
@@ -91,10 +78,31 @@ def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
 _damnation.phase = BUFF
 
 
-SLOTS = {**_packet_slots, "P": _damnation}
-parse_abilities = build_parser(SLOTS, "Thresh")
+# Reviewed crowd control, read from the cached kit.  Q (Death Sentence)'s
+# scythe catches to "deal magic damage, stun and reveal them for 1.5
+# seconds, and render them airborne for 0.4 seconds" — two immobilize
+# kinds on one target, so the reviewed answer is the un-narrowed one.  E
+# (Flay): enemies "are dealt magic damage and knocked 200 units in the
+# target direction, and then are slowed for 1 second" — the knock-back is
+# the immobilizing half.  R (The Box): a wall breaks "dealing magic damage
+# and slowing them by 99% for 2 seconds".  P is a soul-stack buff and W is
+# a lantern shield, neither of which damages.
+MODULE_CC = {"Q": "immobilize", "E": "knockback", "R": "slow"}
 
-OPTIONS = list(_packet_options) + [
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Thresh",
+    PACKET_SHA256,
+    # Each packet is one blow: the scythe "catches the first enemy
+    # hit", Flay "sweeps his chain" once, and one Box wall breaks on
+    # contact — so each row is a hit the ledger can time.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
+    slot_parsers={
+        "P": _damnation,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+OPTIONS = list(OPTIONS) + [
     {
         "key": "souls",
         "type": "int",
@@ -105,7 +113,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Soul count is user-set (default 40 — the expected mid-game state); "
     "soul farming is not simulated",
     "Each Soul grants 1 ability power and 1 bonus armor — wiki prose "
@@ -120,15 +128,7 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "W (Dark Passage) has no enemy-damage formula: the lantern dash and "
     "its shield are self/ally utility only (confirmed by the pinned "
     "reviewed packet's kind='no_damage' declaration for W). W is a cast "
-    "slot in this module (never reassigned away from "
-    "build_packet_module's no_damage branch), so MODULE_COVERAGE "
-    "reflects a sourced no-damage classification rather than an "
-    "unmodeled gap (no_damage, not out_of_scope).",
+    "slot in this module: it emits the packet's sourced zero-damage row "
+    "while the support scanner prices the lantern shield, so the slot is "
+    "modeled.",
 ]
-
-SOURCES = list(_packet_sources)
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

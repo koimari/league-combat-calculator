@@ -59,23 +59,27 @@ def _fight(
     options: dict | None = None,
     include_autos: bool = False,
     one_rotation: bool = False,
+    auto_only: bool = False,
     duration: float = 10.0,
     target_health: float = 2000.0,
 ) -> dict:
     """One /api/calculate fight at level 18, rank 5 / R rank 3, no items."""
+    mode = "one_rotation" if one_rotation else "time_based"
     payload = {
         "champion": champion,
         "level": 18,
         "items": [],
         "role": "mid",
         "ability_ranks": _FULL_RANKS,
-        "fight_mode": "one_rotation" if one_rotation else "time_based",
+        "fight_mode": "auto_only" if auto_only else mode,
         "fight_duration": duration,
         "include_auto_attacks": include_autos,
         "target_health": target_health,
         "target_armor": 0,
         "target_mr": 0,
     }
+    if auto_only:
+        payload["auto_attacks_only"] = True
     if options:
         payload["champion_options"] = options
     app_module.app.config["TESTING"] = True
@@ -188,6 +192,21 @@ class TestAnnieTibbers:
         assert row["count"] == 5
         assert row["total_damage"] == pytest.approx(300.0)
 
+    def test_autos_only_never_summons_tibbers(self) -> None:
+        """R is what summons Tibbers, and autos-only casts nothing.
+
+        Cached R text: "Active: Annie summons Tibbers to the target
+        location..." — no Active, no pet, so the 480 magic this row used
+        to price in an autos-only window came from a cast that never
+        happened.  The explicit option cannot resurrect him either.
+        """
+        data = _fight("Annie", auto_only=True, include_autos=True)
+        assert "tibbers_attacks" not in data["breakdown"]
+        forced = _fight(
+            "Annie", auto_only=True, include_autos=True, options={"tibbers_attacks": 5}
+        )
+        assert "tibbers_attacks" not in forced["breakdown"]
+
 
 # ---------------------------------------------------------------------------
 # Heimerdinger — turrets: Q deploy + R upgrade (Apex)
@@ -297,6 +316,26 @@ class TestMalzaharVoidlings:
         row = data["breakdown"]["voidling_attacks"]
         assert row["count"] == 10
         assert row["total_damage"] == pytest.approx(845.0)
+
+    def test_autos_only_summons_no_swarm(self) -> None:
+        """W's Active is what summons Voidlings, and autos-only casts none.
+
+        Cached W text: the Zz'Rot Swarm stacks come from "when he casts
+        another ability" and "Active: Malzahar consumes all Zz'Rot Swarm
+        stacks and, after a 0.5-second delay, summons a Voidling".  With
+        no cast there is no swarm, so the 1943.5 magic this row used to
+        price in an autos-only window was damage from a cast that never
+        happened.  Neither swarm option can resurrect it.
+        """
+        data = _fight("Malzahar", auto_only=True, include_autos=True)
+        assert "voidling_attacks" not in data["breakdown"]
+        forced = _fight(
+            "Malzahar",
+            auto_only=True,
+            include_autos=True,
+            options={"voidling_count": 4, "voidling_attacks": 6},
+        )
+        assert "voidling_attacks" not in forced["breakdown"]
 
     def test_voidling_cadence_constant_matches_wiki(self) -> None:
         """The module's attack-speed constant reproduces the wiki formula:

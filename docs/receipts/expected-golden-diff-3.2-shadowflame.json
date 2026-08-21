@@ -1,0 +1,64 @@
+{
+  "slice": "3.2-shadowflame",
+  "decisions": [
+    "D-40",
+    "D-43",
+    "D-46",
+    "D-101"
+  ],
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 — no baseline moves inside this commit"
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "rule": "3.2's last amp slice moves Shadowflame's Cinderbloom from `item_effects.MagicTrueCritEffect` — a compiled record carrying `crit_multiplier` and `health_threshold` — onto a declared `delta_amp` rule in the CINDERBLOOM chain slot, whose magnitude is `crit_multiplier - 1` over a live ValueRef and whose activation is `LivePredicate(TARGET_HEALTH_FRACTION, LT, <ref health_threshold>)`. Both numbers are read from the same ITEM_EFFECTS['Shadowflame'] entry the record was compiled from, by the same float arithmetic, and the mechanic's gate is unchanged (the build holds the item). A leaf may therefore move only where it is (a) a leaf of a snapshot entry whose build holds Shadowflame, or (b) an aggregate over (a). No other entry can move: no leaf outside a Shadowflame build reads the record at all. Enumerated from the committed scripts/golden_baseline.json and scripts/golden_coupled_baseline.json, before this slice's first src/ edit.",
+    "excluded_by_construction": {
+      "golden.champion_baselines/**": "itemless stat baselines — the section holds no build and the string 'Shadowflame' does not occur anywhere in it. Structurally empty, not assumed empty. 28421 leaves.",
+      "golden.registered_champion_fights/<champ> without Shadowflame": "69 of the 173 registered champions' fight entries hold no Shadowflame build; the record they never compile cannot move a leaf.",
+      "golden.item_sweep/<item> other than Shadowflame": "one sweep entry per item, each a build holding that item alone.",
+      "coupled_scenarios/{catalyst_roster,cleaver_bloodsong_roster,dream_maker_roster,mandate_abyssal_curse_roster,score_event_scan_holder,score_event_view_holder,score_plain_tuple}": "no participant's items[] names Shadowflame, read off the committed baseline's own participants[].items rather than typed."
+    },
+    "golden": {
+      "size": 11544,
+      "clause_sizes": {
+        "registered_champion_fights_leaves": 11531,
+        "item_sweep_leaves": 13
+      },
+      "holders": 104,
+      "item_sweep_entries": [
+        "Shadowflame"
+      ],
+      "item_sweep_champions": [
+        "ahri",
+        "vayne"
+      ]
+    },
+    "coupled_golden": {
+      "size": 4475,
+      "per_scenario": {
+        "syndra_custom_order_120": 755,
+        "syndra_custom_order_39": 718,
+        "syndra_custom_order_60": 755,
+        "syndra_derived_order_120": 761,
+        "syndra_derived_order_39": 725,
+        "syndra_derived_order_60": 761
+      },
+      "holder": "main",
+      "holder_derivation": "combat.participants[0].items[1] == 'Shadowflame' in each of the six scenarios, read off the committed baseline."
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": []
+  },
+  "measured": {
+    "golden": 0,
+    "coupled_golden": 0,
+    "note": "Measured after the edit against both committed baselines. The pair-golden compare is identical to scripts/golden_baseline.json — zero differing leaves. The coupled compare still reports the campaign's standing difference set, which this slice did not add to and did not shrink: its size is the same before and after the edit, and every member is claimed by an earlier committed expected-diff receipt (tests/test_coupled_golden_allowlist.py). Zero leaves are attributable to this slice in either jurisdiction, so nothing qualifies under R-15 and no oracle receipt is owed. The declared count and the measured count agree, which is what R-20 asks the declaration to do."
+  }
+}

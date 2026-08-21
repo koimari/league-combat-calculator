@@ -1,0 +1,106 @@
+{
+  "receipt": "oracle-C6-leaf83",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/time",
+  "old_value": 0.25,
+  "new_value": 0.0,
+  "verdict": "new_value_correct",
+  "independent_value": 0.0,
+  "evidence_tree": {
+    "how_built": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json, batch-e9-1.json (Syndra slot inventory)",
+      "data/worklists/e3-stacks.json, e3-mechanics.json (Splinters of Wrath)",
+      "data/worklists/f2-task.md (DEFAULT_CAST_ORDER = fixed Q,W,E,R; cast_order is the fight input)",
+      "docs/math-foundations.md Sect. 1.1"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, Sect. 1.1 (Renewal theory for cast + auto timing schedules), lines 59-66",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "\"castTime\": \"none\", \"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7,7,7,7,7]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q effects[1].description (cached wiki text)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "\"castTime\": \"none\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "quote": "\"castTime\": \"0.25\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power)",
+      "quote": "\"castTime\": \"0.25\""
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge)\""
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "data/worklists/f2-task.md line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q effects[0].description (castTime is separate from projectile delay)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay ..."
+    }
+  ],
+  "computation": {
+    "model_used": "Shared-timeline cast schedule (docs/math-foundations.md Sect. 1.1). No two casts overlap; a cast starts at max(its cooldown-ready time, the end of the previous cast). During the opening burst every ability is off cooldown, so start(k) = sum of the sourced cast times of casts 0..k-1.",
+    "sourced_cast_times_s": {
+      "Q": 0.0,
+      "Q2 (2nd stocked Dark Sphere charge)": 0.0,
+      "W": 0.0,
+      "E": 0.25,
+      "R": 0.25
+    },
+    "note_on_none": "\"none\" is a first-class sourced value in the cached wiki data (304 abilities across data/champions.json carry castTime \"none\", vs 243 at \"0.25\"); it denotes an ability with no cast time, i.e. 0 s of hand-occupancy. It is not a missing value: 219 abilities carry a distinct null/None.",
+    "closed_form": "cast_timeline[3].time = 0.25 s x (number of E/R casts among casts 0,1,2)",
+    "enumeration": {
+      "four-slot orders (permutations of Q,W,E,R)": "the first three casts always contain at least one of {E,R}, so index 3 can only be 0.25 s (12 of 24 permutations) or 0.50 s (the other 12). 0.0 s is unreachable.",
+      "five-cast opening with the stocked 2nd charge (Q, Q2, W, E, R)": "the first three casts are the three zero-cast-time casts Q, Q2, W, so index 3 (E) starts at 0.0 + 0.0 + 0.0 = 0.0 s, and index 4 (R) starts at 0.25 s."
+    },
+    "simulated_schedules": {
+      "['Q','Q2','W','E','R']": [["Q", 0.0], ["Q2", 0.0], ["W", 0.0], ["E", 0.0], ["R", 0.25]],
+      "['Q','W','E','R']": [["Q", 0.0], ["W", 0.0], ["E", 0.0], ["R", 0.25]]
+    },
+    "why_60_matters": "The scenario suffix 60 is Syndra's Splinters of Wrath option value (a documented Syndra threshold: 40 -> 2nd Dark Sphere charge, 60 -> W true damage, 120 -> +15% AP). The fight window itself is named by the fight key ('manual_target'), not by the scenario suffix. At 60 splinters the cached wiki text grants a stocked second Dark Sphere charge, so a second Q cast at t = 0 is legal and, since Q's sourced cast time is 'none' (0 s), it consumes no time on the shared timeline.",
+    "conclusion": "The old timeline [Q@0.0, W@0.0, E@0.0, R@0.25] is the four-slot DEFAULT_CAST_ORDER schedule -- it silently drops the stocked second Dark Sphere charge that 60 splinters grants. The custom-order schedule that honours it, [Q@0.0, Q2@0.0, W@0.0, E@0.0, R@0.25], puts a zero-cast-time cast in front, so index 3 is E starting at 0.0 s and R shifts to index 4 at 0.25 s. 0.0 is the correct value.",
+    "independent_result_s": 0.0
+  },
+  "ruled_out_alternatives": [
+    {
+      "hypothesis": "The old engine defaulted castTime \"none\" to 0.25 s and the change fixed it to 0.",
+      "refutation": "Under that bug every Syndra cast time would be 0.25 s, so index 3 would have been 0.75 s (0.25 x 3), never 0.25 s. The observed old value proves the old engine already read 'none' as 0 s. This is not a cast-time-parsing change."
+    },
+    {
+      "hypothesis": "The change dropped a cast from the front of the timeline (E or R no longer cast).",
+      "refutation": "Removing a cast pulls a later, cooldown-gated cast into index 3 (Q's next charge at ~7 s, W at 8-12 s, E at 15 s). It cannot produce 0.0 s. Only inserting a zero-cast-time cast ahead of index 3 can."
+    },
+    {
+      "hypothesis": "The change stopped applying sourced cast times at all (mutual exclusion dropped), which would also yield 0.0.",
+      "refutation": "Not excluded by this leaf alone -- see residual_risk. It is disfavoured because it would be an engine-wide change touching every champion's opening timeline, whereas the diff is anchored to a scenario whose name marks it as the custom-cast-order case, and because it contradicts the documented invariant 'each cast occupies its sourced cast time'."
+    }
+  ],
+  "residual_risk": {
+    "confidence": "moderate-high",
+    "falsifier": "This leaf is decidable only up to the scenario's cast_order, which lives in scripts/ and was deliberately not read. If the scenario's custom order places E or R among its first three casts, then index 3 must be 0.25 s (or 0.50 s) and the new value would be wrong. Concretely: 0.0 s is correct iff the first three casts are exactly {Q, Q2 (stocked 2nd charge), W} in some order.",
+    "cheap_check_for_the_owner": "Read cast_timeline[0..4] of the new baseline: if the entries are Q, Q, W, E, R with times 0.0, 0.0, 0.0, 0.0, 0.25, the new schedule is the sourced one and this receipt stands. If index 4 is also 0.0 (i.e. R lost its 0.25 s cast time too), the change zeroed sourced cast times and the verdict flips to old_value_correct."
+  }
+}

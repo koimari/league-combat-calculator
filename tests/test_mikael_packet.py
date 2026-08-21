@@ -47,10 +47,12 @@ Contract pinned (typed source-backed values):
 * Cleanse decision + exclusions: an eligible control (stun/root/charm)
   active on the ally at activation is REMOVED (interval truncated, downtime
   ends at activation); airborne/suppression are NOT removed with the named
-  excluded_control_kind reason; blind/disarm/slow are known soft kinds that
-  never create downtime (control_not_active); nearsight/unknown kinds fail
-  closed with unknown_control (use NOT consumed); a control landing AFTER
-  activation is untouched (no immunity).
+  excluded_control_kind reason; blind/silence/slow are soft kinds that
+  never create downtime (control_not_active); a real kind the cleanse table
+  does not carry (pull/flee) fails closed with unknown_control (use NOT
+  consumed) and a kind outside CC_KIND_VOCABULARY is refused at the timeline
+  seam before any decision exists; a control landing AFTER activation is
+  untouched (no immunity).
 * Receipts: the public result exposes the heal packet (source
   "Mikael's Blessing — Purify", amount, time), the recipient's cleanse
   receipt (decision, removed/kept intervals, heal entry with the sourced
@@ -77,6 +79,9 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import app
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
@@ -94,15 +99,37 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     _WalkCompiler,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
+from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
 )
+
+from src.calculator.item_coverage import ATTACKER_LANES, item_model_coverage
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
 
 MIKAELS = "Mikael's Blessing"
 MIKAELS_SOURCE = "Mikael's Blessing \u2014 Purify"
@@ -201,7 +228,7 @@ def _purify_events(combat: dict) -> list[dict]:
 
 
 def _combatant(participant_id: str, team: str, health: float = 3000.0) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -783,14 +810,20 @@ def test_supported_controls_are_removed(kind):
     [
         ("airborne", "excluded_control_kind"),
         ("suppression", "excluded_control_kind"),
-        ("nearsight", "unknown_control"),
+        ("pull", "unknown_control"),
     ],
 )
 def test_excluded_kinds_fail_closed_with_named_reason(kind, reason):
     """Airborne and suppression are named exclusions in the sourced wording
-    (NOT removed; the interval survives); nearsight is not even a known
-    control kind, so it fails closed with unknown_control.  Each rejection
-    is receipted with its named reason and no truncation happens."""
+    (NOT removed; the interval survives); ``pull`` is a real control kind
+    the cleanse table does not carry, so it fails closed with
+    unknown_control.  Each rejection is receipted with its named reason and
+    no truncation happens.
+
+    ``pull`` rather than an invented kind: ``cc_kind`` is a closed
+    vocabulary now, so a misspelling never reaches this layer at all — it
+    is refused at the timeline seam (see the test below).  The two
+    refusals are different and both are live."""
     result = _simulate([_control(1.0, kind, 2.0)], [_purify(1.5)])
     target = result["target"]
     receipt = target["cleanse"]
@@ -809,11 +842,15 @@ def test_excluded_kinds_fail_closed_with_named_reason(kind, reason):
     assert target["action_downtime"] == pytest.approx(2.0)
 
 
-@pytest.mark.parametrize("kind", ["blind", "disarm", "slow"])
+@pytest.mark.parametrize("kind", ["blind", "silence", "slow"])
 def test_soft_kinds_never_create_downtime(kind):
-    """Blind/disarm/slow are known SOFT kinds: the control adds no
-    interval and no downtime, so the cleanse receipt names
-    control_not_active (there is nothing to remove) and the heal fires."""
+    """Blind/silence/slow are SOFT kinds: the control adds no interval and
+    no downtime, so the cleanse receipt names control_not_active (there is
+    nothing to remove) and the heal fires.
+
+    ``disarm`` used to stand here; it is not in ``CC_KIND_VOCABULARY``, so
+    no packet can carry it — ``silence`` is the soft kind that both the
+    vocabulary and the cleanse table declare."""
     result = _simulate([_control(1.0, kind, 2.0)], [_purify(1.5)])
     target = result["target"]
     assert target["crowd_control_intervals"] == []
@@ -823,11 +860,11 @@ def test_soft_kinds_never_create_downtime(kind):
     assert target["cleanse"]["heal"]["amount"] == pytest.approx(100.0)
 
 
-def test_unknown_control_kind_fails_closed_and_does_not_consume():
-    """An unknown control kind ('dance') fails closed with the named
-    unknown_control reason, truncates nothing, and does NOT consume a
-    use."""
-    result = _simulate([_control(1.0, "dance", 2.0)], [_purify(1.5)])
+def test_a_control_the_cleanse_table_does_not_carry_does_not_consume():
+    """``flee`` is a real control kind with no cleanse declaration: it
+    fails closed with the named unknown_control reason, truncates nothing,
+    and does NOT consume a use."""
+    result = _simulate([_control(1.0, "flee", 2.0)], [_purify(1.5)])
     target = result["target"]
     receipt = target["cleanse"]
     assert receipt["decision"]["reason"] == "unknown_control"
@@ -838,6 +875,17 @@ def test_unknown_control_kind_fails_closed_and_does_not_consume():
     caster = result["caster"]
     assert caster["cleanse_use"]["uses_before"] == 1
     assert caster["cleanse_use"]["uses_after"] == 1
+
+
+def test_a_kind_outside_the_vocabulary_never_reaches_the_cleanse_layer():
+    """``cc_kind`` is closed: a misspelling is refused at the timeline seam.
+
+    This is the earlier of the two refusals — before any cleanse decision
+    exists — and it is a raise rather than a receipt precisely because a
+    kind nobody declared must never author a no-op stun.
+    """
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        _simulate([_control(1.0, "dance", 2.0)], [_purify(1.5)])
 
 
 def test_control_landing_after_activation_is_untouched():
@@ -1179,6 +1227,32 @@ def test_compiled_walk_falls_back_to_the_receipt_walk_with_equal_results():
     assert receipt["heal"]["source"] == MIKAELS_SOURCE
 
 
+def _scoring_rows(result):
+    """The scoring fields of one fight's damage events, in either shape.
+
+    A build the projection finds adequate is served the LIGHT tuple
+    ledger, so the score path's rows are positional.  They are read through
+    the one declaration of that layout (``ledger_projection.LightRow``)
+    rather than a second set of indices here, and compared on the fields
+    both shapes carry (``SHARED_ROW_FIELDS``) plus the time the light row
+    packs into its sort key.
+    """
+    rows = []
+    for event in result["damage_events"]:
+        if isinstance(event, tuple):
+            row = LightRow._make(event)
+            rows.append(
+                (row.sort_key[0],)
+                + tuple(getattr(row, field) for field in SHARED_ROW_FIELDS)
+            )
+        else:
+            rows.append(
+                (event.get("time"),)
+                + tuple(event.get(field) for field in SHARED_ROW_FIELDS)
+            )
+    return rows
+
+
 def test_score_only_fight_parity_mikaels_build():
     """run_fight score-only keeps every scoring field identical for a
     Mikael's build (totals, damage events, resource spent)."""
@@ -1202,13 +1276,7 @@ def test_score_only_fight_parity_mikaels_build():
     score = run_fight(champion, 18, [item], params, score_only=True)
     assert score["total_damage"] == full["total_damage"]
     assert score["resource_spent"] == full["resource_spent"]
-    scoring_keys = ("time", "source_key", "damage_type", "raw_damage", "damage")
-    assert [
-        tuple(event.get(key) for key in scoring_keys)
-        for event in score["damage_events"]
-    ] == [
-        tuple(event.get(key) for key in scoring_keys) for event in full["damage_events"]
-    ]
+    assert _scoring_rows(score) == _scoring_rows(full)
 
 
 # ---------------------------------------------------------------------------
@@ -1221,19 +1289,17 @@ def test_mikaels_is_optimizer_eligible_with_purify_review_reason():
     review reason "Purify cleanses and heals an ally."; the item is in the
     eligible-legendaries set; the target model is "modeled" (not
     target-blocked)."""
-    from src.calculator.item_coverage import (
-        _REVIEWED_STATS_ONLY,
-        item_model_coverage,
-        target_item_model_coverage,
-    )
+    from src.calculator.item_coverage import target_item_model_coverage
 
     item = get_item_by_name(MIKAELS)
-    coverage = item_model_coverage(item)
+    coverage = _attacker_coverage(item)
     assert coverage["optimizer_eligible"] is True
     assert coverage["status"] == "modeled_state"
     assert coverage["calculation_eligible"] is True
     assert {"ally_support", "cleanse", "sustain"} <= set(coverage["outcome_dimensions"])
-    assert _REVIEWED_STATS_ONLY[MIKAELS] == "Purify cleanses and heals an ally."
+    # The reviewed sentence is derived from the declaration now, not typed
+    # into a per-item table; it still names the mechanic and its recipient.
+    assert "Purify" in coverage["reason"]
 
     assert MIKAELS in {entry["name"] for entry in get_eligible_legendaries()}
 

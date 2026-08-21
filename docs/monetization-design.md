@@ -205,4 +205,4 @@ Phases:
 - No purchase-driven bias: receipts, flags, and certainty are computed the
   same for free and Pro users.
 - No "premium items" or content-gated game data: the wiki cache and pinned
-  formulas stay fully open (`Agents.md` pipeline rules unchanged).
+  formulas stay fully open (`CLAUDE.md` pipeline rules unchanged).

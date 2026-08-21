@@ -19,6 +19,7 @@ from src.calculator.capabilities import (
     SUPPORT_TARGET_RESOLUTION_SCOPES,
     SUPPORT_TARGET_SCOPES,
 )
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import (
     Combatant,
     _support_target_ids,
@@ -35,8 +36,7 @@ def _combatant(participant_id: str, team: str, name: str) -> Combatant:
         level=18,
         items=(),
         stats={},
-        defenses=None,
-        request=None,
+        defenses=StartingDefenses(),
     )
 
 

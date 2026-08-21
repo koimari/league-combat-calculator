@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
+from ..healing_helpers import _ability
 
 
 def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -60,6 +65,7 @@ def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", value),)
     entry["empowers_next_auto"] = True
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "One brew-empowered basic attack; max-health term is evaluated against the live target."
     )
@@ -83,6 +89,7 @@ def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Collision damage plus sourced knockback/stun; cooldown refund is not assumed without a hit state."
     )
@@ -115,7 +122,13 @@ SLOTS = {
     "E": _body_slam,
     "R": _explosive_cask,
 }
-parse_abilities = build_parser(SLOTS, "Gragas")
+# Q's cask detonation "slow[s] them for 2 seconds"; W only empowers an
+# attack; E and R each lead with a displacement ("knocking them back") on
+# the enemies they damage, so each declares its first-listed immobilize.
+# P is the self-heal and authors no damage part.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockback", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Gragas", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -132,46 +145,10 @@ ASSUMPTIONS = [
     "Body Slam's cooldown refund requires a collision state and is not applied to every cast by default.",
 ]
 
-SOURCES = [
-    source_row(
-        "Gragas parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Gragas",
-        4007952,
-        "2026-04-12T23:57:29Z",
-    ),
-    source_row(
-        "Gragas Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/Q",
-        2863945,
-        "2019-11-03T19:57:02Z",
-    ),
-    source_row(
-        "Gragas W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/W",
-        2864240,
-        "2019-11-03T20:09:49Z",
-    ),
-    source_row(
-        "Gragas E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/E",
-        2864386,
-        "2019-11-03T20:12:20Z",
-    ),
-    source_row(
-        "Gragas R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gragas/R",
-        2864532,
-        "2019-11-03T20:15:44Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-import re  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Gragas")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -180,11 +157,17 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Gragas self-healing events from its authored packet."""
-    healing = []
+    """Happy Hour pays 5.5% of maximum health on each ability CAST.
+
+    Cached Wiki text: "Periodically, after casting an ability, Gragas heals
+    himself for 5.5% of his maximum health".  The heal triggers on the
+    cast, not on damage landing, so the cast timeline is the occasion; one
+    cast pays one self-heal (actor-wide receipt).
+    """
+    healing: list[dict] = []
     p_text = " ".join(
         effect.get("description", "")
-        for effect in _healing._ability(champion_data, "P").get("effects", [])
+        for effect in _ability(champion_data, "P").get("effects", [])
     )
     ratio_match = re.search(
         r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
@@ -192,7 +175,7 @@ def derive_self_healing(
         flags=re.IGNORECASE,
     )
     ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
-    per_cast = ratio * float(champion_stats.get("health", 0.0))
+    per_cast = ratio * champion_stat(champion_stats, "health")
     if per_cast > 0.0:
         for cast in cast_timeline or []:
             slot = cast.get("slot")
@@ -209,9 +192,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Gragas", derive_self_healing)

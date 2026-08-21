@@ -3,12 +3,13 @@
 Each item with a damage-relevant passive/active is registered in ITEM_EFFECTS.
 Functions compute bonus damage based on fight context (stats, target, duration).
 
-**Data sourcing:** Values are loaded from the cached item JSON data via
-``passive_parser`` whenever the data is available. ``_STATIC_ITEM_EFFECTS``
-owns schema and values the parser cannot provide; ``_OFFLINE_ITEM_EFFECTS``
-is a complete last-known-good snapshot used only when loading or parsing fails
-as a whole. When JSON data is refreshed, ``refresh_item_effects()`` re-parses
-and updates ``ITEM_EFFECTS`` in place.
+**Data sourcing:** Values are parsed from the tracked item cache via
+``passive_parser``; a missing cache or a failed parse raises at import.
+``_REFERENCE_ITEM_EFFECTS`` is the reviewed shape of every registered entry:
+it supplies ``_STATIC_ITEM_EFFECTS`` (the keys the parser cannot provide),
+declares which keys the parser owns, and is the parity reference the cached
+parse must reproduce. When JSON data is refreshed, ``refresh_item_effects()``
+re-parses and updates ``ITEM_EFFECTS`` in place.
 """
 
 import logging
@@ -25,20 +26,20 @@ from .state_lifecycle import (
     WindowStackGate,
 )
 
+from .data_fetcher import fetch_item_data
+from .passive_parser import parse_all_item_effects
+
 logger = logging.getLogger(__name__)
 
 
 # Shared named-effect source.  Energized is not an item-specific passive: the
 # Wiki defines one charge model that every Energized item consumes, then each
-# item supplies its own trigger/proc packet.  Keep the source receipt beside
-# the typed accessors so a parser refresh cannot silently invent a recharge
-# cadence at a call site.
-ENERGIZED_SOURCE_RECEIPT: dict[str, Any] = {
+# item supplies its own trigger/proc packet.  The cadence numbers are the
+# item's own typed ``energized_*`` keys (Statikk charges at 15/attack against
+# the shared 6); this receipt is only the citation they all share.
+ENERGIZED_SOURCE_RECEIPT: dict[str, str | int] = {
     "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Tip_data/Energized",
     "source_revision_id": 4013385,
-    "max_stacks": 100,
-    "attack_stacks": 6,
-    "distance_units_per_stack": 24.0,
 }
 
 
@@ -1124,7 +1125,13 @@ def input_option_float_value(
             f"item_options.{item_name}.{option_name} must be between "
             f"{schema['min']} and {schema['max']}"
         )
-    step = float(schema.get("step", 0.0) or 0.0)
+    # The step rule has ONE home, and this is a second reader of it: a float
+    # option's step is part of its domain (an active-seconds input is only
+    # ever cast at a sourced granularity), while an integer option's step is
+    # a UI hint — ``validate_item_input_options`` says so at the request
+    # boundary, and a stricter answer here would reject values that boundary
+    # accepts.
+    step = 0.0 if schema.get("type") == "int" else float(schema.get("step", 0.0) or 0.0)
     if step > 0.0:
         span = parsed - float(schema["min"])
         quotient = span / step
@@ -1356,10 +1363,14 @@ def item_state_receipts(
             ),
             max_stack_at=max_stack_time,
             omnivamp_at=max_stack_time,
-            omnivamp_percent=riftmaker_max_stack_omnivamp(
-                fight_duration_seconds=fight_duration_seconds,
-                is_melee=is_melee,
-                item_name="Riftmaker",
+            omnivamp_percent=saturated_grant(
+                required_effect_value(
+                    "Riftmaker",
+                    "max_stack_omnivamp" if is_melee else "max_stack_omnivamp_ranged",
+                ),
+                per_second=per_second,
+                maximum=max_amp,
+                elapsed_seconds=fight_duration_seconds,
             ),
         )
 
@@ -1411,7 +1422,6 @@ def item_state_receipts(
         option_value = float(
             (item_options or {}).get(item_name, {}).get("manaflow_bonus_mana", 0)
         )
-        effect = ITEM_EFFECTS[item_name]
         cap = required_effect_value(item_name, "manaflow_bonus_mana_max")
         add(
             item_name,
@@ -1419,11 +1429,13 @@ def item_state_receipts(
             manaflow_bonus_mana=min(option_value, cap),
             manaflow_cap=cap,
             transformed=option_value >= cap,
-            awe_conversion=(
-                float(effect.get("bonus_mana_to_ap_ratio", 0.0)) * bonus_mana
-                + float(effect.get("bonus_mana_to_health_ratio", 0.0)) * bonus_mana
-                + float(effect.get("bonus_mana_to_heal_shield_power_ratio", 0.0))
-                * bonus_mana
+            awe_conversion=sum(
+                _declared_effect_value(item_name, key) * bonus_mana
+                for key in (
+                    "bonus_mana_to_ap_ratio",
+                    "bonus_mana_to_health_ratio",
+                    "bonus_mana_to_heal_shield_power_ratio",
+                )
             ),
             total_mana=max_mana,
         )
@@ -1956,9 +1968,6 @@ def item_state_receipts(
             multi_target_multiplier=range_authority["multiplier"],
             duration=required_effect_value("Fimbulwinter", "everlasting_duration"),
             cooldown=required_effect_value("Fimbulwinter", "everlasting_cooldown"),
-            trigger_kind=str(
-                required_effect_value("Fimbulwinter", "everlasting_trigger_kind")
-            ),
             trigger_status="authored_immobilize_or_melee_slow_only",
         )
 
@@ -1970,14 +1979,13 @@ def item_state_receipts(
     ):
         if item_name not in names:
             continue
-        effect = ITEM_EFFECTS[item_name]
         add(
             item_name,
             "ultimate_ready",
-            ultimate_haste=float(effect.get("ultimate_haste", 0.0)),
+            ultimate_haste=float(required_effect_value(item_name, "ultimate_haste")),
             active_trigger="R",
-            duration=float(effect.get("duration", 0.0)),
-            cooldown=float(effect.get("cooldown", 0.0)),
+            duration=float(required_effect_value(item_name, "duration")),
+            cooldown=_declared_effect_value(item_name, "cooldown"),
         )
 
     if "Swiftmarch" in names:
@@ -2017,11 +2025,13 @@ def item_state_receipts(
 
 
 # ---------------------------------------------------------------------------
-# Complete offline item effect snapshot
+# Reference item effect entries
 # ---------------------------------------------------------------------------
-# Normal cached-data operation does not merge from this table. It is the
-# explicit whole-system fallback and the parity reference for parser updates.
-_OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
+# The reviewed shape of every registered entry.  The live registry never reads
+# a parser-owned value from this table: ``_STATIC_ITEM_EFFECTS`` takes the
+# code-owned keys, ``_PARSEABLE_ITEM_KEYS`` the rest, and the parity test
+# holds the cached parse to these values.
+_REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Ordered sustain packets ─────────────────────────────────────────
     # These values are intentionally registry-owned.  The cached item JSON
     # still supplies ordinary stats, but the current Wiki entries describe
@@ -2708,6 +2718,43 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Scales linearly: 0% at 0 bonus HP, 15% at 1500+ bonus HP
         "max_amp": 0.15,
         "bonus_hp_cap": 1500.0,
+        "armor_penetration_bonus_only": True,
+    },
+    # ── Percent armour penetration: which armour it reaches ───────────────
+    # The percentage itself is a cached stat (``stats.armorPenetration``);
+    # what the cache does not say is *which* armour it applies to.  The Last
+    # Whisper line reaches BONUS armour only (Wiki Armor penetration §4.1;
+    # the cache's stats panel displays these as ordinary total penetration —
+    # see the K'Sante R footnote "incorrectly displayed as normal percentage
+    # armor penetration on the stats panel HUD"), while Serylda's Grudge is
+    # ordinary total penetration.  It is a structural flag rather than a
+    # parsed value because no branch of the cached page carries it.
+    #
+    # Every cached item carrying the stat is here, not only the exceptional
+    # three: an undeclared channel is a stop in
+    # ``interpreters.stat_derivation``, so the two items no ordinary
+    # Summoner's Rift build can hold — Perplexity (Arena-only) and Ohmwrecker
+    # (Turret Item) (a map object) — say "total" rather than being routed
+    # there by the silence that used to carry them.
+    "Last Whisper": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": True,
+    },
+    "Mortal Reminder": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": True,
+    },
+    "Serylda's Grudge": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": False,
+    },
+    "Perplexity": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": False,
+    },
+    "Ohmwrecker (Turret Item)": {
+        "type": "armor_penetration_channel",
+        "armor_penetration_bonus_only": False,
     },
     "Spear of Shojin": {
         "type": "damage_amp",
@@ -2980,10 +3027,16 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # metadata; it never infers a slow or immobilize from an ability name.
         "everlasting_base_shield": 100.0,
         "everlasting_current_mana_ratio": 0.045,
-        # Current sources do not expose Everlasting's historical mana gate.
-        # Keep the supported shield formula while the gate itself stays
-        # unavailable and cannot authorize a runtime shield.
-        "everlasting_mana_gate_status": "source_unavailable",
+        # The gate is sourced, and the surface-area campaign ruled it so
+        # (docs/plans/2026-08-20-surface-area-campaign.md U11a, from
+        # Fimbulwinter rev 3984419): a melee holder's slow arms Everlasting
+        # above the 20%-maximum-mana gate, and the whole champion x
+        # Fimbulwinter coverage fan-out prices through it.
+        "everlasting_mana_gate_status": "source_authorized",
+        "everlasting_mana_threshold_ratio": 0.20,
+        # Everlasting arms on crowd control and on nothing else, which is
+        # what gates the fight engine's authored-control requirement.
+        "everlasting_trigger_kind": "crowd_control",
         # The Wiki and client binary both place the multi-enemy branch at
         # 1200 units around the shield holder.  The exact boundary operator
         # and a runtime spatial-input contract remain unavailable.
@@ -2995,7 +3048,6 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "everlasting_multi_target_multiplier": 1.80,
         "everlasting_duration": 3.0,
         "everlasting_cooldown": 8.0,
-        "everlasting_trigger_kind": "crowd_control",
     },
     "Winter's Approach": {
         "type": "stat_conversion",
@@ -3238,20 +3290,33 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # consumes it on the first authored hostile ability; cooldown/rearm is
     # intentionally not inferred from an item's name or from unscheduled
     # damage events.
+    # Each of the three carries its own citation because they are one
+    # mechanic with three revisions: a declaration whose family constant
+    # named a single page could not say which revision the other two were
+    # read from, and receipt_for's resolution order reads the entry first.
     "Banshee's Veil": {
         "type": "defensive_start",
         "spell_shield_ready": True,
         "spell_shield_cooldown": 40.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Banshee%27s_Veil",
+        "source_revision_id": 3957919,
+        "source_revision_timestamp": "2025-10-05T20:03:50Z",
     },
     "Edge of Night": {
         "type": "defensive_start",
         "spell_shield_ready": True,
         "spell_shield_cooldown": 40.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Edge_of_Night",
+        "source_revision_id": 4013389,
+        "source_revision_timestamp": "2026-04-29T06:32:04Z",
     },
     "Verdant Barrier": {
         "type": "defensive_start",
         "spell_shield_ready": True,
         "spell_shield_cooldown": 60.0,
+        "source_url": "https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
+        "source_revision_id": 3957920,
+        "source_revision_timestamp": "2025-10-05T20:04:20Z",
     },
     "Immortal Shieldbow": {
         "type": "target_threshold_shield",
@@ -3310,6 +3375,13 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "heal_bonus_armor_ratio": 1.75,
         "heal_bonus_mr_ratio": 1.75,
         "duration": 5.0,
+        # ASSUMED, not sourced: the entry says the heal lands "over the same
+        # duration" and neither it nor Community Dragon's 2525 subdivides the
+        # five seconds.  0.25s is the cadence this calculator already authors
+        # every other heal-over-time on (Lissandra's Frozen Tomb, ten 0.25s
+        # ticks reconciling a 2.5s total).  Re-verify with this item's other
+        # code-owned keys on patch day.
+        "heal_tick_interval": 0.25,
         "cooldown": 90.0,
     },
     # ── Shield reduction (attacker passives that cut the target's shields) ──
@@ -3402,7 +3474,7 @@ _OFFLINE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
 }
 
 
-# Fields owned by code rather than wiki parsing. Every remaining offline field
+# Fields owned by code rather than wiki parsing. Every remaining reference field
 # is explicitly parser-owned through ``_PARSEABLE_ITEM_KEYS`` below.
 _STRUCTURAL_EFFECT_KEYS = frozenset(
     {
@@ -3425,6 +3497,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "energized_max_stacks",
         "energized_ability_trigger",
         "cleave_on_hit",
+        "armor_penetration_bonus_only",
     }
 )
 
@@ -3549,6 +3622,8 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "everlasting_base_shield",
             "everlasting_current_mana_ratio",
             "everlasting_mana_gate_status",
+            "everlasting_mana_threshold_ratio",
+            "everlasting_trigger_kind",
             "everlasting_nearby_enemy_range",
             "everlasting_multi_target_minimum_enemy_count",
             "everlasting_range_center",
@@ -3557,7 +3632,6 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "everlasting_multi_target_multiplier",
             "everlasting_duration",
             "everlasting_cooldown",
-            "everlasting_trigger_kind",
         }
     ),
     "Cull": frozenset(
@@ -3614,9 +3688,33 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "blackout_duration",
         }
     ),
-    "Banshee's Veil": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
-    "Edge of Night": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
-    "Verdant Barrier": frozenset({"spell_shield_ready", "spell_shield_cooldown"}),
+    "Banshee's Veil": frozenset(
+        {
+            "spell_shield_ready",
+            "spell_shield_cooldown",
+            "source_url",
+            "source_revision_id",
+            "source_revision_timestamp",
+        }
+    ),
+    "Edge of Night": frozenset(
+        {
+            "spell_shield_ready",
+            "spell_shield_cooldown",
+            "source_url",
+            "source_revision_id",
+            "source_revision_timestamp",
+        }
+    ),
+    "Verdant Barrier": frozenset(
+        {
+            "spell_shield_ready",
+            "spell_shield_cooldown",
+            "source_url",
+            "source_revision_id",
+            "source_revision_timestamp",
+        }
+    ),
     "Guardian's Horn": frozenset(
         {
             "champion_damage_flat_reduction",
@@ -3707,6 +3805,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
             "heal_bonus_armor_ratio",
             "heal_bonus_mr_ratio",
             "duration",
+            "heal_tick_interval",
             "cooldown",
         }
     ),
@@ -3838,12 +3937,12 @@ _STATIC_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     item_name: {
         key: value for key, value in values.items() if key in _static_keys(item_name)
     }
-    for item_name, values in _OFFLINE_ITEM_EFFECTS.items()
+    for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
 }
 
 _PARSEABLE_ITEM_KEYS: dict[str, frozenset[str]] = {
     item_name: frozenset(values) - _static_keys(item_name)
-    for item_name, values in _OFFLINE_ITEM_EFFECTS.items()
+    for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
 }
 
 
@@ -3855,35 +3954,22 @@ _PARSEABLE_ITEM_KEYS: dict[str, frozenset[str]] = {
 def _build_item_effects() -> dict[str, dict[str, Any]]:
     """Build live effects from code-owned schema plus parsed values.
 
-    A successful parse never borrows a missing parser-owned value from the
-    offline snapshot. Loading failure, parser failure, or an empty whole-parse
-    result uses the complete last-known-good snapshot instead.
+    The tracked cache is the only source: a missing cache, a parser failure,
+    or a parse that registered nothing raises here, at import.  A parse that
+    dropped one key borrows it from nowhere — the entry lacks it and
+    ``required_effect_value`` raises on the read, naming item and key.
 
     Returns:
         Merged dict suitable for use as ``ITEM_EFFECTS``.
     """
-    result = deepcopy(_STATIC_ITEM_EFFECTS)
-
-    try:
-        from .data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
-
-        items_data = fetch_item_data(data_directory=DEFAULT_DATA_DIR)
-    except Exception as exc:
-        logger.debug("Could not load item JSON for parsing: %s", exc)
-        return deepcopy(_OFFLINE_ITEM_EFFECTS)
-
-    try:
-        from .passive_parser import parse_all_item_effects
-
-        parsed = parse_all_item_effects(items_data)
-    except Exception as exc:
-        logger.warning("Item passive parsing failed: %s", exc)
-        return deepcopy(_OFFLINE_ITEM_EFFECTS)
-
+    parsed = parse_all_item_effects(fetch_item_data())
     if not parsed:
-        logger.warning("Item passive parsing produced no registered effects")
-        return deepcopy(_OFFLINE_ITEM_EFFECTS)
+        raise RuntimeError(
+            "Item passive parsing registered no effects — parser/cache bug; "
+            "check passive_parser and data/items.json"
+        )
 
+    result = deepcopy(_STATIC_ITEM_EFFECTS)
     for item_name, parsed_values in parsed.items():
         if item_name in result:
             parseable_keys = _PARSEABLE_ITEM_KEYS[item_name]
@@ -3909,10 +3995,12 @@ def refresh_item_effects() -> None:
     Mutates ``ITEM_EFFECTS`` in place (clear + update) rather than
     rebinding the module global, so modules that imported it via
     ``from .item_effects import ITEM_EFFECTS`` (e.g. ``calculator/__init__.py``)
-    keep seeing the refreshed values through their existing binding.
+    keep seeing the refreshed values through their existing binding.  A
+    rebuild that raises leaves the registry as it was.
     """
+    rebuilt = _build_item_effects()
     ITEM_EFFECTS.clear()
-    ITEM_EFFECTS.update(_build_item_effects())
+    ITEM_EFFECTS.update(rebuilt)
     # Compiled-build memo derives from this registry; drop it with the data.
     _RESOLVED_DAMAGE_EFFECTS.clear()
 
@@ -3926,7 +4014,7 @@ def required_effect_value(item_name: str, key: str) -> Any:
 
     A missing key means the parser omitted a required parser-owned value or
     code omitted a structural value. Raise with item and key context instead
-    of silently borrowing a potentially stale offline number.
+    of silently borrowing a stale literal.
     """
     effect = ITEM_EFFECTS.get(item_name, {})
     if key not in effect:
@@ -3938,28 +4026,63 @@ def required_effect_value(item_name: str, key: str) -> Any:
     return effect[key]
 
 
+def _declared_effect_value(item_name: str, key: str) -> float:
+    """Read a key an item's schema may or may not declare, failing closed.
+
+    Sibling keys a family carries unevenly (Awe converts mana to one stat per
+    item; two ultimate-haste items have no cooldown) are decided by
+    ``entry_schema_keys`` — the reviewed shape, never the live entry — so a
+    parse that dropped a declared key still raises naming item and key, while
+    an item whose schema never carried the key reads 0.0.
+    """
+    if key in entry_schema_keys(item_name):
+        return float(required_effect_value(item_name, key))
+    return 0.0
+
+
+# The two ways Everlasting's mana gate can be authorized: read from the
+# reviewed source, or declared by a test.  Both carry the same contract, so
+# both take the same runtime branch and neither is spelled at a call site.
+AUTHORIZED_MANA_GATE_STATUSES = frozenset({"source_authorized", "script_authorized"})
+
+
 def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
     """Return the typed authority state for Everlasting's mana gate.
 
-    The current Wiki entry, item cache, client binary, extracted scripts,
-    and atoms contain no gate value or comparison contract.  The historical
-    release note cannot authorize current gameplay.  Every semantic field is
-    therefore unavailable until a direct current source supplies it.
+    The registry entry states the gate's authority; this reads it and fails
+    closed on any status the runtime has no branch for.  ``source_authorized``
+    is the reviewed reading of Fimbulwinter rev 3984419 and carries the whole
+    comparison contract; ``script_authorized`` is the same shape supplied by a
+    test declaration; anything else withholds every semantic field until a
+    direct source supplies it.
     """
     status = str(required_effect_value("Fimbulwinter", "everlasting_mana_gate_status"))
-    if status != "source_unavailable":
-        raise ValueError(
-            "Fimbulwinter Everlasting mana-gate authority status must be "
-            f"'source_unavailable', got {status!r}"
-        )
     source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
+    if status not in AUTHORIZED_MANA_GATE_STATUSES:
+        if status != "source_unavailable":
+            raise ValueError(
+                "Fimbulwinter Everlasting mana-gate authority status is not one "
+                f"this runtime has a branch for: {status!r}"
+            )
+        return {
+            "status": status,
+            "threshold_ratio": None,
+            "comparison": None,
+            "current_mana_term": None,
+            "maximum_mana_term": None,
+            "manaless_behavior": None,
+            "source_url": source["source_url"],
+            "source_revision_id": source["source_revision_id"],
+        }
     return {
         "status": status,
-        "threshold_ratio": None,
-        "comparison": None,
-        "current_mana_term": None,
-        "maximum_mana_term": None,
-        "manaless_behavior": None,
+        "threshold_ratio": float(
+            required_effect_value("Fimbulwinter", "everlasting_mana_threshold_ratio")
+        ),
+        "comparison": "current_mana > maximum_mana * ratio",
+        "current_mana_term": "post_cast_current_mana",
+        "maximum_mana_term": "holder_maximum_mana",
+        "manaless_behavior": "deny",
         "source_url": source["source_url"],
         "source_revision_id": source["source_revision_id"],
     }
@@ -4454,23 +4577,14 @@ def sustain_stat_receipt(item_name: str, stat_key: str) -> dict[str, Any]:
     sourced from; a missing key raises, naming the item and key, instead of
     letting a parser break silently change sustain.
     """
-    effect = ITEM_EFFECTS.get(item_name, {})
-    if stat_key not in effect:
-        raise KeyError(
-            f"ITEM_EFFECTS[{item_name!r}] is missing {stat_key!r} — "
-            "no typed sustain stat is pinned for this item"
-        )
     return {
         "item": item_name,
         "stat_key": stat_key,
         "value": sustain_effect_value(item_name, stat_key),
-        "source_url": str(
-            effect.get(
-                "source_url",
-                "https://wiki.leagueoflegends.com/en-us/" + item_name.replace(" ", "_"),
-            )
+        "source_url": str(required_effect_value(item_name, "source_url")),
+        "source_revision_id": int(
+            required_effect_value(item_name, "source_revision_id")
         ),
-        "source_revision_id": int(effect.get("source_revision_id", 0) or 0),
     }
 
 
@@ -4530,26 +4644,6 @@ def requires_authored_control_event(items: Sequence[Mapping[str, Any]]) -> bool:
         == "crowd_control"
         for item in items
     )
-
-
-def death_dance_deferral_fraction(
-    items: list[dict[str, Any]], *, is_melee: bool
-) -> float:
-    """Return Death's Dance's sourced Ignore Pain fraction for this holder."""
-    if not has_item(items, "Death's Dance"):
-        return 0.0
-    key = "damage_deferral_melee" if is_melee else "damage_deferral_ranged"
-    return float(required_effect_value("Death's Dance", key))
-
-
-def death_dance_defy_heal_amount(
-    items: list[dict[str, Any]], *, bonus_attack_damage: float
-) -> float:
-    """Return Death's Dance's sourced Defy heal for the holder's bonus AD."""
-    if not has_item(items, "Death's Dance"):
-        return 0.0
-    ratio = float(required_effect_value("Death's Dance", "defy_heal_bonus_ad_ratio"))
-    return max(0.0, float(bonus_attack_damage)) * ratio
 
 
 # Reviewed provenance for Eclipse's stack-gated trigger.  The values
@@ -4769,8 +4863,6 @@ class SpellbladeEffect:
     cooldown: float
     weave_delay: float
     double_on_hit: bool = False
-    expose_weakness_melee: float = 0.0
-    expose_weakness_ranged: float = 0.0
     bonus_attack_speed_percent: float = 0.0
     mana_restore_base_ad_ratio: float = 0.0
     mana_restore_crit_ratio: float = 0.0
@@ -4930,23 +5022,6 @@ class FirstAutoCritEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class MagicTrueCritEffect:
-    """Low-health critical modifier for magic and true damage."""
-
-    item_name: str
-    health_threshold: float
-    crit_multiplier: float
-
-
-@dataclass(frozen=True, slots=True)
-class StackingReductionEffect:
-    """Per-hit resistance reduction and its stack cap."""
-
-    reduction_per_stack: float
-    max_stacks: int
-
-
-@dataclass(frozen=True, slots=True)
 class ExecuteEffect:
     """Display-only low-health execution threshold."""
 
@@ -4955,124 +5030,24 @@ class ExecuteEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class DamageAmplifierEffect:
-    """One fight-wide amplifier with registry values already captured."""
-
-    item_name: str
-    amp_fraction: Callable[[float, float, Mapping[str, float]], float]
-
-
-@dataclass(frozen=True, slots=True)
-class AbilityAmplifierEffect:
-    """Ability-only amplifier derived from champion bonus mana."""
-
-    item_name: str
-    base_amp: float
-    amp_per_100_bonus_mana: float
-
-    def multiplier(
-        self,
-        champion_stats: Mapping[str, float],
-        include_actives: bool,
-        active: bool = True,
-    ) -> float:
-        """Return the active multiplier for this champion state."""
-        if not include_actives or not active:
-            return 1.0
-        bonus_mana = champion_stats.get("bonus_mana", 0.0)
-        return 1.0 + self.base_amp + self.amp_per_100_bonus_mana * (bonus_mana / 100.0)
-
-
-@dataclass(frozen=True, slots=True)
-class BasicAmplifierEffect:
-    """Distance-scaled basic damage amplifier (Hexoptics C44 Magnification)."""
-
-    item_name: str
-    max_amp: float
-    max_distance: float
-    melee_assumed_distance: float
-
-    def multiplier(self, is_melee: bool) -> float:
-        """Return the amp multiplier under the fight's range assumption.
-
-        Ranged champions are assumed to attack from max Magnification
-        distance (full amp); melee champions attack from roughly
-        ``melee_assumed_distance`` units, scaling the amp down linearly.
-        """
-        if is_melee:
-            distance = min(self.melee_assumed_distance, self.max_distance)
-            return 1.0 + self.max_amp * (distance / self.max_distance)
-        return 1.0 + self.max_amp
-
-
-@dataclass(frozen=True, slots=True)
-class ArmorReductionEffect:
-    """Average stacking armor reduction for one fight."""
-
-    reduction_per_stack: float
-    max_stacks: int
-
-    def average_reduction(self, num_auto_attacks: int) -> float:
-        """Preserve the engine's established Black Cleaver ramp model.
-
-        APPROXIMATION (documented, not exact): under the engine's ordering
-        convention (4 leading ability hits apply stacks before the auto
-        stream) the exact Cesaro mean of the capped ramp min(k, C) over
-        ``hits`` applications is C - C(C-1)/(2*hits) for hits >= C and
-        (hits+1)/2 below; the constant 0.8*C equals that mean at ~10 autos
-        and deviates up to ~20% at the extremes (long fights understate,
-        short fights overstate). Stack expiry (6 s) cannot rescue the
-        constant because the engine's inter-swing interval is below 6 s for
-        any realistic AS*uptime > 1/6. Kept as-is: it is tuned across the
-        corpus and re-tuning it is a balance change, not a P2 foundation
-        fix (see docs/math-foundations.md section 2.3).
-        """
-        hits = num_auto_attacks + 4
-        if hits >= self.max_stacks:
-            average_stacks = self.max_stacks * 0.8
-        else:
-            average_stacks = hits / 2.0
-        return self.reduction_per_stack * average_stacks
-
-
-@dataclass(frozen=True, slots=True)
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
-    per_hits: tuple[PerHitEffect, ...] = ()
     # P3-3M: on-hit branches restricted to one target class.  Kept OUT of
-    # ``per_hits`` so no existing consumer can price them by accident —
-    # only the fight engine's class-aware auto stream arms them.
+    # the interpreter-owned strike stream so no existing consumer can price
+    # them by accident — only the fight engine's class-aware auto stream
+    # arms them.
     class_restricted_per_hits: tuple[PerHitEffect, ...] = ()
     on_hit_heals: tuple[OnHitHealEffect, ...] = ()
-    spellblade: SpellbladeEffect | None = None
-    burns: tuple[BurnEffect, ...] = ()
-    immolates: tuple[DamageSource, ...] = ()
-    periodic: tuple[PeriodicEffect, ...] = ()
-    cooldown_procs: tuple[CooldownProcEffect, ...] = ()
-    ultimate_procs: tuple[UltimateProcEffect, ...] = ()
-    actives: tuple[DamageSource, ...] = ()
-    first_autos: tuple[FirstAutoEffect, ...] = ()
     auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
-    stacking_on_hits: tuple[StackingOnHitEffect, ...] = ()
     per_ability_hits: tuple[DamageSource, ...] = ()
-    shaped_charges: tuple[CooldownProcEffect, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
-    ultimate_auto_buff: UltimateAutoBuffEffect | None = None
     stacking_pen: StackingPenEffect | None = None
     navori_refund_percent: float = 0.0
     crit_damage_bonus: float = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
-    magic_true_crit: MagicTrueCritEffect | None = None
-    damage_amplifiers: tuple[DamageAmplifierEffect, ...] = ()
     magic_amp: float = 1.0
-    basic_amp: BasicAmplifierEffect | None = None
-    ability_amp: AbilityAmplifierEffect | None = None
-    hypershot_amp: float = 1.0
-    armor_reduction: ArmorReductionEffect | None = None
-    ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
-    stacking_mr_reduction: StackingReductionEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: tuple[str, ...] = ()
 
@@ -5098,7 +5073,7 @@ class _RequiredValues:
         return float(self.value(key))
 
 
-def _damage_source(
+def damage_source(
     item_name: str,
     damage_type: DamageType,
     raw_damage: RawDamageFormula,
@@ -5109,7 +5084,12 @@ def _damage_source(
     event_interval: float | None = None,
     same_target_cast_lockout_seconds: float = 0.0,
 ) -> DamageSource:
-    """Build shared source metadata without leaking registry records."""
+    """Build shared source metadata without leaking registry records.
+
+    Public because a strike's row is now built by the interpreter that reads
+    the declaration, and one home for the row's shape is what keeps a
+    migrated family's breakdown key identical to the one it replaces.
+    """
     return DamageSource(
         item_name=item_name,
         breakdown_key=breakdown_key or f"on_hit_{item_name}",
@@ -5119,76 +5099,6 @@ def _damage_source(
         lifesteal_effectiveness=lifesteal_effectiveness,
         event_interval=event_interval,
         same_target_cast_lockout_seconds=same_target_cast_lockout_seconds,
-    )
-
-
-def _compile_on_hit(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> PerHitEffect:
-    """Compile one declarative on-hit formula from validated values."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    damage_type = required.value("damage_type")
-
-    if formula == "flat_ap":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "flat_bonus_ad_ap":
-        base = required.number("base")
-        bonus_ad_ratio = required.number("bonus_ad_ratio")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            stats = inputs.champion_stats
-            return (
-                base
-                + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-                + ap_ratio * stats.get("ability_power", 0.0)
-            )
-
-    elif formula == "current_hp":
-        melee_ratio = required.number("current_hp_ratio_melee")
-        ranged_ratio = required.number("current_hp_ratio_ranged")
-        minimum = required.number("min_damage")
-
-        def raw(inputs: DamageInputs) -> float:
-            ratio = melee_ratio if inputs.is_melee else ranged_ratio
-            return max(minimum, ratio * inputs.target_current_health)
-
-    elif formula == "flat":
-        base = required.number("base")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    elif formula == "max_hp":
-        melee_ratio = required.number("max_hp_ratio_melee")
-        ranged_ratio = required.number("max_hp_ratio_ranged")
-
-        def raw(inputs: DamageInputs) -> float:
-            ratio = melee_ratio if inputs.is_melee else ranged_ratio
-            return ratio * inputs.champion_stats.get("health", 0.0)
-
-    elif formula == "max_mana":
-        ratio = required.number("max_mana_ratio_on_hit")
-
-        def raw(inputs: DamageInputs) -> float:
-            return ratio * inputs.champion_stats.get("max_mana", 0.0)
-
-    else:
-        raise ValueError(f"Unsupported on-hit formula {formula!r} for {item_name!r}")
-
-    source = _damage_source(item_name, damage_type, raw)
-    return PerHitEffect(
-        source,
-        tracks_current_health=formula == "current_hp",
-        superseded_by_ability_proc=values.get("secondary_behavior")
-        == "per_ability_hit",
     )
 
 
@@ -5221,7 +5131,7 @@ def _compile_class_restricted_on_hit(
     def raw(_inputs: DamageInputs) -> float:
         return amount
 
-    source = _damage_source(
+    source = damage_source(
         item_name,
         damage_type,
         raw,
@@ -5256,7 +5166,7 @@ def _compile_auto_cooldown(
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
         return ratio * inputs.champion_stats.get("health", 0.0)
 
-    source = _damage_source(
+    source = damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -5284,7 +5194,7 @@ def _compile_per_ability_hit(
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
         return ratio * inputs.champion_stats.get("max_mana", 0.0)
 
-    return _damage_source(
+    return damage_source(
         item_name,
         required.value("damage_type"),
         raw,
@@ -5294,709 +5204,11 @@ def _compile_per_ability_hit(
     )
 
 
-def _compile_spellblade(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> SpellbladeEffect:
-    """Compile one spellblade formula and its engine scheduling values."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    base_ad_ratio = required.number("base_ad_ratio")
-
-    if formula == "base_ad":
-
-        def raw(inputs: DamageInputs) -> float:
-            return base_ad_ratio * inputs.champion_stats.get("base_attack_damage", 0.0)
-
-    elif formula == "base_ad_ap":
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            stats = inputs.champion_stats
-            return base_ad_ratio * stats.get(
-                "base_attack_damage", 0.0
-            ) + ap_ratio * stats.get("ability_power", 0.0)
-
-    elif formula == "base_ad_crit":
-        crit_bonus_max = required.number("crit_bonus_max")
-
-        def raw(inputs: DamageInputs) -> float:
-            stats = inputs.champion_stats
-            crit_ratio = min(stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
-            return (
-                base_ad_ratio * stats.get("base_attack_damage", 0.0)
-                + crit_bonus_max * crit_ratio
-            )
-
-    else:
-        raise ValueError(
-            f"Unsupported spellblade formula {formula!r} for {item_name!r}"
-        )
-
-    source = _damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Spellblade",
-        breakdown_key=f"spellblade_{item_name}",
-    )
-    # These sibling mechanics are parser-owned for specific spellblades.  A
-    # successful parse that drops one must fail closed rather than silently
-    # compiling a weaker version of the item.
-    required_siblings: dict[str, tuple[str, ...]] = {
-        "Lich Bane": ("bonus_attack_speed_percent",),
-        "Essence Reaver": (
-            "mana_restore_base_ad_ratio",
-            "mana_restore_crit_ratio",
-        ),
-        "Bloodsong": ("expose_weakness_melee", "expose_weakness_ranged"),
-        "Dusk and Dawn": (
-            "self_heal_ap_ratio",
-            "self_heal_bonus_health_ratio",
-        ),
-    }
-    sibling_values = {
-        key: required.number(key) for key in required_siblings.get(item_name, ())
-    }
-    return SpellbladeEffect(
-        source=source,
-        cooldown=required.number("cooldown"),
-        weave_delay=required.number("weave_delay"),
-        double_on_hit=bool(values.get("double_on_hit", False)),
-        expose_weakness_melee=sibling_values.get(
-            "expose_weakness_melee", float(values.get("expose_weakness_melee", 0.0))
-        ),
-        expose_weakness_ranged=sibling_values.get(
-            "expose_weakness_ranged", float(values.get("expose_weakness_ranged", 0.0))
-        ),
-        bonus_attack_speed_percent=sibling_values.get(
-            "bonus_attack_speed_percent",
-            float(values.get("bonus_attack_speed_percent", 0.0)),
-        ),
-        mana_restore_base_ad_ratio=sibling_values.get(
-            "mana_restore_base_ad_ratio",
-            float(values.get("mana_restore_base_ad_ratio", 0.0)),
-        ),
-        mana_restore_crit_ratio=sibling_values.get(
-            "mana_restore_crit_ratio", float(values.get("mana_restore_crit_ratio", 0.0))
-        ),
-        self_heal_ap_ratio=sibling_values.get(
-            "self_heal_ap_ratio", float(values.get("self_heal_ap_ratio", 0.0))
-        ),
-        self_heal_bonus_health_ratio=sibling_values.get(
-            "self_heal_bonus_health_ratio",
-            float(values.get("self_heal_bonus_health_ratio", 0.0)),
-        ),
-    )
-
-
-def _compile_burn(item_name: str, values: Mapping[str, Any]) -> BurnEffect:
-    """Compile one refreshable burn's base-duration raw damage."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "max_hp":
-        ratio = required.number("max_hp_ratio_total")
-
-        def raw(inputs: DamageInputs) -> float:
-            return ratio * inputs.target_max_health
-
-    elif formula == "flat_ap":
-        base = required.number("base_total")
-        ap_ratio = required.number("ap_ratio_total")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "flat":
-        base = required.number("base_total")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    else:
-        raise ValueError(f"Unsupported burn formula {formula!r} for {item_name!r}")
-    source = _damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="burn",
-        breakdown_key=f"burn_{item_name}",
-    )
-    return BurnEffect(
-        source,
-        required.number("duration"),
-        required.number("tick_interval"),
-    )
-
-
-def _compile_immolate(item_name: str, values: Mapping[str, Any]) -> DamageSource:
-    """Compile one Immolate formula as raw damage per second."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "bonus_hp_dps":
-        base = required.number("base_per_second")
-        bonus_hp_ratio = required.number("bonus_hp_ratio_per_second")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + bonus_hp_ratio * inputs.champion_stats.get(
-                "bonus_health", 0.0
-            )
-
-    elif formula == "flat_dps":
-        base = required.number("base_per_second")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    else:
-        raise ValueError(f"Unsupported Immolate formula for {item_name!r}")
-
-    return _damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Immolate",
-        breakdown_key=f"immolate_{item_name}",
-        event_interval=required.number("event_interval"),
-    )
-
-
-def _compile_periodic(item_name: str, values: Mapping[str, Any]) -> PeriodicEffect:
-    """Compile one fixed-interval periodic damage formula."""
-    required = _RequiredValues(item_name, values)
-    if required.value("formula") != "bonus_hp":
-        raise ValueError(f"Unsupported periodic formula for {item_name!r}")
-    bonus_hp_ratio = required.number("bonus_hp_ratio")
-
-    def raw(inputs: DamageInputs) -> float:
-        return bonus_hp_ratio * inputs.champion_stats.get("bonus_health", 0.0)
-
-    source = _damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Anguish",
-        breakdown_key=f"periodic_{item_name}",
-    )
-    self_heal_multiplier = (
-        required.number("self_heal_post_mitigation_multiplier")
-        if item_name == "Unending Despair"
-        else 0.0
-    )
-    return PeriodicEffect(source, required.number("interval"), self_heal_multiplier)
-
-
-def _compile_proc(item_name: str, values: Mapping[str, Any]) -> CooldownProcEffect:
-    """Compile one triggered proc's per-application raw damage."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "charged_ap":
-        base = required.number("base_per_charge")
-        ap_ratio = required.number("ap_ratio_per_charge")
-        multiplier = required.number("single_target_multiplier")
-        charges = int(required.number("charges"))
-        repeated_target_multiplier = (multiplier - 1.0) / max(1, charges - 1)
-
-        def raw(inputs: DamageInputs) -> float:
-            ap = inputs.champion_stats.get("ability_power", 0.0)
-            return (base + ap_ratio * ap) * multiplier
-
-    elif formula == "flat_ap":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "flat":
-        base = required.number("base")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    elif formula == "flat_ap_max_hp":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-        hp_ratio = required.number("target_max_hp_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return (
-                base
-                + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-                + hp_ratio * inputs.target_max_health
-            )
-
-    else:
-        raise ValueError(f"Unsupported proc formula {formula!r} for {item_name!r}")
-    source = DamageSource(
-        item_name=item_name,
-        breakdown_key=f"proc_{item_name}",
-        display_name=f"{item_name} (proc)",
-        damage_type=required.value("damage_type"),
-        raw_damage=raw,
-        is_ability_damage=bool(values.get("is_ability_damage", False)),
-        multi_target_charges=charges if formula == "charged_ap" else 0,
-        repeated_target_multiplier=(
-            repeated_target_multiplier if formula == "charged_ap" else 1.0
-        ),
-        single_target_multiplier=(multiplier if formula == "charged_ap" else 1.0),
-    )
-    trigger = str(values.get("trigger", "coarse"))
-    threshold = trigger == "damage_threshold"
-    return CooldownProcEffect(
-        source,
-        required.number("cooldown"),
-        bool(values.get("repeat_on_cooldown", True)),
-        trigger=trigger,
-        damage_threshold_ratio=(
-            required.number("damage_threshold_ratio") if threshold else 0.0
-        ),
-        damage_threshold_window=(
-            required.number("damage_threshold_window") if threshold else 0.0
-        ),
-        # The structural flag decides whether a refund exists; its parsed
-        # value is then required, so a parse miss raises instead of
-        # silently compiling a refund-less Bullseye.
-        on_attack_cooldown_refund=(
-            required.number("on_attack_cooldown_refund")
-            if values.get("attack_refund")
-            else 0.0
-        ),
-    )
-
-
-def _compile_ultimate_proc(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> UltimateProcEffect:
-    """Compile one ultimate-triggered duration formula."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula not in {"flat_ap", "flat"}:
-        raise ValueError(f"Unsupported ultimate proc formula for {item_name!r}")
-    base = required.number("base")
-    ap_ratio = required.number("ap_ratio") if formula == "flat_ap" else 0.0
-
-    def raw(inputs: DamageInputs) -> float:
-        return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    source = _damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="Hatefog",
-        breakdown_key=f"ult_proc_{item_name}",
-    )
-    return UltimateProcEffect(
-        source,
-        required.number("duration"),
-        # Malignance's Hatefog packet and its target MR reduction are one
-        # parser-owned sibling effect. Other ultimate procs have no MR
-        # reduction and therefore carry an explicit zero.
-        (
-            required.number("mr_reduction")
-            if item_name == "Malignance"
-            else (required.number("mr_reduction") if "mr_reduction" in values else 0.0)
-        ),
-    )
-
-
-def _compile_active(item_name: str, values: Mapping[str, Any]) -> DamageSource:
-    """Compile one once-per-fight active damage formula."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "flat_ap":
-        base = required.number("base")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    elif formula == "total_ad":
-        ratio = required.number("total_ad_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return ratio * inputs.champion_stats.get("attack_damage", 0.0)
-
-    elif formula == "level_ap":
-        base_min = required.number("base_min")
-        base_max = required.number("base_max")
-        ap_ratio = required.number("ap_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            level = max(1, min(inputs.level, 20))
-            base = base_min + (base_max - base_min) * (level - 1) / 19
-            return base + ap_ratio * inputs.champion_stats.get("ability_power", 0.0)
-
-    else:
-        raise ValueError(f"Unsupported active formula {formula!r} for {item_name!r}")
-    raw_lifesteal_effectiveness = values.get("lifesteal_effectiveness", 0.0)
-    lifesteal_effectiveness = (
-        float(raw_lifesteal_effectiveness)
-        if isinstance(raw_lifesteal_effectiveness, (int, float))
-        and not isinstance(raw_lifesteal_effectiveness, bool)
-        else 0.0
-    )
-    return _damage_source(
-        item_name,
-        required.value("damage_type"),
-        raw,
-        suffix="active",
-        breakdown_key=f"active_{item_name}",
-        lifesteal_effectiveness=lifesteal_effectiveness,
-    )
-
-
-def _explicit_damage_source(
-    item_name: str,
-    required: _RequiredValues,
-    raw_damage: RawDamageFormula,
-) -> DamageSource:
-    """Compile registry-owned presentation metadata for special behaviors."""
-    return DamageSource(
-        item_name=item_name,
-        breakdown_key=str(required.value("breakdown_key")),
-        display_name=str(required.value("display_name")),
-        damage_type=required.value("damage_type"),
-        raw_damage=raw_damage,
-        basic_damage=bool(required.values.get("basic_damage", False)),
-    )
-
-
-def _compile_first_auto(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> FirstAutoEffect:
-    """Compile a first-auto raw formula without exposing item identity."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "flat":
-        base = required.number("base")
-
-        def raw(_inputs: DamageInputs) -> float:
-            return base
-
-    elif formula == "flat_base_ad":
-        base = required.number("base")
-        base_ad_ratio = required.number("base_ad_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + base_ad_ratio * inputs.champion_stats.get(
-                "base_attack_damage", 0.0
-            )
-
-    elif formula == "flat_max_hp":
-        base = required.number("base")
-        max_hp_ratio = required.number("max_hp_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + max_hp_ratio * inputs.champion_stats.get("health", 0.0)
-
-    elif formula == "flat_plus_lethality":
-        base = required.number("base")
-        lethality_ratio = required.number("lethality_ratio")
-
-        def raw(inputs: DamageInputs) -> float:
-            return base + lethality_ratio * inputs.champion_stats.get("lethality", 0.0)
-
-    elif formula == "current_hp":
-        melee_ratio = required.number("current_hp_ratio_melee")
-        ranged_ratio = required.number("current_hp_ratio_ranged")
-
-        def raw(inputs: DamageInputs) -> float:
-            ratio = melee_ratio if inputs.is_melee else ranged_ratio
-            return ratio * inputs.target_current_health
-
-    else:
-        raise ValueError(
-            f"Unsupported first-auto formula {formula!r} for {item_name!r}"
-        )
-
-    max_procs = 1
-    if values.get("uses_empowered_auto_count"):
-        max_procs = int(required.number("empowered_auto_count"))
-    temporary_lethality_keys = (
-        "temporary_lethality_melee",
-        "temporary_lethality_ranged",
-        "temporary_lethality_duration",
-    )
-    # Voltaic's first-auto proc is the only registered temporary-lethality
-    # effect.  Its three values are one typed contract; accepting a partial
-    # record would silently turn a parser break into zero lethality/duration.
-    if item_name == "Voltaic Cyclosword" or any(
-        key in values for key in temporary_lethality_keys
-    ):
-        temporary_lethality = {
-            key: required.number(key) for key in temporary_lethality_keys
-        }
-    else:
-        temporary_lethality = {}
-    return FirstAutoEffect(
-        _explicit_damage_source(item_name, required, raw),
-        max_procs=max_procs,
-        temporary_lethality_melee=temporary_lethality.get(
-            "temporary_lethality_melee", 0.0
-        ),
-        temporary_lethality_ranged=temporary_lethality.get(
-            "temporary_lethality_ranged", 0.0
-        ),
-        temporary_lethality_duration=temporary_lethality.get(
-            "temporary_lethality_duration", 0.0
-        ),
-        energized_max_stacks=(
-            int(required.number("energized_max_stacks"))
-            if "energized_max_stacks" in values
-            else 0
-        ),
-        energized_attack_stacks=(
-            int(required.number("energized_attack_stacks"))
-            if "energized_attack_stacks" in values
-            else 0
-        ),
-        energized_ability_trigger=bool(values.get("energized_ability_trigger", False)),
-        chain_targets_min=(
-            int(required.number("chain_targets_min"))
-            if "chain_targets_min" in values
-            else 0
-        ),
-        chain_targets_max=(
-            int(required.number("chain_targets_max"))
-            if "chain_targets_max" in values
-            else 0
-        ),
-    )
-
-
-def _compile_stacking_on_hit(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> StackingOnHitEffect:
-    """Compile every-Nth-on-hit damage and its current-HP dependency."""
-    required = _RequiredValues(item_name, values)
-    formula = required.value("formula")
-    if formula == "base_ad_max_hp":
-        base_ad_melee = required.number("base_ad_ratio_melee")
-        base_ad_ranged = required.number("base_ad_ratio_ranged")
-        hp_melee = required.number("max_hp_ratio_melee")
-        hp_ranged = required.number("max_hp_ratio_ranged")
-
-        def raw(inputs: DamageInputs) -> float:
-            base_ad_ratio = base_ad_melee if inputs.is_melee else base_ad_ranged
-            hp_ratio = hp_melee if inputs.is_melee else hp_ranged
-            stats = inputs.champion_stats
-            return base_ad_ratio * stats.get(
-                "base_attack_damage", 0.0
-            ) + hp_ratio * stats.get("health", 0.0)
-
-        tracks_target_health = False
-    elif formula == "level_missing_hp":
-        base_melee = required.number("base_melee")
-        per_level_melee = required.number("per_level_melee")
-        base_ranged = required.number("base_ranged")
-        per_level_ranged = required.number("per_level_ranged")
-        scaling_start = int(required.number("scaling_start_level"))
-        missing_bonus = required.number("missing_hp_bonus_max")
-
-        def raw(inputs: DamageInputs) -> float:
-            base = base_melee if inputs.is_melee else base_ranged
-            per_level = per_level_melee if inputs.is_melee else per_level_ranged
-            if inputs.level >= scaling_start:
-                base += per_level * (inputs.level - scaling_start + 1)
-            missing_ratio = max(
-                0.0,
-                1.0 - inputs.target_current_health / inputs.target_max_health,
-            )
-            return base * (1.0 + missing_bonus * missing_ratio)
-
-        tracks_target_health = True
-    else:
-        raise ValueError(f"Unsupported stacking formula {formula!r} for {item_name!r}")
-
-    return StackingOnHitEffect(
-        source=_explicit_damage_source(item_name, required, raw),
-        hits_required=int(required.number("hits_required")),
-        tracks_target_health=tracks_target_health,
-    )
-
-
-def _compile_max_hp_proc(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> CooldownProcEffect:
-    """Compile a cooldown proc based on target maximum health."""
-    required = _RequiredValues(item_name, values)
-    if required.value("formula") != "max_hp":
-        raise ValueError(f"Unsupported max-HP proc formula for {item_name!r}")
-    melee_ratio = required.number("target_max_hp_ratio_melee")
-    ranged_ratio = required.number("target_max_hp_ratio_ranged")
-    stack_required = int(required.number("stack_required"))
-    stack_window = required.number("stack_window")
-    shield_melee_base = 0.0
-    shield_ranged_base = 0.0
-    shield_melee_bonus_ad_ratio = 0.0
-    shield_ranged_bonus_ad_ratio = 0.0
-    shield_duration = 0.0
-    if item_name == "Eclipse":
-        shield_melee_base = required.number("shield_melee_base")
-        shield_ranged_base = required.number("shield_ranged_base")
-        shield_melee_bonus_ad_ratio = required.number("shield_melee_bonus_ad_ratio")
-        shield_ranged_bonus_ad_ratio = required.number("shield_ranged_bonus_ad_ratio")
-        shield_duration = required.number("shield_duration")
-
-    def raw(inputs: DamageInputs) -> float:
-        ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.target_max_health
-
-    return CooldownProcEffect(
-        source=_explicit_damage_source(item_name, required, raw),
-        cooldown=required.number("cooldown"),
-        late_phase=True,
-        stack_required=stack_required,
-        stack_window=stack_window,
-        self_shield_melee_base=shield_melee_base,
-        self_shield_ranged_base=shield_ranged_base,
-        self_shield_melee_bonus_ad_ratio=shield_melee_bonus_ad_ratio,
-        self_shield_ranged_bonus_ad_ratio=shield_ranged_bonus_ad_ratio,
-        self_shield_duration=shield_duration,
-    )
-
-
-def _compile_shaped_charge(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> CooldownProcEffect:
-    """Compile an ability-triggered lethality proc without scheduling it."""
-    required = _RequiredValues(item_name, values)
-    base_melee = required.number("base_melee")
-    base_ranged = required.number("base_ranged")
-    ratio_melee = required.number("lethality_ratio_melee")
-    ratio_ranged = required.number("lethality_ratio_ranged")
-
-    def raw(inputs: DamageInputs) -> float:
-        base = base_melee if inputs.is_melee else base_ranged
-        ratio = ratio_melee if inputs.is_melee else ratio_ranged
-        return base + ratio * inputs.champion_stats.get("lethality", 0.0)
-
-    source = DamageSource(
-        item_name=item_name,
-        breakdown_key=f"shaped_charge_{item_name}",
-        display_name=f"{item_name} (Shaped Charge)",
-        damage_type="true",
-        raw_damage=raw,
-    )
-    return CooldownProcEffect(source, required.number("cooldown"))
-
-
-def lord_dominik_damage_amp_fraction(
-    *,
-    attacker_stats: Mapping[str, float],
-    target_bonus_health: float,
-    maximum: float,
-    bonus_hp_cap: float,
-) -> float:
-    """Return Giant Slayer's current target-health damage multiplier.
-
-    The attacker mapping identifies the current holder of Lord Dominik's
-    Regards. The V26.01 passive scales from the target's bonus health only;
-    it does not compare that value with the holder's bonus health. Keeping the
-    holder in the function contract prevents a future caller from applying
-    an item's passive to an unrelated participant.
-    """
-    _ = attacker_stats
-    if bonus_hp_cap <= 0.0:
-        raise ValueError("Lord Dominik's Regards bonus-health cap must be positive")
-    return max(0.0, maximum) * min(
-        max(0.0, float(target_bonus_health)) / bonus_hp_cap,
-        1.0,
-    )
-
-
-def _compile_damage_amplifier(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> DamageAmplifierEffect:
-    """Compile one supported amplifier schema into a fight-time formula."""
-    required = _RequiredValues(item_name, values)
-
-    if "health_state_damage_amp_above_half" in values:
-        # The public scenario starts at full health.  The source also has a
-        # below-half healing branch, which is applied by the ordered survival
-        # ledger; this damage packet therefore records the explicit
-        # above-half starting-state assumption rather than guessing a live
-        # health transition in the compact damage engine.
-        fixed_amp = required.number("health_state_damage_amp_above_half")
-
-        def amp_fraction(
-            _duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            return fixed_amp
-
-    elif "damage_amp_per_second" in values:
-        per_second = required.number("damage_amp_per_second")
-        maximum = required.number("damage_amp_max")
-
-        def amp_fraction(
-            duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            stacks = min(duration, maximum / per_second)
-            return per_second * stacks / 2.0
-
-    elif "amp_per_second" in values:
-        per_second = required.number("amp_per_second")
-        maximum = required.number("amp_max")
-
-        def amp_fraction(
-            duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            stacks = min(duration, maximum / per_second)
-            return per_second * stacks / 2.0
-
-    elif "bonus_hp_cap" in values:
-        maximum = required.number("max_amp")
-        bonus_hp_cap = required.number("bonus_hp_cap")
-
-        def amp_fraction(
-            _duration: float,
-            target_bonus_health: float,
-            attacker_stats: Mapping[str, float],
-        ) -> float:
-            return lord_dominik_damage_amp_fraction(
-                attacker_stats=attacker_stats,
-                target_bonus_health=target_bonus_health,
-                maximum=maximum,
-                bonus_hp_cap=bonus_hp_cap,
-            )
-
-    elif "amp_per_stack" in values:
-        per_stack = required.number("amp_per_stack")
-        maximum_stacks = int(required.number("max_stacks"))
-
-        def amp_fraction(
-            duration: float,
-            _target_bonus_health: float,
-            _attacker_stats: Mapping[str, float],
-        ) -> float:
-            stacks = min(maximum_stacks, max(1, int(duration / 2)))
-            return per_stack * stacks
-
-    else:
-        raise KeyError(
-            f"ITEM_EFFECTS[{item_name!r}] has unsupported damage-amplifier schema"
-        )
-
-    return DamageAmplifierEffect(item_name, amp_fraction)
-
-
 _KNOWN_EFFECT_TYPES = frozenset(
     {
         "ability_damage_amp",
         "active",
+        "armor_penetration_channel",
         "armor_reduction",
         "basic_damage_amp",
         "burn",
@@ -6037,6 +5249,64 @@ _KNOWN_EFFECT_TYPES = frozenset(
 )
 
 
+def row_presentation(item_name: str) -> tuple[str, str] | None:
+    """The breakdown key and display name one entry names for itself.
+
+    ``None`` when the entry names neither, in which case the family's own
+    interpreter derives both from the owner and its prefix.  Naming one and
+    not the other is a stop rather than half a row: a breakdown key nobody can
+    read or a display name nobody can find is worse than either alone.
+
+    Both keys are code-owned (``_STRUCTURAL_EFFECT_KEYS``), so a parse cannot
+    drop them and a present key really does mean the entry claims its own row.
+    """
+    entry = ITEM_EFFECTS.get(item_name)
+    if not isinstance(entry, Mapping):
+        return None
+    key = entry.get("breakdown_key")
+    name = entry.get("display_name")
+    if key is None and name is None:
+        return None
+    if not isinstance(key, str) or not isinstance(name, str):
+        raise KeyError(
+            f"ITEM_EFFECTS[{item_name!r}] names half of its own breakdown row "
+            "(breakdown_key + display_name are one statement) — parser/schema "
+            "bug; a row with only one of them is unreadable"
+        )
+    return (key, name)
+
+
+def entry_schema_keys(item_name: str) -> frozenset[str]:
+    """Which value keys this item's registry entry is *expected* to carry.
+
+    The schema, never the current parse.  A declaration deciding "does this
+    mechanic carry that sibling" must read the shape of the entry rather than
+    what happens to be in it today: keyed on the live entry, a parse that
+    dropped a key would make the declaration quietly conclude the mechanic
+    does not exist, while keyed on the schema the reference is still declared
+    and raises naming the item and the key.  That is the fail-closed contract
+    the registry's own compilers used to buy by comparing item names.
+
+    An item the reference table does not know has no schema but its live
+    entry, which is then the only shape there is.
+    """
+    reference = _REFERENCE_ITEM_EFFECTS.get(item_name)
+    if isinstance(reference, Mapping):
+        return frozenset(reference)
+    entry = ITEM_EFFECTS.get(item_name)
+    return frozenset(entry) if isinstance(entry, Mapping) else frozenset()
+
+
+def known_effect_types() -> frozenset[str]:
+    """The closed set of effect tags an ``ITEM_EFFECTS`` entry may carry.
+
+    The public read behind ``item_behavior_catalog``'s closure test: a new
+    member here has to be given a rule family before the catalog will import,
+    so a tag can never arrive with no engine claiming it.
+    """
+    return _KNOWN_EFFECT_TYPES
+
+
 def resolve_damage_effects(
     items: Sequence[Mapping[str, Any]],
 ) -> BuildDamageEffects:
@@ -6075,37 +5345,17 @@ def _resolve_damage_effects_uncached(
     items: Sequence[Mapping[str, Any]],
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
-    per_hits: list[PerHitEffect] = []
     class_restricted_per_hits: list[PerHitEffect] = []
     on_hit_heals: list[OnHitHealEffect] = []
-    spellblade: SpellbladeEffect | None = None
-    burns: list[BurnEffect] = []
-    immolates: list[DamageSource] = []
-    periodic: list[PeriodicEffect] = []
-    cooldown_procs: list[CooldownProcEffect] = []
-    ultimate_procs: list[UltimateProcEffect] = []
-    actives: list[DamageSource] = []
-    first_autos: list[FirstAutoEffect] = []
-    stacking_on_hits: list[StackingOnHitEffect] = []
     auto_cooldowns: list[AutoCooldownEffect] = []
     per_ability_hits: list[DamageSource] = []
-    shaped_charges: list[CooldownProcEffect] = []
     phantom_hit: PhantomHitEffect | None = None
-    ultimate_auto_buff: UltimateAutoBuffEffect | None = None
     stacking_pen: StackingPenEffect | None = None
     navori_refund_percent = 0.0
     crit_damage_bonus = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
-    magic_true_crit: MagicTrueCritEffect | None = None
-    damage_amplifiers: list[DamageAmplifierEffect] = []
     magic_amp = 1.0
-    basic_amp: BasicAmplifierEffect | None = None
-    ability_amp: AbilityAmplifierEffect | None = None
-    hypershot_amp = 1.0
-    armor_reduction: ArmorReductionEffect | None = None
-    ability_amp_source: str | None = None
     execute: ExecuteEffect | None = None
-    stacking_mr_reduction: StackingReductionEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: list[str] = []
 
@@ -6124,46 +5374,16 @@ def _resolve_damage_effects_uncached(
             class_restricted_per_hits.append(
                 _compile_class_restricted_on_hit(item_name, restricted)
             )
-        if effect_type == "on_hit":
-            per_hits.append(_compile_on_hit(item_name, values))
-        elif effect_type == "on_hit_heal":
+        if effect_type == "on_hit_heal":
             on_hit_heals.append(_compile_on_hit_heal(item_name, values))
-        elif effect_type == "spellblade" and spellblade is None:
-            spellblade = _compile_spellblade(item_name, values)
-        elif effect_type == "burn":
-            burns.append(_compile_burn(item_name, values))
-        elif effect_type == "immolate":
-            immolates.append(_compile_immolate(item_name, values))
-        elif effect_type == "periodic_aoe":
-            periodic.append(_compile_periodic(item_name, values))
-        elif effect_type == "proc":
-            cooldown_procs.append(_compile_proc(item_name, values))
-        elif effect_type == "ult_proc":
-            ultimate_procs.append(_compile_ultimate_proc(item_name, values))
-        elif effect_type == "active":
-            actives.append(_compile_active(item_name, values))
-        elif effect_type == "on_hit_once":
-            first_autos.append(_compile_first_auto(item_name, values))
-        elif effect_type == "on_hit_stacking":
-            stacking_on_hits.append(_compile_stacking_on_hit(item_name, values))
-        elif effect_type == "max_hp_proc":
-            cooldown_procs.append(_compile_max_hp_proc(item_name, values))
-        elif effect_type == "shaped_charge":
-            shaped_charges.append(_compile_shaped_charge(item_name, values))
         elif effect_type == "ult_empowered_autos":
+            # The window itself is a declared charged strike; what stays here
+            # is its assumption note.  ``conditional_notes`` is the one prose
+            # surface this projection owns — ``unmodeled_splash_note`` below
+            # proves it already owns notes for tags it does not otherwise
+            # handle — and keeping the note in the item's own loop position is
+            # what keeps the published note order the order items were bought.
             required = _RequiredValues(item_name, values)
-            ultimate_auto_buff = UltimateAutoBuffEffect(
-                item_name=item_name,
-                bonus_attack_speed_percent=required.number(
-                    "bonus_attack_speed_percent"
-                ),
-                empowered_auto_count=int(required.number("empowered_auto_count")),
-                duration=required.number("duration"),
-                reduced_crit_ratio=required.number("reduced_crit_ratio"),
-                natural_crit_true_damage_ratio=required.number(
-                    "natural_crit_true_damage_ratio"
-                ),
-            )
             conditional_notes.append(
                 "R is assumed to be cast at the start of the fight. "
                 f"{item_name} empowered attacks "
@@ -6179,39 +5399,10 @@ def _resolve_damage_effects_uncached(
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
             )
-        elif effect_type == "magic_true_crit":
-            required = _RequiredValues(item_name, values)
-            magic_true_crit = MagicTrueCritEffect(
-                item_name,
-                required.number("health_threshold"),
-                required.number("crit_multiplier"),
-            )
-        elif effect_type == "basic_damage_amp":
-            required = _RequiredValues(item_name, values)
-            basic_amp = BasicAmplifierEffect(
-                item_name=item_name,
-                max_amp=required.number("max_amp"),
-                max_distance=required.number("max_distance"),
-                melee_assumed_distance=required.number("melee_assumed_distance"),
-            )
-        elif effect_type == "ability_damage_amp":
-            required = _RequiredValues(item_name, values)
-            ability_amp = AbilityAmplifierEffect(
-                item_name,
-                required.number("base_amp"),
-                required.number("amp_per_100_bonus_mana"),
-            )
-            ability_amp_source = item_name
         elif effect_type == "execute":
             execute = ExecuteEffect(
                 item_name,
                 _RequiredValues(item_name, values).number("threshold"),
-            )
-        elif effect_type == "mr_reduction_stacking":
-            required = _RequiredValues(item_name, values)
-            stacking_mr_reduction = StackingReductionEffect(
-                required.number("mr_reduction_per_stack"),
-                int(required.number("max_stacks")),
             )
         elif effect_type == "crit_modifier":
             required = _RequiredValues(item_name, values)
@@ -6225,18 +5416,8 @@ def _resolve_damage_effects_uncached(
             # the typed effect in the build projection without adding a stale
             # conditional note that would contradict its targeting receipt.
             continue
-        if "damage_amp_per_second" in values or effect_type == "damage_amp":
-            damage_amplifiers.append(_compile_damage_amplifier(item_name, values))
         if effect_type == "magic_damage_amp":
             magic_amp += _RequiredValues(item_name, values).number("magic_amp")
-        if effect_type == "hypershot_amp":
-            hypershot_amp += _RequiredValues(item_name, values).number("amp")
-        if effect_type == "armor_reduction":
-            required = _RequiredValues(item_name, values)
-            armor_reduction = ArmorReductionEffect(
-                required.number("reduction_per_stack"),
-                int(required.number("max_stacks")),
-            )
         splash_note = values.get("unmodeled_splash_note")
         if splash_note:
             conditional_notes.append(str(splash_note))
@@ -6291,37 +5472,17 @@ def _resolve_damage_effects_uncached(
             )
 
     return BuildDamageEffects(
-        per_hits=tuple(per_hits),
         class_restricted_per_hits=tuple(class_restricted_per_hits),
         on_hit_heals=tuple(on_hit_heals),
-        spellblade=spellblade,
-        burns=tuple(burns),
-        immolates=tuple(immolates),
-        periodic=tuple(periodic),
-        cooldown_procs=tuple(cooldown_procs),
-        ultimate_procs=tuple(ultimate_procs),
-        actives=tuple(actives),
-        first_autos=tuple(first_autos),
-        stacking_on_hits=tuple(stacking_on_hits),
         auto_cooldowns=tuple(auto_cooldowns),
         per_ability_hits=tuple(per_ability_hits),
-        shaped_charges=tuple(shaped_charges),
         phantom_hit=phantom_hit,
-        ultimate_auto_buff=ultimate_auto_buff,
         stacking_pen=stacking_pen,
         navori_refund_percent=navori_refund_percent,
         crit_damage_bonus=crit_damage_bonus,
         first_auto_crit=first_auto_crit,
-        magic_true_crit=magic_true_crit,
-        damage_amplifiers=tuple(damage_amplifiers),
         magic_amp=magic_amp,
-        basic_amp=basic_amp,
-        ability_amp=ability_amp,
-        hypershot_amp=hypershot_amp,
-        armor_reduction=armor_reduction,
-        ability_amp_source=ability_amp_source,
         execute=execute,
-        stacking_mr_reduction=stacking_mr_reduction,
         cooldown_refund_source=cooldown_refund_source,
         conditional_notes=tuple(conditional_notes),
     )
@@ -6334,11 +5495,6 @@ def _resolve_damage_effects_uncached(
 # semantics of each stat-granting passive; stats.py only orchestrates
 # when to apply them.  Each passive applies once per build regardless of
 # duplicate copies (legendary items are unique).
-
-
-def _ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`ap_multiplier`."""
-    return ap_multiplier(items)
 
 
 def ap_multiplier(items: list[dict[str, Any]]) -> float:
@@ -6362,11 +5518,6 @@ def ap_multiplier(items: list[dict[str, Any]]) -> float:
     return 1.0 + bonus
 
 
-def _permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`permanent_ap_multiplier`."""
-    return permanent_ap_multiplier(items)
-
-
 def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
     """Return parser-backed AP multiplier eligible as a permanent stat.
 
@@ -6376,11 +5527,6 @@ def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
     if "Rabadon's Deathcap" not in _item_names(items):
         return 1.0
     return 1.0 + required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
-
-
-def _mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
-    """Backward-compatible private alias for :func:`mana_to_ap_bonus`."""
-    return mana_to_ap_bonus(items, bonus_mana)
 
 
 def mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
@@ -6413,14 +5559,6 @@ def mana_to_health_bonus(items: list[dict[str, Any]], bonus_mana: float) -> floa
     return total
 
 
-def _dawncore_bonus_ap(
-    items: list[dict[str, Any]],
-    bonus_mana_regen_percent: float,
-) -> float:
-    """Backward-compatible private alias for :func:`dawncore_bonus_ap`."""
-    return dawncore_bonus_ap(items, bonus_mana_regen_percent)
-
-
 def dawncore_bonus_ap(
     items: list[dict[str, Any]],
     bonus_mana_regen_percent: float,
@@ -6441,11 +5579,6 @@ def dawncore_bonus_ap(
     return (bonus_mana_regen_percent / threshold) * ap_per_unit
 
 
-def _flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`flowing_water_bonus_ap`."""
-    return flowing_water_bonus_ap(items)
-
-
 def flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     """Return parser-owned Staff of Flowing Water Rapids AP.
 
@@ -6458,14 +5591,6 @@ def flowing_water_bonus_ap(items: list[dict[str, Any]]) -> float:
     if "Staff of Flowing Water" not in _item_names(items):
         return 0.0
     return required_effect_value("Staff of Flowing Water", "rapids_bonus_ap")
-
-
-def _passive_attack_speed_bonus(
-    items: list[dict[str, Any]],
-    is_melee: bool,
-) -> float:
-    """Backward-compatible private alias for :func:`passive_attack_speed_bonus`."""
-    return passive_attack_speed_bonus(items, is_melee)
 
 
 def passive_attack_speed_bonus(
@@ -6501,130 +5626,6 @@ def passive_attack_speed_bonus(
     return bonus
 
 
-def guinsoo_attack_speed_percent(
-    items: list[dict[str, Any]], stack_count: int
-) -> float:
-    """Return Seething Strike's temporary attack-speed bonus.
-
-    The ordered fight ledger owns stack admission and expiry; this accessor
-    keeps the patch-sourced values in ``ITEM_EFFECTS`` so that callers cannot
-    smuggle a stale 8%/32% literal into an attack schedule.
-    """
-    if "Guinsoo's Rageblade" not in _item_names(items):
-        return 0.0
-    per_stack = float(
-        required_effect_value("Guinsoo's Rageblade", "seething_attack_speed_per_stack")
-    )
-    max_stacks = int(
-        required_effect_value("Guinsoo's Rageblade", "seething_max_stacks")
-    )
-    return 100.0 * per_stack * min(max(0, int(stack_count)), max_stacks)
-
-
-# The schedule intentionally accepts the authored timing inputs explicitly so
-# callers cannot hide state in an untyped global or stale fallback.
-# pylint: disable=too-many-arguments,too-many-locals
-def guinsoo_swing_schedule(
-    items: list[dict[str, Any]],
-    *,
-    attack_speed: float,
-    attack_speed_ratio: float,
-    duration_seconds: float,
-    uptime: float = 1.0,
-    critical_chance: float = 0.0,
-) -> tuple[float, ...]:
-    """Build the authored auto schedule while Seething stacks rise/expire.
-
-    The first attack lands at ``t=0``. Each completed attack grants one
-    Seething stack for the sourced three-second duration, capped at the
-    sourced stack count. When Yun Tal is present, the first champion attack
-    also starts Flurry; later attacks reduce its cooldown by the sourced
-    base/critical refund while its six-second attack-speed window is active.
-    This helper deliberately has no roster or damage side effects; the fight
-    ledger consumes only the resulting authored timestamps.
-    """
-    if duration_seconds <= 0.0 or uptime <= 0.0 or attack_speed <= 0.0:
-        return ()
-    names = _item_names(items)
-    has_guinsoo = "Guinsoo's Rageblade" in names
-    has_yun_tal = "Yun Tal Wildarrows" in names
-    if not has_guinsoo and not has_yun_tal:
-        interval = 1.0 / (attack_speed * uptime)
-        count = max(0, int(duration_seconds * attack_speed * uptime))
-        return tuple(index * interval for index in range(count))
-
-    stack_duration = (
-        float(required_effect_value("Guinsoo's Rageblade", "seething_duration"))
-        if has_guinsoo
-        else 0.0
-    )
-    times: list[float] = [0.0]
-    stack_times: list[float] = [0.0]
-    current = 0.0
-    yun_active_until = (
-        float(required_effect_value("Yun Tal Wildarrows", "duration"))
-        if has_yun_tal
-        else 0.0
-    )
-    yun_cooldown = (
-        float(required_effect_value("Yun Tal Wildarrows", "cooldown"))
-        if has_yun_tal
-        else 0.0
-    )
-    first_attack = True
-    yun_refund = (
-        float(required_effect_value("Yun Tal Wildarrows", "attack_refund_base"))
-        + max(0.0, min(1.0, float(critical_chance)))
-        * float(required_effect_value("Yun Tal Wildarrows", "attack_refund_crit"))
-        if has_yun_tal
-        else 0.0
-    )
-    while True:
-        if has_guinsoo:
-            stack_times[:] = [t for t in stack_times if current - t < stack_duration]
-        else:
-            stack_times.clear()
-        bonus = (
-            guinsoo_attack_speed_percent(items, len(stack_times))
-            if has_guinsoo
-            else 0.0
-        )
-        effective_rate = (attack_speed + attack_speed_ratio * bonus / 100.0) * uptime
-        if has_yun_tal and not first_attack and current < yun_active_until:
-            effective_rate += (
-                attack_speed_ratio
-                * required_effect_value(
-                    "Yun Tal Wildarrows", "bonus_attack_speed_percent"
-                )
-                / 100.0
-                * uptime
-            )
-        if effective_rate <= 0.0:
-            break
-        next_time = current + 1.0 / effective_rate
-        if next_time >= duration_seconds - 1e-12:
-            break
-        if has_yun_tal:
-            elapsed = next_time - current
-            yun_cooldown = max(0.0, yun_cooldown - elapsed)
-            if not first_attack:
-                yun_cooldown = max(0.0, yun_cooldown - yun_refund)
-            if yun_cooldown <= 0.0 and not first_attack:
-                yun_active_until = next_time + required_effect_value(
-                    "Yun Tal Wildarrows", "duration"
-                )
-                yun_cooldown = required_effect_value("Yun Tal Wildarrows", "cooldown")
-        times.append(next_time)
-        if has_guinsoo:
-            stack_times.append(next_time)
-        current = next_time
-        first_attack = False
-    return tuple(times)
-
-
-# pylint: enable=too-many-arguments,too-many-locals
-
-
 def energized_proc_indices(
     item_name: str,
     num_attacks: int,
@@ -6643,22 +5644,11 @@ def energized_proc_indices(
     """
     if num_attacks <= 0:
         return ()
-    values = ITEM_EFFECTS.get(item_name)
-    if not values or "energized_max_stacks" not in values:
-        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_max_stacks'")
     maximum = int(required_effect_value(item_name, "energized_max_stacks"))
     stacks = max(0.0, min(float(initial_stacks), float(maximum)))
-    if "energized_attack_stacks" not in values:
-        raise KeyError(
-            f"ITEM_EFFECTS[{item_name!r}] is missing 'energized_attack_stacks' — "
-            "parser/schema bug; check passive_parser"
-        )
     gain = int(required_effect_value(item_name, "energized_attack_stacks"))
     distance_per_stack = float(
-        values.get(
-            "energized_distance_units_per_stack",
-            ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"],
-        )
+        required_effect_value(item_name, "energized_distance_units_per_stack")
     )
     if distance_per_stack <= 0.0:
         raise ValueError(f"{item_name} has invalid Energized distance cadence")
@@ -6689,12 +5679,8 @@ def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
     """Return the complete source receipt used by an Energized schedule."""
     maximum = int(required_effect_value(item_name, "energized_max_stacks"))
     attack_stacks = int(required_effect_value(item_name, "energized_attack_stacks"))
-    values = ITEM_EFFECTS.get(item_name, {})
     distance = float(
-        values.get(
-            "energized_distance_units_per_stack",
-            ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"],
-        )
+        required_effect_value(item_name, "energized_distance_units_per_stack")
     )
     if maximum <= 0 or attack_stacks <= 0 or distance <= 0.0:
         raise ValueError(f"{item_name} has invalid Energized schedule values")
@@ -6706,35 +5692,6 @@ def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
         "distance_units_per_stack": distance,
         "movement_schedule": "explicit_per_attack; omitted_means_zero_distance",
     }
-
-
-def runaan_secondary_target_count(
-    *,
-    roster_target_count: int,
-    item_name: str = "Runaan's Hurricane",
-) -> int:
-    """Return Wind's Fury's bounded secondary-target count.
-
-    The main target is excluded; the ordered roster allocator decides which
-    nearby enemies receive these bolts. This helper only supplies the sourced
-    cardinality and fails closed if parser data is incomplete.
-    """
-    if roster_target_count <= 1:
-        return 0
-    max_targets = int(required_effect_value(item_name, "max_secondary_targets"))
-    return min(max_targets, roster_target_count - 1)
-
-
-def runaan_secondary_target_damage(
-    *, total_attack_damage: float, item_name: str = "Runaan's Hurricane"
-) -> float:
-    """Return one Wind's Fury bolt's AD-scaled physical packet.
-
-    Target allocation and copied on-hit effects remain owned by the shared
-    roster ledger; this accessor only exposes the parser-owned per-bolt value.
-    """
-    ratio = required_effect_value(item_name, "secondary_ad_ratio")
-    return float(total_attack_damage) * ratio
 
 
 def statikk_chain_target_bounds(*, item_name: str = "Statikk Shiv") -> tuple[int, int]:
@@ -6835,11 +5792,6 @@ def item_bonus_health_multiplier(items: list[dict[str, Any]]) -> float:
     if "Warmog's Armor" not in _item_names(items):
         return 1.0
     return 1.0 + required_effect_value("Warmog's Armor", "item_bonus_health_ratio")
-
-
-def _muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
-    """Backward-compatible private alias for :func:`muramana_bonus_ad`."""
-    return muramana_bonus_ad(items, max_mana)
 
 
 def muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
@@ -6948,34 +5900,37 @@ def riftmaker_bonus_ap(*, bonus_health: float, item_name: str = "Riftmaker") -> 
     return max(0.0, float(bonus_health)) * ratio
 
 
-def riftmaker_max_stack_omnivamp(
-    *,
-    fight_duration_seconds: float,
-    is_melee: bool = True,
-    item_name: str = "Riftmaker",
-) -> float:
-    """Return Void Corruption's max-stack omnivamp after its sourced ramp.
+# How far past a ramp's own saturation time a fight has to reach before the
+# grant it arms is paid.  A ramp that tops out at exactly the fight's length
+# has topped out, and float division is what would otherwise decide that.
+_SATURATION_EPSILON = 1e-9
 
-    Riftmaker gains one 2% damage stack per second, up to four stacks.  The
-    fight timeline starts in combat, so a continuous fight reaches the
-    max-stack omnivamp branch at four seconds; shorter fights receive none.
+
+def saturated_grant(
+    granted: float,
+    *,
+    per_second: float,
+    maximum: float,
+    elapsed_seconds: float,
+) -> float:
+    """What a grant armed by a per-second ramp pays a fight this long.
+
+    Four numbers and no item name: the caller says which ramp and which
+    grant, and this says whether the ramp had time to top out.  It is the one
+    home of that question — the declared grant's interpreter resolves its own
+    references and asks here, and the registry's published state row asks the
+    same thing about the same entry, so the two can never answer differently.
+
+    A ramp with no rate or no ceiling arms nothing.  That is a refusal rather
+    than a division: a zero rate never saturates, and a zero ceiling would
+    saturate instantly and pay a grant whose sibling amplifier pays nothing.
     """
-    if item_name not in ITEM_EFFECTS:
-        raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
-    per_second = required_effect_value(item_name, "amp_per_second")
-    max_amp = required_effect_value(item_name, "amp_max")
-    max_omnivamp = required_effect_value(
-        item_name,
-        "max_stack_omnivamp" if is_melee else "max_stack_omnivamp_ranged",
-    )
-    if per_second <= 0.0 or max_amp <= 0.0:
+    if per_second <= 0.0 or maximum <= 0.0:
         return 0.0
-    max_stack_seconds = max_amp / per_second
-    return (
-        float(max_omnivamp)
-        if fight_duration_seconds + 1e-9 >= max_stack_seconds
-        else 0.0
-    )
+    saturation_seconds = maximum / per_second
+    if elapsed_seconds + _SATURATION_EPSILON < saturation_seconds:
+        return 0.0
+    return float(granted)
 
 
 def hubris_eminence_bonus_ad(
@@ -7099,34 +6054,6 @@ class ThornsEffect:
     bonus_armor_ratio: float = 0.0
 
 
-def thorns_effects(items: Sequence[Mapping[str, Any]]) -> tuple[ThornsEffect, ...]:
-    """Compile the build's reactive Thorns packets (Bramble Vest).
-
-    Args:
-        items: The wearer's item data dicts.
-
-    Returns:
-        One packet per equipped thorns item; empty without one.
-    """
-    compiled: list[ThornsEffect] = []
-    for item in items:
-        item_name = str(item.get("name", ""))
-        values = ITEM_EFFECTS.get(item_name)
-        if not values or values.get("type") != "thorns":
-            continue
-        required = _RequiredValues(item_name, values)
-        compiled.append(
-            ThornsEffect(
-                item_name=item_name,
-                damage_type=required.value("damage_type"),
-                damage=required.number("base"),
-                bonus_armor_ratio=required.number("bonus_armor_ratio"),
-                grievous_duration=required.number("grievous_duration"),
-            )
-        )
-    return tuple(compiled)
-
-
 def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     """Return parser-backed Sterak's base-AD conversion.
 
@@ -7140,14 +6067,6 @@ def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
     if "Sterak's Gage" not in _item_names(items):
         return 0.0
     return required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
-
-
-def _terminus_max_stack_bonuses(
-    items: list[dict[str, Any]],
-    level: int,
-) -> tuple[float, float]:
-    """Backward-compatible private alias for :func:`terminus_max_stack_bonuses`."""
-    return terminus_max_stack_bonuses(items, level)
 
 
 def terminus_max_stack_bonuses(
@@ -7185,11 +6104,6 @@ def terminus_max_stack_bonuses(
     return bonus_resist, pen_percent
 
 
-def _basic_ability_haste(items: list[dict[str, Any]]) -> float:
-    """Backward-compatible private alias for :func:`basic_ability_haste`."""
-    return basic_ability_haste(items)
-
-
 def basic_ability_haste(items: list[dict[str, Any]]) -> float:
     """Return parser-backed Spear of Shojin basic ability haste.
 
@@ -7202,6 +6116,35 @@ def basic_ability_haste(items: list[dict[str, Any]]) -> float:
     if "Spear of Shojin" not in _item_names(items):
         return 0.0
     return required_effect_value("Spear of Shojin", "basic_ability_haste")
+
+
+#: The ally-registry key for haste an ability earns by immobilizing —
+#: Imperial Mandate's Control.  Named here because the membership filter
+#: below is the key, never an item name: a second item stating the same
+#: mechanic joins by declaring the key, not by being spelled in the engine.
+CONTROL_ABILITY_HASTE_KEY = "control_ability_haste"
+
+
+def immobilize_ability_haste(items: list[dict[str, Any]]) -> float:
+    """Extra ability haste this build's *immobilizing* abilities are cast at.
+
+    Imperial Mandate's Control: "abilities with immobilizing effects have
+    their cooldown reduced equivalent to 20 ability haste".  It is not a
+    stat of the build — it reaches only the slots whose reviewed control
+    marker says they immobilize — so it is read here and applied at the
+    cooldown, beside the ultimate haste an ultimate alone reads.
+
+    Args:
+        items: List of item data dicts.
+
+    Returns:
+        Total immobilizing-ability haste this build carries.
+    """
+    return sum(
+        ally_item_effect_value(name, CONTROL_ABILITY_HASTE_KEY)
+        for name in _item_names(items)
+        if CONTROL_ABILITY_HASTE_KEY in ALLY_ITEM_EFFECTS.get(name, {})
+    )
 
 
 @dataclass(frozen=True)
@@ -7288,8 +6231,15 @@ def resolve_stat_effects(
         bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad + hubris_ad,
         is_melee=is_melee,
     )
+    # The membership filter decides whether an item contributes a term at
+    # all; ``_declared_effect_value`` decides what that term is.  Keeping
+    # the two separate matters publicly: a build holding no registry item
+    # sums an empty generator to int 0, and ``views.publish`` gives a
+    # float leaf a disposition entry and an int leaf none.  An item that
+    # lost its whole entry cannot pass here silently -- a configured item
+    # that parses to nothing raises in ``parse_all_item_effects``.
     ultimate_haste = sum(
-        float(ITEM_EFFECTS[name].get("ultimate_haste", 0.0))
+        _declared_effect_value(name, "ultimate_haste")
         for name in _item_names(items)
         if name in ITEM_EFFECTS
     )

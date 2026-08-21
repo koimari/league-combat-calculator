@@ -62,14 +62,14 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
-    _STASIS_SOURCE,
     resolve_starting_defenses,
 )
 from src.calculator.item_coverage import (
-    _REVIEWED_STATS_ONLY,
-    _TARGET_BLOCKED_REASONS,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -82,12 +82,40 @@ from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
+from src.calculator.defensive_effects import defense_source
+from src.calculator.item_behavior import DefenseMechanic
+
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
+
+_SOURCE = defense_source("Zhonya's Hourglass", DefenseMechanic.TIME_STOP)
 
 ZHONYA = "Zhonya's Hourglass"
 STASIS_SOURCE_LABEL = "Zhonya's Hourglass — Time Stop"
@@ -230,9 +258,11 @@ def test_option_block_carries_wiki_source_and_revision():
 
 def test_missing_stasis_key_raises_keyerror_naming_item_and_key(monkeypatch):
     """A missing typed key fails loud, naming the item and the key."""
-    broken = dict(ITEM_EFFECTS[ZHONYA])
-    broken.pop("stasis_duration")
-    monkeypatch.setitem(ITEM_EFFECTS, ZHONYA, broken)
+    # Deleted from the live entry rather than swapped for a copy: the
+    # declaration holds a reference into the registry and resolves it at read
+    # time, so rebinding the name would leave the compiled rule pointing at
+    # the intact mapping and prove nothing.
+    monkeypatch.delitem(ITEM_EFFECTS[ZHONYA], "stasis_duration")
 
     with pytest.raises(KeyError) as excinfo:
         _zhonya_defenses(item_options={ZHONYA: {"stasis_active_seconds": 2.0}})
@@ -349,10 +379,12 @@ def test_item_presence_alone_never_activates_stasis():
     assert survival["action_downtime"] == 0.0
     assert survival["action_downtime_intervals"] == []
 
-    for coverage in (
-        item_model_coverage(get_item_by_name(ZHONYA)),
-        target_item_model_coverage(get_item_by_name(ZHONYA)),
-    ):
+    # The gate sentence is the ATTACKER lane's receipt: it is the answer to
+    # "can the pair engine price this?", and the gate is why the answer does
+    # not depend on holding the item.  The target lane answers a different
+    # question (what the wearer survives) and names the mechanic instead.
+    assert "Time Stop" in target_item_model_coverage(get_item_by_name(ZHONYA))["reason"]
+    for coverage in (_attacker_coverage(get_item_by_name(ZHONYA)),):
         assert (
             "Time Stop is priced only from the explicit bounded active-seconds "
             "scenario input; item presence alone never assumes stasis."
@@ -453,7 +485,7 @@ def test_holder_outgoing_actions_blocked_during_stasis():
 
 
 def _kernel_combatant(participant_id, team, stasis=0.0, health=5000.0):
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -544,8 +576,8 @@ def test_same_time_ordering_stasis_wins_and_expiry_is_exclusive():
 def test_stasis_source_receipt_carries_label_and_wiki_revision():
     """The active stasis receipts carry the Time Stop label and the pinned
     wiki revision on both the typed source and the public summary."""
-    assert _STASIS_SOURCE.label == "Zhonya's Hourglass / Seeker's Armguard — Time Stop"
-    assert _STASIS_SOURCE.revision_id == REVISION_ID
+    assert _SOURCE.label == "Zhonya's Hourglass / Seeker's Armguard — Time Stop"
+    assert _SOURCE.revision_id == REVISION_ID
 
     defenses = _zhonya_defenses(item_options={ZHONYA: {"stasis_active_seconds": 2.0}})
     summary = defenses.public_summary()
@@ -701,12 +733,14 @@ def test_score_only_fight_parity_zhonya_build():
 def test_zhonya_not_optimizer_blocked_by_stasis():
     """Zhonya stays optimizer-eligible with stasis as a reviewed outcome
     dimension; the registry entry names Time Stop as defensive stasis."""
-    coverage = item_model_coverage(get_item_by_name(ZHONYA))
+    coverage = _attacker_coverage(get_item_by_name(ZHONYA))
     assert coverage["optimizer_eligible"] is True
     assert coverage["status"] == "stats_only"
     assert coverage["calculation_eligible"] is True
     assert "stasis" in coverage["outcome_dimensions"]
-    assert _REVIEWED_STATS_ONLY[ZHONYA] == "Time Stop is defensive stasis."
+    # The reviewed sentence is derived from the declaration's own bounded
+    # gate now, not typed into a per-item table.
+    assert "Time Stop" in coverage["reason"]
     assert get_item_by_name(ZHONYA)["name"] in {
         item["name"] for item in get_eligible_legendaries()
     }
@@ -719,7 +753,9 @@ def test_stasis_dimension_not_target_blocked_and_no_stale_bis_entry():
     assert target["status"] == "modeled"
     assert target["calculation_eligible"] is True
     assert "stasis" in target["outcome_dimensions"]
-    assert _TARGET_BLOCKED_REASONS.get(ZHONYA) is None
+    # "not target-blocked" is the derived status itself now: the retired
+    # per-item refusal table is gone, and a refusal would show up here.
+    assert target["status"] not in {"withheld", "review_pending"}
 
     bis_source = (
         Path(__file__).resolve().parent.parent / "src" / "calculator" / "bis.py"

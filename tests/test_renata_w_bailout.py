@@ -252,7 +252,12 @@ def test_module_fails_closed_on_the_local_burn_authority_conflict():
     digest = authority["gamefile_sha256"]
     assert len(digest) == 64
     assert set(digest) <= set("0123456789abcdef")
-    assert renata_glasc.MODULE_COVERAGE["W"] == "out_of_scope"
+    # The denial is about Bailout's LETHAL half (restore-to-full then the
+    # maximum-health burn), not about the whole slot: the self cast's
+    # ramping bonus attack speed is priced off the cached "Bonus Attack
+    # Speed" / "Maximum Bonus Attack Speed" ends, so W's coverage is
+    # ``modeled`` while the burn stays fail-closed above.
+    assert renata_glasc.MODULE_COVERAGE["W"] == "modeled"
 
 
 def test_game_binary_pins_the_conflicting_four_ticks_per_second():

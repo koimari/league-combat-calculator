@@ -1,0 +1,425 @@
+{
+ "audit": "full_coverage_census",
+ "bis_sample": [
+  "Vi",
+  "Kai'Sa",
+  "Karthus",
+  "Taliyah",
+  "Ahri",
+  "Ashe",
+  "Ziggs",
+  "Vayne",
+  "Darius",
+  "Shen",
+  "Yuumi",
+  "Braum"
+ ],
+ "certified_items": [
+  "Fimbulwinter",
+  "Force of Nature",
+  "Hexdrinker",
+  "Immortal Shieldbow",
+  "Jak'Sho, The Protean",
+  "Maw of Malmortius",
+  "Protoplasm Harness",
+  "Seraph's Embrace",
+  "Sterak's Gage"
+ ],
+ "champions": 173,
+ "counts": {
+  "attacker_kit_coarse": 0,
+  "bis_errors": 0,
+  "certified_enemy_withholds": 0,
+  "crossover_unavailable": 0,
+  "enemy_item_entries": 0,
+  "expiry_refusals": 0,
+  "item_pair_coarse": 100,
+  "item_pair_failures": 0,
+  "keystone_failures": 0,
+  "keystone_unmodeled": 0,
+  "mode_refusals": 0,
+  "total": 100
+ },
+ "frontier": {
+  "attacker_kit_coarse": {},
+  "bis_errors": {},
+  "certified_enemy_withholds": {},
+  "crossover_unavailable": {},
+  "enemy_item_entries": {},
+  "expiry_refusals": {},
+  "item_pair_coarse": {
+   "Aatrox|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Aatrox|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Aatrox|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Aatrox|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ahri|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ahri|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ahri|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ahri|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akali|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akali|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akali|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akali|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akshan|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akshan|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akshan|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Akshan|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ambessa|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ambessa|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ambessa|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Ambessa|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Anivia|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Anivia|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Anivia|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Anivia|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Annie|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Annie|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Annie|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Annie|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Bel'Veth|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Bel'Veth|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Bel'Veth|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Bel'Veth|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Brand|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Brand|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Brand|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Brand|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Darius|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Darius|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Darius|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Darius|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Diana|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Diana|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Diana|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Diana|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kennen|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kennen|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kennen|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kennen|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kled|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kled|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kled|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Kled|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "LeBlanc|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "LeBlanc|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "LeBlanc|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "LeBlanc|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Master Yi|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Master Yi|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Master Yi|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Master Yi|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sett|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sett|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sett|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sett|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Shaco|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Shaco|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Shaco|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Shaco|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sivir|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sivir|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sivir|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Sivir|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Syndra|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Syndra|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Syndra|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Syndra|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Vex|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Vex|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Vex|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Vex|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xayah|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xayah|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xayah|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xayah|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xin Zhao|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xin Zhao|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xin Zhao|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Xin Zhao|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Yone|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Yone|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Yone|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Yone|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zoe|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zoe|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zoe|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zoe|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zyra|Fimbulwinter|one_rotation|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zyra|Fimbulwinter|time_based|autos=True": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zyra|Fimbulwinter|timed|autos=False": [
+    "fimbulwinter_everlasting"
+   ],
+   "Zyra|Fimbulwinter|timed|autos=True": [
+    "fimbulwinter_everlasting"
+   ]
+  },
+  "item_pair_failures": {},
+  "keystone_failures": {},
+  "keystone_unmodeled": [],
+  "mode_refusals": {}
+ },
+ "items_swept": 209,
+ "keystones": {
+  "compiled": [
+   "Absolute Focus",
+   "Absorb Life",
+   "Aftershock",
+   "Approach Velocity",
+   "Arcane Comet",
+   "Axiom Arcanist",
+   "Biscuit Delivery",
+   "Bone Plating",
+   "Cash Back",
+   "Celerity",
+   "Cheap Shot",
+   "Conditioning",
+   "Conqueror",
+   "Cosmic Insight",
+   "Coup de Grace",
+   "Cut Down",
+   "Dark Harvest",
+   "Deathfire Touch",
+   "Deep Ward",
+   "Demolish",
+   "Electrocute",
+   "First Strike",
+   "Fleet Footwork",
+   "Font of Life",
+   "Gathering Storm",
+   "Glacial Augment",
+   "Grasp of the Undying",
+   "Grisly Mementos",
+   "Guardian",
+   "Hail of Blades",
+   "Hextech Flashtraption",
+   "Jack Of All Trades",
+   "Last Stand",
+   "Legend: Alacrity",
+   "Legend: Bloodline",
+   "Legend: Haste",
+   "Lethal Tempo",
+   "Magical Footwear",
+   "Manaflow Band",
+   "Nimbus Cloak",
+   "Overgrowth",
+   "Presence of Mind",
+   "Press the Attack",
+   "Relentless Hunter",
+   "Revitalize",
+   "Scorch",
+   "Second Wind",
+   "Shield Bash",
+   "Sixth Sense",
+   "Stormraider's Surge",
+   "Sudden Impact",
+   "Summon Aery",
+   "Taste of Blood",
+   "Time Warp Tonic",
+   "Transcendence",
+   "Treasure Hunter",
+   "Triple Tonic",
+   "Triumph",
+   "Ultimate Hunter",
+   "Unflinching",
+   "Unsealed Spellbook",
+   "Waterwalking"
+  ],
+  "unmodeled": []
+ }
+}

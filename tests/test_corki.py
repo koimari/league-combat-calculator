@@ -9,7 +9,7 @@ derived from.
 
 import pytest
 
-from src.calculator.champions import corki
+from src.calculator.champions import corki, engine
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import (
     FightConfig,
@@ -18,7 +18,8 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.item_effects import resolve_damage_effects
+from src.calculator.interpreters import resistance_shred
+from src.calculator.item_behavior import Resistance
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.resistance import apply_resistance
 
@@ -318,9 +319,14 @@ class TestGatlingGunShred:
             reduced_mr=5.0,
             malignance_mr_reduction=0.0,
             bc_reduction=0.0,
-            mr_reduction_effect=resolve_damage_effects(
-                [get_item_by_name("Bloodletter's Curse")]
-            ).stacking_mr_reduction,
+            mr_shred=resistance_shred.resolve_slot(
+                ["Bloodletter's Curse"],
+                Resistance.MAGIC_RESIST,
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=False,
+            ),
         )
         resists.resolve_magic()
         resists.resolve_armor()
@@ -328,8 +334,7 @@ class TestGatlingGunShred:
         assert resists.base_mr == pytest.approx(-7.0)
 
         damage = [
-            apply_resistance(100.0, _ability_mr(resists, False, stacks))
-            for stacks in range(4)
+            apply_resistance(100.0, _ability_mr(resists, stacks)) for stacks in range(4)
         ]
         assert damage == sorted(damage), "more shred stacks must never deal less"
         assert damage[-1] == pytest.approx(damage[0])
@@ -406,17 +411,19 @@ class TestOptions:
         assert entry["parts"] == ()
 
     def test_big_one_cadence_is_every_third_missile(self, corki_data) -> None:
-        """4 missiles from a fresh cycle -> 1 Big One (the 3rd)."""
+        """4 missiles from a fresh cycle -> 1 Big One, and it is the 3rd.
+
+        One part per missile in firing order, so the cadence is pinned as
+        the sequence it actually is rather than as a pair of counts.
+        """
         entry = _parse(corki_data)["R"]
-        counts = {part.amount: part.count for part in entry["parts"]}
-        assert counts == {255.0: 3, 510.0: 1}
+        assert [part.amount for part in entry["parts"]] == [255.0, 255.0, 510.0, 255.0]
 
     def test_cycle_position_pulls_the_big_one_forward(self, corki_data) -> None:
         """Two missiles already fired: the very next one is a Big One, and
         the 4-missile burst carries 2 of them."""
         entry = _parse(corki_data, options={"r_big_one_cycle_position": 2})["R"]
-        counts = {part.amount: part.count for part in entry["parts"]}
-        assert counts == {255.0: 2, 510.0: 2}
+        assert [part.amount for part in entry["parts"]] == [510.0, 255.0, 255.0, 510.0]
 
 
 class TestMissileEconomy:
@@ -528,3 +535,91 @@ class TestSpellbladeRider:
         rider = result["breakdown"]["spellblade_Trinity Force_bonus_true"]
         assert rider["total_damage"] > 0
         assert result["damage_by_type"]["true"] >= rider["total_damage"]
+
+
+class TestReviewedCcFreeKit:
+    """Corki's kit applies no crowd control, and says so (MODULE_CC).
+
+    The declaration is not decoration: a control-armed holder shield
+    (Fimbulwinter's Everlasting) has to know whether an ability event was
+    a control event, and an unreviewed ability packet makes the whole
+    timed fight fall back to coarse ordering.  Declaring the absence is
+    what clears it, so the probe below is the reason the declaration
+    exists.
+    """
+
+    def test_every_castable_slot_declares_a_reviewed_kind(self) -> None:
+        assert set(corki.MODULE_CC) == set(corki.SLOTS) - {"P"}
+        assert set(corki.MODULE_CC.values()) == {"none"}
+
+    def test_the_passive_is_not_declared_because_nothing_would_read_it(
+        self, corki_data
+    ) -> None:
+        """Hextech Munitions rides the basic attack, not a cast.
+
+        Its row emits no damage part at all — the true damage is a ratio
+        the fight engine applies to each swing — so it authors no ability
+        event, and a declaration there would be reviewed-looking and
+        unread.  The engine refuses that rather than accepting it.
+        """
+        entry = corki.parse_abilities(corki_data, 18, 100.0)["passive"]
+        assert entry["parts"] == ()
+        assert entry["basic_attack_true_ratio"] > 0
+        with pytest.raises(ValueError, match="would reach nothing"):
+            engine._apply_module_cc(dict(entry), "none", "Corki", "P")
+
+    def test_no_cached_ability_text_mentions_crowd_control(self, corki_data) -> None:
+        """The source the declaration is read from, checked as source.
+
+        Every control word the Wiki uses for the classes an item passive
+        can key on, over the whole cached kit.
+        """
+        control_words = (
+            "stun",
+            "root",
+            "snare",
+            "charm",
+            "fear",
+            "flee",
+            "taunt",
+            "sleep",
+            "suppress",
+            "knock",
+            "airborne",
+            "pull",
+            "slow",
+            "immobiliz",
+            "stasis",
+        )
+        for slot, entries in corki_data["abilities"].items():
+            for ability in entries:
+                for effect in ability.get("effects", []):
+                    text = (effect.get("description") or "").lower()
+                    hits = [word for word in control_words if word in text]
+                    assert hits == [], f"{slot}: {hits}"
+
+    def test_every_ability_event_carries_the_review(self, corki_data) -> None:
+        """Reviewing a kit only counts where the ledger can see it."""
+        parsed = _parse(corki_data)
+        for slot, entry in parsed.items():
+            for part in entry.get("parts", ()):
+                assert part.cc_kind == "none", slot
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self) -> None:
+        """The campaign's control-token probe, through the public entry."""
+        from src.calculator.calculate import calculate_payload
+
+        coverage = calculate_payload(
+            {
+                "champion": "Corki",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )["timeline_coverage"]
+
+        assert coverage["complete"] is True
+        assert coverage["certification"] == "event_order_certified"
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+        assert coverage["coarse_sources"] == []

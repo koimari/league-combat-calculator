@@ -19,7 +19,7 @@ E9-2 gap fixes over the packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -31,10 +31,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d6"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Urgot", PACKET_SHA256)
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Purge "autonomously fir[es] at the
 # nearest enemy at a fixed 3.0 attack speed" for 4 seconds (cached W
@@ -86,8 +82,8 @@ def _echoing_flames_per_proc(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One leg shot: per-level % AD + per-level % of target max health."""
     ad_percent = extract_value(ability, "Per-Level Scaling", ctx.level, 0)
     max_hp_percent = extract_value(ability, "Max Health Damage", ctx.level, 0)
-    ad = float(ctx.stats.get("attack_damage", 0.0) or 0.0)
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    ad = float(ctx.stat("attack_damage") or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
     return ad_percent / 100.0 * ad + max_hp_percent / 100.0 * target_max
 
 
@@ -108,6 +104,8 @@ def _fear_beyond_death(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", value),)
+    # One chem-drill, one impale ("impales the first enemy champion hit").
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Chem-drill initial physical damage; the Mercy recast below 25% "
         "of the target's maximum health is an execution — a kill "
@@ -127,13 +125,32 @@ _echoing_flames_proc = proc_damage(
 )
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _echoing_flames_proc
-SLOTS["W"] = _purge
-SLOTS["R"] = _fear_beyond_death
-parse_abilities = build_parser(SLOTS, "Urgot")
+# Reviewed crowd control, read from the cached kit.  Q (Corrosive Charge)
+# explodes "to deal physical damage to enemies hit and slow them for 1.25
+# seconds".  W (Purge) is a machine-gun attack stream with no control.  E
+# (Disdain) deals its damage "knocking them aside and stunning them for 1
+# second" — two immobilize kinds on one target, so the reviewed answer is
+# the un-narrowed one.  R prices the chem-drill impale, which leashes the
+# target "during which they are revealed and slowed by 0% : 75%"; the
+# Mercy recast's suppression and post-execution fear ride the execution
+# branch this row does not price.  P is an attack-stream shotgun rider.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "immobilize", "R": "slow"}
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Urgot",
+    PACKET_SHA256,
+    # One canister explosion and one dash blow per target, so each row
+    # is a hit the ledger can time.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "P": _echoing_flames_proc,
+        "W": _purge,
+        "R": _fear_beyond_death,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "p_legs",
         "type": "int",
@@ -147,7 +164,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Purge) prices all 12 sourced shots of the 4-second channel at the "
     "fixed 3.0 attack speed (3.0 AS x 4s; Modified Physical Damage row "
     "per shot, 1/3s cadence); on-hit effects at 50% effectiveness and "
@@ -162,13 +179,3 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "convention); the post-execution fear is CC state",
     "E (Disdain) shield is authored by the E8c support scanner.",
 ]
-
-SOURCES = list(_packet_sources)
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"

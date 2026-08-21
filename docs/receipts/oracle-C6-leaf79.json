@@ -1,0 +1,81 @@
+{
+  "receipt_id": "oracle-C6-leaf79",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[2]/slot",
+  "old_value": "E",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "scenario_decoding": {
+    "claim": "The trailing '60' is the Syndra module's Splinters of Wrath option set to 60; 'custom_order' is the non-default cast order this champion's custom slot map produces.",
+    "why": [
+      "data/champion-audit/batch-6.json (Syndra): 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'. 60 is one of the kit's exact documented thresholds (40 / 60 / 80 / 100 / 120), not an arbitrary number.",
+      "data/champion-audit/batch-6.json (Syndra): module_slots.modeled = [P, Q, Q2, W, E, R], 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' -> Syndra's slot list is itself custom (5 castable slots, not the usual 4).",
+      "data/worklists/f2-task.md: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)' with 'a documented fallback (default Q,W,E,R order) for champions with no combo signal'. The OLD leaf value E is exactly index 2 of that naive default Q,W,E,R -- i.e. the old snapshot is the fallback order, with Syndra's custom Q2 slot absent.",
+      "data/champion-audit/batch-p1-3.json shows cast_order is a real per-scenario input ('cast_order R,Q,W,E' for Vladimir), confirming a '*_custom_order_*' scenario exercises a non-default order."
+    ],
+    "caveat": "The scenario definition itself lives in scripts/ (golden_snapshot.py), which this runbook forbids reading. The decoding above is reconstructed from cached data only."
+  },
+
+  "independent_computation": {
+    "step_1_second_dark_sphere_charge_is_live_at_60_splinters": {
+      "source_quote": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "corroboration": "data/champions.json -> Syndra.abilities.Q[0].rechargeRate = [7,7,7,7,7] (Q is a charge/ammo ability, not a plain cooldown); data/wiki-atoms/stack-transform-summon-resource.json lists \"Syndra's Dark Sphere\" under 'stocked ability casts' ammo; data/worklists/e3-stacks.json repeats the 40-splinter charge hint.",
+      "arithmetic": "60 >= 40 -> charge cap = 2 -> two Dark Sphere casts are available back-to-back at fight start. The timeline therefore holds TWO Q-family casts (Q and the synthetic Q2 slot) before the next ability, occupying indices 0 and 1."
+    },
+    "step_2_Q_must_precede_W_and_E_apply_before_consume": {
+      "source_quote_W": "data/champions.json -> Syndra.abilities.W[0].effects[0].description: 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location...'",
+      "source_quote_E": "data/champions.json -> Syndra.abilities.E[0].effects[1].description: 'Dark Spheres can be knocked back for 950 units... Targets hit are also stunned for 1.25 seconds...'",
+      "design_rule_quote": "data/worklists/f2-task.md: 'setup/consume relationships (e.g. Cassiopeia Q poisons BEFORE E spam...)' and 'the fight should cast the OPTIMAL rotation (apply-before-consume...)'",
+      "conclusion": "Both W and E consume Dark Spheres that Q creates, so both stocked Q charges lead. Resulting head of the rotation: index0 = Q, index1 = Q (2nd charge / Q2 slot), index2 = the first non-Q ability."
+    },
+    "step_3_which_non_Q_ability_is_third_W_or_E": {
+      "source_quote_W_bonus": "data/champions.json -> Syndra.abilities.W[0].effects[3].description: 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.' Leveling rows: Magic Damage [70,100,130,160,190] (+65% AP); Total Mixed Damage [78.4,112,145.6,179.2,212.8] (+74.2/74.8/75.4/76/76.6% AP) (+1.14% AP quadratic term).",
+      "source_quote_E": "data/champions.json -> Syndra.abilities.E[0].effects[0] leveling 'Magic Damage' [60,95,130,165,200] (+60% AP).",
+      "source_quote_E_threshold": "data/champions.json -> Syndra.abilities.E[0].effects[2].description: 'Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak...' -> at 60 splinters E receives NO bonus (60 < 80), and its 80-splinter bonus is scatter-angle + slow, i.e. utility, not damage.",
+      "rank5_comparison_at_60_splinters": {
+        "W_total_mixed": "212.8 + 0.766*AP + 0.0114*AP^2/100",
+        "E_magic": "200 + 0.60*AP",
+        "W_minus_E": "+12.8 + 0.166*AP + (quadratic) > 0 for every AP >= 0",
+        "worked_points": [
+          {"AP": 0, "W": 212.8, "E": 200.0},
+          {"AP": 200, "W": 370.56, "E": 320.0},
+          {"AP": 400, "W": 537.44, "E": 440.0},
+          {"AP": 700, "W": 804.86, "E": 620.0}
+        ],
+        "all_ranks_check": "rank1 W-E = +18.4 + 0.142*AP; rank3 = +15.6 + 0.154*AP; rank5 = +12.8 + 0.166*AP -- W strictly outdamages E at every rank once the 60-splinter true damage is live.",
+        "contrast_without_the_60_bonus": "W would price 190 + 0.65*AP vs E 200 + 0.60*AP at rank 5, i.e. W - E = -10 + 0.05*AP, so E outdamages W for all AP < 200. The 60-splinter threshold is exactly what makes W-before-E unconditional."
+      },
+      "conclusion": "index2 = W."
+    },
+    "step_4_feasibility_checks": {
+      "mana": "Syndra mana at level 18 = 480 + 40*17*(0.7025 + 0.0175*17) = 480 + 680 = 1160 (data/champions.json stats.mana, growth formula per CLAUDE.md). Q+Q+W+E+R at max rank = 60+60+100+50+100 = 370 mana. No mana gating can drop a cast from the head of the rotation.",
+      "shared_timeline": "docs/math-foundations.md section 1.1: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.' Q castTime 'none', W castTime 'none', E/R castTime 0.25 -- no cast-time collision reorders the first three entries; the head of the timeline is the cast order itself.",
+      "resulting_timeline_head": ["Q", "Q (2nd charge / Q2)", "W", "E", "R"]
+    }
+  },
+
+  "why_the_old_value_is_wrong": "E at index 2 is precisely index 2 of the naive DEFAULT_CAST_ORDER Q,W,E,R quoted in data/worklists/f2-task.md -- a timeline in which Syndra's 40-splinter second Dark Sphere charge never appears and her 60-splinter W true-damage rider never influences priority. Both of those are live at splinters = 60 per the cached wiki text. Under either mechanism independently (the extra Q charge shifting everything one slot right, or W outdamaging E once the 60-splinter true damage applies), E cannot be the third cast.",
+
+  "confidence": "high on the domain math (two independent cached-wiki mechanisms agree on W); medium on the scenario decoding, since the scenario's literal inputs live in scripts/ which this runbook forbids reading.",
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.Q[0].effects[0..1], .rechargeRate, .cooldown",
+    "data/champions.json -> Syndra.abilities.W[0].effects[0..3] (Magic Damage, Bonus True Damage, Total Mixed Damage rows)",
+    "data/champions.json -> Syndra.abilities.E[0].effects[0..2]",
+    "data/champions.json -> Syndra.abilities.R[0] (passive Dark Sphere ability haste 10/20/30; 100-splinter execute)",
+    "data/champions.json -> Syndra.stats.mana {flat 480, perLevel 40}",
+    "data/champion-audit/batch-6.json -> Syndra.module_slots + gap_summary",
+    "data/champion-audit/batch-e9-1.json -> Syndra (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)",
+    "data/worklists/e3-stacks.json -> Syndra Q 40-splinter charge hint",
+    "data/worklists/f2-task.md -> DEFAULT_CAST_ORDER (fixed Q,W,E,R), apply-before-consume rotation design",
+    "docs/math-foundations.md section 1.1 -> shared cast timeline, greedy by cast order"
+  ]
+}

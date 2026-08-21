@@ -1,0 +1,496 @@
+{
+ "slice": "campaign-close-charge-price",
+ "status": "landed",
+ "decisions": [
+  "D-11",
+  "D-97",
+  "R-15/R-18 clause 2"
+ ],
+ "what_this_slice_is": "The R-15/R-18 amendment's clause 2, fired. standing-dissent-docket.json's syndra_cast_timeline_ordinal row records that its clause 1 re-adjudication ran, was well posed, and certified NEITHER committed side of fights/manual_target/cast_timeline[1]/resource_cost in either scenario; the re-adjudication that followed sustained the dissent on the value the whole-series computation states. Clause 2 re-opens the producing correction as a ruled src/ slice rather than absorbing the address into a baseline, and this is that slice: C6's recast_of=\"Q\" stamp gave the scheduler a second Dark Sphere charge to place and the engine priced that charge at nothing. It now pays Dark Sphere's own mana.",
+ "the_correction": {
+  "was": "Syndra's Q2 row carried no resource_cost at all. champions/engine.py's _stamp_resource_cost reaches a cost row only through the slot's OWN ability JSON, and a synthetic slot has none (ctx.ability() is None for Q2), so the stamp returned early and every consumer read the absent key through its own get(..., 0.0) default. A stocked charge was free.",
+  "now": "The module prices its own synthetic slot: resource_type off Q's cached resource field and resource_cost off Q's own cost row at Q's rank, through the new slotlib.extract_resource_cost. The engine's free-recast branch is unchanged and still applies to a recast that one paid cast bought (Camille's and Ambessa's Q2); that is not what a charge is.",
+  "the_source_that_decides_it": "data/champions.json, Syndra Q, effect 2: \"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\" The charge gates availability and says nothing about price; Q's own cost row is [40, 45, 50, 55, 60] with resource MANA, so rank 5 spends 60.0.",
+  "one_home": "The cached cost lookup had one implementation, inside _stamp_resource_cost. Rather than a second copy in the champion module it moves to slotlib.extract_resource_cost beside extract_cooldown and extract_cast_time, and the engine calls it. That move is behaviour-preserving by construction -- same rule, same indexing, same memo -- and every number this slice moves comes from the Syndra stamp."
+ },
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17/R-32/D-97 -- no baseline moves inside this commit"
+ },
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": true,
+  "rule": "R-20's second half. The count is not readable off the pre-change tree by inspection: the charge's price is an absent key, so what moves is every mana leaf standing at or after the charge in a fight that holds one, and how many that is depends on where the scheduler placed it. The population is therefore enumerated from committed artifacts before the first src/ edit, and its membership bounds what may qualify.",
+  "enumerated_from": [
+   "scripts/golden_baseline.json -- champion_baselines/Syndra, the parsed-entry dump",
+   "scripts/golden_coupled_baseline.json -- every coupled scenario whose cast_timeline holds a Q2 row",
+   "scripts/golden_coupled_exact.json -- the same scenarios in the exact capture"
+  ],
+  "the_population": "In the pair jurisdiction: the two keys the Q2 entry gains. In the coupled jurisdiction, per scenario holding a Q2 row: that row's resource_cost, every resource_before and resource_after from the charge onwards, and the fight's resource_spent and resource_remaining -- 16 leaves each. Four scenarios hold a Q2 row (syndra_custom_order_60/120 and syndra_derived_order_60/120); the two 39-splinter scenarios are below the 40-splinter threshold and hold none.",
+  "size": {
+   "golden": 2,
+   "coupled_golden": 64,
+   "coupled_exact": 0
+  },
+  "why_coupled_exact_is_zero": "The exact capture holds only totals -- five string-valued damage leaves per scenario -- and no cast timeline and no resource leaf. A mana move can reach it only by omitting a cast for insufficient mana, and no scenario comes near that: the deepest fight ends on 1213.2 of 1760.0.",
+  "occurrences_outside_the_population": 0,
+  "the_two_shape_counters": "/metadata/fingerprint/leaves and /metadata/fingerprint/numeric_leaves in the pair snapshot follow the two added keys by construction. They are the population's own census rather than members of it, which is why they are declared under golden_shape_counters and not counted in the size above."
+ },
+ "measured": {
+  "golden": {
+   "differing_leaves": 4,
+   "qualifying": 2
+  },
+  "coupled_golden": {
+   "differing_leaves": 64,
+   "qualifying": 8
+  },
+  "coupled_exact": {
+   "differing_leaves": 0
+  },
+  "instrument": "scripts/golden_snapshot.py compare <baseline> --report <path>",
+  "the_qualifying_ten": "Four cast_timeline[1]/resource_cost leaves, 0.0 -> 60.0, transition zero_to_value; four resource_spent leaves, 530.0 -> 590.0, +11.32%; and the two pair-snapshot keys, transition absent_to_value. The other 58 coupled leaves are the same 60.0 walking down the mana ledger -- every one a value transition under 4.8% on a leaf carrying no damage token, which is R-15's own reading and not a waiver."
+ },
+ "unexpected_occurrences": [],
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Syndra/abilities_level_11/Q2/resource_cost",
+   "/champion_baselines/Syndra/abilities_level_11/Q2/resource_type"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "golden_note": "The pair engine computes nothing differently. Both paths are the champion_baselines dump of the parsed ability entry itself, which gains the two keys the stamp now writes, and the section's shape counters follow them.",
+  "coupled_golden": [
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[7]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[7]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/resource_remaining",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/resource_spent",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[7]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[7]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/resource_remaining",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/resource_spent",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[1]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[1]/resource_cost",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[2]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[2]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[3]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[3]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[4]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[4]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[5]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[5]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[6]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[6]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[7]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[7]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/resource_remaining",
+   "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/resource_spent",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[1]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[2]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[2]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[3]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[3]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[4]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[4]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[5]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[5]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[6]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[6]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[7]/resource_after",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[7]/resource_before",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/resource_remaining",
+   "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/resource_spent"
+  ]
+ },
+ "moved_values": {
+  "/champion_baselines/Syndra/abilities_level_11/Q2/resource_cost": {
+   "old": null,
+   "new": 60.0,
+   "transition": "absent_to_value"
+  },
+  "/champion_baselines/Syndra/abilities_level_11/Q2/resource_type": {
+   "old": null,
+   "new": "MANA",
+   "transition": "absent_to_value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_after": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_cost": {
+   "old": 0.0,
+   "new": 60.0,
+   "transition": "zero_to_value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_after": {
+   "old": 1600.0,
+   "new": 1540.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_before": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_after": {
+   "old": 1550.0,
+   "new": 1490.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_before": {
+   "old": 1600.0,
+   "new": 1540.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_after": {
+   "old": 1451.08,
+   "new": 1391.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_before": {
+   "old": 1551.08,
+   "new": 1491.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_after": {
+   "old": 1411.6,
+   "new": 1351.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_before": {
+   "old": 1471.6,
+   "new": 1411.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_after": {
+   "old": 1321.42,
+   "new": 1261.42,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_before": {
+   "old": 1421.42,
+   "new": 1361.42,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[7]/resource_after": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[7]/resource_before": {
+   "old": 1333.2,
+   "new": 1273.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/resource_remaining": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/resource_spent": {
+   "old": 530.0,
+   "new": 590.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_after": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_cost": {
+   "old": 0.0,
+   "new": 60.0,
+   "transition": "zero_to_value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_after": {
+   "old": 1600.0,
+   "new": 1540.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_before": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_after": {
+   "old": 1550.0,
+   "new": 1490.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_before": {
+   "old": 1600.0,
+   "new": 1540.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_after": {
+   "old": 1451.08,
+   "new": 1391.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_before": {
+   "old": 1551.08,
+   "new": 1491.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_after": {
+   "old": 1411.6,
+   "new": 1351.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_before": {
+   "old": 1471.6,
+   "new": 1411.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_after": {
+   "old": 1321.42,
+   "new": 1261.42,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_before": {
+   "old": 1421.42,
+   "new": 1361.42,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[7]/resource_after": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[7]/resource_before": {
+   "old": 1333.2,
+   "new": 1273.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/resource_remaining": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/resource_spent": {
+   "old": 530.0,
+   "new": 590.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[1]/resource_after": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[1]/resource_cost": {
+   "old": 0.0,
+   "new": 60.0,
+   "transition": "zero_to_value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[2]/resource_after": {
+   "old": 1650.0,
+   "new": 1590.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[2]/resource_before": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[3]/resource_after": {
+   "old": 1551.08,
+   "new": 1491.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[3]/resource_before": {
+   "old": 1651.08,
+   "new": 1591.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[4]/resource_after": {
+   "old": 1451.08,
+   "new": 1391.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[4]/resource_before": {
+   "old": 1551.08,
+   "new": 1491.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[5]/resource_after": {
+   "old": 1411.6,
+   "new": 1351.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[5]/resource_before": {
+   "old": 1471.6,
+   "new": 1411.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[6]/resource_after": {
+   "old": 1322.5,
+   "new": 1262.5,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[6]/resource_before": {
+   "old": 1422.5,
+   "new": 1362.5,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[7]/resource_after": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[7]/resource_before": {
+   "old": 1333.2,
+   "new": 1273.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/resource_remaining": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/resource_spent": {
+   "old": 530.0,
+   "new": 590.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[1]/resource_after": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[1]/resource_cost": {
+   "old": 0.0,
+   "new": 60.0,
+   "transition": "zero_to_value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[2]/resource_after": {
+   "old": 1650.0,
+   "new": 1590.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[2]/resource_before": {
+   "old": 1700.0,
+   "new": 1640.0,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[3]/resource_after": {
+   "old": 1551.08,
+   "new": 1491.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[3]/resource_before": {
+   "old": 1651.08,
+   "new": 1591.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[4]/resource_after": {
+   "old": 1451.08,
+   "new": 1391.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[4]/resource_before": {
+   "old": 1551.08,
+   "new": 1491.08,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[5]/resource_after": {
+   "old": 1411.6,
+   "new": 1351.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[5]/resource_before": {
+   "old": 1471.6,
+   "new": 1411.6,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[6]/resource_after": {
+   "old": 1322.5,
+   "new": 1262.5,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[6]/resource_before": {
+   "old": 1422.5,
+   "new": 1362.5,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[7]/resource_after": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[7]/resource_before": {
+   "old": 1333.2,
+   "new": 1273.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/resource_remaining": {
+   "old": 1273.2,
+   "new": 1213.2,
+   "transition": "value"
+  },
+  "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/resource_spent": {
+   "old": 530.0,
+   "new": 590.0,
+   "transition": "value"
+  }
+ },
+ "oracle_pass": {
+  "the_two_leaves_the_dissent_names": {
+   "leaves": [
+    "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+    "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_cost"
+   ],
+   "receipts": [
+    "docs/receipts/oracle-DKT-syndra_cast_timeline_ordinal-leaf1.json",
+    "docs/receipts/oracle-DKT-syndra_cast_timeline_ordinal-leaf2.json"
+   ],
+   "certified": 60.0,
+   "note": "Both are both_wrong on the pre-change and the committed value, and both state the same computed series member by member: index 1 is Dark Sphere's second stocked charge and it spends 60.0 mana at rank 5. This slice moves the committed value to the one they certify, which is what clause 2 asks of a producing correction. Neither receipt is edited and neither is superseded."
+  },
+  "the_eight_qualifying_leaves_with_no_receipt": {
+   "leaves": [
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/cast_timeline[1]/resource_cost",
+    "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/resource_spent",
+    "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/resource_spent",
+    "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/resource_spent",
+    "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/resource_spent",
+    "/champion_baselines/Syndra/abilities_level_11/Q2/resource_cost",
+    "/champion_baselines/Syndra/abilities_level_11/Q2/resource_type"
+   ],
+   "status": "OWED -- R-18 investigators, one per leaf, not run by this lane",
+   "status_now": "DISCHARGED at fc80f2b. Eight fresh R-18 investigators returned one verdict per leaf, all new_value_correct, filed as docs/receipts/oracle-DKT-ruling-leaf1.json through -leaf8.json in the leaf order listed above. The line above is left exactly as the landing slice wrote it -- it was true when it was written, and a status that is edited in place cannot be told apart from one that was never owed. This field is what a later reader needs and the pin re-capture needs: R-19 forbids a re-capture while any qualifying occurrence lacks a receipt, and this block is the record that none of these eight does.",
+   "why_they_are_recorded_rather_than_absorbed": "R-19 is not satisfied by a sibling's receipt. These eight are the same correction reaching addresses no oracle has been asked about: the two derived-order scenarios, which the docket never docketed because C6's brief was built from the custom-order pair; the four mana totals, which move because the charge is priced and are arithmetic over leaves the receipts do state; and the two pair-snapshot keys, which are a declaration dump with no fight behind them -- the same shape C6 recorded when Q2 gained recast_of there. They are reported to the campaign owner as this slice's qualifying occurrences rather than being quietly carried, and the baseline that absorbs them is a separate commit."
+  }
+ },
+ "bench": "No bench scenario reaches this row. The bench's Syndra scenario is a roster search whose counters, winner and score are damage-side; the charge deals the damage it always did, and no fight in the bench set runs out of mana.",
+ "why_the_shape_counters_carry_no_values_here": "The pair snapshot's leaf census is a figure whose sole home is docs/receipts/campaign-fingerprints.json (criterion 4's rule, gated by scripts/sole_home_scan.py). This allowlist claims the two counter PATHS, because a path a slice moves must be claimed, and states neither side's integer, because an allowlist restating a census figure is a second home for it."
+}

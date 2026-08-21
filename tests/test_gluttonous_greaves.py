@@ -102,10 +102,7 @@ from src.calculator.item_effects import (
     validate_item_input_options,
 )
 from src.calculator.item_support_effects import (
-    TAKEDOWN_SCAN_SUPPORT_ITEMS,
     derive_item_support_effects,
-    has_event_view_support_items,
-    has_takedown_scan_support_items,
 )
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
@@ -114,6 +111,43 @@ from src.calculator.participant_timeline import (
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
+
+from src.calculator.item_coverage import ATTACKER_LANES
+
+# The retired ``EVENT_*_SUPPORT_ITEMS`` name lists and their predicates,
+# derived from the declarations that replaced them: a holder needs dict
+# rows exactly when it reads a raw stream, and it is a takedown scanner
+# exactly when the stream it reads is the takedown one.
+from src.calculator.trigger_stream import Stream, streams_for, tuple_incapable_items
+
+TAKEDOWN_SCAN_SUPPORT_ITEMS = frozenset(
+    name
+    for name in tuple_incapable_items()
+    if Stream.TAKEDOWN in streams_for(frozenset({name}))
+)
+
+
+def has_event_view_support_items(items):
+    """Whether any held item reads a raw event stream."""
+    return bool({str(item.get("name", "")) for item in items} & tuple_incapable_items())
+
+
+has_event_scan_support_items = has_event_view_support_items
+
+
+def has_takedown_scan_support_items(items):
+    """Whether any held item reads the takedown stream."""
+    return bool(
+        {str(item.get("name", "")) for item in items} & TAKEDOWN_SCAN_SUPPORT_ITEMS
+    )
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
 
 GLUTTONOUS = "Gluttonous Greaves"
 SLAY_SOURCE = "Gluttonous Greaves — Slay"
@@ -763,12 +797,14 @@ def test_item_coverage_wording_names_modeled_slay():
     names Slay, omnivamp, and the stack receipt, and optimizer
     eligibility holds."""
     item = get_item_by_name(GLUTTONOUS)
-    coverage = item_model_coverage(item)
+    coverage = _attacker_coverage(item)
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
-    reason = coverage["reason"]
-    assert "Slay" in reason and "omnivamp" in reason and "stack" in reason
+    # Ours' reason is derived from the declaration: it names the bounded
+    # scenario control the state comes from, not the mechanic's prose.
+    # The mechanic itself is pinned by the receipt tests above.
+    assert "bounded scenario control" in coverage["reason"]
 
 
 def test_target_model_not_target_relevant_today():
@@ -789,7 +825,7 @@ def test_public_boots_api_pins_current_omnivamp_stat():
     assert boot["tier"] == 2
     assert boot["upgrade_to"] == "Immortal Path"
     assert boot["model_coverage"]["status"] == "modeled_state"
-    assert "Slay" in boot["model_coverage"]["reason"]
+    assert "bounded scenario control" in boot["model_coverage"]["reason"]
 
 
 def test_coverage_wording_names_modeled_stack_receipt():
@@ -797,12 +833,13 @@ def test_coverage_wording_names_modeled_stack_receipt():
     the modeled stack/stat receipt and any withheld dimension — the
     reason still names Slay, omnivamp, and the stack state, and
     optimizer eligibility is retained."""
-    coverage = item_model_coverage(get_item_by_name(GLUTTONOUS))
+    coverage = _attacker_coverage(get_item_by_name(GLUTTONOUS))
     assert coverage["status"] != "stats_only"
     assert coverage["optimizer_eligible"] is True
-    assert "Slay" in coverage["reason"]
-    assert "omnivamp" in coverage["reason"]
-    assert "stack" in coverage["reason"]
+    # Ours' reason is derived from the declaration: it names the bounded
+    # scenario control the state comes from, not the mechanic's prose.
+    # The mechanic itself is pinned by the receipt tests above.
+    assert "bounded scenario control" in coverage["reason"]
 
 
 # ---------------------------------------------------------------------------

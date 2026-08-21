@@ -20,23 +20,70 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_on_hit_entry,
+    damage_entry,
     extract_cooldown,
     extract_named,
     simple_damage,
 )
 from .source_receipts import load_champion_sources
 
+# Bear Trap on a Rope lands twice and the cache times the second hit: the
+# trap "collides with the first enemy champion ... forming a tether
+# between Kled and the target for 1.75 seconds", and "if it is not broken
+# before then, Kled pulls the target 150 units toward him, deals physical
+# damage and slows them for 2.5 seconds".  ``time_offset`` runs from the
+# cast start, and the cache states no travel time for the trap itself, so
+# the throw sits at the cast and the pull 1.75 seconds after it.
+_Q_TETHER_SECONDS = 1.75
+
 
 def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:
-    attribute = (
-        "Total Physical Damage"
-        if bool(ctx.options.get("q_pull", True))
-        else "Physical Damage"
+    """Q: the trap's own hit, then the tether's pull hit 1.75s later."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    # Two cached rows share the name "Physical Damage" — the trap's
+    # (30 : 130 + 60% bonus AD) and the pull's (60 : 260 + 120% bonus AD).
+    # The first is the one a name lookup reaches, and the cached "Total
+    # Physical Damage" row (90 : 390 + 180% bonus AD) is their sum, so the
+    # pull reads as the difference without depending on effect order.
+    impact = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    pulls = bool(ctx.options.get("q_pull", True))
+    total = (
+        extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
+        if pulls
+        else impact
     )
-    return typed_damage(ctx, attribute, "physical")
+    parts = [DamagePart("physical", impact, time_offset=0.0, cc_kind="none")]
+    if pulls:
+        parts.append(
+            DamagePart(
+                "physical",
+                total - impact,
+                time_offset=_Q_TETHER_SECONDS,
+                cc_kind="pull",
+            )
+        )
+    entry = damage_entry(
+        ability.get("name", "Bear Trap on a Rope"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = tuple(parts)
+    entry["detail"] = "trap hit at the cast" + (
+        f", then the tether's pull {_Q_TETHER_SECONDS:g}s later"
+        if pulls
+        else " (the tether is broken before it pulls)"
+    )
+    return entry
 
 
 def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -78,7 +125,7 @@ def _charge(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    fraction = max(0.0, min(1.0, float(ctx.options.get("charge_fraction", 1.0))))
+    fraction = max(0.0, min(1.0, float(ctx.option("charge_fraction"))))
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * fraction
@@ -130,7 +177,26 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kled")
-parse_abilities = build_parser(SLOTS, "Kled")
+# Reviewed crowd control, read from the cached kit.  W (Violent
+# Tendencies) is the empowered fourth attack, which "deal[s] additional
+# physical damage" and nothing else.  R (Chaaaaaaaarge!!!) collides with
+# the first champion in the path "to deal magic damage ... [and] knock
+# them back 150 units".  P authors no damage part.
+#
+# Q's two hits do not control alike, so the answer is authored per part
+# rather than per slot (see ``_bear_trap``): the thrown trap only reveals
+# and tethers, and the pull 1.75 seconds later is the immobilize.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Jousting's row is the Total of the first dash and the recast dash, and
+# the cache gives the recast no instant: "Jousting can be recast after 0.5
+# seconds of the first dash ending while the target is marked" states when
+# the recast becomes *available*, not when it happens, and the dash whose
+# ending it counts from has no cached duration.  Half a schedule is not a
+# schedule, so the second dash stays folded into the first hit.
+MODULE_CC = {"W": "none", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Skaarl the Cowardly Lizard (P): the mounted duo's damage is suffered "
@@ -173,4 +239,3 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

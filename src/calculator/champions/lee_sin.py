@@ -98,10 +98,25 @@ SLOTS = {
         name="Safeguard",
         reason="Ally dash and shield are defensive/team state.",
     ),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # Tempest smashes the ground beneath him and Dragon's Rage kicks the
+    # target: one instance each, at the cast — the boundary claim that
+    # carries MODULE_CC's reviewed kinds into the event ledger.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
+    ),
 }
-parse_abilities = build_parser(SLOTS, "Lee Sin")
+
+# Cached kit review: R "roots the target enemy champion over the cast
+# time, then roundhouse kicks them ... and knock[s] them back up to 800
+# units"; the E slot's second entry (Cripple) "slows nearby enemies marked
+# by Tempest", which is the control the Tempest hit sets up; Q only marks
+# and reveals.  P and W deal no damage.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Lee Sin", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = [
     {
@@ -130,4 +145,3 @@ SOURCES = load_champion_sources("Lee Sin")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

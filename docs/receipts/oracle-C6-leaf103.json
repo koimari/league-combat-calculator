@@ -1,0 +1,114 @@
+{
+  "receipt_id": "oracle-C6-leaf103",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[3]/damage",
+  "old_value": 139.2,
+  "new_value": 580.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "note": "Worked only from the exported data/ and docs/math-foundations.md. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not read."
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[2] (\"Recast\")",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land.",
+      "leveling": {
+        "attribute": "Magic Damage",
+        "flat_by_rank": [70, 100, 130, 160, 190],
+        "ap_ratio_by_rank_percent": [65, 65, 65, 65, 65]
+      }
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3] (\"Transcendent Bonus\")",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "derived_rows_in_cache": {
+        "Bonus True Damage rank5": "22.8 flat + 11.6% AP + quadratic term",
+        "Total Mixed Damage rank5": "212.8 flat + 76.6% AP + quadratic term"
+      }
+    },
+    {
+      "id": "S3",
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "id": "S4",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.2 / formula-audit table",
+      "quote": "A part with `h` identical hits is mitigated per hit and summed ... the mitigation operator `x -> x*100/(100+R)` is *linear in raw damage* for a fixed resistance",
+      "used_for": "Justifies that a mixed-damage ability is authored as separate per-component damage events (magic component and true component) whose sum is the ability total."
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.1 / formula-audit table (True damage)",
+      "quote": "m(R) = 100 / (100 + R)",
+      "used_for": "True damage ignores resistances entirely, so the bonus-true component is unmitigated; the magic component would be mitigated by target MR."
+    }
+  ],
+  "independent_computation": {
+    "step_0_pin_the_configuration": {
+      "reasoning": "The scenario name encodes splinters = 60, which is exactly the Transcendent threshold at which Force of Will gains bonus true damage (S2/S3). Two unknowns remain: W rank and AP. They are pinned uniquely by the two candidate values themselves: 139.2 / 580.0 = 0.24 exactly, and the Transcendent fraction 12% + 2% per 100 AP equals 0.24 only at AP = 600. Feeding AP = 600 back into the W magic row (S1) reproduces 580.0 only at rank 5 (190 + 0.65*600).",
+      "solved": {"W_rank": 5, "total_AP": 600.0, "splinters": 60}
+    },
+    "step_1_w_magic_component": {
+      "formula": "magic = flat[rank] + 0.65 * AP",
+      "substitution": "190 + 0.65 * 600 = 190 + 390",
+      "value": 580.0,
+      "source": "S1"
+    },
+    "step_2_transcendent_true_fraction": {
+      "formula": "frac = 12% + 2% per 100 AP = 0.12 + 0.02 * (AP / 100)",
+      "substitution": "0.12 + 0.02 * 6 = 0.12 + 0.12",
+      "value": 0.24,
+      "source": "S2"
+    },
+    "step_3_w_bonus_true_component": {
+      "formula": "true = frac * magic",
+      "substitution": "0.24 * 580.0",
+      "value": 139.2,
+      "source": "S2 x S1"
+    },
+    "step_4_total_mixed": {
+      "value": 719.2,
+      "note": "580.0 magic + 139.2 true"
+    },
+    "step_5_independent_cross_check_against_cache_derived_rows": {
+      "bonus_true_rank5_row": "22.8 + 11.6% AP + 0.00013*AP^2  ->  22.8 + 0.116*600 + 0.00013*360000 = 22.8 + 69.6 + 46.8 = 139.2",
+      "total_mixed_rank5_row": "212.8 + 76.6% AP + 0.00013*AP^2  ->  212.8 + 459.6 + 46.8 = 719.2",
+      "conclusion": "The wiki's own pre-expanded rank-5 rows in data/champions.json reproduce 139.2 and 719.2 exactly at AP = 600, independently confirming the 580.0 / 139.2 magic-vs-true split. (The quadratic coefficient 0.00013 = 0.0002 * 0.65 is the AP-times-AP cross term of frac * magic; the cache prints it as the mangled '1.14 % AP' modifier.)"
+    },
+    "step_6_elimination_of_other_syndra_rows_at_AP_600": {
+      "Q_rank5": "230 + 0.70*600 = 650.0",
+      "E_rank5": "200 + 0.60*600 = 560.0",
+      "R_per_sphere_rank3": "160 + 0.20*600 = 280.0",
+      "R_minimum_rank3": "480 + 0.60*600 = 840.0",
+      "conclusion": "No other Syndra damage row in the cache produces 580.0 or 139.2 at AP = 600. Both disputed values belong to Force of Will and to nothing else."
+    },
+    "result": {
+      "w_magic_damage_event": 580.0,
+      "w_bonus_true_damage_event": 139.2,
+      "value_for_this_leaf": 580.0
+    }
+  },
+  "interpretation": {
+    "what_the_diff_is": "Both 139.2 and 580.0 are exactly-sourced Force of Will components at this configuration: 580.0 is the magic hit, 139.2 is the 60-splinter Transcendent bonus true damage. The leaf therefore did not change from a wrong number to a right number in place; index 3 of the damage_events list came to hold the magic component where it previously held the true component. That requires exactly one additional damage event ahead of Force of Will in the new ordering (old: W-magic at index 2, W-true at index 3; new: W-magic at index 3). A second Dark Sphere charge (Q2, unlocked at 40+ splinters, so live at splinters = 60 per S3) inserted ahead of W is the ordering-consistent candidate, but the scenario's cast order is defined outside data/ and I did not read it.",
+    "why_new_value_correct": "580.0 = 190 + 0.65 * 600 is the wiki-exact Force of Will magic damage at rank 5 / 600 AP and is a value the engine must emit for this scenario. There is no formula in the cached wiki text under which 580.0 is an erroneous substitute for the bonus-true row: producing 580.0 as bonus true damage would require a 100% true-damage fraction, whereas the sourced fraction is 12% + 2% per 100 AP = 24% here (and every plausible mis-reading of that fraction -- 2% per AP, 2% of AP added flat, 12% flat only -- yields 7029.6, 81.6 or 69.6, never 580.0). Conversely 139.2 is not derivable as the magic component under any reading. The new snapshot's value at this leaf is a correct, exactly-sourced damage number.",
+    "residual_uncertainty": "The scenario definition (cast order, target MR, item/level config) lives in scripts/tests, which this oracle is forbidden to read, so the event-index assignment could not be observed directly; AP = 600 and W rank 5 were solved from the two disputed values and then independently corroborated by the cache's own derived rank-5 rows. Note also that 580.0 being an exact integer implies the manual target's MR is 0 (or that damage_events carry pre-mitigation raw), since a magic component would otherwise be scaled by 100/(100+MR) (S6). A companion check of damage_events[4] == 139.2 in the new snapshot would fully close the ordering question."
+  }
+}

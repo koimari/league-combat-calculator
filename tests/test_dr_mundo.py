@@ -38,6 +38,8 @@ from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import dr_mundo
+from tests import cc_review
 
 LEVEL = 18
 BASE_HEALTH = 2391.0
@@ -491,9 +493,14 @@ class TestMissingHealthIsOneInput:
 class TestSlots:
     """What the module emits, and what it deliberately does not."""
 
-    def test_passive_is_absent(self, dr_mundo_data) -> None:
-        """Goes Where He Pleases deals no damage — no slot, no row."""
+    def test_passive_emits_no_row_and_names_its_channel(self, dr_mundo_data) -> None:
+        """Goes Where He Pleases deals no damage; the heal rule prices it."""
+        from src.calculator.champions import get_champion_module_contract
+
         assert "passive" not in _abilities(dr_mundo_data)
+        contract = get_champion_module_contract("Dr. Mundo")
+        assert contract.coverage["P"] == "modeled"
+        assert contract.coverage_channels["P"] == ("self_healing_rule",)
 
     def test_all_four_castables_emit(self, dr_mundo_data) -> None:
         assert set(_abilities(dr_mundo_data)) == {"Q", "W", "E", "R"}
@@ -621,3 +628,32 @@ class TestFightIntegration:
         assert result["damage_by_type"]["magic"] == pytest.approx(
             breakdown["Q"]["total_damage"] + breakdown["W"]["total_damage"]
         )
+
+
+class TestReviewedCrowdControl:
+    """Dr. Mundo's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Dr. Mundo")
+        assert dr_mundo.MODULE_CC == {"Q": "slow", "W": "none", "E": "none"}
+        assert "slows them by 40% for 2 seconds" in cc_review.slot_text(data, "Q")
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+
+    def test_blunt_force_trauma_only_displaces_a_target_that_dies(self):
+        """E's airborne needs the target dead, so the priced hit controls nothing."""
+        text = cc_review.slot_text(cc_review.kit("Dr. Mundo"), "E")
+        assert "if the target dies or is a small monster, they are sent flying" in text
+        assert dr_mundo.MODULE_CC["E"] == "none"
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Dr. Mundo") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Dr. Mundo")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

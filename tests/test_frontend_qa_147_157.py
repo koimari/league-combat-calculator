@@ -488,7 +488,10 @@ def test_timeline_labels_are_not_truncated_to_fragments(source: str):
     assert ".slice(0, 3)" not in block, "3-character source fragments are unreadable"
 
 
-def test_timeline_is_the_single_timestamped_damage_event_view(source: str):
+def test_timeline_lanes_are_the_one_home_for_events(source: str):
+    """Each lane carries the event's ledger index; the ledger table below keeps
+    the summaries (objective, event order, healing, support) and the damage
+    breakdown neither repeats the event rows."""
     timeline = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
     assert "data-event-index" in timeline
     ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]

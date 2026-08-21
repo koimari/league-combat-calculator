@@ -1,0 +1,63 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh oracle subagent (evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/consume[1]",
+  "old_value": null,
+  "old_value_note": "<absent> - the derived rotation's consume list had no second element",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "independent_computation": {
+    "step_1_read_the_scenario_name": "The scenario is Syndra with a trailing '60'. Syndra's only 60-valued mechanic in the cached wiki text is her passive stack currency: Transcendent Splinters of Wrath, whose ability thresholds are 40 (Q), 60 (W), 80 (E), 100 (R) and 120 (P). '60' therefore denotes splinters = 60, which is the exact W Transcendent threshold and is also >= the Q threshold of 40.",
+    "step_2_which_cast_slots_exist_at_60_splinters": "Q Dark Sphere's Transcendent Bonus in data/champions.json reads: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 60 >= 40, and the wiki states a single threshold with max 2 charges (no higher second threshold). So at 60 splinters Dark Sphere is a 2-charge (ammo) ability: 60 >= 40 => charges = 2. Q's rechargeRate is [7,7,7,7,7] s, so both stocked charges are castable inside one rotation.",
+    "step_3_the_second_charge_is_a_distinct_slot": "data/champion-audit/batch-6.json records Syndra's modeled slots as ['P','Q','Q2','W','E','R'] with the note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' and the ammo atom 'ammo (Q 2nd charge at 40 splinters)'. data/champion-audit/batch-e9-1.json repeats: '40+ Q charges via Q2 slot'. The label for the second Dark Sphere cast is therefore exactly 'Q2'.",
+    "step_4_ordering": "The consume list is the derived (engine-chosen, not user-supplied) cast order. Both Dark Sphere charges are the same stocked ammo pool (data/wiki-atoms/stack-transform-summon-resource.json atom 34: 'stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)'), so the second charge is spent immediately after the first, before the sphere-consuming follow-ups: W 'telekinetically grabs the nearest Dark Sphere' and R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones' both need spheres already on the ground. Hence order = [Q, Q2, W, E, R] and index 1 = 'Q2'.",
+    "step_5_result": "consume[1] = 'Q2'. A rotation at 60 splinters that emits no second element is dropping the second Dark Sphere charge that the wiki grants unconditionally at >= 40 splinters, and would also understate the sphere pool available to R.",
+    "robustness_check": "The conclusion is invariant to the two plausible readings of 'consume'. (a) If consume is the ordered list of ability casts, index 0 = Q and index 1 = Q2. (b) If consume is the ordered list of Dark Spheres consumed by the sphere-eating follow-up (W grab / R's 'grabs up to 4 nearby live ones'), the two spheres available at 60 splinters are the ones created by the Q and Q2 casts, so index 1 is again the Q2 sphere. Both readings give 'Q2'.",
+    "falsification_attempted": "The only way the old <absent> value could be right is if 60 splinters did not unlock the second Dark Sphere charge. The cached wiki text states one threshold (40) and one cap (2) - there is no intermediate gate between 40 and 60 - so <absent> cannot be reconciled with the source."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description (patchLastChanged 26.12; data/staleness.json patch 16.15, checked_at 2026-08-06)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].rechargeRate",
+      "quote": "[7, 7, 7, 7, 7]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location..."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: ['P','Q','Q2','W','E','R']; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)'"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> [34].description",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators..."
+    },
+    {
+      "source": "docs/math-foundations.md line 465 (rotation row of the exactness table)",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread; R single-cast"
+    }
+  ],
+
+  "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md (extracted to a scratch dir); src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never read",
+  "caveat": "The scenario definition itself does not live under data/, so the mapping of the '60' suffix to splinters = 60 is inferred from Syndra's threshold ladder (40/60/80/100/120) in the cached wiki text. The conclusion is stable for any splinters value >= 40, i.e. for every reading of '60' that refers to the splinter count."
+}

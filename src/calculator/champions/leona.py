@@ -17,7 +17,7 @@ Option key consumed by the shared parser: "p_marks".
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, delayed_damage
 from .slotlib import (
     ability_on_hit_entry,
     extract_cooldown,
@@ -76,12 +76,27 @@ def _shield_of_daybreak(ctx: SlotCtx) -> dict[str, Any] | None:
 _sunlight.phase = ONHIT
 
 
+# Eclipse's damage is its detonation, not its cast: "Leona raises her
+# guard for 3 seconds ... Her shield detonates after the duration, dealing
+# magic damage to nearby enemies" (data/champions.json Leona W).
+_W_DETONATION_SECONDS = 3.0
+# Solar Flare "strikes upon the target location after 0.625 seconds"; the
+# cached entry attaches no cast-time qualifier to that number, so it is
+# read from the cast start as written.
+_R_IMPACT_SECONDS = 0.625
+
 SLOTS = {
     "P": _sunlight,
     "Q": _shield_of_daybreak,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": delayed_damage(
+        delay=_W_DETONATION_SECONDS, attr="Magic Damage", dmg_type="magic"
+    ),
+    # The sword's flight has no sourced duration in the cached entry, so
+    # the cast boundary is the only placement its one hit has.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": delayed_damage(delay=_R_IMPACT_SECONDS, attr="Magic Damage", dmg_type="magic"),
 }
 OPTIONS = [
     {
@@ -95,7 +110,22 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Leona")
-parse_abilities = build_parser(SLOTS, "Leona")
+# Reviewed crowd control, read from the cached kit.  Eclipse's detonation
+# only "deal[s] magic damage to nearby enemies" (the extension it buys is
+# Leona's own guard).  Zenith Blade "deals magic damage to enemies hit"
+# and then "roots them for 0.5 seconds" — the last champion struck is the
+# damaged target in a duel.  Solar Flare's impact leaves every enemy hit
+# "slowed by 80% for 1.75 seconds"; the same-duration stun is conditional
+# on the epicenter, which this model does not place, so the unconditional
+# slow is the reviewed kind.
+#
+# Shield of Daybreak "empower[s] his next basic attack within 6 seconds
+# to have an uncancellable windup, gain 50 bonus range, deal bonus magic
+# damage and stun the target for 1 second" — the stun rides the swing the
+# cast forces, which is the event the engine reattributes to this row.
+MODULE_CC = {"Q": "stun", "W": "none", "E": "root", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Leona", cc_kinds=MODULE_CC)
 
 # HARDCODED: verify on patch updates — Eclipse's defense rows are cached
 # leveling data (data/champions.json, Leona W): Flat Damage Reduction
@@ -119,6 +149,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "constants; the ledger's shield events cannot express pre-mitigation "
     "reduction or resistance buffs, so no flat shield amount is invented",
 ]
-
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

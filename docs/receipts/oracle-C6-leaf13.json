@@ -1,0 +1,77 @@
+{
+  "receipt_id": "oracle-C6-leaf13",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/slot",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/wiki-atoms/stack-transform-summon-resource.json", "data/worklists/f2-task.md", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_decode_scenario_suffix": {
+      "claim": "The trailing '120' is the Splinters of Wrath option at its cap, not a duration and not R's rank-1 cooldown.",
+      "why": "Syndra's innate caps at 120 Splinters ('stacking up to 120 times'), 120 is the Transcendence threshold ('At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%'), and the cached audit records the module's option range explicitly as 'splinters option (0-120)'. R rank-1 cooldown also happens to be 120s but no cooldown-valued option exists.",
+      "sources": ["data/champions.json > Syndra > abilities.P", "data/champion-audit/batch-e9-1.json > Syndra.gap_summary", "data/champion-audit/batch-6.json > Syndra"]
+    },
+
+    "step_2_what_casts_exist_at_120_splinters": {
+      "claim": "At splinters >= 40 Syndra's rotation contains TWO Dark Sphere casts, not one. 120 >= 40, so the second charge is live in this scenario.",
+      "wiki_text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2. (data/champions.json > Syndra > abilities.Q > effects[1].description)",
+      "corroboration": [
+        "data/champions.json > Syndra > abilities.Q > rechargeRate = [7,7,7,7,7] -- Q is a recharge/ammo ability, so a stocked charge carries zero remaining cooldown and is castable back-to-back.",
+        "data/champions.json > Syndra > abilities.Q > castTime = 'none' -- the two sphere casts occupy no exclusive cast time on the shared timeline.",
+        "data/wiki-atoms/stack-transform-summon-resource.json > atom 'stack-transform-summon-resource.ammo': 'stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)'.",
+        "data/champion-audit/batch-6.json > Syndra.module_slots.modeled = [P, Q, Q2, W, E, R] with note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' and notable_atoms 'ammo (Q 2nd charge at 40 splinters)'.",
+        "data/champion-audit/batch-e9-1.json > Syndra.gap_summary: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'."
+      ]
+    },
+
+    "step_3_where_the_second_sphere_sits_in_the_order": {
+      "claim": "Both Dark Sphere casts precede W, E and R. The cast timeline is Q, Q2, W, E, R (5 casts).",
+      "reasons": [
+        "Slot order recorded in the cached audit is [P, Q, Q2, W, E, R] -- Q2 is declared immediately after Q, not appended after R (data/champion-audit/batch-6.json).",
+        "Apply-before-consume is forced by the wiki text: every other Syndra ability CONSUMES spheres. W: 'Syndra telekinetically grabs the nearest Dark Sphere ... within 500 units'. E: 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds'. R: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'. Casting the stocked sphere after R would strictly waste it, so no correct rotation places Q2 last.",
+        "The repo's own rotation doctrine states the same principle and names the default fallback: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)' and rotations must 'respect cooldowns' with setup abilities applied before consumers (data/worklists/f2-task.md)."
+      ],
+      "timing_check_against_math_foundations": {
+        "quoted_rule": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order. (docs/math-foundations.md, section 1.1)",
+        "application": "At fight start every Syndra slot is off cooldown and the second Dark Sphere is stocked, so the greedy shared-timeline scheduler emits the casts in cast-order with no gating: Q at t=0 (castTime none), Q2 immediately after (stocked charge, remaining cooldown 0, castTime none), then W (castTime none), then E (castTime 0.25s), then R (castTime 0.25s). Cast times taken from data/champions.json > Syndra > abilities.*.castTime. No cooldown (Q 7s, W 12/11/10/9/8s, E 15s, R 120/100/80s) is reached inside this opening rotation, so no ability repeats and the timeline is exactly the cast order."
+      }
+    },
+
+    "step_4_index_arithmetic": {
+      "computed_timeline": ["Q", "Q2", "W", "E", "R"],
+      "index_0": "Q",
+      "index_1": "Q2 (40-splinter stocked Dark Sphere)",
+      "index_2": "W",
+      "index_3": "E   <-- the leaf under test",
+      "index_4": "R",
+      "diagnosis_of_the_old_value": "The old timeline [Q, W, E, R] is a 4-cast rotation that omits the stocked second Dark Sphere. That omission is only correct below 40 Splinters; this scenario pins splinters=120. Inserting the one wiki-mandated extra cast before the consumers shifts every later slot by one, moving E from index 2 to index 3 and R from index 3 to index 4 -- exactly the observed change. The change is a single insertion, not a reordering or a deletion: a deletion would have shortened the list rather than substituting E at index 3."
+    },
+
+    "robustness_note": "The scenario's explicit 'custom' cast order is scenario input and is not present anywhere under data/ (grep for 'syndra_custom_order' / 'custom_order' over the exported tree returns nothing in data/, and data/practice-corpus/scenarios.json contains no Syndra scenario), so the base order was not read directly. The conclusion does not depend on it: the observed old value pins the base tail as (..., E at index 2, R at index 3), and the wiki-mandated Q2 insertion -- which must land before the sphere consumers W/E/R -- shifts that E to index 3 for ANY base order with Q ahead of E. Under the repo's documented default order Q,W,E,R the result is the same: [Q, Q2, W, E, R]."
+  },
+
+  "sources_quoted": [
+    {"file": "data/champions.json", "path": "Syndra > abilities.Q > effects[1].description", "text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."},
+    {"file": "data/champions.json", "path": "Syndra > abilities.P > effects[0].description", "text": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."},
+    {"file": "data/champions.json", "path": "Syndra > abilities.P > effects[2].description", "text": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."},
+    {"file": "data/champions.json", "path": "Syndra > abilities.W > effects[0].description", "text": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location..."},
+    {"file": "data/champions.json", "path": "Syndra > abilities.E > effects[1].description", "text": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity... Targets hit are also stunned for 1.25 seconds..."},
+    {"file": "data/champions.json", "path": "Syndra > abilities.R > effects[1].description", "text": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."},
+    {"file": "data/champions.json", "path": "Syndra > abilities.*.castTime / cooldown / rechargeRate", "text": "Q castTime 'none', rechargeRate [7,7,7,7,7], cooldown 7 (all ranks); W castTime 'none', cooldown [12,11,10,9,8]; E castTime 0.25, cooldown 15 (all ranks); R castTime 0.25, cooldown [120,100,80]."},
+    {"file": "docs/math-foundations.md", "path": "section 1.1 Renewal theory for cast + auto timing schedules", "text": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."},
+    {"file": "data/champion-audit/batch-6.json", "path": "Syndra.module_slots", "text": "modeled: [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'; notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)' and 'gap_summary: splinters option (0-120) gates Q2 second charge'."},
+    {"file": "data/champion-audit/batch-e9-1.json", "path": "Syndra.gap_summary", "text": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."},
+    {"file": "data/wiki-atoms/stack-transform-summon-resource.json", "path": "atom stack-transform-summon-resource.ammo", "text": "...stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)..."},
+    {"file": "data/worklists/f2-task.md", "path": "CONTEXT / DELIVERABLE 1", "text": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... cooldown gating (cast order must respect cooldowns) ... with a documented fallback (default Q,W,E,R order)."}
+  ],
+
+  "conclusion": "At splinters = 120 the cached wiki text requires a second stocked Dark Sphere cast, and every other Syndra ability consumes Dark Spheres, so both Q casts open the rotation. The 4th cast (index 3) of the shared-timeline rotation is therefore E, with R displaced to index 4. The new value E is correct; the old value R came from a rotation that silently dropped the 40-splinter stocked charge."
+}

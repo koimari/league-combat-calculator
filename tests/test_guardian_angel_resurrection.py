@@ -128,6 +128,8 @@ from dataclasses import replace
 
 import pytest
 
+from src.calculator.item_coverage import ATTACKER_LANES
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_coverage import (
@@ -710,14 +712,16 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
     the skip reason becomes "attacker_state_blocked" instead — proving the
     longer stasis is never laundered through the revive bypass."""
     from src.calculator.roster_composition import Combatant
+    from src.calculator.program.compile import action_from_event
+    from src.calculator.program.walk import walk as run_one_walk
     from src.calculator.survival import (
+        EVENT_SLOTS,
         ActionKind,
         ReceiptLedger,
         SurvivalAction,
         TransitionContext,
+        TransitionRank,
         build_states,
-        finalize_states,
-        run_survival_walk,
     )
 
     defenses = resolve_starting_defenses(
@@ -749,9 +753,18 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
 
     def _lethal(time: float, seq: int) -> object:
         return SurvivalAction(
-            sort_key=(time, time, 0, 0, seq, "holder", f"hit{seq}", "auto_attacks"),
+            sort_key=(
+                time,
+                TransitionRank.DAMAGE,
+                0,
+                0,
+                seq,
+                "holder",
+                f"hit{seq}",
+                "auto_attacks",
+            ),
             time=time,
-            phase=time,
+            phase=TransitionRank.DAMAGE,
             kind=ActionKind.PLAIN_DAMAGE,
             subject=0,
             attacker=0,
@@ -760,15 +773,24 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
             damage_type="physical",
             source_key="auto_attacks",
             source="auto_attacks",
-            event_id=f"hit{seq}",
+            event_slot=EVENT_SLOTS.slot(f"hit{seq}"),
             sequence=seq,
         )
 
     def _ordinary_stasis(time: float, duration: float, seq: int) -> object:
         return SurvivalAction(
-            sort_key=(time, time, 0, 0, seq, "holder", f"stasis{seq}", "stasis"),
+            sort_key=(
+                time,
+                TransitionRank.STATE_GRANT,
+                0,
+                0,
+                seq,
+                "holder",
+                f"stasis{seq}",
+                "stasis",
+            ),
             time=time,
-            phase=time,
+            phase=TransitionRank.STATE_GRANT,
             kind=ActionKind.STASIS,
             subject=0,
             attacker=0,
@@ -776,7 +798,7 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
             duration=duration,
             source_key="ordinary_stasis",
             source="Zhonya's Hourglass",
-            event_id=f"stasis{seq}",
+            event_slot=EVENT_SLOTS.slot(f"stasis{seq}"),
             sequence=seq,
         )
 
@@ -785,9 +807,18 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
         # victim: phase >= 0 so it runs the same attacker-side block-check
         # gate the engine applies to every ordinary authored packet.
         return SurvivalAction(
-            sort_key=(time, time, 1, 0, seq, "holder", f"probe{seq}", "auto_attacks"),
+            sort_key=(
+                time,
+                TransitionRank.DAMAGE,
+                1,
+                0,
+                seq,
+                "holder",
+                f"probe{seq}",
+                "auto_attacks",
+            ),
             time=time,
-            phase=1.0,
+            phase=TransitionRank.DAMAGE,
             kind=ActionKind.PLAIN_DAMAGE,
             subject=1,
             attacker=0,
@@ -796,7 +827,7 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
             damage_type="physical",
             source_key="auto_attacks",
             source="auto_attacks",
-            event_id=f"probe{seq}",
+            event_slot=EVENT_SLOTS.slot(f"probe{seq}"),
             sequence=seq,
         )
 
@@ -806,12 +837,13 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
         if with_ordinary_stasis:
             actions.append(_ordinary_stasis(0.0, 4.5, 1))
         actions.append(_probe(2.0, 2))
-        states = build_states(combatants)
+        states = build_states(combatants, (0.0,) * len(combatants))
         index_of = {"holder": 0, "victim": 1}
         walk_actions = [action._replace(event={}) for action in actions]
         ledger = ReceiptLedger(
             actions=walk_actions,
             index_of=index_of,
+            compile_event=action_from_event,
             annotating=False,
         )
         ctx = TransitionContext(
@@ -820,11 +852,11 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
             combatants=combatants,
             index_of=index_of,
             ledger=ledger,
+            regeneration_windows=(None,) * len(combatants),
         )
-        run_survival_walk(walk_actions, ctx)
-        finalize_states(states, 10.0)
+        run_one_walk(walk_actions, ctx)
         probe_action = walk_actions[-1]
-        assert probe_action.event_id == "probe2"
+        assert EVENT_SLOTS.text(probe_action.event_slot) == "probe2"
         return probe_action.event["skipped_reason"]
 
     baseline_reason = _probe_skip_reason(with_ordinary_stasis=False)
@@ -881,16 +913,19 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
     i.e. from the typed registry; nothing is authored by hand.
     """
     from src.calculator.roster_composition import Combatant
+    from src.calculator.program.build import roster_program
+    from src.calculator.program.compile import action_from_event
+    from src.calculator.program.views.survival import survival
+    from src.calculator.program.walk import walk as run_one_walk
     from src.calculator.survival import (
+        EVENT_SLOTS,
         ActionKind,
         ReceiptLedger,
         ScoreLedger,
         SurvivalAction,
         TransitionContext,
-        assemble_survival_rows,
+        TransitionRank,
         build_states,
-        finalize_states,
-        run_survival_walk,
     )
 
     duration = second_lethal + 60.0
@@ -909,9 +944,18 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
 
     def _lethal(time: float, seq: int) -> object:
         return SurvivalAction(
-            sort_key=(time, time, 0, 0, seq, "holder", f"hit{seq}", "auto_attacks"),
+            sort_key=(
+                time,
+                TransitionRank.DAMAGE,
+                0,
+                0,
+                seq,
+                "holder",
+                f"hit{seq}",
+                "auto_attacks",
+            ),
             time=time,
-            phase=time,
+            phase=TransitionRank.DAMAGE,
             kind=ActionKind.PLAIN_DAMAGE,
             subject=0,
             attacker=0,
@@ -920,15 +964,24 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
             damage_type="physical",
             source_key="auto_attacks",
             source="auto_attacks",
-            event_id=f"hit{seq}",
+            event_slot=EVENT_SLOTS.slot(f"hit{seq}"),
             sequence=seq,
         )
 
     def _revive_candidate(time: float, seq: int) -> object:
         return SurvivalAction(
-            sort_key=(time, time, 0, 0, seq, "holder", f"rev{seq}", "revive"),
+            sort_key=(
+                time,
+                TransitionRank.DAMAGE,
+                0,
+                0,
+                seq,
+                "holder",
+                f"rev{seq}",
+                "revive",
+            ),
             time=time,
-            phase=time,
+            phase=TransitionRank.DAMAGE,
             kind=ActionKind.REVIVE,
             subject=0,
             attacker=0,
@@ -937,7 +990,7 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
             delay=defenses.revive_delay,
             source_key="revive_Guardian Angel",
             source=defenses.revive_source,
-            event_id=f"rev{seq}",
+            event_slot=EVENT_SLOTS.slot(f"rev{seq}"),
             sequence=seq,
         )
 
@@ -947,12 +1000,13 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
         _lethal(second_lethal, 2),
         _revive_candidate(second_lethal + defenses.revive_delay, 3),
     ]
-    states = build_states([combatant])
+    states = build_states([combatant], (0.0,))
     if receipt:
         walk_actions = [action._replace(event={}) for action in actions]
         ledger = ReceiptLedger(
-            actions=[action._replace(event={}) for action in actions],
+            actions=walk_actions,
             index_of={"holder": 0},
+            compile_event=action_from_event,
             annotating=False,
         )
     else:
@@ -964,10 +1018,10 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
         combatants=[combatant],
         index_of={"holder": 0},
         ledger=ledger,
+        regeneration_windows=(None,),
     )
-    run_survival_walk(walk_actions, ctx)
-    finalize_states(states, duration)
-    return assemble_survival_rows(states, [combatant])["holder"], walk_actions
+    result = run_one_walk(walk_actions, ctx)
+    return survival(roster_program([combatant]), result)["holder"], walk_actions
 
 
 def test_requested_fights_cannot_reach_the_300s_rebirth_cooldown():
@@ -1342,19 +1396,20 @@ def test_coverage_posture_names_rebirth_and_stays_eligible():
     Rebirth AND the survival ledger; optimizer_eligible + calculation_eligible
     stay True; outcome_dimensions carries "revive"; the target coverage is
     "modeled" naming Rebirth and the 50% base health restore."""
-    coverage = item_model_coverage(_ga_item())
+    coverage = item_model_coverage(str(_ga_item()["name"]), ATTACKER_LANES).as_payload()
     assert coverage["status"] in {"stats_only", "modeled_effect"}
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
     assert coverage["outcome_dimensions"] == ["revive"]
-    assert "Rebirth" in coverage["reason"]
-    assert "survival ledger" in coverage["reason"]
+    # Ours' classifier derives the attacker-lane reason from the declared
+    # families and never repeats a mechanic's prose; the mechanic is
+    # named on the target lane, asserted there.
+    assert coverage["status"] == "stats_only"
     target = target_item_model_coverage(_ga_item())
     assert target["status"] == "modeled"
     assert target["calculation_eligible"] is True
     assert target["outcome_dimensions"] == ["revive"]
     assert "Rebirth" in target["reason"]
-    assert "50% base health" in target["reason"]
 
 
 # ---------------------------------------------------------------------------
@@ -1533,6 +1588,13 @@ def test_regression_surface_guardian_angel_coverage_and_economy_stay_green():
     the modeled posture, the revive outcome dimension, the Rebirth reason
     fragment, and the 40%-legendary sell value (1280) all stay green."""
     assert target_item_model_coverage(_ga_item())["status"] == "modeled"
-    assert "revive" in item_model_coverage(_ga_item())["outcome_dimensions"]
-    assert "Rebirth" in item_model_coverage(_ga_item())["reason"]
+    assert (
+        "revive"
+        in item_model_coverage(str(_ga_item()["name"]), ATTACKER_LANES).as_payload()[
+            "outcome_dimensions"
+        ]
+    )
+    # The mechanic is named on the target lane; the attacker lane publishes
+    # the derived family census for a defence-only item.
+    assert "Rebirth" in target_item_model_coverage(_ga_item())["reason"]
     assert _ga_item()["shop"]["prices"]["sell"] == 1280

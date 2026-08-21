@@ -24,7 +24,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -34,24 +34,6 @@ from .slotlib import (
 )
 
 PACKET_SHA256 = "b6f179d37816f86a3c589048738bf588034d2340535ad6dde533391daf113d90"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Poppy",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Poppy Q's sourced Hammer Shock field ruptures 1 second after impact; "
-        "the packet emits both physical hits.",
-    ),
-    packet_part_timings={
-        "Q": {
-            "count": 2,
-            "time_offset": 0.0,
-            "hit_interval": 1.0,
-            "total_multiplier": 2.0,
-        }
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _iron_ambassador(ctx: SlotCtx):
@@ -69,7 +51,7 @@ def _iron_ambassador(ctx: SlotCtx):
 _iron_ambassador.phase = ONHIT
 
 
-def _keepers_verdict(ctx: SlotCtx) -> dict[str, Any] | None:
+def _keepers_verdict(packet_r):
     """R: Keeper's Verdict, priced at the charged or uncharged branch.
 
     The reviewed packet prices the UNCHARGED row ("Physical Damage"
@@ -78,40 +60,83 @@ def _keepers_verdict(ctx: SlotCtx) -> dict[str, Any] | None:
     variant); the cached "Increased Damage" row (200-400 + 90% bonus AD)
     is that fully-charged branch, selected by the ``r_charged`` option.
     """
-    if not bool(ctx.options.get("r_charged", False)):
-        return _packet_r(ctx)
-    ability = ctx.ability("R")
-    if ability is None:
-        return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
-    total = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability.get("name", "Keeper's Verdict"),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", total),)
-    entry["detail"] = (
-        "fully-charged Keeper's Verdict ('Increased Damage' row 200-400 "
-        "+ 90% bonus AD == 2x the uncharged row)"
-    )
-    return entry
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        if not bool(ctx.options.get("r_charged", False)):
+            return packet_r(ctx)
+        ability = ctx.ability("R")
+        if ability is None:
+            return None
+        rank = ctx.rank_for("R")
+        if rank < 1:
+            return None
+        total = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
+        entry = damage_entry(
+            ability.get("name", "Keeper's Verdict"),
+            rank,
+            extract_cooldown(ability, rank),
+            total,
+            "physical",
+            # One hammer blow, like the uncharged packet branch beside it.
+            event_order_certified="single_hit",
+        )
+        entry["parts"] = (DamagePart("physical", total),)
+        entry["detail"] = (
+            "fully-charged Keeper's Verdict ('Increased Damage' row 200-400 "
+            "+ 90% bonus AD == 2x the uncharged row)"
+        )
+        return entry
+
+    return parse
 
 
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _iron_ambassador
-_packet_r = SLOTS["R"]
-SLOTS["R"] = _keepers_verdict
-SLOTS["E"] = with_control(
-    SLOTS["E"],
-    kind="stun",
-    duration_attr="Stun Duration",
+# Cached kit review.  Q's impact "creates a field for 1 second that slows
+# enemies within, which then ruptures to deal the same physical damage".  W
+# damages a dashing enemy and "knocked up for 0.5 seconds" (its grounding
+# and 25% slow follow only a successful interrupt, and neither is what the
+# damaging hit applies first).  E is the kit's un-narrowed cast: it "deals
+# physical damage and carries them along with her" — a forced displacement
+# — and on terrain "deal[s] the same physical damage again and stuns
+# them", two immobilize kinds from one cast.  R "knock[s] them up for 1
+# second" in both priced branches; the fully-charged branch adds a knock
+# back on top, which is a second immobilize and not a different answer.
+# P is absent — Iron Ambassador is an on-hit rider on the auto stream.
+MODULE_CC = {"Q": "slow", "W": "knockup", "E": "immobilize", "R": "knockup"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Poppy",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Poppy Q's sourced Hammer Shock field ruptures 1 second after impact; "
+        "the packet emits both physical hits.",
+    ),
+    packet_part_timings={
+        "Q": {
+            "count": 2,
+            "time_offset": 0.0,
+            "hit_interval": 1.0,
+            "total_multiplier": 2.0,
+        }
+    },
+    # Steadfast Presence damages a dashing enemy once, Heroic Charge lands
+    # its hit on arrival and the uncharged Keeper's Verdict is one hammer
+    # blow — the boundary claim that carries MODULE_CC's reviewed answers
+    # into the event ledger.  Q already authors its impact/rupture timing.
+    single_hit_slots=frozenset({"W", "E", "R"}),
+    slot_parsers={
+        "P": _iron_ambassador,
+    },
+    slot_wrappers={
+        "R": _keepers_verdict,
+        # "Stun Duration" is the only interval the cache prices for the
+        # cast, so the reviewed immobilize reads its length from there
+        # rather than carrying an unsourced one.
+        "E": lambda compiled: with_control(
+            compiled, kind="immobilize", duration_attr="Stun Duration"
+        ),
+    },
+    cc_kinds=MODULE_CC,
 )
-parse_abilities = build_parser(SLOTS, "Poppy")
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -134,8 +159,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "200-400 + 90% bonus AD == 2x) is option-gated via r_charged — the "
     "1-second charge time is state.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

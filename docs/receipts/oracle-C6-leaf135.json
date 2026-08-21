@@ -1,0 +1,64 @@
+{
+  "receipt": "oracle-C6-leaf135",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[3]",
+  "old_value": "W",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "docs/math-foundations.md", "data/practice-corpus/scenarios.json", "data/worklists/*.md", "data/bin/behavior-index.json"],
+    "not_read": ["src/", "tests/", "scripts/ (incl. golden_snapshot.py and golden_baseline.json)", "docs/plans/", "docs/receipts/", "git history", "any diff or plan"],
+    "contamination_note": "A file 'syndra.json' (21463 bytes, mtime later than the extraction) appeared at the ROOT of the scratch directory. It cannot have come from the archive (every archived path is under data/ or docs/). It was NOT opened and contributed nothing to this receipt. Flagging it because an unexplained file materialising inside an oracle's isolated evidence tree is worth someone's attention."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (Unleashed Power), active description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0], leveling rows",
+      "quote": "Magic Damage per Sphere: [80, 120, 160] (+ [20,20,20]% AP); Minimum Magic Damage: [240, 360, 480] (+ 60% AP); Maximum Magic Damage: [560, 840, 1120] (+ 140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | cooldown [7,7,7,7,7], affectedByCdr: false"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0], passive row",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste: [10, 20, 30]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will)",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere... If a Dark Sphere is grabbed, its duration is refreshed... Recast: Syndra throws the grabbed target... dealing magic damage. | cooldown [12,11,10,9,8], affectedByCdr: true"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak)",
+      "quote": "cooldown [15,15,15,15,15], affectedByCdr: true; castTime 0.25"
+    },
+    {
+      "source": "docs/math-foundations.md L59-67 (Section 1.1, shared cast timeline)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md L462 (exactness table, ability haste row)",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (restated in math-foundations L462)",
+      "quote": "Ability haste -> CDR: effective_cd = base_cd x 100 / (100 + ability_haste)"
+    }
+  ],
+  "independent_computation": {
+    "step_1_what_the_leaf_is": "exact_sources is timeline_coverage's list of damage sources carrying authored (exact) event timing; the companion list is coarse_sources (sources with no authored event timing, e.g. muramana_ability / proc_Eclipse per data/worklists/e9-bis-b-task.md). For a Syndra fight the ability sources are the four keys Q, W, E, R.",
+    "step_2_effective_cooldowns_at_60": "Reading the '60' in the scenario id as the config's ability haste (level cap is 20, so 60 is not a level), and applying cd' = cd*100/(100+AH) to the cached cooldown rows at max ranks: W r5 = 8*100/160 = 5.000 s; E r5 = 15*100/160 = 9.375 s; R r3 = 80*100/160 = 50.000 s. Q is the exception: its cached cooldown carries affectedByCdr = false, so the 60 AH does not touch it; only R's own passive haste does, giving Q r5 = 7*100/(100+30) = 5.385 s at R rank 3. Under either reading of '60' (60 AH or a 60 s window) R is cast exactly once - both because 50 s >= the rotation window and because math-foundations L462 pins 'R casts exactly once per timed fight' as a model constraint. R is therefore the one source that appears exactly once, and it is the terminal entry of the cast order.",
+    "step_3_R_must_be_cast_last": "The cached R text is explicit that R's damage is a function of how many Dark Spheres are already alive: 3 conjured + up to 4 grabbed live ones. At rank 3 the cached leveling rows give minimum 480 (+60% AP) for the 3 self-conjured spheres and maximum 1120 (+140% AP) for all 7, i.e. the 4 pre-existing spheres are worth 4 * (160 + 20% AP). At 600 AP: min = 480 + 360 = 840; max = 1120 + 840 = 1960 - a 2.33x swing (+1120 raw magic damage) purely from having cast the sphere generators first. Q's spheres persist 6 s on the ground and W refreshes a grabbed sphere's duration, so Q/W/E all precede R in any correct Syndra rotation. Consequently, in any ordering of exact_sources that carries cast/event order, R is the last of the four ability sources and W is not.",
+    "step_4_reading_the_two_candidate_values": "The OLD value is exactly what an order-blind list yields: sorted({Q,W,E,R}) = [E, Q, R, W], whose index 3 is 'W'. That list is invariant to the cast order - it would print the same string for every possible ordering, which makes it vacuous for a scenario whose entire identity is 'custom_order'. The NEW value 'R' at the final index is what an order-bearing list must show, and it agrees with step 3 (R last) and step 2 (R single-cast, longest effective cooldown by an order of magnitude: 50 s vs 5.0-9.4 s).",
+    "step_5_conclusion": "R at index 3 is the correct terminal ability source for a Syndra rotation. 'W' at that position would mean W was scheduled after R, which the cached R text contradicts (it would forfeit up to 4 * (160 + 20% AP) = 1120 magic damage at 600 AP)."
+  },
+  "residual_uncertainty": "The scenario's declared cast order lives in scripts/golden_snapshot.py, which this runbook forbids reading, so index 3 could not be confirmed positionally against a declared order; nor could the exact length of exact_sources (whether the four ability keys are the only entries) be confirmed from data/ alone. The verdict rests on two things that ARE derivable from the permitted evidence: (a) the old value is precisely the alphabetical sort of Syndra's four ability keys, i.e. an order-free artifact, and (b) the cached wiki text makes R the single-cast, last-in-rotation source. If exact_sources is intended to be a sorted set rather than an ordered timeline list, the leaf is order-free and the index carries no meaning - but then the scenario name has no referent. Under the order-bearing reading, which is the only one under which this leaf is meaningful, the new value is correct.",
+  "confidence": "medium-high"
+}

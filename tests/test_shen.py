@@ -3,10 +3,15 @@
 import pytest
 
 from src.app import app
-from src.calculator.champions import get_champion_module_meta, parse_champion_abilities
+from src.calculator.champions import (
+    get_champion_module_meta,
+    parse_champion_abilities,
+    shen,
+)
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests import cc_review
 
 
 def _stats(shen_data, level: int = 12) -> dict:
@@ -139,7 +144,16 @@ def test_public_pipeline_splits_q_swing_from_magic_rider(shen_data):
     )
 
 
-def test_timed_auto_stream_is_explicitly_partial(shen_data):
+def test_timed_auto_stream_certifies_q_with_an_authored_swing_ledger(shen_data):
+    """Q's bonus hits carry authored swing timing; the timeline certifies.
+
+    Five ambient swings cap Q at one cast (three empowered attacks). The
+    Q row's authored events are the three magic bonus hits at the module's
+    swing schedule (0.5s first-attack delay, then the enhanced 1/1.5s
+    cadence); the engine additionally shows the three consumed swings on
+    the Q row, so the ledger reconciles as bonus events plus the swings
+    priced at the auto row's per-hit value.
+    """
     stats, abilities = _parse(shen_data)
     result = calculate_fight_damage(
         stats,
@@ -158,10 +172,47 @@ def test_timed_auto_stream_is_explicitly_partial(shen_data):
     )
 
     coverage = result["timeline_coverage"]
-    assert coverage["complete"] is False
-    assert coverage["certification"] == "partial_event_order"
-    assert "Q" in coverage["coarse_sources"]
-    assert "ambient auto stream" in coverage["note"]
+    assert coverage["complete"] is True
+    assert coverage["certification"] == "event_order_certified"
+    assert coverage["coarse_sources"] == []
+    assert "Q" in coverage["exact_sources"]
+
+    q_row = result["breakdown"]["Q"]
+    q_events = q_row["damage_events"]
+    assert len(q_events) == 3 * q_row["casts"]
+    assert {event["event_precision"] for event in q_events} == {"exact"}
+    assert sorted(event["time"] for event in q_events) == pytest.approx(
+        [0.5, 0.5 + 2.0 / 3.0, 0.5 + 4.0 / 3.0]
+    )
+    # Authored events are the magic bonus; the row total additionally
+    # carries the consumed swings at the auto row's per-hit damage.
+    auto_row = result["breakdown"]["auto_attacks"]
+    swings = 3 * q_row["casts"]
+    assert sum(event["damage"] for event in q_events) == pytest.approx(
+        q_row["total_damage"] - swings * auto_row["damage_per_hit"]
+    )
+    assert sum(event["damage"] for event in q_events) == pytest.approx(
+        q_row["casts"] * abilities["Q"]["total_raw"]
+    )
+
+
+def test_timed_payload_probe_certifies_full_timeline():
+    """The campaign probe: bare-kit timed Shen has no coarse sources."""
+    from src.calculator.calculate import calculate_payload
+
+    result = calculate_payload(
+        {
+            "champion": "Shen",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+    )
+    coverage = result["timeline_coverage"]
+    assert coverage["complete"] is True
+    assert coverage["coarse_sources"] == []
+    assert "Q" in coverage["exact_sources"]
 
 
 def test_target_max_health_change_is_repriced(shen_data):
@@ -189,7 +240,37 @@ def test_target_max_health_change_is_repriced(shen_data):
     assert result["threshold_health_triggered"] is True
     assert result["target_effective_max_health"] == pytest.approx(700.0)
     assert result["target_healing_received"] > 0.0
-    assert "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+    # The target-side heal authors its cadence now, so the fight stays
+    # certified; the reprice above is what the lifeline is measured by.
+    assert result["timeline_coverage"]["complete"] is True
+    assert (
+        "target_Protoplasm Harness" not in result["timeline_coverage"]["coarse_sources"]
+    )
+
+
+class TestReviewedCrowdControl:
+    """Shen's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    Both rows already carry their authored dash/swing timing, so the
+    declaration rides an event the ledger can see.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Shen")
+        assert shen.MODULE_CC == {"E": "taunt", "Q": "slow"}
+        assert "are slowed for the next 2 seconds" in cc_review.slot_text(data, "Q")
+        assert "taunting them for 1.5 seconds" in cc_review.slot_text(data, "E")
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Shen") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Shen")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 # ---------------------------------------------------------------------------
@@ -256,18 +337,23 @@ def test_w_spirits_refuge_is_explicit_zero_damage_row(shen_data):
     assert "block" in entry["detail"].lower()
 
 
-def test_r_stand_united_remains_absent_from_parsed_abilities(shen_data):
-    """R stays unwired: no top-level SLOTS entry, so no parsed row."""
+def test_r_stand_united_is_a_zero_damage_cast_the_scanner_prices(shen_data):
+    """R is wired as a support cast: the rotation casts it and the
+    ally-support scanner prices the sourced shield floor, so the slot emits
+    a row that deals no damage of its own."""
     _, abilities = _parse(shen_data)
 
-    assert "R" not in abilities
-    assert "R" not in get_champion_module_meta("Shen")["slots"]
+    assert "R" in abilities
+    assert abilities["R"]["total_raw"] == 0.0
+    assert abilities["R"]["parts"] == ()
+    assert "R" in get_champion_module_meta("Shen")["slots"]
+    assert shen.CAST_ORDER == ["E", "Q", "R"]
 
 
 def test_module_coverage_reflects_p_w_r_dispositions():
     """P's shield rides E and is modeled; W is an atoms-confirmed
-    zero-damage state row; R's sourced ally shield is not yet wired into
-    CAST_ORDER or the ally-support scanner and stays out_of_scope."""
+    zero-damage state row; R's sourced ally shield is priced by the
+    ally-support scanner off its "Minimum Shield Strength" floor."""
     coverage = get_champion_module_meta("Shen")["coverage"]
 
     assert coverage == {
@@ -275,19 +361,28 @@ def test_module_coverage_reflects_p_w_r_dispositions():
         "Q": "modeled",
         "W": "no_damage",
         "E": "modeled",
-        "R": "out_of_scope",
+        "R": "modeled",
     }
 
 
-def test_sources_include_receipts_for_every_named_ability():
+def test_sources_are_wiki_revision_receipts():
+    """The reviewed pins live in ``static/champion-source-receipts.json``
+    (one home), so the module states no revision of its own.
+
+    MERGE: main's inline ``SOURCES`` list pinned Ki Barrier (3985839),
+    Spirit's Refuge (3977238) and Stand United (4004939) beside Twilight
+    Assault (4008038) and Shadow Dash (4007754).  All five now live in the
+    receipt asset — every priced slot has its own revision receipt — so
+    the set is pinned exactly rather than as a lower bound.
+    """
     meta = get_champion_module_meta("Shen")
 
     assert {row["revision_id"] for row in meta["sources"]} == {
-        3985839,  # Ki Barrier
-        4008038,  # Twilight Assault
-        3977238,  # Spirit's Refuge
-        4007754,  # Shadow Dash
-        4004939,  # Stand United
+        3985839,  # Ki Barrier (P)
+        4008038,  # Twilight Assault (Q)
+        3977238,  # Spirit's Refuge (W)
+        4007754,  # Shadow Dash (E)
+        4004939,  # Stand United (R)
     }
     assert all(
         row["url"].startswith("https://wiki.leagueoflegends.com/")

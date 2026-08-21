@@ -24,6 +24,8 @@ from src.calculator.champions import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.resistance import apply_resistance
+from src.calculator.champions import camille
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -455,6 +457,71 @@ class TestPassiveAndMeta:
         keys = {opt["key"] for opt in meta["options"]}
         assert keys == {"w_outer_cone"}
         assert meta["assumptions"]
+
+
+class TestReviewedCrowdControl:
+    """Camille's crowd-control review, Q2 included.
+
+    Q2's one empowered swing is split into a true and a physical part
+    below level 16; a shared instant is what certifies that as one
+    landing, so the reviewed absence of control reaches the ledger.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Camille")
+        assert camille.MODULE_CC == {
+            "Q": "none",
+            "Q2": "none",
+            "W": "slow",
+            "E": "immobilize",
+        }
+        assert "slowed by 80% decaying over 2 seconds" in " ".join(
+            cc_review.slot_text(data, "W").split()
+        )
+        assert "knocking back all nearby enemy champions" in " ".join(
+            cc_review.slot_text(data, "E").split()
+        )
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+
+    def test_the_recast_mimics_a_control_free_cast(self):
+        """Q2 has no cached slot of its own — both casts live under Q."""
+        text = " ".join(cc_review.slot_text(cc_review.kit("Camille"), "Q").split())
+        assert (
+            "recast: camille mimics the first cast's effects. if precision "
+            "protocol is recast after 1.5 seconds of the first attack, then "
+            "the bonus damage is doubled" in text
+        )
+        assert cc_review.control_words(text) == []
+
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Camille") == []
+        coverage = cc_review.fimbulwinter_coverage("Camille")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def test_p_is_modeled_through_the_466_6_adaptive_defenses_shield() -> None:
+    """P has no cast; the shield it grants rides W's damage event.
+
+    Adaptive Defenses grants 20% of Camille's maximum health for 2
+    seconds — 466.6 at level 18 with no items, the receipt behind P's
+    ``modeled`` label.
+    """
+    from src.calculator.champions import get_champion_module_contract
+    from src.calculator.stats import calculate_total_stats
+
+    contract = get_champion_module_contract("Camille")
+    assert "P" not in contract.slots
+    assert contract.coverage["P"] == "modeled"
+    assert contract.coverage_channels["P"] == ("self_shield_events",)
+
+    data = cc_review.kit("Camille")
+    stats = calculate_total_stats(data, 18, [])
+    parsed = parse_abilities(data, 18, stats["ability_power"], champion_stats=stats)
+    (payload,) = parsed["W"]["self_shield_events"]
+    assert payload["source"] == "Adaptive Defenses"
+    assert payload["amount"] == pytest.approx(466.6, abs=0.01)
+    assert payload["duration"] == pytest.approx(2.0)
 
 
 class TestModuleCoverage:

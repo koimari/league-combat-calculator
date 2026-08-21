@@ -14,8 +14,11 @@ defers both (see ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS`` and
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -25,6 +28,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the shield window and the recast
 # window are prose in the cached W description ("shields herself for 2.5
@@ -41,7 +45,7 @@ def _inferno_aegis_shield(ctx: SlotCtx) -> float:
     if ability is None:
         return 0.0
     rank = ctx.rank_for("W")
-    nearby = min(max(int(ctx.options.get("w_nearby_champions", 1)), 0), 5)
+    nearby = min(max(int(ctx.option("w_nearby_champions")), 0), 5)
     base = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
     per_champion = extract_named(
         ability, "Increased shield per champion", rank, ctx.stats, ctx.target
@@ -57,12 +61,12 @@ def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
     stack = find_named_leveling(ability, "Per-Level Scaling", 1)
     if base is None or stack is None:
         return None
-    stacks = min(max(int(ctx.options.get("scalemail_stacks", 0)), 0), 100)
+    stacks = min(max(int(ctx.option("scalemail_stacks")), 0), 100)
     bonus_armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
         stack, ctx.level
     )
-    ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + bonus_armor
-    ctx.stats["magic_resistance"] = ctx.stats.get("magic_resistance", 0.0) + bonus_armor
+    ctx.stats["armor"] = ctx.stat("armor") + bonus_armor
+    ctx.stats["magic_resistance"] = ctx.stat("magic_resistance") + bonus_armor
     entry = damage_entry("Scalemail", ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"armor": bonus_armor, "magic_resistance": bonus_armor}
     entry["detail"] = f"{stacks} Scalemail stack(s); +{bonus_armor:.2f} armor/MR"
@@ -79,7 +83,7 @@ def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    casts = min(max(int(ctx.options.get("q_casts", 1)), 1), 3)
+    casts = min(max(int(ctx.option("q_casts")), 1), 3)
     dragon = bool(ctx.options.get("dragon_form", False))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
     dragon_third = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
@@ -217,10 +221,24 @@ SLOTS = {
     "Q": _emberstrike,
     "W": _inferno_aegis,
     "E": _molten_burst,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One flight, one cone of fire per target ("breathing fire in a cone
+    # along the way that deals magic damage to enemies hit"), so the row
+    # is a hit the ledger can time and its fear reaches the readers.
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Shyvana")
+# Reviewed crowd control, read from the cached kit.  Q (Emberstrike) is
+# empowered attacks — slash, tail slam, dragon-form bite — with no control
+# clause; W (Inferno Aegis) shields and explodes "dealing magic damage to
+# nearby enemies" and applies none either.  E (Molten Burst) deals damage
+# "and slowing them by 30% for 2 seconds".  R (Dragon's Descent) "deals
+# magic damage to enemies hit and fears them for 0.75 seconds, as well as
+# slows them by 99%" — the fear is the immobilizing half.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear"}
+
+parse_abilities = build_parser(SLOTS, "Shyvana", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -282,26 +300,10 @@ ASSUMPTIONS = [
     "options, never inferred from a cast count.",
 ]
 
-SOURCES = [
-    {
-        "label": "Shyvana — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Shyvana",
-        "revision_id": 4043672,
-        "revision_timestamp": "2026-07-15T18:06:00Z",
-    }
-]
+SOURCES = load_champion_sources("Shyvana")
 
 
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-
-
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -314,7 +316,7 @@ def derive_self_healing(
     healing = []
     w_row = ability_damages.get("W", {})
     if "dragon form" in str(w_row.get("detail", "")).lower():
-        level = max(1, int(champion_stats.get("level", 18) or 18))
+        level = max(1, int(champion_stat(champion_stats, "level")))
         w = _healing._ability(champion_data, "W")
         flat = _healing.extract_named(w, "Heal", level, champion_stats, {})
         missing_pct = _healing._leveling_modifier(w, "Missing Health Damage", level, 0)
@@ -329,9 +331,10 @@ def derive_self_healing(
                 flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
             )
 
-        for event in _healing._attributed_events(
-            damage_events, lambda source, _event: source == "W"
+        for payment in _healing._payments(
+            _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
         ):
+            event = payment.event
             if float(event.get("damage", 0.0)) <= 0.0:
                 continue
             healing.append(
@@ -346,9 +349,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Shyvana", derive_self_healing)

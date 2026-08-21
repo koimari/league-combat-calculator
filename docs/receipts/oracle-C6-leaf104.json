@@ -1,0 +1,101 @@
+{
+  "receipt_id": "oracle-C6-leaf104",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[3]/damage_type",
+  "old_value": "true",
+  "new_value": "magic",
+  "verdict": "old_value_correct",
+  "confidence": "moderate",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6b",
+    "not_consulted": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra -> abilities -> W (Force of Will) -> effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra -> abilities -> W -> effects[2].description + leveling[0]",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.  |  attribute 'Magic Damage', modifiers [70/100/130/160/190] and [65% AP]"
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra -> abilities -> W -> effects[3].leveling",
+      "quote": "attribute 'Bonus True Damage' -> [8.4, 12, 15.6, 19.2, 22.8] + [9.2, 9.8, 10.4, 11, 11.6] % AP + [1.14 ...] % AP(squared); attribute 'Total Mixed Damage' -> [78.4, 112, 145.6, 179.2, 212.8] + [74.2, 74.8, 75.4, 76, 76.6] % AP"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra -> abilities -> P (Transcendent) -> effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra -> abilities Q / E / R descriptions and damageType fields",
+      "quote": "Q Dark Sphere damageType=MAGIC_DAMAGE ('dealing magic damage to nearby enemies'); E Scatter the Weak damageType=MAGIC_DAMAGE; R Unleashed Power damageType=MAGIC_DAMAGE ('each dealing magic damage upon hit'). No true-damage attribute appears anywhere in Syndra's kit except the W 60-Splinter Transcendent Bonus."
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots + gap_summary",
+      "quote": "modeled slots [P, Q, Q2, W, E, R] ... 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'"
+    },
+    {
+      "id": "S8",
+      "file": "data/worklists/f2-task.md",
+      "locator": "CONTEXT paragraph",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, resistance row",
+      "quote": "Resistance mitigation (apply_resistance) | m(R)=100/(100+R) ... EXACT"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_only_true_damage_source": "Syndra's entire kit is magic damage (S5). The single true-damage component in the champion is the W Transcendent Bonus, unlocked at 60 Splinters of Wrath (S1). The scenario name encodes exactly that splinter count ('_60'), and the module gate is inclusive at 60 ('60+ W true damage', S6/S7), so in this scenario the W true-damage component IS active.",
+    "step_2_confirm_the_bonus_is_additive_and_separately_typed": "Wiki rows give three attributes for the enhanced W: 'Magic Damage' (base), 'Bonus True Damage', and 'Total Mixed Damage'. Additivity check at rank 1: 70 (magic) + 8.4 (true) = 78.4 = Total Mixed Damage. Same at every rank: 100+12=112, 130+15.6=145.6, 160+19.2=179.2, 190+22.8=212.8. The word 'Mixed' plus the separate 'Bonus True Damage' attribute confirms the enhanced W resolves as TWO damage packets: one magic, one true.",
+    "step_3_derive_the_closed_form_from_the_prose_and_check_it_against_all_ten_parsed_coefficients": {
+      "hypothesis": "bonus_true = (0.12 + 0.02 * AP/100) * (base_r + 0.65 * AP), i.e. 12% (+2% per 100 AP) OF the W's magic damage",
+      "expansion": "= 0.12*base_r  +  (0.12*0.65 + 0.0002*base_r)*AP  +  (0.0002*0.65)*AP^2",
+      "predicted_flat_per_rank": [8.4, 12.0, 15.6, 19.2, 22.8],
+      "wiki_flat_per_rank": [8.4, 12, 15.6, 19.2, 22.8],
+      "predicted_AP_coefficient_per_rank_percent": [9.2, 9.8, 10.4, 11.0, 11.6],
+      "wiki_AP_coefficient_per_rank_percent": [9.2, 9.8, 10.4, 11, 11.6],
+      "predicted_quadratic_coefficient": "0.013% of AP^2 (constant across ranks)",
+      "fit": "10/10 published coefficients reproduced exactly; the quadratic term is the AP-scaling of the multiplier applied to the AP-scaling of the base damage.",
+      "worked_value": "Rank 5, AP = 500: W magic = 190 + 0.65*500 = 515.0 ; W bonus true = (0.12 + 0.0002*500) * 515.0 = 0.22 * 515.0 = 113.3. Reconstructing from the parsed row instead: 22.8 + 0.116*500 + 0.00013*500^2 = 22.8 + 58.0 + 32.5 = 113.3. Identical."
+    },
+    "step_4_type_assignment": "The quantity above is labelled by the wiki, verbatim, 'bonus TRUE damage' / attribute 'Bonus True Damage'. True damage ignores all resistances (it is not routed through m(R)=100/(100+R), S9). Therefore any damage event carrying this component must have damage_type == 'true'. There is no reading of the cached wiki text under which this component is magic.",
+    "step_5_locate_index_3": "The Syndra module emits slots [P, Q, Q2, W, E, R] (S7); at 60 Splinters the Q second charge (40+ threshold) is live, so Q contributes two events, and the enhanced W contributes two (magic base + true bonus). Event index of the W true packet = (events preceding W) + 1. Under the engine's default cast order Q,W,E,R (S8) that is 0=Q, 1=Q2, 2=W magic, 3=W TRUE, 4=E, 5=R -> index 3 is precisely the W true bonus. A reversed custom order R,E,W,Q lands it at index 3 as well (0=R, 1=E, 2=W magic, 3=W TRUE). The old value 'true' at index 3 is therefore exactly what the correctly-modelled 60-Splinter W produces, and the observed flip to 'magic' is what you get when the true packet is dropped (gate regressed off the inclusive 60 boundary, or the splinters option no longer reaches the module as the value 60) and the following magic event shifts left into slot 3 -- or when the packet itself is mis-typed.",
+    "step_6_why_a_benign_reordering_is_disfavoured": "This scenario is named 'custom_order', i.e. the cast order is pinned explicitly by the scenario rather than derived by the engine. An explicitly-ordered scenario should be invariant under rotation/ordering work, so a type flip at a fixed index in this particular scenario points at a change in which packets exist or how they are typed, not at a benign permutation."
+  },
+
+  "conclusion": "At exactly 60 Splinters of Wrath, Force of Will is enhanced and deals magic damage PLUS a bonus TRUE damage packet equal to (12% + 2% per 100 AP) of its magic damage. That packet is the only true-damage source in Syndra's kit, it is live at 60 (inclusive threshold), and at damage_events[3] under both the default and the natural reversed cast order it is the packet occupying that slot. 'true' is the correct damage_type; 'magic' is not.",
+
+  "caveats_and_falsifiers": [
+    "The scenario definition (cast order, build, options) lives in scripts/ and tests/, which this runbook forbids reading, so the identity of damage_events[3] was inferred from the module's slot list, the 40/60 Splinter thresholds, and the documented DEFAULT_CAST_ORDER rather than read directly.",
+    "This verdict flips to 'new_value_correct' if, and only if, the new golden still contains a true-typed W bonus event at a different index AND the reindexing was an intended, reviewed ordering change for this explicitly-ordered scenario. If the new golden for syndra_custom_order_60 contains NO true-typed damage event at all, the change is a confirmed regression against S1/S3/S6.",
+    "Cheap confirmation for the parent (outside this oracle's sandbox): grep the new baseline entry for syndra_custom_order_60 for any damage_event with damage_type 'true'."
+  ]
+}

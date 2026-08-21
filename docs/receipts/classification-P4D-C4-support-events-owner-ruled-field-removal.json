@@ -1,0 +1,66 @@
+{
+  "artifact": "leaf_classification",
+  "slice": "P4D",
+  "cluster_id": "P4D-C4-support-events-owner",
+  "dated": "2026-08-14",
+  "what_this_is": "Not a verdict. A classification receipt: it records that the leaf below is not a value adjudication, so the dissenting verdict filed against it does not stand as a finding about the tree. R-15's 2026-08-14 amendment rules that a membership transition which is the ruled consequence of a declared change is adjudicated by CITATION, not by verdict, and this is that citation.",
+  "rules": [
+    "R-15, amended 2026-08-14 (docs/plans/silent-failure-runbook.md, *Independent investigation*): adjudicated by citation, not by verdict; both guards checked below.",
+    "R-19 / the R-15/R-18 amendment's adjudication clause 3: a superseding receipt names the specific defect in the brief it replaces and names what it supersedes; the superseded receipt is never edited and never deleted."
+  ],
+  "category_error": {
+    "name": "ruled field removal",
+    "one_sentence": "`owner` is present on a cross-participant packet IFF its Authority is SPLIT (D-07), so the field's absence is what a landed authority ruling says -- not a number an oracle can weigh.",
+    "detail": "D-07's check is: every packet modifying another participant's damage declares an Authority, and `owner` is present iff Authority == SPLIT. The Phase 4 S7 Bloodsong move takes bloodsong.expose_weakness off SPLIT, so its three armings in this scenario carry no owner, while Black Cleaver -- Carve, which is H1-blocked and still SPLIT, keeps its own owner on every row in the same list. An investigator asked whether `main` is the right value for that field has no evidence that can answer: cached wiki text describes what Expose Weakness does, never which engine the campaign ruled owns it."
+  },
+  "leaves_reclassified": [
+    {
+      "was_addressed_as": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]/owner",
+      "was_reported_as": "value_to_absent, main -> <absent>",
+      "supersedes": "docs/receipts/oracle-S6S7-leaf24.json",
+      "superseded_verdict": "old_value_correct",
+      "superseded_confidence_as_filed": "low-moderate -- 'this leaf is a provenance/serialization field, not a game quantity, and no wiki text or documented formula fixes its value', the receipt's own words"
+    }
+  ],
+  "defect_in_the_prior_brief": {
+    "clause": "R-19 / adjudication clause 3 -- a re-run or a supersession must cite the specific defect in the brief it replaces.",
+    "defect": "The brief posed a ruled provenance field as a value question, and R-19's closed verdict set left no way to say so: the investigator reconstructed both items from cached wiki text, concluded correctly that every support effect in the scenario is emitted BY a roster participant, and mapped that onto `old_value_correct` -- a dissent meaning 'no evidence exists' filed in the same shape as one meaning 'the tree is wrong'. Its own confidence line says as much. The brief was underdetermined in a second way it could not see: the leaf was addressed by ordinal, and support_events[17] is a Black Cleaver -- Carve arming in the pre-change list and a Bloodsong -- Expose Weakness arming in the post-change one, so the pair `main -> <absent>` straddled two different records.",
+    "recorded_as": "escalated-defects-S6S7-oracle.json::the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide, which names this receipt by id and already states that its absence is D-07's ruled consequence of the authority move."
+  },
+  "the_instrument_fix": {
+    "commit": "c57a902",
+    "what": "scripts/golden_snapshot.py::leaf_report pairs list members carrying event_id by that identity and never by list position.",
+    "measured_after": {
+      "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[18]/owner",
+      "identity": "enemy:Aatrox:support:2",
+      "transition": "value_to_absent",
+      "what_the_ordinal_was_hiding": "The pre-change record at ordinal 17, enemy:Aatrox:support:17, is a Black Cleaver -- Carve arming that the S7 rearm fold no longer authors; it is now reported as its own removal at /coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[17]. The owner drop belongs to the Expose Weakness arming the baseline holds at ordinal 18.",
+      "the_sibling_armings": "The same drop is reported at support_events[5]/owner (enemy:Aatrox:support:0) and support_events[12]/owner (enemy:Aatrox:support:1) -- the two Expose Weakness armings no removal shifted -- and both are claimed by expected-golden-diff-P4-S7-bloodsong.json. Three armings, one ruled consequence, and only the third one was ever routed to an oracle.",
+      "how_measured": "scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json, read through tests/test_coupled_golden_allowlist.py::standing_coupled_diffs on this tip."
+    }
+  },
+  "ruling_cited": {
+    "ruling": "D-07 -- every packet modifying another participant's damage declares an Authority, and `owner` is present iff Authority == SPLIT -- applied to the Phase 4 S7 Bloodsong authority move.",
+    "openable_at": [
+      "docs/plans/2026-08-08-silent-failure-campaign.md -- D-07 in the D-01…D-14 table, and Amendment D for the member the move landed",
+      "docs/receipts/expected-golden-diff-P4-S7-bloodsong.json -- the slice receipt, which already claims the same drop at support_events[5]/owner and support_events[12]/owner"
+    ],
+    "why_it_decides_the_leaf": "The field's presence is the decision's own consequence: keep the owner and the packet contradicts its declared authority; drop it and the packet says what the ruling says. There is no third value to be right about."
+  },
+  "guards": {
+    "membership_transition_as_the_identity_keyed_report_classifies_it": true,
+    "cited_ruling_is_openable": true,
+    "note": "The transition is value_to_absent on a record both sides hold, matched by identity -- so it is a field the ruling removed, not a value re-spelled as a removal by an ordinal shift, which the pre-fix report could not distinguish."
+  },
+  "allowlist_entry": {
+    "receipt": "docs/receipts/expected-golden-diff-P4D-identity-keyed-report.json",
+    "path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[18]/owner",
+    "status": "NOT_OWED_RULED_MEMBERSHIP"
+  },
+  "effect": {
+    "on_the_leaf": "It is no longer an open value adjudication and owes no oracle receipt.",
+    "on_the_entry": "escalated-defects-S6S7-oracle.json::the_verdict_enum_has_no_member_for_a_leaf_the_evidence_tree_cannot_decide stays OPEN. The amendment answers one of the two options its for_the_owner named, and only for the subclass a ruling decides: a membership transition produced by a declared change is now adjudicated by citation instead of being routed to an oracle at all. Its second citation, oracle-S6S7-leaf30 on an event's `sequence`, is engine bookkeeping that no ruling removed and no evidence tree can decide, so the gap the entry names is narrowed, not closed.",
+    "on_the_baselines": "None. No baseline moves in the commit that lands this (R-17, R-32, D-97).",
+    "on_the_thirteen_boundary_dissents": "None. C4 is the S6/S7 ledger's, not the boundary's."
+  }
+}

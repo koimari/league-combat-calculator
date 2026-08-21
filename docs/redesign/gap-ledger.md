@@ -69,7 +69,7 @@ two steps (Champion, Roster) that are genuinely scenario setup.
 | Available gold input | "Available gold" row becomes editable |
 | Allow selling (pivot) checkbox | Row in the Constraints block, above Find best buy |
 | Objective picker (overall/kill/survival/damage/utility) | "Objective" row expands to the 5-way segmented control (option 1a/1b show the idiom) |
-| Window: rotations, window-per-rotation, auto-uptime calculated/explicit + % | "Window" row expands to the three controls; collapsed summary e.g. "1 rotation · 10s · AA calc" |
+| Window: fight length, actions (full kit / autos only), auto-uptime calculated/explicit + % | "Window" row expands to the three controls; collapsed summary e.g. "10s window · AA calc" (2026-08-20: the rotations slider was retired — it multiplied the one window number) |
 | Game state: Theory / Snapshot lens (+ mode descriptions) | A Constraints row ("State: Theory"); the mode sentence moves to the expanded editor. 1c's header shows where state reads back: "· THEORY · 1 ROTATION ·" |
 | Find best buy button | Stays as the mock has it (paper button at rail bottom) |
 | Optimizer results (plan summary, buy/sell/combine receipt, gold spent/remaining, partial-exhaustive note, apply) | **Not in the mock.** Render as a canvas takeover band below the verdict strip (a "best buy" result panel in the design language), never a toast; every receipt and truncation note survives |

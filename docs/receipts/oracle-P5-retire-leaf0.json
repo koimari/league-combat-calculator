@@ -1,0 +1,101 @@
+{
+  "receipt": "oracle-P5-retire-leaf0",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[1]",
+  "old_value": "Q2",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-tree",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects (cached League Wiki text)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cooldown",
+      "quote": "{\"modifiers\": [{\"values\": [7, 7, 7, 7, 7], \"units\": [\"\",\"\",\"\",\"\",\"\"]}], \"affectedByCdr\": false}"
+    },
+    {
+      "id": "S3",
+      "source": "data/champions.json -> Syndra.abilities.R[0] (passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -- Ability Haste [10, 20, 30]"
+    },
+    {
+      "id": "S4",
+      "source": "data/champions.json -> Syndra.abilities.E[0]",
+      "quote": "Active: Syndra propels a wave of force in a cone ... Magic Damage [60,95,130,165,200] (+60% AP); cooldown [15,15,15,15,15] affectedByCdr true; castTime 0.25. 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast.'"
+    },
+    {
+      "id": "S5",
+      "source": "data/champions.json -> Syndra.abilities.W[0]",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere ... Recast: ... dealing magic damage ... Magic Damage [70,100,130,160,190] (+65% AP). 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'"
+    },
+    {
+      "id": "S6",
+      "source": "docs/math-foundations.md, section 1.1 (lines ~60-68)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`"
+    },
+    {
+      "id": "S7",
+      "source": "docs/math-foundations.md, section 5 formula-audit table",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT |"
+    },
+    {
+      "id": "S8",
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled slots [P, Q, Q2, W, E, R]; 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; notable atom 'ammo (Q 2nd charge at 40 splinters)'; gap_summary: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage ..., P 120-splinter +15% AP buff'."
+    },
+    {
+      "id": "S9",
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "id": "S10",
+      "source": "data/worklists/f2-task.md (rotation/combo layer spec, defines how cast_order is derived)",
+      "quote": "rank its damaging abilities by (a) DPS contribution per rank at the fight's stats, (b) setup/consume relationships (e.g. Cassiopeia Q poisons BEFORE E spam ...), (c) cooldown gating (cast order must respect cooldowns), (d) buffs first ... The event order shown in the UI comes from the fight's cast_order"
+    }
+  ],
+  "independent_computation": {
+    "step_0_scenario_identification": {
+      "claim": "The trailing '39' in the scenario id is the Syndra `splinters` option value (39), not a duration or a corpus index.",
+      "why": "S8/S9 establish `splinters` as an integer option with domain 0-120 whose sole gating thresholds are 40 (Q2 second charge), 60 (W true damage), 100 (R execute, not modeled) and 120 (+15% AP). 39 lies in that domain and is exactly threshold(40) - 1, i.e. the canonical off-by-one boundary probe for the very slot this leaf disputes (Q2). No other Syndra quantity in the cached data takes the value 39.",
+      "caveat": "The scenario setup tuple itself lives outside the permitted evidence tree (scripts/), so this identification is inference from the cached data, not a direct read."
+    },
+    "step_1_is_Q2_admissible_at_39_splinters": {
+      "rule": "S1 - the second Dark Sphere charge exists only after 'Collecting 40 Splinters of Wrath'.",
+      "arithmetic": "39 < 40  =>  the Transcendent Bonus is not active  =>  Syndra holds at most 1 Dark Sphere charge  =>  the synthetic Q2 slot (S8: 'ammo (Q 2nd charge at 40 splinters)') has no ammo and must not be scheduled.",
+      "conclusion": "Q2 cannot appear anywhere in the derived cast order at splinters = 39, and in particular not at index 1."
+    },
+    "step_2_could_a_plain_second_Q_occupy_index_1_anyway": {
+      "rule": "S6 - one shared timeline; an ability recasts only after its effective cooldown has elapsed. S7 - cd' = cd*100/(100+AH).",
+      "arithmetic": [
+        "Q base cooldown = 7 s at every rank (S2).",
+        "Best case for a fast recast: R rank 3 grants Q 30 ability haste (S3), plus generous item haste. With 30 AH: 7*100/130 = 5.38 s. With an implausible 130 total AH: 7*100/230 = 3.04 s.",
+        "Every value is strictly positive and vastly larger than the length of the first cast (Q castTime 'none'), so the second cast epoch on the shared timeline cannot be a Q."
+      ],
+      "conclusion": "Without the 40-splinter charge, index 1 is necessarily a different ability. The old value Q2 is therefore wrong on two independent grounds (charge gate and cooldown gate)."
+    },
+    "step_3_what_should_occupy_index_1": {
+      "candidates_off_cooldown_at_t=0": "W (cd 12/11/10/9/8), E (cd 15, castTime 0.25), R (cd 120/100/80).",
+      "setup_consume_rule_S10b": "Q places a Dark Sphere; E is the sphere's consumer - S4: 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage'. The derived order must therefore place the sphere (Q) before the ability that converts it (E), exactly the Cassiopeia Q-before-E precedent named in S10.",
+      "against_R_at_index_1": "S4/R text: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones', with damage scaling from 3 spheres (min 240/360/480 +60% AP) to 7 (max 560/840/1120 +140% AP). Firing R before spheres accumulate strictly loses damage, so R is a finisher, not the second cast.",
+      "against_W_at_index_1": "W is a two-part cast whose damage only lands on the recast, and it removes the freshly placed sphere from the ground ('grabs the nearest Dark Sphere ... She prioritizes grabbing the nearest unit, then Dark Spheres'), stripping E of its sphere-knockback line. On raw damage at rank 5, E = 200 + 0.60*AP vs W = 190 + 0.65*AP, so E leads for AP < 200 and W's 60-splinter true-damage upgrade is inactive at 39 splinters (S5), removing W's only other edge.",
+      "conclusion": "E is the correct index-1 cast: it is off cooldown at fight start, it is the sourced consumer of the Q sphere, and no competing slot dominates it at splinters = 39."
+    },
+    "result": "cast_order[0] = Q, cast_order[1] = E. The old 'Q2' leaf asserted a Dark Sphere charge that the cached wiki text grants only at 40+ Splinters of Wrath."
+  },
+  "residual_uncertainty": [
+    "The scenario setup tuple (level, ranks, AP, fight mode, splinters value) is not in the permitted evidence tree; '39 = splinters' is inferred (see step_0).",
+    "The per-champion combo-priority table lives in src/ and was not read. The refutation of 'Q2' is airtight from the cached wiki text alone; the positive choice of 'E' over 'W' rests on the setup/consume and raw-damage arguments in step_3 and would flip only under a scenario with AP >= 200 combined with a pure-damage tiebreak that ignores the Q-sphere consume relationship."
+  ]
+}

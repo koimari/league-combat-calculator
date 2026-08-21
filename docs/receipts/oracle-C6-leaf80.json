@@ -1,0 +1,61 @@
+{
+  "receipt_id": "oracle-C6-leaf80",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[2]/resource_cost",
+  "old_value": 50.0,
+  "new_value": 100.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-leaf80",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan, and git history were never opened."
+  },
+
+  "sources": [
+    {
+      "source": "data/champions.json -> Syndra (patchLastChanged 26.12), abilities[*].cost.modifiers[0].values",
+      "quote": "Q 'Dark Sphere' cost = [40, 45, 50, 55, 60]; W 'Force of Will' cost = [60, 70, 80, 90, 100]; E 'Scatter the Weak' cost = [50, 50, 50, 50, 50]; R 'Unleashed Power' cost = [100, 100, 100]; resource = MANA for all four."
+    },
+    {
+      "source": "data/champions.json -> Syndra.stats.mana",
+      "quote": "{flat: 480, perLevel: 40}  ->  growth_stat(480, 40, 18) = 1160.0 mana at level 18 (formula from CLAUDE.md / math-foundations: base + growth*(L-1)*(0.7025 + 0.0175*(L-1)))."
+    },
+    {
+      "source": "data/worklists/f2-task.md line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R). ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "data/worklists/f2-task.md line 10",
+      "quote": "... with a documented fallback (default Q,W,E,R order) for champions with no combo signal."
+    },
+    {
+      "source": "data/champion-audit/batch-p1-3.json (Vladimir entry) - precedent that custom orders front-load R",
+      "quote": "Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E"
+    },
+    {
+      "source": "docs/math-foundations.md lines 59-67 and the Exact/Approx table row for `_schedule_shared_casts`",
+      "quote": "Ability recasts are scheduled on one shared timeline ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order. | Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast |"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json (Syndra entry) - confirms a reviewed named module exists with all five slots modeled",
+      "quote": "Syndra ... 'verdict': 'ok' ... E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_authoritative_cost_table": "From the cached wiki data (patch 26.12) Syndra's only legal per-cast mana costs are: Q in {40,45,50,55,60}, W in {60,70,80,90,100}, E = 50 at every rank, R = 100 at every rank.",
+    "step_2_structural_result": "No single Syndra ability has both 50 and 100 anywhere in its cost curve. Therefore this leaf could NOT have moved 50 -> 100 through a rank change, a scaling change, or any cost-formula change. The only way cast_timeline[2].resource_cost changes from 50 to 100 is that the ability occupying timeline slot 2 changed identity - i.e. the change is an ORDERING change, not a numeric one.",
+    "step_3_which_identities_are_possible": "50 is reachable only by E (any rank) or Q at rank 3. 100 is reachable only by R (any rank) or W at rank 5. At the level a 60 s timed fight is run (max rank W), both R and W price at exactly 100; a rank-3 Q is impossible in a maxed-out fight, so the old 50 can only be E.",
+    "step_4_default_order_test": "The engine's fallback ordering is quoted verbatim in data/worklists/f2-task.md as 'DEFAULT_CAST_ORDER (fixed Q,W,E,R)'. Index 2 (0-based, third cast) of Q,W,E,R is E, whose cost is 50 at every rank. The OLD value 50.0 is therefore exactly the value produced by ignoring the scenario's cast order and falling back to Q,W,E,R.",
+    "step_5_scenario_intent": "The scenario is named 'syndra_custom_order_60': a *custom* (non-default) cast order over a 60 s timed fight. In a timed fight every ability is off cooldown at t=0, so the first casts on the shared timeline follow the supplied order element-for-element; cast_timeline[2] is the third element of the custom order. A custom order is by definition not Q,W,E,R, so its third element being E (the default's third element) would be a coincidence, whereas R or max-rank W third - the documented house pattern is R-first orders such as Vladimir's 'R,Q,W,E' - prices at exactly 100.",
+    "step_6_affordability_check": "Syndra has 1160 mana at level 18 (480 + 40 growth), so a 100-mana third cast is affordable and cannot have been clamped or substituted for resource reasons.",
+    "conclusion": "The correct value for cast_timeline[2].resource_cost is 100.0 - Syndra's R 'Unleashed Power' (100 flat at all three ranks) or, equivalently, a rank-5 W 'Force of Will' (100). The old 50.0 is the DEFAULT_CAST_ORDER artifact (E 'Scatter the Weak', 50 flat) that appears when the scenario's custom order is not honored."
+  },
+
+  "confidence": "high-with-caveat",
+  "caveat": "The scenario's literal cast_order list lives in test/script code, which this runbook forbids reading, so the ability identity at index 2 was inferred rather than read. The inference is tight: the change is provably an ordering change (no Syndra ability holds both 50 and 100); the old value coincides exactly with the quoted DEFAULT_CAST_ORDER (Q,W,E,R) third slot; and the scenario is explicitly a custom-order scenario. A value that equals the default-order result inside a custom-order scenario is the signature of the bug such a scenario is built to catch. If the leaf were ever shown to sit on a custom order whose third element genuinely is E, the verdict would flip to old_value_correct - nothing in data/ supports that reading.",
+  "committed": false
+}

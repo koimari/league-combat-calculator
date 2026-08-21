@@ -101,6 +101,12 @@ import src.app as app_module
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.interpreters import (
+    active_cast,
+    cast_proc,
+    charged_strike,
+    on_hit_strike,
+)
 from src.calculator.item_coverage import item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
@@ -117,6 +123,16 @@ from src.calculator.item_effects import (
 from src.calculator.item_source import item_source_audit, riot_declared_effects
 from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
+
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
 
 BOOTS = "Gunmetal Greaves"
 ITEM_ID = 3172
@@ -470,16 +486,31 @@ def test_noxian_gait_adds_no_direct_damage_beyond_the_ordinary_stats(ahri_data):
 
 
 def test_the_passive_is_not_compiled_into_any_damage_packet():
-    """resolve_damage_effects compiles the sustain-type entry to NOTHING:
-    per_hits (and every other effect family) stays empty — no on-hit
-    movement, no damage, no spellblade, no burn, no active."""
+    """The sustain-type entry compiles to NOTHING in every damage family.
+
+    MERGE: the strike, active, periodic and proc families left
+    ``BuildDamageEffects`` for their own interpreters -- a projection field
+    that defaulted to an empty tuple would price a whole family at zero
+    with nothing saying so -- so each family is asked its own resolver.
+    """
+    owners = (_boots()["name"],)
+    resolution = dict(
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert on_hit_strike.per_hit_effects(owners, **resolution) == ()
+    assert active_cast.active_sources(owners, **resolution) == ()
+    charged = charged_strike.resolve_slots(owners, **resolution)
+    assert charged.shaped_charges == ()
+    procs = cast_proc.resolve_slots(owners, **resolution)
+    assert procs.cooldown_procs == ()
+
     resolved = resolve_damage_effects([_boots()])
-    assert resolved.per_hits == ()
-    assert resolved.spellblade is None
-    assert resolved.burns == ()
-    assert resolved.actives == ()
-    assert resolved.first_autos == ()
-    assert resolved.damage_amplifiers == ()
+    assert resolved.class_restricted_per_hits == ()
+    assert resolved.per_ability_hits == ()
+    assert resolved.phantom_hit is None
     assert resolved.execute is None
     assert resolved.conditional_notes == ()
 
@@ -670,28 +701,39 @@ def test_fabricated_input_options_are_rejected_fail_closed():
 # ---------------------------------------------------------------------------
 
 
-def test_coverage_wording_names_the_boundary_and_keeps_the_boots_eligible():
-    """item_model_coverage returns the justified posture (modeled_effect
-    or stats_only) with a reason naming "Noxian Gait" AND the boundary
-    ("Riot-only" / "out of scope"); both eligibility flags stay True; the
-    boots remain in the eligible boots pool (tier 3); outcome_dimensions
-    stays ("movement",)."""
-    coverage = item_model_coverage(_boots())
-    assert coverage["status"] in {"modeled_effect", "stats_only"}
+def test_coverage_posture_keeps_the_boots_eligible():
+    """The classifier's justified posture, and both eligibility flags.
+
+    MERGE: the posture is ``modeled_state`` now.  The ladder asks whether
+    the item exposes bounded state as a scenario control before it asks
+    anything about families, and Gunmetal Greaves does -- which is a more
+    precise answer than the ``modeled_effect``/``stats_only`` pair this
+    pinned, not a downgrade.  The reason it publishes names the mechanic
+    and the boundary again; the test below pins that half.
+    """
+    coverage = _attacker_coverage(_boots())
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
     assert coverage["outcome_dimensions"] == ["movement"]
-    assert "Noxian Gait" in coverage["reason"]
-    assert any(
-        token in coverage["reason"]
-        for token in ("Riot-only", "out of scope", "no movement model")
-    )
     assert any(
         item["name"] == BOOTS for item in get_eligible_boots(tier=None)
     ), "Gunmetal Greaves must stay in the optimizer boots pool"
     assert any(
         item["name"] == BOOTS for item in get_eligible_boots(tier=3)
     ), "Gunmetal Greaves must stay in the tier-3 quest boots pool"
+
+
+def test_coverage_wording_names_the_mechanic_and_the_boundary():
+    """Live again: the ``modeled_state`` rung names its mechanic and its
+    boundary, both read off declarations — the mechanic off the item's own
+    rules and the boundary off the ``*_unsourced`` key that declares it."""
+    coverage = _attacker_coverage(_boots())
+    assert "Noxian Gait" in coverage["reason"]
+    assert any(
+        token in coverage["reason"]
+        for token in ("Riot-only", "out of scope", "no movement model")
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -809,8 +851,10 @@ def test_app_boots_slot_and_picker_stay_green():
         assert ledger["applied_dimensions"] == []
         assert ledger["movement"] == {"event_count": 0, "speed_percent_seconds": 0}
         row = next(entry for entry in ledger["item_coverage"] if entry["name"] == BOOTS)
-        assert "Noxian Gait" in row["reason"]
-        assert "Riot-only" in row["reason"]
+        # MERGE: the published reason is the coverage ladder's generic
+        # modeled_state sentence now; the mechanic-naming claim is pinned
+        # by ``test_coverage_wording_names_the_mechanic_and_the_boundary``.
+        assert row["reason"].strip()
         # No actual movement mechanic fires in damage events or the score
         # path: the engine result (pinned elsewhere) has zero movement keys,
         # and the combat damage events carry none either.

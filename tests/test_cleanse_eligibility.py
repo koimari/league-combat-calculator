@@ -178,18 +178,35 @@ from typing import Any
 import pytest
 
 from src.app import app
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import delivery_eligibility as de
 from src.calculator.participant_timeline import (
     Combatant,
     _WalkCompiler,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.state_lifecycle import SourceReceipt
-from src.calculator.survival.actions import ActionKind
-from src.calculator.survival.compile import (
-    uncompilable_item_receipt,
-    unrepresentable_template_receipt,
+from src.calculator.survival.actions import (
+    ActionKind,
+    TransitionRank,
+    support_transition_rank,
 )
+from src.calculator.interpreters import uncompilable_item_receipt
+from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 try:  # P2 Slice 4 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import cleanse_eligibility as ce
@@ -338,18 +355,35 @@ def _ally(champion: str, *, items: list[str] | None = None) -> dict:
     }
 
 
-def _enemy(champion: str, *, ranks: dict | None = None) -> dict:
-    return {
+def _enemy(
+    champion: str, *, ranks: dict | None = None, options: dict | None = None
+) -> dict:
+    card = {
         "champion": champion,
         "level": 18,
         "items": [],
         "ability_ranks": ranks or {"Q": 5, "W": 5, "E": 5, "R": 0},
     }
+    if options is not None:
+        card["champion_options"] = options
+    return card
 
 
 def _lulu_qw() -> dict:
-    """Lulu: Q damage (t=0) + W polymorph (t=0.25, 2.0s) — CCs everyone."""
-    return _enemy("Lulu", ranks={"Q": 5, "W": 5, "E": 0, "R": 0})
+    """Lulu: Q damage (t=0) + W polymorph (t=0.25, 2.0s) — CCs everyone.
+
+    Whimsy has two mutually exclusive cached branches ("Self / Ally Cast"
+    grants attack speed, "Enemy Cast" polymorphs), and the module prices
+    only the one ``lulu_whimsy_target`` names — the default is the self
+    buff, which authors no control at all.  A fixture that wants the
+    polymorph has to say so, which is the point: an enemy Lulu who was
+    never told to cast W at anybody no longer polymorphs the board.
+    """
+    return _enemy(
+        "Lulu",
+        ranks={"Q": 5, "W": 5, "E": 0, "R": 0},
+        options={"lulu_whimsy_target": "enemy"},
+    )
 
 
 def _ahri_e() -> dict:
@@ -368,7 +402,7 @@ def _dummy_combatant(
     health: float = 3000.0,
 ) -> Combatant:
     """Minimal combatant for timeline rows (mirrors the pinned suite)."""
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -1538,27 +1572,48 @@ def test_r14_repeated_use_second_activation_fails_closed():
 # ---------------------------------------------------------------------------
 
 
-def test_r15_unknown_control_kind_fails_closed_no_truncation():
-    """Kernel + timeline: an unknown-kind control (e.g. 'dance') is not in
-    KNOWN_CONTROL_KINDS.  Today's walk applies its interval when no immunity
-    grant exists (CURRENT, pinned); the contract decision denies it with the
-    named unknown_control reason and truncates nothing."""
+def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
+    """Kernel + timeline: what an *unknown* control kind means here.
+
+    The merge ruling: ours keeps the closed ``ability_spec.CC_KIND_VOCABULARY``
+    and ``trigger_stream`` raises on anything outside it, because a misspelled
+    kind must never author a no-op control.  So a ``'dance'`` packet can no
+    longer reach the walk at all -- the branch main's version of this test
+    drove (apply the interval, then deny the cleanse with ``unknown_control``)
+    is unreachable *through the timeline*, and asserting it there would pin a
+    fail-open path this tree does not have.
+
+    Three halves, at the two seams that still exist:
+
+    * the timeline refuses the kind by name (ours' ruling);
+    * ``classify_control`` and the cleanse eligibility still answer
+      ``unknown`` for a kind handed straight to them -- they are pure
+      classifiers with no engine in front, and "an unknown control is not
+      cleansable and truncates nothing" is still their contract;
+    * a real non-blocking vocabulary kind (``slow``) carries the walk-level
+      half: it is authored, it adds no action downtime, and the activation
+      finds no active control to remove.
+    """
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("target", "main"),
     ]
-    incoming = {
-        "target": [_control_packet(1.0, duration=2.0, source="?", kind="dance")]
-    }
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
-    # CURRENT: the unknown-kind interval is applied by today's walk.
-    assert result["target"]["action_downtime"] == pytest.approx(2.0)
-    assert result["target"]["crowd_control_intervals"][0]["kind"] == "dance"
 
-    # NEW-CONTRACT: the decision names unknown_control and truncates nothing.
+    # 1. The closed vocabulary refuses the kind, by name, before the walk.
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        _simulate_survival(
+            combatants,
+            {"target": [_control_packet(1.0, duration=2.0, source="?", kind="dance")]},
+            {},
+            support_effects,
+            10.0,
+        )
+
+    # 2. The kernel seam still classifies an unknown kind as unknown, and an
+    #    unknown control is neither cleansable nor truncatable.
     ce = _require_contract()
     from src.calculator.crowd_control_eligibility import classify_control
 
@@ -1574,12 +1629,24 @@ def test_r15_unknown_control_kind_fails_closed_no_truncation():
     )
     assert kept == [_interval("dance", 1.0, 3.0)]
     assert removed == []
+
+    # 3. The walk-level half, on a kind the vocabulary declares: a slow is
+    #    known and non-blocking, so it authors no downtime interval and the
+    #    activation names control_not_active with nothing removed.
+    assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
+    result = _simulate_survival(
+        combatants,
+        {"target": [_control_packet(1.0, duration=2.0, source="?", kind="slow")]},
+        {},
+        support_effects,
+        10.0,
+    )
+    assert result["target"]["action_downtime"] == pytest.approx(0.0)
+    assert result["target"]["crowd_control_intervals"] == []
     receipt = result["target"]["cleanse"]
-    assert receipt["decision"]["reason"] == "unknown_control"
+    assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["removed_controls"] == []
-    assert result["target"]["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
-    # unknown_control does NOT consume a use (committed semantics).
-    assert result["target"]["cleanse_use"]["uses_after"] == 1
+    assert receipt["rejected_controls"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -1753,7 +1820,9 @@ def test_r17_same_timestamp_control_and_cleanse_total_order():
         )
     )
     assert decision.eligible is True
-    assert de.support_packet_priority("cleanse") > 0.0  # after the control phase
+    # After the control phase: a cleanse arms at the end of its
+    # timestamp, which is what UTILITY_ARM outranking DAMAGE says.
+    assert support_transition_rank({"kind": "cleanse"}) > TransitionRank.DAMAGE
 
 
 # ---------------------------------------------------------------------------
@@ -2394,15 +2463,18 @@ def test_r25_cleanse_packet_records_utility_and_truncates_nothing():
 # ---------------------------------------------------------------------------
 
 
-def test_r26_cleanse_and_movement_ride_phase_one_after_controls():
-    """Kernel, CURRENT: cleanse and movement support packets ride the
-    default arming priority (phase 1.0) — strictly after same-timestamp
-    damage/control packets (phase 0.0) — which is the total-order baseline
-    the same-timestamp row (R17) pins; the stable event key keeps the
-    deterministic identity."""
-    assert de.support_packet_priority("cleanse") == pytest.approx(1.0)
-    assert de.support_packet_priority("movement") == pytest.approx(1.0)
-    assert de.support_packet_priority("cleanse") > 0.0
+def test_r26_cleanse_and_movement_arm_after_the_controls_at_their_time():
+    """Kernel, CURRENT: cleanse and movement support packets take the
+    kind ladder's fall-through rank, ``UTILITY_ARM`` — strictly after the
+    same-timestamp damage and control packets that arm at ``DAMAGE`` —
+    which is the total-order baseline the same-timestamp row (R17) pins;
+    the stable event key keeps the deterministic identity.  Read off the
+    one rank ladder, because the parallel float table it used to read is
+    retired and a second home for one ordering is how the two drift."""
+    for kind in ("cleanse", "movement"):
+        rank = support_transition_rank({"kind": kind})
+        assert rank is TransitionRank.UTILITY_ARM
+        assert rank > TransitionRank.DAMAGE
     # The stable identity used by both the cleanse and control decisions.
     action = SimpleNamespace(time=1.5, source_key=QUICKSILVER_SOURCE, sequence=2)
     assert de.stable_event_key(action) == f"{QUICKSILVER_SOURCE}:1.5:2"

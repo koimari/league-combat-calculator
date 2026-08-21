@@ -34,7 +34,7 @@ P1 addition over the reviewed packet:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -46,10 +46,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Malphite", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — Granite Shield's 10% ratio and
 # until-broken lifetime are prose-only in the cached passive description
@@ -61,31 +57,35 @@ GRANITE_SHIELD_MAX_HP_RATIO = 0.10  # 10% of maximum health
 _DEFAULT_FIGHT_WINDOW_SECONDS = 5.0  # one-rotation fallback
 
 
-def _seismic_shard(ctx: SlotCtx) -> dict[str, Any] | None:
+def _seismic_shard(packet_q):
     """Q: the reviewed magic hit carrying Granite Shield's pre-fight shield."""
-    entry = _packet_q(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = GRANITE_SHIELD_MAX_HP_RATIO * ctx.stats.get("health", 0.0)
-    try:
-        window = float(ctx.options.get("fight_duration_seconds"))
-    except (TypeError, ValueError):
-        window = _DEFAULT_FIGHT_WINDOW_SECONDS
-    if not window or window <= 0.0:
-        window = _DEFAULT_FIGHT_WINDOW_SECONDS
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=float(window),
-        source="Granite Shield",
-        detail=(
-            f"Q carries Granite Shield's pre-fight barrier: {shield:g} "
-            f"({GRANITE_SHIELD_MAX_HP_RATIO * 100:g}% of max HP), until "
-            f"broken (modeled as the {window:g}s fight window)"
-        ),
-    )
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        shield = GRANITE_SHIELD_MAX_HP_RATIO * ctx.stat("health")
+        try:
+            window = float(ctx.options.get("fight_duration_seconds"))
+        except (TypeError, ValueError):
+            window = _DEFAULT_FIGHT_WINDOW_SECONDS
+        if not window or window <= 0.0:
+            window = _DEFAULT_FIGHT_WINDOW_SECONDS
+        entry["event_order_certified"] = "single_hit"
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=float(window),
+            source="Granite Shield",
+            detail=(
+                f"Q carries Granite Shield's pre-fight barrier: {shield:g} "
+                f"({GRANITE_SHIELD_MAX_HP_RATIO * 100:g}% of max HP), until "
+                f"broken (modeled as the {window:g}s fight window)"
+            ),
+        )
+
+    return parse
 
 
 def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -108,8 +108,8 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Increased Bonus Armor", rank, ctx.stats, ctx.target
     )
     if armor_grant > 0.0:
-        ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + armor_grant
-        ctx.stats["bonus_armor"] = ctx.stats.get("bonus_armor", 0.0) + armor_grant
+        ctx.stats["armor"] = ctx.stat("armor") + armor_grant
+        ctx.stats["bonus_armor"] = ctx.stat("bonus_armor") + armor_grant
     on_hit_bonus = extract_named(
         ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
     )
@@ -139,17 +139,46 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
 _thunderclap.phase = BUFF
 
 
-SLOTS = dict(SLOTS)
-_packet_q = SLOTS["Q"]
-_packet_r = SLOTS["R"]
-SLOTS["Q"] = _seismic_shard
-SLOTS["W"] = _thunderclap
-SLOTS["R"] = with_control(
-    _packet_r,
-    kind="airborne",
-    duration_attr="Knock Up Duration",
+def _unstoppable_force(packet_r):
+    """R: the reviewed arrival, carrying its sourced knockup interval."""
+    return with_control(packet_r, kind="knockup", duration_attr="Knock Up Duration")
+
+
+# Reviewed crowd control, read from the cached kit.  Q (Seismic Shard)
+# "deals magic damage and slows them for 3 seconds upon impact".  E
+# (Ground Slam) deals "magic damage to nearby enemies and crippl[es] them
+# for 3 seconds" — an attack-speed slow, which is neither an immobilize
+# nor a movement slow.  R (Unstoppable Force) arrives and "deals magic
+# damage to nearby enemies and knocks them up for 1.5 seconds".  P is the
+# shield row with no damage part.
+#
+# W (Thunderclap) controls nothing: it "empowers his next basic attack
+# ... to deal additional physical damage on-hit" and triggers "a cone in
+# the direction of the target that deals physical damage to enemies hit"
+# — damage clauses only, in a kit whose control all sits on Q/E/R.  Its
+# row is the two halves of that one swing, which ``single_hit`` now
+# certifies as one shared landing.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "cripple", "R": "knockup"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Malphite",
+    PACKET_SHA256,
+    # Ground Slam is one slam on the enemies around Malphite and
+    # Unstoppable Force is one arrival — one part and one hit each, which
+    # is what carries their reviewed control into the event ledger.
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "W": _thunderclap,
+    },
+    slot_wrappers={
+        "Q": _seismic_shard,
+        # R's knockup interval is read off the cached "Knock Up Duration"
+        # row rather than restated here, so the ledger gets the sourced
+        # 1.5s as target action downtime.
+        "R": _unstoppable_force,
+    },
+    cc_kinds=MODULE_CC,
 )
-parse_abilities = build_parser(SLOTS, "Malphite")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Granite Shield) is modeled as a pre-fight granted shield: 10% of "
@@ -167,6 +196,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the un-tripled value is part of that documented boundary",
     "R's sourced 1.5-second knockup counts as target action downtime",
 ]
-
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

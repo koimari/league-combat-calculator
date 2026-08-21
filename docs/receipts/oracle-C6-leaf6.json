@@ -1,0 +1,93 @@
+{
+  "receipt": "oracle-C6-leaf6",
+  "runbook": "R-18 / R-19 (independent oracle, sealed evidence tree)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[1]/name",
+  "old_value": "Force of Will",
+  "new_value": "Dark Sphere (2nd charge)",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-C6b",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/wiki-atoms/stack-transform-summon-resource.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].name",
+      "quote": "Dark Sphere"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].rechargeRate",
+      "quote": "[7, 7, 7, 7, 7]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].name",
+      "quote": "Force of Will"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities (dict key order)",
+      "quote": "['P', 'Q', 'W', 'E', 'R']  ->  ['Transcendent', 'Dark Sphere', 'Force of Will', 'Scatter the Weak', 'Unleashed Power']"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots",
+      "quote": "modeled: ['P','Q','Q2','W','E','R'] ... note: \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\""
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.notable_atoms",
+      "quote": "ammo (Q 2nd charge at 40 splinters)"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "resource atom description",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere) ..."
+    }
+  ],
+  "independent_computation": {
+    "step_1_scenario_gating": "The scenario suffix '120' is the Splinters of Wrath option value. Cached wiki text (P) caps Splinters at 120 and grants Transcendence (+15% AP) exactly there, so at 120 every Transcendent threshold is satisfied: Q's 40-splinter threshold, W's 60-splinter threshold, and P's 120-splinter capstone.",
+    "step_2_q_is_a_charged_ability_at_120": "Q's cached wiki text: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' Q also carries rechargeRate [7,7,7,7,7] (a recharge/ammo field, non-null only for Q among Syndra's five slots; W/E/R are null). Therefore at 120 splinters Syndra can cast Dark Sphere twice back-to-back off two stocked charges, and the second cast is a legitimate, distinct entry in a cast timeline.",
+    "step_3_the_module_slot_list": "The cached audit records Syndra's modeled cast slots as the ordered list ['P','Q','Q2','W','E','R'], with the explicit note that Q2 is the 'synthetic Q2 (2nd charge)' slot introduced for the 40+ splinter charge. A custom cast order for Syndra at 120 splinters therefore has Q2 available as the cast immediately following Q, i.e. at timeline index 1 (0-based) of a Q -> Q2 -> ... order.",
+    "step_4_diagnosis_of_the_old_value": "The cached source ability table has only five slots, in order ['P','Q','W','E','R'] -> ['Transcendent','Dark Sphere','Force of Will','Scatter the Weak','Unleashed Power']. The module slot list ['P','Q','Q2','W','E','R'] inserts the synthetic Q2 as its third entry. Resolving the display name of the third module slot positionally against the five-entry wiki table yields the third wiki ability, W = 'Force of Will'. The old value is exactly this off-by-one product: the Q2 slot borrowing W's name. It is not a physically different rotation, it is the synthetic charge slot mislabelled.",
+    "step_5_what_the_name_should_be": "The cast at index 1 is a second Dark Sphere fired from a stocked charge. The wiki names the ability 'Dark Sphere' and names the mechanic a 'Dark Sphere charge ... up to a maximum of 2'. The faithful label is therefore 'Dark Sphere' qualified as the second charge -> 'Dark Sphere (2nd charge)'. It cannot be 'Force of Will': W is a grab-and-throw with its own separate damage row (70/100/130/160/190 + 65% AP, plus the 60-splinter 12% + 2% per 100 AP bonus true damage), whereas Q is 90/125/160/195/230 + 70% AP magic damage. The two are different abilities with different scalings, so the label 'Force of Will' on a Dark Sphere charge cast is unambiguously wrong.",
+    "step_6_sanity_on_damage_rows": "Cross-check that the mislabelled entry was a Q and not really a W: Q wiki damage = 90/125/160/195/230 (+70% AP); W wiki recast damage = 70/100/130/160/190 (+65% AP) with, at >=60 splinters, an added 12% (+2% per 100 AP) bonus true damage component that Q has no analogue for. Q and W are also distinguished by cooldown behaviour in the cache: Q cooldown 7s flat with affectedByCdr=false and a non-null rechargeRate, W cooldown 12/11/10/9/8 with affectedByCdr=true and rechargeRate null. Only the Q family can produce two consecutive casts from stocked charges, which is precisely what a 120-splinter custom-order scenario exists to exercise."
+  },
+  "residual_uncertainty": "The scenario's literal cast-order list lives outside the sealed evidence tree (scripts/ and tests/ were deliberately not read). The conclusion rests on: (a) cached wiki text making a second stocked Dark Sphere the only charge-driven repeat cast Syndra has, (b) the cached audit recording 'Q2' as a real synthetic slot sitting between Q and W in the module's slot order, and (c) the old value 'Force of Will' being the exact string an unaware positional lookup of that Q2 slot against the five-entry wiki ability table returns. Under any custom order in which index 1 is the Q2 slot -- the only order the '120' gating makes interesting -- 'Dark Sphere (2nd charge)' is correct and 'Force of Will' is a mislabel.",
+  "date": "2026-08-09"
+}

@@ -21,15 +21,16 @@ modifier override Mounting Dread uses), over ``w_attacks`` attacks
 (Wolf attacks at 25% of Kindred's bonus attack speed; the count is the
 player-controlled option, default 3 attacks in the window).
 
-Roadmap session 4 (2026-08-20): closes both of Kindred's out_of_scope
-slots (Q, R). Both were already fully wired above (``_dance_of_arrows``
-prices real physical damage off the sourced "Physical Damage" leveling;
-``_BASE_SLOTS["R"]`` emits Lamb's Respite as an explicit no_damage row)
--- ``MODULE_COVERAGE`` was simply stale, still reading "out_of_scope" for
-slots the CP10.3 packet review had already closed, the identical
+Coverage (roadmap session 4, 2026-08-20): every stale ``out_of_scope``
+label closes, with no behavior change -- ``MODULE_COVERAGE`` was simply
+stale for slots the CP10.3 packet review had already closed, the identical
 stale-label pattern Alistar-P/Anivia-P were corrected under in the prior
-roadmap session. Reclassified Q -> modeled, R -> no_damage; no behavior
-change.
+roadmap session.  P (Mark of the Kindred) and R (Lamb's Respite) each emit
+an explicit ``no_damage`` row: P's marks are the range/attack-speed/scaling
+state the other slots already read, and R's minimum-health zone is state
+(its end heal is paid by ``derive_self_healing`` below -- the ally scanner
+pays every teammate in the zone and the caster's own copy -- not as enemy
+damage).  Q, W and E each price their own row.
 
   - Q (Dance of Arrows): the atoms capture (data/atoms/kindred.atoms.json,
     behavior KindredQ) and the cached leveling both carry a real
@@ -49,7 +50,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage, typed_damage
 from .slotlib import (
     damage_entry,
@@ -59,13 +62,17 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
     result = typed_damage(ctx, "Physical Damage", "physical")
     if result:
+        # One arrow per nearby enemy, fired at the cast: the boundary claim
+        # that carries MODULE_CC's answer for Q into the event ledger.
+        result["event_order_certified"] = "single_hit"
         result["detail"] = (
-            f"Dance of Arrows; {int(ctx.options.get('marks', 0))} Mark of "
+            f"Dance of Arrows; {int(ctx.option('marks'))} Mark of "
             "the Kindred stacks grant the sourced attack-speed state."
         )
     return result
@@ -93,7 +100,7 @@ _E_POUNCE_CRIT_EFFECTIVENESS = 0.5
 
 
 def _marks(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.options.get("marks", 0)), 0), _MARK_MAX)
+    return min(max(int(ctx.option("marks")), 0), _MARK_MAX)
 
 
 def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -122,7 +129,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("e_stacks", 3)), 1), _E_STACK_MAX)
+    stacks = min(max(int(ctx.option("e_stacks")), 1), _E_STACK_MAX)
     if stacks < _E_STACK_MAX:
         return no_damage(
             ctx,
@@ -144,7 +151,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         if "of target's missing health" not in unit:
             return None
         percent = value + 0.5 * marks
-        missing = float(ctx.target.get("target_missing_health", 0.0) or 0.0)
+        missing = float(ctx.target_stat("target_missing_health") or 0.0)
         return percent / 100.0 * missing
 
     damage = sum_modifiers(
@@ -165,6 +172,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         ),
     )
     entry["target_max_health_sensitive"] = True
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"Third-stack Wolf pounce at {stacks}/3 stacks: {damage:.2f} "
         "physical (80 : 200 by rank + 100% bonus AD + 5% (+0.5% per "
@@ -188,7 +196,7 @@ def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("W", 0)
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("w_hunters_vigor_stacks", 100)), 0), 100)
+    stacks = min(max(int(ctx.option("w_hunters_vigor_stacks")), 0), 100)
     if stacks < 100:
         return no_damage(
             ctx,
@@ -230,7 +238,7 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("w_attacks", 3)), 1), 8)
+    attacks = min(max(int(ctx.option("w_attacks")), 1), 8)
     marks = _marks(ctx)
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
@@ -241,7 +249,7 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
         if "of target's current health" not in unit:
             return None
         percent = value + 1.0 * marks
-        current = float(ctx.target.get("target_current_health", 0.0) or 0.0)
+        current = float(ctx.target_stat("target_current_health") or 0.0)
         return percent / 100.0 * current
 
     per = sum_modifiers(
@@ -275,7 +283,14 @@ SLOTS = {
     "E": _mounting_dread,
     "R": _BASE_SLOTS["R"],
 }
-parse_abilities = build_parser(SLOTS, "Kindred")
+
+# Cached kit review: E's active "slows them by 30% (+ 5% per 100 AP) for 1
+# second" on the target its pounce then damages; Q's arrows apply no
+# control, and Wolf's frenzy attacks slow only "against monsters", never
+# the champion this pair fight damages.  P, W_vigor and R deal no damage.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Kindred", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -341,18 +356,11 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Kindred")
 MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "no_damage",
+    slot: ("no_damage" if slot in {"P", "R"} else "modeled") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -388,7 +396,7 @@ def derive_self_healing(
     # (the deterministic next auto) and is naturally zero at full
     # health (the wiki says it is not triggered there).
     if "W_vigor" in ability_damages:
-        level = int(champion_stats.get("level", 18) or 18)
+        level = int(champion_stat(champion_stats, "level"))
         heal = _healing.extract_named(
             _healing._ability(champion_data, "W"), "Heal", level, champion_stats, {}
         )
@@ -408,9 +416,5 @@ def derive_self_healing(
             break
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Kindred", derive_self_healing)

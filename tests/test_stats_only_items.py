@@ -1,6 +1,6 @@
-"""Certification for the 92 SR-admitted ``stats_only`` items (roadmap-100 §1).
+"""Certification for the 90 SR-admitted ``stats_only`` items (roadmap-100 §1).
 
-``stats_only`` means ``item_coverage.item_model_coverage()`` found no
+``stats_only`` means ``item_coverage._attacker_coverage()`` found no
 outgoing-damage mechanic on the item's OWN HOLDER to model -- not that the
 cached entry is textually numberless.  51 of the 92 have no described
 passive/active at all; the other 41 have a real, numeric passive/active
@@ -34,6 +34,16 @@ from src.calculator.item_coverage import (
 from src.calculator.item_source import is_ordinary_sr_item
 from src.calculator.stats import calculate_total_stats, get_item_stats
 
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
+
 # The 91-plus SR-admitted items whose current cached data classifies as
 # stats_only.  Computed live (the same predicate the optimizer's candidate
 # pool and docs/roadmap-100.md §6.1 use) rather than hand-listed, so this
@@ -47,7 +57,7 @@ def _all_stats_only_items() -> list[dict]:
     items = fetch_item_data()
     sr_items = [item for item in items.values() if is_ordinary_sr_item(item)]
     return [
-        item for item in sr_items if item_model_coverage(item)["status"] == "stats_only"
+        item for item in sr_items if _attacker_coverage(item)["status"] == "stats_only"
     ]
 
 
@@ -62,13 +72,19 @@ _ITEMS_BY_NAME = {str(item["name"]): item for item in _CERTIFIED_ITEMS}
 
 
 def test_certified_count_matches_roadmap_100():
-    """docs/roadmap-100.md §1.1 pins 92 stats_only items out of 209 SR-admitted.
+    """The SR-admitted ``stats_only`` population, re-pinned from the
+    declaration-driven classifier.
 
-    A count drift here means the roadmap table and this suite's coverage
-    have gone out of sync and must be refreshed together, not silently
-    tolerated.
+    90, not the roadmap's 92.  Six items left the population because they
+    declare something the engines run — Diadem of Songs, Dream Maker, Echoes
+    of Helia, Moonstone Renewer and Solstice Sleigh declare ally_packet
+    mechanics the support ledger schedules, and Spirit Visage declares a
+    sustain multiplier — and four joined it because their declared families
+    are all defences: Bramble Vest and Thornmail (reactive), Force of Nature
+    and Jak'Sho (combat_state).  A count drift from here means the classifier
+    moved again and must be re-read, not silently tolerated.
     """
-    assert len(_CERTIFIED_ITEMS) == 92
+    assert len(_CERTIFIED_ITEMS) == 90
 
 
 def test_certified_names_have_no_duplicates():
@@ -77,7 +93,7 @@ def test_certified_names_have_no_duplicates():
 
 @pytest.mark.parametrize("item_name", _CERTIFIED_NAMES)
 def test_certified_item_is_stats_only_and_eligible(item_name):
-    coverage = item_model_coverage(_ITEMS_BY_NAME[item_name])
+    coverage = _attacker_coverage(_ITEMS_BY_NAME[item_name])
 
     assert coverage["status"] == "stats_only"
     assert coverage["optimizer_eligible"] is True

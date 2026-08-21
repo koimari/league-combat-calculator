@@ -2,88 +2,49 @@
 
 Twilight Assault is not cast damage: it modifies up to three subsequent
 basic attacks with level-, rank-, AP-, and target-max-health-scaled magic
-damage. The module therefore emits the bonus as a three-hit typed part and
-declares the consumed basic attacks through ``empowers_next_auto``. In a
-one-rotation calculation, those attacks are forced and timestamped exactly.
-When a timed ambient auto stream is present, the damage remains included but
-the result is explicitly partial until the shared auto schedule can couple the
-same physical and magic instances.
+damage. The module emits the bonus as a three-hit typed part carrying the
+authored swing schedule (the selected first-attack delay, then the
+enhanced-attack-speed cadence), and declares the consumed basic attacks
+through ``empowers_next_auto``. In a one-rotation calculation those attacks
+are forced on the same schedule and the row's ledger sums exactly. In a
+timed fight the engine caps Q casts at the ambient swings that consume them
+and shows those swings on the Q row at the auto row's per-hit value; the
+authored events remain the magic bonus hits, so the row certifies by its
+cast schedule while the ledger prices each bonus instance at its swing.
 
 Shadow Dash is authored at the selected travel distance. Its cooldown begins
 after the dash, so travel time is added to the data's post-effect cooldown.
+It also carries P (Ki Barrier), which fires "after completing an ability's
+effects": the sourced self-shield (``data/champions.json`` Shen P "Shield"
+leveling row — a per-LEVEL flat base, 47 : 128.59, plus a flat 13% bonus
+health modifier that is the same at every level) rides the E cast as a
+``self_shield_events`` payload, because a shield-only slot has no channel of
+its own and a passive is never cast.  The cached notes name Shadow Dash's own
+dash-end as one of Ki Barrier's triggers ("Shadow Dash will grant the shield
+when the dash ends") and this module's certified order is E before Q, so E is
+the first ability to complete in a one-rotation fight.  Ki Barrier's 11-second
+flat cooldown — its own cached row, not affected by ability haste — is longer
+than any one-rotation fight, so Q's own later completion (also a named
+trigger) is not double-counted.
 
-Roadmap session (2026-08-20): closes 2 of Shen's 3 out_of_scope slots (P, W);
-R stays open with a named receipt.
+R (Stand United) is a zero-damage cast so the ally-support scanner prices
+the sourced ally shield at its floor (the cached "Minimum Shield Strength"
+row, 120/220/320 + 135% AP + 15% of his bonus health, which
+``support_effects._SHIELD_ATTRIBUTES`` reads floor-before-ceiling); the
+"increased by 0% : 60% (based on target's missing health)" that separates it
+from the "Maximum Shield Strength" row (uniformly 1.6x the minimum at every
+rank) is a live-health condition the scan cannot establish, and the 3-second
+channel's teleport has no numeric representation in this engine at all.
 
-  - P (Ki Barrier): sourced self-shield (``data/champions.json`` Shen P
-    "Shield" leveling row: 47 : 128.59 based on LEVEL, flat, + 13% bonus
-    health) granted "after completing an ability's effects", on an 11s flat
-    cooldown NOT affected by ability haste (P's own cached cooldown row).
-    Ki Barrier has no cast of its own — it rides whichever ability
-    completes — so it cannot carry ``self_shield_events`` on a standalone
-    "P" entry: that payload requires a host with its own nonzero damage
-    events (``attach_self_shield``'s own contract; Ki Barrier deals none).
-    The cached notes name Shadow Dash's own dash-end as one of Ki Barrier's
-    triggers ("Shadow Dash will grant the shield when the dash ends"), and
-    this module's certified order is E before Q ("The standard damage order
-    is E, then Q empowered attacks"), so E is the FIRST ability to complete
-    in a one-rotation fight — the shield is attached there. Ki Barrier's
-    11-second flat cooldown is far longer than any one-rotation fight's
-    total elapsed time, so at most one grant is possible regardless of how
-    many abilities complete afterward; Q's own later completion (also a
-    named trigger) is accordingly not double-counted. Reclassified from
-    out_of_scope to modeled.
-  - W (Spirit's Refuge): the cached ability carries `"leveling": []` for
-    its only effect row (``data/champions.json`` Shen W) — no damage, heal,
-    or shield numeric attribute of any kind; only its cost and cooldown
-    scale by rank. The ability is a pure attack-block ZONE: "blocking all
-    non-turret basic attacks that hit Shen or allied champions in the
-    area" for 1.75s. This engine does carry a modeled "blocks basic
-    attacks" defense convention (``interaction_effects.py``'s
-    ``ProjectileDefense.blocks_basic_attacks``, used by Jax's Counter
-    Strike and Fiora's Riposte) — so the underlying mechanic is not an
-    unbuilt kernel — but that convention lives entirely on the DEFENDER
-    side of a champion-vs-champion interaction (applied when the shielded
-    champion is the one being attacked), not in a named champion's own
-    outgoing SLOTS map, and wiring Shen into it means editing
-    ``interaction_effects.py``, a file this session's scope is Shen-only
-    and does not include. Reclassified from out_of_scope to no_damage (an
-    atoms-confirmed zero-HP-number effect), not left silently absent.
-  - R (Stand United): stays out_of_scope. The shield IS sourced
-    (``data/champions.json`` Shen R "Minimum Shield Strength" 120/220/320
-    + 135% AP + 15% of Shen's bonus health; "Maximum Shield Strength"
-    192/352/512 + 216% AP + 24% of Shen's bonus health; description:
-    "increased by 0% : 60% (based on target's missing health)" — Maximum
-    is uniformly 1.6x Minimum at every rank, matching a linear ramp from
-    the Minimum endpoint at 0% missing health to the Maximum endpoint at
-    100%). Every number needed is cached, but wiring it is structurally
-    blocked on three independent points, each named so a later session
-    with a wider file scope can close it without re-deriving the audit:
-    (1) It shields an ALLY, not Shen, so it does not fit
-    ``attach_self_shield``'s self-shield contract, and Stand United has no
-    outgoing damage of its own to host the payload on regardless (it is a
-    channel + teleport, zero cast damage) — the module-authored-shield
-    path used for P is unavailable here for the opposite reason.
-    (2) The generic ally-support scanner (``support_effects.py``) only
-    recognizes the attribute names "Shield Strength" / "Shield" / "Magic
-    Shield Strength" (``_SUPPORT_ATTRIBUTES``); Stand United's "Minimum
-    Shield Strength" / "Maximum Shield Strength" pair is not in that set,
-    and the scanner's two typed formula helpers
-    (``_target_max_health_shield_metadata``,
-    ``_target_missing_health_heal_metadata``) each resolve ONE ratio
-    against ONE health term — neither performs the two-endpoint linear
-    interpolation Stand United's shield needs. Both are new scanner
-    capability, not a one-line ``_CHAMPION_SHIELD_ATTR`` override, and
-    ``support_effects.py`` is outside this session's Shen-only scope.
-    (3) Even the source ratio's own unit string is a live blocker,
-    verified directly: ``resolve_scaling("% of his bonus health", 15.0,
-    {"bonus_health": 1000.0}, {})`` returns ``0.0`` — the phrasing "% of
-    his bonus health" (not the "% bonus health" string P's row uses) is
-    unmapped in ``scaling.py``'s unit table and silently resolves to zero
-    rather than raising, so any shortcut reuse of the existing scaling
-    helper would silently drop the bonus-health term. Stand United's
-    teleport has no numeric representation in this engine at all (it is a
-    position change, not a combat number) and is not priced by any slot.
+W (Spirit's Refuge) is a pure attack-block zone: the cached ability carries
+``"leveling": []`` for its only effect row (``data/champions.json`` Shen W) —
+no damage, heal or shield numeric attribute of any kind, only a rank-scaled
+cost and cooldown — so the slot emits an explicit ``no_damage`` state row
+rather than staying silently absent.  The engine does carry an attack-block
+convention (``interaction_effects.ProjectileDefense.blocks_basic_attacks``,
+used by Jax's Counter Strike and Fiora's Riposte), but it lives entirely on
+the DEFENDER side of a champion-vs-champion interaction, not in a champion's
+own outgoing ``SLOTS`` map.
 """
 
 from dataclasses import replace
@@ -99,11 +60,16 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     find_named_leveling,
+    support_cast,
 )
+from .source_receipts import load_champion_sources
 
 _Q_ATTACKS = 3
 _Q_ENHANCED_BONUS_ATTACK_SPEED = 50.0
 _E_BASE_SPEED = 800.0
+# HARDCODED: verify on patch updates — Ki Barrier's duration is prose
+# ("grants himself a shield for 47 : 128.59 (based on level) (+ 13% bonus
+# health) for 2.5 seconds"); the amount itself is the cached P "Shield" row.
 _P_SHIELD_DURATION_SECONDS = 2.5
 
 
@@ -203,7 +169,7 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
     enhanced = bool(ctx.options.get("q_spirit_blade_hit", True))
     attribute = "Increased Bonus Damage" if enhanced else "Bonus Magic Damage"
     per_hit = _named_level_rank_damage(ctx, ability, attribute, rank)
-    baseline_target_health = float(ctx.target.get("target_max_health", 0.0))
+    baseline_target_health = float(ctx.target_stat("target_max_health"))
     if baseline_target_health > 0.0:
         flat_ctx = replace(
             ctx,
@@ -236,18 +202,7 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
         per_hit * hits,
         "magic",
     )
-    entry["parts"] = (
-        (
-            DamagePart(
-                "magic",
-                per_hit,
-                count=hits,
-                hp_scaled_damage=target_health_damage,
-            ),
-        )
-        if hits
-        else ()
-    )
+    entry["parts"] = ()
     entry["target_max_health_sensitive"] = True
     entry["resource_restore"] = _energy_restore(ctx.level) * hits
     entry["detail"] = (
@@ -255,13 +210,29 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
         f"{'' if hits == 1 else 's'}"
     )
     if hits:
-        attack_speed = ctx.stats.get("attack_speed", 0.0)
+        attack_speed = ctx.stat("attack_speed")
         if enhanced:
-            attack_speed += ctx.stats.get("attack_speed_ratio", 0.0) * (
+            attack_speed += ctx.stat("attack_speed_ratio") * (
                 _Q_ENHANCED_BONUS_ATTACK_SPEED / 100.0
             )
-        first_delay = float(ctx.options.get("q_first_attack_delay", 0.5))
+        first_delay = float(ctx.option("q_first_attack_delay"))
         interval = 1.0 / attack_speed if attack_speed > 0 else 0.0
+        # The bonus part carries the authored swing schedule, so every
+        # bonus instance prices an exact event at its consuming swing
+        # (first hit after the selected delay, then the enhanced cadence)
+        # instead of an uncertified cast-boundary lump.  The engine caps
+        # timed casts at the ambient swings that consume them and forces
+        # the swings itself when no stream exists.
+        entry["parts"] = (
+            DamagePart(
+                "magic",
+                per_hit,
+                count=hits,
+                hp_scaled_damage=target_health_damage,
+                time_offset=first_delay,
+                hit_interval=interval if hits > 1 else None,
+            ),
+        )
         entry["empowers_next_auto"] = {
             "hits": hits,
             "authored_timing": {
@@ -269,7 +240,6 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
                 "attack_interval": interval,
             },
         }
-        entry["requires_auto_timeline_coupling"] = True
     return entry
 
 
@@ -293,8 +263,8 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    distance = min(600.0, max(300.0, float(ctx.options.get("e_dash_distance", 600))))
-    speed = _E_BASE_SPEED + ctx.stats.get("move_speed", 0.0)
+    distance = min(600.0, max(300.0, float(ctx.option("e_dash_distance"))))
+    speed = _E_BASE_SPEED + ctx.stat("move_speed")
     travel = distance / speed if speed > 0 else 0.0
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -306,6 +276,11 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", total, time_offset=travel),)
     entry["resource_restore"] = _energy_restore(ctx.level)
+    entry["detail"] = f"champion hit after {travel:.2f}s dash"
+    # Ki Barrier fires "after completing an ability's effects", and E is the
+    # module's first cast (CAST_ORDER), so the sourced self-shield rides it.
+    # A shield-only slot has no channel of its own — ``attach_self_shield``
+    # needs a damage event to ride (slotlib) and a passive is never cast.
     shield = _ki_barrier_shield_amount(ctx)
     return attach_self_shield(
         entry,
@@ -313,10 +288,10 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
         duration=_P_SHIELD_DURATION_SECONDS,
         source="Ki Barrier",
         detail=(
-            f"champion hit after {travel:.2f}s dash; Ki Barrier (P) also "
-            f"shields Shen for {shield:g} for {_P_SHIELD_DURATION_SECONDS:g}s "
-            "once the dash ends (sourced per-level base + 13% bonus health; "
-            "11s flat cooldown caps this at one grant per one-rotation fight)"
+            f"{entry['detail']}; Ki Barrier (P) also shields Shen for "
+            f"{shield:g} for {_P_SHIELD_DURATION_SECONDS:g}s once the dash "
+            "ends (sourced per-level base + 13% bonus health; the 11s flat "
+            "cooldown caps this at one grant per one-rotation fight)"
         ),
     )
 
@@ -345,8 +320,8 @@ def _spirits_refuge(ctx: SlotCtx) -> dict[str, Any] | None:
             "defense convention (interaction_effects.py's "
             "ProjectileDefense.blocks_basic_attacks, used by Jax's Counter "
             "Strike and Fiora's Riposte) lives on the defender side of a "
-            "champion-vs-champion interaction, outside this Shen-only "
-            "session's file scope, so the zone is priced as an explicit "
+            "champion-vs-champion interaction, not in a champion's own "
+            "outgoing SLOTS map, so the zone is priced as an explicit "
             "zero-HP-number state rather than left silently absent."
         ),
     )
@@ -393,68 +368,65 @@ ASSUMPTIONS = [
     "Q uses its sourced 50% bonus attack speed for spacing.",
     "Each landed Q attack and E champion hit restores the sourced level-based "
     "energy amount.",
-    "Timed fights with ambient autos include Q damage but remain partial until "
-    "the physical and magic instances share one coupled auto timeline.",
-    "Ki Barrier (P) has no cast of its own; its sourced self-shield (per-level "
-    "base + 13% bonus health) is attached to Shadow Dash (E), the first "
-    "ability to complete in the certified E-then-Q order, since its 11s flat "
-    "cooldown allows only one grant per one-rotation fight.",
-    "Spirit's Refuge (W) is a pure attack-block zone with no damage, heal, or "
+    "Timed fights cap Q casts at the ambient swings that consume them; each "
+    "bonus instance is an authored event on the module's swing schedule "
+    "(selected first-attack delay, then the enhanced cadence), and the "
+    "consumed swings themselves are shown on the Q row at the auto stream's "
+    "per-hit damage.",
+    "Ki Barrier (P) has no cast of its own; its sourced self-shield "
+    "(per-level base + 13% bonus health) is attached to Shadow Dash (E), the "
+    "first ability to complete in the certified E-then-Q order, since its 11s "
+    "flat cooldown allows only one grant per one-rotation fight.",
+    "Spirit's Refuge (W) is a pure attack-block zone with no damage, heal or "
     "shield attribute in the cached data; it emits an explicit zero-damage "
-    "state row (no_damage) rather than staying silently absent.",
-    "Stand United (R)'s ally shield is sourced (Minimum/Maximum Shield "
-    "Strength, base + AP + bonus health, ramped by the target's missing "
-    "health) but is not yet wired: it shields an ally rather than Shen, the "
-    "generic ally-support scanner does not recognize its attribute names or "
-    "two-endpoint ramp, and its bonus-health unit string is unmapped in "
-    "scaling.py — so it stays out_of_scope.",
+    "state row rather than staying silently absent, because the engine's "
+    "attack-block convention lives on the defender side of an interaction.",
+    "Stand United (R) deals no damage; the ally-support scanner prices its "
+    "sourced shield floor (Minimum Shield Strength + 135% AP + 15% of his "
+    "bonus health).  The 0-60% missing-health ramp to the Maximum row is a "
+    "live-health condition the scan cannot establish, and the 3-second "
+    "channel's teleport is not modeled.",
 ]
 
-SOURCES = [
-    {
-        "label": "Shen — Ki Barrier",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Ki_Barrier",
-        "revision_id": 3985839,
-        "revision_timestamp": "2026-01-21T19:55:43Z",
-    },
-    {
-        "label": "Shen — Twilight Assault",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Twilight_Assault",
-        "revision_id": 4008038,
-        "revision_timestamp": "2026-04-13T04:23:20Z",
-    },
-    {
-        "label": "Shen — Spirit's Refuge",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Spirit's_Refuge",
-        "revision_id": 3977238,
-        "revision_timestamp": "2025-12-18T16:34:14Z",
-    },
-    {
-        "label": "Shen — Shadow Dash",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Shadow_Dash",
-        "revision_id": 4007754,
-        "revision_timestamp": "2026-04-12T14:09:29Z",
-    },
-    {
-        "label": "Shen — Stand United",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Stand_United",
-        "revision_id": 4004939,
-        "revision_timestamp": "2026-04-02T19:26:56Z",
-    },
-]
+SOURCES = load_champion_sources("Shen")
 
-CAST_ORDER = ["E", "Q"]
-SLOTS = {"E": _shadow_dash, "Q": _twilight_assault, "W": _spirits_refuge}
-
-parse_abilities = build_parser(SLOTS, "Shen")
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "out_of_scope",
+CAST_ORDER = ["E", "Q", "R"]
+SLOTS = {
+    "E": _shadow_dash,
+    "Q": _twilight_assault,
+    "W": _spirits_refuge,
+    # Stand United shields the target ally ("granting the target allied
+    # champion a shield for 5 seconds at the time of cast").  The slot
+    # exists so the rotation casts it and the support scanner can price the
+    # shield; the sourced floor ("Minimum Shield Strength" 120/220/320 +
+    # 135% AP + 15% of his bonus health) is what is priced, because the
+    # "increased by 0% : 60% (based on target's missing health)" that
+    # separates it from the maximum is a live-health condition.
+    "R": support_cast(
+        default_name="Stand United",
+        detail="Ally shield (sourced by the support scanner) at its "
+        "sourced floor; the 0-60% missing-health increase and the "
+        "3-second channel's teleport are not modeled.",
+    ),
 }
-REVIEW_STATUS = "reviewed_module"
+
+# Reviewed crowd control, read from the cached kit.  Q (Twilight Assault):
+# "Enemy champions hit by the Spirit Blade along its path are slowed for
+# the next 2 seconds while moving away from Shen" — the blade recall
+# applies the slow, and the empowered attacks this row prices land on that
+# same target.  E (Shadow Dash): "dealing physical damage to enemy
+# champions and monsters he passes through and taunting them for 1.5
+# seconds".  Both rows already carry their authored swing/dash timing, so
+# the declaration rides an event the ledger can see.
+MODULE_CC = {"E": "taunt", "Q": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
+
+# P emits no cast row of its own; the Ki Barrier shield E carries is what
+# the engine prices.  W emits an explicit zero-damage state row: its cached
+# entry carries no HP number at all, and the attack block it does apply lives
+# on the defender side of an interaction, not in this outgoing slot map.
+MODULE_COVERAGE = {
+    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
+}
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

@@ -2,21 +2,18 @@
 
 import json
 import os
-import time
 from pathlib import Path
 
 import pytest
 
 from src.calculator.data_fetcher import (
-    _is_cache_valid,
-    _write_cache,
     _read_cache,
     _validate_champion_data,
     _validate_item_data,
     fetch_champion_data,
     fetch_item_data,
-    CACHE_MAX_AGE_SECONDS,
 )
+from src.calculator.data_registry import write_runtime_cache
 
 SAMPLE_CHAMPION_DATA = {
     "Aatrox": {
@@ -49,59 +46,8 @@ SAMPLE_ITEM_DATA = {
 }
 
 
-class TestCacheValidity:
-    """Tests for cache validity checking."""
-
-    def test_cache_invalid_when_no_files_exist(self, tmp_path: Path) -> None:
-        assert _is_cache_valid(tmp_path, "champions.json") is False
-
-    def test_cache_invalid_when_only_data_exists(self, tmp_path: Path) -> None:
-        (tmp_path / "champions.json").write_text("{}")
-        assert _is_cache_valid(tmp_path, "champions.json") is False
-
-    def test_cache_invalid_when_only_meta_exists(self, tmp_path: Path) -> None:
-        meta = {"fetched_at": time.time()}
-        (tmp_path / ".champions.json.meta").write_text(json.dumps(meta))
-        assert _is_cache_valid(tmp_path, "champions.json") is False
-
-    def test_cache_valid_when_fresh(self, tmp_path: Path) -> None:
-        _write_cache(tmp_path, "champions.json", {"test": "data"})
-        assert _is_cache_valid(tmp_path, "champions.json") is True
-
-    def test_cache_invalid_when_stale(self, tmp_path: Path) -> None:
-        _write_cache(tmp_path, "champions.json", {"test": "data"})
-        # Overwrite meta with old timestamp
-        meta = {"fetched_at": time.time() - CACHE_MAX_AGE_SECONDS - 1}
-        (tmp_path / ".champions.json.meta").write_text(json.dumps(meta))
-        assert _is_cache_valid(tmp_path, "champions.json") is False
-
-    def test_cache_invalid_when_meta_corrupted(self, tmp_path: Path) -> None:
-        (tmp_path / "champions.json").write_text("{}")
-        (tmp_path / ".champions.json.meta").write_text("not json")
-        assert _is_cache_valid(tmp_path, "champions.json") is False
-
-
 class TestCacheReadWrite:
     """Tests for reading and writing cache files."""
-
-    def test_write_and_read_roundtrip(self, tmp_path: Path) -> None:
-        data = {"key": "value", "nested": {"a": 1}}
-        _write_cache(tmp_path, "test.json", data)
-        result = _read_cache(tmp_path, "test.json")
-        assert result == data
-
-    def test_write_creates_directory(self, tmp_path: Path) -> None:
-        nested_dir = tmp_path / "a" / "b" / "c"
-        _write_cache(nested_dir, "test.json", {"key": "value"})
-        assert (nested_dir / "test.json").exists()
-
-    def test_write_creates_metadata(self, tmp_path: Path) -> None:
-        _write_cache(tmp_path, "test.json", {"key": "value"})
-        meta_path = tmp_path / ".test.json.meta"
-        assert meta_path.exists()
-        meta = json.loads(meta_path.read_text())
-        assert "fetched_at" in meta
-        assert meta["filename"] == "test.json"
 
     def test_read_reuses_parsed_json_until_file_changes(self, tmp_path: Path) -> None:
         """Repeated reads share one parse for the same path and mtime."""
@@ -183,7 +129,7 @@ class TestFetchChampionData:
     """Tests for the champion data fetch function (cache-only)."""
 
     def test_returns_cached_data(self, tmp_path: Path) -> None:
-        _write_cache(tmp_path, "champions.json", SAMPLE_CHAMPION_DATA)
+        write_runtime_cache(tmp_path, "champions.json", SAMPLE_CHAMPION_DATA)
         result = fetch_champion_data(data_directory=tmp_path)
         assert result == SAMPLE_CHAMPION_DATA
 
@@ -191,31 +137,15 @@ class TestFetchChampionData:
         with pytest.raises(FileNotFoundError, match="No champion data found"):
             fetch_champion_data(data_directory=tmp_path)
 
-    def test_returns_stale_cache(self, tmp_path: Path) -> None:
-        """Stale cache is still returned — staleness is informational only."""
-        _write_cache(tmp_path, "champions.json", SAMPLE_CHAMPION_DATA)
-        meta = {"fetched_at": time.time() - CACHE_MAX_AGE_SECONDS - 1}
-        (tmp_path / ".champions.json.meta").write_text(json.dumps(meta))
-        result = fetch_champion_data(data_directory=tmp_path)
-        assert result == SAMPLE_CHAMPION_DATA
-
 
 class TestFetchItemData:
     """Tests for the item data fetch function (cache-only)."""
 
     def test_returns_cached_data(self, tmp_path: Path) -> None:
-        _write_cache(tmp_path, "items.json", SAMPLE_ITEM_DATA)
+        write_runtime_cache(tmp_path, "items.json", SAMPLE_ITEM_DATA)
         result = fetch_item_data(data_directory=tmp_path)
         assert result == SAMPLE_ITEM_DATA
 
     def test_raises_when_no_cache_exists(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="No item data found"):
             fetch_item_data(data_directory=tmp_path)
-
-    def test_returns_stale_cache(self, tmp_path: Path) -> None:
-        """Stale cache is still returned — staleness is informational only."""
-        _write_cache(tmp_path, "items.json", SAMPLE_ITEM_DATA)
-        meta = {"fetched_at": time.time() - CACHE_MAX_AGE_SECONDS - 1}
-        (tmp_path / ".items.json.meta").write_text(json.dumps(meta))
-        result = fetch_item_data(data_directory=tmp_path)
-        assert result == SAMPLE_ITEM_DATA

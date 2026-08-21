@@ -116,10 +116,15 @@ class TestChampionOptionsMetaMap:
         assert "Kog'Maw" in meta_map
 
     def test_includes_assumptions_only_champions(self) -> None:
-        """Alistar has no knobs but does have assumptions to display."""
+        """A champion with no knobs still has assumptions to display.
+
+        Named by the property rather than by one champion: a module that
+        gains its first option should not turn this test red.
+        """
         meta_map = champion_options_meta_map()
-        assert meta_map["Alistar"]["options"] == []
-        assert len(meta_map["Alistar"]["assumptions"]) > 0
+        knobless = [name for name, meta in meta_map.items() if not meta["options"]]
+        assert knobless
+        assert all(meta_map[name]["assumptions"] for name in knobless)
 
     def test_includes_revision_backed_champions(self) -> None:
         meta_map = champion_options_meta_map()
@@ -167,6 +172,7 @@ class TestOptionsDeclarationValidity:
                     source,
                 )
                 assert isinstance(source["revision_id"], int), (name, source)
+                assert source["revision_id"] > 0, (name, source)
 
     def test_all_registered_modules_expose_manifest_or_inline_receipts(self) -> None:
         """The full registry has no provenance-empty champion metadata."""
@@ -194,11 +200,20 @@ class TestOptionsDeclarationValidity:
         or archetype params (``by_option(key, ...)``,
         ``count_option=key``), so a
         declared key that never appears in the module source is a stale
-        declaration or a rename that missed the parse path.
+        declaration or a rename that missed the parse path.  The one generic
+        consumer is ``packet_module.select_variant``: it both declares a
+        ``<slot>_variant`` option (labelled ``"<SLOT> packet variant"``) and
+        reads it, so those keys need no literal in the champion module.
         """
         for name in _CHAMPION_MODULES:
             source = inspect.getsource(_module(name))
             for opt in get_champion_options_meta(name)["options"]:
+                key = opt["key"]
+                if (
+                    key == f"{key[0]}_variant"
+                    and opt["label"] == f"{key[0].upper()} packet variant"
+                ):
+                    continue
                 assert f'"{opt["key"]}"' in source, (
                     f"{name}: OPTIONS key {opt['key']!r} is not referenced "
                     f"anywhere in its module — stale declaration or rename?"

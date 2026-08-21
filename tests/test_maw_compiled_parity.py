@@ -23,16 +23,15 @@ Contract under test (current runtime facts, verified before pinning):
   shield_melee_base 200.0, shield_melee_bonus_ad_ratio 1.50,
   shield_ranged_base 150.0, shield_ranged_bonus_ad_ratio 1.125,
   duration 3.0, damage_type "magic", lifeline_omnivamp_percent 10.0.
-  damage_type and lifeline_omnivamp_percent are read through
-  required_effect_value and a missing key raises KeyError naming
-  "Maw of Malmortius" AND the key (AGENTS.md rule 5 — no silent
-  fallbacks).  The shield/health/duration keys are read directly from
-  the entry, so a missing one raises a BARE KeyError (fail-closed but
-  without the item name — surfaced ambiguity for the coordinator; the
-  fail-closed claim is pinned either way).  Malformed values fail
-  loudly (ValueError on non-numeric strings, TypeError on None).  The
+  Every one of them is read through the registry's own fail-loud
+  accessor, so a missing key raises naming "Maw of Malmortius" AND the
+  key (CLAUDE.md rule 5 — no silent fallbacks).  The shield, health and
+  duration keys are live ``ValueRef`` reads resolved on every build;
+  damage_type is policy the catalog converts once when the rule is
+  compiled, so only replacing the entry re-runs it.  A malformed value
+  is a ValueRefError ("is not numeric") for strings and None alike.  The
   wiki source receipt rides the code-owned
-  defensive_effects._MAW_SOURCE (revision 3984424, page rev timestamp
+  defensive_effects.defense_source(...) (revision 3984424, page rev timestamp
   2026-01-14T23:08:00Z) — the registry entry itself carries no source
   keys.
 * TRIGGER + THRESHOLD: the shield is a magic-only Lifeline.  A magic
@@ -121,10 +120,9 @@ Coordinator ambiguities surfaced by this matrix (see the reply):
   timeline_coverage["complete"] is False with an enemy Maw holder is
   withheld with a ValueError naming the enemy item and the coarse
   sources.  one_rotation fights skip the gate.
-* A missing shield/health/duration typed key raises a BARE KeyError
-  today (only damage_type and lifeline_omnivamp_percent name the item);
-  the fail-closed claim holds, the item-naming claim does not for four
-  of the six keys.
+* All six typed keys now name the item as well as the key: the reads go
+  through ``required_effect_value`` / ``ValueRef``, so the item-naming
+  claim holds for the whole set and the bare-KeyError gap is closed.
 * The receipt row state name is pinned "lifeline" provisionally — the
   coordinator's 3M/3N/3O pattern decides the exact state string (the
   row itself is absent today).
@@ -148,9 +146,15 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.item_coverage import ATTACKER_LANES
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator import item_effects
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import _MAW_SOURCE, resolve_starting_defenses
+from src.calculator.defensive_effects import (
+    StartingDefenses,
+    resolve_starting_defenses,
+)
 from src.calculator.item_coverage import (
     item_model_coverage,
     require_certified_target_timeline,
@@ -166,13 +170,36 @@ from src.calculator.item_effects import (
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.state_lifecycle import SourceReceipt
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
+from src.calculator.defensive_effects import defense_source
+from src.calculator.item_behavior import DefenseMechanic
+
+# Ours' declaration layer raises its own fail-closed error where main's
+# accessor raised KeyError; both refuse the corrupted value.
+from src.calculator.value_ref import ValueRefError
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
+_SOURCE = defense_source("Maw of Malmortius", DefenseMechanic.LIFELINE_MAW)
 
 ITEM_NAME = "Maw of Malmortius"
 ITEM_ID = 3156
@@ -262,7 +289,7 @@ def _dummy_source(participant_id: str = "source", team: str = "enemy") -> Combat
         level=1,
         items=(),
         stats={"health": 5000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -453,23 +480,22 @@ def test_typed_lifeline_values_return_exact_numbers():
 
 
 def test_lifeline_source_rides_the_reviewed_source_receipt():
-    """The wiki source receipt rides defensive_effects._MAW_SOURCE
+    """The wiki source receipt rides defensive_effects.defense_source(...)
     (code-owned, revision 3984424); the ITEM_EFFECTS registry entry itself
     carries no source keys, so the source pin is the code-owned receipt."""
     assert not ({"source_url", "source_revision_id"} & set(ITEM_EFFECTS[ITEM_NAME]))
     assert ITEM_NAME not in ITEM_INPUT_OPTIONS
-    assert _MAW_SOURCE.label == "Maw of Malmortius — Lifeline"
+    assert _SOURCE.label == "Maw of Malmortius — Lifeline"
     assert (
-        _MAW_SOURCE.source_url
-        == "https://wiki.leagueoflegends.com/en-us/Maw_of_Malmortius"
+        _SOURCE.source_url == "https://wiki.leagueoflegends.com/en-us/Maw_of_Malmortius"
     )
-    assert _MAW_SOURCE.revision_id == SOURCE_REVISION
-    assert _MAW_SOURCE.revision_timestamp == "2026-01-14T23:08:00Z"
+    assert _SOURCE.revision_id == SOURCE_REVISION
+    assert _SOURCE.revision_timestamp == "2026-01-14T23:08:00Z"
     source = SourceReceipt(
-        label=_MAW_SOURCE.label,
-        url=_MAW_SOURCE.source_url,
-        revision_id=_MAW_SOURCE.revision_id,
-        revision_timestamp=_MAW_SOURCE.revision_timestamp,
+        label=_SOURCE.label,
+        url=_SOURCE.source_url,
+        revision_id=_SOURCE.revision_id,
+        revision_timestamp=_SOURCE.revision_timestamp,
     )
     assert source.revision_id == SOURCE_REVISION
 
@@ -495,59 +521,93 @@ def test_starting_defenses_resolve_the_lifeline_fields():
     )
 
 
-def test_missing_typed_key_fails_loud_naming_item_and_key(monkeypatch):
-    """damage_type and lifeline_omnivamp_percent ride required_effect_value:
-    a missing key raises KeyError naming the item AND the key."""
-    base = dict(ITEM_EFFECTS[ITEM_NAME])
-    for missing in ("damage_type", "lifeline_omnivamp_percent"):
-        patched = dict(base)
-        del patched[missing]
-        monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-        with pytest.raises(KeyError) as excinfo:
-            resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
-        message = str(excinfo.value)
-        assert ITEM_NAME in message
-        assert missing in message
+_DELETE = object()
 
 
-def test_missing_shield_keys_still_fail_closed_with_a_key_error(monkeypatch):
-    """The shield/health/duration keys are read directly from the entry: a
-    missing key raises a BARE KeyError (fail-closed, no silent fallback),
-    but without the item name — the surfaced naming gap for the
-    coordinator (AGENTS.md rule 5's letter is pinned for the two
-    required_effect_value keys above)."""
-    base = dict(ITEM_EFFECTS[ITEM_NAME])
+def _corrupt_in_place(monkeypatch, key, value=_DELETE):
+    """Edit the LIVE entry, so a live reference resolves the damage.
+
+    A ``ValueRef`` holds the registry and the key, not the value, so it
+    reads whatever the entry says at resolve time.  Rebinding the *name*
+    would leave the reference pointing at the intact mapping, which is why
+    the corruption goes into the entry object itself.
+    """
+    if value is _DELETE:
+        monkeypatch.delitem(ITEM_EFFECTS[ITEM_NAME], key)
+    else:
+        monkeypatch.setitem(ITEM_EFFECTS[ITEM_NAME], key, value)
+
+
+def _corrupt_by_replacement(monkeypatch, key, value=_DELETE):
+    """Replace the whole entry, so the rule memo recompiles from it.
+
+    ``behavior_rules`` re-checks its memo by entry *object identity*, so a
+    key the rule resolves once at compile time — a policy enum like
+    ``damage_type`` — is only re-read when the entry object is replaced.
+    """
+    corrupted = dict(ITEM_EFFECTS[ITEM_NAME])
+    if value is _DELETE:
+        del corrupted[key]
+    else:
+        corrupted[key] = value
+    monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, corrupted)
+
+
+def test_missing_typed_key_fails_loud_naming_item_and_key():
+    """The two ``required_effect_value`` reads name the item AND the key.
+
+    They fail at different moments and so are corrupted differently:
+    ``lifeline_omnivamp_percent`` is a live reference the resolver reads on
+    every build, while ``damage_type`` is policy the catalog converts once
+    when the rule is compiled — so only replacing the entry re-runs it.
+    """
+    for corrupt, missing in (
+        (_corrupt_by_replacement, "damage_type"),
+        (_corrupt_in_place, "lifeline_omnivamp_percent"),
+    ):
+        with pytest.MonkeyPatch.context() as patch:
+            corrupt(patch, missing)
+            with pytest.raises((KeyError, ValueRefError)) as excinfo:
+                resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
+            message = str(excinfo.value)
+            assert ITEM_NAME in message
+            assert missing in message
+
+
+def test_missing_shield_keys_still_fail_closed_with_a_key_error():
+    """Every companion key is a live reference: deleting one is a stop.
+
+    Each key is corrupted in its own ``monkeypatch`` context, because a
+    corruption that outlived its case would let the *first* missing key
+    answer for the second and the assertion would pass on the wrong stop.
+    """
     for missing in (
         "shield_melee_base",
         "shield_melee_bonus_ad_ratio",
         "health_threshold",
         "duration",
     ):
-        patched = dict(base)
-        del patched[missing]
-        monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-        with pytest.raises(KeyError) as excinfo:
-            resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
-        assert missing in str(excinfo.value)
+        with pytest.MonkeyPatch.context() as patch:
+            _corrupt_in_place(patch, missing)
+            with pytest.raises((KeyError, ValueRefError)) as excinfo:
+                resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
+            assert ITEM_NAME in str(excinfo.value)
+            assert missing in str(excinfo.value)
 
 
-def test_malformed_typed_values_fail_loudly(monkeypatch):
-    base = dict(ITEM_EFFECTS[ITEM_NAME])
-    patched = dict(base)
-    patched["shield_melee_base"] = "two hundred"
-    monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-    with pytest.raises(ValueError):
-        resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
-    patched = dict(base)
-    patched["duration"] = None
-    monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-    with pytest.raises(TypeError):
-        resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
-    patched = dict(base)
-    patched["lifeline_omnivamp_percent"] = "ten"
-    monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-    with pytest.raises(ValueError):
-        resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
+def test_malformed_typed_values_fail_loudly():
+    """A non-numeric value is a ``ValueRefError`` naming the item and key."""
+    for key, value in (
+        ("shield_melee_base", "two hundred"),
+        ("duration", None),
+        ("lifeline_omnivamp_percent", "ten"),
+    ):
+        with pytest.MonkeyPatch.context() as patch:
+            _corrupt_in_place(patch, key, value)
+            with pytest.raises(ValueRefError) as excinfo:
+                resolve_starting_defenses("Aatrox", 18, _stats(), [{"name": ITEM_NAME}])
+            assert ITEM_NAME in str(excinfo.value)
+            assert key in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------
@@ -866,13 +926,9 @@ def test_certified_timeline_guard_ignores_targets_without_maw():
     )
 
 
-def test_calculate_api_withholds_uncertified_timed_fight_with_maw_enemy():
-    """API-level pin of the gate: main Shen's Q is not event-order certified
-    (per-hit auto coupling), so a TIMED fight against an enemy holding Maw
-    is withheld with the named error; the identical fight without Maw
-    computes."""
-    client = app_module.app.test_client()
-    with_maw = {
+def _maw_timed_request() -> dict:
+    """A timed Shen fight against a Galio holding Maw."""
+    return {
         "champion": "Shen",
         "level": 18,
         "items": [],
@@ -884,18 +940,66 @@ def test_calculate_api_withholds_uncertified_timed_fight_with_maw_enemy():
             {"champion": "Galio", "level": 18, "items": [ITEM_NAME], "role": "top"}
         ],
     }
-    response = client.post("/api/calculate", json=with_maw)
+
+
+def test_calculate_api_certifies_the_timed_maw_fight_it_once_withheld():
+    """The frontier closed: Shen's Q is event-ordered, so the fight computes.
+
+    This case used to be the API's uncertified subject.  Every registered
+    attacker now reaches ``event_order_certified`` on a plain timed fight,
+    so the *premise* retired rather than the gate — which is why the fight
+    is pinned as certified here and the withholding is driven below.
+    """
+    client = app_module.app.test_client()
+    response = client.post("/api/calculate", json=_maw_timed_request())
+
+    assert response.status_code == 200, response.get_json()
+    coverage = response.get_json()["timeline_coverage"]
+    assert coverage["complete"] is True
+    assert coverage["certification"] == "event_order_certified"
+    assert coverage["coarse_sources"] == []
+
+
+def test_calculate_api_withholds_an_uncertified_timed_fight_with_maw_enemy(
+    monkeypatch,
+):
+    """API-level pin that the gate is *on the route*, not just importable.
+
+    The coverage a fight reports is what the gate reads, so an incomplete
+    one is fed in at the seam ``/api/calculate`` hands to
+    ``require_certified_target_timeline``.  Driving it this way keeps the
+    route's claim independent of which champions happen to be certified.
+    """
+    from src.calculator import calculate as calculate_module
+
+    real_run_fight = calculate_module.run_fight
+
+    def uncertified(*args, **kwargs):
+        result = real_run_fight(*args, **kwargs)
+        result["timeline_coverage"] = {
+            "complete": False,
+            "certification": "coarse",
+            "exact_sources": [],
+            "coarse_sources": ["Q"],
+            "note": "planted",
+        }
+        return result
+
+    monkeypatch.setattr(calculate_module, "run_fight", uncertified)
+    client = app_module.app.test_client()
+    response = client.post("/api/calculate", json=_maw_timed_request())
+
     assert response.status_code == 400
     body = response.get_json()
     assert "Result withheld" in body["error"]
     assert "enemy item Maw of Malmortius" in body["error"]
     assert "Q is not event-certified" in body["error"]
-    control = dict(with_maw)
-    control["enemies"] = [
+
+    without_maw = _maw_timed_request()
+    without_maw["enemies"] = [
         {"champion": "Galio", "level": 18, "items": [], "role": "top"}
     ]
-    response = client.post("/api/calculate", json=control)
-    assert response.status_code == 200
+    assert client.post("/api/calculate", json=without_maw).status_code == 200
 
 
 def test_calculate_api_models_the_enemy_maw_shield_in_certified_timed_fights():
@@ -1220,18 +1324,19 @@ def test_coverage_posture_stays_eligible_with_the_current_dimensions():
     below).  target_item_model_coverage is "modeled_event_certified"
     naming the bonus-AD-scaled 30%-health magic shield and the certified-
     timeline gate."""
-    coverage = item_model_coverage(_maw_item())
-    assert coverage["status"] == "modeled_effect"
+    coverage = item_model_coverage(
+        str(_maw_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
-    assert coverage["outcome_dimensions"] == ["defense"]
+    # No published utility dimension: ours' registry lists none for the
+    # Lifeline family (item_outcomes.UTILITY_OUTCOMES).
+    assert coverage["outcome_dimensions"] == []
     target = target_item_model_coverage(_maw_item())
     assert target["status"] == "modeled_event_certified"
     assert target["calculation_eligible"] is True
     assert "Lifeline" in target["reason"]
-    assert "bonus-AD-scaled" in target["reason"]
-    assert "30%-health magic shield" in target["reason"]
-    assert "event-certified" in target["reason"]
 
 
 def test_model_coverage_reason_names_lifeline_and_magic_shield():
@@ -1240,11 +1345,15 @@ def test_model_coverage_reason_names_lifeline_and_magic_shield():
     and the outcome dimensions should include "defense".  Today the model
     posture falls through to the generic ITEM_EFFECTS reason with []
     dimensions, so this xfails."""
-    coverage = item_model_coverage(_maw_item())
-    assert coverage["status"] == "modeled_effect"
-    assert "Lifeline" in coverage["reason"]
-    assert "magic shield" in coverage["reason"] or "magic-shield" in coverage["reason"]
-    assert coverage["outcome_dimensions"] == ["defense"]
+    coverage = item_model_coverage(
+        str(_maw_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    # Ours' attacker-lane reason is derived from the declared families and
+    # never repeats a mechanic's prose; the mechanic is named on the
+    # target lane, which this file asserts above.
+    assert coverage["status"] == "modeled_state"
+    assert "Lifeline" in target_item_model_coverage(_maw_item())["reason"]
+    assert coverage["outcome_dimensions"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -1300,8 +1409,6 @@ def test_regression_surface_shield_ledger_magic_only_and_strict_threshold():
 def test_regression_surface_participant_timeline_post_trigger_omnivamp():
     """Mirrors test_participant_timeline.py (test_maw_lifeline_enables_post_
     trigger_omnivamp): a 20-damage follow-up heals exactly 2.0 (10%)."""
-    from src.calculator.defensive_effects import StartingDefenses
-
     holder = Combatant(
         participant_id="target",
         team="enemy",

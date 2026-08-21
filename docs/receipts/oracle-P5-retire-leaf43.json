@@ -1,0 +1,100 @@
+{
+  "receipt": "oracle-P5-retire-leaf43",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[2]",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle43",
+    "scope_respected": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened."
+  },
+  "old_value": "Q2 recast_of Q (40+ splinter second charge)",
+  "new_value": "Q2 is the recast of Q - Q2 is Q's recast (recast_of atom)",
+  "verdict": "old_value_correct",
+
+  "independent_computation": {
+    "what_the_leaf_asserts": "This leaf is a provenance/source string, not a number. It must state WHY the rotation contains a second Dark Sphere cast (the 'Q2' slot) in a scenario pinned at 120 Splinters of Wrath. The correct answer is decided by whether Syndra's second Q cast comes from a recast mechanic or from a stocked charge (ammo), and by whether a 'recast_of atom' exists in the cached atom taxonomy.",
+    "step_1_what_120_means": "data/champions.json -> Syndra.abilities.P[0].effects: 'Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' So the scenario suffix _120 pins the passive at max stacks, which is >= the 40-splinter threshold below.",
+    "step_2_where_the_second_Q_comes_from": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' At 120 splinters this bonus is active, so the rotation legitimately holds 2 Dark Sphere casts. The second cast is a STOCKED CHARGE, not a recast.",
+    "step_3_charge_not_recast_structural_evidence": [
+      "data/champions.json -> Syndra.abilities.Q[0] carries 'rechargeRate': [7, 7, 7, 7, 7] (the charge-recharge field), alongside cooldown modifiers [7,7,7,7,7]; charge stocking is the modeled mechanism.",
+      "data/champions.json -> Syndra.abilities.Q[0].notes: 'After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only.' -- charge pips, the standard ammo UI.",
+      "data/champions.json -> Syndra.abilities has exactly one entry per slot (P, Q, W, E, R), each a single-element list; no Syndra ability carries a second/recast sub-ability entry."
+    ],
+    "step_4_taxonomy_check_ammo_not_recast": "data/wiki-atoms/stack-transform-summon-resource.json, element index 34, atom_id 'stack-transform-summon-resource.ammo' (name 'Ammo / stocked charges'), description: 'A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators ...'. The cached atom taxonomy files Syndra's Dark Sphere stocking explicitly under AMMO, by name.",
+    "step_5_no_recast_atom_exists": "Grepping the whole exported tree for 'recast_of' returns zero hits. In data/wiki-atoms/spell-tags.json the only recast-adjacent tags are 'Trait_RecastOrReplaceSpell': [null, null] and 'Trait_FreeRecast': [null, null] -- both map to NO atom id. There is therefore no 'recast_of atom' anywhere in the cached data to cite.",
+    "step_6_game_file_object_check": "data/atoms/classification-report.json lists every game-file spell object. Champions that genuinely recast have a *Recast object: ZoeQRecast, NaafiriQRecast, GwenWRecast, GwenRRecast, RenataQRecast, IvernQRecast, IvernRRecast, KaynRRecast, AuroraQRecast, AuroraRRecast, DrMundoWRecast, ShyvanaWRecast, UrgotRRecastMissileLongDistance, MonkeyKingSpinRecast. The complete Syndra object list contains NO recast object: SyndraPassive, SyndraPassiveMissile, SyndraQSpell, SyndraQVisualCounter, SyndraWCast, SyndraWCDTimer, SyndraESound/SyndraE5Sound/SyndraESphereMissile, SyndraRSpell/RTrigger/RVisual/RPassive/RBounce/RBounce5/RSpread2..35. Note 'SyndraQVisualCounter' -- a counter (charge pip) object, consistent with ammo, not with a recast spell.",
+    "step_7_corroborating_cached_worklists_and_audit": [
+      "data/worklists/e3-stacks.json line 1206 repeats the same wiki hint: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "data/worklists/e3-mechanics.json line 611 repeats the 120-stack cap.",
+      "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary: 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage) ...'. The cached audit itself names the mechanism as '40+ Q CHARGES via Q2 slot' -- i.e. Q2 is the engine's slot name for the stocked second charge, exactly what the old string said."
+    ],
+    "step_8_scheduling_semantics": "docs/math-foundations.md lines 59-62: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress ...'. Here 'recast' is used loosely for 'is cast again', so the shared relation name 'recast_of Q' is acceptable shorthand in BOTH strings; it is not what separates them. What separates them is the justification: the old string sources the extra cast to the 40-splinter charge stock; the new string sources it to a nonexistent atom.",
+    "conclusion": "The correct source text for sources[2] is the one that attributes the Q2 slot to the Transcendent Bonus stocked Dark Sphere charge at >= 40 Splinters (satisfied at the scenario's 120). The old value does exactly that. The new value deletes the only real citation and replaces it with a self-referential tautology ('Q2 is the recast of Q - Q2 is Q's recast') plus a citation to a 'recast_of atom' that does not exist in the cached taxonomy, while mislabelling an ammo/charge mechanic as a recast mechanic that Syndra provably does not have in the game files."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].rechargeRate / .cooldown",
+      "quote": "rechargeRate: [7, 7, 7, 7, 7]; cooldown.modifiers[0].values: [7, 7, 7, 7, 7]"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[0].description and effects[2].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "locator": "[34] atom_id = stack-transform-summon-resource.ammo",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators (Annie's Pyromania stun, Pantheon empowered cast, Ryze runes)."
+    },
+    {
+      "file": "data/wiki-atoms/spell-tags.json",
+      "locator": "Trait_RecastOrReplaceSpell, Trait_FreeRecast",
+      "quote": "Trait_RecastOrReplaceSpell -> [null, null]; Trait_FreeRecast -> [null, null] (no atom id; the taxonomy defines no recast atom)"
+    },
+    {
+      "file": "data/atoms/classification-report.json",
+      "locator": "all objects matching /Syndra/ vs. other champions' *Recast objects",
+      "quote": "Syndra objects: SyndraPassive, SyndraPassiveMissile, SyndraQSpell, SyndraQVisualCounter, SyndraWCast, SyndraWCDTimer, SyndraESound, SyndraE5Sound, SyndraESphereMissile, SyndraRSpell, SyndraRTrigger, SyndraRVisual, SyndraRPassive, SyndraRBounce, SyndraRBounce5, SyndraRSpread2/25/3/35/15 -- no *Recast. Contrast: ZoeQRecast, NaafiriQRecast, GwenWRecast, RenataQRecast, IvernQRecast, KaynRRecast, AuroraQRecast, DrMundoWRecast."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "CP-era ok carried forward; E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "data/worklists/e3-stacks.json",
+      "locator": "line 1206",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "lines 59-62",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`)."
+    }
+  ],
+
+  "findings": [
+    "Syndra has no recast ability. Her Q (Dark Sphere) gains a SECOND STOCKED CHARGE at 40+ Splinters of Wrath (max 2), which is an ammo/charge mechanic, not a recast.",
+    "The cached atom taxonomy assigns Syndra's Dark Sphere stocking to stack-transform-summon-resource.ammo BY NAME.",
+    "No 'recast_of' atom exists anywhere in the exported data tree (zero grep hits); the two recast-adjacent spell tags map to no atom. The new value's parenthetical '(recast_of atom)' is an unsupported citation.",
+    "Game-file object lists confirm the point structurally: champions with real recasts have a *Recast spell object; Syndra has none, and instead has SyndraQVisualCounter (a charge-pip counter).",
+    "The old value's parenthetical '(40+ splinter second charge)' is the accurate, sourced justification for the Q2 slot at 120 splinters and matches the cached audit's own wording ('40+ Q charges via Q2 slot').",
+    "Caveat recorded for honesty: the shared token 'recast_of' in BOTH strings is loose vocabulary (math-foundations.md uses 'recast' to mean 'cast again'), so the old string is not perfectly worded either. It is nonetheless correct and sourced, whereas the new string is circular and cites a nonexistent atom, so 'both_wrong' is not warranted."
+  ],
+
+  "verdict_note": "old_value_correct -- the change replaced a sourced, mechanically accurate provenance string with a tautological one citing a 'recast_of atom' that does not exist in the cached data, and mischaracterised a stocked-charge (ammo) mechanic as a recast."
+}

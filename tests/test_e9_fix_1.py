@@ -85,6 +85,8 @@ def _fight(
         "target_armor": 0,
         "target_mr": 0,
     }
+    if mode == "auto_only":
+        payload["auto_attacks_only"] = True
     if options:
         payload["champion_options"] = options
     if enemies:
@@ -312,6 +314,28 @@ class TestTalon:
         row = data["breakdown"]["passive"]
         assert row["total_damage"] == pytest.approx(expected, abs=0.6)
         assert row["count"] == 1
+
+    def test_autos_only_never_stacks_wound_so_no_bleed(self):
+        """Abilities apply Wound; a basic attack only consumes it.
+
+        Cached P text: "Talon's abilities apply a stack of Wound to
+        enemy champions and large monsters hit for 6 seconds, refreshing
+        on basic attacks... Talon's next basic attack on-hit against an
+        enemy with 3 Wound stacks is empowered to consume them all."
+        The consumer is a swing but the stacks are not, so an autos-only
+        window has nothing to consume — the explicit proc count cannot
+        conjure one either.
+        """
+        data = _fight("Talon", enemies=False, mode="auto_only", autos=True)
+        assert "passive" not in data["breakdown"]
+        forced = _fight(
+            "Talon",
+            enemies=False,
+            mode="auto_only",
+            autos=True,
+            options={"passive_procs": 3},
+        )
+        assert "passive" not in forced["breakdown"]
 
     def test_q_heals_the_sourced_per_level_amount(self):
         """On-kill flat heal: 55 at level 18 (per-level array)."""

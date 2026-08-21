@@ -1,0 +1,103 @@
+{
+  "receipt": "oracle-C6-leaf113",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[6]/time",
+  "old_value": 5.0,
+  "new_value": 0.25,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/champion-audit/batch-p1-3.json (Zac cast-time precedent)",
+      "data/worklists/f2-task.md (cast_order / damage_events vocabulary)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/champions.json -> Syndra.abilities.E[0].castTime",
+      "quote": "\"castTime\": \"0.25\"",
+      "note": "Scatter the Weak, sourced cast time = 0.25 s."
+    },
+    {
+      "id": "S2",
+      "source": "data/champions.json -> Syndra.abilities.R[0].castTime",
+      "quote": "\"castTime\": \"0.25\"",
+      "note": "Unleashed Power, sourced cast time = 0.25 s. Q and W both carry castTime \"none\" (= 0), P carries null. 0.25 s is therefore the ONLY non-zero cast time in Syndra's kit."
+    },
+    {
+      "id": "S3",
+      "source": "docs/math-foundations.md section 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`).",
+      "note": "Establishes that opening-rotation cast epochs are driven by the sourced cast times, not by ability durations."
+    },
+    {
+      "id": "S4",
+      "source": "data/champion-audit/batch-p1-3.json -> Zac.gap_summary",
+      "quote": "... with the empowered basic-attack replacement landing at its sourced 0.25s cast time.",
+      "note": "Corpus-wide precedent for the convention: a cast started at t=0 with a 0.25 s sourced cast time authors its damage event at t = 0.25."
+    },
+    {
+      "id": "S5",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. ... Force of Will can be recast while the target is being held. Recast: Syndra throws the grabbed target ... dealing magic damage to them and nearby enemies once they land.",
+      "note": "The only 5-second quantity anywhere in Syndra's cached wiki text. It is a maximum recast WINDOW, not a damage delay."
+    },
+    {
+      "id": "S6",
+      "source": "data/champions.json -> Syndra.abilities.W[0].notes",
+      "quote": "If the ability is not recast within the duration, Syndra will release the unit or Dark Sphere that she is holding.",
+      "note": "At t = 5.0 s the hold EXPIRES with a release and no damage. So 5.0 s is explicitly the one instant at which W cannot author a damage event."
+    },
+    {
+      "id": "S7",
+      "source": "data/champions.json -> Syndra.abilities.W[0].cooldown",
+      "quote": "{\"modifiers\": [{\"values\": [12, 11, 10, 9, 8]}], \"affectedByCdr\": true}",
+      "note": "Used to test the one alternative reading of 5.0 (see alternative_reading below)."
+    },
+    {
+      "id": "S8",
+      "source": "docs/math-foundations.md formula-audit table, Ability haste row / CLAUDE.md domain knowledge",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` | EXACT",
+      "note": "Cooldown identity used in the alternative-reading arithmetic."
+    },
+    {
+      "id": "S9",
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count",
+      "note": "Reads the scenario suffix '_60': 60 is the module's splinters knob (the exact W true-damage threshold). At 60 splinters a W cast authors TWO damage events (magic + bonus true), and R authors one event per sphere (>=3, wiki: 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones')."
+    },
+    {
+      "id": "S10",
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "note": "3..7 damage instances per R cast (min row 240 = 3 x 80, max row 560 = 7 x 80 at rank 1), all landing at the same cast epoch."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_cast_epochs": "Shared-timeline rule (S3): the opening custom cast order is issued back-to-back, each cast occupying its sourced cast time. Syndra's sourced cast times (S1, S2) are Q = 0, W = 0, E = 0.25, R = 0.25. So an opening order issued at t = 0 places every zero-cast-time ability (Q, its 40-splinter second charge Q2, W) at t = 0, and the first ability carrying a cast time lands its damage at t = 0 + 0.25 = 0.25 s (S4 convention: damage lands at cast start + sourced cast time).",
+    "step_2_event_count_before_index_6": "At splinters = 60 (S9) the opening authors, in order: Q (1 event, t=0), Q2 second charge (1 event, t=0), W magic (1 event) and W 60-splinter bonus true damage (1 event) at t=0, then the 0.25 s-cast ability. R alone contributes >=3 simultaneous per-sphere events (S10). Four events at t = 0 plus the 0.25 s cast block therefore puts indices 4,5,6 inside the 0.25 s block. damage_events[6] (0-based, the 7th event) falls on the third event of that block.",
+    "step_3_value": "t(damage_events[6]) = 0 (rotation start) + 0.25 s (sourced cast time of E / R) = 0.25 s.",
+    "step_4_falsify_5.0": "Search of Syndra's entire cached wiki text for a 5-second quantity returns exactly one hit: W's hold duration (S5). It is a maximum recast window, and the wiki states that at its expiry Syndra RELEASES the held target (S6) - i.e. at t = 5.0 s W deals no damage at all. No other sourced Syndra quantity yields 5.0 s: Q sphere delay 0.6 s, Q/R sphere lifetime 6 s, E stun 1.25 s, W slow 1.5 s, P collection 0.6 s / 4 s window. Base cooldowns are Q 7 (rechargeRate 7), W 12/11/10/9/8, E 15, R 120/100/80 - none equals 5.0 at zero ability haste. Therefore 5.0 s is not a sourced damage-event time for this fight.",
+    "conclusion": "0.25 s is the only value at this leaf that is derivable from the cached wiki data plus the documented shared-timeline / cast-time convention. The new value is correct."
+  },
+
+  "alternative_reading_tested": {
+    "hypothesis": "'_60' denotes 60 ability haste rather than 60 splinters, in which case old 5.0 could be a legitimate SECOND W cast: cd' = 8 * 100/(100+60) = 5.0 s exactly (S7, S8) at W rank 5.",
+    "assessment": "Arithmetically exact, so it cannot be excluded from data/ alone. But it does not overturn the verdict: under that reading the leaf diff is a re-index (extra opening events - the 60-splinter W true-damage event and/or the per-sphere R events - pushed the W recast past index 6), and index 6 then legitimately lands inside the 0.25 s cast block computed above. Under either reading 0.25 s is a sourced, valid damage-event time and 5.0 s is not one for index 6. Naming evidence favours the splinters reading: 60 is the module's own splinters threshold for W true damage (S9), and an ability-haste knob would conventionally be spelled 'ah60'.",
+    "residual_uncertainty": "The scenario definition itself lives outside the permitted evidence tree (scripts/), so the exact cast order, fight length and sphere count were not read. The verdict rests on: 0.25 s is sourced and reachable; 5.0 s is not sourced as a damage instant (S5, S6)."
+  },
+
+  "verdict_reason": "new_value_correct - 0.25 s is exactly the sourced cast time of Syndra's E (Scatter the Weak) and R (Unleashed Power) in data/champions.json, and the shared-timeline convention in docs/math-foundations.md section 1.1 plus the corpus precedent in data/champion-audit/batch-p1-3.json place that cast's damage at cast start + 0.25 s. The old 5.0 s matches nothing in Syndra's cached wiki text except Force of Will's 5-second HOLD window, which the same cache says ends in a release with no damage."
+}

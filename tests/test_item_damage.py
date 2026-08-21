@@ -25,12 +25,117 @@ from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
     _calculate_stacking_procs,
 )
+from src.calculator.interpreters import (
+    cast_proc,
+    charged_strike,
+    on_hit_strike,
+    periodic,
+    resistance_shred,
+    spellblade,
+)
+from src.calculator.item_behavior import Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
+
+
+def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
+    """The magic-resistance shred a build declares, resolved through its rule."""
+    return resistance_shred.resolve_slot(
+        owners,
+        Resistance.MAGIC_RESIST,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=False,
+    )
+
+
+def _charged_strikes(*owners: str, level: int = 18, is_melee: bool = True):
+    """The charged strikes a build declares, resolved through their rules."""
+    return charged_strike.resolve_slots(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
+
+
+def _cast_proc_slots(*owners: str, is_melee: bool = True) -> "cast_proc.CastProcSlots":
+    """The cast-triggered procs a build declares, resolved through their rules."""
+    return cast_proc.resolve_slots(
+        owners,
+        level=11,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
+
+
+def _periodic_slots(*owners: str) -> "periodic.PeriodicSlots":
+    """The clock-driven strikes a build declares, resolved through their rules."""
+    return periodic.resolve_slots(
+        owners,
+        level=11,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
 
 
 def _build(*names: str) -> list[dict[str, str]]:
     """Build the minimal item shape accepted by the typed resolver."""
     return [{"name": name} for name in names]
+
+
+def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
+    """The spellblade a build arms, resolved through its declaration."""
+    return spellblade.resolve_slot(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
+
+
+def _hypershot_slot(owners):
+    """Resolve the Hypershot chain slot for a build, as the engine does."""
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
+    )
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
+    )
+
+    return delta_amp.resolve_slot(
+        owners,
+        AmpChainSlot.HYPERSHOT,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+
+
+def _whole_total_fraction(owner: str, duration: float) -> float:
+    """One holder's contribution to the whole-total amp slot."""
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
+    )
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
+    )
+
+    slot = delta_amp.resolve_slot(
+        [owner],
+        AmpChainSlot.WHOLE_TOTAL,
+        level=18,
+        fight_duration_seconds=duration,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slot is not None
+    return slot.sources()[0][1]
 
 
 def _simulate_bork_damage(
@@ -45,9 +150,15 @@ def _simulate_bork_damage(
     double_hit_all=False,
 ):
     """Readable test adapter around the generic current-health simulation."""
-    effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
+    strikes = on_hit_strike.per_hit_effects(
+        ["Blade of the Ruined King"],
+        level=1,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
-        effect.per_hits[0],
+        strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
         num_auto_attacks,
@@ -68,10 +179,24 @@ def _calculate_phantom_hits(num_auto_attacks, item_names):
 
 
 def _shadowflame_effect():
-    """Return the live compiled low-health magic/true crit rule."""
-    effect = resolve_damage_effects([{"name": "Shadowflame"}]).magic_true_crit
-    assert effect is not None
-    return effect
+    """The declared Cinderbloom chain slot, resolved for a Shadowflame build."""
+    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        delta_amp,
+    )
+    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        AmpChainSlot,
+    )
+
+    slot = delta_amp.resolve_slot(
+        ["Shadowflame"],
+        AmpChainSlot.CINDERBLOOM,
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slot is not None
+    return slot
 
 
 def _simulate_kraken_damage(
@@ -86,10 +211,12 @@ def _simulate_kraken_damage(
     kraken_proc_autos,
 ):
     """Readable test adapter around the generic stacking-proc simulation."""
-    effects = resolve_damage_effects([{"name": "Kraken Slayer"}])
-    effect = effects.stacking_on_hits[0]
+    effect = _charged_strikes(
+        "Kraken Slayer", level=level, is_melee=is_melee
+    ).stacking_on_hits[0]
     return sum(
-        _simulate_stacking_on_hit_damage(
+        proc.mitigated
+        for proc in _simulate_stacking_on_hit_damage(
             effect,
             DamageInputs({}, level, is_melee, target_health, target_health),
             target_health,
@@ -124,7 +251,7 @@ class TestBastionbreakerShapedCharge:
     def test_shaped_charge_ranged_damage(self) -> None:
         """Ranged: 25 + 0.75 * 22 lethality = 41.5 true damage."""
         stats = {"lethality": 22.0}
-        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        effect = _charged_strikes("Bastionbreaker").shaped_charges[0]
         damage = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
@@ -133,14 +260,14 @@ class TestBastionbreakerShapedCharge:
     def test_shaped_charge_melee_damage(self) -> None:
         """Melee: 50 + 1.5 * 22 lethality = 83 true damage."""
         stats = {"lethality": 22.0}
-        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        effect = _charged_strikes("Bastionbreaker").shaped_charges[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000.0, 1000.0))
         assert abs(damage - 83.0) < 0.01
 
     def test_shaped_charge_multiple_procs(self) -> None:
         """20s cooldown: 50s fight = 3 procs."""
         stats = {"lethality": 22.0}
-        effect = resolve_damage_effects(_build("Bastionbreaker")).shaped_charges[0]
+        effect = _charged_strikes("Bastionbreaker").shaped_charges[0]
         per_proc = effect.source.raw_damage(
             DamageInputs(stats, 18, False, 1000.0, 1000.0)
         )
@@ -317,6 +444,9 @@ class TestFimbulwinterTimelineCertification:
     """Everlasting never guesses an unreviewed ability control state."""
 
     def test_unreviewed_ability_control_is_coarse(self, ahri_data: dict) -> None:
+        """Fox-Fire is the kit's still-unreviewed row: the first flame plus
+        two more in one repeated part, a schedule with no sourced cadence,
+        so nothing may state its control either way."""
         from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.stats import calculate_total_stats
 
@@ -325,7 +455,7 @@ class TestFimbulwinterTimelineCertification:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         result = calculate_fight_damage(
             stats,
-            {"Q": abilities["Q"]},
+            {"W": abilities["W"]},
             [item],
             FightConfig(
                 target_health=5000.0,
@@ -334,7 +464,7 @@ class TestFimbulwinterTimelineCertification:
                 fight_duration_seconds=2.0,
                 auto_attack_uptime=0.0,
                 one_rotation=True,
-                cast_order=["Q"],
+                cast_order=["W"],
             ),
         )
 
@@ -346,6 +476,8 @@ class TestFimbulwinterTimelineCertification:
     def test_one_unreviewed_ability_keeps_mixed_timeline_coarse(
         self, ahri_data: dict
     ) -> None:
+        """Charm is reviewed and Fox-Fire is not: one unreviewed row in the
+        cast order is enough to withhold."""
         from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.stats import calculate_total_stats
 
@@ -354,7 +486,7 @@ class TestFimbulwinterTimelineCertification:
         abilities = parse_ahri_abilities(ahri_data, 18, stats["ability_power"])
         result = calculate_fight_damage(
             stats,
-            {"Q": abilities["Q"], "E": abilities["E"]},
+            {"W": abilities["W"], "E": abilities["E"]},
             [item],
             FightConfig(
                 target_health=2000.0,
@@ -364,7 +496,7 @@ class TestFimbulwinterTimelineCertification:
                 auto_attack_uptime=0.0,
                 one_rotation=True,
                 include_actives=True,
-                cast_order=["E", "Q"],
+                cast_order=["E", "W"],
             ),
         )
 
@@ -410,18 +542,15 @@ class TestBloodlettersCurseVileDecay:
         return get_item_by_name("Bloodletter's Curse")
 
     def test_stacking_mr_reduction_helper(self) -> None:
-        """The build projection carries a typed stacking-reduction rule."""
-        effect = resolve_damage_effects(
-            [{"name": "Bloodletter's Curse"}]
-        ).stacking_mr_reduction
-        assert effect is not None
-        assert effect.reduction_per_stack == 0.075
-        assert effect.max_stacks == 4
+        """The build declares a stacking magic-resistance shred."""
+        slot = _mr_shred("Bloodletter's Curse")
+        assert slot is not None
+        assert slot.per_stack == 0.075
+        assert slot.max_stacks == 4
 
     def test_no_stacking_mr_reduction_without_item(self) -> None:
-        """Unrelated builds carry no stacking-reduction rule."""
-        effects = resolve_damage_effects([{"name": "Liandry's Torment"}])
-        assert effects.stacking_mr_reduction is None
+        """Unrelated builds declare none, which is an answer and not a zero."""
+        assert _mr_shred("Liandry's Torment") is None
 
     def test_effective_mr_decreases_per_ability(
         self,
@@ -606,7 +735,7 @@ class TestShadowflameCinderbloom:
 
     def test_no_bonus_when_target_above_threshold(self) -> None:
         """No Shadowflame bonus when all damage is dealt above 40% HP."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -625,14 +754,14 @@ class TestShadowflameCinderbloom:
             },
         }
         # Target at 1000 HP, threshold 400 — 100 damage won't cross it
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert bonus == 0.0
 
     def test_bonus_when_target_below_threshold(self) -> None:
         """Damage dealt when target is below 40% should get 20% bonus."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         # Q does 700 damage (drops target from 1000 to 300, below 400)
         # W does 200 magic damage (target already below 40%)
@@ -669,7 +798,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 200),),
             },
         }
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         # W (200) dealt below threshold, gets 20% bonus = 40
@@ -677,7 +806,7 @@ class TestShadowflameCinderbloom:
 
     def test_magic_shield_delays_shadowflame_health_threshold(self) -> None:
         """A ready magic shield must absorb events before health falls."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             slot: {
@@ -698,10 +827,10 @@ class TestShadowflameCinderbloom:
             for slot in ("Q", "W", "E")
         }
 
-        no_shield, _ = _calculate_shadowflame_bonus(
+        no_shield, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
-        shielded, _ = _calculate_shadowflame_bonus(
+        shielded, _ = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             ability_damages,
@@ -714,7 +843,7 @@ class TestShadowflameCinderbloom:
 
     def test_timed_cast_timeline_controls_threshold_crossing(self) -> None:
         """Recasts must not be grouped ahead of intervening abilities."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -735,7 +864,7 @@ class TestShadowflameCinderbloom:
             "W": {"damage_type": "magic", "parts": (DamagePart("magic", 200),)},
         }
 
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             ability_damages,
@@ -752,7 +881,7 @@ class TestShadowflameCinderbloom:
         assert bonus == pytest.approx(100.0)
 
     def test_lifeline_shield_delays_shadowflame_health_threshold(self) -> None:
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             slot: {
@@ -768,10 +897,10 @@ class TestShadowflameCinderbloom:
             for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
         }
 
-        no_lifeline, _ = _calculate_shadowflame_bonus(
+        no_lifeline, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, abilities, 1000.0
         )
-        lifeline, _ = _calculate_shadowflame_bonus(
+        lifeline, _ = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             abilities,
@@ -786,7 +915,7 @@ class TestShadowflameCinderbloom:
 
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -809,7 +938,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 700),),
             },
         }
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         # Auto attacks are physical — no crit bonus
@@ -817,7 +946,7 @@ class TestShadowflameCinderbloom:
 
     def test_mixed_damage_splits_correctly(self) -> None:
         """Mixed abilities (like Ahri Q) should split into magic and true events."""
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         # Q: 300 magic (mitigated) + 500 true = 800 total
         # Target at 1000 HP: after Q magic (300), HP = 700 (above 400)
@@ -863,7 +992,7 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 150),),
             },
         }
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert abs(bonus - 30.0) < 0.01
@@ -960,7 +1089,7 @@ class TestShadowflameCinderbloom:
         Counting the Q2 breakdown row AGAIN as an "item effect" event would
         add a bogus below-threshold event worth another 80.
         """
-        from src.calculator.damage import _calculate_shadowflame_bonus
+        from src.calculator.damage import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -1004,7 +1133,7 @@ class TestShadowflameCinderbloom:
             },
         }
         # Default cast_order includes "Q2" — step 1 already consumes it.
-        bonus, _ = _calculate_shadowflame_bonus(
+        bonus, _ = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
         )
         assert abs(bonus - 60.0) < 0.01
@@ -1198,7 +1327,7 @@ class TestBurnRefreshWindow:
         window must be exactly the base. Burn totals scale linearly with
         (spread + duration), so the ratio pins both windows.
         """
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         duration = burn.duration
 
         plain = self._fight(
@@ -1225,7 +1354,7 @@ class TestBurnRefreshWindow:
         spread + tail + duration. Burn totals scale linearly with the
         window, so the ratio pins the semantics.
         """
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         duration = burn.duration
 
         plain = self._fight(
@@ -1258,8 +1387,8 @@ class TestBurnRefreshWindow:
     def test_hatefog_refresh_window_uses_seconds_not_dash_count(self) -> None:
         """Malignance's Hatefog starts at R1: cast_spread minus the dash
         spread in SECONDS (r_extra x 0.5s), not minus the dash count."""
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
-        (hatefog,) = resolve_damage_effects(_build("Malignance")).ultimate_procs
+        (burn,) = _periodic_slots("Liandry's Torment").burns
+        (hatefog,) = _cast_proc_slots("Malignance").ultimate_procs
         duration = burn.duration
 
         fight = self._fight(
@@ -1328,7 +1457,7 @@ class TestBurnTimedModeUptime:
     def _expected_burn(self, fight, uptime_seconds):
         from src.calculator.resistance import apply_resistance
 
-        (burn,) = resolve_damage_effects(_build("Liandry's Torment")).burns
+        (burn,) = _periodic_slots("Liandry's Torment").burns
         inputs = DamageInputs(dict(self._STATS), 18, False, 4000.0, 4000.0)
         raw = burn.source.raw_damage(inputs) * (uptime_seconds / burn.duration)
         return apply_resistance(raw, fight["effective_mr"])
@@ -1398,7 +1527,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
     def test_spellblade_damage_equals_base_ad(self) -> None:
         """Bloodsong spellblade should deal 100% base AD."""
         stats = {"base_attack_damage": 104.0}
-        effect = resolve_damage_effects(_build("Bloodsong")).spellblade
+        effect = _spellblade_slot("Bloodsong")
         assert effect is not None
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         assert abs(damage - 104.0) < 0.01
@@ -1633,7 +1762,7 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
     def test_spellblade_damage_formula(self) -> None:
         """Dusk and Dawn spellblade should deal 75% base AD + 10% AP."""
         stats = {"base_attack_damage": 104.0, "ability_power": 160.0}
-        effect = resolve_damage_effects(_build("Dusk and Dawn")).spellblade
+        effect = _spellblade_slot("Dusk and Dawn")
         assert effect is not None
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         expected = 0.75 * 104.0 + 0.10 * 160.0  # 78 + 16 = 94
@@ -2077,19 +2206,19 @@ class TestEclipseEverRisingMoon:
 
     def test_ranged_single_proc_damage(self) -> None:
         """Ranged: 5% of 2000 max HP = 100 raw physical damage (one proc)."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, False, 2000.0, 2000.0))
         assert abs(damage - 100.0) < 0.01
 
     def test_melee_single_proc_damage(self) -> None:
         """Melee: 8% of 2000 max HP = 160 raw physical damage (one proc)."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, True, 2000.0, 2000.0))
         assert abs(damage - 160.0) < 0.01
 
     def test_multiple_procs_over_duration(self) -> None:
         """6s cooldown: 12s fight = 3 procs (0s, 6s, 12s)."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         per_proc = effect.source.raw_damage(DamageInputs({}, 18, False, 1000.0, 1000.0))
         damage = per_proc * (1 + int(12.0 / effect.cooldown))
         # 3 procs * 5% * 1000 = 150
@@ -2097,7 +2226,7 @@ class TestEclipseEverRisingMoon:
 
     def test_zero_target_health_returns_zero(self) -> None:
         """Zero target max HP should result in zero Eclipse damage."""
-        effect = resolve_damage_effects(_build("Eclipse")).cooldown_procs[0]
+        effect = _cast_proc_slots("Eclipse").cooldown_procs[0]
         damage = effect.source.raw_damage(DamageInputs({}, 18, True, 0.0, 0.0))
         assert damage == 0.0
 
@@ -3501,21 +3630,21 @@ class TestHeartsteelDamage:
     def test_heartsteel_damage_calculation(self) -> None:
         """70 + 6% of 3000 max HP = 70 + 180 = 250 raw physical damage."""
         stats = {"health": 3000.0}
-        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        effect = _charged_strikes("Heartsteel").first_autos[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 250.0) < 0.01
 
     def test_heartsteel_damage_low_health(self) -> None:
         """70 + 6% of 1000 max HP = 70 + 60 = 130 raw physical damage."""
         stats = {"health": 1000.0}
-        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        effect = _charged_strikes("Heartsteel").first_autos[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 130.0) < 0.01
 
     def test_heartsteel_damage_zero_health(self) -> None:
         """With 0 health the damage is just the base 70."""
         stats = {"health": 0.0}
-        effect = resolve_damage_effects(_build("Heartsteel")).first_autos[0]
+        effect = _charged_strikes("Heartsteel").first_autos[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         assert abs(damage - 70.0) < 0.01
 
@@ -3569,24 +3698,10 @@ class TestUmbralGlaiveNightstalker:
 class TestHexopticsC44BasicDamageAmp:
     """Tests for Hexoptics C44 Magnification basic damage amplification."""
 
-    def test_ranged_amp_with_item(self) -> None:
-        """Ranged champs are assumed at max distance: full 10% amp."""
-        items = [{"name": "Hexoptics C44"}]
-        effect = resolve_damage_effects(items).basic_amp
-        assert effect is not None
-        assert effect.multiplier(is_melee=False) == pytest.approx(1.10)
-
-    def test_melee_amp_with_item(self) -> None:
-        """Melee champs are assumed at ~100 units: 2% amp, not 10%."""
-        items = [{"name": "Hexoptics C44"}]
-        effect = resolve_damage_effects(items).basic_amp
-        assert effect is not None
-        assert effect.multiplier(is_melee=True) == pytest.approx(1.02)
-
-    def test_no_amp_without_item(self) -> None:
-        """Without Hexoptics C44, there is no basic amp effect."""
-        items = [{"name": "Infinity Edge"}]
-        assert resolve_damage_effects(items).basic_amp is None
+    # The amp itself left this registry for its declaration at 3.7-r2;
+    # ``tests/test_interp_delta_amp.py`` owns the melee/ranged multipliers
+    # and the no-holder answer.  What stays here is the end-to-end fight
+    # assertion below, which is the thing no interpreter test can make.
 
     def test_parsed_values_from_json(self) -> None:
         """Verify parser extracts correct values from item JSON data."""
@@ -3734,16 +3849,15 @@ class TestHorizonFocusHypershotAmp:
         assert abs(effect["amp"] - 0.10) < 0.001
 
     def test_amplifier_with_item(self) -> None:
-        """With Horizon Focus, hypershot amp should be 1.10."""
-        items = [{"name": "Horizon Focus"}]
-        result = resolve_damage_effects(items).hypershot_amp
-        assert abs(result - 1.10) < 0.001
+        """With Horizon Focus, the declared chain slot resolves to 1.10."""
+        slot = _hypershot_slot(["Horizon Focus"])
+        assert slot is not None
+        assert abs(slot.multiplier - 1.10) < 0.001
+        assert slot.owner == "Horizon Focus"
 
     def test_amplifier_without_item(self) -> None:
-        """Without Horizon Focus, hypershot amp should be 1.0."""
-        items = [{"name": "Liandry's Torment"}]
-        result = resolve_damage_effects(items).hypershot_amp
-        assert result == 1.0
+        """Without Horizon Focus nobody declares the slot, which is not a zero."""
+        assert _hypershot_slot(["Liandry's Torment"]) is None
 
     def test_first_ability_not_amped(self) -> None:
         """First ability triggers the mark and should NOT be amplified."""
@@ -3974,7 +4088,7 @@ class TestHullbreakerSkipper:
     def test_proc_damage_melee(self) -> None:
         """Melee proc: 120% base AD + 5% max HP."""
         stats = {"base_attack_damage": 100.0, "health": 2000.0}
-        effect = resolve_damage_effects(_build("Hullbreaker")).stacking_on_hits[0]
+        effect = _charged_strikes("Hullbreaker").stacking_on_hits[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, True, 1000, 1000))
         # 1.20 * 100 + 0.05 * 2000 = 120 + 100 = 220
         assert abs(damage - 220.0) < 0.1
@@ -3982,7 +4096,7 @@ class TestHullbreakerSkipper:
     def test_proc_damage_ranged(self) -> None:
         """Ranged proc: 84% base AD + 3.5% max HP."""
         stats = {"base_attack_damage": 100.0, "health": 2000.0}
-        effect = resolve_damage_effects(_build("Hullbreaker")).stacking_on_hits[0]
+        effect = _charged_strikes("Hullbreaker").stacking_on_hits[0]
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         # 0.84 * 100 + 0.035 * 2000 = 84 + 70 = 154
         assert abs(damage - 154.0) < 0.1
@@ -5514,7 +5628,7 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
 
         # The stamp is the ledger moment the rolling window held the
         # item's threshold share of the target's max health.
-        effect = resolve_damage_effects(_build("Stormsurge")).cooldown_procs[0]
+        effect = _cast_proc_slots("Stormsurge").cooldown_procs[0]
         proc_time = events[0]["time"]
         window = [
             event
@@ -5564,7 +5678,7 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
         row = fight["breakdown"]["spellblade_Bloodsong"]
         events = row["damage_events"]
         assert len(events) == row["count"] == 2
-        effect = resolve_damage_effects(_build("Bloodsong")).spellblade
+        effect = _spellblade_slot("Bloodsong")
         first_cast = min(event["time"] for event in fight["cast_timeline"])
         assert events[0]["time"] == pytest.approx(first_cast + effect.weave_delay)
         assert events[1]["time"] >= events[0]["time"] + effect.cooldown
@@ -5747,7 +5861,7 @@ class TestSheenSpellblade:
         }
 
     def test_spellblade_compiles_and_scales_from_base_ad(self) -> None:
-        effect = resolve_damage_effects(_build("Sheen")).spellblade
+        effect = _spellblade_slot("Sheen")
         assert effect is not None
         assert effect.source.item_name == "Sheen"
         assert effect.cooldown == pytest.approx(1.5)
@@ -5771,7 +5885,7 @@ class TestSheenSpellblade:
     def test_spellblade_damage_equals_base_ad(self) -> None:
         """Sheen's proc is exactly 100% base AD with no AP scaling."""
         stats = {"base_attack_damage": 104.0, "ability_power": 300.0}
-        effect = resolve_damage_effects(_build("Sheen")).spellblade
+        effect = _spellblade_slot("Sheen")
         assert effect is not None
         damage = effect.source.raw_damage(DamageInputs(stats, 18, False, 1000, 1000))
         assert damage == pytest.approx(104.0)
@@ -5815,13 +5929,11 @@ class TestHauntingGuiseMadness(_FightHarness):
         assert parsed["amp_per_second"] == pytest.approx(0.02)
         assert parsed["amp_max"] == pytest.approx(0.06)
 
-    def test_amp_fraction_uses_the_riftmaker_ramp_model(self) -> None:
+    def test_the_ramp_magnitude_averages_over_its_capped_window(self) -> None:
         """Average ramp: half the per-second rate over the capped window."""
-        effects = resolve_damage_effects(_build("Haunting Guise"))
-        amp = {e.item_name: e for e in effects.damage_amplifiers}["Haunting Guise"]
-        assert amp.amp_fraction(2.0, 0.0, {}) == pytest.approx(0.02)
+        assert _whole_total_fraction("Haunting Guise", 2.0) == pytest.approx(0.02)
         # 6% cap is reached after 3 seconds; longer fights keep that average.
-        assert amp.amp_fraction(5.0, 0.0, {}) == pytest.approx(0.03)
+        assert _whole_total_fraction("Haunting Guise", 5.0) == pytest.approx(0.03)
 
     def test_fight_total_is_amplified_with_a_breakdown_row(self) -> None:
         """A 5s auto fight gains the 3% averaged Madness multiplier."""
@@ -5899,8 +6011,7 @@ class TestBamisCinderImmolate(_FightHarness):
 
     def test_flat_dps_ignores_bonus_health(self) -> None:
         """The V14.19 flat Immolate must not scale with bonus health."""
-        effects = resolve_damage_effects(_build("Bami's Cinder"))
-        source = effects.immolates[0]
+        (source,) = _periodic_slots("Bami's Cinder").auras
         inputs = DamageInputs(
             champion_stats={"bonus_health": 2000.0},
             level=11,
@@ -5964,7 +6075,7 @@ class TestFatedAshesInflame(_FightHarness):
 
     def test_flat_burn_ignores_ability_power(self) -> None:
         """Inflame's total is 15 whether the caster has 0 or 500 AP."""
-        (burn,) = resolve_damage_effects(_build("Fated Ashes")).burns
+        (burn,) = _periodic_slots("Fated Ashes").burns
         assert burn.duration == pytest.approx(3.0)
         assert burn.tick_interval == pytest.approx(0.5)
         for ability_power in (0.0, 500.0):
@@ -6067,7 +6178,7 @@ class TestHextechAlternatorRevved(_FightHarness):
 
     def test_compiles_as_champion_damage_proc_without_ap_scaling(self) -> None:
         """Revved is a flat 65 whether the holder has 0 or 500 AP."""
-        (proc,) = resolve_damage_effects(_build("Hextech Alternator")).cooldown_procs
+        (proc,) = _cast_proc_slots("Hextech Alternator").cooldown_procs
         assert proc.trigger == "champion_damage"
         assert proc.cooldown == pytest.approx(40.0)
         for ability_power in (0.0, 500.0):
@@ -6149,7 +6260,7 @@ class TestScoutsSlingshotBullseye(_FightHarness):
 
     def test_compiles_with_spell_damage_and_refund(self) -> None:
         """Bullseye is spell damage (unlike Revved) and carries its refund."""
-        (proc,) = resolve_damage_effects(_build("Scout's Slingshot")).cooldown_procs
+        (proc,) = _cast_proc_slots("Scout's Slingshot").cooldown_procs
         assert proc.trigger == "champion_damage"
         assert proc.cooldown == pytest.approx(40.0)
         assert proc.on_attack_cooldown_refund == pytest.approx(1.0)
@@ -6164,7 +6275,7 @@ class TestScoutsSlingshotBullseye(_FightHarness):
         with pytest.MonkeyPatch.context() as patcher:
             patcher.setitem(item_effects.ITEM_EFFECTS, "Scout's Slingshot", broken)
             with pytest.raises(KeyError) as exc_info:
-                resolve_damage_effects(_build("Scout's Slingshot"))
+                _cast_proc_slots("Scout's Slingshot")
         message = exc_info.value.args[0]
         assert "Scout's Slingshot" in message
         assert "on_attack_cooldown_refund" in message

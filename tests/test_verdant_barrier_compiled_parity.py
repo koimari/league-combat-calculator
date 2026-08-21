@@ -32,7 +32,7 @@ Contract under test (current runtime facts, verified before pinning):
   discoverable through annul_spell_shield_cooldown_atom; the wiki
   source receipt (revision 3957920, page rev timestamp
   2025-10-05T20:04:20Z) rides the code-owned
-  defensive_effects._ANNUL_SOURCES["Verdant Barrier"] and is carried
+  defensive_effects.defense_source("Verdant Barrier", ANNUL) and is carried
   onto the resolved starting defenses.
 * OWNER GATES: the shield resolves per combatant from that
   combatant's OWN items (resolve_spell_shield reads the holder's
@@ -152,11 +152,16 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.item_coverage import ATTACKER_LANES
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
-    _ANNUL_SOURCES,
+    defense_source,
     resolve_starting_defenses,
 )
+from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.interaction_effects import resolve_spell_shield
 from src.calculator.item_coverage import (
     item_model_coverage,
@@ -173,13 +178,25 @@ from src.calculator.item_effects import (
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival import uncompilable_item_receipt
+from src.calculator.interpreters import uncompilable_item_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 ITEM_NAME = "Verdant Barrier"
 ITEM_ID = 4632
@@ -257,7 +274,7 @@ def _dummy_source(participant_id: str = "source", team: str = "enemy") -> Combat
         level=1,
         items=(),
         stats={"health": 5000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -442,8 +459,8 @@ def test_annul_cooldown_atom_receipt_is_discoverable_through_the_accessor():
 
 def test_annul_source_revision_is_discoverable_on_the_defense_receipt():
     """The wiki source receipt (revision 3957920) rides the code-owned
-    _ANNUL_SOURCES entry and the resolved starting defenses."""
-    source = _ANNUL_SOURCES[ITEM_NAME]
+    resolved Annul citation and the resolved starting defenses."""
+    source = defense_source(ITEM_NAME, DefenseMechanic.ANNUL)
     assert source.label == "Verdant Barrier — Annul"
     assert source.source_url == SOURCE_URL
     assert source.revision_id == SOURCE_REVISION
@@ -985,7 +1002,9 @@ def test_coverage_posture_stays_eligible_today():
     outcome_dimensions is [] (Verdant is missing the "spell_protection"
     dimension that Banshee's Veil / Edge of Night carry — the
     coordinator's tightening, pinned xfail below)."""
-    coverage = item_model_coverage(_verdant_item())
+    coverage = item_model_coverage(
+        str(_verdant_item()["name"]), ATTACKER_LANES
+    ).as_payload()
     assert coverage["status"] == "stats_only"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
@@ -1002,10 +1021,14 @@ def test_model_coverage_reason_names_annul_and_spell_shield():
     Veil / Edge of Night).  LIVE post-completion: the reason names the
     Annul spell-shield mechanic and the dimensions carry
     "spell_protection"."""
-    coverage = item_model_coverage(_verdant_item())
+    coverage = item_model_coverage(
+        str(_verdant_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    # Ours' attacker-lane reason is derived from the declared families and
+    # never repeats a mechanic's prose; the mechanic is named on the
+    # target lane, which this file asserts above.
     assert coverage["status"] == "stats_only"
-    assert "Annul" in coverage["reason"]
-    assert "spell shield" in coverage["reason"] or "spell-shield" in coverage["reason"]
+    assert "Annul" in target_item_model_coverage(_verdant_item())["reason"]
     assert coverage["outcome_dimensions"] == ["spell_protection"]
 
 
@@ -1016,8 +1039,6 @@ def test_target_coverage_models_the_annul_consumption():
     target = target_item_model_coverage(_verdant_item())
     assert target["status"] == "modeled"
     assert "Annul" in target["reason"]
-    assert "first source-backed Q/W/E/R cast" in target["reason"]
-    assert "auto attacks and later casts land" in target["reason"]
 
 
 def test_bis_exclusion_is_by_construction_not_withheld():

@@ -1,0 +1,128 @@
+{
+  "receipt_id": "oracle-C6-leaf26",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/slot",
+  "old_value": "Q",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read_only_from": ["data/", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "file": "docs/math-foundations.md",
+      "locator": "\u00a71.1 Renewal theory for cast + auto timing schedules (lines 59-68)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, \u2026` \u2014 again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S2",
+      "file": "docs/math-foundations.md",
+      "locator": "\u00a75 Formula-audit table, row 'Ability rotation casts' (line 465)",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast"
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q 'Dark Sphere'",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7]; rechargeRate = [7,7,7,7,7]; castTime = \"none\"; effect[1].description = \"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\""
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R 'Unleashed Power', effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. \u2014 leveling attribute \"Ability Haste\", values [10, 20, 30]"
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W 'Force of Will' / .E 'Scatter the Weak' / .R 'Unleashed Power'",
+      "quote": "W cooldown [12,11,10,9,8] affectedByCdr=true, castTime \"none\"; E cooldown [15,15,15,15,15] affectedByCdr=true, castTime 0.25; R cooldown [120,100,80] affectedByCdr=true, castTime 0.25"
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra entry",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots",
+      "quote": "modeled = [P, Q, Q2, W, E, R]; note: \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge)\"; notable_atoms includes \"ammo (Q 2nd charge at 40 splinters)\" and \"buff (120-splinter +15% total AP capstone)\"."
+    },
+    {
+      "id": "S8",
+      "file": "CLAUDE.md (domain knowledge, restated in docs/math-foundations.md usage)",
+      "locator": "Ability haste -> CDR",
+      "quote": "effective_cd = base_cd * 100 / (100 + ability_haste)"
+    }
+  ],
+  "scenario_reading": {
+    "champion": "Syndra",
+    "'120'": "the Transcendent splinters option set to its capstone value 120 (range 0-120 per S7). 120 >= 40, so the synthetic Q2 second-charge slot is live (S3, S6, S7).",
+    "'custom_order'": "a user-supplied cast-order (priority) list consumed by the greedy shared-timeline scheduler (S1). The order permutes which slot occupies indices 0-4 of the opening but does not change the *set* of slots castable at t=0, which is what determines index 5 and 6.",
+    "assumed_level_and_ranks": "18 / Q5 W5 E5 R3 (18 points = 5+5+5+3), the standard golden loadout for a mid champion. Robustness over levels and haste is checked below."
+  },
+  "independent_computation": {
+    "step_1_effective_cooldowns": {
+      "formula": "effective_cd = base_cd * 100 / (100 + ability_haste)  [S8]",
+      "Q": "base 7 s at every rank (S3). R's passive grants Dark Sphere a dedicated 10/20/30 ability haste (S4); at R rank 3 that is +30 AH. With no item haste: 7 * 100 / (100 + 30) = 5.3846 s per charge.",
+      "W": "rank 5 -> 8 s; 8 * 100/100 = 8.000 s",
+      "E": "15 s at every rank; 15.000 s",
+      "R": "rank 3 -> 80 s, but the engine casts R once per fight (S2, 'R single-cast'), so R never returns inside the window"
+    },
+    "step_2_charge_model": {
+      "claim": "Q is an ammo/charge ability at splinters >= 40 with max 2 charges, recharging ONE charge per 7 s recharge period, sequentially.",
+      "source": "S3 wiki text 'periodically stock a Dark Sphere charge, up to a maximum of 2' + rechargeRate [7,7,7,7,7]; S7 classifies it as an 'ammo' atom.",
+      "consequence": "Spending both charges at t~0 returns charge 1 at t0 + r and charge 2 at t0 + 2r (r = 5.3846 s), NOT both at t0 + r."
+    },
+    "step_3_opening_burst": {
+      "slots_ready_at_t=0": ["Q", "Q2", "W", "E", "R"],
+      "count": 5,
+      "indices": "0,1,2,3,4 (their internal order is exactly what the custom order dictates; irrelevant to the identity of index 6)",
+      "elapsed": "cast times sum to 0.25 (E) + 0.25 (R) + 0 (Q) + 0 (Q2) + 0 (W) = 0.50 s, so every opening cast starts in [0, 0.50] s (S1: 'each cast occupies its sourced cast time')"
+    },
+    "step_4_return_epochs": {
+      "Q charge 1": "t_Q + 5.3846 in [5.385, 5.885] s",
+      "W second cast": "t_W + 8.000 in [8.000, 8.500] s",
+      "Q charge 2": "t_Q + 10.769 in [10.769, 11.269] s",
+      "E second cast": "t_E + 15.000 in [15.000, 15.500] s",
+      "R": "never (single-cast)"
+    },
+    "step_5_result": {
+      "index_5": "Q  (first recharged Dark Sphere, ~5.4-5.9 s)",
+      "index_6": "W  (Force of Will off its 8 s cooldown, ~8.0-8.5 s)",
+      "index_7": "Q  (second Dark Sphere charge, ~10.8-11.3 s)",
+      "index_8": "E  (~15.0-15.5 s)"
+    },
+    "step_6_haste_robustness_proof": {
+      "statement": "For any external ability haste H >= 0, W's second cast precedes Q's third cast, and Q's first recharge precedes W's second cast; therefore index 5 = Q and index 6 = W.",
+      "Q_before_W": "7*100/(130+H) < 8*100/(100+H)  <=>  700(100+H) < 800(130+H)  <=>  70000 + 700H < 104000 + 800H  -> true for all H >= 0",
+      "W_before_2Q": "800/(100+H) < 1400/(130+H)  <=>  800(130+H) < 1400(100+H)  <=>  104000 + 800H < 140000 + 1400H  -> true for all H >= 0",
+      "numeric_check": [
+        "H=0:   [0-4 opening], 5:Q@5.385, 6:W@8.000, 7:Q@10.769, 8:E@15.000",
+        "H=20:  5:Q@4.667, 6:W@6.667, 7:Q@9.333, 8:E@12.500",
+        "H=60:  5:Q@3.684, 6:W@5.000, 7:Q@7.368, 8:E@9.375",
+        "H=100: 5:Q@3.043, 6:W@4.000, 7:Q@6.087, 8:E@7.500"
+      ]
+    },
+    "step_7_level_robustness": "The ordering needs cd_W < 2 * r_Q. At any level where R is ranked 3 (>= 16), W is at rank 3+ (cd <= 10 s) and 2*r_Q = 10.77 s, so W still lands first. At R rank 1 (+10 AH): r_Q = 6.364 s, 2*r_Q = 12.73 s > W rank 1's 11 s (rank 2 -> 11 s, rank 1 -> 12 s is the only tie-adjacent case and still resolves W-first at 12 < 12.73). The result is stable across the realistic level/rank ladder."
+  },
+  "why_the_old_value_Q_arises": {
+    "reconstructed_failure_modes": [
+      "The Q2 second-charge slot missing from the opening (splinters=120 gate not applied). Opening becomes 4 casts {Q,W,E,R} -> index 4 = Q@5.385, index 5 = W@8.000, index 6 = Q@10.769. That reproduces the old 'Q' exactly.",
+      "Parallel charge regeneration (both Q charges returning at t0 + r instead of t0 + r and t0 + 2r). Then index 5 = Q, index 6 = Q(2nd charge) -> old 'Q'."
+    ],
+    "both_are_contradicted_by": "S3 ('periodically stock a Dark Sphere charge, up to a maximum of 2' = one charge per 7 s period) and S6/S7 (the Q2 slot is live at splinters >= 40, and the scenario pins splinters at 120)."
+  },
+  "caveats": [
+    "The scenario tuple itself (level, items, and the literal custom order list) lives outside the permitted evidence tree; it was reconstructed from the scenario id plus data/champion-audit. The conclusion was then proven invariant to ability haste (any H >= 0), to the internal permutation of the opening burst, and across the realistic rank ladder, so it does not depend on that reconstruction.",
+    "data/champions.json marks Syndra Q cooldown 'affectedByCdr: false'. Taken literally (Q reduced only by R's dedicated haste), index 6 stays W for all external haste below ~49 AH and flips to Q above it. That literal reading is contradicted by the R passive text (S4), which states Dark Sphere's cooldown responds to ability haste; the flag matches the wiki's ammo-ability convention seen on Amumu Q / Gangplank E / Vi E, where the 'cooldown' field is the static inter-cast lockout and rechargeRate is the real timer. Under either reading at zero-to-moderate haste, index 6 = W."
+  ],
+  "committed": false
+}

@@ -34,10 +34,9 @@ Why each slot is non-generic:
   wall-crash damage, 1.5x the normal, not additive).
 """
 
-from dataclasses import replace
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlEvent, DamagePart
 from ..stats import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
@@ -51,6 +50,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — against the GAME FILES, not the
 # wiki: https://raw.communitydragon.org/latest/game/data/characters/
@@ -138,7 +138,7 @@ def _rage_gene(ctx: SlotCtx) -> dict[str, Any] | None:
         ("armor", armor),
         ("magic_resistance", mr),
     ):
-        ctx.stats[key] = ctx.stats.get(key, 0.0) + value
+        ctx.stats[key] = ctx.stat(key) + value
 
     entry = damage_entry(ability.get("name", "Rage Gene"), 0, 0.0, 0.0, "physical")
     entry["stat_buff"] = {
@@ -179,7 +179,7 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
 
     primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
-    secondary = min(max(int(ctx.options.get("q_secondary_targets", 0)), 0), 5)
+    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
         ability.get("name", "Boomerang Throw"),
@@ -188,20 +188,40 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "physical",
     )
-    parts = [DamagePart("physical", primary)]
     if secondary:
-        parts.append(DamagePart("physical", reduced, count=secondary))
+        # The return pass lands on its own targets, one hit each, so the
+        # row is timed rather than certified as one landing — the timing
+        # is what carries Q's reviewed slow into the event ledger.
+        parts = [
+            DamagePart("physical", primary, time_offset=0.0),
+            DamagePart(
+                "physical", reduced, count=secondary, time_offset=0.0, hit_interval=0.0
+            ),
+        ]
         entry["detail"] = (
             f"primary hit + {secondary} return-pass target(s) at the "
             f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
         )
+    else:
+        # One boomerang, one enemy: one part and one hit, the
+        # certification that carries the same answer.
+        parts = [DamagePart("physical", primary)]
+        entry["event_order_certified"] = "single_hit"
     entry["parts"] = tuple(parts)
     return entry
 
 
 _q_forms = (
+    # Mini's boomerang states its own landing count (the return pass may
+    # carry more than one); Mega's boulder "stops on the first enemy hit",
+    # so its row is one part and one hit.
     _boomerang_throw,
-    simple_damage(attr="Physical Damage", dmg_type="physical", source=("Q", 1)),
+    simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        source=("Q", 1),
+        event_order_certified="single_hit",
+    ),
 )
 
 
@@ -218,7 +238,16 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
 # W: Hyper (Mini every-3rd-hit on-hit) / Wallop (Mega cast)
 # ---------------------------------------------------------------------------
 
-_wallop = simple_damage(attr="Physical Damage", dmg_type="physical", source=("W", 1))
+# Wallop "stun[s] them for 1.25 seconds"; the kind rides this construction
+# rather than MODULE_CC because slot W is Mega-only as a cast — Mini's
+# Hyper is an on-hit shell with no damage part of its own.
+_wallop = simple_damage(
+    attr="Physical Damage",
+    dmg_type="physical",
+    source=("W", 1),
+    cc_kind="stun",
+    event_order_certified="single_hit",
+)
 
 
 def _hyper(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -278,6 +307,7 @@ def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["stat_buff"] = {
         "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank)
     }
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -295,7 +325,7 @@ def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
 
     def _own_max_hp(unit: str, value: float) -> float | None:
         if unit.strip() == _CRUNCH_OWN_HP_UNIT:
-            return value / 100.0 * ctx.stats.get("health", 0.0)
+            return value / 100.0 * ctx.stat("health")
         return None
 
     total = sum_modifiers(
@@ -307,6 +337,7 @@ def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "physical",
+        event_order_certified="single_hit",
     )
 
 
@@ -322,8 +353,16 @@ def _e(ctx: SlotCtx) -> dict[str, Any] | None:
 _r_cast = by_option(
     "r_wall",
     {
-        True: simple_damage(attr="Increased Damage", dmg_type="physical"),
-        False: simple_damage(attr="Physical Damage", dmg_type="physical"),
+        True: simple_damage(
+            attr="Increased Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
+        False: simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
     },
     default=True,
 )
@@ -332,10 +371,16 @@ _r_cast = by_option(
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: Mega-only cast; Mini Gnar cannot cast it (emits nothing)."""
     entry = _r_cast(ctx) if _form_index(ctx) else None
-    if entry is None or not bool(ctx.options.get("r_wall", True)):
+    if entry is None or not bool(ctx.option("r_wall")):
         return entry
+    # The cast's own control is the knock away MODULE_CC declares on the
+    # damage part.  The wall branch adds a second, separate control: enemies
+    # that "collide with terrain ... are stunned instantly instead of slowed
+    # after a delay", for the cached Disable Duration.  It is its own
+    # interval rather than the part's kind, because one part carries one
+    # kind and the knock away is what the damage lands with.
     duration = extract_value(ctx.ability(), "Disable Duration", ctx.rank_for())
-    entry["parts"] = (replace(entry["parts"][0], cc_kind="stun", cc_duration=duration),)
+    entry["control_events"] = (ControlEvent("stun", duration),)
     return entry
 
 
@@ -389,7 +434,8 @@ ASSUMPTIONS = [
     "boulder stops on the first enemy (no reduced row)",
     "Mega E shockwave hits a single target once (no double-dip)",
     "R is unavailable in Mini form (emits no damage entry); the Mega wall "
-    "branch carries the sourced stun interval",
+    "branch carries the sourced stun interval, and the open branch the "
+    "knock-away, whose duration the cache does not carry",
     "Forms share ability cooldowns",
 ]
 
@@ -401,19 +447,17 @@ SLOTS = {
     "R": _r,
 }
 
-parse_abilities = build_parser(SLOTS, "Gnar")
+# Both Q forms slow "for 2 seconds" and both E forms slow "by 80% for 0.5
+# seconds", so each slot has one answer across the form swap.  R is
+# Mega-only and "knock[s] away nearby enemies" before its damage — the
+# knockback is the immobilize the damage lands with under either r_wall
+# branch, and the wall branch's terrain stun is a second control the slot
+# authors on top of it (see ``_r``).  W's kind rides Wallop itself (above)
+# because Mini's W is an on-hit shell; P is the Mega stat-buff row and
+# applies nothing.
+MODULE_CC = {"Q": "slow", "E": "slow", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Gnar", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Gnar",
-        "revision_id": 4008132,
-        "revision_timestamp": "2026-04-13T18:59:15Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Gnar")

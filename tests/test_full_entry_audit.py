@@ -243,7 +243,7 @@ def test_item_effect_receipt_keeps_each_branch_and_runtime_path_visible():
         },
     )
     runtime = {
-        "status": "blocked",
+        "status": "withheld",
         "reason": "Secondary target timing is not modeled.",
         "review_issue_refs": [43],
         "calculation_eligible": False,

@@ -1,0 +1,483 @@
+{
+  "campaign": "coverage-frontier",
+  "expected_diff_paths": {
+    "golden": [
+      "/champion_baselines/Bard/abilities_level_11/W",
+      "/champion_baselines/JarvanIV/abilities_level_11/W",
+      "/champion_baselines/Milio/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Milio/abilities_level_11/passive/detail",
+      "/champion_baselines/Milio/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Milio/abilities_level_11/passive/rank",
+      "/champion_baselines/Milio/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Milio/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Rakan/abilities_level_11/E",
+      "/champion_baselines/Seraphine/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Seraphine/abilities_level_11/passive/detail",
+      "/champion_baselines/Seraphine/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Seraphine/abilities_level_11/passive/rank",
+      "/champion_baselines/Seraphine/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Seraphine/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Shen/abilities_level_11/E/detail",
+      "/champion_baselines/Shen/abilities_level_11/E/self_shield_events",
+      "/champion_baselines/Shen/abilities_level_11/R",
+      "/champion_baselines/Sona/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Sona/abilities_level_11/passive/detail",
+      "/champion_baselines/Sona/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Sona/abilities_level_11/passive/rank",
+      "/champion_baselines/Sona/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Sona/abilities_level_11/passive/resource_type",
+      "/champion_baselines/Soraka/abilities_level_11/R",
+      "/champion_baselines/Taric/abilities_level_11/passive/cooldown",
+      "/champion_baselines/Taric/abilities_level_11/passive/detail",
+      "/champion_baselines/Taric/abilities_level_11/passive/on_hit",
+      "/champion_baselines/Taric/abilities_level_11/passive/rank",
+      "/champion_baselines/Taric/abilities_level_11/passive/resource_cost",
+      "/champion_baselines/Taric/abilities_level_11/passive/resource_type",
+      "/registered_champion_fights/Bard/11/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/sustained/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/sustained/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/sustained/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/sustained/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/11/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force",
+      "/registered_champion_fights/Bard/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Bard/18/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/sustained/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/sustained/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/sustained/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/sustained/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Bard/18/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force",
+      "/registered_champion_fights/Bard/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Jarvan IV/11/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/sustained/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/sustained/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/sustained/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/11/sustained/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/sustained/magic_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/sustained/no_items/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/sustained/physical_build/breakdown_totals/W",
+      "/registered_champion_fights/Jarvan IV/18/sustained/spellblade_build/breakdown_totals/W",
+      "/registered_champion_fights/Milio/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Milio/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Milio/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Milio/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Milio/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Milio/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Milio/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Milio/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Milio/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Milio/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Milio/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Rakan/11/magic_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/no_items/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/physical_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/spellblade_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/sustained/magic_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/sustained/no_items/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/sustained/physical_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/11/sustained/spellblade_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/magic_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/no_items/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/physical_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/spellblade_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/sustained/magic_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/sustained/no_items/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/sustained/physical_build/breakdown_totals/E",
+      "/registered_champion_fights/Rakan/18/sustained/spellblade_build/breakdown_totals/E",
+      "/registered_champion_fights/Seraphine/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Seraphine/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Seraphine/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Seraphine/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Seraphine/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Seraphine/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+      "/registered_champion_fights/Seraphine/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Seraphine/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Seraphine/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Seraphine/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Seraphine/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Seraphine/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Shen/11/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/sustained/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/sustained/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/sustained/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/11/sustained/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/sustained/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/sustained/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/sustained/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Shen/18/sustained/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Sona/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Sona/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Sona/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Sona/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Sona/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Sona/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Sona/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Sona/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Sona/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Sona/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Sona/18/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Soraka/11/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/sustained/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/sustained/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/sustained/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/11/sustained/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/sustained/magic_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/sustained/no_items/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/sustained/physical_build/breakdown_totals/R",
+      "/registered_champion_fights/Soraka/18/sustained/spellblade_build/breakdown_totals/R",
+      "/registered_champion_fights/Taric/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/11/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Taric/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/11/sustained/no_items/total_damage",
+      "/registered_champion_fights/Taric/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Taric/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/11/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Taric/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/11/sustained/spellblade_build/total_damage",
+      "/registered_champion_fights/Taric/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/18/sustained/magic_build/total_damage",
+      "/registered_champion_fights/Taric/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/18/sustained/no_items/total_damage",
+      "/registered_champion_fights/Taric/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+      "/registered_champion_fights/Taric/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/18/sustained/physical_build/total_damage",
+      "/registered_champion_fights/Taric/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+      "/registered_champion_fights/Taric/18/sustained/spellblade_build/total_damage"
+    ],
+    "golden_shape_counters": []
+  },
+  "how_to_reproduce": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json ; the two coupled baselines compare clean.  For the riders, re-run any moved sustained fight with the module's proc option at 0 and it returns to the committed value.",
+  "landed_against": {
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "golden": "scripts/golden_baseline.json",
+    "rule": "R-17 / campaign decision 10 — the unit lands against the three committed baselines and declares the paths it moves; the orchestrator re-captures once at integration close."
+  },
+  "measured": {
+    "coupled_exact": 0,
+    "coupled_golden": 0,
+    "golden": 188,
+    "golden_shape_counters": 0,
+    "new_leaves": 123,
+    "value_moves": 65
+  },
+  "receipt": "expected_golden_diff",
+  "slice": "the ally-support scanner and its fourteen champions (utility-axis census slices 2, 3 and 6)",
+  "unit": "W2-SUPPORT",
+  "value_moves": {
+    "/champion_baselines/Milio/abilities_level_11/passive/cooldown": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Milio/abilities_level_11/passive/detail": {
+      "new": "1 enchanted hit(s) applying the sourced burn 33.53 (10 : 50 based on level + 20% of Milio's AP over 1.5s, priced at the hit); the 7% / 11% / 15% of the enchanted target's AD on the same hit has no cached row and no sourced level breakpoints",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability."
+    },
+    "/champion_baselines/Milio/abilities_level_11/passive/rank": {
+      "new": null,
+      "old": 0
+    },
+    "/champion_baselines/Milio/abilities_level_11/passive/resource_cost": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Milio/abilities_level_11/passive/resource_type": {
+      "new": null,
+      "old": "MANA"
+    },
+    "/champion_baselines/Seraphine/abilities_level_11/passive/cooldown": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Seraphine/abilities_level_11/passive/detail": {
+      "new": "4 Note(s) of 16.35 bonus magic damage each (4 : 27.47 based on level + 4% AP) on one empowered attack; Notes from allies (reduced by 75%) and Echo's free recast are unpriced",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability."
+    },
+    "/champion_baselines/Seraphine/abilities_level_11/passive/rank": {
+      "new": null,
+      "old": 0
+    },
+    "/champion_baselines/Seraphine/abilities_level_11/passive/resource_cost": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Seraphine/abilities_level_11/passive/resource_type": {
+      "new": null,
+      "old": "MANA"
+    },
+    "/champion_baselines/Shen/abilities_level_11/E/detail": {
+      "new": "champion hit after 0.53s dash; the E cast also grants the Ki Barrier self-shield (89.94 for 2.5s, 47:128.59 by level + 13% bonus health)",
+      "old": "champion hit after 0.53s dash"
+    },
+    "/champion_baselines/Sona/abilities_level_11/passive/cooldown": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Sona/abilities_level_11/passive/detail": {
+      "new": "1 Power Chord(s) of 135.00 bonus magic damage (20 : 270 based on level + 20% AP), one per three basic abilities; the Staccato / Diminuendo / Tempo tag riders are not applied",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability."
+    },
+    "/champion_baselines/Sona/abilities_level_11/passive/rank": {
+      "new": null,
+      "old": 0
+    },
+    "/champion_baselines/Sona/abilities_level_11/passive/resource_cost": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Sona/abilities_level_11/passive/resource_type": {
+      "new": null,
+      "old": "MANA"
+    },
+    "/champion_baselines/Taric/abilities_level_11/passive/cooldown": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Taric/abilities_level_11/passive/detail": {
+      "new": "2 empowered attack(s) of 65.00 bonus magic damage (25 : 101 based on level + 15% bonus armor); the 100% total attack speed those attacks gain and the 1 : 2s cooldown refund they pay have no engine channel",
+      "old": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability."
+    },
+    "/champion_baselines/Taric/abilities_level_11/passive/rank": {
+      "new": null,
+      "old": 0
+    },
+    "/champion_baselines/Taric/abilities_level_11/passive/resource_cost": {
+      "new": null,
+      "old": 0.0
+    },
+    "/champion_baselines/Taric/abilities_level_11/passive/resource_type": {
+      "new": null,
+      "old": "MANA"
+    },
+    "/registered_champion_fights/Bard/11/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force": {
+      "new": 208.0,
+      "old": 104.0
+    },
+    "/registered_champion_fights/Bard/11/sustained/spellblade_build/total_damage": {
+      "new": 1368.46,
+      "old": 1264.46
+    },
+    "/registered_champion_fights/Bard/18/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force": {
+      "new": 274.67,
+      "old": 137.33
+    },
+    "/registered_champion_fights/Bard/18/sustained/spellblade_build/total_damage": {
+      "new": 1734.58,
+      "old": 1597.25
+    },
+    "/registered_champion_fights/Milio/11/sustained/magic_build/total_damage": {
+      "new": 1085.22,
+      "old": 987.68
+    },
+    "/registered_champion_fights/Milio/11/sustained/no_items/total_damage": {
+      "new": 404.52,
+      "old": 380.57
+    },
+    "/registered_champion_fights/Milio/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 105.09,
+      "old": 104.77
+    },
+    "/registered_champion_fights/Milio/11/sustained/physical_build/total_damage": {
+      "new": 1628.11,
+      "old": 1603.84
+    },
+    "/registered_champion_fights/Milio/11/sustained/spellblade_build/total_damage": {
+      "new": 1281.1,
+      "old": 1257.15
+    },
+    "/registered_champion_fights/Milio/18/sustained/magic_build/total_damage": {
+      "new": 1218.4,
+      "old": 1107.68
+    },
+    "/registered_champion_fights/Milio/18/sustained/no_items/total_damage": {
+      "new": 536.29,
+      "old": 500.57
+    },
+    "/registered_champion_fights/Milio/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 129.85,
+      "old": 129.28
+    },
+    "/registered_champion_fights/Milio/18/sustained/physical_build/total_damage": {
+      "new": 1807.64,
+      "old": 1771.35
+    },
+    "/registered_champion_fights/Milio/18/sustained/spellblade_build/total_damage": {
+      "new": 1665.19,
+      "old": 1629.47
+    },
+    "/registered_champion_fights/Seraphine/11/sustained/magic_build/total_damage": {
+      "new": 1301.14,
+      "old": 1192.24
+    },
+    "/registered_champion_fights/Seraphine/11/sustained/no_items/total_damage": {
+      "new": 519.02,
+      "old": 472.31
+    },
+    "/registered_champion_fights/Seraphine/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 105.39,
+      "old": 104.77
+    },
+    "/registered_champion_fights/Seraphine/11/sustained/physical_build/total_damage": {
+      "new": 1742.91,
+      "old": 1695.58
+    },
+    "/registered_champion_fights/Seraphine/11/sustained/spellblade_build/total_damage": {
+      "new": 1395.6,
+      "old": 1348.89
+    },
+    "/registered_champion_fights/Seraphine/18/sustained/magic_build/total_damage": {
+      "new": 1614.88,
+      "old": 1459.32
+    },
+    "/registered_champion_fights/Seraphine/18/sustained/no_items/total_damage": {
+      "new": 787.7,
+      "old": 716.27
+    },
+    "/registered_champion_fights/Seraphine/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 130.34,
+      "old": 129.19
+    },
+    "/registered_champion_fights/Seraphine/18/sustained/physical_build/total_damage": {
+      "new": 2056.7,
+      "old": 1984.13
+    },
+    "/registered_champion_fights/Seraphine/18/sustained/spellblade_build/total_damage": {
+      "new": 1911.3,
+      "old": 1839.87
+    },
+    "/registered_champion_fights/Sona/11/sustained/magic_build/total_damage": {
+      "new": 1154.32,
+      "old": 975.6
+    },
+    "/registered_champion_fights/Sona/11/sustained/no_items/total_damage": {
+      "new": 560.71,
+      "old": 464.29
+    },
+    "/registered_champion_fights/Sona/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 105.97,
+      "old": 104.7
+    },
+    "/registered_champion_fights/Sona/11/sustained/physical_build/total_damage": {
+      "new": 1781.69,
+      "old": 1683.98
+    },
+    "/registered_champion_fights/Sona/11/sustained/spellblade_build/total_damage": {
+      "new": 1432.21,
+      "old": 1335.79
+    },
+    "/registered_champion_fights/Sona/18/sustained/magic_build/total_damage": {
+      "new": 1434.99,
+      "old": 1172.27
+    },
+    "/registered_champion_fights/Sona/18/sustained/no_items/total_damage": {
+      "new": 823.81,
+      "old": 652.38
+    },
+    "/registered_champion_fights/Sona/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 131.85,
+      "old": 129.11
+    },
+    "/registered_champion_fights/Sona/18/sustained/physical_build/total_damage": {
+      "new": 2091.49,
+      "old": 1917.32
+    },
+    "/registered_champion_fights/Sona/18/sustained/spellblade_build/total_damage": {
+      "new": 1942.11,
+      "old": 1770.68
+    },
+    "/registered_champion_fights/Taric/11/sustained/magic_build/total_damage": {
+      "new": 680.16,
+      "old": 576.16
+    },
+    "/registered_champion_fights/Taric/11/sustained/no_items/total_damage": {
+      "new": 329.14,
+      "old": 236.29
+    },
+    "/registered_champion_fights/Taric/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 133.79,
+      "old": 131.87
+    },
+    "/registered_champion_fights/Taric/11/sustained/physical_build/total_damage": {
+      "new": 1351.33,
+      "old": 1256.56
+    },
+    "/registered_champion_fights/Taric/11/sustained/spellblade_build/total_damage": {
+      "new": 1256.56,
+      "old": 1163.7
+    },
+    "/registered_champion_fights/Taric/18/sustained/magic_build/total_damage": {
+      "new": 984.96,
+      "old": 836.16
+    },
+    "/registered_champion_fights/Taric/18/sustained/no_items/total_damage": {
+      "new": 615.43,
+      "old": 482.57
+    },
+    "/registered_champion_fights/Taric/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+      "new": 165.69,
+      "old": 163.03
+    },
+    "/registered_champion_fights/Taric/18/sustained/physical_build/total_damage": {
+      "new": 1962.12,
+      "old": 1826.6
+    },
+    "/registered_champion_fights/Taric/18/sustained/spellblade_build/total_damage": {
+      "new": 1613.6,
+      "old": 1480.74
+    }
+  },
+  "what_moved": "188 pair-golden leaves: 123 rows that did not exist before (the five new support casts, the four rider on-hit blocks, Shen's self_shield_events) and 65 values that moved.  The two leaf-count fingerprints follow them and are already declared by the riders and E receipts this unit merged.  Nothing in either coupled baseline moved (both compare clean); the coupled-exact baseline's single cleaver_bloodsong_roster difference is older than this unit and reproduces at ac712803 with this unit's src/calculator/support_effects.py reverted to that commit.",
+  "why": {
+    "five_support_casts_join_the_rotation": "Bard W, Jarvan IV W, Rakan E, Soraka R and Shen R are shield/heal-only abilities the ally-support scanner could not price because no cast existed to hang the packet on (census slice 3).  Each is now a zero-damage cast in SLOTS, which adds one `abilities_level_*` row and one 0.0 `breakdown_totals` entry per fight.  Bard's is the only one that moves a number: Caretaker's Shrine is an ability cast, so it procs Spellblade (Trinity Force 137.33 -> 274.67 at level 18, 104.0 -> 208.0 at level 11) — the same reason Soraka W already did.",
+    "four_damage_riders": "Milio P (Fired Up!), Seraphine P (Stage Presence), Sona P (Power Chord) and Taric P (Bravado) each carried a cached damage row and priced nothing (census slice 6).  Each now emits an on-hit entry, so its `passive` baseline row stops being the compiler's zero-damage shell — `cooldown 0.0`, `rank 0`, `resource_cost 0.0`, `resource_type MANA` all become absent, and a sourced `on_hit` block and `detail` appear — and its sustained fights gain the rider's damage.  PROOF that the rider is the whole of it: with each module's proc option set to 0 (`p_procs`, `p_notes`, `p_power_chords`, `p_empowered_attacks`), every one of the 32 committed sustained totals for these four champions reproduces exactly.",
+    "on_hit_item_rows_that_follow": "In the sustained scenarios the rider changes the target's health walk — Sona's level-18 physical build now ends the target at 0.0 health where the baseline left 82.68 — so Kraken Slayer's on-hit row moves with it (Sona 18: 129.11 -> 131.85).  Same option-at-0 proof.",
+    "shen_ki_barrier": "Shen P rides the E cast as a `self_shield_events` payload, so E's `detail` gains the shield sentence and a `self_shield_events` leaf appears.  The shield absorbs incoming damage and changes no outgoing number."
+  }
+}

@@ -20,6 +20,7 @@ from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.interpreters import cast_proc
 from src.calculator.item_support_effects import derive_item_support_effects
 
 # ---------------------------------------------------------------------------
@@ -74,8 +75,20 @@ def _eclipse_fight(abilities: dict, *, duration: float, **kwargs) -> dict:
 
 class TestEclipseConsumer:
     def test_kernel_gate_rule_matches_sourced_values(self):
-        effect = item_effects.resolve_damage_effects([{"name": "Eclipse"}])
-        proc = next(p for p in effect.cooldown_procs if p.source.item_name == "Eclipse")
+        # MERGE: the proc families left ``BuildDamageEffects`` for their
+        # own interpreter (a projection field defaulting to an empty tuple
+        # would price a whole family at zero with nothing saying so).
+        proc = next(
+            p
+            for p in cast_proc.resolve_slots(
+                ("Eclipse",),
+                level=11,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ).cooldown_procs
+            if p.source.item_name == "Eclipse"
+        )
         gate = item_effects.eclipse_trigger_gate(proc)
         rule = gate.public_receipt()["rule"]
         assert rule["stacks_required"] == 2
@@ -90,6 +103,12 @@ class TestEclipseConsumer:
         )
         row = fight["breakdown"]["proc_Eclipse"]
         assert row["count"] == 1
+        # The event now carries the ``AuthoredDeclaration`` the walk prices it
+        # from: the rule that authored the packet, its pre-mitigation
+        # magnitude and the attack class that decides which of the holder's
+        # amplifiers it earns.  The last three positions are the resistance,
+        # swing and routing umbrellas, all absent on a proc that reached its
+        # subject directly through no basic-attack swing.
         assert row["damage_events"] == [
             {
                 "time": 0.0,
@@ -97,6 +116,7 @@ class TestEclipseConsumer:
                 "damage_type": "physical",
                 "event_precision": "exact",
                 "target_id": "target:0",
+                "declared": ("eclipse.proc", 100.0, "other", None, None, None),
             }
         ]
         receipt = row["state_transitions"]
@@ -494,7 +514,12 @@ class TestFimbulwinterConsumer:
 
 class TestForceOfNatureConsumer:
     def test_steadfast_rule_declaration(self):
-        from src.calculator.defensive_effects import _FORCE_OF_NATURE_SOURCE
+        from src.calculator.defensive_effects import defense_source
+        from src.calculator.item_behavior import DefenseMechanic
+
+        _FORCE_OF_NATURE_SOURCE = defense_source(
+            "Force of Nature", DefenseMechanic.STEADFAST
+        )
 
         rule = item_effects.force_of_nature_steadfast_rule(
             source=sl.SourceReceipt(

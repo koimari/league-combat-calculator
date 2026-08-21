@@ -1,0 +1,83 @@
+{
+  "receipt_id": "oracle-C6-leaf24",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/resource_cost",
+  "old_value": 100.0,
+  "new_value": 60.0,
+  "independent_value": 60.0,
+  "verdict": "new_value_correct",
+  "unit": "mana",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "cost.modifiers = [{\"values\": [40, 45, 50, 55, 60]}]; cooldown.modifiers = [{\"values\": [7, 7, 7, 7, 7]}]",
+      "use": "Dark Sphere mana cost per rank; rank 5 = 60 mana. Cooldown 7 s at every rank."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] (Force of Will)",
+      "quote": "cost.modifiers = [{\"values\": [60, 70, 80, 90, 100]}]; cooldown.modifiers = [{\"values\": [12, 11, 10, 9, 8]}] (affectedByCdr true)",
+      "use": "The only other Syndra ability that can cost 100 mana (rank 5). Its shortest cooldown (8 s at rank 5) is strictly longer than Q's 7 s."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] / R[0]",
+      "quote": "E cost = 50 flat (cd 15); R cost = 100 flat (cd 120/100/80)",
+      "use": "Completes the Syndra cost table: {Q: 40/45/50/55/60, W: 60/70/80/90/100, E: 50, R: 100}. 60 mana can only be Q(r5) or W(r1); 100 mana can only be W(r5) or R."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[1] (Transcendent Bonus)",
+      "quote": "\"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\"",
+      "use": "At the scenario's 120 splinters (the '120' in the scenario id, and the Transcendence cap per Syndra.P: 'stacking up to 120 times' / 'At 120 Splinters of Wrath, Syndra achieves Transcendence'), Dark Sphere is a 2-charge ability, so the opening rotation contains TWO Dark Sphere casts, each paying full mana."
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "atom stack-transform-summon-resource.ammo",
+      "quote": "\"A resource (internal index 12) consumed by specific actions ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)\"",
+      "use": "Confirms the second Dark Sphere charge is a stocked *cast* (ammo), not a free recast: each stocked cast is an independent Dark Sphere cast and pays Dark Sphere's mana cost."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots / notable_atoms",
+      "quote": "modeled = [P, Q, Q2, W, E, R] ... \"ammo (Q 2nd charge at 40 splinters)\" ... \"splinters option (0-120) gates Q2 second charge\"",
+      "use": "Independent confirmation (cached audit data, not source) that the modelled Syndra cast set at 120 splinters is six slots including the synthetic Q2 second Dark Sphere charge."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1 + audit table row 'Ability rotation casts'",
+      "quote": "\"Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order\"; \"R casts exactly once per timed fight (model constraint, documented)\"",
+      "use": "Gives the ordering rule used to identify which ability occupies cast_timeline[5]: opening casts first (greedy by cast order), then recasts in cooldown order; R never recasts."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0] passive",
+      "quote": "\"Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste\" — Ability Haste 10/20/30",
+      "use": "Only shortens Q further (7 x 100/(100+30) = 5.38 s at R rank 3), reinforcing that the first recast on the shared timeline is a Dark Sphere."
+    }
+  ],
+
+  "computation": {
+    "step_1_cost_table": "From the cached wiki rows, Syndra's mana costs are Q 40/45/50/55/60, W 60/70/80/90/100, E 50 flat, R 100 flat. So a 60-mana cast is either Q at rank 5 or W at rank 1; a 100-mana cast is either W at rank 5 or R.",
+    "step_2_which_cast_is_index_5": "cast_timeline[5] is the 6th cast. At 120 splinters Dark Sphere is a 2-charge ability, so the opening (each available cast fired once) is five casts: Q, Q(2nd charge), W, E, R. The 6th cast is therefore the first RECAST, and by the shared-timeline rule ('recasts when its effective cooldown has elapsed', math-foundations 1.1) that is the ability with the shortest cooldown. Q = 7 s at every rank (5.38 s with R rank 3's +30 ability haste on Q); W's shortest possible cooldown is 8 s (rank 5) and is 12 s at rank 1; E = 15 s; R is single-cast. min(7, 8, 15) = 7 -> the 6th cast is a Dark Sphere, unconditionally on rank assignment.",
+    "step_3_value": "A Dark Sphere cast at rank 5 costs 60 mana. (Level-18 max mana = 480 + 40 x 17 x (0.7025 + 0.0175 x 17) = 1160, so no resource clamping is in play; a cost leaf is the sourced cost, not a mana-limited payment.) => cast_timeline[5].resource_cost = 60.0.",
+    "step_4_where_100_came_from": "100 mana is reachable at index 5 only if the timeline OMITS the second Dark Sphere charge: a four-cast opening (Q, W, E, R) makes index 4 the Q recast at 7 s and index 5 the W recast at 8 s = 100 mana at W rank 5. That reconstruction contradicts the cached wiki text for the scenario's 120-splinter state, which grants up to 2 stocked Dark Sphere charges; a 120-splinter timeline that fires Dark Sphere only once undercounts casts. Alternatively 100 would be R, but R sits in the opening (index <= 4) and never recasts.",
+    "conclusion": "60.0 is the value supported by the cached wiki data; 100.0 is the artifact of a cast timeline that ignores Syndra's stocked second Dark Sphere charge at 40+ splinters."
+  },
+
+  "residual_uncertainty": [
+    "The scenario definition itself lives in scripts/ (out of bounds for this runbook), so the ability ranks and the exact cast order were not read; the identification of index 5 relies on the cooldown argument above, which is rank-independent for the ORDERING (Q always recasts first) but assumes Q is at rank 5 for the VALUE. Rank 5 is the only Q rank that yields 60; a lower Q rank would have produced 40/45/50/55, none of which is the observed new value. The observed new value therefore matches Q rank 5 (a level-18 maxed-Q build) exactly.",
+    "The one reading under which the old value would be correct — a four-cast opening with W maxed — is exactly the reading the 120-splinter Q-charge wiki text rules out."
+  ],
+
+  "gates_run": "none (read-only oracle; nothing committed, no source files touched)"
+}

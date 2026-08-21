@@ -132,33 +132,22 @@ slots (P, W).
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
+from .healing_contract import declare_healing_rule
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    STEROID_ZERO,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Naafiri",
-        PACKET_SHA256,
-        packet_tick_fixes={
-            "Darkin Daggers": {
-                "initial_tick": 0.0,
-                "extra_part": {
-                    "attribute": "Bleed Physical Damage per Tick",
-                    "count": 10,
-                    "damage_type": "physical",
-                    "first_tick": 0.5,
-                    "tick_interval": 0.5,
-                    "dot_duration": 5.0,
-                },
-            }
-        },
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — the sourced bleed tick count:
 # Total Bleed Physical Damage == Bleed Physical Damage per Tick x 10 at
@@ -225,26 +214,32 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         0.0,
         "physical",
+        zero_policy=STEROID_ZERO,
     )
-    if not bool(ctx.options.get("w_hunt", True)):
+    if not bool(ctx.option("w_hunt")):
         entry["detail"] = (
             "Hunt not priced (w_hunt off): the 20% AD bonus attack damage "
             "and the raised Packmate cap are both withheld."
         )
         return entry
 
-    bonus = _HUNT_AD_PERCENT / 100.0 * ctx.stats.get("attack_damage", 0.0)
-    ctx.stats["attack_damage"] = ctx.stats.get("attack_damage", 0.0) + bonus
-    ctx.stats["bonus_attack_damage"] = ctx.stats.get("bonus_attack_damage", 0.0) + bonus
+    # The hunt expires; a stat_buff is one scalar for the whole fight, so
+    # the grant lands time-weighted by the share of the window it covers
+    # (Blitzcrank's Overdrive rule, module_helpers.buff_window_share).
+    granted = _HUNT_AD_PERCENT / 100.0 * ctx.stat("attack_damage")
+    bonus = granted * buff_window_share(ctx, _HUNT_DURATION)
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus
     entry["stat_buff"] = {"bonus_attack_damage": bonus}
     entry["detail"] = (
-        f"+{bonus:.1f} bonus attack damage for {_HUNT_DURATION:g}s "
+        f"+{granted:.1f} bonus attack damage for {_HUNT_DURATION:g}s "
         f"({_HUNT_AD_PERCENT:g}% of total AD, wiki W prose corroborated by "
-        "the game binary's NaafiriADPercentBoost); the hunt also raises the "
-        "Packmate cap (priced on the We Are More row) and grants bonus "
-        "movement speed, which stays a sourced-but-unmodeled rider — see "
-        "ASSUMPTIONS.  The untargetability and the Packmate vanish/reappear "
-        "are state."
+        f"the game binary's NaafiriADPercentBoost); +{bonus:.1f} over the "
+        "fight window.  The hunt also raises the Packmate cap (priced on "
+        f"the We Are More row) and grants +{movement:g}% movement speed, "
+        "which stays a sourced-but-unmodeled rider — see ASSUMPTIONS.  The "
+        "untargetability and the Packmate vanish/reappear are state."
     )
     return entry
 
@@ -264,7 +259,7 @@ def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     name = ability.get("name", "We Are More")
-    hunt = bool(ctx.options.get("w_hunt", True))
+    hunt = bool(ctx.option("w_hunt"))
     count = _packmate_count(ctx.level, hunt=hunt)
     r_ability = ctx.ability("R", 0)
     r_rank = ctx.rank_for("R")
@@ -429,14 +424,46 @@ def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _we_are_more
-SLOTS["Q"] = _darkin_daggers
-SLOTS["W"] = _call_of_the_pack
-SLOTS["E"] = _eviscerate
-parse_abilities = build_parser(SLOTS, "Naafiri")
+# Reviewed crowd control, read from the cached kit.  Q (Darkin Daggers)
+# "deals physical damage to enemies hit and inflicts them with a bleed"
+# with no control clause, and E (Eviscerate) dashes and explodes with
+# none either.  R (Hounds' Pursuit) arrives and "deals physical damage
+# and slows the target by 99% for 0.25 seconds" — the slow lands on
+# Naafiri's own arrival hit.  P's Packmates land with her and apply
+# nothing of their own; W authors no damage part.
+MODULE_CC = {"P": "none", "Q": "none", "E": "none", "R": "slow"}
 
-OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Naafiri",
+    PACKET_SHA256,
+    # Hounds' Pursuit is one arrival on the singled-out champion —
+    # one part and one hit, which is what carries R's reviewed slow
+    # into the event ledger.  (Eviscerate's dash-and-explode row is
+    # two hits, so it is not certified here.)
+    single_hit_slots=frozenset({"R"}),
+    packet_tick_fixes={
+        "Darkin Daggers": {
+            "initial_tick": 0.0,
+            "extra_part": {
+                "attribute": "Bleed Physical Damage per Tick",
+                "count": 10,
+                "damage_type": "physical",
+                "first_tick": 0.5,
+                "tick_interval": 0.5,
+                "dot_duration": 5.0,
+            },
+        }
+    },
+    slot_parsers={
+        "P": _we_are_more,
+        "Q": _darkin_daggers,
+        "E": _eviscerate,
+        "W": _call_of_the_pack,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     {
         "key": "q_recast",
         "type": "bool",
@@ -453,7 +480,7 @@ OPTIONS: list[dict[str, Any]] = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Darkin Daggers) prices the initial hit, 10 sourced 0.5s bleed "
     "ticks (Total Bleed Physical Damage == per-tick x 10, E2 worklist), "
     "and the recast's bonus damage — interpolated between the "
@@ -509,20 +536,12 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "(100/150/200 + 150% bonus AD) and the 99% slow stay state",
 ]
 
-SOURCES = list(_packet_sources)
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+# No MODULE_COVERAGE: every slot now emits a priced row — P the pack's
+# share of Hounds' Pursuit, W the hunt's stat_buff — which is exactly
+# what the contract derives from SLOTS.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -537,32 +556,23 @@ def derive_self_healing(
     q_heal = _healing.extract_named(
         _healing._ability(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
-    # One heal per Q cast: the module emits the initial hit at the
-    # cast boundary, then the bleed ticks and the recast share later
-    # timestamps, so the heal anchors to the cast's initial-hit event
-    # (the recast hits an already-bleeding champion the same cast).
-    q_events = _healing._attributed_events(
-        damage_events, lambda source, _event: source == "Q"
-    )
-    q_event_by_time: dict[float, dict[str, Any]] = {}
-    for event in q_events:
-        q_event_by_time.setdefault(round(float(event.get("time", 0.0)), 6), event)
-    for cast_time in _healing._cast_slot_times(cast_timeline, "Q"):
-        anchor = q_event_by_time.get(round(cast_time, 6))
-        if anchor is None:
-            continue
+    # One heal per Q cast: the module emits the initial hit at the cast
+    # boundary, then the bleed ticks and the recast share later
+    # timestamps, so the heal anchors to the cast's first hit (the recast
+    # hits an already-bleeding champion the same cast).  Matching cast
+    # time to event time exactly drops a cast whose published time the
+    # engine rounded, so the anchor is resolved by ``HealAnchor.CAST``.
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
         _healing._heal_from_damage(
             healing,
-            anchor,
+            payment.event,
             q_heal,
             "Darkin Daggers",
             link_to_damage=False,
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Naafiri", derive_self_healing)

@@ -46,6 +46,7 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the
 # passive's monster damage cap (attribute "Bonus Damage", 100-270 by
@@ -64,9 +65,9 @@ def _spirit_abjuration(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     percent = _SPIRIT_PCT_BASE + _SPIRIT_PCT_PER_100_AP * ap / 100.0
-    per_proc = percent / 100.0 * ctx.target.get("target_max_health", 0.0)
+    per_proc = percent / 100.0 * ctx.target_stat("target_max_health")
 
     name = ability.get("name", "Spirit Abjuration")
     return ability_on_hit_entry(
@@ -126,7 +127,7 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
     bolt_max = extract_named(
         ability, "Subsequent Bolt Maximum Magic Damage", rank, ctx.stats, ctx.target
     )
-    extra_marks = min(max(int(ctx.options.get("q_marked_enemies", 0)), 0), 5)
+    extra_marks = min(max(int(ctx.option("q_marked_enemies")), 0), 5)
 
     parts = [
         # The recast is available after 0.1 seconds; retaining that sourced
@@ -233,22 +234,29 @@ SLOTS = {
     "P": _spirit_abjuration,
     "Q": _twofold_hex,
     "W": _across_the_veil,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # E's blast and R's shockwave each land once on the target they damage,
+    # with no sourced sub-cast phase in the cached packet.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Aurora")
+# Cached kit review.  E "slows them by 80% for 1 second" and R's shockwave
+# "slow[s] them by 30% for 2 seconds".  Q only "marks them with a curse",
+# which is a mark the recast expunges, not crowd control.  W's dash,
+# invisibility and movement speed touch nobody else, and P is an on-hit
+# stack consume.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Aurora", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aurora",
-        "revision_id": 3959795,
-        "revision_timestamp": "2025-10-17T02:11:19Z",
-    }
-]
+SOURCES = load_champion_sources("Aurora")
+
+# W is emitted, but its row is a sourced zero — not a fact SLOTS derives.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",
@@ -256,4 +264,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

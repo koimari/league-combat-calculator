@@ -4,17 +4,20 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    count = min(max(int(ctx.options.get("p_tentacles", 1)), 0), 12)
+    count = min(max(int(ctx.option("p_tentacles")), 0), 12)
     if count <= 0:
         return None
     value = extract_named(
@@ -63,13 +66,11 @@ def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
     pct = extract_value(ability, "Additional Physical Damage", rank) / 100.0
     ad_ratio = extract_value(ability, "Additional Physical Damage", rank, 1) / 100.0
     minimum = extract_value(ability, "Minimum Physical Damage", rank)
-    value = max(
-        minimum, pct * target_max + ad_ratio * ctx.stats.get("attack_damage", 0.0)
-    )
+    value = max(minimum, pct * target_max + ad_ratio * ctx.stat("attack_damage"))
     entry = damage_entry(
         ability.get("name", "Harsh Lesson"),
         rank,
@@ -129,7 +130,15 @@ SLOTS = {
     ),
     "R": _leap_of_faith,
 }
-parse_abilities = build_parser(SLOTS, "Illaoi")
+# W's empowered attack and R's idol slam only damage — Illaoi's control is
+# E's tether severance (a slow that lands with no damage packet of its own)
+# and it is not on either damaging cast.  Q and E author no damage part;
+# P's Tentacle strikes are an effect-phase proc row whose event list the
+# module builds itself, so a slot marker there would never reach the
+# ledger.
+MODULE_CC = {"W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Illaoi", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_tentacles",
@@ -148,45 +157,10 @@ ASSUMPTIONS = [
     "missing health (cached P description prose); the E1 self-heal rule "
     "authors one live missing-health heal per tentacle hit event.",
 ]
-SOURCES = [
-    source_row(
-        "Illaoi parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Illaoi",
-        4033192,
-        "2026-06-21T14:50:24Z",
-    ),
-    source_row(
-        "Illaoi Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/Q",
-        2863949,
-        "2019-11-03T19:57:06Z",
-    ),
-    source_row(
-        "Illaoi W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/W",
-        2864244,
-        "2019-11-03T20:09:53Z",
-    ),
-    source_row(
-        "Illaoi E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/E",
-        2864390,
-        "2019-11-03T20:12:24Z",
-    ),
-    source_row(
-        "Illaoi R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Illaoi/R",
-        2864536,
-        "2019-11-03T20:15:49Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Illaoi")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -215,9 +189,5 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Illaoi", derive_self_healing)

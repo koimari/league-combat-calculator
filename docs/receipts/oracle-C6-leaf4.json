@@ -1,0 +1,134 @@
+{
+  "receipt_id": "oracle-C6-leaf4",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_by_type/magic",
+  "old_value": 5143.0,
+  "new_value": 5856.0,
+  "delta": 713.0,
+  "ratio_new_over_old": 1.1386350379156134,
+  "verdict": "new_value_correct",
+  "confidence": "delta-verified, absolute-unverified",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": [
+      "data/champions.json (Syndra: stats, abilities P/Q/W/E/R)",
+      "data/practice-corpus/scenarios.json",
+      "data/wiki-atoms/stack-transform-summon-resource.json",
+      "data/worklists/e3-stacks.json",
+      "data/worklists/e3-mechanics.json",
+      "data/champion-audit/batch-e9-1.json (Syndra entry)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "limitation_declared": "The scenario input tuple for 'syndra_custom_order_120' (champion level, item build, ability ranks, manual-target resistances/HP, fight window) is defined in scripts/golden_snapshot.py, which runbook R-18/R-19 forbids this oracle from reading. It does not appear anywhere in the permitted export (grep for 'custom_order', 'manual_target', 'damage_by_type' over data/ and docs/math-foundations.md returns nothing). The absolute total therefore cannot be reproduced from primary sources alone. What IS fully determinable from the cached wiki text is the DELTA: what mechanic can and cannot produce exactly +713.0 magic damage. All four candidate explanations are tested below; three are eliminated outright and the survivor is the wiki-mandated behaviour that this scenario exists to exercise.",
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[3].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "use": "Fixes the 120-splinter AP multiplier at exactly 1.15x."
+    },
+    {
+      "id": "S2",
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.",
+      "use": "Confirms the '120' in the scenario name is the max-splinter (Transcendent) state, so every Transcendent Bonus tier (40 / 60 / 80 / 100) is simultaneously active."
+    },
+    {
+      "id": "S3",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At 120 splinters Dark Sphere is a 2-charge ability, so a fight window contains a stocked extra Q cast beyond the plain-cooldown count."
+    },
+    {
+      "id": "S4",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].leveling[0] (attribute 'Magic Damage')",
+      "quote": "modifiers: values [90, 125, 160, 195, 230] (flat) + values [70,70,70,70,70] units '% AP'",
+      "use": "Dark Sphere magic damage = base(rank) + 70% AP, AP ratio identical at every rank."
+    },
+    {
+      "id": "S5",
+      "source": "data/champions.json -> Syndra.abilities.W[0] / E[0] / R[0] leveling blocks",
+      "quote": "W Force of Will: [70,100,130,160,190] + 65% AP magic. E Scatter the Weak: [60,95,130,165,200] + 60% AP magic. R Unleashed Power 'Magic Damage per Sphere': [80,120,160] + 20% AP, 'Minimum Magic Damage' 3 spheres, 'Maximum Magic Damage' 7 spheres.",
+      "use": "Full packet table for Syndra's magic damage. Note every AP ratio is rank-invariant (0.70 / 0.65 / 0.60 / 0.20-per-sphere) and every flat base is a multiple of 5 -- the two invariants the eliminations below hang on."
+    },
+    {
+      "id": "S6",
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3] ('Bonus True Damage')",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "use": "The 60-splinter tier routes its bonus into the TRUE bucket, not the magic bucket -- so it cannot be the cause of a change in damage_by_type/magic."
+    },
+    {
+      "id": "S7",
+      "source": "docs/math-foundations.md, Section 2 table row (line 477)",
+      "quote": "Stat rounding (calculate_total_stats) | display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX",
+      "use": "AP is an integer at damage time, which is why the extra-cast fit below lands on exact integers."
+    },
+    {
+      "id": "S8",
+      "source": "docs/math-foundations.md, Section 1.2 item 1 (_mitigate_hits)",
+      "quote": "A part with h identical hits is mitigated per hit and summed: SUM_h m(R)*raw = h*m(R)*raw ... the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance.",
+      "use": "Justifies factoring the post-mitigation total as m * raw and treating a whole extra cast as m * (base + ratio*AP)."
+    },
+    {
+      "id": "S9",
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "use": "Independent confirmation (audit data, not source code) that the 120-splinter state is modelled as three separate levers, and that the Q charge is carried by a distinct 'Q2' cast slot -- the slot a custom cast order can drop."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_what_the_delta_must_be": "damage_by_type/magic is a post-mitigation sum over cast instances. By S8 it factors as m * SUM_i (base_i + ratio_i * AP_eff), with m = 100/(100+MR) fixed for the fight and AP_eff = 1.15 * AP by S1. Any explanation of +713.0 must therefore be (a) a change in AP_eff, (b) a change in ability RANKS (base_i only, since S5 makes every ratio rank-invariant), or (c) a change in which cast instances occur.",
+
+    "hypothesis_A_transcendence_ap_toggle": {
+      "claim": "old omitted the 15% Transcendence AP buff; new applies it.",
+      "algebra": "old = B + K*AP, new = B + K*1.15*AP  =>  0.15*K*AP = 713  =>  K*AP = 4753.33, B = 5143 - 4753.33 = 389.67.",
+      "consequence": "That requires 92.42% of the old magic total to be AP-scaled, i.e. an AP-part to flat-base ratio of 12.20:1.",
+      "check_against_S5": "Rank-5 Syndra packets need AP_eff = 4008 (Q), 3566 (W), 4066 (E), or 4305 (a Q+W+E+R[3 spheres] rotation) to reach a 12.20:1 AP-to-base ratio. No reachable League build produces ~4000 AP.",
+      "verdict": "ELIMINATED. The delta is not the Transcendence AP buff being switched on or off, in either direction."
+    },
+
+    "hypothesis_B_ability_rank_change": {
+      "claim": "the 'custom order' seeded different ability ranks; only flat bases move.",
+      "algebra": "By S5 every AP ratio is rank-invariant, so a pure re-ranking moves only flat bases, and every flat base and every rank step is a multiple of 5 (Q step 35, W step 30, E step 35, R step 40/sphere). Hence the RAW delta must be a multiple of 5, and 713.0 = m * raw  =>  raw = 7.13 * (100 + MR).",
+      "check": "7.13*(100+MR) is a multiple of 5 only when 713*(100+MR) == 0 mod 500; gcd(713,500)=1, so 100+MR must be a multiple of 500, i.e. MR = 400. Swept MR = 0..200 in steps of 5: zero admissible values.",
+      "verdict": "ELIMINATED. No realistic magic-resist value lets a pure ability-rank change land on exactly 713.0. Whatever 'custom_order' shifted, it was not just ranks -- an AP-scaled term entered or left the sum."
+    },
+
+    "hypothesis_C_r_sphere_count": {
+      "claim": "Unleashed Power collected a different number of Dark Spheres (S5: 3 to 7).",
+      "algebra": "one extra sphere at rank 3 = m*(160 + 0.20*AP_eff) = 713  =>  AP_eff = (713/m - 160)/0.20.",
+      "check": "m=1.0 -> AP_eff 2765; m=0.8 (MR 25) -> 3656; m=0.5 (MR 100) -> 6330. Two spheres would need AP_eff 1965 / 2622 / 4485. All far outside any reachable build.",
+      "verdict": "ELIMINATED. The delta is not the r_spheres lever."
+    },
+
+    "hypothesis_D_one_extra_cast": {
+      "claim": "exactly one additional ability instance is present in the new value.",
+      "algebra": "extra cast = m*(base + ratio*AP_eff) = 713.",
+      "fits_at_m_equals_1": {
+        "Q_rank5": "713 = 230 + 0.70*AP_eff  =>  AP_eff = 690.0  =>  AP = 690/1.15 = 600.0  (all integers; 0.70*690 = 483 exactly)",
+        "W_rank5": "713 = 190 + 0.65*AP_eff  =>  AP_eff = 804.615  =>  AP = 699.666  (non-integral)",
+        "E_rank5": "713 = 200 + 0.60*AP_eff  =>  AP_eff = 855.0  =>  AP = 743.478  (non-integral)",
+        "R_sphere": "AP_eff = 2765  (unreachable)"
+      },
+      "note": "Dark Sphere is the unique packet in S4/S5 that lands on an exactly integral, exactly Transcendence-consistent parameterisation: AP 600 -> 600*1.15 = 690 -> 230 + 483 = 713.0. Per S7 the engine rounds AP to an integer before damage, so an integral fit is the expected signature and the W/E fits are the anomalous ones. (An MR>0 target admits other fits, e.g. MR 25 with AP ~821 for Q, so this is corroboration, not proof of the exact stat line.)",
+      "verdict": "SURVIVES, and it is the only survivor."
+    },
+
+    "step_final_which_direction_is_correct": "By S3, at 120 splinters Dark Sphere periodically stocks a charge up to a maximum of 2 -- so a fight window at max splinters contains one stocked Q cast beyond the plain-cooldown schedule. S9 confirms that charge is carried by a distinct 'Q2' cast slot, exactly the kind of slot a custom cast order can fail to seed. A scenario whose entire name is 'splinters = 120' exists to exercise the Transcendent tiers; a magic total that omits the stocked Dark Sphere cast is the pre-charge (wiki-incorrect) count. The delta is +1 Dark Sphere, in the direction of honouring S3, and its magnitude of 713.0 is exactly one rank-5 Dark Sphere at Transcendence-buffed AP. The higher value is the wiki-consistent one.",
+
+    "residual_risk": "Because the scenario's input tuple is outside the permitted evidence tree, this oracle verified the delta, not the absolute total. It cannot rule out that the new value adds a THIRD stocked Q beyond the 2-charge cap of S3, nor that the absolute total is off by an unrelated constant shared by both values. A cheap follow-up that would close this without violating R-18: expose the Q cast count for this scenario and confirm it is <= 2 charges above the plain-cooldown schedule."
+  },
+
+  "computation_reproducer": "python - <<'EOF'\nd = 5856.0 - 5143.0                      # 713.0\n# Hypothesis A (Transcendence 1.15x AP toggle), S1 + S5\nK_AP = d/0.15; B = 5143 - K_AP\nprint('AP-scaled fraction of old total:', K_AP/5143)        # 0.9242 -> needs ~4000 AP, impossible\n# Hypothesis B (pure rank change): S5 bases/steps are all multiples of 5\nfor mr in range(0, 201, 5):\n    raw = d * (100+mr)/100\n    assert abs(raw/5 - round(raw/5)) > 1e-9                   # no MR admits it\n# Hypothesis D (one extra cast) at m = 1\nfor name, base, ratio in [('Q5',230,.70), ('W5',190,.65), ('E5',200,.60), ('R3/sphere',160,.20)]:\n    ap_eff = (d-base)/ratio\n    print(name, ap_eff, ap_eff/1.15)                          # Q5 -> 690.0, 600.0 exactly\nEOF",
+
+  "committed": false
+}

@@ -11,31 +11,19 @@ deals damage to enemy champions in this calculator's scope (Heal heals
 the caster, Barrier shields, Smite damages monsters), so each variant
 is a documented no-damage row instead of being collapsed into a bolt.
 
-Roadmap session 5 slot 14 (2026-08-21): R (Portal Jump) has no
-enemy-damage formula: the cached effects are a blink/reposition with a
-static movement-speed lock and an attack-reset, with no enemy-damage
-leveling row (confirmed by the pinned reviewed packet's kind="no_damage"
-declaration for R, and live: parse_champion_abilities emits R with
-total_raw=0.0, and the fight breakdown carries an R row that totals
-zero damage). This module never reassigns R away from
-build_packet_module's default no-damage branch (only W is overridden
-above). MODULE_COVERAGE was simply stale, still reading "out_of_scope"
-for a slot this module already treats as non-damaging (the
-Rek'Sai/Renekton precedent). Reclassified to "no_damage"; zero
-fight-computation change.
+Coverage: R (Portal Jump) blinks Zoe out and back — a reposition with a
+movement-speed lock and an attack reset, and no enemy-damage row (the
+pinned packet declares the slot ``kind: "no_damage"``), so R is
+``no_damage``.  Mobility itself stays an axis the engine does not have.
 """
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .engine import SlotCtx
+from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zoe", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # Wheeeee fires three bolts; the "Total Magic Damage" row is exactly
 # 3 x "Magic Damage Per Bolt" at every rank (45/3 == 15, ..., 165/3 == 55).
@@ -61,7 +49,7 @@ def _spell_thief(ctx: SlotCtx):
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    summoner = int(ctx.options.get("w_summoner", 0))
+    summoner = int(ctx.option("w_summoner"))
     if summoner != 0:
         reason = _W_SUMMONER_VARIANTS.get(
             summoner, "Unknown summoner Spell Shard mimic."
@@ -96,9 +84,40 @@ def _spell_thief(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["W"] = _spell_thief
-parse_abilities = build_parser(SLOTS, "Zoe")
+# Paddle Star! only explodes.  Sleepy Trouble Bubble's burst "deals magic
+# damage to the target and inflicts them with drowsy for 1.4 seconds, which
+# gradually slows them until they fall asleep for 2.25 seconds" — the
+# drowsy is the ramp, the sleep is the control the cast lands.  R (Portal
+# Jump) is out_of_scope with no damage, and P is the empowered next attack.
+#
+# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Spell Thief's bolts control nothing, but Wheeeee "shoots one bolt at a
+# time" over its 10-second window and the row is one aggregated part of
+# three hits with no sourced cadence between them, so no event reaches the
+# ledger.
+MODULE_CC = {"Q": "none", "E": "sleep"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zoe",
+    PACKET_SHA256,
+    # Q's star explodes on the first enemy it hits and E's bubble bursts on
+    # it; neither packet carries a travel phase to place.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        # The reviewed packet folded Paddle Star's per-level term into its
+        # per-rank base, so one index served both and the level term was read at
+        # the rank — at level 18 rank 5 the star priced its level-5 scaling.  The
+        # packet's own reading is kept (the Maximum row, the star at full travel);
+        # reading the cached row through the shared slot repairs the axis.
+        "Q": simple_damage(
+            attr="Maximum Magic Damage",
+            dmg_type="magic",
+            event_order_certified="single_hit",
+        ),
+        "W": _spell_thief,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -136,4 +155,3 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

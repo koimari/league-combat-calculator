@@ -36,13 +36,14 @@ import re
 from dataclasses import replace
 from typing import Any, Callable
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import ControlEvent, DamagePart, Disposition, ZeroPolicy
 from .attribute_classifier import (
     classify_damage_type,
     is_damage_attribute,
     is_primary_damage_attribute,
 )
 from .engine import BUFF, DAMAGE, ONHIT, SlotCtx, SlotParser
+from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
 # ---------------------------------------------------------------------------
@@ -53,7 +54,7 @@ from .scaling import is_flat_unit, resolve_scaling
 ModifierOverride = Callable[[str, float], float | None]
 
 
-_MODIFIER_PAIRS_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
+_MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
 # Attribute-lookup memos over the same cached JSON, keyed and
 # identity-verified the same way.
 _NAMED_LEVELING_MEMO: dict[tuple[int, str, int], tuple[dict, Any]] = {}
@@ -204,12 +205,39 @@ def extract_description_damage_reduction(
     return float(match.group("value")) if match else None
 
 
-def sum_modifiers(
+# An ability's rank array holds one value per rank — five, or six for
+# Jayce's dual-form kit, which is the longest rank axis the cache carries.
+# An array this long can only hold one value per champion level.  It is the
+# same rule ``extract_resource_cost`` applies to cost rows, and it is a
+# length test rather than a unit test because the Wiki emits per-level
+# terms under a bare unit.  Level-*bracket* arrays (Pyke R's levels 6-18,
+# Aphelios P's every-third-level steps) are shorter than this and stay on
+# the rank axis, unchanged: reading them needs their own sourced domain,
+# not this rule.
+_PER_LEVEL_VALUES = 18
+
+
+def _axis_index(values: list[Any], rank: int, level: int | None) -> int:
+    """Index one modifier array by the axis its own length declares.
+
+    A single leveling row mixes both axes — Zoe Q's "Maximum Magic Damage"
+    carries an 18-entry per-level term beside 5-entry per-rank terms — so
+    the axis is a property of each array, not of the row or the caller.
+    ``level=None`` is a caller that does not know the champion's level; its
+    arrays are all read at *rank*, which is what they were before.
+    """
+    axis = level if level is not None and len(values) >= _PER_LEVEL_VALUES else rank
+    return min(axis - 1, len(values) - 1)
+
+
+def sum_modifiers(  # pylint: disable=too-many-arguments
     leveling: dict[str, Any],
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
     modifier_override: ModifierOverride | None = None,
+    *,
+    level: int | None = None,
 ) -> float:
     """Sum one leveling entry's modifiers at a rank (flat + scaling).
 
@@ -218,6 +246,9 @@ def sum_modifiers(
         rank: 1-indexed rank (or level, for per-level entries).
         stats: Champion stats for scaling resolution.
         target: Target stats for %HP scaling.
+        level: Champion level, when the caller knows it. Per-level
+            modifier arrays in this row are then read at the level
+            (:func:`_axis_index`) instead of at *rank*.
 
     Returns:
         Total raw damage contribution of this leveling entry.
@@ -225,7 +256,7 @@ def sum_modifiers(
     # The (value, unit) pair at a rank is pure cached-JSON data; memoize it
     # by leveling-entry identity (verified on every hit) so the optimizer's
     # thousands of identical parses skip the JSON walk.
-    memo_key = (id(leveling), rank)
+    memo_key = (id(leveling), rank, level)
     memo = _MODIFIER_PAIRS_MEMO.get(memo_key)
     if memo is not None and memo[0] is leveling:
         pairs = memo[1]
@@ -236,7 +267,7 @@ def sum_modifiers(
             units = modifier.get("units", [])
             if not values:
                 continue
-            idx = min(rank - 1, len(values) - 1)
+            idx = _axis_index(values, rank, level)
             pairs.append((float(values[idx]), units[idx] if idx < len(units) else ""))
         pairs = tuple(pairs)
         _MODIFIER_PAIRS_MEMO[memo_key] = (leveling, pairs)
@@ -253,12 +284,14 @@ def sum_modifiers(
     return total
 
 
-def extract_named(
+def extract_named(  # pylint: disable=too-many-arguments
     ability: dict[str, Any],
     attribute: str,
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
+    *,
+    level: int | None = None,
 ) -> float:
     """Extract damage for an exact attribute name from ability JSON.
 
@@ -270,6 +303,8 @@ def extract_named(
         rank: Ability rank (1-indexed).
         stats: Champion stats for scaling resolution.
         target: Target stats for %HP scaling.
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         Total raw damage at the given rank, or 0.0 if not found.
@@ -277,7 +312,7 @@ def extract_named(
     leveling = find_named_leveling(ability, attribute)
     if leveling is None:
         return 0.0
-    return sum_modifiers(leveling, rank, stats, target)
+    return sum_modifiers(leveling, rank, stats, target, level=level)
 
 
 def _find_primary_damage_leveling(
@@ -313,6 +348,8 @@ def extract_auto(
     rank: int,
     stats: dict[str, float] | None = None,
     target: dict[str, float] | None = None,
+    *,
+    level: int | None = None,
 ) -> tuple[float, str]:
     """Extract damage with classifier-driven attribute auto-detection.
 
@@ -324,6 +361,8 @@ def extract_auto(
         rank: Ability rank (1-indexed), or level for per-level entries.
         stats: Champion stats for scaling resolution.
         target: Target stats for %HP scaling.
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         Tuple of (total_raw_damage, damage_type). Damage is 0.0 when no
@@ -333,7 +372,7 @@ def extract_auto(
     leveling = _find_primary_damage_leveling(ability)
     if leveling is None:
         return 0.0, damage_type
-    return sum_modifiers(leveling, rank, stats, target), damage_type
+    return sum_modifiers(leveling, rank, stats, target, level=level), damage_type
 
 
 def find_named_leveling(
@@ -370,6 +409,7 @@ def _modifier_value(
     leveling: dict[str, Any],
     modifier_index: int,
     rank: int,
+    level: int | None = None,
 ) -> float:
     """Raw value of one modifier at a rank (0.0 when absent/empty)."""
     modifiers = leveling.get("modifiers", [])
@@ -378,8 +418,7 @@ def _modifier_value(
     values = modifiers[modifier_index].get("values", [])
     if not values:
         return 0.0
-    idx = min(rank - 1, len(values) - 1)
-    return float(values[idx])
+    return float(values[_axis_index(values, rank, level)])
 
 
 def extract_value(
@@ -387,6 +426,9 @@ def extract_value(
     attribute: str,
     rank: int,
     modifier_index: int = 0,
+    *,
+    level: int | None = None,
+    occurrence: int = 0,
 ) -> float:
     """Extract a raw numeric leveling value without resolving scaling.
 
@@ -399,14 +441,20 @@ def extract_value(
         attribute: Exact attribute name to look for.
         rank: Ability rank (1-indexed).
         modifier_index: Which modifier to read (default 0 = first).
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
+        occurrence: Which row of a repeated attribute name to read — see
+            :func:`find_named_leveling`.  Dr. Mundo's P states the same
+            regeneration twice under one name, per five seconds and per
+            half second, and only the caller knows which cadence it wants.
 
     Returns:
         The flat numeric value at the given rank, or 0.0 if not found.
     """
-    leveling = find_named_leveling(ability, attribute)
+    leveling = find_named_leveling(ability, attribute, occurrence=occurrence)
     if leveling is None:
         return 0.0
-    return _modifier_value(leveling, modifier_index, rank)
+    return _modifier_value(leveling, modifier_index, rank, level)
 
 
 def pct_health_per_hit(
@@ -418,6 +466,8 @@ def pct_health_per_hit(
     ap_ratio_per_100: bool = False,
     floor_attr: str | None = None,
     stacks_required: int = 1,
+    *,
+    level: int | None = None,
 ) -> float | None:
     """Per-hit on-hit damage as a percentage of the target's max health.
 
@@ -437,6 +487,8 @@ def pct_health_per_hit(
         ap_ratio_per_100: Modifier 1 is bonus % per 100 AP.
         floor_attr: Attribute holding the minimum per-proc damage.
         stacks_required: Hits needed per proc; divides the proc damage.
+        level: Champion level, when the caller knows it — see
+            :func:`sum_modifiers`.
 
     Returns:
         Damage per hit, or None when *attr* is absent from the ability
@@ -446,23 +498,28 @@ def pct_health_per_hit(
     if leveling is None:
         return None
 
-    percent = _modifier_value(leveling, 0, rank)
+    percent = _modifier_value(leveling, 0, rank, level)
     if ap_ratio_per_100:
-        percent += ap * _modifier_value(leveling, 1, rank) / 100.0
+        percent += ap * _modifier_value(leveling, 1, rank, level) / 100.0
 
-    max_health = (target or {}).get("target_max_health", 0.0)
+    max_health = target_stat(target or {}, "target_max_health")
     per_proc = (percent / 100.0) * max_health
     if floor_attr:
-        per_proc = max(per_proc, extract_value(ability, floor_attr, rank))
+        per_proc = max(per_proc, extract_value(ability, floor_attr, rank, level=level))
     return per_proc / stacks_required
 
 
-def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
+def extract_cooldown(
+    ability: dict[str, Any], rank: int, *, level: int | None = None
+) -> float:
     """Extract the base cooldown for an ability at a given rank.
 
     Args:
         ability: Single ability dict from champion JSON.
         rank: Ability rank (1-indexed).
+        level: Champion level, when the caller knows it. A per-level
+            cooldown row (Aphelios' rankless weapon cooldowns) is then read
+            at the level — see :func:`_axis_index`.
 
     Returns:
         Base cooldown in seconds, or 0.0 if not found.
@@ -475,8 +532,36 @@ def extract_cooldown(ability: dict[str, Any], rank: int) -> float:
     if not values:
         return 0.0
 
-    idx = min(rank - 1, len(values) - 1)
-    return float(values[idx])
+    return float(values[_axis_index(values, rank, level)])
+
+
+def extract_resource_cost(ability: dict[str, Any], rank: int, level: int) -> float:
+    """Extract what one cast of this ability spends, from its own cost row.
+
+    The sole home of the cached cost lookup: ``engine._stamp_resource_cost``
+    calls it for every slot that owns an ability JSON, and a synthetic slot —
+    one the wiki has no ability entry for, so the engine cannot reach a cost
+    row on its behalf — calls it with the ability it is a cast of.
+
+    An 18-or-more-value cost row is indexed by level (a per-level cost) and a
+    shorter one by rank, which is the same rule every cached cost row obeys.
+
+    Args:
+        ability: Single ability dict from champion JSON.
+        rank: Ability rank (1-indexed).
+        level: Champion level (1-indexed).
+
+    Returns:
+        Resource units one cast spends, or 0.0 when the row carries no values.
+    """
+    modifiers = (ability.get("cost") or {}).get("modifiers", [])
+    values = modifiers[0].get("values", []) if modifiers else []
+    if not values:
+        return 0.0
+    index = level - 1 if len(values) >= 18 else rank - 1
+    if index < 0:
+        return 0.0
+    return float(values[min(index, len(values) - 1)])
 
 
 _NUMBER = re.compile(r"\d+(?:\.\d+)?")
@@ -533,12 +618,61 @@ def build_stats_context(
 # ---------------------------------------------------------------------------
 
 
+MODULE_FORMULA_ZERO = ZeroPolicy(
+    Disposition.MEASURED,
+    "a champion module's formula ran against its parsed ability data and "
+    "produced this total; a zero here is a computed zero, not a rule that "
+    "never ran",
+)
+"""The one declared ``zero_policy`` default in the champion tree (D-24).
+
+Every numeric leaf a champion authors is born in one of the two builders
+below, so this is the single place the disposition has to be stated — the
+399 call sites across 152 champion modules are deliberately **not** edited,
+and a required-no-default field there would be a campaign-wide champion
+sweep smuggled in by an idiom.  Those two figures are measured, not
+recalled: ``tests/test_zero_policy.py`` counts the calls and states the
+counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the honest default at this layer
+and only at this layer: a module formula that evaluates to zero *computed*
+that zero.  Any slot whose zero means something else passes its own policy.
+
+The default's safety rests on the inputs being wired, which is why it ships
+with a guard rather than on its own.  A ``.get(key, <literal>)`` on one of
+the three champion input blocks is **forbidden** — ``champions/inputs.py``
+holds their vocabularies and declared defaults, and reading an undeclared
+name raises — so a zero produced by an option that never resolved fails loud
+instead of being stamped ``MEASURED`` here.
+``scripts/behavior_frontier.py``'s zero-policy frontier enforces that
+refusal and additionally pins the two ratcheted populations non-growing:
+the same shape on a block the tree *produced*, and hand-built entries that
+bypass these builders.
+"""
+
+
+STEROID_ZERO = ZeroPolicy(
+    Disposition.STRUCTURAL_ZERO,
+    "a steroid slot with no damage attribute grants a stat and deals no "
+    "damage by declaration; the zero is the answer, not a missing formula",
+)
+"""The one place a champion-tree zero is a declaration rather than a result.
+
+``stat_buff`` without a ``damage_attr`` emits a zero-damage entry so the
+buff has a row to ride on.  That zero is ``STRUCTURAL_ZERO``, and saying so
+here is what makes ``damage_entry``'s default overridable in fact rather
+than only in signature.
+"""
+
+
 def damage_entry(
     name: str,
     rank: int,
     cooldown: float,
     total: float,
     dmg_type: str,
+    cc_kind: str | None = None,
+    *,
+    zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
+    event_order_certified: str | None = None,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -549,7 +683,30 @@ def damage_entry(
     (usually the parts sum; proc entries store per-proc × count, and
     hp-scaled entries store a bound) — the fight engine reads ONLY
     ``parts``.
+
+    ``zero_policy`` says what a zero total *means*.  It defaults to
+    :data:`MODULE_FORMULA_ZERO` — the one declared default in the champion
+    tree (D-24) — and a slot whose zero is a declaration rather than a
+    computation passes its own.  It is **keyword-only**: a trailing
+    positional would let a seventh positional argument at any of the
+    hundreds of call sites bind a non-``ZeroPolicy`` value into it silently.
+
+    ``cc_kind`` marks the cast's reviewed crowd control (e.g. "stun",
+    "immobilize") on the entry's single part.  It is a statement about the
+    kit, not about event timing: certifying that the cast's hit lands at
+    the cast boundary is a *separate* claim the caller makes with
+    ``event_order_certified="single_hit"``.  The two used to be one
+    keyword, which meant reviewing a stun silently certified an event
+    order nobody had checked; a slot that needs both now says both.  A
+    "mixed" entry is two parts, which the engine's certified single-hit
+    export cannot carry — that combination raises rather than silently
+    dropping the marker.
     """
+    if cc_kind is not None and dmg_type == "mixed":
+        raise ValueError(
+            f"damage_entry({name!r}): cc_kind requires a single-part entry "
+            "(dmg_type must not be 'mixed')"
+        )
     entry: dict[str, Any] = {
         "name": name,
         "rank": rank,
@@ -559,12 +716,58 @@ def damage_entry(
     }
     if dmg_type == "mixed":
         entry["parts"] = (
-            DamagePart("magic", total / 2.0),
-            DamagePart("true", total / 2.0),
+            DamagePart("magic", total / 2.0, zero_policy=zero_policy),
+            DamagePart("true", total / 2.0, zero_policy=zero_policy),
         )
     else:
-        entry["parts"] = (DamagePart(dmg_type, total),)
+        entry["parts"] = (
+            DamagePart(dmg_type, total, cc_kind=cc_kind, zero_policy=zero_policy),
+        )
+    if event_order_certified is not None:
+        entry["event_order_certified"] = event_order_certified
     return entry
+
+
+def support_cast(
+    *,
+    default_name: str,
+    detail: str,
+    dmg_type: str = "magic",
+    resource_cost: float | None = None,
+) -> Any:
+    """A slot parser for a shield/heal-only ability that damages nothing.
+
+    ``support_effects`` hangs its packet on a CAST, so a shield- or heal-only
+    ability has to be in ``SLOTS`` for the rotation to schedule one — the
+    slot exists to produce the cast, not to price damage.  ``resource_cost``
+    is stated only when the cached cost row is something the engine's mana
+    ledger would mislabel (Soraka W's 10%-of-max-health cost).
+    """
+
+    def parse(ctx: Any) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+        rank = ctx.rank_for()
+        if rank < 1:
+            return None
+        entry = damage_entry(
+            ability.get("name", default_name),
+            rank,
+            extract_cooldown(ability, rank),
+            0.0,
+            dmg_type,
+        )
+        # The shared builder always writes one part; a support cast has none
+        # to price, and an authored zero part would put a zero-damage
+        # instance in the ledger.
+        entry["parts"] = ()
+        entry["detail"] = detail
+        if resource_cost is not None:
+            entry["resource_cost"] = resource_cost
+        return entry
+
+    return parse
 
 
 def attach_self_shield(
@@ -761,6 +964,7 @@ def _resolve_casts(
     casts: int | str,
     ability: dict[str, Any],
     rank: int,
+    level: int | None = None,
 ) -> float:
     """Resolve a casts param to a damage multiplier.
 
@@ -770,12 +974,14 @@ def _resolve_casts(
     than silently zeroing the slot's damage.
     """
     if isinstance(casts, str):
-        count = extract_named(ability, casts, rank)
+        count = extract_named(ability, casts, rank, level=level)
         return count if count > 0 else 1.0
     return float(casts)
 
 
-def extract_recharge(ability: dict[str, Any], rank: int) -> float:
+def extract_recharge(
+    ability: dict[str, Any], rank: int, *, level: int | None = None
+) -> float:
     """Cooldown for a charge ability: rechargeRate at rank.
 
     The JSON ``cooldown`` field of a charge ability stores the short
@@ -785,9 +991,8 @@ def extract_recharge(ability: dict[str, Any], rank: int) -> float:
     """
     rates = ability.get("rechargeRate") or []
     if not rates:
-        return extract_cooldown(ability, rank)
-    idx = min(rank - 1, len(rates) - 1)
-    return float(rates[idx])
+        return extract_cooldown(ability, rank, level=level)
+    return float(rates[_axis_index(rates, rank, level)])
 
 
 def simple_damage(
@@ -799,6 +1004,10 @@ def simple_damage(
     cooldown: str = "standard",
     ranks: str = "rank",
     dot_duration: float | None = None,
+    cc_kind: str | None = None,
+    *,
+    zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
+    event_order_certified: str | None = None,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -827,6 +1036,28 @@ def simple_damage(
             after the cast (poisons, zone ticks). Item burns (Liandry's,
             Blackfire) stay refreshed for this tail — see
             ``_add_burn_damage``. None (default) emits nothing.
+        cc_kind: Reviewed crowd control the cast applies ("stun",
+            "immobilize", "root", "slow", …), stamped on the entry's
+            first part so CC-triggered item passives can see the cast
+            in the event ledger. Requires a single-part slot
+            (``dmg_type != "mixed"``). None (default) authors no CC.
+            A whole kit's kinds are better declared once in the module's
+            ``MODULE_CC``; this stays for a kind that is genuinely a
+            property of one construction rather than of the slot.
+        zero_policy: Keyword-only. What a zero total from this slot means.
+            Defaults to
+            :data:`MODULE_FORMULA_ZERO`, the champion tree's one declared
+            disposition (D-24); pass a different policy where a zero is a
+            declaration rather than a computed result.
+        event_order_certified: Keyword-only. ``"single_hit"`` states that
+            this cast's one hit lands at the cast boundary, so the engine
+            exports it as an authored event instead of folding it into a
+            coarse aggregate row. It is a claim about timing and nothing
+            else — an ability with sourced travel or delay authors the
+            part's ``time_offset`` instead of certifying. A ``"mixed"``
+            slot is one landing split into a magic and a true part, which
+            certifies too: ``engine._certify_shared_instant`` gives the
+            split parts the instant they share.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -835,6 +1066,14 @@ def simple_damage(
         raise ValueError(
             f"simple_damage: unknown cooldown mode {cooldown!r} "
             "(must be 'standard' or 'recharge')"
+        )
+    if cc_kind is not None and dmg_type == "mixed":
+        # The engine exports a certified single-hit event only for a
+        # one-part cast; a two-part "mixed" entry would silently drop
+        # the CC marker from the ledger. Fail closed instead.
+        raise ValueError(
+            "simple_damage: cc_kind requires a single-part slot "
+            "(dmg_type must not be 'mixed')"
         )
     extract_cd = extract_recharge if cooldown == "recharge" else extract_cooldown
 
@@ -853,7 +1092,7 @@ def simple_damage(
             return None
 
         cd_ability = ctx.ability(*cooldown_from) if cooldown_from else ability
-        cd_value = extract_cd(cd_ability, rank) if cd_ability else 0.0
+        cd_value = extract_cd(cd_ability, rank, level=ctx.level) if cd_ability else 0.0
 
         if attr is None:
             total, resolved_type = extract_auto(
@@ -861,20 +1100,32 @@ def simple_damage(
                 rank,
                 ctx.stats,
                 ctx.target,
+                level=ctx.level,
             )
             if total <= 0 and not ability.get("damageType"):
                 # Non-damaging ability (shields, buffs, etc.)
                 return None
         else:
-            total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+            total = extract_named(
+                ability, attr, rank, ctx.stats, ctx.target, level=ctx.level
+            )
             resolved_type = classify_damage_type(ability)
 
         if dmg_type != "auto":
             resolved_type = dmg_type
 
-        total *= _resolve_casts(casts, ability, rank)
+        total *= _resolve_casts(casts, ability, rank, ctx.level)
         name = ability.get("name", f"Ability {ctx.slot}")
-        entry = damage_entry(name, rank, cd_value, total, resolved_type)
+        entry = damage_entry(
+            name,
+            rank,
+            cd_value,
+            total,
+            resolved_type,
+            cc_kind,
+            zero_policy=zero_policy,
+            event_order_certified=event_order_certified,
+        )
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration
         return entry
@@ -1071,23 +1322,34 @@ def stat_buff(
         if rank < 1:
             return None
 
-        value = extract_value(ability, attr, rank)
+        value = extract_value(ability, attr, rank, level=ctx.level)
         if mode == "percent_of":
-            value = value / 100.0 * ctx.stats.get(percent_of, 0.0)
+            value = value / 100.0 * ctx.stat(percent_of)
 
         damage = 0.0
         if damage_attr is not None:
-            damage = extract_named(ability, damage_attr, rank, ctx.stats, ctx.target)
+            damage = extract_named(
+                ability, damage_attr, rank, ctx.stats, ctx.target, level=ctx.level
+            )
 
         for key in apply_to:
-            ctx.stats[key] = ctx.stats.get(key, 0.0) + value
+            ctx.stats[key] = ctx.stat(key) + value
         if couples is not None:
             stats_key, couple_attr = couples
-            ctx.stats[stats_key] = extract_value(ability, couple_attr, rank)
+            ctx.stats[stats_key] = extract_value(
+                ability, couple_attr, rank, level=ctx.level
+            )
 
         name = ability.get("name", f"Ability {ctx.slot}")
         entry = damage_entry(
-            name, rank, extract_cooldown(ability, rank), damage, dmg_type
+            name,
+            rank,
+            extract_cooldown(ability, rank, level=ctx.level),
+            damage,
+            dmg_type,
+            zero_policy=(
+                MODULE_FORMULA_ZERO if damage_attr is not None else STEROID_ZERO
+            ),
         )
         entry["stat_buff"] = {stat: value}
         return entry
@@ -1219,7 +1481,9 @@ def _slot_passive_on_hit(
     if rank < 1:
         return None
 
-    total, resolved_type = extract_auto(ability, rank, ctx.stats, ctx.target)
+    total, resolved_type = extract_auto(
+        ability, rank, ctx.stats, ctx.target, level=ctx.level
+    )
     if total <= 0:
         return None
 
@@ -1266,6 +1530,7 @@ def on_hit_auto(source: tuple[str, int] | None = None) -> SlotParser:
             ctx.level,
             ctx.stats,
             ctx.target,
+            level=ctx.level,
         )
         if total <= 0:
             return None

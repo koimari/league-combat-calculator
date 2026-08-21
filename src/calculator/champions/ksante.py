@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -14,6 +14,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — All Out's omnivamp is prose in the
 # cached R fourth effect: "he gains bonus attack speed, 50% bonus-armor
@@ -27,21 +28,19 @@ def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     all_out = bool(ctx.options.get("all_out", False))
     extra = (
         0.01
-        + 0.01 * ctx.stats.get("bonus_armor", 0.0) / 100.0
-        + 0.01 * ctx.stats.get("bonus_magic_resistance", 0.0) / 100.0
+        + 0.01 * ctx.stat("bonus_armor") / 100.0
+        + 0.01 * ctx.stat("bonus_magic_resistance") / 100.0
         if all_out
         else 0.0
     )
-    return base + (ratio + extra) * float(
-        ctx.target.get("target_max_health", 0.0) or 0.0
-    )
+    return base + (ratio + extra) * float(ctx.target_stat("target_max_health") or 0.0)
 
 
 def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    count = min(max(int(ctx.options.get("p_marks", 1)), 0), 8)
+    count = min(max(int(ctx.option("p_marks")), 0), 8)
     if count <= 0:
         return None
     value = _marked_attack(ctx, ability)
@@ -78,7 +77,15 @@ _dauntless.phase = ONHIT
 
 
 def _ntofo(ctx: SlotCtx) -> dict[str, Any] | None:
-    return simple_damage(attr="Physical Damage", dmg_type="physical")(ctx)
+    return simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        # "deals physical damage to enemies hit and slows them by 80% for
+        # 0.5 seconds" — the empowered two-stack recast's pull and stun are
+        # a branch this module does not price.
+        cc_kind="slow",
+        event_order_certified="single_hit",
+    )(ctx)
 
 
 # W bonus-resistance ratios (P3 package 4A — typed declaration with
@@ -177,7 +184,7 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    charge = min(max(float(ctx.options.get("w_charge", 1.0)), 0.0), 1.0)
+    charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     for attribute in (
         "Physical Damage",
         "Minimum Bonus True Damage",
@@ -186,9 +193,9 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
         _require_row(ability, attribute)
     flat = extract_value(ability, "Physical Damage", rank, 0)
     base_pct = extract_value(ability, "Physical Damage", rank, 1)
-    bonus_armor = ctx.stats.get("bonus_armor", 0.0)
-    bonus_mr = ctx.stats.get("bonus_magic_resistance", 0.0)
-    max_health = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    bonus_armor = ctx.stat("bonus_armor")
+    bonus_mr = ctx.stat("bonus_magic_resistance")
+    max_health = float(ctx.target_stat("target_max_health") or 0.0)
     resist_pct = _W_PHYS_RESIST_PCT_PER_100 * (bonus_armor / 100.0) + (
         _W_PHYS_RESIST_PCT_PER_100 * (bonus_mr / 100.0)
     )
@@ -207,13 +214,16 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
         low = min_flat + (min_pct + min_resist_pct) / 100.0 * max_health
         high = max_flat + (max_pct + max_resist_pct) / 100.0 * max_health
         true_value = low + (high - low) * charge
+        # Both packets are the one dash, so the physical half lands at the
+        # same authored instant as the true half.  In All Out "Path Maker
+        # no longer applies its knock back and stun".
         parts = (
-            DamagePart("physical", physical),
-            DamagePart("true", true_value, time_offset=charge),
+            DamagePart("physical", physical, time_offset=charge, cc_kind="none"),
+            DamagePart("true", true_value, time_offset=charge, cc_kind="none"),
         )
         total = physical + true_value
     else:
-        parts = (DamagePart("physical", physical, time_offset=charge),)
+        parts = (DamagePart("physical", physical, time_offset=charge, cc_kind="stun"),)
         total = physical
     entry = damage_entry(
         ability.get("name", "Path Maker"),
@@ -289,7 +299,15 @@ SLOTS = {
     ),
     "R": _all_out,
 }
-parse_abilities = build_parser(SLOTS, "K'Sante")
+# R's target "is stunned for 0.3 seconds once [the displacement] ends" —
+# and 0.5 seconds after the airborne on the terrain branch — so both of its
+# packets land with a stun.  W's kind depends on the All Out branch and
+# rides its parts.  E authors no damage part, and P's mark-consumption row
+# is an effect-phase proc with a module-built event list the marker would
+# not reach.
+MODULE_CC = {"R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "K'Sante", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_marks",
@@ -322,37 +340,4 @@ ASSUMPTIONS = [
     "Path Maker uses its physical packet and optionally the authored All Out true-damage range; charge duration is explicit.",
     "All Out terrain routing and the health threshold / resistance conversion remain visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the fight's explicitly single-target attack/on-hit packets (the engine's full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is a documented boundary",
 ]
-SOURCES = [
-    source_row(
-        "K'Sante parent entry",
-        "https://wiki.leagueoflegends.com/en-us/K%27Sante",
-        4011715,
-        "2026-04-22T20:20:34Z",
-    ),
-    source_row(
-        "K'Sante Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/Q",
-        3471718,
-        "2022-10-16T16:23:55Z",
-    ),
-    source_row(
-        "K'Sante W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/W",
-        3471720,
-        "2022-10-16T16:25:10Z",
-    ),
-    source_row(
-        "K'Sante E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/E",
-        3471722,
-        "2022-10-16T16:25:47Z",
-    ),
-    source_row(
-        "K'Sante R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/R",
-        3471724,
-        "2022-10-16T16:26:26Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("K'Sante")

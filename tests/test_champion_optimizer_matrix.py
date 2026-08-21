@@ -55,7 +55,7 @@ def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
             },
             "candidate_coverage": {
                 "complete": False,
-                "excluded_count": 21,
+                "withheld_count": 21,
                 "excluded": [{"name": "Redemption", "reason": "active"}],
             },
         }
@@ -63,7 +63,7 @@ def test_item_scope_gap_does_not_withhold_a_complete_champion_package():
     report = run_matrix(post, ["Aatrox"])
     assert report["passed"] is True
     assert report["outcome_counts"] == {"certified_with_item_scope_gap": 1}
-    assert report["results"][0]["candidate_coverage"]["excluded_count"] == 21
+    assert report["results"][0]["candidate_coverage"]["withheld_count"] == 21
     assert report["results"][0]["selection_certification"] != "partial_or_unexhaustive"
     receipt = build_gate_report(report, ["Aatrox"])
     assert receipt["passed"] is True

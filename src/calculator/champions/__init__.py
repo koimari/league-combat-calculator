@@ -9,13 +9,13 @@ archetype registration in the reviewed surface.
 import importlib
 from typing import Any
 
-from .generic import GENERIC_SLOTS, parse_abilities as parse_generic_abilities
+from ..cast_dependency import CastDependency
 from .module_contract import ChampionModuleContract, contract_from_module
 
 # Map display name -> module name within this package.  This is the single
 # explicit roster manifest: every cached champion has a reviewed module and
 # no champion is routed through an archetype parser at runtime.
-_CUSTOM_CHAMPION_MODULES: dict[str, str] = {
+_CHAMPION_MODULES: dict[str, str] = {
     "Aatrox": "aatrox",
     "Ahri": "ahri",
     "Akali": "akali",
@@ -191,17 +191,6 @@ _CUSTOM_CHAMPION_MODULES: dict[str, str] = {
     "Ziggs": "ziggs",
 }
 
-
-# The complete runnable registration surface.  Every cached champion has a
-# reviewed module (the CP10 review program closed the generated-packet lane),
-# so the engine map IS the custom manifest — the same dict object, so a
-# manifest entry is immediately visible through every alias and there is no
-# derived generated/generic middle lane.
-_ENGINE_CHAMPION_MODULES: dict[str, str] = _CUSTOM_CHAMPION_MODULES
-# Compatibility alias for internal callers that used the historical name; it
-# is the same complete registration map, not a generic fallback path.
-_CHAMPION_MODULES: dict[str, str] = _ENGINE_CHAMPION_MODULES
-
 # Resolved module ``parse_abilities`` callables — the import system already
 # caches modules, but the coupled optimizer dispatches thousands of parses
 # per request, so skip even the ``import_module`` lookup after the first.
@@ -233,7 +222,13 @@ def get_champion_module_contract(champion_name: str) -> ChampionModuleContract:
 # ``auto_attack_uptime``: the fight's auto uptime, so auto-timeline
 # mechanics (e.g. Braum's passive stack cycle) walk the same auto
 # cadence (attack_speed x uptime) the fight engine schedules.
-RESERVED_OPTION_KEYS = frozenset({"fight_duration_seconds", "auto_attack_uptime"})
+# ``auto_attacks_only``: the engine casts no abilities in this window,
+# so a walk module must count ambient swings alone — without it a
+# merged auto+ability stream (Braum P, Vi W, Caitlyn P) keeps pricing
+# hits from casts that never happened.
+RESERVED_OPTION_KEYS = frozenset(
+    {"fight_duration_seconds", "auto_attack_uptime", "auto_attacks_only"}
+)
 
 
 def parse_abilities(
@@ -248,9 +243,7 @@ def parse_abilities(
 ) -> dict[str, dict[str, Any]]:
     """Parse abilities for any champion.
 
-    Dispatches to a dedicated reviewed module. Unknown names fail closed;
-    synthetic fixtures must call :func:`parse_synthetic_champion_abilities`
-    explicitly.
+    Dispatches to a dedicated reviewed module. Unknown names fail closed.
 
     Args:
         champion_name: Display name of the champion (e.g., "Ahri").
@@ -268,28 +261,6 @@ def parse_abilities(
     """
     contract = get_champion_module_contract(champion_name)
     return contract.parse_abilities(
-        champion_data,
-        level,
-        total_ability_power,
-        ability_ranks=ability_ranks,
-        champion_options=champion_options,
-        champion_stats=champion_stats,
-        target_stats=target_stats,
-    )
-
-
-def parse_synthetic_champion_abilities(
-    champion_data: dict[str, Any],
-    level: int,
-    total_ability_power: float,
-    ability_ranks: dict[str, int] | None = None,
-    champion_stats: dict[str, float] | None = None,
-    target_stats: dict[str, float] | None = None,
-    champion_options: dict[str, Any] | None = None,
-) -> dict[str, dict[str, Any]]:
-    """Run the explicitly synthetic/development Wiki parser."""
-
-    return parse_generic_abilities(
         champion_data,
         level,
         total_ability_power,
@@ -348,6 +319,29 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
     return list(declared) if declared else None
 
 
+def get_champion_cast_dependencies(champion_name: str) -> tuple[CastDependency, ...]:
+    """The champion's declared ordering prerequisites, or ``()``.
+
+    A module declares ``CAST_DEPENDENCIES`` when its own kit makes an
+    order mandatory rather than preferable — Syndra's Scatter the Weak
+    stuns only through a Dark Sphere her Q put on the field, so E after Q
+    is the mechanic, not a scheduling taste.  A champion that declares
+    none constrains nothing and keeps the resolver's inferred edges alone.
+
+    The validated contract is the only source: reading ``CAST_DEPENDENCIES``
+    off the module would hand out declarations that never passed the
+    import gate.
+
+    Returns:
+        The validated declarations, empty for a champion with no module
+        or one that declares none.
+    """
+    try:
+        return get_champion_module_contract(champion_name).cast_dependencies
+    except KeyError:
+        return ()
+
+
 def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     """Return a champion's option/assumption metadata for the frontend.
 
@@ -355,8 +349,8 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
     ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
     plus ``min``/``max``/``step`` for numeric inputs) and
     ``ASSUMPTIONS`` (prose strings shown in the UI), and optionally
-    revision-pinned ``SOURCES`` beside their ``SLOTS``. Unknown synthetic
-    fixtures without a module have no metadata.
+    revision-pinned ``SOURCES`` beside their ``SLOTS``. An unregistered
+    name has no metadata.
 
     Returns:
         ``{"options": [...], "assumptions": [...], "sources": [...]}``
@@ -531,9 +525,13 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     # cast feeds these).
     "p_notes_fired": {"role": "self_state", "slot": "P"},
     "p_pre_stacks": {"role": "self_state", "slot": "P"},
+    "p_empowered_attacks": {"role": "self_state", "slot": "P"},
+    "p_notes": {"role": "self_state", "slot": "P"},
+    "p_power_chords": {"role": "self_state", "slot": "P"},
     "p_procs": {"role": "self_state", "slot": "P"},
     "p_ready": {"role": "self_state", "slot": "P"},
     "p_right_punches": {"role": "self_state", "slot": "P"},
+    "p_self_health_percent": {"role": "self_state", "slot": "P"},
     # Mel P: how many Searing Brilliance stacks the empowered swing
     # consumes.  Deliberately ``self_state`` and NOT a ``stack_consume``
     # consume edge: the arming relation is already structural, not
@@ -710,7 +708,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
         "condition": "execute",
         "kind": "execute",
         "role": "execute",
-        "slot": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q"},
+        "slot": {"Bel'Veth": "E", "Briar": "W", "Varus": "Q", "Warwick": "W"},
     },
     "target_poisoned": {
         "condition": "poison",
@@ -810,8 +808,7 @@ def get_champion_option_rotation(
 
     Returns:
         ``{option_key: rotation_decl_or_None}`` for the champion's declared
-        OPTIONS entries.  Unknown synthetic fixtures without a module
-        return ``{}``.
+        OPTIONS entries.  An unregistered name returns ``{}``.
     """
     try:
         contract = get_champion_module_contract(champion_name)
@@ -838,12 +835,12 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
     """Return the module-level trust metadata used by the validation layer.
 
     Extends :func:`get_champion_options_meta` with the structural facts a
-    trust label needs: the slot map keys, the module's own coverage
-    declaration, and its review status.  ``coverage`` values are the
-    module's ``MODULE_COVERAGE`` dict (``"modeled"`` / ``"no_damage"`` /
-    ``"out_of_scope"`` per slot) when declared, else an empty dict;
-    ``slots`` is the ordered list of SLOTS-map keys the module actually
-    implements.  Unknown champions return an empty metadata dict.
+    trust label needs: the slot map keys, the contract's five-slot coverage
+    (the module's ``MODULE_COVERAGE`` when declared, else derived from its
+    ``SLOTS``; ``"modeled"`` / ``"no_damage"`` / ``"out_of_scope"`` per
+    slot), and its review status.  ``slots`` is the ordered list of
+    SLOTS-map keys the module actually implements.  Unknown champions
+    return an empty metadata dict.
 
     Returns:
         ``{"options": [...], "assumptions": [...], "sources": [...],
@@ -925,42 +922,17 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
 
 
 def registered_champion_names() -> list[str]:
-    """Display names of all champions with a dedicated engine module.
+    """Sorted display names of every champion with a validated module.
 
-    This is the runnable registration surface, not the certification surface:
-    every registered module is reviewed, and the reviewed surface is exposed
-    separately through :func:`reviewed_champion_names`.
+    Registration and review are one surface: a registered module is a
+    reviewed module.
     """
     return sorted(_CHAMPION_MODULES)
 
 
-def reviewed_champion_names() -> list[str]:
-    """Display names whose modules passed the exact champion review gate.
-
-    Every registered champion has a reviewed module (the CP10 review program
-    closed the generated lane), so this equals the registration surface.
-    Kept as a separate name for API compatibility with older clients.
-    """
-    return sorted(_CUSTOM_CHAMPION_MODULES)
-
-
-def registered_engine_champion_names() -> list[str]:
-    """Display names with an importable backend module, sorted.
-
-    This is the complete runnable registration surface (all reviewed
-    modules).  It is retained as a separate name for API compatibility with
-    older clients.
-    """
-    return sorted(_ENGINE_CHAMPION_MODULES)
-
-
 def engine_registration_kind(champion_name: str) -> str | None:
-    """Return the public registration kind for one champion module.
-
-    Every registered module is a reviewed module (the generated-packet lane
-    was removed with issue #136); unknown names return ``None``.
-    """
-    if champion_name not in _CUSTOM_CHAMPION_MODULES:
+    """The public registration kind of one module; ``None`` when unknown."""
+    if champion_name not in _CHAMPION_MODULES:
         return None
     return get_champion_module_contract(champion_name).review_status
 
@@ -968,8 +940,6 @@ def engine_registration_kind(champion_name: str) -> str | None:
 def is_champion_supported(champion_name: str) -> bool:
     """Check whether a champion has ability damage implemented.
 
-    Returns True only for cached champions with a dedicated module. Explicit
-    synthetic/development fixtures use ``parse_synthetic_champion_abilities``
-    and are not advertised as supported.
+    Returns True only for cached champions with a dedicated module.
     """
     return champion_name in _CHAMPION_MODULES

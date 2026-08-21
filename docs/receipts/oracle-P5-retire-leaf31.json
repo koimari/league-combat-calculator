@@ -1,0 +1,74 @@
+{
+  "receipt": "oracle-P5-retire-leaf31",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[6]",
+  "old_value": "<absent> (no 7th source entry; rotation declared no R sphere-count input)",
+  "new_value": {
+    "option": "r_spheres",
+    "kind": "self_state",
+    "slot": "R"
+  },
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].leveling",
+      "quote": "attribute 'Magic Damage per Sphere' = [80, 120, 160] + [20, 20, 20] % AP; attribute 'Minimum Magic Damage' = [240, 360, 480] + [60, 60, 60] % AP; attribute 'Maximum Magic Damage' = [560, 840, 1120] + [140, 140, 140] % AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].notes",
+      "quote": "Unleashed Power will not add a Sphere that Syndra is holding with Force of Will. Spheres that are being pushed by Scatter the Weak (normally ones that were made late during the push) will not get picked up for Unleashed Power. A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "docs/math-foundations.md",
+      "quote": "No entry governs option/source declaration taxonomy for coupled scenarios; the document contains no Syndra- or sphere-specific formula. Computation therefore rests on the cached wiki text above."
+    }
+  ],
+
+  "independent_computation": {
+    "model_recovered_from_wiki": "R_damage(rank, AP, n_spheres) = n_spheres * (per_sphere_flat[rank] + 0.20 * AP), with per_sphere_flat = [80, 120, 160] and n_spheres in [3, 7] (3 conjured + up to 4 live ones grabbed).",
+    "reconciliation_of_the_wiki_min_max_rows": {
+      "method": "The wiki publishes 'Minimum' and 'Maximum' rows independently of the per-sphere row. If the model above is right, Minimum must equal 3x the per-sphere row and Maximum must equal 7x it, at every rank. Checked all three ranks:",
+      "rank_1": "3 x (80 + 20% AP) = 240 + 60% AP == wiki Minimum 240 + 60% AP  [match]; 7 x (80 + 20% AP) = 560 + 140% AP == wiki Maximum 560 + 140% AP  [match]",
+      "rank_2": "3 x (120 + 20% AP) = 360 + 60% AP == wiki Minimum 360 + 60% AP  [match]; 7 x (120 + 20% AP) = 840 + 140% AP == wiki Maximum 840 + 140% AP  [match]",
+      "rank_3": "3 x (160 + 20% AP) = 480 + 60% AP == wiki Minimum 480 + 60% AP  [match]; 7 x (160 + 20% AP) = 1120 + 140% AP == wiki Maximum 1120 + 140% AP  [match]",
+      "conclusion": "6 of 6 independent reconciliations exact. The sphere count is a free multiplicative input to R's damage, bounded [3, 7], and is not derivable from rank or AP."
+    },
+    "load_bearing_check": {
+      "worked_example": "R rank 3, 200 AP, per-sphere = 160 + 0.20*200 = 200 magic damage.",
+      "sweep": {"3": 600.0, "4": 800.0, "5": 1000.0, "6": 1200.0, "7": 1400.0},
+      "sensitivity": "d(R_damage)/d(n_spheres) = 200 per sphere; the 3 -> 7 span moves R damage by 800 (2.33x). A golden leaf set that omits this input asserts R's damage is invariant in sphere count, which the wiki min/max rows falsify directly."
+    },
+    "field_by_field_adjudication": {
+      "option_name 'r_spheres'": "CORRECT - the sphere-count option for Syndra is named r_spheres in the pre-existing cached evidence (data/champion-audit/batch-e9-1.json), independent of the change under test.",
+      "kind 'self_state'": "CORRECT - the count is the number of Syndra's OWN Dark Spheres alive on the map at cast time (3 self-conjured plus up to 4 of her own live ones). It is a property of the caster's board state, not of the target, an item, or a rune. The wiki notes further confirm it is caster-side bookkeeping (spheres held by W excluded, spheres being pushed by E excluded).",
+      "slot 'R'": "CORRECT - the quantity parameterizes Unleashed Power (slot R) only; Q/W/E damage rows carry no sphere-count term.",
+      "presence_vs_absence": "PRESENT is correct for any rotation containing an R cast. The sources list enumerates the inputs a rotation's damage depends on; R's damage is a strict function of n_spheres, so the input must be declared. Absence under-declares the dependency."
+    }
+  },
+
+  "residual_uncertainty": "The scenario definition for 'syndra_derived_order_39' lives outside the permitted evidence tree (data/ and docs/math-foundations.md only), so I could not read its rotation directly. My adjudication is therefore conditional in exactly one way: it holds if the rotation contains an R cast. Two facts make that near-certain: the leaf itself is typed slot R (a slot-scoped source is only emitted for a rotation that casts that slot), and the scenario is a Syndra coupled/derived-order case, whose whole point is that earlier Q/W casts leave live spheres that R then collects. Under the alternative - a rotation with no R cast - the correct verdict would flip to old_value_correct; I found no evidence for that alternative.",
+
+  "verdict_rationale": "Syndra's Unleashed Power deals 'Magic Damage per Sphere' x (number of collected spheres), with the count ranging 3 to 7 and set by the caster's own board state. I recovered that model from the cached wiki text alone and confirmed it by reconciling the wiki's separately-published Minimum and Maximum damage rows against 3x and 7x the per-sphere row at all three ranks - 6 of 6 exact matches. The count is a real, free, damage-bearing self-state input to slot R (800 damage of swing at rank 3 / 200 AP), so declaring 'r_spheres (self_state, slot R)' among the rotation's sources is correct and its prior absence was an under-declaration."
+}

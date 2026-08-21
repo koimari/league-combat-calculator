@@ -10,7 +10,9 @@ primitives in test_champion_primitives.py.
 import pytest
 from types import SimpleNamespace
 
+from src.calculator import damage
 from src.calculator.ability_spec import DamagePart
+from src.calculator.interpreters import on_hit_strike
 from src.calculator.resistance import apply_resistance
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
@@ -43,9 +45,15 @@ def _simulate_bork_damage(
     double_hit_all=False,
 ):
     """Readable test adapter around the generic current-health simulation."""
-    effect = resolve_damage_effects([{"name": "Blade of the Ruined King"}])
+    strikes = on_hit_strike.per_hit_effects(
+        ["Blade of the Ruined King"],
+        level=1,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=is_melee,
+    )
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
-        effect.per_hits[0],
+        strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
         num_auto_attacks,
@@ -456,6 +464,105 @@ class TestOrderedDamageEvents:
             if event["source_key"] == "damage_amp_Test"
             and event["damage_type"] == "magic"
         ) == pytest.approx(15.0)
+
+
+class TestLedgerRowShapes:
+    """The three ledger shapes stay projections of one row schema."""
+
+    # What ``lean`` drops: display-only fields no scoring consumer reads.
+    DISPLAY_ONLY = {
+        "ordinal",
+        "phase",
+        "order",
+        "source_missing_ratio",
+        "event_precision",
+    }
+
+    @staticmethod
+    def _ledger(**kwargs):
+        breakdown = {
+            "Q": {
+                "casts": 1,
+                "total_damage": 90.0,
+                "total_raw": 120.0,
+                "damage_type": "magic",
+            },
+            "auto_attacks": {
+                "count": 2,
+                "total_damage": 150.0,
+                "damage_type": "physical",
+                "damage_events": [
+                    {
+                        "time": 0.0,
+                        "damage": 50.0,
+                        "damage_type": "physical",
+                        "raw_damage": 60.0,
+                        "raw_formula": {"kind": "auto"},
+                        "basic_attack": True,
+                        "cc_kind": "slow",
+                        "source_missing_ratio": 0.25,
+                        "event_precision": "exact",
+                        "declared": ("mechanic", 60.0),
+                    },
+                    {"time": 0.5, "damage": 100.0, "damage_type": "physical"},
+                ],
+                # Shorter than the event list on purpose: the second swing
+                # has no shield to inherit.
+                "self_shield_events": [{"amount": 12.0}],
+            },
+            "burn_Test": {"total_damage": 40.0, "damage_by_type": {"magic": 40.0}},
+            "damage_amp_Test": {"total_damage": 20.0},
+        }
+        return _ordered_damage_events(breakdown, {"Q": {}}, ["Q"], **kwargs)
+
+    def test_every_shape_reports_the_same_events_in_the_same_order(self):
+        full = self._ledger()
+        lean = self._ledger(lean=True)
+        light = self._ledger(light=True)
+
+        assert len(full) == len(lean) == len(light) > 4
+        for full_row, lean_row, light_row in zip(full, lean, light):
+            assert light_row[0] == full_row["_lk"] == lean_row["_lk"]
+            assert light_row[1] == full_row["damage"]
+            assert light_row[2] == full_row["damage_type"]
+            assert light_row[3] == full_row["source_key"]
+            assert light_row[4] == full_row.get("raw_formula")
+            assert light_row[5] == full_row.get("raw_damage", 0.0)
+            assert light_row[6] == full_row.get("declared")
+
+    def test_lean_drops_the_display_fields_and_nothing_else(self):
+        for full_row, lean_row in zip(self._ledger(), self._ledger(lean=True)):
+            assert set(lean_row) == set(full_row) - self.DISPLAY_ONLY
+            for key, value in lean_row.items():
+                assert full_row[key] == value
+            assert self.DISPLAY_ONLY & set(full_row)
+
+    def test_pricing_markers_ride_the_scoring_shape(self):
+        swing = next(
+            row
+            for row in self._ledger(lean=True)
+            if row["source_key"] == "auto_attacks" and row["time"] == 0.0
+        )
+
+        assert swing["basic_attack"] is True
+        assert swing["omnivamp_effectiveness"] == 1.0
+        assert swing["cc_kind"] == "slow"
+        assert swing["cc_reviewed"] is True
+        assert swing["declared"] == ("mechanic", 60.0)
+        assert swing["raw_damage"] == 60.0
+
+    def test_entry_shield_list_shorter_than_its_events_lands_once(self):
+        swings = [row for row in self._ledger() if row["source_key"] == "auto_attacks"]
+
+        assert [row.get("self_shield") for row in swings] == [{"amount": 12.0}, None]
+
+    def test_synthesized_rows_carry_the_same_schema_as_authored_ones(self):
+        ability = next(row for row in self._ledger() if row["source_key"] == "Q")
+
+        assert ability["raw_damage"] == 120.0
+        assert ability["is_ability"] is True
+        assert ability["phase"] == "ability"
+        assert "omnivamp_effectiveness" not in ability
 
 
 class TestAmplifierEventAttribution:
@@ -948,6 +1055,7 @@ class TestTargetIncomingDamageModifiers:
                     "parts": (DamagePart("magic", 800.0),),
                 }
             },
+            fight_duration_seconds=4.0,
             target_health=1000.0,
             target_magic_resistance=0.0,
             target_threshold_health_bonus=200.0,
@@ -959,8 +1067,49 @@ class TestTargetIncomingDamageModifiers:
         assert result["total_damage"] == pytest.approx(800.0)
         assert result["threshold_health_triggered"] is True
         assert result["threshold_health_bonus_gained"] == 200.0
+        # Inside the window: the raised maximum still stands.
         assert result["target_effective_max_health"] == 1200.0
-        assert result["target_ending_health"] == pytest.approx(400.0)
+        # 1000 - 800 damage, plus the 16 of 20 authored 0.25s heal ticks
+        # (15 each) that fall inside a four-second fight.
+        assert result["threshold_health_heal_ticks"] == 16
+        assert result["target_ending_health"] == pytest.approx(640.0)
+
+    def test_protoplasm_temporary_maximum_lapses_on_the_wiki_health_rule(
+        self, fight, attacker_stats
+    ):
+        """The Wiki's Health page worked example, driven through the engine.
+
+        "When the passive runs out, maximum health decreases by 200 from 1200
+        to 1000.  Current health remains at 700."  A defender that spent more
+        than the grant keeps every point it healed to; only an overhang above
+        the restored maximum would be clamped away.
+        """
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            fight_duration_seconds=5.0,
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_expired"] is True
+        assert result["threshold_health_heal_ticks"] == 20
+        assert result["target_effective_max_health"] == pytest.approx(1000.0)
+        assert result["target_ending_health"] == pytest.approx(700.0)
 
     def test_protoplasm_updates_later_liandry_max_health_ticks(
         self, fight, attacker_stats
@@ -991,10 +1140,14 @@ class TestTargetIncomingDamageModifiers:
         assert [event["damage"] for event in burn["damage_events"]] == pytest.approx(
             [12.0] * 6
         )
-        assert result["target_healing_received"] == pytest.approx(180.0)
-        assert result["timeline_coverage"]["complete"] is False
+        # The whole sourced heal, delivered on its authored 0.25s ticks
+        # rather than interpolated across whatever damage events existed.
+        assert result["target_healing_received"] == pytest.approx(300.0)
+        assert result["threshold_health_cadence_certified"] is True
+        assert result["timeline_coverage"]["complete"] is True
         assert (
-            "target_Protoplasm Harness" in result["timeline_coverage"]["coarse_sources"]
+            "target_Protoplasm Harness"
+            not in result["timeline_coverage"]["coarse_sources"]
         )
 
     def test_protoplasm_health_can_delay_shadowflame_threshold(
@@ -1042,31 +1195,83 @@ class TestTargetIncomingDamageModifiers:
         ] == pytest.approx(20.0)
         assert "shadowflame_Shadowflame" not in protoplasm["breakdown"]
 
-    def test_protoplasm_fails_closed_at_unsourced_expiry_boundary(
+    def test_protoplasm_still_downgrades_coverage_without_an_authored_cadence(
+        self, fight, attacker_stats, monkeypatch
+    ):
+        """The emptied downgrade, fired on a declaration that authors no ticks.
+
+        Banned shortcut check: the coverage refusal was not deleted, it was
+        *measured*.  A declaration subdividing the sourced window into no
+        ticks leaves the heal a total rather than a schedule, and the coarse
+        source comes back exactly as it used to.
+        """
+        monkeypatch.setattr(
+            damage.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
+        )
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger",
+                    "rank": 1,
+                    "cooldown": 10.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_cadence_certified"] is False
+        assert result["threshold_health_heal_ticks"] == 0
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is False
+        assert coverage["certification"] == "partial_event_order"
+        assert "target_Protoplasm Harness" in coverage["coarse_sources"]
+        assert "no heal tick cadence" in coverage["note"]
+
+    def test_protoplasm_prices_a_fight_that_outlives_its_window(
         self, fight, attacker_stats
     ):
-        with pytest.raises(ValueError, match="temporary-health expiry"):
-            fight(
-                attacker_stats(),
-                {
-                    "Q": {
-                        "name": "Trigger and repeat",
-                        "rank": 1,
-                        "cooldown": 5.0,
-                        "damage_type": "magic",
-                        "total_raw": 800.0,
-                        "parts": (DamagePart("magic", 800.0),),
-                    }
-                },
-                one_rotation=False,
-                fight_duration_seconds=6.0,
-                target_health=1000.0,
-                target_magic_resistance=0.0,
-                target_threshold_health_bonus=200.0,
-                target_threshold_health_heal=300.0,
-                target_threshold_health_ratio=0.30,
-                target_threshold_health_duration=5.0,
-            )
+        """The fight the refusal used to withhold now computes.
+
+        Six seconds outlives the five-second window, and the second cast
+        lands after it: the temporary maximum is gone by then, so the
+        defender meets that packet on its base maximum.
+        """
+        result = fight(
+            attacker_stats(),
+            {
+                "Q": {
+                    "name": "Trigger and repeat",
+                    "rank": 1,
+                    "cooldown": 5.0,
+                    "damage_type": "magic",
+                    "total_raw": 800.0,
+                    "parts": (DamagePart("magic", 800.0),),
+                }
+            },
+            one_rotation=False,
+            fight_duration_seconds=6.0,
+            target_health=1000.0,
+            target_magic_resistance=0.0,
+            target_threshold_health_bonus=200.0,
+            target_threshold_health_heal=300.0,
+            target_threshold_health_ratio=0.30,
+            target_threshold_health_duration=5.0,
+        )
+
+        assert result["threshold_health_triggered"] is True
+        assert result["threshold_health_expired"] is True
+        assert result["target_effective_max_health"] == pytest.approx(1000.0)
+        assert result["timeline_coverage"]["complete"] is True
 
 
 class TestShieldReaver:
@@ -1172,6 +1377,9 @@ class TestShieldReaver:
         result = self._fang_fight(
             fight,
             attacker_stats,
+            # Inside the temporary maximum's own window, so what is measured
+            # is the venom sparing the grant rather than its expiry.
+            fight_duration_seconds=4.0,
             target_threshold_health_bonus=200.0,
             target_threshold_health_heal=300.0,
             target_threshold_health_ratio=0.30,
@@ -3099,7 +3307,11 @@ class TestEmpoweredSwingAttribution:
         # earlier hits instead of six times against full target health.  F3
         # derives E (Blunt Force Trauma, bonus-AD buff) first, shifting the
         # buff/auto cadence — the total is re-captured with the derivation.
-        assert result["total_damage"] == pytest.approx(1868.152, rel=1e-3)
+        # Re-captured with the landing-instant ruling: Q is current-health
+        # damage, so it is priced against what had actually landed by each
+        # cast rather than against the rotation's running total.  The
+        # conservation invariant itself is the sibling row below.
+        assert result["total_damage"] == pytest.approx(1883.966, rel=1e-3)
 
     def test_breakdown_rows_still_sum_to_total(self, dr_mundo_data) -> None:
         result = self._fight(dr_mundo_data)

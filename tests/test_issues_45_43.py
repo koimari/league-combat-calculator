@@ -23,13 +23,13 @@ from src.calculator.item_effects import (
     energized_schedule_receipt,
     essence_reaver_mana_restore_per_proc,
     grouped_sustain_stat_percent,
-    guinsoo_attack_speed_percent,
     hydra_cleave_secondary_ad_damage,
     hydra_secondary_target_damage,
     required_effect_value,
     sustain_effect_value,
     sustain_stat_receipt,
 )
+from src.calculator.interpreters import charged_strike
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
 
@@ -113,6 +113,15 @@ def test_missing_lifesteal_key_raises_naming_item_and_key(monkeypatch):
         sustain_stat_receipt("Vampiric Scepter", "lifesteal_percent")
     with pytest.raises(KeyError, match="Vampiric Scepter.*lifesteal_percent"):
         grouped_sustain_stat_percent(_items("Vampiric Scepter"), "lifesteal_percent")
+
+
+def test_missing_lifesteal_source_raises_naming_item_and_key(monkeypatch):
+    """A receipt without its wiki revision is not synthesized; it raises."""
+    monkeypatch.setitem(
+        ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain", "lifesteal_percent": 7.0}
+    )
+    with pytest.raises(KeyError, match="Vampiric Scepter.*source_url"):
+        sustain_stat_receipt("Vampiric Scepter", "lifesteal_percent")
 
 
 def test_grouped_sustain_stat_sums_lifesteal_across_a_build():
@@ -235,10 +244,15 @@ def test_guinsoo_seething_strike_stacks_typed_and_fight_accelerates():
     assert required_effect_value(
         "Guinsoo's Rageblade", "seething_duration"
     ) == pytest.approx(3.0)
-    assert guinsoo_attack_speed_percent(_items("Guinsoo's Rageblade"), 0) == 0.0
-    assert guinsoo_attack_speed_percent(
-        _items("Guinsoo's Rageblade"), 4
-    ) == pytest.approx(32.0)
+    ramp = charged_strike.resolve_slots(
+        ["Guinsoo's Rageblade"],
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    ).swing_schedule.ramp
+    assert ramp.bonus_percent(0) == 0.0
+    assert ramp.bonus_percent(4) == pytest.approx(32.0)
 
     baseline = _calculate([])
     guinsoo = _calculate(["Guinsoo's Rageblade"])
@@ -377,17 +391,17 @@ def test_hydra_cleave_secondary_cone_typed_and_boundary_documented():
 
 
 def test_energized_source_receipt_pins_e9_bis_cadence():
-    """The shared Energized cadence matches the E9-BIS Tip data receipt."""
+    """Every Energized item's own typed cadence cites the E9-BIS Tip data."""
     assert ENERGIZED_SOURCE_RECEIPT["source_revision_id"] == 4013385
-    assert ENERGIZED_SOURCE_RECEIPT["max_stacks"] == 100
-    assert ENERGIZED_SOURCE_RECEIPT["attack_stacks"] == 6
-    assert ENERGIZED_SOURCE_RECEIPT["distance_units_per_stack"] == 24.0
     for item_name in (
         "Statikk Shiv",
         "Rapid Firecannon",
         "Stormrazor",
         "Voltaic Cyclosword",
     ):
+        effect = ITEM_EFFECTS[item_name]
+        assert effect["energized_max_stacks"] == 100
+        assert effect["energized_distance_units_per_stack"] == 24.0
         receipt = energized_schedule_receipt(item_name)
         assert receipt["source_revision_id"] == 4013385
         assert receipt["max_stacks"] == 100

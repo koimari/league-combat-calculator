@@ -14,10 +14,26 @@ At level 18, rank 5/5/5/3, 600 total AP:
   (at 100 AP pre-buff: Q rank 5 = 230 + 0.70 x 115 = 310.5)
 """
 
+import importlib
+import json
+import sys
+from pathlib import Path
+
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests import cc_review
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _golden_snapshot():
+    """The capture instrument, imported from ``scripts/`` on first use."""
+    if str(_REPO_ROOT / "scripts") not in sys.path:
+        sys.path.insert(0, str(_REPO_ROOT / "scripts"))
+    return importlib.import_module("golden_snapshot")
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -209,6 +225,56 @@ class TestDarkSphereCharges:
         abilities = _parse(syndra_data, options={"splinters": 39})
         assert "Q2" not in abilities
 
+    def test_the_charge_pays_dark_spheres_own_mana(self, syndra_data) -> None:
+        """A stocked charge is a whole cast and is priced like one.
+
+        The wiki grants the charge and says nothing about price: "Collecting
+        40 Splinters of Wrath causes Syndra to periodically stock a Dark
+        Sphere charge, up to a maximum of 2."  So the charge spends what Q
+        spends at Q's rank, read from Q's own cached cost row rather than
+        typed here.
+        """
+        abilities = _parse(syndra_data, options={"splinters": 40})
+        q_cost = (syndra_data["abilities"]["Q"][0]["cost"]["modifiers"][0]["values"])[4]
+        assert abilities["Q2"]["resource_cost"] == pytest.approx(float(q_cost))
+        assert abilities["Q2"]["resource_cost"] == abilities["Q"]["resource_cost"]
+        assert abilities["Q2"]["resource_type"] == "MANA"
+
+    @pytest.mark.parametrize("rank, expected", [(1, 40.0), (3, 50.0), (5, 60.0)])
+    def test_the_charge_is_priced_at_its_parents_rank(
+        self, syndra_data, rank, expected
+    ) -> None:
+        """Not a fixed number: the charge follows Q's rank down its cost row."""
+        abilities = _parse(
+            syndra_data,
+            options={"splinters": 40},
+            ranks={"Q": rank, "W": 5, "E": 5, "R": 3},
+        )
+        assert abilities["Q2"]["resource_cost"] == pytest.approx(expected)
+
+    def test_the_charge_is_priced_on_the_fights_cast_ledger(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        """The stamp is not decoration — the executed timeline carries it.
+
+        Two Q casts and one charge in an 8 s window, and the ledger prices
+        all three at Dark Sphere's cost rather than two of them.
+        """
+        stats = attacker_stats()
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            0.0,
+            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+            champion_stats=stats,
+            champion_options={"splinters": 40},
+        )
+        timeline = _fight(stats, abilities)["cast_timeline"]
+        assert [cast["slot"] for cast in timeline] == ["Q", "Q2", "Q"]
+        assert [cast["resource_cost"] for cast in timeline] == [
+            abilities["Q"]["resource_cost"]
+        ] * 3
+
     def test_timed_fight_gets_exactly_one_extra_q(
         self, syndra_data, attacker_stats
     ) -> None:
@@ -298,6 +364,419 @@ class TestUnleashedPowerSpheres:
 
 
 # ---------------------------------------------------------------------------
+# Rotation: Q must precede E (the stun consumes a sphere)
+# ---------------------------------------------------------------------------
+
+
+class TestRotationOrder:
+    """E's stun exists only by scattering a Dark Sphere, so Q is E's setup —
+    the reverse of the generic cc-setup-first ordering.  The hand seed in
+    CAST_ORDER_OVERRIDES pinned that order until the module declared it;
+    the order is now DERIVED from ``CAST_DEPENDENCIES`` (D-89) and cites
+    the wiki revision the declaration was read from, which is the whole
+    point of retiring a seed rather than deleting one."""
+
+    def test_cast_order_is_qe_combo(self, syndra_data) -> None:
+        from src.calculator.rotation_resolver import (
+            CAST_ORDER_OVERRIDES,
+            resolve_cast_order,
+        )
+
+        abilities = _parse(syndra_data)
+        order, rule = resolve_cast_order("Syndra", abilities, champion_data=syndra_data)
+        assert order == ["Q", "Q2", "E", "W", "R"]
+        assert rule is not None and rule.derived is True
+        assert "Syndra" not in CAST_ORDER_OVERRIDES
+        assert "sphere" in rule.rationale.lower()
+        assert "cc_enabler" in rule.rationale
+        assert "wiki.leagueoflegends.com/en-us/Syndra@" in rule.rationale
+
+
+# ---------------------------------------------------------------------------
+# The two cast-order pins — Phase 5 criteria 6 and 11
+#
+# There is no bespoke Syndra pin fixture.  The parameter set lives once, in
+# the ``syndra_derived_order`` / ``syndra_custom_order`` coupled scenarios,
+# and the binding totals live once, in the committed
+# ``scripts/golden_coupled_baseline.json``.  These classes run the named
+# scenarios live and read that file; no number below is typed by hand.
+# ---------------------------------------------------------------------------
+
+
+def _coupled_baseline():
+    """The committed coupled baseline — the binding home of the totals."""
+    path = _REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
+    return json.loads(path.read_text(encoding="utf-8"))["coupled_scenarios"]
+
+
+def _scenario(name):
+    """One named coupled scenario; its request is the one parameter set."""
+    for scenario in _golden_snapshot().COUPLED_SCENARIOS:
+        if scenario.name == name:
+            return scenario
+    raise AssertionError(f"coupled scenario {name!r} is missing")
+
+
+def _capture(name):
+    """Run a named scenario live, rounded exactly as the baseline is."""
+    snapshot = _golden_snapshot()
+    return snapshot._rounded(  # pylint: disable=protected-access
+        snapshot.coupled_entry(_scenario(name))
+    )
+
+
+def _casts(entry):
+    """One captured fight's cast timeline as ``(time, slot)`` pairs."""
+    fight = entry["fights"]["manual_target"]
+    return [(cast["time"], cast["slot"]) for cast in fight["cast_timeline"]]
+
+
+def _without_coverage_prose(value):
+    """The same tree with every ``item_coverage`` block removed.
+
+    The utility-outcomes payload carries one coverage record per item — a
+    status and a reason, both prose about *why* the model does or does not
+    price a mechanic, and neither a number.  Phase 3's 3.8 flip regenerated
+    all of them, and the leaves are enumerated in
+    ``docs/receipts/expected-golden-diff-3.8-coverage-flip.json``, which is
+    where they are pinned.  Dropping them here is the same split ``rotation``
+    already gets: this assertion is about what the engine computed.
+    """
+    if isinstance(value, dict):
+        return {
+            key: _without_coverage_prose(child)
+            for key, child in value.items()
+            if key != "item_coverage"
+        }
+    if isinstance(value, list):
+        return [_without_coverage_prose(child) for child in value]
+    return value
+
+
+def _priced(entry):
+    """Everything the scenario prices — the entry minus its receipts' prose.
+
+    ``rotation`` is the receipt that says *why* the order is what it is, and
+    ``item_coverage`` is the receipt that says why a mechanic is or is not
+    priced; every other leaf is what the engine computed.  The prose moves
+    when a hand seed retires against a declaration, or when a coverage
+    classifier stops reading a hand registry, and no number may: splitting
+    them here is what lets one assertion mean "the change moved nothing"
+    instead of "the wording is unchanged".  ``cast_order`` and ``order`` live
+    inside ``rotation`` and are pinned separately below by the cast timeline,
+    which is the executed fact.
+    """
+    fights = {
+        key: {name: value for name, value in fight.items() if name != "rotation"}
+        for key, fight in entry["fights"].items()
+    }
+    # ``dispositions`` is Phase 4 S9's parallel map: one entry per published
+    # leaf, saying whether a rule produced that number.  It is a receipt
+    # *about* the numbers rather than one of them, and it did not exist when
+    # this baseline was captured, so it joins the prose this comparison
+    # excludes.  Its own coverage is asserted in
+    # ``tests/test_payload_dispositions.py``, two-way, against a live run.
+    combat = {
+        name: value
+        for name, value in entry.get("combat", {}).items()
+        if name != "dispositions"
+    }
+    trimmed = {**entry, "fights": fights}
+    if "combat" in entry:
+        trimmed["combat"] = combat
+    return _without_coverage_prose(trimmed)
+
+
+_PIN_SPLINTERS = (39, 60, 120)
+
+
+def _allowlisted_moves():
+    """Every coupled leaf a committed R-17 allowlist claims, with its new value.
+
+    R-17 lands a semantic slice against the *old* baseline plus a committed
+    allowlist and re-captures at the boundary, so between the two a pin that
+    demands byte-equality with the committed entry forbids every correction
+    this campaign exists to make.  What must hold in between is the weaker
+    pair the allowlist itself states: a leaf outside it did not move, and a
+    leaf inside it holds the value its receipt declared.  Once the boundary
+    lands the difference set is empty and both clauses hold trivially.
+    """
+    claimed: set[str] = set()
+    declared: dict[str, object] = {}
+    receipts = (_REPO_ROOT / "docs" / "receipts").glob("expected-golden-diff-*.json")
+    for receipt in sorted(receipts):
+        block = json.loads(receipt.read_text(encoding="utf-8"))
+        paths = block.get("expected_diff_paths", {})
+        for key in ("coupled_golden", "coupled_golden_shape_counters"):
+            claimed.update(paths.get(key, ()))
+        for path, move in (block.get("moved_values") or {}).items():
+            claimed.add(path)
+            declared[path] = move.get("new")
+    return claimed, declared
+
+
+def _pin_diffs(name):
+    """The live run against the committed entry, through R-15's own instrument."""
+    snapshot = _golden_snapshot()
+    live = {"coupled_scenarios": {name: _priced(_capture(name))}}
+    committed = {"coupled_scenarios": {name: _priced(_coupled_baseline()[name])}}
+    return snapshot.leaf_report(committed, live)
+
+
+def _assert_pinned(name):
+    """The scenario reproduces its committed entry, allowlist included."""
+    claimed, declared = _allowlisted_moves()
+    for diff in _pin_diffs(name):
+        assert (
+            diff.path in claimed
+        ), f"{name} moved {diff.path}, which no receipt claims"
+        if diff.path in declared:
+            assert diff.new == declared[diff.path], (
+                f"{name} moved {diff.path} to {diff.new!r}, where the receipt claiming "
+                f"it declares {declared[diff.path]!r}"
+            )
+
+
+class TestTheDerivedOrderPinScenario:
+    """Criterion 6 — the 5.0 s Q recast, pinned by the coupled baseline.
+
+    The splinter count is load-bearing: Q's second charge arrives at 40
+    stacks and W's bonus true damage at 60, so the same run totals three
+    different numbers across the variants and a pin without that axis is
+    ambiguous.  Every expectation here is read from the committed
+    baseline; the suite retypes nothing.
+    """
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
+        _assert_pinned(f"syndra_derived_order_{splinters}")
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_q_recasts_at_five_seconds(self, splinters) -> None:
+        """10 ability haste puts the recast at 5.0 s exactly."""
+        casts = _casts(_capture(f"syndra_derived_order_{splinters}"))
+        assert (5.0, "Q") in casts
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_second_charge_rides_its_parents_cast_times(self, splinters) -> None:
+        """C6's fold: Q2 never occupies a cast slot of its own."""
+        casts = _casts(_capture(f"syndra_derived_order_{splinters}"))
+        q_times = {time for time, slot in casts if slot == "Q"}
+        q2_times = [time for time, slot in casts if slot == "Q2"]
+        assert q2_times == ([0.0] if splinters >= 40 else [])
+        assert set(q2_times) <= q_times
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_derived_timeline_is_not_the_requested_one(self, splinters) -> None:
+        """A pin the fix and a fall-through both satisfy is not a pin."""
+        derived = _casts(_capture(f"syndra_derived_order_{splinters}"))
+        requested = _casts(_capture(f"syndra_custom_order_{splinters}"))
+        assert derived != requested
+
+
+class TestTheSeedRetirementAllowlistIsCommitted:
+    """R-17: the retirement lands against the committed baseline plus a list.
+
+    The seed deletion moves receipt prose and no number, and the list of
+    exactly which leaves may move is committed beside the code rather than
+    absorbed by re-capturing a baseline inside a semantic commit.
+    """
+
+    _PATH = (
+        _REPO_ROOT / "docs" / "receipts" / "expected-golden-diff-P5-seed-syndra.json"
+    )
+
+    @staticmethod
+    def _receipt():
+        return json.loads(
+            TestTheSeedRetirementAllowlistIsCommitted._PATH.read_text(encoding="utf-8")
+        )
+
+    def test_the_pair_baseline_half_is_empty(self) -> None:
+        """The retirement's own gate: the pair engine sees no change."""
+        receipt = self._receipt()
+        assert receipt["slice"] == "P5-seed-syndra"
+        assert receipt["decisions"] == ["D-89", "P5-e"]
+        assert receipt["expected_diff_paths"]["golden"] == []
+
+    def test_every_allowed_path_is_inside_the_declared_population(self) -> None:
+        """An occurrence outside the enumerated population stops the slice."""
+        receipt = self._receipt()
+        prefixes = tuple(
+            receipt["qualifying_population"]["coupled_golden"]["bounded_by_prefix"]
+        )
+        assert len(prefixes) == 3
+        allowed = receipt["expected_diff_paths"]["coupled_golden"]
+        assert allowed, "an empty allowlist would make this check vacuous"
+        outside = [path for path in allowed if not path.startswith(prefixes)]
+        assert outside == []
+
+    def test_the_population_was_enumerated_before_the_first_src_edit(self) -> None:
+        population = self._receipt()["qualifying_population"]
+        assert population["enumerated_before_first_src_edit"] is True
+        assert population["pair_golden"]["measured_qualifying_leaves"] == 0
+        assert population["coupled_golden"]["occurrences_outside_the_population"] == 0
+
+    def test_the_positive_control_is_recorded_in_the_fingerprints_receipt(self) -> None:
+        """Zero diffs means nothing unless the gate can be made to fail."""
+        fingerprints = json.loads(
+            (_REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        control = fingerprints["demonstrated_red"]["P5_syndra_seed_positive_control"]
+        assert control["pair_golden_diff_count"] >= 1
+        assert len(control["sha"]) == 40
+        assert len(control["output_sha256"]) == 64
+
+
+class TestTheCustomOrderPinReadsTheBaseline:
+    """Criterion 11 — the requested order is whole, and the total is pinned.
+
+    ``tests/test_custom_cast_order.py`` asserts C6's behaviour structurally
+    (the recast survives, once).  This class binds the same scenario to the
+    committed number, so a change that keeps the shape and moves the damage
+    cannot pass both.
+    """
+
+    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
+    def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
+        _assert_pinned(f"syndra_custom_order_{splinters}")
+
+    def test_the_requested_order_keeps_the_second_charge(self) -> None:
+        entry = _capture("syndra_custom_order_120")
+        fight = entry["fights"]["manual_target"]
+        assert fight["breakdown"]["Q2"]["casts"] == 1
+        committed = _coupled_baseline()["syndra_custom_order_120"]
+        assert (
+            fight["total_damage"]
+            == committed["fights"]["manual_target"]["total_damage"]
+        )
+
+
+# ---------------------------------------------------------------------------
+# E: Scatter the Weak's authored stun marker
+# ---------------------------------------------------------------------------
+
+
+class TestScatterTheWeakStun:
+    """E carries the authored stun so CC-triggered item passives (Imperial
+    Mandate's Command, Bandlepipes' Fanfare) can see it in the event ledger."""
+
+    def test_the_stun_is_declared_once_in_module_cc(self) -> None:
+        """MODULE_CC is the kit's one crowd-control declaration site; the
+        slot map states only the separate event-order claim."""
+        from src.calculator.champions import syndra
+
+        assert syndra.MODULE_CC["E"] == "stun"
+
+    def test_the_mixed_landing_is_reviewed_and_the_barrage_is_not(
+        self, syndra_data
+    ) -> None:
+        """W is two parts of ONE landing, so it certifies and carries its
+        slow; R is one part of ``r_spheres`` hits — a schedule with no
+        sourced cadence, which certification refuses and which therefore
+        carries no reviewed kind."""
+        parsed = _parse(syndra_data)
+        unreviewed = {
+            slot
+            for slot, entry in parsed.items()
+            if any(part.cc_kind is None for part in entry.get("parts", ()))
+        }
+        assert unreviewed == {"R"}
+        assert parsed["W"]["event_order_certified"] == "single_hit"
+        assert [
+            (part.damage_type, part.cc_kind, part.time_offset)
+            for part in parsed["W"]["parts"]
+        ] == [("magic", "slow", 0.0), ("true", "slow", 0.0)]
+
+    def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
+        """The honest consequence of the line above: the control token
+        stays until Unleashed Power's spheres author events of their own."""
+        from src.calculator.calculate import calculate_payload
+
+        coverage = calculate_payload(
+            {
+                "champion": "Syndra",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )["timeline_coverage"]
+
+        assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
+
+    def test_e_part_carries_stun_marker(self, syndra_data) -> None:
+        (part,) = _parse(syndra_data)["E"]["parts"]
+        assert part.cc_kind == "stun"
+
+    def test_e_certifies_its_event_order_in_its_own_right(self, syndra_data) -> None:
+        """Reviewing the stun does not certify the event order: the module
+        makes that claim explicitly, or the marker never reaches a ledger."""
+        assert _parse(syndra_data)["E"]["event_order_certified"] == "single_hit"
+
+    def test_e_fight_event_carries_stun_marker(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        """The marker must survive the fight engine into damage_events —
+        that ledger is what item_support_effects scans for CC triggers."""
+        stats = attacker_stats(ability_power=600.0)
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            600.0,
+            ability_ranks={"Q": 0, "W": 0, "E": 5, "R": 0},
+            champion_stats=stats,
+            champion_options={"splinters": 60},
+        )
+        result = _fight(stats, abilities, one_rotation=True)
+        e_events = [
+            event
+            for event in result["damage_events"]
+            if event.get("source") == "E" or event.get("source_key") == "E"
+        ]
+        assert e_events
+        assert all(event.get("cc_kind") == "stun" for event in e_events)
+
+    def test_imperial_mandate_command_amps_post_stun_damage(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        """E stuns at t=0, R lands at t=0.25 inside Command's 4s window:
+        7% of R's 840 = 58.8 bonus. E itself (the trigger) is not amped."""
+        from src.calculator.data_fetcher import get_item_by_name
+
+        items = [get_item_by_name("Imperial Mandate")]
+        stats = attacker_stats(ability_power=600.0)
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            600.0,
+            ability_ranks={"Q": 0, "W": 0, "E": 5, "R": 3},
+            champion_stats=stats,
+            champion_options={"splinters": 60},
+        )
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            items,
+            FightConfig(
+                target_health=10000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=8.0,
+                auto_attack_uptime=0.0,
+                one_rotation=False,
+                deterministic=True,
+            ),
+        )
+        row = result["breakdown"]["damage_amp_Imperial Mandate"]
+        assert row["multiplier"] == pytest.approx(1.07)
+        assert row["total_damage"] == pytest.approx(0.07 * 840.0)
+        assert result["total_damage"] == pytest.approx(560.0 + 840.0 * 1.07)
+
+
+# ---------------------------------------------------------------------------
 # Fight-engine integration
 # ---------------------------------------------------------------------------
 
@@ -372,3 +851,68 @@ class TestFightIntegration:
             for event in r_events
         )
         assert all(event["execute_source"] == "Unleashed Power" for event in r_events)
+
+
+# ---------------------------------------------------------------------------
+# Command window arithmetic (the declared TriggerWindow)
+# ---------------------------------------------------------------------------
+
+
+def _command_slot():
+    """Command's declared chain slot, resolved for a Mandate holder.
+
+    The window arithmetic used to be two module helpers in ``damage.py``
+    taking a duration nobody sourced at the call site; Phase 3 moved both
+    into the rule's ``TriggerWindow(IMMOBILIZE, merge=EXTEND,
+    boundary=OPEN_CLOSED)`` and its interpreter.  These tests follow, so
+    they keep pinning the behaviour rather than a deleted spelling.
+    """
+    from src.calculator.interpreters import delta_amp
+    from src.calculator.item_behavior import AmpChainSlot
+
+    slot = delta_amp.resolve_slot(
+        ["Imperial Mandate"],
+        AmpChainSlot.POST_IMMOBILIZE,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slot is not None
+    return slot
+
+
+class TestCommandWindows:
+    """The two pieces of _apply_command_amp most exposed to refactor drift:
+    window merging (extend, not stack) and the strictly-after boundary."""
+
+    def test_overlapping_immobilizes_extend_one_window(self) -> None:
+        from src.calculator.interpreters import delta_amp
+
+        slot = _command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        assert slot.trigger_windows([0.0, duration / 2.0]) == (
+            (0.0, duration / 2.0 + duration),
+        )
+
+    def test_separated_immobilizes_open_separate_windows(self) -> None:
+        from src.calculator.interpreters import delta_amp
+
+        slot = _command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        far = duration * 2.5
+        assert slot.trigger_windows([0.0, far]) == (
+            (0.0, duration),
+            (far, far + duration),
+        )
+
+    def test_boundary_is_strictly_after_start_inclusive_end(self) -> None:
+        from src.calculator.interpreters import delta_amp
+
+        slot = _command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        windows = slot.trigger_windows([1.0])
+        assert not slot.window_holds(windows, 1.0)  # the trigger itself
+        assert slot.window_holds(windows, 1.001)
+        assert slot.window_holds(windows, 1.0 + duration)  # inclusive end
+        assert not slot.window_holds(windows, 1.0 + duration + 0.001)

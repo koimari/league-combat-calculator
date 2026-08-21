@@ -190,11 +190,20 @@ from pathlib import Path
 
 import pytest
 
+from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
-from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
+from src.calculator.champions import (
+    get_champion_module_contract,
+    get_champion_options_meta,
+    parse_champion_abilities,
+)
 from src.calculator.champions.slotlib import extract_named
-from src.calculator.champions.zeri import MODULE_COVERAGE, PACKET_SHA256
+from src.calculator.champions.zeri import PACKET_SHA256
+
+# Coverage has one home now: the validated module contract (a module only
+# restates it as ``MODULE_COVERAGE`` when it differs from what SLOTS derive).
+MODULE_COVERAGE = get_champion_module_contract("Zeri").coverage
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 
@@ -917,7 +926,7 @@ class TestSourceAndAtomReceipts:
         assert _MANIFEST_CHAMPIONS["sha256"] == hash_domain_file(
             Path("data/atoms/champions.json")
         )
-        actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
+        actual = sha256_as_committed("data/champions.json")
         assert _MANIFEST_CHAMPIONS["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"
         )
@@ -1049,17 +1058,21 @@ class TestRegressionSurface:
             for path in test_dir.glob("test_*.py")
             if "zeri" in path.read_text(encoding="utf-8", errors="ignore").lower()
         )
+        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
+        # ``test_full_entry_packets.py`` (ours, 108872c8), and this branch
+        # carries a named ``test_zeri.py``.
         assert hits == [
             # ci-evidence scanner uses this file as a calibration fixture
             "test_ci_evidence_parity.py",
-            "test_cp10_batch_10.py",
             "test_e2_dot_3.py",
             "test_e5_fix_2.py",
+            "test_full_entry_packets.py",
             # Mel's P test cites Zeri's Living Battery as the contrast
             # case for why Overwhelm's kill boundary is NOT modeled as
             # an execute ratio; it asserts nothing about Zeri herself.
             "test_mel_searing_brilliance.py",
             "test_spellblade_on_hit_matrix.py",
+            "test_zeri.py",
             "test_zeri_p_execute_range.py",
         ]
 

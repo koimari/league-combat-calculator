@@ -17,38 +17,25 @@ Stack mechanics modeled (E3):
 - E (Bola Strike) base: "Physical Damage" (55 : 235 + 80% bonus AD);
   empowered: "Bonus Physical Damage" (50 : 335 by level + 80% bonus AD).
 
-R (Thrill of the Hunt) keeps the reviewed CP10.6 packet pricing
-(armor reduction and leap bonus are state). All numeric values are read
-from the champion JSON data.
+R (Thrill of the Hunt) is not a self buff.  Its priced effect is the
+armour reduction the empowered attack leaves on the target — "then
+inflicts armor reduction for 4 seconds", the cached "Armor Reduction"
+row (15/20/25) — emitted as a ``target_debuff`` the fight engine shreds
+with (``engine.py`` ``_ALLOWED_DEBUFF_KEYS``).  All numeric values are
+read from the champion JSON data.
 
-Roadmap session 4 batch F (2026-08-21) — R stays OPEN, NOT a stale-
-label fix: unlike this batch's other four champions (Quinn W, Rek'Sai
-P, Renekton P, Riven E, all reclassified out_of_scope -> no_damage on
-a verified zero-formula basis), Rengar R's cached effect 4 prose is NOT
-damage-free — "Rengar's next basic attack within 125 range against any
-enemy or with Unseen Predator to the marked enemy deals 100% AD
-additional physical damage, then inflicts armor reduction for 4
-seconds" (data/champions.json R) — and the game file corroborates a
-real, currently-unpriced formula: rengar.bin.json
-Characters/Rengar/Spells/RengarRAbility/RengarR carries
-mSpellCalculations.BonusDamage (StatByCoefficientCalculationPart,
-mStat=2 [bonus AD, the same stat code Quinn's binary uses], coefficient
-1.0) plus a 7-value ArmorShred DataValues array
-([10,15,20,25,30,35,40]) with a 4-second ArmorShredDuration. This is a
-genuine gap, not a documentation lag: (1) an authority conflict on the
-damage-stat basis (wiki prose reads "100% AD" — ambiguous between total
-and bonus AD — against the binary's explicit bonus-AD stat code); (2)
-an authority conflict on the armor-shred rank shape (the wiki's
-3-value leveling row [15, 20, 25] does not align 1:1 with the binary's
-7-value array, which is Riot's usual all-ranks-plus-padding container
-shape); (3) no marked-target / Unseen-Predator proc-condition kernel
-exists anywhere in this engine (P's own _unseen_predator row only
-tracks Ferocity stacks, never this ambush bonus) to gate a "next basic
-attack against the marked/proximate enemy" trigger. Reclassifying R to
-no_damage would misrepresent an ability that does deal real damage;
-MODULE_COVERAGE keeps R "out_of_scope" (the Dr. Mundo P precedent,
-roadmap session 4 batch B/slots7.md — a discovered-but-unresolved
-formula stays open rather than being mislabeled in either direction).
+What R still does NOT price is the ambush attack's damage rider —
+"deals 100% AD additional physical damage" — and that stays open on
+sourced grounds: rengar.bin.json
+RengarRAbility/RengarR carries mSpellCalculations.BonusDamage
+(StatByCoefficientCalculationPart, mStat=2 = bonus AD, coefficient 1.0)
+against wiki prose reading an ambiguous "100% AD", and an ArmorShred
+DataValues array of 7 values ([10,15,20,25,30,35,40]) against the
+wiki's 3-value leveling row — two authority conflicts — while no
+marked-target / Unseen-Predator proc-condition kernel exists to gate a
+"next basic attack against the marked enemy" trigger.  A
+discovered-but-unresolved formula stays named and unpriced rather than
+being mislabelled in either direction (the Dr. Mundo P precedent).
 """
 
 from __future__ import annotations
@@ -57,25 +44,71 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
-from .engine import SlotCtx, build_parser
+from .engine import DEBUFF, SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import (
+    STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
+    extract_value,
     find_named_leveling,
     sum_modifiers,
 )
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Rengar", PACKET_SHA256)
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 _FEROCITY_MAX = 4
+
+# HARDCODED: verify on patch updates — the shred's window is cached R
+# prose ("then inflicts armor reduction for 4 seconds"); the magnitude
+# is the JSON's "Armor Reduction" row.
+_R_SHRED_SECONDS = 4.0
+
+
+def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the empowered attack's flat armour shred on the marked target."""
+    ability = ctx.ability("R")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
+
+    landed = bool(ctx.option("r_thrill_attack"))
+    shred = extract_value(ability, "Armor Reduction", rank)
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    entry = damage_entry(
+        ability.get("name", "Thrill of the Hunt"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    if landed and shred > 0.0:
+        entry["target_debuff"] = {
+            "armor_reduction_flat": shred,
+            "duration": _R_SHRED_SECONDS,
+        }
+    entry["detail"] = (
+        f"the empowered attack shreds {shred:g} armour for "
+        f"{_R_SHRED_SECONDS:g}s (the engine weights it by the share of "
+        "the fight the window covers, timed from the cast rather than "
+        "from the attack that lands it 2s later); the row's "
+        f"+{movement:g}% movement speed, the camouflage and the 100% AD "
+        "rider on that attack have no channel here"
+        if landed
+        else (
+            "not armed: r_thrill_attack is off, so no empowered attack "
+            f"lands and the {shred:g} armour shred is not applied"
+        )
+    )
+    return entry
+
+
+_thrill_of_the_hunt.phase = DEBUFF
 
 
 # Ferocity is a typed kernel state (state_lifecycle.StackRule).  The
@@ -136,7 +169,7 @@ def _ferocity_state(ctx: SlotCtx) -> TimedStackState:
     """
     return TimedStackState(
         RENGAR_FEROCITY_STACK_RULE,
-        starting_stacks=max(0, min(int(ctx.options.get("p_ferocity", 0)), 4)),
+        starting_stacks=max(0, min(int(ctx.option("p_ferocity")), _FEROCITY_MAX)),
     )
 
 
@@ -188,6 +221,7 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         ferocity_bonus if empowered else base_bonus,
         "physical",
+        event_order_certified="single_hit",
     )
     # The engine prices the BASE parts by default and the FEROCITY parts
     # only for a live empowered cast (the post-rotation consume); the
@@ -225,6 +259,7 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         ferocity_damage if empowered else base_damage,
         "magic",
+        event_order_certified="single_hit",
     )
     entry["parts"] = (DamagePart("magic", base_damage),)
     entry["ferocity_parts"] = (DamagePart("magic", ferocity_damage),)
@@ -242,7 +277,12 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: Bola Strike — base or Ferocity-empowered (level array) physical damage."""
+    """E: Bola Strike — base or Ferocity-empowered (level array) physical damage.
+
+    E answers its own crowd control rather than ``MODULE_CC`` because the
+    Ferocity bonus changes it: the base bola "slows them for 1.75 seconds",
+    and the empowered one roots "instead of slowed".
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -258,31 +298,76 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         ferocity_damage if empowered else base_damage,
         "physical",
+        event_order_certified="single_hit",
     )
-    entry["parts"] = (DamagePart("physical", base_damage),)
-    entry["ferocity_parts"] = (DamagePart("physical", ferocity_damage),)
+    # The two part sets carry the two crowd-control answers with them, so
+    # whichever set the engine prices states the control that cast applied.
+    entry["parts"] = (DamagePart("physical", base_damage, cc_kind="slow"),)
+    entry["ferocity_parts"] = (DamagePart("physical", ferocity_damage, cc_kind="root"),)
     if empowered:
         entry["detail"] = (
             "Ferocity-empowered: 50 : 335 by level + 80% bonus AD (the "
-            "wiki Ferocity Bonus), consuming all 4 stacks; the root is "
-            "crowd-control state."
+            "wiki Ferocity Bonus), consuming all 4 stacks; the target "
+            "is rooted instead of slowed."
         )
     else:
         entry["detail"] = (
-            "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the slow "
-            "and reveal are state."
+            "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the bola "
+            "slows the first enemy hit for 1.75 seconds."
         )
     return entry
 
 
-SLOTS = {
-    "P": _unseen_predator,
-    "Q": _savagery,
-    "W": _battle_roar,
-    "E": _bola_strike,
-    "R": _BATCH_SLOTS["R"],
-}
-parse_abilities = build_parser(SLOTS, "Rengar")
+# Cached kit review.  Q's empowered stab only "deal[s] additional physical
+# damage" and W's roar "deal[s] magic damage to nearby enemies" while
+# healing Rengar — neither applies control in either Ferocity branch.  E
+# answers per cast because its Ferocity bonus changes the kind
+# (``_bola_strike``).  R is absent: Thrill of the Hunt's damage row is the
+# empowered basic attack's armour reduction rider, which the reviewed
+# packet prices as no enemy-damage of its own, and P is the Ferocity state
+# row.
+MODULE_CC = {"Q": "none", "W": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Rengar",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "W (Battle Roar) stores 50% of post-mitigation damage taken in the last 1.5 seconds as "
+        "grey health and the active heals the stored pool (the E8a grey-health primitive authors "
+        "the heal from the incoming ledger at each W cast)",
+        "Ferocity is a typed kernel stack state: cap 4, each stack lasts 1 second, subsequent "
+        "triggers do not refresh the timer, and expiry is prevented for 10 seconds after dealing "
+        "or taking damage (excluding DoT/proc damage); at 4 stacks the next Q/W/E cast is "
+        "empowered and prices the wiki Ferocity Bonus values, consuming all stacks.  The 1-second "
+        "value is prose in the reviewed P template (rev 2864152); live in-fight gains are not "
+        "wired: the rotation resolver does not feed per-cast stack events into champion-module "
+        "parses (named reason), so the fight starts from the seeded state and the kernel receipt "
+        "documents the rule",
+        "p_ferocity is the explicit pre-stack state; 0 prices base Q/W/E",
+        "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array as per-rank base "
+        "damage; this module prices base Q from the rank array (20 : 160 + 5% AD) and the empower "
+        "from the level array (35 : 260 + 20% AD)",
+        "R (Thrill of the Hunt) prices its armour reduction as a target_debuff: the cached Armor "
+        "Reduction row (15/20/25) for the sourced 4 seconds, applied when r_thrill_attack is on "
+        "(default).  The engine weights the shred by the share of the fight its window covers, "
+        "timed from the cast rather than from the empowered attack that lands 2 seconds later, "
+        "and the 100% AD rider on that attack, the camouflage and the movement speed are not "
+        "priced.  That rider stays unpriced on sourced grounds: rengar.bin.json RengarR carries "
+        "mSpellCalculations.BonusDamage (mStat=2 bonus AD, coefficient 1.0) against the wiki's "
+        "ambiguous '100% AD' prose, and a 7-value ArmorShred DataValues array against the wiki's "
+        "3-value leveling row, and no marked-target / Unseen-Predator proc-condition kernel "
+        "exists to gate the ambush attack",
+    ),
+    slot_parsers={
+        "P": _unseen_predator,
+        "Q": _savagery,
+        "W": _battle_roar,
+        "E": _bola_strike,
+        "R": _thrill_of_the_hunt,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -298,47 +383,22 @@ OPTIONS = [
         # rule, and the 10-second in-combat expiry freeze.
         "state": RENGAR_FEROCITY_STACK_RULE.public_receipt(),
     },
+    {
+        "key": "r_thrill_attack",
+        "type": "bool",
+        "default": True,
+        "label": "Thrill of the Hunt's empowered attack lands (armour shred)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "R",
+            "note": (
+                "Arms R's own armour shred, which is already a parsed "
+                "target_debuff atom."
+            ),
+        },
+    },
 ]
 
-ASSUMPTIONS = [
-    "W (Battle Roar) stores 50% of post-mitigation damage taken in the "
-    "last 1.5 seconds as grey health and the active heals the stored "
-    "pool (the E8a grey-health primitive authors the heal from the "
-    "incoming ledger at each W cast)",
-    "Ferocity is a typed kernel stack state: cap 4, each stack lasts 1 "
-    "second, subsequent triggers do not refresh the timer, and expiry is "
-    "prevented for 10 seconds after dealing or taking damage (excluding "
-    "DoT/proc damage); at 4 stacks the next Q/W/E cast is empowered and "
-    "prices the wiki Ferocity Bonus values, consuming all stacks.  The "
-    "1-second value is prose in the reviewed P template (rev 2864152); "
-    "live in-fight gains are not wired: the rotation resolver does not "
-    "feed per-cast stack events into champion-module parses (named "
-    "reason), so the fight starts from the seeded state and the kernel "
-    "receipt documents the rule",
-    "p_ferocity is the explicit pre-stack state; 0 prices base Q/W/E",
-    "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array "
-    "as per-rank base damage; this module prices base Q from the rank "
-    "array (20 : 160 + 5% AD) and the empower from the level array "
-    "(35 : 260 + 20% AD)",
-    "R (Thrill of the Hunt) keeps the reviewed packet pricing; its armor "
-    "reduction and leap bonus are target/state effects",
-    "R stays out_of_scope (roadmap session 4 batch F, 2026-08-21): the "
-    "cached R effect 4 prose ('next basic attack ... deals 100% AD "
-    "additional physical damage, then inflicts armor reduction') and "
-    "rengar.bin.json RengarR (mSpellCalculations.BonusDamage, mStat=2 "
-    "bonus-AD coefficient 1.0; ArmorShred 7-value DataValues array) "
-    "corroborate a real, unpriced ambush-attack formula, but a "
-    "wiki/binary authority conflict on the damage-stat basis (total vs "
-    "bonus AD) and the armor-shred rank shape (3-value wiki leveling "
-    "vs 7-value binary array), plus the absence of any marked-target / "
-    "Unseen-Predator proc-condition kernel in this engine, make this a "
-    "genuine unresolved gap, not a documentation-lag reclassification "
-    "(the Dr. Mundo P precedent, roadmap session 4 batch B).",
-]
 
-SOURCES = load_champion_sources("Rengar")
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now
+# (R's is the target_debuff armour shred).

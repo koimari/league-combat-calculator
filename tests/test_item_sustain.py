@@ -1,9 +1,10 @@
 """Full-entry sustain receipts for starter and defensive items."""
 
-from types import SimpleNamespace
-
 import pytest
 
+from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import (
     FightParams,
@@ -14,6 +15,20 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.participant_timeline import Combatant, _simulate_survival
 from src.calculator.stats import calculate_total_stats, get_item_stats
+
+
+def _simulated_rows(combatants, *args, **kwargs):
+    """The published survival rows for one simulated walk.
+
+    ``_simulate_survival`` returns the frozen walk result from S9 on, because
+    the composition hands that one result to five views.  These tests read the
+    published rows, so they project it through the survival view exactly as
+    the composition does.
+    """
+    return _survival_view(
+        _roster_program(combatants),
+        _simulate_survival(combatants, *args, **kwargs),
+    )
 
 
 def test_doran_shield_uses_flat_hp5_and_exposes_total_regen(ahri_data):
@@ -198,7 +213,7 @@ def test_dorans_blade_no_longer_reports_stale_omnivamp(ahri_data):
 
 def test_spirit_visage_does_not_amplify_lifesteal_or_omnivamp():
     """Boundless Vitality amplifies direct heals, not vamp stat packets."""
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -248,5 +263,5 @@ def test_spirit_visage_does_not_amplify_lifesteal_or_omnivamp():
             }
         ]
     }
-    result = _simulate_survival([source, target], incoming, healing, {}, 1.0)
+    result = _simulated_rows([source, target], incoming, healing, {}, 1.0)
     assert result["target"]["healing_received"] == pytest.approx(22.5)

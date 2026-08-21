@@ -8,8 +8,13 @@ receipt for why.
 
 The dedup dependency IS satisfied (pinned below: the primitive exists
 and already accepts an ``ability_hit`` consumer, which is Fired Up!'s
-"next basic attack OR ability hit").  Milio P stays ``out_of_scope`` on
-three independent SOURCE blockers instead:
+"next basic attack OR ability hit").
+
+MERGE: this branch's ``milio.py`` prices the half the cache sources —
+the enchanted hit's burn (10 : 50 by level + 20% of Milio's AP), on a
+selectable proc count — so P is ``modeled``, not ``out_of_scope``.  The
+three SOURCE blockers below still hold, and they now bound the WITHHELD
+half (the AD burst) rather than the whole slot:
 
 1. The burst's "7% / 11% / 15% (based on level) of enchanted target's
    AD" has no per-level array in any cached artifact, and no artifact
@@ -18,19 +23,23 @@ three independent SOURCE blockers instead:
    engine models a single attacker.
 3. W arms Fired Up! every 3 seconds across its 6s hearth, not once at
    the cast, so the primitive's cast-time ``armed_by`` resolution would
-   undercount W's arms.
+   undercount W's arms — which is why the proc count is an OPTION.
 
 These tests assert the ABSENCE of the missing terms on purpose: the
 moment a patch pull starts publishing the breakpoints or a ratio, they
-fail and force Milio P to be revisited rather than staying quietly
-shelved behind a stale reason.
+fail and force Milio's withheld burst to be revisited rather than
+staying quietly shelved behind a stale reason.
 """
 
 import json
 from pathlib import Path
 
-from src.calculator.champions.milio import ASSUMPTIONS, MODULE_COVERAGE
+from src.calculator.champions import get_champion_module_contract
+from src.calculator.champions.milio import ASSUMPTIONS
 from src.calculator.damage import _empower_window_procs
+
+# Coverage has one home now: the validated module contract.
+MODULE_COVERAGE = get_champion_module_contract("Milio").coverage
 
 _REPO = Path(__file__).resolve().parents[1]
 _MILIO_P = json.loads((_REPO / "data" / "champions.json").read_text(encoding="utf-8"))[
@@ -194,8 +203,11 @@ class TestBlockerThreeWArmsOnACadenceNotAtTheCast:
 class TestTheBlockerIsRecorded:
     """The blocker lives in the contract, not only in a docstring."""
 
-    def test_p_stays_out_of_scope(self) -> None:
-        assert MODULE_COVERAGE["P"] == "out_of_scope"
+    def test_p_prices_the_sourced_half_only(self) -> None:
+        # MERGE: this branch models P (the enchanted hit's sourced burn),
+        # so the slot is ``modeled``; the blockers above bound the
+        # WITHHELD AD burst, which the assumptions below still disclose.
+        assert MODULE_COVERAGE["P"] == "modeled"
         assert MODULE_COVERAGE["Q"] == "modeled"
         assert MODULE_COVERAGE["W"] == "modeled"
         assert MODULE_COVERAGE["E"] == "modeled"
@@ -210,5 +222,11 @@ class TestTheBlockerIsRecorded:
         assert "every 3 seconds" in joined
 
     def test_assumptions_record_that_the_dedup_blocker_is_retired(self) -> None:
-        """Stops a later session re-citing the session-1 reason."""
-        assert any("NOT blocked on proc-window dedup any" in row for row in ASSUMPTIONS)
+        """Stops a later session re-citing the session-1 reason.
+
+        The record moved into blocker 3's own row: the primitive is named
+        and the reason it is not used is its cast-time ``armed_by``
+        resolution, not its absence.
+        """
+        assert any("_empower_window_procs" in row for row in ASSUMPTIONS)
+        assert any("undercount its arms" in row for row in ASSUMPTIONS)

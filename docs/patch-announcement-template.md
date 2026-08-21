@@ -27,7 +27,7 @@ Fill in and post to the beta channel on patch day. Two posts: an early
 - Boundary-documented: <list of values intentionally not modeled, with reasons>
 - New items: <names + modeled passives>
 - Golden baseline re-captured; every diff explained in <commit sha>
-- Issues closed: <#n — gated by scripts/issue_gate.py>
+- Issues closed: <#n — gated per docs/issue-closure-policy.md>
 - Known limitations: <known-degraded wiki parses, unmodeled mechanics>
 
 Changelog highlights:

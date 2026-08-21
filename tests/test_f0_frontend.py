@@ -14,6 +14,7 @@ These tests pin the F0 redesign without a browser:
 * ``node --check`` still passes for the shipped JS
 """
 
+import json
 import re
 import shutil
 import subprocess
@@ -24,10 +25,15 @@ import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
+from src.calculator.champions import champion_options_meta_map
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_JS = ROOT / "static" / "js" / "app.js"
 CSS = ROOT / "static" / "css" / "style.css"
+OPTIONS_HARNESS = (
+    Path(__file__).resolve().parent / "js" / "champion_options_harness.mjs"
+)
+BIS_PROFILES = ROOT / "static" / "bis-profiles.json"
 
 
 def _client():
@@ -313,20 +319,207 @@ def test_practice_target_is_the_passive_dummy_with_exact_stat_inputs():
 
 def test_ability_variant_buttons_write_the_declared_backend_option():
     source = _source()
-    assert 'data-ability-variant="${ability.slot}"' in source
+    assert 'data-ability-variant="${slot}"' in source
+    # A Variant row renders only when the slot has a bound module option.
+    assert (
+        'const bound = ability.variants?.length > 1 && abilityOptionBinding(slot, "ability_variants");'
+        in source
+    )
     assert (
         'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
         in source
     )
-    assert "options[option.key] = abilityInput(variantAbility.slot).variant" in source
     assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
+    assert "legacyVariantKeys" in source
+    # Which key a global form toggle binds is decided in one place; the rule
+    # itself is pinned by
+    # ``test_global_form_binding_checks_set_membership_not_property_lookup``.
+    assert "globalFormToggles" in source
+
+
+def _wiki_kit(champion):
+    """The ability kit app.js renders: each damage packet of each cached wiki
+    form becomes one Variant button, in slot order."""
+    profiles = json.loads(BIS_PROFILES.read_text(encoding="utf-8"))
+    abilities = profiles["champions"][champion]["abilities"]
+    kit = []
+    for slot in ("P", "Q", "W", "E", "R"):
+        forms = abilities.get(slot)
+        if not forms:
+            continue
+        variants = []
+        for form in forms:
+            packets = [
+                packet
+                for packet in form.get("packets", [])
+                if re.search(
+                    r"TRUE|MAGIC|PHYSICAL", str(packet.get("damageType") or "").upper()
+                )
+            ]
+            variants += [{"name": packet["attribute"]} for packet in packets] or [
+                {"name": form["name"]}
+            ]
+        kit.append({"slot": slot, "variants": variants, "maxHits": 11})
+    return kit
+
+
+def _payload_probe(champion, variants, tmp_path):
+    """Run app.js's real payload builder: ``options`` and ``bindings``."""
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(
+        json.dumps(
+            {
+                "champion": champion,
+                "options": champion_options_meta_map()[champion]["options"],
+                "abilities": _wiki_kit(champion),
+                "variants": variants,
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [node, str(OPTIONS_HARNESS), str(APP_JS), str(fixture)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(result.stdout)
+
+
+def _champion_options_payload(champion, variants, tmp_path):
+    """The ``champion_options`` app.js would POST."""
+    return _payload_probe(champion, variants, tmp_path)["options"]
+
+
+def test_variant_flattening_pins_the_boolean_option_indices():
+    """``VARIANT_BOOLEAN_OPTIONS`` names one variant index per boolean; the
+    cached wiki packets are what those indices count."""
+    assert [variant["name"] for variant in _wiki_kit("Ziggs")[4]["variants"]] == [
+        "Epicenter Magic Damage",
+        "Reduced Damage",
+    ]
+    assert [variant["name"] for variant in _wiki_kit("Jayce")[1]["variants"]] == [
+        "Physical Damage",
+        "Physical Damage",
+        "Increased Damage",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("champion", "variants", "key", "expected"),
+    [
+        ("Ziggs", {"R": 0}, "r_sweet_spot", True),
+        ("Ziggs", {"R": 1}, "r_sweet_spot", False),
+        ("Jayce", {"Q": 2}, "accelerated_q", True),
+        ("Jayce", {"Q": 1}, "accelerated_q", False),
+        ("Jayce", {"W": 0}, "hammer_stance", True),
+        ("Jayce", {"W": 2}, "hammer_stance", False),
+        ("Gnar", {"W": 1}, "mega", True),
+        ("Gnar", {"W": 0}, "mega", False),
+    ],
+)
+def test_variant_buttons_send_booleans_not_variant_indices(
+    champion, variants, key, expected, tmp_path
+):
+    """Variant-driven options the backend types as booleans must reach it as
+    booleans: the raw index answered ``champion_options.<key> must be true or
+    false`` (Gnar's ``mega``, then Ziggs' ``r_sweet_spot``, then Jayce's
+    ``accelerated_q``) and left the whole champion uncalculable."""
+    options = _champion_options_payload(champion, variants, tmp_path)
+    assert options[key] is expected
+
+
+@pytest.mark.parametrize("variants", [{"R": 0}, {"R": 1}])
+def test_ziggs_variant_payload_is_accepted_by_the_calculate_route(variants, tmp_path):
+    """The bug was only visible at the boundary: both R variants must POST."""
+    options = _champion_options_payload("Ziggs", variants, tmp_path)
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 18,
+            "items": [],
+            "champion_options": options,
+            "target_health": 2000,
+            "target_armor": 50,
+            "target_mr": 50,
+        },
+    )
+    assert response.status_code == 200, response.get_json()
+
+
+def test_global_form_binding_checks_set_membership_not_property_lookup():
+    """``"hammer_stance" in declared`` on a Set checks properties, never
+    membership — it silently returned "mega" for Jayce, whose module declares
+    no such option, leaving his variant buttons wired to a dead key."""
+    source = _source()
+    assert '"hammer_stance" in declared' not in source
+    assert "globalFormToggles().find((key) => declared.has(key))" in source
+
+
+@pytest.mark.parametrize(
+    ("champion", "expected"),
+    [
+        ("Ziggs", {"P": None, "Q": None, "W": None, "E": None, "R": "r_sweet_spot"}),
+        (
+            "Jayce",
+            {
+                "P": "hammer_stance",
+                "Q": "accelerated_q",
+                "W": "hammer_stance",
+                "E": "hammer_stance",
+                "R": None,
+            },
+        ),
+    ],
+)
+def test_slot_owned_booleans_never_answer_the_global_form_lookup(
+    champion, expected, tmp_path
+):
+    """A boolean a single slot claims — by explicit binding (Ziggs' R) or by
+    name (Jayce's ``accelerated_q``) — must not be offered to that champion's
+    other slots just because it joined the index map."""
+    assert _payload_probe(champion, {}, tmp_path)["bindings"] == expected
+
+
+def test_the_variant_index_to_boolean_rule_has_one_home():
+    """The dedicated ``r_sweet_spot`` branch is gone; the map is the rule."""
+    source = _source()
+    assert 'options[option.key] = abilityInput("R").variant === 0;' not in source
     assert (
-        'const variantBinding = abilityOptionBinding(ability.slot, "ability_variants")'
+        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
+    )
+
+
+def test_global_form_variant_click_syncs_every_bound_slot():
+    """Q/W/E all bind the same global form toggle; clicking Boulder Toss must
+    not leave W/E rendering the Mini kit (and the payload is read from the
+    first bound slot, so unsynced slots would silently disagree with it)."""
+    source = _source()
+    assert "syncGlobalFormVariants" in source
+
+
+def test_global_form_variants_default_to_the_module_option_default():
+    """A fresh champion pick must not flip a form toggle: variant index 0 is
+    Jayce's hammer kit, but his module defaults hammer_stance to false
+    (cannon).  Reset seeds each bound slot's variant from the option default,
+    and the payload falls back to the option value when no variant input
+    exists (share-restore clears abilityInputs)."""
+    source = _source()
+    assert "defaultFormVariantIndex" in source
+    # One home for the starting index: a boolean toggle through
+    # VARIANT_BOOLEAN_OPTIONS, an index-valued option clamped to the list.
+    assert (
+        "variant: defaultFormVariantIndex(ability.slot, ability.variants?.length || 1)"
         in source
     )
-    assert "ability.variants?.length > 1 && variantBinding" in source
-    assert "legacyVariantKeys" in source
-    assert 'declared.has("hammer_stance") ? "hammer_stance" : "mega"' in source
+    # Payload never reads the synthetic variant-0 fallback for form toggles.
+    assert (
+        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
+    )
 
 
 def test_quick_to_analyst_bridge_is_wired():
@@ -401,8 +594,7 @@ def test_manual_package_bindings_are_null_safe():
 def test_range_sliders_have_accessible_names():
     soup = _soup()
     for slider_id, label in (
-        ("rotationRange", "Rotations"),
-        ("durationRange", "Window per rotation"),
+        ("durationRange", "Fight length"),
         ("uptimeRange", "Auto attack uptime percent"),
     ):
         node = soup.select_one(f"#{slider_id}")

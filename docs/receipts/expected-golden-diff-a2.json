@@ -1,0 +1,146 @@
+{
+  "slice": "a2",
+  "unit": "coverage-frontier A2 \u2014 Imperial Mandate's Control ability haste",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "note": "All three baselines were already failing at this unit's base commit d01f7842 (186 / 3 / 1 differences) against numbers captured at 5af69843; those are fc/integration's merged work, not this unit's. The population below is measured as the difference between this branch's compare report and the same report run in a detached worktree at d01f7842."
+  },
+  "what_moved": "Imperial Mandate's Control passive \u2014 'abilities with immobilizing effects have their cooldown reduced equivalent to 20 ability haste' \u2014 was cached, declared in ALLY_ENTRY_SHAPES and read by nothing (backlog row F1). It is now added to a slot's total haste in damage._effective_timed_cooldown when the slot's reviewed MODULE_CC marker passes trigger_stream.is_immobilizing_event, the same declaration Imperial Mandate's Command amplifier gates on.",
+  "qualifying_population": {
+    "method": "A leaf can move only in a timed fight (one_rotation casts each ability once whatever its cooldown) whose build holds an item declaring control_ability_haste and whose champion has a slot with a reviewed immobilizing cc_kind. Two snapshot entries qualify.",
+    "declaring_items": [
+      "Imperial Mandate"
+    ],
+    "golden_entries": [
+      "item_sweep/Imperial Mandate/ziggs_30s (Ziggs W = knockback)"
+    ],
+    "coupled_entries": [
+      "mandate_abyssal_curse_roster (Ahri E = charm)"
+    ],
+    "entries_that_could_not_move": "item_sweep's ahri/vayne arms are one_rotation; ziggs_12s casts W once inside 12s either way; every other sweep item declares no control_ability_haste."
+  },
+  "measured": {
+    "golden": {
+      "reading": "Ziggs at 11 with Imperial Mandate alone, 30s: W's cooldown falls from 14.17s to 12.10s, so its second cast moves from 14.41s to 12.35s and its third comes due at 24.45s \u2014 where the build has 49.6 mana of the 80 it costs. The mana-limited planner casts the cheaper E at 28.83s instead, trading a 121.43 W for a 70.71 E: 3825.06 -> 3774.35. The rune is faster and the fight is worth less, which is the existing greedy planner's policy (it never waits for a better cast), not a defect of this change."
+    },
+    "coupled_golden": {
+      "reading": "mandate_abyssal_curse_roster: Ahri's Charm (reviewed immobilize) recasts inside the window \u2014 E 1 -> 2 casts, +239.4 magic \u2014 so Aatrox takes 2183.7 -> 2423.1 and ends on 396.5 health instead of 635.9. The fingerprint's leaf count rises with the second cast's events."
+    },
+    "coupled_exact": {
+      "reading": "2183.7 -> 2423.1, the same second Charm."
+    }
+  },
+  "regenerate": "python scripts/golden_snapshot.py compare <baseline> --report <path> on this branch and in a detached worktree at d01f7842; the paths above are the set difference of the two reports' diff paths.",
+  "expected_diff_paths": {
+    "golden": [
+      "/item_sweep/Imperial Mandate/ziggs_30s/total_damage"
+    ],
+    "golden_shape_counters": [],
+    "coupled_golden": [
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/outgoing_damage_before_death",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/sources[0]/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/support_value",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[0]/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/health_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/incoming_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/breakdown[2]/utility_outcomes/scored_support_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/events[28].damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/events[28].overkill",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/events[28].pair_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/events[28].raw_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/events[28].time",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].applied_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].duration",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].expires_at",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].mr_reduction_percent",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].stack_count",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[11].time",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[12].amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[12].applied_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[12].duration",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[12].expires_at",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[12].multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/dispositions/support_events[12].time",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[10]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[11]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[12]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[13]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[14]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[15]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[16]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[17]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[18]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[21]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[22]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[23]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[24]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[27]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[28]",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[7]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[8]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/events[9]/sequence",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/focus_damage_before_death",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/focus_support_value",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/focus_utility_outcomes/scored_support_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/main_team_damage_before_death",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/objective/total_support_value",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/damage_taken",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/ending_health",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/ending_health_ratio",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/participants[2]/survival/health_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[12]",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/all_sources",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/applied_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/cc_scope_disclosure",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/duration",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/expires_at",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/mr_reduction_percent",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/multiplier",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/resistance_type",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/source",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/stack_count",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/support_events[2]/time",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/utility_outcomes/focus/scored_support_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/combat/utility_outcomes/participants/main/scored_support_amount",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/ability_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/breakdown/E/casts",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/breakdown/E/total_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/cast_timeline[7]",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/damage_by_type/magic",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/damage_by_type/true",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/damage_events[18]",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/health_damage",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/resource_remaining",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/resource_spent",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/order[7]",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/target_ending_health",
+      "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/total_damage"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves"
+    ],
+    "coupled_exact": {
+      "mandate_abyssal_curse_roster": {
+        "combat/0:main/outgoing": {
+          "old": "2183.7",
+          "new": "2423.1"
+        },
+        "combat/2:enemy:Aatrox/incoming": {
+          "old": "3072.3",
+          "new": "3311.7"
+        },
+        "fights/0:Aatrox": {
+          "old": "2183.7",
+          "new": "2423.1"
+        }
+      }
+    }
+  }
+}

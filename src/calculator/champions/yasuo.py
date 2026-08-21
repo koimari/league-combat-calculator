@@ -13,22 +13,19 @@ Stack mechanics modeled (E3):
 - P (Way of the Wanderer): Flow shield (125 : 674.46 by level) is a
   state row; crit conversion and reduced crit damage are passive stats.
 
-W (Wind Wall) and R (Last Breath) keep the reviewed CP10.10 packet
-pricing. All numeric values are read from the champion JSON data.
+- W (Wind Wall) is a selected projectile-defense window: the cached
+  active duration, the slots (or specific incoming event ids) the
+  scenario names, and nothing else.  R (Last Breath) keeps the reviewed
+  CP10.10 packet pricing.  All numeric values are read from the champion
+  JSON data.
 
-Roadmap session 5 slot 14 (2026-08-21): R (Last Breath) is fully
-modeled, not a gap. R has been wired into SLOTS below (``SLOTS["R"] =
-_BATCH_SLOTS["R"]``) via the reviewed CP10.10 packet since before this
-pass, pricing real damage (200/350/500 base + 150% bonus AD) — verified
-live: parse_champion_abilities emits R with a nonzero total_raw, and it
-appears in the fight breakdown with real damage every run. Git history
-(6f31e02 and later) shows MODULE_COVERAGE's hardcoded modeled-slot set
-drifted from {"Q", "E", "R"} -> {"P", "Q", "E"} (R silently dropped when
-P was added) -> {"P", "Q", "W", "E"} (W added, R still missing), while R
-itself was never removed from SLOTS — the exact Samira precedent
-(session 2): a coverage dict comprehension rewrite silently dropped a
-slot whose SLOTS entry was untouched. MODULE_COVERAGE was simply stale;
-reclassified R to "modeled". Zero fight-computation change.
+Coverage: P and W are ``no_damage``, not ``out_of_scope``.  Way of the
+Wanderer deals nothing — it grants the Flow shield and the crit
+conversion the fight engine already applies through ``crit_modifier`` —
+and Wind Wall only destroys projectiles.  Q, E and R each price their
+own row — R (Last Breath) among them: the map dropped it while its SLOTS
+entry was never touched (the Samira precedent), which is the stale label
+this fixes.
 """
 
 from __future__ import annotations
@@ -36,7 +33,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
     CRIT_DAMAGE_MULTIPLIER_FACTOR,
@@ -46,21 +43,16 @@ from .module_helpers import (
     no_damage,
 )
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
+    extract_description_control_duration,
     extract_description_duration,
     extract_named,
     extract_value,
 )
 
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
-
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Yasuo", PACKET_SHA256)
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 
 # P4: the crit-conversion rule is the shared module_helpers rule (the
@@ -102,6 +94,28 @@ def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# The Q3 knock-up has no cached leveling row: its only source is the
+# "Gathering Storm Bonus" branch of the Q description, which is also the
+# branch that states the empower exists at all.
+_Q3_BRANCH = "Gathering Storm Bonus"
+
+
+def _q3_knockup_duration(ability: dict[str, Any]) -> float:
+    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
+    for index, effect in enumerate(ability.get("effects") or []):
+        if _Q3_BRANCH not in str(effect.get("description") or ""):
+            continue
+        duration = extract_description_control_duration(ability, index)
+        if duration:
+            return float(duration)
+        break
+    raise ValueError(
+        f"Yasuo Q: the cached {_Q3_BRANCH!r} branch states no knock-up "
+        "duration, so the Q3 control fails closed rather than shipping an "
+        "invented interval"
+    )
+
+
 def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Steel Tempest, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
     ability = ctx.ability()
@@ -110,7 +124,7 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_gathering_storm", 0)), 0), 2)
+    stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Steel Tempest"),
@@ -126,25 +140,31 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     # crit_modifier (which already multiplies the multiplier by 0.9).
     flat = extract_value(ability, "Physical Damage", rank, 0)
     ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
-    ad_part = ctx.stats.get("attack_damage", 0.0) * ad_ratio
+    ad_part = ctx.stat("attack_damage") * ad_ratio
+    # Both parts are the one thrust — the split is crit eligibility, not a
+    # second hit — so the ledger sees ONE landing: the flat part carries
+    # the cast instant (and with it the control marker), and the AD part
+    # rides that same event rather than booking a second one.
+    #
+    # The knock-up is a property of the branch, not of the slot, so it is
+    # authored here rather than in MODULE_CC: only the 2-stack cast is the
+    # whirlwind that "additionally knocks up enemies hit for 0.9 seconds",
+    # and that sentence is where its duration is read from.
+    knockup = _q3_knockup_duration(ability) if stacks >= 2 else 0.0
     entry["parts"] = (
-        DamagePart("physical", flat),
+        DamagePart(
+            "physical",
+            flat,
+            time_offset=0.0,
+            cc_kind="knockup" if stacks >= 2 else "none",
+            cc_duration=knockup,
+        ),
         DamagePart("physical", ad_part, crit_effectiveness=1.0),
     )
     if stacks >= 2:
-        entry["parts"] = (
-            DamagePart(
-                "physical",
-                flat,
-                cc_kind="knockup",
-                cc_duration=0.9,
-                time_offset=0.0,
-            ),
-            DamagePart("physical", ad_part, crit_effectiveness=1.0),
-        )
         entry["detail"] = (
             "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
-            "same sourced damage as a normal thrust, adding a 0.9s "
+            f"same sourced damage as a normal thrust, adding a {knockup:g}s "
             "knock-up (crowd-control state, not damage)."
         )
     else:
@@ -166,7 +186,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
     duration = extract_description_duration(ability)
     if duration is None:
         return None
-    selected_duration = float(ctx.options.get("w_active_seconds", 0.0) or 0.0)
+    selected_duration = float(ctx.option("w_active_seconds") or 0.0)
     if selected_duration > 0.0:
         duration = min(duration, selected_duration)
     return {
@@ -212,7 +232,7 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("e_stacks", 0)), 0), 4)
+    stacks = min(max(int(ctx.option("e_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(
         ability, "Bonus Damage per Stack", rank, ctx.stats, ctx.target
@@ -227,6 +247,9 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", total),)
+    # One impact at the end of the dash — the cached packet has no separate
+    # travel or tick phase to place.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"Ride the Wind {stacks}/4 stacks: base {base:.2f} + {stacks} x "
         f"per-stack bonus {per_stack:.2f} = {total:.2f}; at 4 stacks this "
@@ -237,14 +260,48 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _way_of_the_wanderer,
-    "Q": _steel_tempest,
-    "W": _wind_wall,
-    "E": _sweeping_blade,
-    "R": _BATCH_SLOTS["R"],
-}
-parse_abilities = build_parser(SLOTS, "Yasuo")
+# Sweeping Blade only "deals magic damage to the target"; Last Breath
+# "knocks up all nearby airborne enemy champions for 1 second ... slashing
+# them with his sword over the duration to deal physical damage".  Q is not
+# here: its knock-up belongs to the Gathering Storm branch, so the kind is
+# authored per part in ``_steel_tempest``.  W raises a projectile wall and P
+# is the Flow/crit state row; neither authors a damage part.
+MODULE_CC = {"E": "none", "R": "knockup"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    # R's slashes are one priced sweep over the knock-up's duration.
+    "Yasuo",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal Q. Its 0.9s "
+        "knock-up is an authored control interval on the cast's parts.",
+        "E (Sweeping Blade) prices Ride the Wind stacks: base + N x per-stack bonus, capped at 4 "
+        "stacks (the wiki Total Combined Damage)",
+        "P (Way of the Wanderer) Intent is now priced: total crit chance is doubled (capped at "
+        "100%), crits deal 90% of the normal crit damage, and excess crit chance converts to 0.5 "
+        "bonus AD per 1% — applied by the fight engine to autos and Steel Tempest's crit-eligible "
+        "AD part. The Flow shield stays state (no enemy damage)",
+        "Q (Steel Tempest) splits the flat 20-120 base (never crits) from the 105% AD portion "
+        "(crits at the converted crit stats, per the cached description 'damage based on its AD "
+        "ratio can critically strike')",
+        "W (Wind Wall) uses the cached active-duration value as a selected projectile-defense "
+        "window. The scenario can name source slots, specific event ids (w_blocked_event_ids), or "
+        "leave the lists empty for every marked projectile. Event ids are positional per scenario "
+        "('attacker:defender:index'); changes to the build, ranks, or roster renumber them, and "
+        "any selected id that never matches an incoming event is reported on the survival receipt "
+        "as blocked_event_ids_unmatched. R (Last Breath) keeps the reviewed CP10.10 packet "
+        "pricing.",
+    ),
+    single_hit_slots=frozenset({"R"}),
+    slot_parsers={
+        "P": _way_of_the_wanderer,
+        "Q": _steel_tempest,
+        "W": _wind_wall,
+        "E": _sweeping_blade,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -308,33 +365,7 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a "
-    "normal Q. Its 0.9s knock-up is an authored control interval.",
-    "E (Sweeping Blade) prices Ride the Wind stacks: base + N x "
-    "per-stack bonus, capped at 4 stacks (the wiki Total Combined Damage)",
-    "P (Way of the Wanderer) Intent is now priced: total crit chance is "
-    "doubled (capped at 100%), crits deal 90% of the normal crit damage, "
-    "and excess crit chance converts to 0.5 bonus AD per 1% — applied by "
-    "the fight engine to autos and Steel Tempest's crit-eligible AD part. "
-    "The Flow shield stays state (no enemy damage)",
-    "Q (Steel Tempest) splits the flat 20-120 base (never crits) from the "
-    "105% AD portion (crits at the converted crit stats, per the cached "
-    "description 'damage based on its AD ratio can critically strike')",
-    "W (Wind Wall) uses the cached active-duration value as a selected "
-    "projectile-defense window. The scenario can name source slots, specific "
-    "event ids (w_blocked_event_ids), or leave the lists empty for every "
-    "marked projectile. Event ids are positional per scenario "
-    "('attacker:defender:index'); changes to the build, ranks, or roster "
-    "renumber them, and any selected id that never matches an incoming "
-    "event is reported on the survival receipt as "
-    "blocked_event_ids_unmatched.",
-    "R (Last Breath) is priced via the reviewed CP10.10 packet "
-    "(_BATCH_SLOTS['R']): 200/350/500 base + 150% bonus AD, unaffected "
-    "by this pass; MODULE_COVERAGE was the only stale artifact "
-    "(modeled, not out_of_scope).",
-]
 
-SOURCES = load_champion_sources("Yasuo")
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"
+MODULE_COVERAGE = {
+    slot: ("no_damage" if slot in {"P", "W"} else "modeled") for slot in "PQWER"
+}

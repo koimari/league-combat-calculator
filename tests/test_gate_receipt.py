@@ -1,6 +1,7 @@
 """Gate receipt schema contract (issue #139)."""
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -165,6 +166,41 @@ def test_validate_receipt_cli(tmp_path):
     )
     assert fail.returncode == 1
     assert "FAIL" in fail.stdout
+
+
+def test_champion_optimizer_matrix_emits_boolean_envelope():
+    """The optimizer matrix's envelope must validate like its siblings."""
+    result = subprocess.run(
+        [sys.executable, "scripts/champion_optimizer_matrix.py", "--json"],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
+    receipt = json.loads(result.stdout)
+    assert receipt["schema_version"] == SCHEMA_VERSION
+    validate_receipt(receipt)
+    assert type(receipt["passed"]) is bool
+
+
+def test_ci_validates_every_receipt_it_emits():
+    """A new matrix cannot ship an unchecked artifact (the issue #139 TODO)."""
+    workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text(
+        encoding="utf-8"
+    )
+    written = set(re.findall(r">\s*(artifacts/backend/\S+\.json)", workflow))
+    # status.json carries the two exit codes, not a gate receipt envelope.
+    written.discard("artifacts/backend/status.json")
+    validated = set(
+        re.findall(
+            r"(artifacts/backend/\S+\.json)",
+            next(
+                line for line in workflow.splitlines() if "validate_receipt.py" in line
+            ),
+        )
+    )
+    assert written
+    assert written == validated
 
 
 def test_item_umbrella_audit_emits_boolean_envelope():

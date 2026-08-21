@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .source_receipts import load_champion_sources
 
 
 def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -75,13 +78,13 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
     if entry is None:
         return None
     if ready:
-        target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-        missing_ratio = float(ctx.options.get("w_target_missing_health", 0.5))
+        target_max = float(ctx.target_stat("target_max_health") or 0.0)
+        missing_ratio = float(ctx.option("w_target_missing_health"))
         missing_ratio = min(max(missing_ratio, 0.0), 1.0)
         base = max(
             15.0,
             target_max
-            * (0.03 + 0.03 * ctx.stats.get("ability_power", 0.0) / 100.0)
+            * (0.03 + 0.03 * ctx.stat("ability_power") / 100.0)
             * missing_ratio,
         )
         entry["on_hit"] = {
@@ -113,6 +116,8 @@ def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", bonus),)
     entry["empowers_next_auto"] = True
+    # One empowered swing, landing with that swing.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Empowers one basic attack; the blink and attack reset are state-only."
     )
@@ -149,7 +154,14 @@ SLOTS = {
     "E": _phase_dive,
     "R": _chronobreak,
 }
-parse_abilities = build_parser(SLOTS, "Ekko")
+# Cached kit review.  Q's grenade "expand[s] into a Temporal Sickness field
+# that slows nearby enemies" around the champion it hits; E's empowered
+# attack and R's arrival explosion add damage and nothing else.  W is
+# absent because it emits no damage row — its chronosphere slow and its
+# entry-triggered stun ride a zone the damage model does not price.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ekko", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -184,45 +196,10 @@ ASSUMPTIONS = [
     "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the arrival explosion enters damage.",
 ]
 
-SOURCES = [
-    source_row(
-        "Ekko parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Ekko",
-        4007951,
-        "2026-04-12T23:57:12Z",
-    ),
-    source_row(
-        "Ekko Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/Q",
-        2863934,
-        "2019-11-03T19:56:51Z",
-    ),
-    source_row(
-        "Ekko W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/W",
-        2864229,
-        "2019-11-03T20:09:38Z",
-    ),
-    source_row(
-        "Ekko E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/E",
-        2864375,
-        "2019-11-03T20:12:09Z",
-    ),
-    source_row(
-        "Ekko R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ekko/R",
-        2864521,
-        "2019-11-03T20:15:33Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Ekko")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -237,17 +214,14 @@ def derive_self_healing(
     r_heal = _healing.extract_named(
         _healing._ability(champion_data, "R"), "Minimum Heal", r_rank, champion_stats
     )
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "R"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
     ):
+        event = payment.event
         _healing._heal_from_damage(
             healing, event, r_heal, "Chronobreak", link_to_damage=False
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Ekko", derive_self_healing)

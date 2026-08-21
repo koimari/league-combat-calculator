@@ -1,0 +1,1157 @@
+{
+ "slice": "C6",
+ "decisions": [
+  "D-11"
+ ],
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "rule": "R-17/R-32/D-97 \u2014 no baseline moves inside this commit"
+ },
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": true,
+  "rule": "C6 can move a leaf only where a request supplies a custom cast_order for a champion whose parse holds a recast slot: expansion adds rows that do not exist in the pre-change tree, so the count is not readable by inspection and R-20's second half applies. The population is every coupled scenario that requests a cast_order, read from scripts/golden_snapshot.py's COUPLED_SCENARIOS and the committed golden_coupled_baseline.json, together with each requesting loadout's live recast slots.",
+  "method": "For every scenario in the committed coupled baseline, every loadout (main, allies, enemies) carrying a cast_order was enumerated and its champion's kit parsed at that loadout's level, ranks and champion options; a loadout qualifies when the parse holds a slot outside cast_dependency.BASE_CAST_SLOTS.",
+  "scenarios": [
+   "syndra_custom_order_39",
+   "syndra_custom_order_60",
+   "syndra_custom_order_120"
+  ],
+  "custom_order_loadouts": 6,
+  "per_scenario": {
+   "syndra_custom_order_39": {
+    "loadouts": [
+     "main",
+     "ally[0]"
+    ],
+    "champion": "Syndra",
+    "requested_order": [
+     "Q",
+     "W",
+     "E",
+     "R"
+    ],
+    "live_recast_slots": [],
+    "reason": "39 splinters is below Syndra's 40-splinter second-charge threshold, so Q2 is absent from the parse and expansion is the identity",
+    "predicted_qualifying_leaves": 0
+   },
+   "syndra_custom_order_60": {
+    "loadouts": [
+     "main",
+     "ally[0]"
+    ],
+    "champion": "Syndra",
+    "requested_order": [
+     "Q",
+     "W",
+     "E",
+     "R"
+    ],
+    "live_recast_slots": [
+     "Q2"
+    ],
+    "predicted_qualifying_leaves": "non-zero, bounded by this scenario's leaves"
+   },
+   "syndra_custom_order_120": {
+    "loadouts": [
+     "main",
+     "ally[0]"
+    ],
+    "champion": "Syndra",
+    "requested_order": [
+     "Q",
+     "W",
+     "E",
+     "R"
+    ],
+    "live_recast_slots": [
+     "Q2"
+    ],
+    "predicted_qualifying_leaves": "non-zero, bounded by this scenario's leaves"
+   }
+  },
+  "excluded_and_why": {
+   "syndra_derived_order_39": "requests no cast_order; the derived path already folds Q2 in",
+   "syndra_derived_order_60": "requests no cast_order",
+   "syndra_derived_order_120": "requests no cast_order",
+   "catalyst_roster": "no loadout requests a cast_order",
+   "cleaver_bloodsong_roster": "no loadout requests a cast_order",
+   "dream_maker_roster": "no loadout requests a cast_order",
+   "mandate_abyssal_curse_roster": "no loadout requests a cast_order; its 53 differing leaves are C2/C3/C4's already-receipted Abyssal population, carried unchanged",
+   "score_event_scan_holder": "no loadout requests a cast_order",
+   "score_event_view_holder": "no loadout requests a cast_order",
+   "score_plain_tuple": "no loadout requests a cast_order"
+  },
+  "pair_engine_golden": {
+   "declared": "structurally zero fight-row diffs",
+   "asserted_from": "scripts/golden_snapshot.py builds exactly one FightParams, with cast_order=None, so no snapshot fight can gain a recast slot (pinned by tests/test_custom_cast_order.py::TestPairEngineGoldenIsStructurallyBlind)",
+   "measured": "zero fight-row diffs, and two leaves the structural argument did not cover \u2014 see unexpected_occurrences below"
+  }
+ },
+ "measured": {
+  "coupled_golden": {
+   "differing_leaves_attributable_to_C6": 160,
+   "qualifying_leaves_attributable_to_C6": 138,
+   "carried_from_c2_c3_c4": "53 mandate_abyssal_curse_roster leaves, byte-identical to the pre-edit report, each already covered by docs/receipts/oracle-C2-*.json, oracle-C3-*.json and oracle-C4-*.json",
+   "outside_the_enumerated_population": 0
+  }
+ },
+ "unexpected_occurrences": [
+  {
+   "path": "/champion_baselines/Syndra/abilities_level_11/Q2/recast_of",
+   "baseline": "scripts/golden_baseline.json",
+   "old": "<absent>",
+   "new": "Q",
+   "transition": "absent_to_value",
+   "why_the_declared_zero_missed_it": "C6's pair-engine zero was argued from cast_order=None, which is sound for every fight row and blind to the champion_baselines section: that section serialises the parsed ability entries themselves, so the recast_of stamp shows up as a new declaration field with no fight behind it.",
+   "kind": "declaration field, not a computed number",
+   "oracle_receipt": null
+  },
+  {
+   "path": "/metadata/fingerprint/leaves",
+   "baseline": "scripts/golden_baseline.json",
+   "transition": "value",
+   "why": "one leaf more, because of the row above; the value is campaign-fingerprints.json's to state, never this file's (umbrella criterion 4)",
+   "qualifies_under_R15": false,
+   "oracle_receipt": null
+  },
+  {
+   "path": "/metadata/fingerprint/leaves and /metadata/fingerprint/numeric_leaves",
+   "baseline": "scripts/golden_coupled_baseline.json",
+   "transition": "value",
+   "why": "the two custom-order scenarios gain the Q2 breakdown row, its cast, its damage event and their aggregates; the counts are campaign-fingerprints.json's to state",
+   "qualifies_under_R15": false,
+   "oracle_receipt": null
+  }
+ ],
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Syndra/abilities_level_11/Q2/recast_of"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves"
+  ],
+  "golden_note": "The pair engine computes nothing differently \u2014 golden_snapshot.py builds every fight with cast_order=None. The one path above is the champion_baselines dump of the parsed ability entry itself, which gains the recast_of declaration, and the shape counter follows it.",
+  "coupled_golden": [
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/ability_damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/breakdown/Q2",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/name",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/slot",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/name",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/slot",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/name",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/slot",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/name",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/ordinal",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/slot",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/name",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/slot",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/name",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/ordinal",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/slot",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[7]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_by_type/magic",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[10]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[2]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[2]/source",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[3]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[3]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[4]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[4]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[4]/source",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[5]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[5]/source",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[5]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[6]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[6]/source",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[6]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[7]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[7]/source",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[7]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[8]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[8]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/source",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/time",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/health_damage",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[1]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[2]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[3]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[4]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[1]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[2]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[3]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[4]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[5]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[6]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[7]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/target_ending_health",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[2]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[3]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[4]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[5]",
+   "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/total_damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/ability_damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/breakdown/Q2",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/name",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/slot",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/name",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/slot",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/name",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/slot",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/name",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/ordinal",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/slot",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/name",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/slot",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/name",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/ordinal",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_after",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_before",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_cost",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/slot",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[7]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_by_type/magic",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[10]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[2]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[2]/source",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[3]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[3]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[4]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[4]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[4]/source",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[5]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[5]/source",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[5]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[6]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[6]/source",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[6]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[7]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[7]/source",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[7]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[8]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[8]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/damage_type",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/source",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/time",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/health_damage",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[1]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[2]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[3]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[4]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[1]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[2]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[3]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[4]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[5]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[6]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[7]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/target_ending_health",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[2]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[3]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[4]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[5]",
+   "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/total_damage"
+  ],
+  "coupled_golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_exact": {
+   "syndra_custom_order_60": {
+    "fights/manual_target": {
+     "old": "4998.4",
+     "new": "5648.4"
+    }
+   },
+   "syndra_custom_order_120": {
+    "fights/manual_target": {
+     "old": "5472.5",
+     "new": "6185.5"
+    }
+   }
+  },
+  "coupled_exact_note": "old is the value the committed exact baseline still holds and new is this tip's; the difference is the second Dark Sphere charge the requested order used to delete. syndra_custom_order_39 does not move because Q2 is not live below 40 splinters, and every derived-order scenario is byte-identical."
+ },
+ "oracle_receipts_required": [
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/ability_damage",
+   "old": 5472.5,
+   "new": 6185.5,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/breakdown/Q2",
+   "old": null,
+   "new": "{\"casts\": 1, \"count\": null, \"crit_damage_per_hit\": null, \"damage_per_hit\": null, \"name\": \"Dark Sphere (2nd charge)\", ...",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/name",
+   "old": "Force of Will",
+   "new": "Dark Sphere (2nd charge)",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/resource_cost",
+   "old": 100.0,
+   "new": 0.0,
+   "transition": "value_to_zero"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[1]/slot",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/name",
+   "old": "Scatter the Weak",
+   "new": "Force of Will",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/resource_cost",
+   "old": 50.0,
+   "new": 100.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[2]/slot",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/name",
+   "old": "Unleashed Power",
+   "new": "Scatter the Weak",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/resource_cost",
+   "old": 100.0,
+   "new": 50.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/slot",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[3]/time",
+   "old": 0.25,
+   "new": 0.0,
+   "transition": "value_to_zero"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/name",
+   "old": "Dark Sphere",
+   "new": "Unleashed Power",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/ordinal",
+   "old": 2,
+   "new": 1,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/resource_cost",
+   "old": 60.0,
+   "new": 100.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/slot",
+   "old": "Q",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[4]/time",
+   "old": 5.0,
+   "new": 0.25,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/name",
+   "old": "Force of Will",
+   "new": "Dark Sphere",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/resource_cost",
+   "old": 100.0,
+   "new": 60.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/slot",
+   "old": "W",
+   "new": "Q",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[5]/time",
+   "old": 7.27,
+   "new": 5.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/name",
+   "old": "Dark Sphere",
+   "new": "Force of Will",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/ordinal",
+   "old": 3,
+   "new": 2,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/resource_cost",
+   "old": 60.0,
+   "new": 100.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/slot",
+   "old": "Q",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[6]/time",
+   "old": 10.0,
+   "new": 7.27,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/cast_timeline[7]",
+   "old": null,
+   "new": "{\"name\": \"Dark Sphere\", \"ordinal\": 3, \"resource_after\": 1273.2, \"resource_before\": 1333.2, \"resource_cost\": 60.0, \"re...",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_by_type/magic",
+   "old": 5143.0,
+   "new": 5856.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[10]",
+   "old": null,
+   "new": "{\"damage\": 713.0, \"damage_type\": \"magic\", \"phase\": \"ability\", \"source\": \"Q\", \"time\": 10.0}",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[2]/damage",
+   "old": 638.5,
+   "new": 713.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[2]/source",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[3]/damage",
+   "old": 164.7,
+   "new": 638.5,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[3]/damage_type",
+   "old": "true",
+   "new": "magic",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[4]/damage",
+   "old": 614.0,
+   "new": 164.7,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[4]/damage_type",
+   "old": "magic",
+   "new": "true",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[4]/source",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[5]/damage",
+   "old": 894.0,
+   "new": 614.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[5]/source",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[5]/time",
+   "old": 0.25,
+   "new": 0.0,
+   "transition": "value_to_zero"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[6]/damage",
+   "old": 713.0,
+   "new": 894.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[6]/source",
+   "old": "Q",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[6]/time",
+   "old": 5.0,
+   "new": 0.25,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[7]/damage",
+   "old": 638.5,
+   "new": 713.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[7]/source",
+   "old": "W",
+   "new": "Q",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[7]/time",
+   "old": 7.27,
+   "new": 5.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[8]/damage",
+   "old": 164.7,
+   "new": 638.5,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[8]/damage_type",
+   "old": "true",
+   "new": "magic",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/damage",
+   "old": 713.0,
+   "new": 164.7,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/damage_type",
+   "old": "magic",
+   "new": "true",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/source",
+   "old": "Q",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/damage_events[9]/time",
+   "old": 10.0,
+   "new": 7.27,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/health_damage",
+   "old": 5472.5,
+   "new": 6185.5,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[1]",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[2]",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[3]",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/cast_order[4]",
+   "old": null,
+   "new": "R",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[1]",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[2]",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[3]",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[4]",
+   "old": "Q",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[5]",
+   "old": "W",
+   "new": "Q",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[6]",
+   "old": "Q",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/rotation/order[7]",
+   "old": null,
+   "new": "Q",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/target_ending_health",
+   "old": 4527.5,
+   "new": 3814.5,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[2]",
+   "old": "R",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[3]",
+   "old": "W",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[4]",
+   "old": "proc_Luden's Echo",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/timeline_coverage/exact_sources[5]",
+   "old": null,
+   "new": "proc_Luden's Echo",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_120/fights/manual_target/total_damage",
+   "old": 5472.5,
+   "new": 6185.5,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/ability_damage",
+   "old": 4998.4,
+   "new": 5648.4,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/breakdown/Q2",
+   "old": null,
+   "new": "{\"casts\": 1, \"count\": null, \"crit_damage_per_hit\": null, \"damage_per_hit\": null, \"name\": \"Dark Sphere (2nd charge)\", ...",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/name",
+   "old": "Force of Will",
+   "new": "Dark Sphere (2nd charge)",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+   "old": 100.0,
+   "new": 0.0,
+   "transition": "value_to_zero"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[1]/slot",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/name",
+   "old": "Scatter the Weak",
+   "new": "Force of Will",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/resource_cost",
+   "old": 50.0,
+   "new": 100.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[2]/slot",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/name",
+   "old": "Unleashed Power",
+   "new": "Scatter the Weak",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/resource_cost",
+   "old": 100.0,
+   "new": 50.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/slot",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[3]/time",
+   "old": 0.25,
+   "new": 0.0,
+   "transition": "value_to_zero"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/name",
+   "old": "Dark Sphere",
+   "new": "Unleashed Power",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/ordinal",
+   "old": 2,
+   "new": 1,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/resource_cost",
+   "old": 60.0,
+   "new": 100.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/slot",
+   "old": "Q",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[4]/time",
+   "old": 5.0,
+   "new": 0.25,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/name",
+   "old": "Force of Will",
+   "new": "Dark Sphere",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/resource_cost",
+   "old": 100.0,
+   "new": 60.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/slot",
+   "old": "W",
+   "new": "Q",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[5]/time",
+   "old": 7.27,
+   "new": 5.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/name",
+   "old": "Dark Sphere",
+   "new": "Force of Will",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/ordinal",
+   "old": 3,
+   "new": 2,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/resource_cost",
+   "old": 60.0,
+   "new": 100.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/slot",
+   "old": "Q",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[6]/time",
+   "old": 10.0,
+   "new": 7.27,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/cast_timeline[7]",
+   "old": null,
+   "new": "{\"name\": \"Dark Sphere\", \"ordinal\": 3, \"resource_after\": 1273.2, \"resource_before\": 1333.2, \"resource_cost\": 60.0, \"re...",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_by_type/magic",
+   "old": 4720.0,
+   "new": 5370.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[10]",
+   "old": null,
+   "new": "{\"damage\": 650.0, \"damage_type\": \"magic\", \"phase\": \"ability\", \"source\": \"Q\", \"time\": 10.0}",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[2]/damage",
+   "old": 580.0,
+   "new": 650.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[2]/source",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[3]/damage",
+   "old": 139.2,
+   "new": 580.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[3]/damage_type",
+   "old": "true",
+   "new": "magic",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[4]/damage",
+   "old": 560.0,
+   "new": 139.2,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[4]/damage_type",
+   "old": "magic",
+   "new": "true",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[4]/source",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[5]/damage",
+   "old": 840.0,
+   "new": 560.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[5]/source",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[5]/time",
+   "old": 0.25,
+   "new": 0.0,
+   "transition": "value_to_zero"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[6]/damage",
+   "old": 650.0,
+   "new": 840.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[6]/source",
+   "old": "Q",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[6]/time",
+   "old": 5.0,
+   "new": 0.25,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[7]/damage",
+   "old": 580.0,
+   "new": 650.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[7]/source",
+   "old": "W",
+   "new": "Q",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[7]/time",
+   "old": 7.27,
+   "new": 5.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[8]/damage",
+   "old": 139.2,
+   "new": 580.0,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[8]/damage_type",
+   "old": "true",
+   "new": "magic",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/damage",
+   "old": 650.0,
+   "new": 139.2,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/damage_type",
+   "old": "magic",
+   "new": "true",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/source",
+   "old": "Q",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/damage_events[9]/time",
+   "old": 10.0,
+   "new": 7.27,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/health_damage",
+   "old": 4998.4,
+   "new": 5648.4,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[1]",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[2]",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[3]",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/cast_order[4]",
+   "old": null,
+   "new": "R",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[1]",
+   "old": "W",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[2]",
+   "old": "E",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[3]",
+   "old": "R",
+   "new": "E",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[4]",
+   "old": "Q",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[5]",
+   "old": "W",
+   "new": "Q",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[6]",
+   "old": "Q",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/rotation/order[7]",
+   "old": null,
+   "new": "Q",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/target_ending_health",
+   "old": 5001.6,
+   "new": 4351.6,
+   "transition": "value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[2]",
+   "old": "R",
+   "new": "Q2",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[3]",
+   "old": "W",
+   "new": "R",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[4]",
+   "old": "proc_Luden's Echo",
+   "new": "W",
+   "transition": "text_change"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/timeline_coverage/exact_sources[5]",
+   "old": null,
+   "new": "proc_Luden's Echo",
+   "transition": "absent_to_value"
+  },
+  {
+   "path": "/coupled_scenarios/syndra_custom_order_60/fights/manual_target/total_damage",
+   "old": 4998.4,
+   "new": 5648.4,
+   "transition": "value"
+  }
+ ],
+ "note": "Every path above is inside the enumerated population. No baseline is re-captured here (R-17, R-32, D-97); the phase-boundary re-capture carries one oracle receipt per qualifying leaf under R-18/R-19.",
+ "bench": {
+  "instrument": "scripts/bench_coupled_optimizer.py --fixed-work --isolate --json",
+  "reference": "the C5 tip (13d3d6e); syndra_mandate_3champ's committed 0A fingerprint predates C1's routing move, so the reference is C3's and C5's re-measured reading",
+  "cassiopeia_3champ": "identical (all four counter families, residual, rungs, winner, score, timeline_complete)",
+  "cassiopeia_5champ": "identical",
+  "mundo_3champ": "identical",
+  "syndra_mandate_3champ": "identical \u2014 public_evaluations 796, measured_proposals 782, score_memo_misses 775, pair_run_fight_calls 3014, residual 1422, rungs {receipt_walk_candidate: 775}, score 4642.3, same winner",
+  "cause": "No bench scenario sends a cast_order, so run_fight's post-parse expansion/check call site is never entered: every bench candidate takes the derived-order branch, which C6 leaves byte-identical."
+ }
+}

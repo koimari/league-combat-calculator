@@ -15,16 +15,22 @@ bonus), dropping the sourced active damage:
   %missing-health bonus ("Physical Damage" row: 12/16/20% + 5% per 100
   bonus AD of the target's missing health) as a live hp-scaled part.
 
-W damage is unchanged; E/P stay documented out_of_scope, and the
-possession/transform mechanic is inherently out of scope (E8d note).
+W damage is unchanged.  E (Harrowed Path) prices the one grant the
+engine has a channel for: "while inside the mist, Viego gains bonus
+attack speed", the cached "Bonus Attack Speed" row (30-50%) scaled by
+the explicit ``e_mist_uptime`` share of the fight spent on his own
+trail.  Its movement speed and camouflage have no channel.  P stays an
+emitted zero row — possession assumes another champion's whole kit,
+which is inherently out of scope (E8d note).
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    STEROID_ZERO,
     with_item_on_hits,
     damage_entry,
     extract_cooldown,
@@ -42,23 +48,6 @@ _R_BASE_AD_RATIO = 1.20
 
 PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756b"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Viego", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
-
-
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
 
 def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the active thrust plus the on-hit passive and mark second strike."""
@@ -69,12 +58,12 @@ def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     active = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    second_strikes = min(max(int(ctx.options.get("q_second_strike", 0)), 0), 20)
+    second_strikes = min(max(int(ctx.option("q_second_strike")), 0), 20)
     second_damage = (
         second_strikes
         * (
-            _Q_SECOND_STRIKE_AD_RATIO * float(ctx.stats.get("attack_damage", 0.0))
-            + _Q_SECOND_STRIKE_AP_RATIO * float(ctx.stats.get("ability_power", 0.0))
+            _Q_SECOND_STRIKE_AD_RATIO * float(ctx.stat("attack_damage"))
+            + _Q_SECOND_STRIKE_AP_RATIO * float(ctx.stat("ability_power"))
         )
         if second_strikes > 0
         else 0.0
@@ -126,12 +115,12 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("R")
     if rank < 1:
         return None
-    ad = float(ctx.stats.get("attack_damage", 0.0))
+    ad = float(ctx.stat("attack_damage"))
     base = _R_BASE_AD_RATIO * ad
     missing_pct = extract_value(ability, "Physical Damage", rank, 0)
     per_100_bad = extract_value(ability, "Physical Damage", rank, 1)
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
-    target_max = float(ctx.target.get("target_max_health", 0.0))
+    bonus_ad = float(ctx.stat("bonus_attack_damage"))
+    target_max = float(ctx.target_stat("target_max_health"))
 
     def missing_health_bonus(missing_ratio: float) -> float:
         return (
@@ -164,17 +153,64 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _blade_of_the_ruined_king
-SLOTS["R"] = _heartbreaker
-SLOTS["W"] = _certified_single_hit(SLOTS["W"])
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit",)
+# Q's thrust "deals physical damage to enemies hit" and its passive second
+# strike only damages; Spectral Maw's mist "deals magic damage to the first
+# enemy hit and stuns them for 0.25 : 1.25 (based on channel time) seconds";
+# Heartbreaker "strikes the most wounded enemy champion nearby, dealing
+# physical damage, slowing them by 99% for 0.25 seconds" — the slow is what
+# lands on the target this module prices (the knockback is for the *other*
+# nearby enemies).  E creates a mist trail and P is the possession
+# mechanic; neither authors a damage part, so neither can carry a kind —
+# E's attack-speed grant is a stat row, and P prices nothing at all.
+MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
+
+
+def _harrowed_path(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: the 30-50% attack speed Viego holds while inside his own mist."""
+    ability = ctx.ability("E")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("E")
+    if rank < 1:
+        return None
+
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0
+    bonus_as = granted * uptime
+    entry = damage_entry(
+        ability.get("name", "Harrowed Path"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed inside the mist at "
+        f"{uptime * 100:g}% uptime ({bonus_as:g}% applied); the trail's "
+        "movement speed and camouflage have no channel"
+    )
+    return entry
+
+
+_harrowed_path.phase = BUFF
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Viego",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"W"}),
+    slot_parsers={
+        "E": _harrowed_path,
+        "Q": with_item_on_hits(
+            _blade_of_the_ruined_king, effectiveness=1.0, hits=1, triggers=("on_hit",)
+        ),
+        "R": with_item_on_hits(
+            _heartbreaker, effectiveness=1.0, hits=1, triggers=("on_hit",)
+        ),
+    },
+    cc_kinds=MODULE_CC,
 )
-SLOTS["R"] = with_item_on_hits(
-    SLOTS["R"], effectiveness=1.0, hits=1, triggers=("on_hit",)
-)
-parse_abilities = build_parser(SLOTS, "Viego")
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -193,6 +229,22 @@ OPTIONS = list(OPTIONS) + [
             ),
         },
     },
+    {
+        "key": "e_mist_uptime",
+        "type": "int",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "label": "Share of the fight Viego spends inside Harrowed Path (%)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "E",
+            "note": (
+                "Positional uptime of E's own mist — self-state, with no "
+                "cross-slot cast edge."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -208,10 +260,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the %missing-health bonus ('Physical Damage' row 12/16/20% + 5% per "
     "100 bonus AD) as a live hp-scaled part evaluated at the strike; "
     "total_raw is the static base bound.",
+    "E (Harrowed Path) grants the cached Bonus Attack Speed row "
+    "(30-50%) while Viego stands in his own mist; e_mist_uptime "
+    "(default 100%) is that share of the fight, since the trail lasts 8 "
+    "seconds and E's cooldown falls to 6 by rank 5.  The trail's bonus "
+    "movement speed and camouflage have no engine channel.",
     "The possession/transform mechanic is inherently out of scope (E8d "
-    "note); E/P remain documented out_of_scope.",
+    "note): P stays an emitted zero-damage row.",
 ]
+
+# P is emitted and grants nothing the engine prices — Possession assumes
+# another champion's whole kit, which no axis expresses.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

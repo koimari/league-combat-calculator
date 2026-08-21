@@ -11,7 +11,9 @@ module declares W in SLOTS so the fight rotation casts it.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import _ability, _cast_slot_times, _rank
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import (
     ability_on_hit_entry,
@@ -85,7 +87,12 @@ def _kayle_r(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _kayle_passive,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The sword's expansion damages every target it strikes once, at the
+    # cast: the boundary claim that carries Q's reviewed slow into the
+    # event ledger.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": lambda ctx: no_damage(
         ctx,
         name="Celestial Blessing",
@@ -110,7 +117,13 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kayle")
-parse_abilities = build_parser(SLOTS, "Kayle")
+
+# Cached kit review: Q's struck targets are "slowed for 2 seconds"; R
+# rains swords with no control, and the Aflame wave, W's heal and E's
+# empowered attack apply none either.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kayle", cc_kinds=MODULE_CC)
 
 _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
@@ -129,41 +142,41 @@ def parse_abilities(*args, **kwargs):
     return result
 
 
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"
+# The wrapper is the module's published parser, so it republishes the
+# wiring the inner parser holds — the contract proves declaration and
+# wiring are one dict off whichever function the module exports.
+parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
-
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
-    """Resolve Kayle self-healing events from its authored packet."""
-    healing = []
-    w = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
-    w_heal = _healing.extract_named(w, "Heal", w_rank, champion_stats)
-    for cast_time in _healing._cast_slot_times(cast_timeline, "W"):
-        healing.append(
-            {
-                "time": cast_time,
-                "amount": w_heal,
-                "source": "Celestial Blessing",
-                "kind": "champion_ability",
-                "actor_wide": True,
-            }
-        )
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Celestial Blessing's heal: one sourced Heal row per W cast.
+
+    "Kayle blesses herself and the target allied champion, healing them"
+    — the heal is paid on the cast, not on damage, so it rides the cast
+    timeline and carries ``actor_wide`` for the ally copy.
+    """
+    del damage_events, fight_duration_seconds
+    w_rank = _rank(ability_damages, "W")
+    w_heal = extract_named(_ability(champion_data, "W"), "Heal", w_rank, champion_stats)
+    healing = [
+        {
+            "time": cast_time,
+            "amount": w_heal,
+            "source": "Celestial Blessing",
+            "kind": "champion_ability",
+            "actor_wide": True,
+        }
+        for cast_time in _cast_slot_times(cast_timeline, "W")
+    ]
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Kayle", derive_self_healing)

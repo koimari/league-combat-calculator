@@ -1,0 +1,87 @@
+{
+  "receipt": "oracle-P5-retire-leaf10",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/setup[0]",
+  "old_value": "Q",
+  "new_value": "E",
+  "verdict": "old_value_correct",
+  "independent_value": "Q",
+
+  "what_the_leaf_means": "Per data/worklists/f3-task.md, the 'derived order' is produced by src/calculator/rotation_resolver.py, which derives a cast order on the fly from the atomized ability data. Its first signal is automatic setup/consume-edge detection: 'an ability whose row names indicate application ... must precede abilities that consume ...'. rotation/setup[] is therefore the setup (producer) phase of the derived order, and setup[0] is the first ability that must be cast before its consumers. The trailing '60' matches the Syndra module's splinters option at the 60-Splinter threshold (W's Transcendent true-damage bonus), per data/champion-audit/batch-e9-1.json.",
+
+  "computation": {
+    "step_1_identify_the_producer": "In Syndra's kit exactly one ability creates the object every other ability consumes: Q 'Dark Sphere' — 'Syndra conjures a Dark Sphere at the target location ... The Dark Sphere then remains on the ground for 6 seconds.' (data/champions.json, Syndra.abilities.Q[0].effects[0].description)",
+    "step_2_identify_the_consumers": [
+      "W 'Force of Will': 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units ...' and 'She prioritizes grabbing the nearest unit, then Dark Spheres.' — W's damage row (Recast: 'throws the grabbed target ... dealing magic damage') has no payload without a grabbable object.",
+      "E 'Scatter the Weak': 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds ...' — E's sphere/stun branch exists only if a Dark Sphere is already on the ground.",
+      "R 'Unleashed Power': 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones, ... each dealing magic damage upon hit.' The sourced rows are Minimum Magic Damage 240/360/480 (+60% AP) = 3 spheres and Maximum Magic Damage 560/840/1120 (+140% AP) = 7 spheres; reaching the maximum row requires 4 pre-existing spheres, i.e. prior Q casts."
+    ],
+    "step_3_edge_direction": "The detected setup/consume edges are Q -> {W, E, R}. There is no edge in the opposite direction: nothing in Syndra's cached rows consumes E's output. E applies a stun (and, at 80 Splinters, a slow), but no Syndra damage row is conditioned on a stunned/slowed target (no 'Enhanced', 'Bonus vs', 'per stack' or '% of target's' row keys off E). E is a consumer only.",
+    "step_4_dps_signal_(f3_rule_1b,_total_raw_per_effective_cooldown)": {
+      "sourced_inputs": "Q rank5 230 (+70% AP), cd 7 at every rank (cooldown.affectedByCdr = false; R passive grants Dark Sphere 10/20/30 ability haste). W rank5 190 (+65% AP), cd 12/11/10/9/8, affectedByCdr = true; at 60 Splinters the Transcendent row applies, Total Mixed Damage rank5 = 212.8 (+76.6% AP). E rank5 200 (+60% AP), cd 15 at every rank, affectedByCdr = true.",
+      "formula": "effective_cd = base_cd x 100/(100+AH) (docs/math-foundations.md, Section 5 audit table: 'Ability haste (effective_cooldown) | cd' = cd*100/(100+AH) | EXACT')",
+      "results_damage_per_effective_second": {
+        "AH=0,   AP=0":   {"Q": 42.7, "W": 26.6, "E": 13.3},
+        "AH=60,  AP=0":   {"Q": 42.7, "W": 42.6, "E": 21.3},
+        "AH=0,   AP=500": {"Q": 107.7, "W": 74.5, "E": 33.3},
+        "AH=60,  AP=500": {"Q": 107.7, "W": 119.2, "E": 53.3},
+        "AH=60,  AP=800": {"Q": 146.7, "W": 165.1, "E": 72.5}
+      },
+      "conclusion": "E is strictly last on the DPS signal at every AP/AH point tested (its 15 s cooldown is more than double Q's and its damage is the lowest of the three). Q leads at low AP/AH; W overtakes Q only once the 60-Splinter true-damage bonus plus high AP is in play. Under no configuration does E rank first."
+    },
+    "step_5_verdict_reasoning": "Both derivation signals put Q ahead of E. On the setup/consume signal Q is the sole producer and E is one of its consumers, so 'E' at setup[0] places a consumer before its producer — exactly the violation the F3 invariant suite forbids ('the derived order never violates a detected setup/consume edge'). On the DPS signal E is last, not first. The 60-Splinter state changes only W's damage (true-damage bonus) and Q's charges (40-Splinter threshold, already active); it creates no producer role for E. Therefore setup[0] = Q."
+  },
+
+  "counter_hypothesis_considered": "Real-game Syndra 'E-then-Q' tech exists (Q's sphere appears after a 0.6 s delay and the E notes say 'Spheres spawned at close range of the ability are more likely to be hit'), which could motivate casting E fractionally before Q. This is a cast-time/travel-window nuance, not a data-detectable atom edge, and it does not change the dependency: the sphere must still exist for the stun branch, and the sphere path adds no damage ('dealt Scatter the Weak's damage if they were not damaged by the initial cast' — no extra damage). It does not support E as the setup producer.",
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].cooldown / leveling",
+      "quote": "Magic Damage 90/125/160/195/230 (+70% AP); cooldown 7/7/7/7/7, affectedByCdr: false; rechargeRate 7"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].effects[0].description and notes",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... She prioritizes grabbing the nearest unit, then Dark Spheres. / notes: 'Grabbing prioritizes Dark Spheres.'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].effects[3] (Transcendent Bonus) and cooldown",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. Total Mixed Damage rank5 = 212.8 (+76.6% AP); cooldown 12/11/10/9/8, affectedByCdr: true"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0].effects[0..1] and cooldown",
+      "quote": "Active: Syndra propels a wave of force in a cone ... Magic Damage 60/95/130/165/200 (+60% AP) ... 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast.'; cooldown 15/15/15/15/15, affectedByCdr: true"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[0..1]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste (10/20/30). Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)."
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "locator": "DELIVERABLES 1a and 2a",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing) ... COMBO-INVARIANT TESTS: ... the derived order never violates a detected setup/consume edge"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5, formula-audit table",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd·100/(100+AH)`; casts/unit time affine in AH | EXACT"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    }
+  ],
+
+  "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>; no src/, tests/, scripts/, docs/plans/, docs/receipts/, diff, or git history was read."
+}

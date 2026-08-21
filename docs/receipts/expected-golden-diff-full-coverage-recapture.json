@@ -1,0 +1,189 @@
+{
+ "slice": "full-coverage-recapture",
+ "campaign": "full-coverage",
+ "date": "2026-08-20",
+ "decisions": [
+  "R-17",
+  "R-19"
+ ],
+ "what_landed": "The full-coverage campaign re-captured all three golden baselines. Fifteen of the sixty leaves the Phase 4 boundary certified moved again, every one of them in cleaver_bloodsong_roster, and this receipt declares each new reading in advance of the assertion that reads it — the boundary's own discipline, which exists so a moved leaf is a claim somebody committed rather than a number somebody edited afterwards.",
+ "why_each_moved": "Two causes, and they are one. Lulu's Whimsy served a cooldown frozen at rank 1 (ten seconds where the cache falls to eight by rank three), so the roster fight now fits another cast: her outgoing goes 731.8 to 733.5, the 1.7 damage arrives on Aatrox as 4041.9 to 4043.6, and the same figure restates itself across the breakdown, the objective and the survival rows because they are all that one cast. The remaining leaves are addressed by ordinal — support_events[5], events[23], healing_events[25] — and the ledger they index into grew: a certified multi-part row now publishes one event per part instead of one merged lump, so every later index shifts. The fingerprint leaf count rises with it.",
+ "expected_diff_values": {
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/support_events[5]/owner": {
+   "old": null,
+   "new": "main",
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "A certified multi-part row publishes one event per part instead of one merged lump, so the ledger this leaf is addressed into by ordinal grew and every later index shifted."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/support_resistance_reduction[0]/fraction": {
+   "old": 0.18,
+   "new": 0.24,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "A certified multi-part row publishes one event per part instead of one merged lump, so the ledger this leaf is addressed into by ordinal grew and every later index shifted."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[25]/overheal": {
+   "old": 22.2,
+   "new": 20.4,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "A certified multi-part row publishes one event per part instead of one merged lump, so the ledger this leaf is addressed into by ordinal grew and every later index shifted."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/sources[1]/total_damage": {
+   "old": 194.1,
+   "new": 195.8,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/outgoing_damage_before_death": {
+   "old": 731.8,
+   "new": 733.5,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[1]/total_damage": {
+   "old": 731.8,
+   "new": 733.5,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/damage": {
+   "old": 45.9,
+   "new": 47.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "A certified multi-part row publishes one event per part instead of one merged lump, so the ledger this leaf is addressed into by ordinal grew and every later index shifted."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/pair_damage": {
+   "old": 45.9,
+   "new": 47.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "A certified multi-part row publishes one event per part instead of one merged lump, so the ledger this leaf is addressed into by ordinal grew and every later index shifted."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[23]/raw_damage": {
+   "old": 45.9,
+   "new": 47.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "A certified multi-part row publishes one event per part instead of one merged lump, so the ledger this leaf is addressed into by ordinal grew and every later index shifted."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/health_damage": {
+   "old": 4041.9,
+   "new": 4043.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/breakdown[2]/incoming_damage": {
+   "old": 4041.9,
+   "new": 4043.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/objective/main_team_damage_before_death": {
+   "old": 4041.9,
+   "new": 4043.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/damage_taken": {
+   "old": 4041.9,
+   "new": 4043.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/health_damage": {
+   "old": 4041.9,
+   "new": 4043.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight now fits another cast; this leaf is that cast, restated where the ledger restates it."
+   }
+  },
+  "/metadata/fingerprint/leaves": {
+   "old": 65077,
+   "new": 65500,
+   "supersedes": {
+    "receipt": "expected-golden-diff-campaign-close-swing-term-coverage.json",
+    "why": "The leaf count rises with the ledger that grew, and with the sweep's new timed arm."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/healing_received": {
+   "old": 4041.9,
+   "new": 4043.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight fits another cast; this leaf is that cast arriving."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[25]/applied_amount": {
+   "old": 337.2,
+   "new": 339.0,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight fits another cast; this leaf is that cast arriving."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/overhealing": {
+   "old": 1747.2,
+   "new": 1745.4,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight fits another cast; this leaf is that cast arriving."
+   }
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/participants[2]/survival/effective_health": {
+   "old": 6629.9,
+   "new": 6631.6,
+   "supersedes": {
+    "receipt": "escalated-defects-P4-boundary.json",
+    "entry": "the_phase_4_boundary_recapture_is_owed_60_oracle_receipts",
+    "why": "Lulu's Whimsy served a cooldown frozen at rank 1, so the roster fight fits another cast; this leaf is that cast arriving."
+   }
+  }
+ },
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17 -- this receipt moves no baseline. It declares the readings the campaign's re-capture (641695d) landed, for the leaves the Phase 4 boundary's owed population still pins."
+ }
+}

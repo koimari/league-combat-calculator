@@ -1,15 +1,17 @@
 """Dr. Mundo — slot map for the archetype engine.
 
 Why each slot is non-generic:
-- P (Goes Where He Pleases) has NO slot: the passive immunity arm
-  (the next hostile immobilizing control is RESISTED before it applies —
-  4% current-health cost + canister drop receipt) rides the coupled
-  survival walk via the participant timeline's t=0 arm packet; the
-  canister pickup (4% max-health heal + 15s refund) and the enemy
-  destruction are NAMED unsupported timings (no movement model, no
-  toggle); the innate health regeneration (0.4%..2.3% max HP per 5s /
-  0.04%..0.23% per 0.5s) stays self-sustain and out of scope (P2
-  Slice 8). It deals no damage to an enemy, so it gets no slot.
+- P (Goes Where He Pleases) has NO slot: it deals no damage to an enemy.
+  Its two arms are priced elsewhere.  The immunity arm (the next hostile
+  immobilizing control is RESISTED before it applies — 4% current-health
+  cost + canister drop receipt) rides the coupled survival walk via the
+  participant timeline's t=0 arm packet.  The innate regeneration is
+  priced by the self-heal rule, off the cached P's SECOND "Max Health
+  Damage" row (the cache mislabels both regeneration rows) — 0.04% :
+  0.23% (based on level) of maximum health every 0.5 seconds, ten of
+  which equal the first row's per-five-seconds statement.  The canister
+  pickup (4% max-health heal + 15s refund) and the enemy destruction stay
+  NAMED unsupported timings (no movement model, no toggle).
 - Q (Infected Bonesaw) is %CURRENT-health magic damage floored at a flat
   minimum, and both halves defeat the generic path. The unit
   ``"% of target's current health"`` resolves against a
@@ -36,7 +38,9 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -44,6 +48,8 @@ from .slotlib import (
     extract_value,
     stat_buff,
 )
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # HARDCODED: verify on patch updates — W's charge lasts 3.0s and ticks 4
 # times a second, so the charge total is per-tick x 12.
@@ -135,12 +141,12 @@ def _maximum_dosage(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank >= R_NEARBY_BONUS_RANK:
         percent *= 1.0 + R_NEARBY_CHAMPION_BONUS * _nearby_champions(ctx)
 
-    max_health = ctx.stats.get("health", 0.0)
+    max_health = ctx.stat("health")
     grant = percent * max_health * _missing_health_fraction(ctx)
     # Raise base and total together — bonus health is untouched, which is
     # what keeps the grant away from bonus-health item conversions.
     ctx.stats["health"] = max_health + grant
-    ctx.stats["base_health"] = ctx.stats.get("base_health", 0.0) + grant
+    ctx.stats["base_health"] = ctx.stat("base_health") + grant
 
     entry = damage_entry(
         ability.get("name", "Maximum Dosage"),
@@ -213,6 +219,10 @@ def _blunt_force_trauma(ctx: SlotCtx) -> dict[str, Any] | None:
     total = bonus * _damage_amp(ctx)
     entry["total_raw"] = total
     entry["parts"] = (DamagePart("physical", total),)
+    # One empowered swing per cast (see above), so one part and one hit —
+    # the certification that carries the row's reviewed control answer into
+    # the event ledger.
+    entry["event_order_certified"] = "single_hit"
     # The attack reset's THROUGHPUT is opt-in (the Vayne-Q template):
     # with the ``e_reset_throughput`` option the empower is stamped as a
     # self-supplying burst at an infinite rate — "the auto fires
@@ -223,7 +233,7 @@ def _blunt_force_trauma(ctx: SlotCtx) -> dict[str, Any] | None:
     # passive steroid) rides the same entry untouched.  Default keeps the
     # conservative ``True`` form (casts capped at the auto count).  The
     # option is read STRICTLY so junk values fail closed to the default.
-    if ctx.options.get("e_reset_throughput") is True:
+    if ctx.option("e_reset_throughput") is True:
         entry["empowers_next_auto"] = {
             "hits": 1,
             "attack_speed": float("inf"),
@@ -259,7 +269,7 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
 
     percent = extract_value(ability, "Magic Damage", rank) / 100.0
     minimum = extract_value(ability, "Minimum Damage", rank)
-    target_max = float(ctx.target.get("target_max_health", 0.0))
+    target_max = float(ctx.target_stat("target_max_health"))
 
     # Q is current-health damage.  The fight evaluator calls this closure
     # once per hit with the running target-health loss, so a repeated Q is
@@ -412,9 +422,15 @@ ASSUMPTIONS = [
     "Mundo's passive IMMUNITY (the next hostile immobilizing control is "
     "resisted — 4% current-health cost + canister drop) is modeled in the "
     "coupled survival walk; the canister pickup (4% max-health heal + "
-    "15s refund) and the enemy destruction are named unsupported timings; "
-    "the innate health regeneration, Q's health cost and refund, and W's "
-    "grey-health healing are self-sustain and are not modeled",
+    "15s refund) and the enemy destruction are named unsupported timings",
+    "P (Goes Where He Pleases) regenerates an additional 0.04% : 0.23% "
+    "(based on level) of maximum health every 0.5 seconds — the cached P's "
+    "second 'Max Health Damage' row, ten of which equal its first row's "
+    "per-five-seconds statement. The self-heal rule pays it over the whole "
+    "fight window; champion base regeneration stays outside the ledger, so "
+    "this is the passive's additional stream alone",
+    "Q's health cost and refund and W's grey-health healing are "
+    "self-sustain and are not modeled",
     "Dr. Mundo has no AP scaling anywhere in his kit",
 ]
 
@@ -427,27 +443,28 @@ SLOTS = {
     "W": _heart_zapper,
 }
 
-parse_abilities = build_parser(SLOTS, "Dr. Mundo")
+# Reviewed crowd control, read from the cached kit.  Q (Infected Bonesaw)
+# "deals magic damage to the first enemy hit and slows them by 40% for 2
+# seconds".  W (Heart Zapper) charges, ticks and detonates with no control
+# clause.  E (Blunt Force Trauma) sends a target flying only "if the target
+# dies or is a small monster" — the enemy this module prices survives the
+# hit, so the row applies no control.  R is the self-buff and authors no
+# damage part.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
+
+# P damages nothing and has no cast, so it emits no row; the self-heal
+# rule is what prices its regeneration, and that is the channel the map
+# names.
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Dr._Mundo",
-        "revision_id": 4007950,
-        "revision_timestamp": "2026-04-12T23:57:05Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Dr. Mundo")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -456,7 +473,14 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Dr. Mundo self-healing events from its authored packet."""
+    """Resolve Dr. Mundo self-healing events from its authored packet.
+
+    Two streams, both with a cadence of their own rather than a damage
+    event to ride: Maximum Dosage's regeneration over R's 10-second
+    window, and Goes Where He Pleases' innate regeneration over the whole
+    fight.  Both are actor-wide, so the timeline layer deduplicates the
+    receipts across multiple defenders.
+    """
     healing = []
     r = _healing._ability(champion_data, "R")
     r_rank = _healing._rank(ability_damages, "R")
@@ -482,11 +506,41 @@ def derive_self_healing(
                     }
                 )
                 tick += 0.5
+
+    # Goes Where He Pleases (P): "Dr. Mundo regenerates an additional
+    # 0.04% : 0.23% (based on level) of his maximum health every 0.5
+    # seconds" — the cached P's SECOND "Max Health Damage" row (the cache
+    # mislabels both regeneration rows as damage and states the same
+    # stream twice, per five seconds and per half second; ten of the
+    # second row equal the first at every level).  The heal has a cadence
+    # of its own and no cast to read, so it runs the whole fight window on
+    # the half-second the row names, against the maximum health R has
+    # already raised.  Champion base regeneration stays outside the ledger
+    # (pipeline.py adds only the item contribution), so this is the
+    # passive's additional stream alone.
+    level = int(champion_stat(champion_stats, "level"))
+    regen_percent = extract_value(
+        _healing._ability(champion_data, "P"),
+        "Max Health Damage",
+        level,
+        level=level,
+        occurrence=1,
+    )
+    per_half_second = regen_percent / 100.0 * champion_stat(champion_stats, "health")
+    if per_half_second > 0.0 and duration > 0.0:
+        tick = 0.5
+        while tick <= duration + 1e-9:
+            healing.append(
+                {
+                    "time": tick,
+                    "amount": per_half_second,
+                    "source": "Goes Where He Pleases",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                }
+            )
+            tick += 0.5
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Dr. Mundo", derive_self_healing)

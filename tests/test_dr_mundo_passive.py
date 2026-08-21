@@ -154,6 +154,9 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -175,8 +178,23 @@ from src.calculator.crowd_control_eligibility import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.participant_timeline import (
+    Combatant,
+    _simulate_survival as _simulate_survival_walk,
+)
 from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MUNDO_DATA = _CHAMPION_DATA["DrMundo"]
@@ -382,12 +400,44 @@ def _main_heals(combat: dict) -> list[dict]:
     return [e for e in combat.get("healing_events", []) if e.get("attacker") == "main"]
 
 
+#: MERGE: the passive has TWO heal mechanics and only one of them is
+#: modeled.  The 4%-of-maximum-health canister PICKUP heal still never
+#: fires (no movement simulation).  The passive's REGENERATION stream --
+#: "an additional 0.04% : 0.23% (based on level) of maximum health every
+#: 0.5 seconds", the cached P's second row -- is priced by the self-heal
+#: rule since the sustain slice, and it publishes under the same ability
+#: name.  So "no pickup heal" is a claim about the AMOUNT and cadence, not
+#: about the name: a pickup receipt would be an order of magnitude larger
+#: than a tick and would not sit on the half-second.
+_PICKUP_MAX_HEALTH_RATIO = 0.04
+_REGEN_TICK_MAX_RATIO = 0.0023
+
+
+def _pickup_heals(combat: dict) -> list[dict]:
+    """Passive receipts too large to be one regeneration tick."""
+    max_health = _survival(combat)["max_health"]
+    return [
+        heal
+        for heal in _main_heals(combat)
+        if "Goes Where He Pleases" in str(heal.get("source", ""))
+        and float(heal.get("amount", 0.0)) > 2.0 * _REGEN_TICK_MAX_RATIO * max_health
+    ]
+
+
+def _regen_stream_heals(combat: dict) -> list[dict]:
+    return [
+        heal
+        for heal in _main_heals(combat)
+        if "Goes Where He Pleases" in str(heal.get("source", ""))
+    ]
+
+
 def _cleanse_event_count(combat: dict) -> int:
     return combat["utility_outcomes"]["participants"]["main"]["cleanse"]["event_count"]
 
 
 def _dummy_combatant(participant_id: str, team: str, health: float = 3000.0):
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -694,13 +744,23 @@ class TestSourceAndTypedValues:
 
     def test_p_public_receipt_absent_from_parse(self):
         # The module parse receipt (the brief's contract #1): exactly
-        # E/Q/R/W — NO P slot (the passive deals no enemy damage) — and
-        # MODULE_COVERAGE names P out_of_scope.
+        # E/Q/R/W — NO P slot (the passive deals no enemy damage).
+        #
+        # MERGE: P is no longer ``out_of_scope``.  A slot with no cast can
+        # still be priced through a named engine channel, and the contract
+        # makes the module say WHICH: Dr. Mundo's P is ``modeled`` through
+        # ``COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}`` — the
+        # regeneration its own healing rule prices.  The claim resolves to
+        # a receipt instead of to prose.
         _, abilities = _parse()
         assert sorted(abilities.keys()) == ["E", "Q", "R", "W"]
-        from src.calculator.champions.dr_mundo import MODULE_COVERAGE
+        from src.calculator.champions import get_champion_module_contract
 
-        assert MODULE_COVERAGE["P"] == "out_of_scope"
+        contract = get_champion_module_contract("Dr. Mundo")
+        MODULE_COVERAGE = contract.coverage
+
+        assert MODULE_COVERAGE["P"] == "modeled"
+        assert contract.coverage_channels["P"] == ("self_healing_rule",)
         assert MODULE_COVERAGE["Q"] == "modeled"
         assert MODULE_COVERAGE["W"] == "modeled"
         assert MODULE_COVERAGE["E"] == "modeled"
@@ -753,15 +813,23 @@ class TestSourceAndTypedValues:
                 )
 
     def test_p_assumptions_name_the_passive(self):
-        # The module's ASSUMPTIONS carry the passive's absence explicitly
-        # (the self-sustain carve-out the completion's bounded wiring
-        # supersedes — the resist/cost/canister are NOT self-sustain).
+        # MERGE: the ASSUMPTIONS now split the passive by mechanic instead
+        # of declaring the whole of it absent -- the canister pickup stays
+        # a named unsupported timing, the regeneration stream is priced
+        # from the cached row, and the self-sustain carve-out (Q's health
+        # cost, W's grey health) is still what is not modeled.
         meta = get_champion_options_meta("Dr. Mundo")
         assert any(
-            "Mundo's passive" in row and "not modeled" in row
+            "canister pickup" in row and "unsupported" in row
             for row in meta["assumptions"]
         )
-        assert any("grey-health" in row for row in meta["assumptions"])
+        assert any(
+            "Goes Where He Pleases" in row and "every 0.5 seconds" in row
+            for row in meta["assumptions"]
+        )
+        assert any(
+            "grey-health" in row and "not modeled" in row for row in meta["assumptions"]
+        )
 
     def test_p_source_receipts_pin_wiki_revision(self):
         # Source receipts pin the wiki revision the cached rows came from.
@@ -837,8 +905,11 @@ class TestNoTrigger:
             assert not any(key in k for k in survival)
         heals = _main_heals(combat)
         assert heals, "the R regen heal surface still fires"
-        assert all(h["source"] == "Maximum Dosage" for h in heals)
-        assert not any("Goes Where He Pleases" in h.get("source", "") for h in heals)
+        assert {h["source"] for h in heals} == {
+            "Maximum Dosage",
+            "Goes Where He Pleases",
+        }
+        assert _pickup_heals(combat) == []
 
     def test_no_cc_kernel_no_intervals_no_cleanse(self):
         # Kernel-level mirror: an empty control list leaves both ledgers
@@ -1037,9 +1108,10 @@ class TestCanisterTimingAndLifetime:
         pickup = survival["pickup"]
         assert pickup["supported"] is False
         assert "movement" in pickup["reason"]
-        assert not any(
-            h.get("source") == "Goes Where He Pleases" for h in _main_heals(combat)
-        )
+        assert _pickup_heals(combat) == []
+        # The half-second regeneration stream is a different mechanic of
+        # the same passive and keeps running.
+        assert _regen_stream_heals(combat)
 
 
 # ---------------------------------------------------------------------------
@@ -1090,8 +1162,13 @@ class TestHealReceipt:
         combat = _app_combat(enemy="Ahri")
         heals = _main_heals(combat)
         assert heals
-        assert all(h["source"] == "Maximum Dosage" for h in heals)
-        assert not any("Goes Where He Pleases" in h.get("source", "") for h in heals)
+        assert _pickup_heals(combat) == []
+        max_health = _survival(combat)["max_health"]
+        assert not any(
+            float(h.get("amount", 0.0))
+            == pytest.approx(_PICKUP_MAX_HEALTH_RATIO * max_health, rel=1e-3)
+            for h in heals
+        )
 
     def test_wired_pickup_heal_4_percent_max_health(self):
         # P2-8 contract: the pickup heal is 4% of MAXIMUM health (the
@@ -1584,11 +1661,13 @@ class TestModeParity:
             {},
         )
         assert per_tick == pytest.approx(0.03 * stats["health"])
-        assert [h["time"] for h in heals] == [0.75 + 0.5 * i for i in range(11)]
-        assert all(h["amount"] == pytest.approx(per_tick) for h in heals)
-        assert all(h["source"] == "Maximum Dosage" for h in heals)
-        assert all(h["kind"] == "champion_ability" for h in heals)
-        assert all(h["actor_wide"] is True for h in heals)
+        # MERGE: the passive's own regeneration stream shares the ledger,
+        # so the R surface is the "Maximum Dosage" rows.
+        dosage = [h for h in heals if h["source"] == "Maximum Dosage"]
+        assert [h["time"] for h in dosage] == [0.75 + 0.5 * i for i in range(11)]
+        assert all(h["amount"] == pytest.approx(per_tick) for h in dosage)
+        assert all(h["kind"] == "champion_ability" for h in dosage)
+        assert all(h["actor_wide"] is True for h in dosage)
 
     def test_r_regen_heal_lands_in_app_fight(self):
         # The same R-regen surface lands in the app-level fight: the
@@ -1597,8 +1676,8 @@ class TestModeParity:
         combat = _app_combat(enemy="Ahri")
         heals = _main_heals(combat)
         assert heals
-        assert all(h["source"] == "Maximum Dosage" for h in heals)
-        assert not any("Goes Where He Pleases" in h.get("source", "") for h in heals)
+        assert any(h["source"] == "Maximum Dosage" for h in heals)
+        assert _pickup_heals(combat) == []
 
     def test_wired_p_parity_and_named_score_divergence(self):
         # P2-8 contract: full vs score agree on the Q/W/E/R + heal

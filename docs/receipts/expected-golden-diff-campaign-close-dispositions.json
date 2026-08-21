@@ -1,0 +1,697 @@
+{
+ "slice": "campaign-close-dispositions",
+ "dated": "2026-08-14",
+ "decisions": [
+  "D-24",
+  "D-72",
+  "D-97",
+  "Amendment E"
+ ],
+ "correction": {
+  "one_sentence": "A number the walk refused to produce stops being published as a number a rule produced: a refused transition's outcome fields carry STRUCTURAL_ZERO with the walk's own refusal as the reason, instead of a MEASURED zero with the refusal sitting one key away as a bare string.",
+  "sites": [
+   "src/calculator/survival/outcome_state.py::outcome_quantity -- the two answers a refusal makes different, in one expression, so the ledger and the projection that publishes its numbers cannot disagree about one transition",
+   "src/calculator/program/views/receipt.py::_outcome / _refusal -- the three panels publish their outcome fields through that one verdict"
+  ],
+  "why_it_had_no_symptom": "StructuralZero.read() is 0.0 and the branch is only reached on a zero, so no published number moves. What moves is what the payload SAYS about those numbers, which is the whole of umbrella criterion 1's emission clause.",
+  "not_touched": "AttackerOutcome and ObjectiveFold still carry plain floats, and no aggregate gains a disposition from this. Retyping the folds is a separate and larger question and is not smuggled in here."
+ },
+ "raised_by": {
+  "how": "Umbrella criterion 1's emission clause, open since Phase 4 S9 and re-raised by every R-35 pass since: every disposition every production path emitted was MEASURED, so three of the four spellings were unreachable on /api/calculate, /api/bis and /api/optimize.",
+  "escalation": "docs/receipts/escalated-defects-P4-S9.json, entry no_production_path_emits_a_non_measured_disposition, which retires in this commit with its reproducer inverted.",
+  "what_unblocked_it": "The umbrella's Amendment E of 2026-08-14. Before it, every one of the occurrences below was a text_change R-19 sent to an investigator R-18's export could not brief, so the slice had no legal landing."
+ },
+ "qualifying_population": {
+  "enumerated_before_the_src_edit": true,
+  "enumerated_from": "scripts/golden_coupled_baseline.json (committed), by walking all thirteen scenarios for any published event row carrying a non-empty skipped_reason.",
+  "rule": "Only a row the walk refused can gain a declared zero, because _refusal reads the row's own skipped_reason and _outcome is the only caller of the new verdict. The enumeration is therefore total over the committed baseline and bounds what may qualify: a moved leaf on a row with no skipped_reason, or on any field outside the three named below, is an unexpected occurrence and stops the slice.",
+  "refused_rows": 24,
+  "by_panel": {
+   "events": 14,
+   "healing_events": 10,
+   "support_events": 0
+  },
+  "fields_a_refusal_zeroes": {
+   "events": [
+    "damage",
+    "overkill"
+   ],
+   "healing_events": [
+    "applied_amount"
+   ],
+   "support_events": [
+    "applied_amount"
+   ]
+  },
+  "why_support_events_contributes_none": "ReceiptLedger.skip zeroes applied_amount on every refusal, so a refused support row is the same shape -- the committed baseline simply holds none. The arm ships anyway, because a rule that holds only where a baseline happens to have an example is the shape this campaign removes; tests/test_program_views.py drives it directly.",
+  "expected_qualifying_occurrences": 76,
+  "arithmetic": "24 refused rows -> 38 refusal-zeroed outcome leaves (14x2 + 10x1) -> 38 text_change transitions on the entries' disposition strings and 38 absent_to_value transitions on the reason keys beside them."
+ },
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17/R-32/D-97 -- no baseline moves inside this commit"
+ },
+ "expected_diff_paths": {
+  "golden": [],
+  "coupled_golden": [
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/reason",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/disposition",
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/reason"
+  ],
+  "coupled_golden_shape_counters": [
+   "/metadata/fingerprint/leaves"
+  ],
+  "coupled_exact": {}
+ },
+ "expected_diff_values": {
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/reason": {
+   "old": null,
+   "new": "attacker_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/reason": {
+   "old": null,
+   "new": "outside_window"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/reason": {
+   "old": null,
+   "new": "outside_window"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/reason": {
+   "old": null,
+   "new": "trigger_event_skipped"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/disposition": {
+   "old": "MEASURED",
+   "new": "STRUCTURAL_ZERO"
+  },
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/reason": {
+   "old": null,
+   "new": "target_dead"
+  },
+  "/metadata/fingerprint/leaves": {
+   "old": 23310,
+   "new": 23348,
+   "why": "The 38 reason keys the emission adds beside the 38 dispositions it re-spells, and nothing else. numeric_leaves does not move: a disposition and a reason are both strings.",
+   "supersedes": {
+    "receipt": "expected-golden-diff-P4-H2-ccscope.json",
+    "why": "This leaf is one of the sixty escalated-defects-P4-boundary.json pins, and H2's allowlist already declared the successor to that pin. This slice moves it a second time, so the claim names the claim it replaces rather than the ledger entry two moves back -- supersession is a chain and each link is declared, which is what keeps a leaf that moves twice from being resolved by editing a boundary row afterwards. A second claimant on this same predecessor is a contradiction the resolution refuses rather than an ordering it picks."
+   }
+  }
+ },
+ "described_leaves": {
+  "why": "Amendment E's third guard: an allowlist claiming a disposition transition states, path by path in this same allowlist, that the leaf the entry describes is identical on both sides. A number that moved is a value question and owes its investigator under R-19; no citation reaches one.",
+  "measured": "Every one of the thirty-eight is 0.0 in the committed baseline and none of them appears in the difference set -- the leaves that moved are exactly the entries, and the report's own path list is the evidence.",
+  "leaves": {
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[57].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[57].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[58].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[58].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[63].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[63].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[65].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[65].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[68].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[68].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[69].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[69].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[71].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[71].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[73].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[73].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[76].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[76].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[78].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[78].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[79].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[79].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[80].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[80].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[81].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[81].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82].damage",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82].overkill",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[44].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[46].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[48].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[52].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[54].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[56].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[59].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[61].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[62].applied_amount",
+    "value_both_sides": 0.0
+   },
+   "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/disposition": {
+    "describes": "/coupled_scenarios/cleaver_bloodsong_roster/combat/healing_events[63].applied_amount",
+    "value_both_sides": 0.0
+   }
+  }
+ },
+ "oracle_pass": {
+  "status": "NOT_OWED_BY_CITATION",
+  "why": "The umbrella's Amendment E of 2026-08-14: a disposition transition is adjudicated by citation, not by verdict. All seventy-six occurrences are on entries of the dispositions map as the identity-keyed leaf_report classifies them (guard 1); the cited ruling is one a reader can open -- D-24 ('a rule that can legitimately return 0.0 declares zero_policy=STRUCTURAL_ZERO with a reason'), D-72's single writer, and the invariant table's four spellings (guard 2); and the described leaves do not move (guard 3, stated above and gated). No oracle receipt is owed on any of them, and one may not be filed as though the question were a value question: no cached wiki text and no formula in docs/math-foundations.md decides whether a zero the walk refused is MEASURED or STRUCTURAL_ZERO.",
+  "what_an_oracle_would_still_be_owed": "Any numeric movement. There is none: the pair baseline reads 'snapshot identical', the coupled report's numeric-leaf difference count is zero, and scripts/golden_coupled_exact.json reproduces every per-attacker total unchanged."
+ },
+ "qualifying_occurrences": [
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[57].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[58].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[63].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[65].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[68].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[69].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[71].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[73].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[76].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[78].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[79].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[80].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[81].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].damage/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/events[82].overkill/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[44].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[46].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[48].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[52].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[54].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[56].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[59].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[61].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[62].applied_amount/reason",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/disposition",
+  "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions/healing_events[63].applied_amount/reason"
+ ]
+}

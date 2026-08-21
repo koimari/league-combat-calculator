@@ -103,6 +103,9 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -126,8 +129,23 @@ from src.calculator.cleanse_eligibility import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.participant_timeline import (
+    Combatant,
+    _simulate_survival as _simulate_survival_walk,
+)
 from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _RENGAR_DATA = _CHAMPION_DATA["Rengar"]
@@ -349,7 +367,7 @@ def _w_empowered_value(stats: dict) -> float:
 
 
 def _dummy_combatant(participant_id: str, team: str, health: float = 3000.0):
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -1055,16 +1073,33 @@ class TestCrowdControlAndSuppression:
         assert result["main"]["cleanse_use"]["uses_after"] == 1
 
     def test_rengar_unknown_control_fails_closed(self):
-        # P2-6 contract: an unknown control kind at the activation fails
-        # closed with the named unknown_control denial and nothing is
-        # truncated.
+        # P2-6 contract: a control kind the cleanse table has no entry for
+        # fails closed at the activation with the named unknown_control
+        # denial, and nothing is truncated.
+        #
+        # MERGE: the fixture kind is "cripple" rather than "dance".  A kind
+        # outside CC_KIND_VOCABULARY is now refused a whole layer earlier --
+        # the walk compiler raises rather than authoring a no-op stun (see
+        # the guard below) -- so it can no longer reach this kernel.
+        # "cripple" is a real authored kind that KNOWN_CONTROL_KINDS does
+        # not carry, which is exactly the case this contract is about.
         result = _kernel_survival(
-            controls=[_control_packet(1.0, "dance", 2.0, source="E")],
+            controls=[_control_packet(1.0, "cripple", 2.0, source="E")],
             cleanses=[_rengar_cleanse_packet(1.5, 0)],
         )
         cleanse = result["main"]["cleanse"]
         assert cleanse["decision"]["reason"] == "unknown_control"
         assert cleanse["removed_controls"] == []
+
+    def test_a_kind_outside_the_vocabulary_never_reaches_the_kernel(self):
+        # The stricter half of the same fail-closed rule: a misspelled kind
+        # is refused where the packet becomes an action, naming the kind and
+        # the vocabulary, instead of being classified as nothing.
+        with pytest.raises(ValueError, match="'dance' is not in CC_KIND_VOCABULARY"):
+            _kernel_survival(
+                controls=[_control_packet(1.0, "dance", 2.0, source="E")],
+                cleanses=[_rengar_cleanse_packet(1.5, 0)],
+            )
 
     def test_empowered_w_heal_fires_while_caster_cc(self):
         # P2-6 contract: the grey-health heal riding the EMPOWERED W cast
@@ -1766,7 +1801,10 @@ class TestUnchangedBoundaries:
         # the cleanse rides the seed, it adds NO user option.
         meta = get_champion_options_meta("Rengar")
         by_key = {option["key"]: option for option in meta["options"]}
-        assert set(by_key) == {"p_ferocity"}
+        # MERGE: this branch also declares ``r_thrill_attack`` -- whether
+        # Thrill of the Hunt's empowered attack landed, which arms R's
+        # sourced damage-reduction row.  The cleanse still adds no option.
+        assert set(by_key) == {"p_ferocity", "r_thrill_attack"}
         assert by_key["p_ferocity"] == {
             "key": "p_ferocity",
             "type": "int",

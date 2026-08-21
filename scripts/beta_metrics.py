@@ -54,7 +54,7 @@ def _format_human(scorecard: dict) -> str:
         "receipts={receipts}".format(**scorecard["data_sources"]),
         "",
     ]
-    for name in ("activation", "retention", "receipts", "bias", "staleness"):
+    for name in ("retention", "receipts", "bias", "staleness"):
         entry = scorecard["criteria"][name]
         status = entry["status"].upper()
         value = entry.get("value", entry.get("value_hours"))

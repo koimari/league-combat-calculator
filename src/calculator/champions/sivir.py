@@ -8,6 +8,12 @@ single-pass "Physical Damage" row the reviewed packet priced.  The
 module now prices the Total row so a full out-and-back pass deals the
 in-game 2x damage (320 at rank 5 vs the old 160).
 
+E (Spell Shield) is ``modeled`` as a timed ``self_state_events`` window:
+the sourced 1.5s shield blocks one hostile effect and, after the sourced
+0.25s delay, heals Sivir for the cached Heal row (60-80% AD + 50% AP by
+rank), scoped to herself — "she heals herself and activates Fleet of
+Foot" names no ally.
+
 Roadmap session (2026-08-21): adjudicates Sivir's two remaining
 out_of_scope slots.  They resolve DIFFERENTLY, and the difference is the
 point.
@@ -68,16 +74,11 @@ from ..ability_atoms import (
     ranked_ability_atom_value,
 )
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Sivir", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -107,9 +108,6 @@ def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _boomerang_blade
-
 # Sourced from the cached Spell Shield description.  The duration is read
 # through the typed ability-atom accessor (``timing.active_duration``, the
 # description's "for 1.5 seconds" prose atom); the 0.25s heal delay has NO
@@ -133,7 +131,7 @@ def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
     return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
 
 
-def _spell_shield(ctx: Any) -> dict[str, Any] | None:
+def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: one timed spell shield with its sourced block heal.
 
     Numeric values ride the typed ability-atom accessors: the 1.5s window
@@ -169,8 +167,8 @@ def _spell_shield(ctx: Any) -> dict[str, Any] | None:
         "Sivir", champion_data, "E", "Heal", rank, modifier_index=1
     )
     heal = (
-        ad_ratio * float(ctx.stats.get("attack_damage", 0.0)) / 100.0
-        + ap_ratio * float(ctx.stats.get("ability_power", 0.0)) / 100.0
+        ad_ratio * ctx.stat("attack_damage") / 100.0
+        + ap_ratio * ctx.stat("ability_power") / 100.0
     )
     return {
         "name": ability.get("name", "Spell Shield"),
@@ -202,8 +200,14 @@ def _spell_shield(ctx: Any) -> dict[str, Any] | None:
     }
 
 
-SLOTS["E"] = _spell_shield
-parse_abilities = build_parser(SLOTS, "Sivir")
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sivir",
+    PACKET_SHA256,
+    slot_parsers={
+        "Q": _boomerang_blade,
+        "E": _spell_shield,
+    },
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Boomerang Blade) prices the full two-way pass from the cached "
@@ -259,4 +263,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "out_of_scope",
 }
-REVIEW_STATUS = "reviewed_module"

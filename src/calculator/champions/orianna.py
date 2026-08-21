@@ -13,9 +13,10 @@ Why each slot is non-generic:
   ramp: auto 1 at 0 stacks (x1.00), auto 2 at 1 (x1.15), auto 3+ at 2
   (x1.30). The passive applies SPELL effects, not on-hit effects — it
   never declares ``applies_item_on_hits``.
-- Q must read "Magic Damage" explicitly so the 70%-effectiveness
-  "Reduced Damage" row (secondary targets) can never be picked up — the
-  single-target calc always uses full damage on the primary target.
+- Q reads "Magic Damage" and the 70%-effectiveness "Reduced Damage" row
+  separately: the primary target takes the full row and each target
+  selected by ``q_secondary_targets`` takes one reduced hit, so the
+  reduction can never silently land on the primary.
 - W reads "Magic Damage" explicitly; the speed-field/slow row
   ("Movement Speed Modifier") is utility and must not leak into damage.
 - E's pass-through damage is gated by the ``e_passes_through_target``
@@ -40,6 +41,7 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
+from .source_receipts import load_champion_sources
 
 
 def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -106,7 +108,7 @@ def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
 
     primary = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
-    secondary = min(max(int(ctx.options.get("q_secondary_targets", 0)), 0), 5)
+    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
         ability.get("name", "Command: Attack"),
@@ -115,9 +117,20 @@ def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
-    parts = [DamagePart("magic", primary)]
+    # One arrival: the primary and every secondary target are struck at
+    # the cast boundary together, which is the instant each part authors
+    # (a zero interval between simultaneous hits).
+    parts = [DamagePart("magic", primary, time_offset=0.0)]
     if secondary:
-        parts.append(DamagePart("magic", reduced, count=secondary))
+        parts.append(
+            DamagePart(
+                "magic",
+                reduced,
+                count=secondary,
+                time_offset=0.0,
+                hit_interval=0.0,
+            )
+        )
         entry["detail"] = (
             f"primary target + {secondary} secondary target(s) at the "
             f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
@@ -149,6 +162,10 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # The ball crosses the target once on its way to the ally — one
+        # hit at the cast boundary, the claim that carries MODULE_CC's
+        # reviewed answer for E into the event ledger.
+        event_order_certified="single_hit",
     )
 
 
@@ -192,10 +209,19 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
+    # Each command moves the ball once and damages what it crosses once,
+    # with no sourced sub-cast phase, so each certifies the cast boundary
+    # its reviewed control rides on.  Q is the exception: it can price more
+    # than one target off one arrival, so its parts author that instant
+    # directly instead of certifying a single landing.
     "Q": _command_attack,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _command_protect,
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "P": _clockwork_windup,
 }
 SLOTS["R"] = with_control(
@@ -204,19 +230,19 @@ SLOTS["R"] = with_control(
     duration_attr="Stun Duration",
 )
 
-parse_abilities = build_parser(SLOTS, "Orianna")
+# Cached kit review.  Q's ball and E's fly-through only "deal[] magic
+# damage".  W's pulse damages and "leaves behind an electric field ...
+# enemies that move within the field are slowed by the same amount", which
+# is the control the pulse's own targets stand in.  R "deals magic damage
+# to nearby enemies, stuns them for 0.75 seconds, and pulls them over 325
+# units"; the stun is the interval the cache prices ("Stun Duration"), so
+# the slot names that kind and reads its length rather than standing in the
+# coarser "immobilize" — the pull stays named-but-unmodeled utility.  P is
+# absent — Clockwork Windup is an on-hit rider on the auto stream, not an
+# ability event of its own.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Orianna", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Orianna",
-        "revision_id": 3892665,
-        "revision_timestamp": "2025-05-02T11:28:16Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Orianna")

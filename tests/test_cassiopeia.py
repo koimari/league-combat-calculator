@@ -19,6 +19,8 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
+from src.calculator.champions import cassiopeia
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -38,6 +40,19 @@ def _parse(data, ranks, level=18, ap=100.0, options=None):
         champion_stats={"attack_damage": 100.0, "bonus_attack_damage": 0.0},
         target_stats={"target_max_health": 3000.0},
     )
+
+
+def _r_part(*, facing: bool):
+    """Petrifying Gaze's one part on the facing / facing-away branch."""
+    from src.calculator.data_fetcher import get_champion
+
+    abilities = _parse(
+        get_champion("Cassiopeia"),
+        ALL_MAXED,
+        options={"r_target_facing": facing},
+    )
+    (part,) = abilities["R"]["parts"]
+    return part
 
 
 # ---------------------------------------------------------------------------
@@ -358,6 +373,48 @@ class TestPassiveAndMeta:
         assert options["r_target_facing"]["type"] == "bool"
         assert options["r_target_facing"]["default"] is True
         assert meta["assumptions"]
+
+
+class TestReviewedCrowdControl:
+    """Cassiopeia's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Cassiopeia")
+        # R is absent because its kind is a property of the cast, not of
+        # the slot: Petrifying Gaze stuns the enemies facing Cassiopeia
+        # and slows the ones facing away, so ``_petrifying_gaze`` authors
+        # the kind and its sourced duration on the part per branch (the
+        # ``r_target_facing`` option picks it) rather than declaring one
+        # answer for both.
+        assert cassiopeia.MODULE_CC == {
+            "P": "none",
+            "Q": "none",
+            "W": "slow",
+            "E": "none",
+        }
+        assert _r_part(facing=True).cc_kind == "stun"
+        assert _r_part(facing=False).cc_kind == "slow"
+        assert "grounded and slowed" in " ".join(cc_review.slot_text(data, "W").split())
+        assert "instead stunned for the same duration" in " ".join(
+            cc_review.slot_text(data, "R").split()
+        )
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Cassiopeia") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Cassiopeia")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestModuleCoverage:

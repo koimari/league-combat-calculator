@@ -1,0 +1,109 @@
+{
+  "receipt": "oracle-P5-retire-leaf51",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/W",
+  "old_value": null,
+  "old_value_note": "<absent> — the leaf did not exist in the previous baseline",
+  "new_value": 5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle51",
+    "isolation_confirmed": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan and git history were not read."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0] scalar fields",
+      "quote": "spellEffects = \"Aoe\"; effectRadius = \"225\"; affects = \"Enemies\"; damageType = \"MAGIC_DAMAGE\"; targeting = \"Unit • Location\". No maxTargets / targetCap / collisionRadius field is present (collisionRadius = null)."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0].effects[2].leveling[0] (\"Magic Damage\")",
+      "quote": "values [70, 100, 130, 160, 190] (flat) + [65,65,65,65,65] \"% AP\" — five ranks."
+    },
+    {
+      "source": "data/champions.json → Syndra.abilities.W[0].cooldown",
+      "quote": "modifiers values [12, 11, 10, 9, 8], affectedByCdr = true"
+    },
+    {
+      "source": "data/worklists/f3-task.md line 12 (the derived-order/rotation-resolver task that this scenario family, 'syndra_derived_order_39', names)",
+      "quote": "RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown × AoE weight) — high-DPS spam tools right after their setup."
+    },
+    {
+      "source": "docs/math-foundations.md §1.1 (cast scheduling)",
+      "quote": "With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, …` … This replaced the legacy `1 + T/c` independent-timeline count."
+    },
+    {
+      "source": "docs/math-foundations.md §5 formula-audit table",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | … R single-cast"
+    },
+    {
+      "source": "docs/math-foundations.md §2.1",
+      "quote": "Resistance mitigation (`apply_resistance`) | `m(R)=100/(100+R)` | EXACT"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json → Syndra",
+      "quote": "{\"verdict\": \"ok\", \"module\": \"syndra.py\", \"slots\": {\"P\": \"modeled\", \"Q\": \"modeled\", \"W\": \"modeled\", \"E\": \"modeled\", \"R\": \"modeled\"}} — gap_summary notes the 60-splinter W true-damage bonus is implemented."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_leaf_semantics": {
+      "reasoning": "The scenario id 'syndra_derived_order_39' names the F3 derived-ability-order family (data/worklists/f3-task.md: 'OPTIMAL EVENT-ORDER ENGINE (F3) … derive the order on the fly from the atomized data'), whose ranking signal is 'total_raw / effective cooldown × AoE weight'. The leaf therefore sits in the rotation-resolver readout, and the 'aoe' node is the per-ability area-of-effect signal keyed by ability slot. The only ambiguity left is which integer quantity the node stores; I bounded that by elimination below.",
+      "note": "The scenario definition itself lives outside the permitted evidence tree (no 'coupled_scenarios' or 'syndra_derived_order_39' string exists anywhere under data/), so the semantics were pinned by elimination from the cached data rather than read off a schema."
+    },
+    "step_2_is_an_aoe_entry_for_W_warranted": {
+      "claim": "Yes. Syndra W is unambiguously an area-of-effect damage ability in the cached wiki text.",
+      "evidence": "spellEffects = 'Aoe'; effectRadius = 225; recast description 'dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25%'. An 'aoe' map that omits W is therefore wrong-in-kind; adding a W entry is correct-in-kind."
+    },
+    "step_3_eliminate_the_readings_under_which_5_would_be_wrong": [
+      {
+        "reading": "5 = W damage (raw or post-mitigation) in the rotation",
+        "excluded": true,
+        "work": "W raw at 0 AP = 70/100/130/160/190 by rank; post-mitigation vs 50 MR via m(R)=100/(100+R) gives 46.7/66.7/86.7/106.7/126.7. The 60-splinter Transcendent bonus only adds true damage on top. No W damage figure at any rank, any AP, any resistance is anywhere near 5 — the smallest possible non-zero W damage packet in the cache is 70 raw. Reading excluded."
+      },
+      {
+        "reading": "5 = number of W casts in the scenario window",
+        "excluded": true,
+        "work": "Cast epochs are 0, c, 2c, … (math-foundations §1.1), so 5 casts require T ≥ 4·c_eff. With c = [12,11,10,9,8] and effective_cd = cd·100/(100+AH): at 0 AH rank 5 needs T ≥ 32.0 s; at 50 AH, 21.3 s; even at 100 AH, 16.0 s. The corpus fight windows are 'one_rotation' (exactly one cast per ability) and short timed fights (data/practice-corpus/scenarios.json uses one_rotation and t=10 readouts), so 5 W casts is unreachable. Reading excluded."
+      }
+    ],
+    "step_4_surviving_readings_all_evaluate_to_exactly_5": [
+      {
+        "reading": "AoE breadth / targets hit (the 'AoE weight' factor of the F3 ranking formula, expressed as targets)",
+        "value": 5,
+        "work": "The cached W entry carries no target cap (no maxTargets/targetCap field; collisionRadius null; projectile FALSE) and the wiki text puts no limit on 'nearby enemies'. An uncapped AoE against an enemy team is therefore bounded only by the 5-champion team size ⇒ 5."
+      },
+      {
+        "reading": "W ability rank used by the derived order",
+        "value": 5,
+        "work": "W's leveling arrays have exactly 5 entries (damage [70,100,130,160,190]; cost [60,70,80,90,100]; cooldown [12,11,10,9,8]) ⇒ max rank 5, which is the rank a level-18/20 skill order assigns to a maxed basic ability (18 points = 5/5/5/3)."
+      },
+      {
+        "reading": "W hold duration in seconds",
+        "value": 5,
+        "work": "Cached wiki text, verbatim: 'holds the target near her for 5 seconds'."
+      }
+    ],
+    "conclusion": "Every reading of this leaf that survives the numeric elimination evaluates to exactly 5, and the readings that would contradict 5 (damage, cast count) are arithmetically impossible for Syndra W in this corpus. The prior state — the leaf absent — is affirmatively wrong for an ability the cache flags spellEffects='Aoe' with a 225-unit effect radius and 'damage to them and nearby enemies' text, so <absent> cannot be defended."
+  },
+
+  "residual_uncertainty": "The exact unit of the 'aoe' node (targets vs. rank vs. seconds) could not be read from the permitted evidence tree, because no scenario/schema definition for 'coupled_scenarios' exists under data/. The verdict does not depend on resolving it: all admissible units land on 5, and the two units that would not land on 5 were excluded by arithmetic on the cached values.",
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "old_value_correct": false,
+    "why_old_is_wrong": "Syndra W is an AoE damage ability in the cached source data (spellEffects 'Aoe', effectRadius 225, 'damage to them and nearby enemies'); omitting it from the rotation's aoe node under-represents it in the F3 ranking signal total_raw / effective_cd × AoE weight."
+  },
+  "committed": false
+}

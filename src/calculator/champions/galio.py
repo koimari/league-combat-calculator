@@ -13,6 +13,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 _Q_CAST_TIME = 0.25
 _Q_TORNADO_FIRST_TICK = 0.75
@@ -32,7 +33,7 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    conversions = max(0, int(ctx.options.get("passive_procs", 1)))
+    conversions = max(0, int(ctx.option("passive_procs")))
     total_modified_raw = extract_named(
         ability,
         "Bonus Magic Damage",
@@ -40,7 +41,7 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.stats,
         ctx.target,
     )
-    total_ad = float(ctx.stats.get("attack_damage", 0.0))
+    total_ad = float(ctx.stat("attack_damage"))
     return {
         "name": ability.get("name", "Colossal Smash"),
         "auto_attack_conversion": {
@@ -62,10 +63,8 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     gust = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    ap = float(ctx.stats.get("ability_power", 0.0))
-    target_max_health = float(
-        ctx.target.get("target_max_health", ctx.target.get("health", 0.0))
-    )
+    ap = float(ctx.stat("ability_power"))
+    target_max_health = float(ctx.target_stat("target_max_health"))
     per_tick = target_max_health * (0.02 + ap * 0.0001)
 
     def max_health_tick(
@@ -153,7 +152,7 @@ def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     distance = min(
         650.0,
-        max(250.0, float(ctx.options.get("e_dash_distance", 650.0))),
+        max(250.0, float(ctx.option("e_dash_distance"))),
     )
     hit_delay = _E_CAST_TIME + distance / _E_DASH_SPEED
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -237,38 +236,7 @@ ASSUMPTIONS = [
     "control or defense rather than Galio's damage and are not added to TDD",
 ]
 
-SOURCES = [
-    {
-        "label": "Galio — Colossal Smash",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Colossal_Smash",
-        "revision_id": 4038336,
-        "revision_timestamp": "2026-06-30T08:53:44Z",
-    },
-    {
-        "label": "Galio — Winds of War",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Winds_of_War",
-        "revision_id": 4016962,
-        "revision_timestamp": "2026-05-13T14:26:32Z",
-    },
-    {
-        "label": "Galio — Shield of Durand",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Shield_of_Durand",
-        "revision_id": 3990299,
-        "revision_timestamp": "2026-02-07T07:08:21Z",
-    },
-    {
-        "label": "Galio — Justice Punch",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Justice_Punch",
-        "revision_id": 4016963,
-        "revision_timestamp": "2026-05-13T14:26:54Z",
-    },
-    {
-        "label": "Galio — Hero's Entrance",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Galio/Hero%27s_Entrance",
-        "revision_id": 4017997,
-        "revision_timestamp": "2026-05-14T13:57:45Z",
-    },
-]
+SOURCES = load_champion_sources("Galio")
 
 SLOTS = {
     "Q": _winds_of_war,
@@ -278,11 +246,10 @@ SLOTS = {
     "P": _colossal_smash,
 }
 
-parse_abilities = build_parser(SLOTS, "Galio")
+# Q's windblasts and tornado only damage; W's recast "taunts them", E
+# "knocks them up for 0.75 seconds", R lands "knocking them back 100
+# units".  P is the auto-attack conversion row — it authors no damage part
+# of its own, so it carries no reviewable marker.
+MODULE_CC = {"Q": "none", "W": "taunt", "E": "knockup", "R": "knockback"}
 
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+parse_abilities = build_parser(SLOTS, "Galio", cc_kinds=MODULE_CC)

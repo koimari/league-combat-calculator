@@ -49,6 +49,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _bonus_magic_damage_levelings(
@@ -91,6 +92,8 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One targeted launch, no travel or tick phase in the packet.
+        event_order_certified="single_hit",
     )
 
 
@@ -184,8 +187,15 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: damage plus a facing-selected stun or slow state."""
-    parser = simple_damage(attr="Magic Damage", dmg_type="magic")
+    """R: damage plus a facing-selected stun or slow state.
+
+    One cone blast, no travel or tick phase in the packet, so the row is
+    certified as one landing — which is also what puts it in the event
+    ledger where the control marker below can be read.
+    """
+    parser = simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    )
     entry = parser(ctx)
     if entry is None:
         return None
@@ -203,7 +213,7 @@ def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:
     duration = ranked_ability_atom_value(atom, 1, source=source)
     if atom.get("units") != ["s"]:
         raise ValueError("Cassiopeia R control duration atom must use seconds")
-    kind = "stun" if bool(ctx.options.get("r_target_facing", True)) else "slow"
+    kind = "stun" if bool(ctx.option("r_target_facing")) else "slow"
     part = entry["parts"][0]
     entry["parts"] = (
         replace(
@@ -254,10 +264,14 @@ ASSUMPTIONS = [
     "E's healing against poisoned targets is not modeled (damage calculator)",
     "P (Serpentine Grace) increases movement-speed-bonus effectiveness by "
     "6-40% (based on level); it is stat-effectiveness state with no "
-    "combat-damage interaction, so it emits a sourced zero-damage row "
-    "(MODULE_COVERAGE: no_damage, not out_of_scope)",
-    "R applies the typed 2-second stun when the target faces Cassiopeia; "
-    "the option selects the sourced slow branch when the target faces away",
+    "combat-damage interaction, so it emits a sourced zero-damage row",
+    "R's facing condition does not change damage either way; for crowd "
+    "control it selects the branch — R applies the sourced stun when the "
+    "target faces Cassiopeia ('Enemies with their facing direction "
+    "towards her are instead stunned'), which the duel's target engaged "
+    "with her is, and the r_target_facing option selects the sourced "
+    "slow branch when it faces away.  The duration is read from the "
+    "cached R description atom, never a literal",
 ]
 
 SLOTS = {
@@ -279,20 +293,26 @@ SLOTS = {
     "R": _petrifying_gaze,
 }
 
-parse_abilities = build_parser(SLOTS, "Cassiopeia")
+# Cached kit review.  Q's blast only poisons ("taking magic damage every
+# 0.429 seconds"), W's clouds leave enemies "grounded and slowed" — a
+# ground is not an immobilizing effect, the slow is the control — and E's
+# fangs apply nothing at all; P is Cassiopeia's own movement speed.  R is
+# absent because its kind is a property of the cast rather than of the
+# slot: the facing branch selects stun or
+# slow, so ``_petrifying_gaze`` authors the kind (and its sourced
+# duration) on the part itself.
+MODULE_CC = {"P": "none", "Q": "none", "W": "slow", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Cassiopeia",
-        "revision_id": 4022596,
-        "revision_timestamp": "2026-05-27T00:42:10Z",
-    }
-]
+SOURCES = load_champion_sources("Cassiopeia")
+
+# P is emitted, but its row is a sourced zero — not a fact SLOTS derives.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

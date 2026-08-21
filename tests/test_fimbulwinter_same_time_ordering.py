@@ -12,17 +12,22 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
+from src.calculator.program.build import roster_program
+from src.calculator.program.compile import action_from_event
+from src.calculator.program.views.survival import survival
+from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.survival import (
+    EVENT_SLOTS,
     ReceiptLedger,
     ScoreLedger,
+    SUPPORT_RANK_KEY,
     TransitionContext,
-    assemble_survival_rows,
+    TransitionRank,
     build_states,
-    finalize_states,
-    run_survival_walk,
 )
-from src.calculator.survival.actions import action_key, survival_action_from_event
+from src.calculator.survival.actions import action_key
 
 EVERLASTING = "Fimbulwinter — Everlasting"
 EPSILON = 1e-6
@@ -39,7 +44,7 @@ def _combatants(holder_id: str) -> list[Combatant]:
             level=18,
             items=items,
             stats={"health": 100.0, "is_melee": True},
-            defenses=SimpleNamespace(
+            defenses=StartingDefenses(
                 magic_shield=0.0,
                 physical_shield=0.0,
                 general_shield=0.0,
@@ -67,7 +72,9 @@ def _events(holder_id: str, shield_time: object, reactive_time: object) -> list[
             "target": holder_id,
             "_event_id": f"{holder_id}:fimbulwinter:E:1",
             "event_precision": "exact",
-            "_priority": 0.5,
+            # Everlasting is a barrier placed *after* the damage that
+            # triggered it: the old ``_priority: 0.5`` float is this rank.
+            SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
         },
         {
             "time": reactive_time,
@@ -93,8 +100,11 @@ def _actions(holder_id: str, shield_time: object, reactive_time: object):
     }
     actions = []
     for aidx, event in enumerate(events):
-        phase = float(event.get("_priority", 0.5))
-        action = survival_action_from_event(
+        # The reactive packet rode the same 0.5 float as the barrier above;
+        # ``REACTIVE`` and ``LATE_BARRIER`` still share one ordering slot, so
+        # the same-time tie this matrix is about is unchanged.
+        phase = event.get(SUPPORT_RANK_KEY, TransitionRank.REACTIVE)
+        action = action_from_event(
             event,
             phase,
             index_of[holder_id],
@@ -118,19 +128,20 @@ def _walk(
     actions, events = _actions(holder_id, shield_time, reactive_time)
     if reverse_input:
         actions = sorted(reversed(actions), key=lambda action: action.sort_key)
-    states = build_states(combatants)
+    states = build_states(combatants, (0.0,) * len(combatants))
     index_of = {
         combatant.participant_id: index for index, combatant in enumerate(combatants)
     }
     if ledger_type is ReceiptLedger:
         event_by_id = {event["_event_id"]: event for event in events}
         walk_actions = [
-            action._replace(event=event_by_id[str(action.event_id)])
+            action._replace(event=event_by_id[EVENT_SLOTS.text(action.event_slot)])
             for action in actions
         ]
         ledger = ReceiptLedger(
             actions=walk_actions,
             index_of=index_of,
+            compile_event=action_from_event,
             annotating=True,
         )
     else:
@@ -142,10 +153,10 @@ def _walk(
         combatants=combatants,
         index_of=index_of,
         ledger=ledger,
+        regeneration_windows=(None,) * len(combatants),
     )
-    run_survival_walk(walk_actions, context)
-    finalize_states(states, 5.0)
-    return assemble_survival_rows(states, combatants)[holder_id], events
+    result = run_one_walk(walk_actions, context)
+    return survival(roster_program(combatants), result)[holder_id], events
 
 
 @pytest.mark.parametrize("holder_id", ["main", "enemy:Ahri"])
@@ -251,9 +262,9 @@ def test_non_numeric_event_time_fails_closed(bad_time):
     event = _events("main", bad_time, 1.0)[0]
 
     with pytest.raises((TypeError, ValueError)):
-        survival_action_from_event(
+        action_from_event(
             event,
-            0.5,
+            TransitionRank.LATE_BARRIER,
             0,
             {"main": 0, "enemy:Aatrox": 1},
             subject_id="main",
@@ -263,18 +274,22 @@ def test_non_numeric_event_time_fails_closed(bad_time):
 def test_non_finite_event_time_fails_closed():
     """A non-finite timestamp cannot establish a stable event order.
 
-    ``survival_action_from_event`` (src/calculator/survival/actions.py) now
-    validates ``math.isfinite(time_value)`` right after the ``float(...)``
-    coercion and raises ``ValueError`` naming the bad value and event id —
+    ``action_key`` (src/calculator/survival/actions.py) validates
+    ``math.isfinite`` on the timestamp and raises ``ValueError`` naming the
+    bad value and event id.  The guard moved there with the constructor:
+    main put it in ``survival_action_from_event``, which this branch split
+    into ``program.compile.action_from_event``; ``action_key`` is the one
+    function every author of an action reaches, so the refusal covers the
+    composition and the compiler too rather than only one caller —
     matching the existing ``test_non_numeric_event_time_fails_closed``
     row's fail-closed contract for None/malformed timestamps, extended to
     the case a bare ``float()`` coercion does not reject (NaN, +/-inf)."""
     event = _events("main", float("nan"), 1.0)[0]
 
     with pytest.raises(ValueError):
-        survival_action_from_event(
+        action_from_event(
             event,
-            0.5,
+            TransitionRank.LATE_BARRIER,
             0,
             {"main": 0, "enemy:Aatrox": 1},
             subject_id="main",
@@ -291,10 +306,12 @@ def test_same_time_action_key_exposes_side_sensitive_source_order(
     """Equal phases fall through to source-side order in the stable key."""
     shield, reactive = _events(holder_id, 1.0, 1.0)
 
-    shield_key = action_key(1.0, 0.5, holder_id, shield)
-    reactive_key = action_key(1.0, 0.5, holder_id, reactive)
+    shield_key = action_key(1.0, TransitionRank.LATE_BARRIER, holder_id, shield)
+    reactive_key = action_key(1.0, TransitionRank.REACTIVE, holder_id, reactive)
     first = "shield" if shield_key < reactive_key else "reactive"
 
-    assert shield_key[1] == pytest.approx(0.5)
-    assert reactive_key[1] == pytest.approx(0.5)
+    # Both fold onto one ordering slot, which is what the shared 0.5 float
+    # meant; the tie-break below it is what this row is about.
+    assert shield_key[1] is TransitionRank.LATE_BARRIER
+    assert reactive_key[1] is TransitionRank.LATE_BARRIER
     assert first == first_kind

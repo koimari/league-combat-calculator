@@ -6,22 +6,41 @@ the passive damage is priced at the target's old armor and its 20% armor
 reduction is applied only to later hits. E is represented as the attack it
 modifies on the primary target and as cone damage on secondary roster targets.
 
-Timed fights fail closed in :mod:`calculator.pipeline` until ability casts,
-attack resets, ambient attacks, W stack expiry, and W's four-second attack-
-speed/shred windows share one event ledger.
+Timed fights walk W's stack cycle over the merged hit stream (Braum-pattern
+module walk): ambient autos plus Q hits — E's empowered attacks ride the
+ambient stream itself, so they are already counted as the swings they
+consume, and only with no stream do E casts force their own attacks.  An
+autos-only fight casts nothing, so its stream is the ambient swings.  Stacks
+expire 4 seconds after the last application, every third hit procs the
+%max-health damage as an authored exact event, and the 20% shred is carried
+as a 4-second ``target_debuff`` on the first ranked cast slot (Q, else E)
+whenever the walk procs at least once.
+
+P (Blast Shield) is the kit's one defensive row: "Periodically, Vi's next
+ability hit grants her a shield equal to 12% of her maximum health for 3
+seconds."  It has no cast and no damage, so it reaches the ledger as a
+``self_shield_events`` payload on the first ranked damage slot — the
+ability hit the wiki says activates it — and the coverage map names that
+channel (``module_contract.COVERAGE_CHANNELS``).
 """
 
+import math
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
+from .module_helpers import clamp
 from .slotlib import (
+    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_recharge,
     extract_value,
 )
+from .source_receipts import load_champion_sources
 
 _Q_MAX_CHARGE_SECONDS = 1.25
 _Q_MIN_RANGE = 250.0
@@ -33,6 +52,12 @@ _Q_MAX_BONUS_MULTIPLIER = 1.5
 _W_STACKS_REQUIRED = 3
 _W_ARMOR_REDUCTION_PERCENT = 20.0
 _W_DEBUFF_DURATION = 4.0
+_W_STACK_DURATION = 4.0  # stacks expire this long after the last application
+
+# Hit kinds for the timed Denting Blows stream; ability hits sort before
+# ambient attacks on equal timestamps (the rotation leads the fight model).
+_ABILITY_HIT = 0
+_ATTACK = 1
 
 _R_CAST_TIME = 0.25
 _R_GRAB_DAMAGE_DELAY = 0.75
@@ -40,27 +65,80 @@ _R_GRAB_RANGE = 300.0
 _R_INITIAL_SPEED = 800.0
 
 
-def _clamp(value: float, lower: float, upper: float) -> float:
-    return min(upper, max(lower, value))
-
-
 def _q_geometry(ctx: SlotCtx) -> tuple[float, float, float, float]:
     """Return charge fraction, clamped distance, speed, and hit time."""
-    charge = _clamp(
+    charge = clamp(
         float(ctx.options.get("q_charge_seconds", _Q_MAX_CHARGE_SECONDS)),
         0.0,
         _Q_MAX_CHARGE_SECONDS,
     )
     fraction = charge / _Q_MAX_CHARGE_SECONDS
     allowed_range = _Q_MIN_RANGE + (_Q_MAX_RANGE - _Q_MIN_RANGE) * fraction
-    requested_distance = max(0.0, float(ctx.options.get("q_dash_distance", 725.0)))
+    requested_distance = max(0.0, float(ctx.option("q_dash_distance")))
     distance = min(requested_distance, allowed_range)
     speed = _Q_MIN_SPEED + (_Q_MAX_SPEED - _Q_MIN_SPEED) * fraction
     return fraction, distance, speed, charge + distance / speed
 
 
 def _is_primary_target(ctx: SlotCtx) -> bool:
-    return int(ctx.target.get("roster_target_index", 0.0)) == 0
+    return int(ctx.target_stat("roster_target_index")) == 0
+
+
+# Blast Shield's size and duration are cached prose, not a leveling row,
+# so they are read out of the sentence that states them.
+_P_SHIELD_PROSE = re.compile(
+    r"shield equal to\s+(\d+(?:\.\d+)?)%\s+of her maximum health for\s+"
+    r"(\d+(?:\.\d+)?)\s+seconds",
+    re.IGNORECASE,
+)
+
+# The damage slots that can carry P's payload, in the order the certified
+# sequence lands them.
+_SHIELD_CARRIERS = ("Q", "E", "R")
+
+
+def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
+    """Ride P's sourced shield on the first damage slot that can grant it.
+
+    Blast Shield has no cast and no damage of its own, so it reaches the
+    ledger the way Mana Barrier and Adaptive Defenses do: as a
+    ``self_shield_events`` payload on an ability that emits damage events
+    (``slotlib.attach_self_shield``), which the participant ledger turns
+    into a timed self-shield at that event's timestamp.  One activation is
+    one shield, so the earliest ranked carrier takes the payload and the
+    later ones leave it alone; secondary roster targets never carry it, so
+    a roster grants Vi one shield rather than one per enemy.
+    """
+    if not _is_primary_target(ctx):
+        return entry
+    if any(
+        (ctx.results.get(slot) or {}).get("self_shield_events")
+        for slot in _SHIELD_CARRIERS
+    ):
+        return entry
+    ability = ctx.ability("P")
+    if ability is None:
+        return entry
+    match = _P_SHIELD_PROSE.search(
+        " ".join(effect.get("description", "") for effect in ability.get("effects", []))
+    )
+    if match is None:
+        return entry
+    percent = float(match.group(1))
+    duration = float(match.group(2))
+    amount = percent / 100.0 * ctx.stat("health")
+    if amount <= 0.0:
+        return entry
+    return attach_self_shield(
+        entry,
+        amount=amount,
+        duration=duration,
+        source=ability.get("name", "Blast Shield"),
+        detail=(
+            f"{entry.get('detail', '')}; Blast Shield {percent:g}% of "
+            f"maximum health ({amount:.0f}) for {duration:g}s"
+        ).strip("; "),
+    )
 
 
 def _w_trigger_slot(ctx: SlotCtx) -> str | None:
@@ -68,8 +146,8 @@ def _w_trigger_slot(ctx: SlotCtx) -> str | None:
     if ctx.rank_for("W") < 1:
         return None
     stacks = int(
-        _clamp(
-            float(ctx.options.get("denting_blows_starting_stacks", 0)),
+        clamp(
+            float(ctx.option("denting_blows_starting_stacks")),
             0.0,
             2.0,
         )
@@ -86,7 +164,8 @@ def _w_trigger_slot(ctx: SlotCtx) -> str | None:
     return None
 
 
-def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
+def _w_percent(ctx: SlotCtx) -> float:
+    """W's sourced %max-health per proc, including the bonus-AD scaling."""
     ability = ctx.ability("W")
     if ability is None:
         raise ValueError("Vi W data is unavailable")
@@ -95,9 +174,25 @@ def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
     per_100_bonus_ad = extract_value(
         ability, "Bonus Physical Damage", rank, modifier_index=1
     )
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
-    max_health = float(ctx.target.get("target_max_health", 0.0))
-    percent = base_percent + per_100_bonus_ad * bonus_ad / 100.0
+    return base_percent + per_100_bonus_ad * float(ctx.stat("bonus_attack_damage")) / (
+        100.0
+    )
+
+
+def _w_shred_debuff() -> dict[str, float]:
+    """W's sourced armor shred as a fight-engine ``target_debuff``."""
+    return {
+        "armor_reduction_percent": _W_ARMOR_REDUCTION_PERCENT,
+        "duration": _W_DEBUFF_DURATION,
+    }
+
+
+def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
+    ability = ctx.ability("W")
+    if ability is None:
+        raise ValueError("Vi W data is unavailable")
+    max_health = float(ctx.target_stat("target_max_health"))
+    percent = _w_percent(ctx)
     raw = max_health * percent / 100.0
 
     def max_health_damage(
@@ -120,13 +215,161 @@ def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
                 time_offset=hit_time,
             ),
         ),
-        "target_debuff": {
-            "armor_reduction_percent": _W_ARMOR_REDUCTION_PERCENT,
-            "duration": _W_DEBUFF_DURATION,
-        },
+        "target_debuff": _w_shred_debuff(),
         "detail": (
             f"third stack: {percent:g}% target max HP, then "
             f"{_W_ARMOR_REDUCTION_PERCENT:g}% armor reduction"
+        ),
+    }
+
+
+def _timed_window(ctx: SlotCtx) -> float | None:
+    """The injected fight window, or ``None`` in one-rotation mode."""
+    duration = ctx.options.get("fight_duration_seconds")
+    return None if duration is None else float(duration)
+
+
+def _timed_cast_starts(ctx: SlotCtx, duration: float) -> dict[str, list[float]]:
+    """Q/E cast start times, mirroring the engine's shared-hands schedule.
+
+    One set of hands: Q's charge occupies its cast time, each ability
+    recasts when its cooldown — running from the end of the cast — is
+    back up and no other cast is in progress, ties break by cast order,
+    and a cast counts if it starts within the fight window
+    (``damage._schedule_shared_casts``).  Item cooldown modifiers (Navori
+    refunds, Actualizer) and mana exhaustion are not mirrored, matching
+    the Braum-pattern walk's approximation.
+    """
+    haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
+    keys: list[str] = []
+    cast_times: dict[str, float] = {}
+    cooldowns: dict[str, float] = {}
+    q_ability = ctx.ability("Q")
+    if q_ability is not None and ctx.rank_for("Q") >= 1:
+        keys.append("Q")
+        cast_times["Q"] = clamp(
+            float(ctx.option("q_charge_seconds")), 0.0, _Q_MAX_CHARGE_SECONDS
+        )
+        cooldowns["Q"] = effective_cooldown(
+            extract_cooldown(q_ability, ctx.rank_for("Q")), haste
+        )
+    e_ability = ctx.ability("E")
+    if e_ability is not None and ctx.rank_for("E") >= 1:
+        keys.append("E")
+        cast_times["E"] = 0.0
+        cooldowns["E"] = effective_cooldown(
+            extract_recharge(e_ability, ctx.rank_for("E")), haste
+        )
+
+    times: dict[str, list[float]] = {key: [] for key in keys}
+    next_ready = dict.fromkeys(keys, 0.0)
+    pending = set(keys)
+    now = 0.0
+    while pending and now <= duration + 1e-9:
+        ready = [
+            key for key in keys if key in pending and next_ready[key] <= now + 1e-9
+        ]
+        if not ready:
+            now = min(next_ready[key] for key in pending)
+            continue
+        key = ready[0]
+        times[key].append(now)
+        if cooldowns[key] <= 0:
+            pending.remove(key)
+        else:
+            next_ready[key] = now + cast_times[key] + cooldowns[key]
+        now += cast_times[key]
+    return times
+
+
+def _denting_stream(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
+    """Vi's stack-applying hits on this target over a timed fight.
+
+    Ambient autos land at ``i / rate`` with ``rate = attack_speed x
+    auto_attack_uptime``; Q hits land at each cast start plus the charge
+    and travel time and stack every enemy in Q's path.  E's empowered
+    attack consumes an ambient swing (the engine models attack resets as
+    spending attack-cooldown dead time), so with a stream it is already
+    one of the counted autos; with no stream each E cast forces its own
+    attack on the primary target only.  An ``auto_attacks_only`` window
+    schedules no casts at all, so the stream is the ambient swings alone.
+    """
+    events: list[tuple[float, int]] = []
+    rate = ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime"))
+    if rate > 0:
+        events.extend(
+            (index / rate, _ATTACK) for index in range(math.floor(rate * duration))
+        )
+    if not ctx.option("auto_attacks_only"):
+        starts = _timed_cast_starts(ctx, duration)
+        q_hit_offset = _q_geometry(ctx)[3]
+        events.extend(
+            (start + q_hit_offset, _ABILITY_HIT) for start in starts.get("Q", ())
+        )
+        if rate <= 0 and _is_primary_target(ctx):
+            events.extend((start, _ABILITY_HIT) for start in starts.get("E", ()))
+    events.sort()
+    return events
+
+
+def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: walk the merged hit stream through stack -> proc -> reset cycles.
+
+    Each counted hit adds a stack (stacks reset when 4s pass without an
+    application); the third consumes them all, dealing the %max-health
+    physical damage at that hit's time.  ``denting_blows_starting_stacks``
+    seeds the counter at t=0.  One-rotation mode emits nothing — Q/E carry
+    the proc there — and a window whose stream never completes a cycle
+    emits nothing rather than a fractional proc.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    duration = _timed_window(ctx)
+    if duration is None or ctx.rank_for("W") < 1:
+        return None
+
+    stacks = int(clamp(float(ctx.option("denting_blows_starting_stacks")), 0.0, 2.0))
+    last_application = 0.0 if stacks else None
+    proc_times: list[float] = []
+    for time, _kind in _denting_stream(ctx, duration):
+        if last_application is not None and time - last_application > (
+            _W_STACK_DURATION
+        ):
+            stacks = 0
+        stacks += 1
+        last_application = time
+        if stacks >= _W_STACKS_REQUIRED:
+            proc_times.append(time)
+            stacks = 0
+            last_application = None
+    if not proc_times:
+        return None
+
+    percent = _w_percent(ctx)
+    raw = float(ctx.target_stat("target_max_health")) * percent / 100.0
+    procs = len(proc_times)
+    return {
+        "name": ability.get("name", "Denting Blows"),
+        "damage_type": "physical",
+        "total_raw": raw * procs,
+        "parts": (DamagePart("physical", raw),),
+        "proc_count": procs,
+        "damage_events": [
+            {
+                "time": time,
+                "damage_type": "physical",
+                "damage": raw,
+                "event_precision": "exact",
+            }
+            for time in proc_times
+        ],
+        "event_phase": "effect",
+        "target_max_health_sensitive": True,
+        "unit": "procs",
+        "detail": (
+            f"{procs} third-stack proc(s) ({percent:g}% target max HP each) "
+            f"over {duration:g}s"
         ),
     }
 
@@ -158,16 +401,22 @@ def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
         f"{fraction * _Q_MAX_CHARGE_SECONDS:.2f}s charge; "
         f"{distance:.0f} range at {speed:.0f} speed"
     )
-    if _w_trigger_slot(ctx) == "Q":
+    if _timed_window(ctx) is not None:
+        # The timed walk owns W's procs; when it procced at least once
+        # ("W" is in the results — the walk runs first in the slot map),
+        # Q carries the 4-second shred windows at its cast times.
+        if "W" in ctx.results:
+            entry["target_debuff"] = _w_shred_debuff()
+    elif _w_trigger_slot(ctx) == "Q":
         entry["post_hit_proc"] = _w_proc(ctx, hit_time)
         entry["target_max_health_sensitive"] = True
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 def _e_hit_time(ctx: SlotCtx) -> float:
     q_time = _q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0
-    delay = _clamp(
-        float(ctx.options.get("e_attack_delay", 0.25)),
+    delay = clamp(
+        float(ctx.option("e_attack_delay")),
         0.0,
         2.0,
     )
@@ -183,8 +432,8 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     flat = extract_value(ability, "Physical Damage", rank)
-    total_ad = float(ctx.stats.get("attack_damage", 0.0))
-    ability_power = float(ctx.stats.get("ability_power", 0.0))
+    total_ad = float(ctx.stat("attack_damage"))
+    ability_power = float(ctx.stat("ability_power"))
     hit_time = _e_hit_time(ctx)
     primary = _is_primary_target(ctx)
 
@@ -212,7 +461,7 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
             "triggers": ("on_hit", "on_attack"),
         }
         entry["detail"] = "primary empowered attack (attack reset)"
-        if _w_trigger_slot(ctx) == "E":
+        if _timed_window(ctx) is None and _w_trigger_slot(ctx) == "E":
             entry["post_hit_proc"] = _w_proc(ctx, hit_time)
             entry["target_max_health_sensitive"] = True
     else:
@@ -229,7 +478,11 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         entry["parts"] = (DamagePart("physical", raw, time_offset=hit_time),)
         entry["detail"] = "secondary cone target; no crit or W stack"
-    return entry
+    if _timed_window(ctx) is not None and "W" in ctx.results and "Q" not in ctx.results:
+        # Fallback shred carrier when Q is unranked: the walk's procs
+        # still shred, anchored at E's cast times.
+        entry["target_debuff"] = _w_shred_debuff()
+    return _carry_blast_shield(ctx, entry)
 
 
 def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -246,8 +499,8 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
         if ctx.rank_for("E") > 0
         else (_q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0)
     )
-    distance = _clamp(
-        float(ctx.options.get("r_start_distance", 800.0)),
+    distance = clamp(
+        float(ctx.option("r_start_distance")),
         _R_GRAB_RANGE,
         800.0,
     )
@@ -264,22 +517,13 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["detail"] = (
         "primary grab" if _is_primary_target(ctx) else "enemy crossed in R path"
     )
-    return entry
+    return _carry_blast_shield(ctx, entry)
 
 
 CAST_ORDER = ("Q", "E", "R")
-SUPPORTED_FIGHT_MODES = ("one_rotation",)
-UNSUPPORTED_FIGHT_MODE_REASON = (
-    "Time-based Vi calculations are withheld until Denting Blows can be "
-    "interleaved with the ambient attack stream. Use One Rotation."
-)
 CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
     "Vi uses the certified Q -> E -> R sequence; custom cast orders are not "
     "available yet."
-)
-COMPARISON_CURVE_UNAVAILABLE_REASON = (
-    "Crossover windows are withheld for Vi until W stacks, attack resets, "
-    "and ambient attacks share one timed event ledger."
 )
 
 OPTIONS = [
@@ -331,59 +575,61 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Certified mode is one Q -> E -> R rotation; time-based Vi is withheld",
+    "One-rotation mode is one Q -> E -> R rotation with the certified "
+    "stack ordering; timed mode walks W's stack cycle over the fight's "
+    "merged hit stream",
     "Every selected enemy is in Q's path, E's cone, and R's path; enemy 1 is "
     "the primary E/R target",
     "Q and primary-target E each add one W stack; E secondary targets do not",
-    "W proc damage uses pre-shred armor, then later hits use 20% reduced armor",
-    "Blast Shield is defensive only: Q/E may activate its 12% max-health shield, "
-    "but it does not change outgoing TDD",
+    "In one rotation, W proc damage uses pre-shred armor, then later hits "
+    "use 20% reduced armor",
+    "Timed W stacks come from ambient autos and Q hits (E's empowered "
+    "attacks consume ambient swings, so they are counted as those swings; "
+    "with no auto stream each E cast forces one attack); stacks expire 4s "
+    "after the last application, and Q/E are assumed cast on cooldown from "
+    "t=0 on one shared cast timeline without item cooldown modifiers or "
+    "mana exhaustion",
+    "An autos-only fight casts nothing, so only the ambient swings stack "
+    "(the pipeline states this with the auto_attacks_only reserved "
+    "option) and no cast carries the shred window",
+    "Timed W procs are priced against the fight's static target max health "
+    "and the 20% shred is time-weighted over 4s windows anchored at the "
+    "carrier ability's cast times (Q, else E) — the engine anchors shred "
+    "windows to casts, not procs",
+    "W's 30-50% attack-speed steroid after a proc is not modeled "
+    "(conservative in both modes)",
+    "P (Blast Shield) grants 12% of maximum health for 3 seconds (cached "
+    "P prose) on the first ranked ability hit of the fight — the shield "
+    "rides that slot's first damage event into the ledger, and only the "
+    "primary target's fight authors it, so a roster grants one shield. "
+    "Its unstated internal cooldown ('periodically') is not enforced and "
+    "the 4-second reduction per Denting Blows consume is not modeled",
 ]
 
-SOURCES = [
-    {
-        "label": "Vi — Blast Shield",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Blast_Shield",
-        "revision_id": 3986701,
-        "revision_timestamp": "2026-01-23T00:03:48Z",
-    },
-    {
-        "label": "Vi — Vault Breaker",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Vault_Breaker",
-        "revision_id": 3921391,
-        "revision_timestamp": "2025-06-29T22:47:26Z",
-    },
-    {
-        "label": "Vi — Denting Blows",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Denting_Blows",
-        "revision_id": 3932548,
-        "revision_timestamp": "2025-07-19T01:58:33Z",
-    },
-    {
-        "label": "Vi — Relentless Force",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Relentless_Force",
-        "revision_id": 3986710,
-        "revision_timestamp": "2026-01-23T00:42:37Z",
-    },
-    {
-        "label": "Vi — Cease and Desist",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Vi/Cease_and_Desist",
-        "revision_id": 4004943,
-        "revision_timestamp": "2026-04-02T19:30:57Z",
-    },
-]
+SOURCES = load_champion_sources("Vi")
 
+# W runs first: Q/E read its presence in ctx.results to decide whether
+# the timed shred has a proc to anchor to.
 SLOTS = {
+    "W": _denting_blows_timed,
     "Q": _vault_breaker,
     "E": _relentless_force,
     "R": _cease_and_desist,
 }
 
-parse_abilities = build_parser(SLOTS, "Vi")
+# Reviewed crowd control, read from the cached kit.  Q (Vault Breaker)
+# "stops upon hitting an enemy champion, knocking them back over 0.75
+# seconds" — the pull in the same sentence reaches "all non-champions
+# hit".  E (Relentless Force) is the empowered blast, with no control
+# clause.  R (Cease and Desist) grabs the singled-out champion, "knocking
+# them up for 1.3 seconds and dealing physical damage after 0.75 seconds
+# into the grab duration".  W (Denting Blows) is armour reduction, which
+# is not crowd control, and it is the auto-stack row besides.
+MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup"}
 
+parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
 
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+# P emits no row of its own — Blast Shield has no cast and no damage — so
+# the map names the channel that pays it instead.
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

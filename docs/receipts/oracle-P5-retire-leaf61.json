@@ -1,0 +1,77 @@
+{
+  "receipt": "oracle-P5-retire-leaf61",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/W",
+  "scenario": "syndra_derived_order_120",
+  "old_value": null,
+  "old_value_note": "<absent> — the leaf did not exist in the previous snapshot",
+  "new_value": 5,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle61",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "data/worklists/p5-ux-task.md", "git history", "the diff"]
+  },
+  "independent_computation": {
+    "step_1_scenario_identification": "The scenario id decodes from the cached wiki text alone: Syndra's innate collects Splinters of Wrath 'stacking up to 120 times' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' The trailing 120 is therefore the max-splinter (Transcendent) state, which is >= every Transcendent threshold in the kit: Q at 40 splinters (charges), W at 60 splinters (bonus true damage), E at 80 splinters. 'derived_order' names a derived skill order; at the level cap a full point allocation puts every basic ability at rank 5 (5+5+5+3 = 18 points at level 18).",
+    "step_2_is_W_an_AoE_ability": "Decisive and unambiguous from data/champions.json. Syndra W 'Force of Will' recast: 'Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them AND NEARBY ENEMIES once they land. ALL TARGETS HIT are slowed by 25% for 1.5 seconds.' The same ability object carries the structural fields spellEffects='Aoe', affects='Enemies', effectRadius='225', damageType='MAGIC_DAMAGE'. Three independent fields (prose, spellEffects tag, effect radius) agree: W's landing damage is an area effect with no wiki-stated target cap.",
+    "step_3_the_aoe_map_is_not_all_abilities": "The `/fights/manual_target/rotation/aoe/*` map is discriminating, not a blanket per-ability map: Syndra R 'Unleashed Power' is targeting='Unit', spellEffects='spell' ('she barrages THE TARGET ENEMY CHAMPION with all collected Dark Spheres'), i.e. single-target, while Q (spellEffects='Aoe', effectRadius=210, 'deals magic damage to nearby enemies') and E (spellEffects='Aoe', 'deals magic damage to enemies hit' in a cone) are area effects. Membership of the map is therefore decided by the AoE property, and W satisfies it exactly as Q and E do. An `aoe` map that contained Q and E but omitted W contradicts the cached source for W.",
+    "step_4_magnitude": "Every reading of the leaf value that is consistent with the exported sources evaluates to 5, and none evaluates to 'absent':\n  (a) targets hit — an unbounded AoE in a coupled roster is capped only by the enemy roster size; a coupled Summoner's Rift scenario carries a 5-champion enemy team, and no wiki text caps Syndra W below that (contrast R, whose barrage is one champion). => 5.\n  (b) ability rank in the derived order — at the level cap the derived order maxes each basic ability: W rank 5 (its rank-5 row is 190 (+65% AP) magic damage, cooldown 8s). => 5.\n  (c) AoE-capable slots / count-of-something-per-W — no exported source yields any value other than 5 for W while yielding a defined value for Q and E.\nUnder (a) and (b), which are the only readings the exported schema-bearing text supports, the correct value is 5.",
+    "step_5_absence_test": "For <absent> to be correct, Syndra W would have to be a non-AoE ability (readings a/c) or an unlearned/unused slot in the rotation (reading b). Both are refuted by the cache: W is tagged Aoe with a 225-unit effect radius and damages 'nearby enemies'/'all targets hit', and W is a damaging, cooldown-bearing ability that any derived order ranks (its recast is the damage instance; the initial grab is not). Absence is a false negative in every reading.",
+    "supporting_numbers": {
+      "W_rank5_magic_damage": "190 (+65% AP), cooldown 8s (rank ladder 12/11/10/9/8, affectedByCdr true), mana 100",
+      "W_transcendent_bonus": "'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage' — active at 120 splinters",
+      "W_effect_radius": "225 units",
+      "per_target_mitigation": "docs/math-foundations.md §1.2.1: mitigation x -> x*100/(100+R) is linear in raw damage, so pricing one AoE cast against N targets is exact per target — the engine's AoE map is a target/hit count, not an averaged fudge"
+    }
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[2].description (Force of Will, recast)",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] structural fields",
+      "quote": "\"targeting\": \"Unit \u2022 Location\", \"affects\": \"Enemies\", \"damageType\": \"MAGIC_DAMAGE\", \"spellEffects\": \"Aoe\", \"effectRadius\": \"225\", \"cooldown\": [12,11,10,9,8] (affectedByCdr true)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[2].leveling 'Magic Damage'",
+      "quote": "values [70, 100, 130, 160, 190] plus [65,65,65,65,65] % AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[3].description (Transcendent Bonus)",
+      "quote": "Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0]/P[2].description (Transcendent)",
+      "quote": "Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (comparison: AoE sibling)",
+      "quote": "\"spellEffects\": \"Aoe\", \"effectRadius\": \"210\" \u2014 'conjures a Dark Sphere at the target location ... dealing magic damage to nearby enemies'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (comparison: AoE sibling)",
+      "quote": "\"spellEffects\": \"Aoe\" \u2014 'propels a wave of force in a cone in the target direction that deals magic damage to enemies hit'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (comparison: NOT AoE)",
+      "quote": "\"targeting\": \"Unit\", \"spellEffects\": \"spell\" \u2014 'she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit'"
+    },
+    {
+      "source": "docs/math-foundations.md:465 (formula-audit table)",
+      "quote": "| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast |"
+    },
+    {
+      "source": "docs/math-foundations.md:110 (\u00a71.2 linearity of expectation)",
+      "quote": "Multi-hit abilities. A part with `h` identical hits is mitigated per hit and summed: \u03a3_h m(R)\u00b7raw = h\u00b7m(R)\u00b7raw (`_mitigate_hits`). This is exact because the mitigation operator x \u21a6 x\u00b7100/(100+R) is linear in raw damage for a fixed resistance."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra (corroborates the scenario's splinter option, not the leaf)",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    }
+  ],
+  "residual_uncertainty": "The scenario definition and the receipt schema live in src/ and tests/, which this oracle did not read by construction, so the leaf's unit (targets hit vs. derived ability rank) could not be pinned from the export. This does not change the verdict: the two readings the exported sources support both evaluate to exactly 5, and <absent> is refuted under every reading because Syndra W is unambiguously an area-of-effect damage ability in the cached wiki text (spellEffects 'Aoe', effectRadius 225, 'damage to them and nearby enemies ... all targets hit').",
+  "committed": false
+}

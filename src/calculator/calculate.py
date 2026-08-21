@@ -5,6 +5,7 @@ This module owns scenario resolution, fight execution, comparison curves, and
 the stable JSON-safe payload returned to every in-process consumer.
 """
 
+import re
 from collections.abc import Mapping
 from dataclasses import replace
 
@@ -16,6 +17,7 @@ from .defensive_effects import resolve_starting_defenses
 from .item_coverage import require_certified_target_timeline
 from .participant_timeline import build_participant_timeline
 from .pipeline import ONE_ROTATION_DURATION, run_fight
+from .program.views import LeafWriter, name_every_number
 from .public_response import (
     aggregate_public_results,
     public_engine_mode,
@@ -24,18 +26,13 @@ from .public_response import (
 )
 from .role_quests import role_quest_meta
 from .scenario import (
-    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ResolvedScenario,
     ScenarioRequest,
     parse_scenario_request,
     resolve_scenario,
 )
 from .stats import calculate_total_stats
-
-
-def _loadout_summary(loadout) -> dict:
-    """Render one resolved loadout through the public certification boundary."""
-    return public_loadout_summary(loadout, _VERIFIED_CHAMPIONS)
+from .validation_receipts import displayed_prediction
 
 
 def _comparison_curve(
@@ -114,9 +111,10 @@ def _add_comparison_curve(
 
 def _engine_receipt(champion_name: str) -> dict:
     """Return the stable engine registration and certification receipt."""
+    registration = engine_registration_kind(champion_name)
     return {
-        "registration": engine_registration_kind(champion_name),
-        "certified": champion_name in _VERIFIED_CHAMPIONS,
+        "registration": registration,
+        "certified": registration is not None,
         "mode": public_engine_mode(champion_name),
     }
 
@@ -131,6 +129,40 @@ def _ally_effects_receipt(resolved: ResolvedScenario) -> dict:
             "applied only when an explicit tested effect exists."
         ),
     }
+
+
+#: One ``combat.breakdown`` row's ``dispositions`` keys, which carry its index.
+_BREAKDOWN_ROW = re.compile(r"^breakdown\[(\d+)\]")
+
+
+def _drop_unattributed_breakdown(combat: dict) -> None:
+    """Withhold breakdown rows that no participant stands behind.
+
+    A fight against a manual target has no coupled opponent, so the walk
+    folds one outcome carrying no identity and no damage -- published, that
+    is a blank row in the public shape.  Each row's ``dispositions`` entries
+    are keyed by its index, so the survivors are renumbered with it.
+    """
+    rows = combat["breakdown"]
+    renumbered = {
+        old: new
+        for new, old in enumerate(
+            index for index, row in enumerate(rows) if row["participant_id"]
+        )
+    }
+    if len(renumbered) == len(rows):
+        return
+    combat["breakdown"] = [rows[old] for old in renumbered]
+    kept: dict[str, object] = {}
+    for path, entry in combat["dispositions"].items():
+        match = _BREAKDOWN_ROW.match(path)
+        if match is None:
+            kept[path] = entry
+            continue
+        target = renumbered.get(int(match.group(1)))
+        if target is not None:
+            kept[f"breakdown[{target}]{path[match.end():]}"] = entry
+    combat["dispositions"] = kept
 
 
 def _combat_receipt(
@@ -150,8 +182,9 @@ def _combat_receipt(
         role=params.role,
         role_quest_complete=params.role_quest_complete,
         external_stat_bonuses=params.ally_stat_bonuses,
+        rune_page=params.rune_page,
     )
-    return build_participant_timeline(
+    combat = build_participant_timeline(
         champion_data,
         request.level,
         items,
@@ -167,6 +200,8 @@ def _combat_receipt(
         enemies=list(resolved.enemies),
         allies=list(resolved.allies),
     )
+    _drop_unattributed_breakdown(combat)
+    return combat
 
 
 def _role_quest_receipt(resolved: ResolvedScenario) -> dict | None:
@@ -196,7 +231,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
         if allies:
             response.update(
                 {
-                    "allies": [_loadout_summary(ally) for ally in allies],
+                    "allies": [public_loadout_summary(ally) for ally in allies],
                     "scenario": {
                         "target_count": 1,
                         "aggregation": "Manual target",
@@ -219,7 +254,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
             )
         target_rows.append(
             {
-                "target": _loadout_summary(enemy),
+                "target": public_loadout_summary(enemy),
                 "result": serialize_fight_result(result),
             }
         )
@@ -227,7 +262,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     response.update(
         {
             "targets": target_rows,
-            "allies": [_loadout_summary(ally) for ally in allies],
+            "allies": [public_loadout_summary(ally) for ally in allies],
             "scenario": {
                 "target_count": len(target_rows),
                 "aggregation": "Same selected damage package landed on every target",
@@ -246,10 +281,53 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     return response
 
 
+#: The response blocks that carry a parallel ``dispositions`` map of their
+#: own.  ``combat`` is the five views' payload and the receipt view's writer
+#: named every number in it at the path it lives at; re-describing those
+#: leaves here would give each of them a *second* entry, and criterion 5 says
+#: exactly one.  So the response holds one map per block that has one, every
+#: numeric leaf is covered by exactly one of them, and neither map is a
+#: second producer of the other's entries.
+_BLOCKS_CARRYING_THEIR_OWN_MAP = frozenset({"combat"})
+
+
+def _name_the_response(response: dict) -> None:
+    """Give the response its own ``dispositions`` map, keyed by leaf path.
+
+    The endpoint's headline ``total_damage``, all ninety-odd
+    ``champion_stats``, the top-level ``breakdown``, every ``cast_timeline``
+    and ``damage_events`` row, each target's fight and each roster member's
+    starting defenses are published numbers, and until now none of them
+    carried an entry: the map lived on the ``combat`` sub-object alone, which
+    is a little under half of what this endpoint serves.  Criterion 5 says
+    *every numeric leaf of the /api/calculate payload*, so the rest of the
+    payload gets the same treatment ``/api/bis`` and ``/api/optimize``
+    already had -- re-written through the one writer at the path it lives at,
+    so the entry is produced beside its leaf by ``serialize_leaf`` rather
+    than by a second pass describing numbers it did not write.
+
+    The pass itself, and the two properties of it worth stating, belong to
+    ``name_every_number`` -- the one function all three served payloads are
+    named by.  What is this module's to say is which block it skips and why.
+    """
+    response["dispositions"] = name_every_number(
+        response, LeafWriter(), skip=_BLOCKS_CARRYING_THEIR_OWN_MAP
+    )
+
+
 def calculate_payload(
     data: Mapping[str, object], *, deterministic: bool = False
 ) -> dict:
-    """Return the complete JSON-safe calculate payload without Flask state."""
+    """Return the complete JSON-safe calculate payload without Flask state.
+
+    ``headline_total`` is the one published answer to "which number does
+    this result headline": the attacker's own coupled combat row when the
+    fight has one, else the rotation total.  ``displayed_prediction`` is the
+    rule; the browser reads the leaf instead of re-deriving it.
+    """
     request = parse_scenario_request(data, deterministic=deterministic)
     resolved = resolve_scenario(request)
-    return _calculate_resolved(request, resolved)
+    response = _calculate_resolved(request, resolved)
+    response["headline_total"] = displayed_prediction(response)[0]
+    _name_the_response(response)
+    return response

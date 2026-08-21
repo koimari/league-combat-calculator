@@ -376,8 +376,13 @@ class TestZaahenDarkinGlaive:
     RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
     def test_q_prices_both_strikes(self):
-        """2 x Physical Damage per Hit == Total Physical Damage (75 + 100% AD)."""
-        data = _fight("Zaahen", self.RANKS)
+        """2 x Physical Damage per Hit == Total Physical Damage (75 + 100% AD).
+
+        Read with Determination unstacked: P's stack buff is bonus AD and
+        Q's row carries a bonus-AD ratio, so a stacked parse is
+        deliberately larger than the row this asserts.
+        """
+        data = _fight("Zaahen", self.RANKS, options={"p_determination_stacks": 0})
         main_stats, target_stats = _context(data)
         expected = _expected_total(
             "Zaahen", "Q", "Total Physical Damage", 5, main_stats, target_stats

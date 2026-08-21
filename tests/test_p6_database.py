@@ -81,7 +81,9 @@ def test_save_and_load_build_round_trip(sqlite_database):
     build_id = response.get_json()["build_id"]
     assert isinstance(build_id, int)
 
-    loaded = client.get(f"/api/builds/{build_id}")
+    # The share link is the only read path for a saved build.
+    token = client.post("/api/share", json={"build_id": build_id}).get_json()["token"]
+    loaded = client.get(f"/api/share/{token}")
     assert loaded.status_code == 200
     payload = loaded.get_json()
     assert payload["champion"] == "Ahri"
@@ -99,10 +101,6 @@ def test_save_and_load_build_round_trip(sqlite_database):
     assert payload["created_at"].endswith("Z")
 
 
-def test_get_build_404(sqlite_database):
-    assert _client().get("/api/builds/999999").status_code == 404
-
-
 def test_save_build_validation(sqlite_database):
     client = _client()
     assert client.post("/api/builds", json={}).status_code == 400
@@ -117,6 +115,57 @@ def test_save_build_validation(sqlite_database):
         == 400
     )
     assert client.post("/api/builds", json=_build_payload(level=99)).status_code == 400
+
+
+class _RecordingLimiter:
+    """A token bucket that records the scope of every spend."""
+
+    def __init__(self, allowed=True):
+        self.scopes = []
+        self.allowed = allowed
+
+    def consume(self, scope, **_kwargs):
+        self.scopes.append(scope)
+        return self.allowed, 2.0
+
+
+def _budgeted(monkeypatch, limiter):
+    monkeypatch.setattr(app_module, "_rate_limiter", limiter)
+    monkeypatch.setitem(app_module.app.config, "TESTING", False)
+    monkeypatch.setitem(app_module.app.config, "RATE_LIMIT_ENABLED", True)
+    return _client()
+
+
+def test_build_and_share_writes_spend_a_token(sqlite_database, monkeypatch):
+    """Both persisting routes are budgeted, like every other public write."""
+    limiter = _RecordingLimiter()
+    client = _budgeted(monkeypatch, limiter)
+
+    saved = client.post("/api/builds", json=_build_payload())
+    assert saved.status_code == 201
+    share = client.post("/api/share", json={"build_id": saved.get_json()["build_id"]})
+
+    assert share.status_code == 201
+    assert limiter.scopes == ["build_write", "build_write"]
+
+
+def test_exhausted_build_budget_returns_a_labelled_429(sqlite_database, monkeypatch):
+    client = _budgeted(monkeypatch, _RecordingLimiter(allowed=False))
+
+    response = client.post("/api/builds", json=_build_payload())
+
+    assert response.status_code == 429
+    assert response.get_json() == {"error": "Build sharing is busy; retry shortly"}
+    assert int(response.headers["Retry-After"]) >= 1
+
+
+def test_malformed_build_write_does_not_spend_a_token(sqlite_database, monkeypatch):
+    limiter = _RecordingLimiter()
+    client = _budgeted(monkeypatch, limiter)
+
+    assert client.post("/api/builds", json={}).status_code == 400
+    assert client.post("/api/share", json={}).status_code == 400
+    assert limiter.scopes == []
 
 
 # ---------------------------------------------------------------------------
@@ -175,22 +224,21 @@ def test_share_links_are_unique_per_build(sqlite_database):
 # ---------------------------------------------------------------------------
 
 
-def test_feedback_write_and_read(sqlite_database):
+def test_feedback_read_filters(sqlite_database):
+    """GET /api/feedback lists what the receipt writer stored, newest first.
+    The only HTTP writer is POST /api/receipts (tests/test_p7_validation.py);
+    rows are seeded through the persistence helper it calls."""
     client = _client()
-    created = client.post(
-        "/api/feedback",
-        json={
-            "champion": "Ahri",
-            "loadout": {"items": ["Liandry's Torment"]},
-            "expected": {"total_damage": 2500.0},
-            "actual": {"total_damage": 2487.5},
-            "source": "combat_log",
-            "matched": False,
-            "note": "slightly under expected",
-        },
+    feedback_id = db.add_feedback(
+        champion="Ahri",
+        loadout={"items": ["Liandry's Torment"]},
+        expected={"tdd": 2500.0},
+        actual={"tdd": 2487.5},
+        source="combat_log",
+        matched=False,
+        delta=-12.5,
+        note="slightly under expected",
     )
-    assert created.status_code == 201
-    feedback_id = created.get_json()["feedback_id"]
     assert isinstance(feedback_id, int)
 
     listed = client.get("/api/feedback?champion=Ahri").get_json()
@@ -199,29 +247,37 @@ def test_feedback_write_and_read(sqlite_database):
     assert row["feedback_id"] == feedback_id
     assert row["source"] == "combat_log"
     assert row["matched"] is False
-    assert row["actual"]["total_damage"] == 2487.5
+    assert row["actual"]["tdd"] == 2487.5
     assert "under expected" in row["note"]
 
     # Champion filter excludes other champions.
-    client.post(
-        "/api/feedback",
-        json={"champion": "Darius", "expected": {}, "actual": {}},
-    )
+    db.add_feedback(champion="Darius", loadout={}, expected={}, actual={})
     assert client.get("/api/feedback?champion=Ahri").get_json()["count"] == 1
     assert client.get("/api/feedback?champion=Darius").get_json()["count"] == 1
     assert client.get("/api/feedback").get_json()["count"] == 2
+    assert client.get("/api/feedback?source=combat_log").get_json()["count"] == 1
 
 
-def test_feedback_source_validation(sqlite_database):
+def test_feedback_query_strings_go_through_request_parsing(sqlite_database):
+    """GET query strings use the shared public coercion policy: bounded
+    integers and 100-char strings, rejected (400) rather than clamped."""
     client = _client()
-    bad = client.post(
-        "/api/feedback", json={"champion": "Ahri", "source": "spreadsheet"}
-    )
-    assert bad.status_code == 400
-    missing = client.post("/api/feedback", json={"expected": {}, "actual": {}})
-    assert missing.status_code == 400
-    not_bool = client.post("/api/feedback", json={"champion": "Ahri", "matched": "yes"})
-    assert not_bool.status_code == 400
+    assert client.get("/api/feedback?limit=200").status_code == 200
+    for bad in ("0", "201", "abc", "1.5"):
+        response = client.get(f"/api/feedback?limit={bad}")
+        assert response.status_code == 400, bad
+        assert response.get_json()["error"].startswith("limit must be"), bad
+    assert client.get("/api/feedback?champion=" + "x" * 101).status_code == 400
+    assert client.get("/api/validation?limit=500").status_code == 400
+    assert client.get("/api/certainty?champion=" + "x" * 101).status_code == 400
+
+
+def test_feedback_has_no_client_supplied_writer(sqlite_database):
+    """A client may not write expected/actual/matched verbatim into the table
+    that drives the /api/validation bias flag; the receipt route derives them."""
+    client = _client()
+    assert client.post("/api/feedback", json={"champion": "Ahri"}).status_code == 405
+    assert client.get("/api/feedback?source=spreadsheet").status_code == 400
 
 
 # ---------------------------------------------------------------------------
@@ -294,16 +350,17 @@ def test_cache_consulted_by_calculate_when_configured(sqlite_database):
     assert warm.status_code == 200
     assert cold.get_json() == warm.get_json()
 
-    status = client.get("/api/cache-status").get_json()
-    assert status["cache_enabled"] is True
-    assert status["hits"] == 1
-    assert status["misses"] == 1
-    assert status["cached_entries"] == 1
+    cache = client.get("/api/health/deep").get_json()["checks"]["cache"]
+    assert cache["enabled"] is True
+    assert cache["hits"] == 1
+    assert cache["misses"] == 1
+    assert cache["cached_entries"] == 1
 
     # A different request is a separate key.
     payload["rotations"] = 2
     assert client.post("/api/calculate", json=payload).status_code == 200
-    assert client.get("/api/cache-status").get_json()["misses"] == 2
+    cache = client.get("/api/health/deep").get_json()["checks"]["cache"]
+    assert cache["misses"] == 2
 
 
 def test_cache_bypassed_in_testing_mode(sqlite_database):
@@ -328,10 +385,10 @@ def test_cache_bypassed_in_testing_mode(sqlite_database):
     first = client.post("/api/calculate", json=payload)
     assert first.status_code == 200
     assert client.post("/api/calculate", json=payload).status_code == 200
-    status = client.get("/api/cache-status").get_json()
-    assert status["cache_enabled"] is False
-    assert status["hits"] == 0
-    assert status["misses"] == 0
+    cache = client.get("/api/health/deep").get_json()["checks"]["cache"]
+    assert cache["enabled"] is False
+    assert cache["hits"] == 0
+    assert cache["misses"] == 0
 
 
 # ---------------------------------------------------------------------------
@@ -348,7 +405,7 @@ def test_sqlite_fallback_without_database_url(monkeypatch, tmp_path):
     try:
         assert db.is_configured() is False
         build_id = db.save_build({"champion": "Ahri", "level": 18})
-        loaded = db.get_build(build_id)
-        assert loaded["champion"] == "Ahri"
+        token = db.create_share_link(build_id)["token"]
+        assert db.get_share_link(token)["champion"] == "Ahri"
     finally:
         db.reset()

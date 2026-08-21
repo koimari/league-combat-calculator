@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -14,6 +14,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _level_scaling(
@@ -110,7 +111,7 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("e_true_grit_stacks", 1)), 0), 8)
+    stacks = min(max(int(ctx.option("e_true_grit_stacks")), 0), 8)
     armor = extract_named(ability, "Bonus Armor", rank, ctx.stats, ctx.target) * stacks
     mr = (
         extract_named(ability, "Bonus Magic Resistance", rank, ctx.stats, ctx.target)
@@ -160,7 +161,13 @@ SLOTS = {
     "E": _quickdraw,
     "R": _collateral_damage,
 }
-parse_abilities = build_parser(SLOTS, "Graves")
+# W's canister "slows them by 50% for 0.5 seconds" (its nearsight is not an
+# immobilize and has no kind in the vocabulary); Q's round and detonation
+# and R's shell only damage.  P's Buckshot knockback lands on non-champion
+# units only, and the row authors no damage part anyway; E deals no damage.
+MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Graves", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -191,37 +198,4 @@ ASSUMPTIONS = [
     "True Grit armor/MR is a selected defensive state and cannot inflate outgoing damage.",
 ]
 
-SOURCES = [
-    source_row(
-        "Graves parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Graves",
-        3892615,
-        "2025-05-02T11:24:28Z",
-    ),
-    source_row(
-        "Graves Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/Q",
-        2863946,
-        "2019-11-03T19:57:03Z",
-    ),
-    source_row(
-        "Graves W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/W",
-        2864241,
-        "2019-11-03T20:09:50Z",
-    ),
-    source_row(
-        "Graves E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/E",
-        2864387,
-        "2019-11-03T20:12:20Z",
-    ),
-    source_row(
-        "Graves R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Graves/R",
-        2864533,
-        "2019-11-03T20:15:45Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Graves")

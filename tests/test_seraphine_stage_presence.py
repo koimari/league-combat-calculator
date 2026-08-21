@@ -50,12 +50,12 @@ from pathlib import Path
 import pytest
 
 from src.calculator.champions import (
+    get_champion_module_contract,
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.seraphine import (
     ASSUMPTIONS,
-    MODULE_COVERAGE,
     _MAX_NOTES,
 )
 from src.calculator.data_fetcher import get_champion
@@ -136,6 +136,23 @@ def _parse(
     return champion_stats, abilities
 
 
+def _notes(level: int, count: int, **kwargs):
+    """The Stage Presence on-hit payload: per-Note damage and Notes fired.
+
+    The empowered attack is a basic attack, so the row rides the on-hit
+    channel with ``max_procs`` 1 — one empowered swing fires every Note it
+    holds and the next has none.  A ``parts`` row on the ``passive`` slot
+    could not reach a fight at all: ``passive`` is not an orderable cast
+    (``pipeline.validate_cast_order_for_kit`` refuses it).  The sourced
+    per-Note number and the Note count are unchanged; only where they live.
+    """
+    _, abilities = _parse(level, options={"p_notes": count}, **kwargs)
+    on_hit = abilities["passive"].get("on_hit")
+    if on_hit is None or not on_hit.get("max_procs"):
+        return 0.0, 0
+    return float(on_hit["damage_per_hit"]) / max(count, 1), count
+
+
 # ---------------------------------------------------------------------------
 # P — sourcing re-derived from the binary
 # ---------------------------------------------------------------------------
@@ -194,49 +211,35 @@ class TestNoteDamage:
         [(1, 4.0), (11, 16.35), (18, 25.0), (20, 27.47)],
     )
     def test_per_note_damage_is_the_sum_of_both_terms(self, level, flat):
-        stats, abilities = _parse(
-            level,
-            options={"p_notes_fired": 1},
-            stats_override={"ability_power": 200.0},
-        )
+        per_note, notes = _notes(level, 1, stats_override={"ability_power": 200.0})
         expected = flat + 0.04 * 200.0
-        assert stats["ability_power"] == pytest.approx(200.0)
-        assert abilities["passive"]["total_raw"] == pytest.approx(expected)
+        assert notes == 1
+        assert per_note == pytest.approx(expected)
 
     def test_level_twenty_value_is_hand_derived(self):
-        _, abilities = _parse(
-            20, options={"p_notes_fired": 1}, stats_override={"ability_power": 100.0}
-        )
+        per_note, _ = _notes(20, 1, stats_override={"ability_power": 100.0})
         # 27.47 + 4.00 (4% of 100 AP)
-        assert abilities["passive"]["total_raw"] == pytest.approx(31.47)
+        assert per_note == pytest.approx(31.47)
 
     def test_ap_term_is_actually_present(self):
-        _, low = _parse(
-            18, options={"p_notes_fired": 1}, stats_override={"ability_power": 0.0}
-        )
-        _, high = _parse(
-            18, options={"p_notes_fired": 1}, stats_override={"ability_power": 500.0}
-        )
-        gain = high["passive"]["total_raw"] - low["passive"]["total_raw"]
-        assert gain == pytest.approx(0.04 * 500.0)
+        low, _ = _notes(18, 1, stats_override={"ability_power": 0.0})
+        high, _ = _notes(18, 1, stats_override={"ability_power": 500.0})
+        assert high - low == pytest.approx(0.04 * 500.0)
 
     @pytest.mark.parametrize("notes", [1, 2, 3, 4])
     def test_total_scales_linearly_in_the_note_count(self, notes):
-        _, one = _parse(18, options={"p_notes_fired": 1})
-        _, many = _parse(18, options={"p_notes_fired": notes})
-        assert many["passive"]["total_raw"] == pytest.approx(
-            one["passive"]["total_raw"] * notes
-        )
-        assert [part.count for part in many["passive"]["parts"]] == [notes]
+        one_per_note, _ = _notes(18, 1)
+        many_per_note, fired = _notes(18, notes)
+        assert fired == notes
+        assert many_per_note * fired == pytest.approx(one_per_note * notes)
 
     def test_note_damage_is_magic(self):
-        _, abilities = _parse(18, options={"p_notes_fired": 2})
+        _, abilities = _parse(18, options={"p_notes": 2})
         assert abilities["passive"]["damage_type"] == "magic"
-        assert [part.damage_type for part in abilities["passive"]["parts"]] == ["magic"]
+        assert abilities["passive"]["on_hit"]["damage_type"] == "magic"
 
     def test_negative_note_counts_floor_at_zero(self):
-        _, abilities = _parse(18, options={"p_notes_fired": -3})
-        assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
+        assert _notes(18, -3) == (0.0, 0)
 
 
 class TestNoteCapIsSourced:
@@ -251,36 +254,36 @@ class TestNoteCapIsSourced:
         assert all(value == pytest.approx(4.0) for value in values)
 
     def test_note_count_is_clamped_to_the_cap(self):
-        _, capped = _parse(18, options={"p_notes_fired": 10_000})
-        _, rail = _parse(18, options={"p_notes_fired": _MAX_NOTES})
-        assert capped["passive"]["total_raw"] == pytest.approx(
-            rail["passive"]["total_raw"]
-        )
-        assert [part.count for part in capped["passive"]["parts"]] == [_MAX_NOTES]
+        _, capped = _parse(18, options={"p_notes": 10_000})
+        _, rail = _parse(18, options={"p_notes": _MAX_NOTES})
+        assert capped["passive"]["on_hit"] == rail["passive"]["on_hit"]
 
 
 class TestZeroNotesCostZero:
-    """No Note must cost nothing — the Rammus-W phantom pin."""
+    """No Note must cost nothing - the Rammus-W phantom pin.
 
-    def test_default_option_prices_no_note_damage(self):
-        _, abilities = _parse(18)
+    The default is the sourced cap rather than 0, and that is a different
+    claim from Rumble's ``overheat_autos``: every ability cast grants a
+    Note, so four Notes are what the fight's OWN default rotation
+    (Q/W/E/R) produces, not caster state the engine never simulates.
+    ``max_procs`` still holds it to the single empowered swing.
+    """
+
+    def test_zero_notes_price_no_rider_at_all(self):
+        _, abilities = _parse(18, options={"p_notes": 0})
         assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
-        assert sum(
-            part.amount * part.count for part in abilities["passive"]["parts"]
-        ) == pytest.approx(0.0)
+        assert abilities["passive"]["parts"] == ()
+        assert not abilities["passive"]["on_hit"].get("max_procs")
 
     def test_zero_and_one_note_are_not_identical(self):
-        _, none = _parse(18, options={"p_notes_fired": 0})
-        _, one = _parse(18, options={"p_notes_fired": 1})
-        assert none["passive"]["total_raw"] == pytest.approx(0.0)
-        assert one["passive"]["total_raw"] > 0.0
+        assert _notes(18, 0) == (0.0, 0)
+        per_note, fired = _notes(18, 1)
+        assert per_note > 0.0 and fired == 1
 
-    def test_option_is_registered_with_a_zero_default(self):
+    def test_option_is_registered_with_the_sourced_cap_as_its_default(self):
         meta = get_champion_options_meta("Seraphine")
-        option = next(
-            entry for entry in meta["options"] if entry["key"] == "p_notes_fired"
-        )
-        assert option["default"] == 0
+        option = next(entry for entry in meta["options"] if entry["key"] == "p_notes")
+        assert option["default"] == _MAX_NOTES
         assert option["min"] == 0
         assert option["max"] == _MAX_NOTES
 
@@ -300,10 +303,8 @@ class TestAllyNotesAreWithheld:
         # Four self Notes at level 18 / 200 AP: 4 x (25 + 8). An ally Note
         # would add a fifth quarter-strength hit; the total must be exactly
         # the four self Notes.
-        _, abilities = _parse(
-            18, options={"p_notes_fired": 4}, stats_override={"ability_power": 200.0}
-        )
-        assert abilities["passive"]["total_raw"] == pytest.approx(132.0)
+        per_note, fired = _notes(18, 4, stats_override={"ability_power": 200.0})
+        assert per_note * fired == pytest.approx(132.0)
 
     def test_withholding_is_documented(self):
         assumption = next(a for a in ASSUMPTIONS if "Stage Presence" in a)
@@ -318,7 +319,7 @@ class TestEmpoweredAttackRidersAreWithheld:
         assert "25 bonus attack range per Note" in description
 
     def test_no_stat_buff_is_emitted(self):
-        _, abilities = _parse(18, options={"p_notes_fired": 4})
+        _, abilities = _parse(18, options={"p_notes": 4})
         assert "stat_buff" not in abilities["passive"]
 
     def test_withholding_is_documented(self):
@@ -391,13 +392,21 @@ class TestSurroundSound:
         )
         assert high["amount"] == pytest.approx(low["amount"])
 
-    def test_gated_pulse_heal_is_authored_alongside_the_shield(self):
-        effects = _ally_effects(18, {"ability_power": 0.0, "health": 2000.0})
-        heal = next(effect for effect in effects if effect["kind"] == "heal")
-        assert heal["time"] == pytest.approx(3.5)
-        assert heal["requires_existing_shield"] is True
-        # 16% (rank 5) of 1000 missing health
-        assert heal["amount_formula"](1000.0, 2000.0) == pytest.approx(160.0)
+    def test_the_gated_pulse_heal_is_refused_not_published_at_zero(self):
+        """The scanner withholds the pulse rather than pricing it.
+
+        Its amount is a share of each RECIPIENT's live missing health, which
+        the scanner cannot price per recipient, so it publishes no row at
+        all - and w_already_shielded, which exists only to drop the
+        caster's shield gate, must not resurrect a zero-amount one.
+        tests/test_e8_support.py pins the same refusal on the roster
+        path.
+        """
+        for options in (None, {"w_already_shielded": True}):
+            effects = _ally_effects(
+                18, {"ability_power": 0.0, "health": 2000.0}, options=options
+            )
+            assert {effect["kind"] for effect in effects} == {"shield"}
 
     def test_w_carries_no_damage_row(self):
         _, abilities = _parse(18, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
@@ -434,7 +443,14 @@ class TestSurroundSoundMovementSpeedIsWithheld:
 
 
 def test_module_coverage_has_no_out_of_scope_slots_left():
-    assert MODULE_COVERAGE == {
+    """Read off the contract, not a module constant.
+
+    Every slot is emitted and priced, so ``module_contract.default_coverage``
+    already derives exactly this map; the contract refuses a module-level
+    ``MODULE_COVERAGE`` that restates what SLOTS derive, so the assertion
+    reads the registry's answer instead.
+    """
+    assert get_champion_module_contract("Seraphine").coverage == {
         "P": "modeled",
         "Q": "modeled",
         "W": "modeled",

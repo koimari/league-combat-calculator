@@ -17,9 +17,11 @@ Why each slot is non-generic:
 - Q (Baleful Strike) is a plain "Magic Damage" read (80 / 120 / 160 /
   200 / 240 + 50 / 55 / 60 / 65 / 70% AP).
 - W (Dark Matter) is a plain "Magic Damage" read (85 / 140 / 195 / 250 /
-  305 + 70 / 80 / 90 / 100 / 110% AP).
+  305 + 70 / 80 / 90 / 100 / 110% AP) whose strike lands 1.221 s from the
+  start of the cast.
 - P (Phenomenal Evil Power) and E (Event Horizon) deal no enemy damage
-  and are explicit no-damage slots.
+  and are explicit no-damage slots; E still authors the cage's sourced
+  stun as a typed control interval.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -28,7 +30,7 @@ hardcoded.
 from typing import Any, Callable
 
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage_parser
+from .module_helpers import delayed_damage, no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
 from ..ability_spec import ControlEvent, DamagePart
@@ -40,27 +42,6 @@ from ..ability_spec import ControlEvent, DamagePart
 # == 2.0 in the game files).  The pass-16 decision pins the curve to
 # min(1, missing_ratio / (2/3)) — NOT a ramp anchored at 2/3.
 _EXECUTE_MISSING_RATIO_CAP = 2.0 / 3.0
-
-
-def _no_damage(slot: str, reason: str):
-    """Emit an explicit zero-damage entry for a non-damaging slot."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
-
-    parse.phase = "damage"
-    return parse
 
 
 def _event_horizon(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -143,19 +124,29 @@ ASSUMPTIONS = [
     "('increased by 0% : 100% based on target's missing health'; live "
     "tooltip '1.5% per 1% of target's missing health; capped at 66.66% "
     "missing health'; pass-16 curve min(1, missing_ratio / (2/3))).",
-    "Q and W price one enemy-champion hit each.",
-    "P and E deal no enemy damage and are explicit no-damage slots.",
+    "Q and W price one enemy-champion hit each; W's strike lands 1.221s "
+    "from the start of the cast (the cached delay note).",
+    "P and E deal no enemy damage and are explicit no-damage slots; E "
+    "authors the cage's sourced stun as a control interval 0.5s after "
+    "the cast.",
 ]
 
-SOURCES = list(load_champion_sources("Veigar"))
+SOURCES = load_champion_sources("Veigar")
 
 SLOTS = {
     "P": no_damage_parser(
         "P",
         "Phenomenal Evil Power is a stacking AP passive; no enemy damage.",
     ),
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # "Veigar casts down a mass of dark matter that strikes the target
+    # location after a 1.221 seconds delay ... afterwards dealing magic
+    # damage to enemies hit", and the cached note fixes the offset's
+    # origin: "The delay starts at the beginning of the cast time." So
+    # 1.221 s from the cast start is the whole sourced placement.
+    "W": delayed_damage(delay=1.221, attr="Magic Damage", dmg_type="magic"),
     "E": _event_horizon,
     "R": _primordial_burst,
 }
@@ -170,5 +161,13 @@ MODULE_COVERAGE = {
 
 OPTIONS: list[dict[str, Any]] = []
 
-parse_abilities = build_parser(SLOTS, "Veigar")
-REVIEW_STATUS = "reviewed_module"
+# Baleful Strike "deals magic damage to the first two enemies hit", Dark
+# Matter "deal[s] magic damage to enemies hit" on its delayed strike, and
+# Primordial Burst "deals magic damage, increased by 0% : 100%" — none of
+# the three applies control.  Event Horizon is where the kit's stun lives
+# ("knocked down and stunned for a duration"); the cage deals no damage,
+# so there is no part for a marker to ride and the slot authors the stun
+# as a typed ``control_events`` interval instead (``_event_horizon``).
+MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Veigar", cc_kinds=MODULE_CC)

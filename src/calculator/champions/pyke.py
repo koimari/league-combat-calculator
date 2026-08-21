@@ -18,41 +18,32 @@ so R prices the sourced damage row (level-based, physical) plus the
 bAD and lethality terms.  The threshold itself is documented, not
 priced as damage — an execution is a kill boundary, not a number.
 
-Roadmap session (2026-08-21): closes both of Pyke's out_of_scope slots
-(P, W).
+P and W are ``no_damage``: neither carries an enemy-damage clause, and
+the pinned packet declares both so.  Each still has a named missing
+axis, which the label does not close:
 
-  - P (Gift of the Drowned Ones): not a damage gap but a stale label.
-    P deals no enemy damage (a self-state grey-health passive), and its
-    store/consume mechanic is already priced by the shared E8a
-    grey-health primitive in ``participant_timeline.py`` — "Pyke" is
-    registered in ``healing.GREY_HEALTH_RULE_CHAMPIONS``, and the exact
-    sourced constants documented in this module's ASSUMPTIONS below
-    (9%/40% store ratio + 0.2%/0.4% per Lethality, 80 + 800% bonus AD
-    flat cap, 55% max-health cap) are the same constants the primitive
-    reads.  Reclassified from out_of_scope to no_damage on the
-    Mordekaiser-W precedent (E8a-priced self-state slots read
-    "no_damage": no enemy damage, but the effect is not withheld — it
-    is priced elsewhere), with no behavior change.
-  - W (Ghostwater Dive): not a damage gap but a stale label — the
-    pinned packet already declares W ``kind: "no_damage"``
-    (``static/reviewed-packets.json``), so ``build_packet_module`` was
-    already emitting a proper zero-damage row while ``MODULE_COVERAGE``
-    still read "out_of_scope".  Ghostwater Dive is a stealth/haste
-    self-buff with no enemy-damage clause anywhere in the cached entry.
-    Reclassified to no_damage on the pinned-packet declaration, with no
-    behavior change (the parser output is byte-identical).
+- P (Gift of the Drowned Ones) is three mechanics. The grey-health store
+  is priced by the shared E8a primitive (probe: ``grey_health_stored``
+  80.0 at level 18 with no items — the flat cap; "Pyke" is registered in
+  ``healing.GREY_HEALTH_RULE_CHAMPIONS``), but its consume is a VISION
+  boundary ("while Pyke is not visible to enemies") and the engine has no
+  vision axis, so nothing is paid back. The other half is a stat
+  CONVERSION the stat layer cannot express: Pyke's maximum health may not
+  rise except by growth, and bonus health becomes 7.143% of itself as
+  bonus attack damage instead. Probe with Warmog's Armor: health
+  2540 -> 3660 and attack damage unchanged at 96 — the model grants him
+  the health the game denies him and none of the attack damage the game
+  gives him.
+- W (Ghostwater Dive) is camouflage plus lethality-scaled movement speed:
+  no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
 """
 
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_modifiers
 
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Pyke", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # The non-execute damage row's scaling, from the wiki prose on R:
 # 50% of the threshold amount -> 40% bonus AD and 0.75 per 1 Lethality.
@@ -76,16 +67,17 @@ def _death_from_below(ctx: SlotCtx):
     if damage_leveling is None:
         return None
     damage = sum_modifiers(damage_leveling, level, ctx.stats, ctx.target)
-    damage += _R_DAMAGE_BONUS_AD_RATIO * float(
-        ctx.stats.get("bonus_attack_damage", 0.0) or 0.0
-    )
-    damage += _R_DAMAGE_PER_LETHALITY * float(ctx.stats.get("lethality", 0.0) or 0.0)
+    damage += _R_DAMAGE_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
+    damage += _R_DAMAGE_PER_LETHALITY * float(ctx.stat("lethality") or 0.0)
     entry = damage_entry(
         ability.get("name", "Death from Below"),
         level,
         extract_cooldown(ability, ctx.rank_for()),
         damage,
         "physical",
+        # One strike inside the x, at the cast boundary — the claim that
+        # carries MODULE_CC's reviewed answer for R into the event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "Non-execute damage (50% of the 250 : 550 + "
@@ -96,9 +88,29 @@ def _death_from_below(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["R"] = _death_from_below
-parse_abilities = build_parser(SLOTS, "Pyke")
+# Cached kit review.  Q's harpoon deals "physical damage to the first enemy
+# hit and pull[s] them ... then slow[s] them by 90% for 1 second": the pull
+# is the immobilize the slow rides with.  (Releasing within 0.4 seconds
+# thrusts instead, "dealing the same damage" with no displacement; the
+# module prices one Bone Skewer row and does not split the two releases,
+# so the ability's own recast is what the kind describes.)  E's phantom
+# "stun[s] enemies around it" and the champions it hits "also take physical
+# damage".  R executes or deals its non-execute damage row and applies no
+# control at all.  W (camouflage) and P (grey health) damage nothing.
+MODULE_CC = {"Q": "pull", "E": "stun", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Pyke",
+    PACKET_SHA256,
+    # The harpoon damages the first enemy it hits once and the phantom
+    # damages once on its return — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E"}),
+    slot_parsers={
+        "R": _death_from_below,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Gift of the Drowned Ones) stores 9% (+ 0.2% per 1 Lethality) of "
@@ -136,4 +148,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

@@ -1,0 +1,101 @@
+{
+  "receipt_id": "oracle-C6-leaf123",
+  "runbook": "R-18 / R-19 (independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/cast_order[1]",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6-fresh-1786326337",
+    "exclusions_honored": [
+      "src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (other files)",
+      "git history / diff / plan"
+    ],
+    "note": "A first scratch path already contained two unexplained files (syndra_ab_export.json, syndra_abilities.txt) that are NOT part of the git-archive export. They were treated as untrusted and were never read; the whole analysis was redone in a guaranteed-fresh directory containing only data/ and docs/math-foundations.md."
+  },
+
+  "what_the_leaf_is": "The second entry (index 1) of the resolved cast order for the manual-target fight of the Syndra scenario whose option suffix is 60 (the champion's `splinters` option, range 0-120, per the cached audit records). 'Q2' is the synthetic slot for Syndra's second Dark Sphere charge.",
+
+  "independent_computation": {
+    "step_1_is_Q2_a_legal_cast_at_60_splinters": {
+      "claim": "Yes. At >= 40 Splinters of Wrath Syndra stocks a second Dark Sphere charge, so at 60 splinters two Q casts are available back-to-back.",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "corroboration": [
+        "data/champions.json -> Syndra.abilities.Q[0].notes: 'After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only.'",
+        "data/champion-audit/batch-6.json -> Syndra.module_slots.modeled = [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; notable_atoms: 'ammo (Q 2nd charge at 40 splinters)'",
+        "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'"
+      ],
+      "conclusion": "60 >= 40, so the Q2 slot is live in this scenario. Any ordering that omits the second charge leaves a fully-available cast unspent."
+    },
+
+    "step_2_which_abilities_are_sphere_producers_vs_sphere_consumers": {
+      "producer_Q": {
+        "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+        "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+      },
+      "consumer_W": {
+        "source": "data/champions.json -> Syndra.abilities.W[0].effects[0] and effects[2]",
+        "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.",
+        "reading": "W has no damage of its own without a grabbable object; its damage row is the thrown object's impact. It is a consumer of a Q-produced sphere."
+      },
+      "consumer_E": {
+        "source": "data/champions.json -> Syndra.abilities.E[0].effects[1]",
+        "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds ...",
+        "reading": "E's stun (and its second damage application) requires a live Dark Sphere to push."
+      },
+      "consumer_R": {
+        "source": "data/champions.json -> Syndra.abilities.R[0].effects[1]",
+        "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+        "reading": "R's damage is linear in the number of live spheres on the ground at cast time (3 baseline + up to 4 grabbed)."
+      }
+    },
+
+    "step_3_ordering_rule": {
+      "rule": "Sphere producers must precede sphere consumers (setup-before-consume). Q and Q2 are the only producers; W, E and R are all consumers.",
+      "rule_source": "docs/math-foundations.md, Section 1.1: 'the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order' - the cast order is the free variable, so it should be chosen so every consumer fires with its setup already applied. The same apply-before-consume principle is the stated contract of the rotation resolver in data/worklists/f2-task.md ('the fight should cast the OPTIMAL rotation (apply-before-consume, reapply buffs/poisons, detonate stacks at the right moment)') and data/worklists/f3-task.md ('an ability whose row names indicate application ... must precede abilities that consume').",
+      "applied": "cast_order[0] = Q (produces sphere #1). The next cast should be the remaining producer, Q2 (produces sphere #2), not the consumer W."
+    },
+
+    "step_4_quantified_penalty_of_the_old_value": {
+      "R_damage_rows_rank_3": {
+        "per_sphere": "160 (+20% AP)",
+        "minimum_3_spheres": "240 (+60% AP)",
+        "maximum_7_spheres": "1120 (+140% AP)",
+        "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].leveling ('Magic Damage per Sphere' [80,120,160] + 20% AP; 'Minimum Magic Damage' [240,360,480] + 60% AP; 'Maximum Magic Damage' [560,840,1120] + 140% AP)"
+      },
+      "arithmetic": "Per-sphere 160 (+20% AP) x 3 = 480 (+60% AP) = the quoted minimum, and x 7 = 1120 (+140% AP) = the quoted maximum, confirming R = per_sphere x (3 conjured + live grabbed, capped at 4).",
+      "consequence": "Order [Q, Q2, W, E, R] leaves 2 Q-spheres alive for R (5 total spheres = 800 + 100% AP at rank 3). Order [Q, W, ...] that never spends the second charge leaves 1 Q-sphere (4 total = 640 + 80% AP). Difference = exactly one sphere = 160 (+20% AP) at rank 3, plus the entire omitted Q2 nuke itself (230 + 70% AP at rank 5, per Q's 'Magic Damage' row [90,125,160,195,230] + 70% AP). Casting W first also spends the only sphere before the second one exists, which is the exact setup/consume violation the resolver contract forbids."
+    },
+
+    "step_5_sanity_checks": [
+      "Q2 is not gated behind a recharge wait at fight start: the charge system stocks 'up to a maximum of 2', so both charges are in hand when the fight opens.",
+      "Q's cooldown row is 7s flat at all ranks with affectedByCdr=false (data/champions.json Syndra.Q.cooldown), consistent with the charge/recharge mechanic; R's passive supplies Q ability haste 10/20/30 (Syndra.R.effects[0]). Neither makes the second charge unavailable at t=0.",
+      "The 60-splinter threshold itself only adds W bonus true damage (12% (+2% per 100 AP), Syndra.W.effects[3]); it has no bearing on ordering, so it cannot be an argument for W at index 1.",
+      "W does not destroy the sphere it grabs ('If a Dark Sphere is grabbed, its duration is refreshed'), so no ordering argument favors W-before-Q2 on sphere-preservation grounds either."
+    ]
+  },
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.Q[0].effects[0].description, effects[1].description, notes, cooldown",
+    "data/champions.json -> Syndra.abilities.W[0].effects[0].description, effects[2].description, effects[3].description + 'Bonus True Damage' leveling",
+    "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+    "data/champions.json -> Syndra.abilities.R[0].effects[0..1] + 'Magic Damage per Sphere' / 'Minimum Magic Damage' / 'Maximum Magic Damage' leveling rows",
+    "data/champions.json -> Syndra.abilities.P[0].effects[0..2] (Splinters of Wrath, 120 max, 15% AP at 120)",
+    "data/champion-audit/batch-6.json -> Syndra (module_slots incl. synthetic Q2; 'ammo (Q 2nd charge at 40 splinters)')",
+    "data/champion-audit/batch-e9-1.json -> Syndra ('40+ Q charges via Q2 slot, 60+ W true damage')",
+    "data/worklists/e3-stacks.json -> Syndra Q hint (40-splinter charge)",
+    "data/worklists/f2-task.md, data/worklists/f3-task.md (apply-before-consume ordering contract)",
+    "docs/math-foundations.md Section 1.1 (shared-timeline casts resolved greedily by cast order)"
+  ],
+
+  "reasoning_summary": "At 60 splinters Syndra provably has two stocked Dark Sphere charges (wiki threshold is 40). Every other damaging ability in her kit consumes or scales with live Dark Spheres: W throws one, E must push one to stun and re-damage, and R grabs up to 4 live ones on top of the 3 it conjures. The correct cast order therefore front-loads both sphere producers, making the second cast Q2, not W. Placing W at index 1 both drops an entirely available cast and fires a consumer before its setup exists, costing (at R rank 3) one grabbed sphere = 160 (+20% AP) on R plus the omitted Q2 nuke (230 + 70% AP at Q rank 5).",
+
+  "caveats": [
+    "The scenario definition itself lives outside the permitted evidence tree (not present anywhere under data/), so the suffix '60' was inferred to be the champion's `splinters` option value from the option's documented 0-120 range and from 60 being a named Transcendent threshold. If '60' instead denoted a 60-second fight duration with splinters left at a value >= 40, the conclusion is unchanged (Q2 still available, still a producer). The conclusion would only flip if the scenario ran at < 40 splinters, in which case the Q2 slot could not exist at all - and a leaf that newly emits Q2 would then be self-evidently wrong for a different reason.",
+    "This receipt certifies the ordering leaf only; it does not certify the numeric damage totals of the scenario."
+  ]
+}

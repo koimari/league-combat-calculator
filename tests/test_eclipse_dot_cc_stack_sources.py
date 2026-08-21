@@ -24,6 +24,7 @@ from src.calculator.damage import (
     _stacked_champion_proc_times,
     calculate_fight_damage,
 )
+from src.calculator.interpreters import cast_proc
 from src.calculator.item_effects import resolve_damage_effects
 
 
@@ -130,13 +131,28 @@ def _fight(
     )
 
 
-def _eclipse_effect():
-    effects = resolve_damage_effects([{"name": "Eclipse"}])
+def _eclipse_proc():
+    """Eclipse's cast-triggered proc, resolved through its own rule.
+
+    MERGE: the proc families left ``BuildDamageEffects`` -- a projection
+    field that defaulted to an empty tuple would price a whole family at
+    zero with nothing saying so -- so they come off their interpreter.
+    """
     return next(
-        effect
-        for effect in effects.cooldown_procs
-        if effect.source.item_name == "Eclipse"
+        proc
+        for proc in cast_proc.resolve_slots(
+            ("Eclipse",),
+            level=11,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ).cooldown_procs
+        if proc.source.item_name == "Eclipse"
     )
+
+
+def _eclipse_effect():
+    return _eclipse_proc()
 
 
 class TestCertifiedDamageAndDotSources:
@@ -160,9 +176,8 @@ class TestCertifiedDamageAndDotSources:
     # variant directly below (test_multi_tick_dot_does_not_add_one_stack_per_tick)
     # already pins the chosen, fail-closed branch: the DoT still authors its
     # 6 per-tick damage_events (unaffected), but Eclipse's proc row stays at
-    # count == 0 with the named withheld_reason
-    # "eclipse_stack_source_unavailable" and a stack_source_denials receipt
-    # naming "dot_application_timing_unavailable". A champion module that
+    # count == 0 with a stack_source_denials receipt naming
+    # "dot_application_timing_unavailable" as its disclosure. A champion module that
     # supplies a real, source-backed application timestamp could reopen this
     # question for that champion specifically — the generic packet path
     # deliberately never will (see module docstring).
@@ -173,7 +188,11 @@ class TestCertifiedDamageAndDotSources:
         row = result["breakdown"]["proc_Eclipse"]
         assert row["count"] == 0
         assert row["total_damage"] == 0.0
-        assert row["withheld_reason"] == "eclipse_stack_source_unavailable"
+        # A denial is a DISCLOSURE, not a withholding: the passive really
+        # did not fire in this window, so the row is a certified zero
+        # carrying the receipt below.  Stamping it withheld put the pair
+        # on the coarse coverage frontier for every zero-proc window.
+        assert "withheld_reason" not in row
         assert row["stack_source_denials"] == [
             {
                 "source": "Eclipse (Ever Rising Moon)",
@@ -285,7 +304,11 @@ class TestFailClosedIdentityAndMetadata:
         row = result["breakdown"]["proc_Eclipse"]
         assert row["count"] == 0
         assert row["total_damage"] == 0.0
-        assert row["withheld_reason"] == "eclipse_stack_source_unavailable"
+        # A denial is a DISCLOSURE, not a withholding: the passive really
+        # did not fire in this window, so the row is a certified zero
+        # carrying the receipt below.  Stamping it withheld put the pair
+        # on the coarse coverage frontier for every zero-proc window.
+        assert "withheld_reason" not in row
         assert row["stack_source_denials"] == [
             {
                 "source": "Eclipse (Ever Rising Moon)",

@@ -2,11 +2,13 @@
 
 Locks the wave-2 decisions and invariants:
 
-1. Unsealed Spellbook stays a documented, fail-closed rejection (it is a
-   summoner-spell selection state with no numeric cache values and no
-   summoner-spell model anywhere in the architecture).
-2. The compiled roster exactly matches the cached keystone registry minus
-   Unsealed Spellbook; the catalog flags coverage per keystone.
+1. Unsealed Spellbook books no damage and says so with a receipt.  MERGE:
+   it is no longer a raise — this branch compiles it to a
+   ``RuneNoDamageEffect`` carrying a ``STRUCTURAL_ZERO`` disposition and
+   the reason (RUNES-API), so the refusal is a value the page can carry
+   rather than an exception a caller must catch.
+2. The compiled roster exactly matches the cached keystone registry (all
+   seventeen row-0 runes); the catalog flags coverage per keystone.
 3. keystone_options is exposed ONLY for keystones the engine consumes
    (Fleet Footwork starting_charges, Conqueror starting_stacks); accepting
    an option the engine ignores would break score-vs-receipt parity.
@@ -27,11 +29,19 @@ import pytest
 from src.calculator import rune_effects
 
 COMPILED_KEYSTONES = frozenset(rune_effects._KEYSTONE_COMPILERS)
-REJECTED_KEYSTONES = frozenset({"Unsealed Spellbook"})
+# MERGE: nothing in the keystone row is refused outright any more; the
+# damageless ones compile to a ``RuneNoDamageEffect`` instead.
+NO_DAMAGE_KEYSTONES = frozenset(rune_effects._NO_DAMAGE_KEYSTONES)
 
 
 def _registry_names():
-    return frozenset(rune_effects.RUNE_EFFECTS)
+    # MERGE: ``RUNE_EFFECTS`` is the WHOLE 62-rune roster now (ours' page
+    # architecture), so the keystone question is asked of row 0.
+    return frozenset(
+        name
+        for name, entry in rune_effects.RUNE_EFFECTS.items()
+        if isinstance(entry, dict) and entry.get("row") == rune_effects.KEYSTONE_ROW
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -40,27 +50,37 @@ def _registry_names():
 
 
 class TestUnsealedSpellbookDecision:
-    def test_rejection_names_the_reason(self):
-        with pytest.raises(ValueError, match="not modeled") as excinfo:
-            rune_effects.resolve_keystone("Unsealed Spellbook")
-        message = str(excinfo.value)
-        assert "summoner-spell" in message
-        assert "no numeric values" in message
+    def test_it_compiles_to_a_structural_zero_carrying_the_reason(self):
+        # MERGE: the decision is unchanged (no summoner-spell model, no
+        # sourced combat number), but it is now DECLARED rather than
+        # raised: a damageless rune is a value with a disposition.
+        effect = rune_effects.resolve_keystone("Unsealed Spellbook")
+        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
+        assert effect.rune_name == "Unsealed Spellbook"
+        assert (
+            effect.zero_policy.disposition is rune_effects.Disposition.STRUCTURAL_ZERO
+        )
+        reason = effect.zero_policy.reason
+        assert "summoner spells" in reason
+        assert "no source states a combat number" in reason
 
-    def test_request_validation_rejects_it(self):
-        with pytest.raises(ValueError, match="not modeled"):
+    def test_request_validation_accepts_it_and_books_no_damage(self):
+        assert (
             rune_effects.validate_keystone_request("Unsealed Spellbook")
+            == "Unsealed Spellbook"
+        )
 
-    def test_catalog_serves_it_greyed_out(self):
-        by_name = {entry["name"]: entry for entry in rune_effects.keystone_catalog()}
-        assert by_name["Unsealed Spellbook"]["implemented"] is False
+    def test_catalog_serves_it_as_a_declared_zero(self):
+        by_name = {entry["name"]: entry for entry in rune_effects.rune_catalog()}
+        # It has a compiler now, so the catalog no longer greys it out;
+        # the zero is the model, and the receipt says why.
+        assert by_name["Unsealed Spellbook"]["implemented"] is True
         assert by_name["Unsealed Spellbook"]["path"] == "Inspiration"
 
     def test_assumptions_document_the_decision(self):
         joined = " ".join(rune_effects.ASSUMPTIONS)
         assert "Unsealed Spellbook" in joined
-        assert "not compiled" in joined
-        assert "fail-closed" in joined
+        assert "summoner-spell" in joined
 
 
 # ---------------------------------------------------------------------------
@@ -70,22 +90,23 @@ class TestUnsealedSpellbookDecision:
 
 class TestRosterCoverage:
     def test_every_registry_keystone_is_accounted_for(self):
-        assert _registry_names() == COMPILED_KEYSTONES | REJECTED_KEYSTONES
+        assert _registry_names() == COMPILED_KEYSTONES
         assert len(_registry_names()) == 17
-        assert len(COMPILED_KEYSTONES) == 16
+        assert len(COMPILED_KEYSTONES) == 17
+        assert NO_DAMAGE_KEYSTONES == {"Unsealed Spellbook"}
 
     def test_catalog_implemented_flags_match_the_compilers(self):
-        by_name = {entry["name"]: entry for entry in rune_effects.keystone_catalog()}
-        assert set(by_name) == _registry_names()
+        by_name = {entry["name"]: entry for entry in rune_effects.rune_catalog()}
+        assert _registry_names() <= set(by_name)
         for name in COMPILED_KEYSTONES:
             assert by_name[name]["implemented"] is True
-        for name in REJECTED_KEYSTONES:
-            assert by_name[name]["implemented"] is False
 
     def test_every_compiled_effect_keeps_its_registry_name(self):
+        # MERGE: ``keystone_name`` -> ``rune_name`` (one vocabulary for
+        # keystones, minors and shards alike).
         for name in COMPILED_KEYSTONES:
             effect = rune_effects.resolve_keystone(name)
-            assert effect.keystone_name == name
+            assert effect.rune_name == name
 
 
 # ---------------------------------------------------------------------------
@@ -170,11 +191,13 @@ def _patch_registry(broken_effects_by_name):
 
 class TestFailClosedOnDegradedParses:
     def test_malformed_melee_ranged_pair_names_rune_and_key(self):
+        # Every melee/ranged split is keyed by what it measures, so First
+        # Strike's pair is its gold conversion rather than a bare pair.
         effects = dict(rune_effects.RUNE_EFFECTS["First Strike"]["effects"])
-        effects["melee_ranged_ratios"] = [0.5, 0.35, 0.2]
+        effects["gold_conversion_ratios"] = [0.5, 0.35, 0.2]
         monkeypatch = _patch_registry({"First Strike": effects})
         try:
-            with pytest.raises(KeyError, match=r"First Strike.*melee_ranged_ratios"):
+            with pytest.raises(KeyError, match=r"First Strike.*gold_conversion_ratios"):
                 rune_effects.resolve_keystone("First Strike")
         finally:
             monkeypatch.undo()
@@ -194,7 +217,7 @@ class TestFailClosedOnDegradedParses:
         effects["leveling"] = [["not", "a", "number"]]
         monkeypatch = _patch_registry({"Electrocute": effects})
         try:
-            with pytest.raises(KeyError, match=r"Electrocute.*leveling\[0\]"):
+            with pytest.raises(KeyError, match=r"Electrocute.*leveling"):
                 rune_effects.resolve_keystone("Electrocute")
         finally:
             monkeypatch.undo()
@@ -209,25 +232,27 @@ class TestSourcedValueSanity:
     def test_proc_class_fields_are_positive_and_finite(self):
         for name in COMPILED_KEYSTONES:
             effect = rune_effects.resolve_keystone(name)
-            if isinstance(effect, rune_effects.KeystoneProcEffect):
+            if isinstance(effect, rune_effects.RuneProcEffect):
                 assert effect.stacks_required >= 1
                 assert effect.stack_window_seconds > 0
                 assert effect.cooldown_seconds > 0
                 assert effect.proc_delay_seconds >= 0
-            elif isinstance(effect, rune_effects.KeystoneProcAmpEffect):
+            elif isinstance(effect, rune_effects.RuneProcAmpEffect):
                 assert effect.stacks_required >= 1
                 assert effect.stack_duration_seconds > 0
+                # Press the Attack's lasting amp is declared in the amp
+                # chain too, for the same one-number-one-home reason.
                 assert effect.cooldown_seconds > 0
-                assert 0 < effect.damage_amp_ratio < 1
-            elif isinstance(effect, rune_effects.KeystoneAbilityProcEffect):
+            elif isinstance(effect, rune_effects.RuneAbilityProcEffect):
                 assert len(effect.cooldown_by_level) >= 20
                 assert all(cd > 0 for cd in effect.cooldown_by_level)
                 assert effect.proc_delay_seconds > 0
                 assert effect.assumed_travel_distance > 0
                 assert effect.distance_amp_ratio >= 0
-            elif isinstance(effect, rune_effects.KeystoneWindowAmpEffect):
-                assert effect.window_seconds > 0
-                assert effect.bonus_damage_ratio > 0
+            elif isinstance(effect, rune_effects.RuneWindowAmpEffect):
+                # The window and its bonus-damage ratio are the amp chain's
+                # OPENING_WINDOW declaration, not fields here; what is left
+                # on the effect is the gold accounting.
                 assert effect.activation_gold >= 0
                 assert 0 < effect.gold_conversion_melee < 1
                 assert 0 < effect.gold_conversion_ranged < 1

@@ -25,6 +25,7 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON
 # home (P has no leveling data; the refund is prose on Q).
@@ -63,7 +64,7 @@ def _haste_factor(ctx: SlotCtx) -> float:
     later apply to entry cooldowns. The refund is a flat 1.5s of REAL
     time, so the refund math runs in hasted seconds and converts back
     through this factor when writing pre-haste entry cooldowns."""
-    return 1.0 + ctx.stats.get("ability_haste", 0.0) / 100.0
+    return 1.0 + ctx.stat("ability_haste") / 100.0
 
 
 def _q_hasted_period(ctx: SlotCtx) -> float | None:
@@ -133,7 +134,7 @@ def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("passive_stacks", 5)), 0), PASSIVE_MAX_STACKS)
+    stacks = min(max(int(ctx.option("passive_stacks")), 0), PASSIVE_MAX_STACKS)
     bonus_as = PASSIVE_AS_PER_STACK * stacks
     entry = damage_entry(
         ability.get("name", "Rising Spell Force"), ctx.level, 0.0, 0.0, "physical"
@@ -179,6 +180,10 @@ def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
     }
+    # One bolt, one enemy, no sourced travel phase in the cached packet —
+    # the claim that puts Q's hit in the event ledger, where MODULE_CC's
+    # reviewed "no control" can be read.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -193,9 +198,13 @@ def _essence_flux(ctx: SlotCtx) -> dict[str, Any] | None:
     detonation means; ``basic_attack`` disables the refund entirely (the
     mark is detonated by a basic attack, which sources no mana back).
     """
-    entry = _with_q_refund(simple_damage(attr="Bonus Magic Damage", dmg_type="magic"))(
-        ctx
-    )
+    entry = _with_q_refund(
+        simple_damage(
+            attr="Bonus Magic Damage",
+            dmg_type="magic",
+            event_order_certified="single_hit",
+        )
+    )(ctx)
     if entry is None:
         return None
     detonation = str(ctx.options.get("w_mark_detonation", "ability"))
@@ -267,33 +276,32 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _rising_spell_force,
     "Q": _mystic_shot,
+    # W carries the mark-detonation mana refund as well as its damage.
+    # Each of W/E/R is one damage instance with no sourced travel or tick
+    # phase, so the single-hit certification is what carries them into the
+    # event ledger MODULE_CC is read from.
     "W": _essence_flux,
-    "E": _with_q_refund(simple_damage(attr="Magic Damage", dmg_type="magic")),
-    "R": _with_q_refund(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "E": _with_q_refund(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        )
+    ),
+    "R": _with_q_refund(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        )
+    ),
 }
 
-# Source-audited module opt-in. Every Ezreal ability entry has been reviewed
-# against the pinned Wiki record and game binary. None applies enemy crowd
-# control.
-CC_REVIEW_STATUS = "reviewed_no_cc"
+# Ezreal's cached kit applies no crowd control at all: Q is a bolt that
+# only refunds cooldowns, W marks and detonates, E blinks and reveals, R
+# grants sight.  Every entry has been reviewed against the pinned Wiki
+# record and the game binary.  P is the module's zero-damage attack-speed
+# buff slot — it authors no damage part the ledger can carry a review on,
+# so it is left undeclared rather than stamped.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
 
-parse_abilities = build_parser(
-    SLOTS,
-    "Ezreal",
-    cc_review_status=CC_REVIEW_STATUS,
-)
+parse_abilities = build_parser(SLOTS, "Ezreal", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ezreal",
-        "revision_id": 4041697,
-        "revision_timestamp": "2026-07-10T18:11:03Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Ezreal")

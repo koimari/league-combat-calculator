@@ -5,9 +5,9 @@ E3 additions over the CP10.9 packet module:
   generates 3 stacks (up to 5) and each basic attack consumes one stack
   to shoot a Feather. The feather deals the triggering attack's damage
   to the PRIMARY target — no single-target damage delta — and 35% /
-  45% / 55% (based on level) AD to OTHER enemies (not modeled,
-  single-target calc). What the stacks materially change is the planted
-  feather count that detonates through E.
+  45% / 55% (based on level) AD to OTHER enemies, priced through the
+  ``clean_cuts_secondary_targets`` option. What the stacks materially
+  change is the planted feather count that detonates through E.
 - E (Bladecaller) prices the detonation: per-feather damage
   ("Physical Damage Per Feather", flat + 40% bonus AD) times the
   recalled feather count. The count is a user option
@@ -27,32 +27,16 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import ControlEvent, DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry, extract_cooldown
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module(
-        "Xayah",
-        PACKET_SHA256,
-        assumption_overrides=(
-            "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
-            "== Total Physical Damage).",
-        ),
-        slot_parsers={
-            "Q": repeat_damage_parser(
-                attr="Physical Damage Per Hit",
-                dmg_type="physical",
-                count=2,
-                time_offset=0.0,
-                hit_interval=0.1,
-            )
-        },
-    )
-)
-PACKET_SPEC = _packet_slots.packet_spec
+# Featherstorm's feathers fly after the leap: "Xayah leaps into the air ...
+# After 1 second, she shoots 5 Feathers" (cached R prose).
+_R_LEAP_SECONDS = 1.0
+
 
 # HARDCODED: verify on patch updates — Clean Cuts' stack bookkeeping
 # (3 stacks per cast, 5 cap, 8-second window) and the 35/45/55% AD
@@ -137,7 +121,7 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
         "attack's damage — no single-target delta); E detonates "
         "planted Feathers"
     )
-    secondary = min(max(int(ctx.options.get("clean_cuts_secondary_targets", 0)), 0), 5)
+    secondary = min(max(int(ctx.option("clean_cuts_secondary_targets")), 0), 5)
     entry: dict[str, Any] = {
         "name": ability.get("name", "Clean Cuts"),
         "rank": ctx.level,
@@ -150,13 +134,13 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
         ratio = _secondary_feather_ratio(ability, ctx.level)
         crit_extra = _secondary_feather_crit_extra(ability)
         crit_chance = min(
-            max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0),
+            max(ctx.stat("critical_strike_chance") / 100.0, 0.0),
             1.0,
         )
         per_auto = (
             secondary
             * ratio
-            * float(ctx.stats.get("attack_damage", 0.0))
+            * ctx.stat("attack_damage")
             * (1.0 + crit_extra * crit_chance)
         )
         entry["on_hit"] = {
@@ -209,9 +193,7 @@ def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
         raise ValueError("Xayah E base damage atom must use flat units")
     if ratio_atom.get("units") != ["% bonus AD"] * len(ratio_atom.get("values", [])):
         raise ValueError("Xayah E ratio atom must use bonus-AD units")
-    per_feather = (
-        base + ratio * float(ctx.stats.get("bonus_attack_damage", 0.0)) / 100.0
-    )
+    per_feather = base + ratio * ctx.stat("bonus_attack_damage") / 100.0
     feathers = int(ctx.options.get("bladecaller_feathers", _DEFAULT_FEATHERS))
     feathers = min(max(feathers, 0), _MAX_FEATHERS)
 
@@ -246,10 +228,48 @@ def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {**_packet_slots, "P": _clean_cuts, "E": _bladecaller}
-parse_abilities = build_parser(SLOTS, "Xayah")
+# Double Daggers' feathers "each deal physical damage to enemies hit",
+# Deadly Plumage's extra feather only damages, and Featherstorm's cone
+# "deal[s] physical damage to enemies hit".  P is the stack bookkeeping
+# row and authors no damage part.
+#
+# E is absent from the declaration on purpose: Bladecaller's root — "a
+# target hit by at least three Feathers is rooted for 1.25 seconds" — is a
+# property of the recalled feather count, this module's option, not of the
+# slot, so a per-slot kind would be false below three Feathers.  The recall
+# is one aggregated part of ``bladecaller_feathers`` hits with no sourced
+# cadence between them, so a part marker could never reach the ledger
+# either; ``_bladecaller`` instead authors the sourced root as a
+# ``control_events`` payload exactly when the feather count arms it.
+MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
 
-OPTIONS = list(_packet_options) + [
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Xayah",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
+        "== Total Physical Damage).",
+    ),
+    # W's row is the one extra feather the frenzy fires per attack.
+    single_hit_slots=frozenset({"W"}),
+    # "After 1 second, she shoots 5 Feathers" — R's hit is not at the
+    # cast, so it authors the sourced delay instead of certifying.
+    packet_part_timings={"R": {"time_offset": _R_LEAP_SECONDS}},
+    slot_parsers={
+        "Q": repeat_damage_parser(
+            attr="Physical Damage Per Hit",
+            dmg_type="physical",
+            count=2,
+            time_offset=0.0,
+            hit_interval=0.1,
+        ),
+        "P": _clean_cuts,
+        "E": _bladecaller,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+OPTIONS = list(OPTIONS) + [
     {
         "key": "clean_cuts_secondary_targets",
         "type": "int",
@@ -280,7 +300,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Clean Cuts stack count is user-set (default 5); the 8-second stack "
     "window and which casts generate stacks are not simulated",
     "Each empowered auto deals the triggering attack's damage to the "
@@ -302,10 +322,3 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "W's bonus attack speed is the packet read; its extra 25%-damage "
     "feather to the primary target is not double-counted with Clean Cuts",
 ]
-
-SOURCES = list(_packet_sources)
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

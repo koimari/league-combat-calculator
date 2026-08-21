@@ -3,6 +3,8 @@
 import pytest
 
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import ashe
+from tests import cc_review
 
 
 class TestPassiveFrostShot:
@@ -315,6 +317,33 @@ class TestFightEngineIntegration:
         )
         assert result["total_damage"] > 0
         assert "R" in result["breakdown"]
+
+
+class TestReviewedCrowdControl:
+    """Ashe's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Ashe")
+        assert ashe.MODULE_CC == {"W": "slow", "R": "stun", "E": "none"}
+        assert "applying critical slow to enemy champions hit" in " ".join(
+            cc_review.slot_text(data, "W").split()
+        )
+        assert "stunning them for" in " ".join(cc_review.slot_text(data, "R").split())
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Ashe") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Ashe")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestModuleCoverage:

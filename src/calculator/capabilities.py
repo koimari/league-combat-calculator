@@ -22,7 +22,47 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Mapping
 
-CAPABILITY_SCHEMA_VERSION = 1
+# The cast-slot vocabulary, from the stdlib-only leaf that owns it.
+from .cast_dependency import BASE_CAST_SLOTS
+
+# The price of deriving the published phase list instead of hand-listing it
+# (0A.6): the public schema now points at the kernel.  Note the reach —
+# importing ``.survival.actions``
+# executes ``survival/__init__.py``, so compile, transitions, accumulate,
+# receipt_state and score_state all load with this module, which is heavier
+# than the import line reads for a module whose job is publishing a contract.
+# Acyclic: nothing under ``survival/`` imports ``capabilities``.
+from .survival.actions import TransitionRank, public_phase
+
+# D-63's chain, in commit order: 1 at 0A's derivation (a starting value, not a
+# bump), 2 at 0B's C4 — which published ``persistent_aura_arming`` as the
+# ledger's seventh phase — and 3 here, at Phase 3's 3.8 coverage flip.  The
+# flip changed the serialized coverage payload: ``blocked`` became
+# ``withheld`` (D-23's spelling for a refusal that carries a receipt and no
+# number), and every status and reason is now computed from declarations
+# rather than read out of a hand registry.  4 is Phase 4's S9: every payload
+# that publishes a number now publishes a parallel ``dispositions`` map beside
+# it, keyed by leaf path, whose entries carry the leaf's ``Disposition`` and
+# its ``ViewTag``.  Measured and structurally-zero leaves are unchanged bare
+# numbers; a withheld leaf is *absent* from the payload while its entry
+# remains, carrying the receipts.  S6's rank split was asserted payload-
+# neutral, so it took no value and S9 takes 4 rather than 5 (D-63).
+#
+# 5 is the rune page: the request gained ``minor_runes``, ``stat_shards``
+# and ``rune_options``, and ``/api/config`` gained the whole rune catalog
+# (with each rune's path, row and model coverage) and the stat-shard table
+# beside the keystone list it already published.
+#
+#
+# 6 is the survival row's certification fields: the participant ledger row
+# gained the crowd-control interval and immunity block, the cleanse receipt,
+# the revive-stasis lifecycle, the projectile-defense and spell-shield
+# receipts, the Guardian and Aftershock blocks, the action-downtime union and
+# the permanent-bonus-health ledger.
+#
+# The version moves for a change to the *published payload* and for nothing
+# else, so a derivation edit that comes out byte-identical leaves it alone.
+CAPABILITY_SCHEMA_VERSION = 6
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in
@@ -80,17 +120,29 @@ def _target_policy_label(scope: str) -> str:
     }[scope]
 
 
+def _ledger_phases() -> list[str]:
+    """``PARTICIPANT_LEDGER_CONTRACT['phases']``, derived from the kernel.
+
+    Walks :class:`TransitionRank` in declaration order — which is ledger
+    order — and keeps each published name's first appearance.  The list was
+    six hand-written strings, which meant no contract could notice a rank
+    being added, split or renamed; deriving it makes the published
+    vocabulary and the walk's ordering one fact.  ``CAPABILITY_SCHEMA_VERSION``
+    moves when *this list* changes, never when the derivation is edited and
+    the payload comes out identical.
+
+    C4 is the first proof that the derivation works: adding ``AURA_ARM`` to
+    the ladder published a seventh name here without anyone editing this
+    module's payload, which is exactly the change six hand-written strings
+    would have missed.
+    """
+    return list(dict.fromkeys(public_phase(rank) for rank in TransitionRank))
+
+
 PARTICIPANT_LEDGER_CONTRACT: dict[str, Any] = {
     "name": "ordered_participant_ledger",
     "certification": "event_order_certified",
-    "phases": [
-        "state_transition",
-        "shield_or_temporary_health",
-        "damage_and_mitigation",
-        "reactive_effect",
-        "healing_and_regeneration",
-        "death_or_terminal_cutoff",
-    ],
+    "phases": _ledger_phases(),
     "target_policy": {
         scope: _target_policy_label(scope)
         for scope in sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)
@@ -246,20 +298,10 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
     if is_main:
         fields.update(
             {
-                "ability_casts": _field(
-                    payload_field="champion_options",
-                    state_path="attacker.abilityInputs.*.casts",
-                    frontend_token='data-ability-casts="',
-                    conditional=True,
-                    availability="champion_option_binding",
-                ),
-                "ability_hits": _field(
-                    payload_field="champion_options",
-                    state_path="attacker.abilityInputs.*.hits",
-                    frontend_token='data-ability-hits="',
-                    conditional=True,
-                    availability="champion_option_binding",
-                ),
+                # A module's count options (passive procs, mines hit) are
+                # champion_options rendered on the ability card they name;
+                # the engine schedules casts itself, so there is no cast
+                # count control.
                 "ability_variants": _field(
                     payload_field="champion_options",
                     state_path="attacker.abilityInputs.*.variant",
@@ -271,6 +313,21 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
                     payload_field="keystone",
                     state_path="attacker.keystone{side}",
                     frontend_token='data-picker="keystone"',
+                ),
+                "minor_runes": _field(
+                    payload_field="minor_runes",
+                    state_path="attacker.minorRunes{side}",
+                    frontend_token='data-picker="minor-rune"',
+                ),
+                "stat_shards": _field(
+                    payload_field="stat_shards",
+                    state_path="attacker.statShards{side}",
+                    frontend_token='data-picker="stat-shard"',
+                ),
+                "rune_options": _field(
+                    payload_field="rune_options",
+                    state_path="attacker.runeOptions{side}",
+                    frontend_token="data-rune-option",
                 ),
                 "ally_effects_enabled": _field(
                     payload_field="ally_effects_enabled",
@@ -381,7 +438,6 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
 def public_capability_contract(
     *,
     input_limits: Mapping[str, tuple[float, float]],
-    max_rotations: int,
     champion_option_count: int,
     item_option_count: int,
 ) -> dict[str, Any]:
@@ -394,11 +450,8 @@ def public_capability_contract(
         for kind in ("main", "enemy", "ally")
     }
     scenario_fields = {
-        "rotations": _field(
-            payload_field="rotations",
-            state_path="fight.rotations",
-            frontend_token='data-proto-range="rotations"',
-        ),
+        # One fight-length slider. The engine's rotation count is not a public
+        # control: the window is the one number a user sets.
         "window": _field(
             payload_field="fight_duration",
             state_path="fight.duration",
@@ -413,6 +466,13 @@ def public_capability_contract(
             payload_field="auto_attack_uptime_mode",
             state_path="fight.aaUptimeMode",
             frontend_token="uptimeModeToggle",
+        ),
+        # Full kit or autos only: ``fight_mode`` is ``auto_only`` when the
+        # Actions control says so, the module's timed mode otherwise.
+        "actions": _field(
+            payload_field="fight_mode",
+            state_path="fight.autosOnly",
+            frontend_token="data-fight-mode",
         ),
         # The Enemy Hits constraint: unchecked, enemies deal zero damage in
         # the coupled timeline (participant_timeline owns the semantics).
@@ -431,7 +491,6 @@ def public_capability_contract(
             "supported": True,
             "fields": scenario_fields,
             "limits": {key: list(value) for key, value in input_limits.items()},
-            "rotations": {"min": 1, "max": max_rotations},
         },
         "controls": {
             "supported": True,
@@ -472,19 +531,20 @@ def public_capability_contract(
                 "supported": True,
                 "reason": None,
             },
+            "runes": {
+                "supported": True,
+                "keys": ["name", "path", "row", "icon", "implemented", "options"],
+                "reason": None,
+            },
+            "rune_shards": {
+                "supported": True,
+                "keys": ["row", "name", "options"],
+                "reason": None,
+            },
             "abilities": {
                 "supported": True,
-                "slots": ["P", "Q", "W", "E", "R"],
-                "keys": [
-                    "slot",
-                    "name",
-                    "icon",
-                    "blurb",
-                    "description",
-                    "damage_type",
-                    "targeting",
-                    "ingested",
-                ],
+                "slots": list(BASE_CAST_SLOTS),
+                "keys": ["slot", "name", "icon", "ingested"],
                 "reason": None,
             },
         },

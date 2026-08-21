@@ -1,0 +1,78 @@
+{
+  "receipt_id": "oracle-C6-leaf60",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/order[3]",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] scalar fields",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7,7,7,7,7], \"castTime\": \"none\"  -- Q is charge-based (recharge, not CDR-scaled cooldown), confirming stocked charges are a real cast resource."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0]",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [120,100,80]}], \"affectedByCdr\": true}, \"castTime\": \"0.25\"; Active: \"Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones.\" -- R is the single long-cooldown finisher of the rotation."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0]",
+      "quote": "\"castTime\": \"0.25\"; cooldown values [15,15,15,15,15]; Active: \"Syndra propels a wave of force in a cone ... Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds.\""
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1, shared-timeline cast scheduling",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "path": "Fidelity table, row 'Ability rotation casts'",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast"
+    }
+  ],
+  "independent_computation": {
+    "step_1_scenario_decode": "The scenario id pins splinters = 120. S1 fixes 120 as Syndra's Splinter-of-Wrath cap (and the Transcendence threshold, +15% AP); S6 confirms the calculator exposes exactly that as the `splinters` option with the 1.15x AP buff. So this scenario runs Syndra at full Transcendent stacks.",
+    "step_2_slot_count": "120 splinters is >= the 40-splinter Transcendent threshold on Q (S2), so Dark Sphere is stocked as CHARGES, up to a maximum of 2. S3 corroborates the charge semantics in the cached data itself: Q carries a `rechargeRate` of 7 s and `affectedByCdr: false`, i.e. a recharging charge pool rather than an ordinary cooldown. S6 states the implementation models this as a distinct 'Q2 slot'. Therefore at 120 splinters the rotation has FIVE cast slots (Q, Q2, W, E, R), not the four of a sub-40-splinter Syndra.",
+    "step_3_ordering": "Under the shared-timeline convention (S7), at t = 0 every slot is off cooldown and both Q charges are stocked, so casts are emitted greedily in slot priority with no gating: Q (castTime 'none' = 0 s), then the second stocked Q charge (still ready, no cooldown to wait on), then W (castTime 'none'), then E (0.25 s), then R (0.25 s). R is emitted last and once only -- S8: 'R single-cast', and S4 gives it a 120/100/80 s cooldown, far beyond any rotation window, while it is also the sphere-consuming finisher that wants Q's spheres already on the ground (S4: 'grabs up to 4 nearby live ones').",
+    "step_4_resolved_order": "order = [Q, Q2, W, E, R]  ->  order[0]=Q, order[1]=Q2, order[2]=W, order[3]=E, order[4]=R.",
+    "step_5_compare": "order[3] = E, matching the new value. The old value R is exactly what a FOUR-element rotation [Q, W, E, R] yields at index 3 -- i.e. the stocked second Dark Sphere charge was missing from (or appended after) the rotation, contradicting S2/S3/S6. Inserting the extra front-loaded cast shifts E from index 2 to index 3 and R from index 3 to index 4, which is precisely the observed leaf change.",
+    "robustness_note": "The conclusion does not depend on the extra front-loaded cast being specifically the Q charge. Syndra's W is also a cast-plus-recast ability whose damage lands on the recast (Syndra.abilities.W[0]: 'Force of Will can be recast while the target is being held' / 'Recast: Syndra throws the grabbed target ... dealing magic damage'; notes: 'The initial cast does not count as an ability activation ... Detonating the ability manually does'). Any single additional legitimate cast slot ahead of E in a Q-W-E-R rotation puts E at index 3 and R at index 4. Every mechanic the cached wiki text documents for Syndra at 120 splinters adds slots BEFORE E, never after it, so R at index 3 is only reachable by omitting a documented slot."
+  },
+  "counter_check": {
+    "could_old_be_right": "Only if the rotation legitimately has exactly four casts with R fourth. That requires Syndra to have a single Dark Sphere cast, which S2 contradicts at splinters >= 40 (the scenario pins 120) and S3/S6 contradict structurally (charge pool of 2, modeled Q2 slot). Rejected.",
+    "could_both_be_wrong": "Would require E to sit somewhere other than index 3 in the true order -- e.g. R emitted before E. S8 pins R as a single cast and S4 gives it the longest cooldown and the sphere-consuming finisher role (it grabs live spheres created by Q), so R trailing E is the game-correct and convention-correct placement. No cached source supports R ahead of E. Rejected."
+  },
+  "confidence": "high on the mechanic (charge/extra front slot at 120 splinters is explicit in the cached wiki text and the audit record); the index-3 identification follows from the documented shared-timeline greedy cast order.",
+  "committed": false
+}

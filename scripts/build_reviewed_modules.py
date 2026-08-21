@@ -41,7 +41,9 @@ try:
 except ImportError:  # imported as scripts.build_reviewed_modules in tests
     from scripts.source_receipt import source_receipt
 
-SLOTS = ("P", "Q", "W", "E", "R")
+from src.calculator.cast_dependency import BASE_CAST_SLOTS  # noqa: E402
+
+SLOTS = BASE_CAST_SLOTS
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -171,6 +173,15 @@ def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
 
 
 def _wiki_cooldown(ability: dict[str, Any]) -> float:
+    """The rank-1 cooldown, recorded as evidence of the row's shape.
+
+    A packet's ``cooldown`` is a scalar and a cooldown is a rank array, so
+    this field can only ever be the array's first entry.  It is no longer
+    served: ``packet_module._packet_cooldown`` reads the cached row at the
+    rank being cast, which is the cooldown's one home.  The field stays for
+    the receipt (and pins the packet digests already accepted by named
+    modules); a regeneration is free to drop it.
+    """
     raw = ability.get("cooldown")
     if not isinstance(raw, dict):
         return 0.0

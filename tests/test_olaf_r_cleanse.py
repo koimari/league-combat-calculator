@@ -11,15 +11,25 @@ fail-closed behavior.  CURRENT RUNTIME FACTS (verified before pinning):
   PACKET_SHA256 abc0765e...): Q/E are modeled packets; W (Tough It Out)
   is the E8c scanner-emitted self shield (10/40/70/100/130 + 17.5%
   missing health, 2.5 s, at the cast — the missing-health term is a
-  documented boundary); R is out_of_scope (the packet module's no_damage
-  slot).  MODULE_COVERAGE: Q/W/E modeled, P/R out_of_scope.  OPTIONS is
-  empty; the API rejects every r_* champion option with a named 400
-  ("champion_options contains unknown option r_time").
+  documented boundary).  MERGE: P, W and R also PRICE their sourced
+  steroid rows, so every slot is ``modeled`` and the module declares no
+  MODULE_COVERAGE; OPTIONS carries one key (olaf_missing_health_percent,
+  which scales Berserker Rage).  There is still no r_* option — the API
+  rejects every one with a named 400 ("champion_options contains unknown
+  option r_time").
 - The module R parse receipt: name "Ragnarok", rank 3, MANA cost 100,
-  cast_time None (the cached castTime is "none"), total_raw 0.0 and NO
-  parts — the R is non-damaging; the cooldown row is NOT published by
-  the packet module (parse cooldown 0.0 today — the typed declaration
-  must receipt it).
+  cast_time None (the cached castTime is "none"), total_raw 0.0 and one
+  structural-zero part — the R deals no damage; its stat_buff carries
+  the sourced Bonus Resistances and Bonus Attack Damage, and the cached
+  rank cooldown row (100/90/80) is published.
+- MERGE: because R is a BUFF-phase steroid, the app's derived rotation
+  OPENS with it.  The four R receipts anchor on that cast (t=0.0), not
+  on a slot-ordered 0.5, and the immunity window is therefore already up
+  when an enemy control would land — the app fight BLOCKS the Ahri charm
+  instead of truncating it.  The truncation path itself is pinned at
+  kernel level, where the packets are authored behind an active control.
+  Tests read the activation back off the fight (``_r_activation_time``)
+  rather than pinning a rotation-order literal.
 - The cached R rows (data/champions.json "Olaf", R[0]):
   effects[0] passive "Passive: Olaf gains bonus armor and bonus magic
   resistance." (Bonus Resistances leveling 10/15/20); effects[1]
@@ -167,6 +177,9 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -186,9 +199,25 @@ from src.calculator.crowd_control_eligibility import (
     classify_control,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.data_fetcher import get_champion
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.participant_timeline import (
+    Combatant,
+    _simulate_survival as _simulate_survival_walk,
+)
 from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _OLAF_DATA = _CHAMPION_DATA["Olaf"]
@@ -374,8 +403,38 @@ def _cleanse_event_count(combat: dict) -> int:
     return combat["utility_outcomes"]["participants"]["main"]["cleanse"]["event_count"]
 
 
+def _r_activation_time(combat: dict) -> float:
+    """The instant the R cast armed Ragnarok, read off the fight itself.
+
+    MERGE: Ragnarok is a priced BUFF-phase steroid on this branch — it
+    grants the sourced Bonus Attack Damage and Bonus Resistances — so the
+    app's derived rotation OPENS with it (0.0) instead of scheduling it
+    behind Q/W/E (0.5).  ``participant_timeline`` still anchors all four
+    receipts on the R cast in ``result["cast_timeline"]``, which is the
+    contract these tests are about; reading the instant back off the
+    fight pins that relationship instead of a rotation-order literal.
+    """
+    times = [
+        float(event["time"])
+        for event in combat.get("support_events", ())
+        if event.get("attacker") == "main" and event.get("source") == _R_CLEANSE_SOURCE
+    ]
+    assert times, "no Olaf R receipt in the fight"
+    assert len(set(times)) == 1, f"R receipts disagree on the activation: {times}"
+    return times[0]
+
+
+def _r_option_keys(meta: dict) -> list[str]:
+    """Any champion option that would make the R cast a toggle."""
+    return [
+        row["key"]
+        for row in meta["options"]
+        if row["key"] == "r" or row["key"].startswith("r_")
+    ]
+
+
 def _dummy_combatant(participant_id: str, team: str, health: float = 3000.0):
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -682,21 +741,34 @@ class TestSourceAndTypedValues:
             ) == pytest.approx(float(_R_MS[rank - 1]))
 
     def test_r_public_receipt_present_in_parse(self):
-        # The R public receipt at parse level (the brief's contract #1):
-        # name, rank, MANA cost, no cast time, zero total and no parts.
+        # MERGE: the R public receipt is the priced steroid row now, not a
+        # no-damage placeholder.  The no-outgoing-damage half of the
+        # brief's contract #1 is unchanged (total_raw 0, one structural
+        # zero part, no cast time); what is added is the cached rank-3
+        # cooldown row (80) the packet module used to withhold and the
+        # stat_buff carrying the sourced resistances and bonus AD.
         _, abilities = _parse()
         r = abilities["R"]
         assert r["name"] == "Ragnarok"
         assert r["rank"] == 3
-        assert r["cooldown"] == pytest.approx(0.0)
+        assert r["cooldown"] == pytest.approx(float(_R_COOLDOWN[2]))
         assert r["resource_type"] == "MANA"
         assert r["resource_cost"] == pytest.approx(100.0)
-        # The no_damage packet does not publish a cast_time key (the
-        # cached castTime "none" is not a numeric engine cast time).
+        # The steroid row publishes no cast_time key (the cached castTime
+        # "none" is not a numeric engine cast time).
         assert r.get("cast_time") is None
         assert r["total_raw"] == 0.0
-        assert r["parts"] == ()
-        assert "no enemy-damage formula" in r["detail"]
+        assert [part.amount for part in r["parts"]] == [0.0]
+        assert r["stat_buff"]["armor"] == pytest.approx(float(_R_RESISTANCES[2]))
+        assert r["stat_buff"]["magic_resistance"] == pytest.approx(
+            float(_R_RESISTANCES[2])
+        )
+        # 30 flat + the sourced 25% total-AD amplification of the 100 AD
+        # reference build.
+        assert r["stat_buff"]["bonus_attack_damage"] == pytest.approx(
+            float(_R_AD_FLAT[2]) + _R_AD_PERCENT / 100.0 * 100.0
+        )
+        assert "crowd-control immunity" in r["detail"]
 
     def test_r_no_outgoing_damage_pin(self):
         # The no-outgoing-damage pin: R total_raw 0 and no damage row in
@@ -723,21 +795,23 @@ class TestSourceAndTypedValues:
         assert sources["Olaf parent entry"]["revision_id"] == 3952811
         assert sources["Olaf R ability entry"]["revision_id"] == 2864579
 
-    def test_r_assumptions_absent_cleanse_mention(self):
-        # The module ASSUMPTIONS name the W shield boundary but say
-        # nothing about the R cleanse/immunity (the R is out_of_scope
-        # today — the completion must add the declaration + the
-        # assumption).
+    def test_r_assumptions_name_the_priced_rows_and_the_boundaries(self):
+        # MERGE: this branch PRICES R — the sourced Bonus Attack Damage
+        # and Bonus Resistances rows are applied over their 3s window —
+        # so R is ``modeled`` and the assumptions carry both halves: what
+        # is priced, and the crowd-control immunity / movement speed /
+        # duration-extension rows that are named rather than priced.
         meta = get_champion_options_meta("Olaf")
         joined = " ".join(meta["assumptions"])
         assert "Tough It Out" in joined
-        assert "Ragnarok" not in joined
-        from src.calculator.champions.olaf import MODULE_COVERAGE
+        assert "R's Bonus Attack Damage" in joined
+        assert "crowd-control immunity and the up-to-2.5s-per-hit" in joined
+        from src.calculator.champions import get_champion_module_contract
 
-        assert MODULE_COVERAGE["R"] == "out_of_scope"
-        assert MODULE_COVERAGE["Q"] == "modeled"
-        assert MODULE_COVERAGE["W"] == "modeled"
-        assert MODULE_COVERAGE["E"] == "modeled"
+        # Coverage has one home now: the validated module contract.  Olaf
+        # declares no ``MODULE_COVERAGE`` because every slot prices a row.
+        coverage = get_champion_module_contract("Olaf").coverage
+        assert coverage == dict.fromkeys("PQWER", "modeled")
 
     def test_r_typed_declaration_publishes_cleanse_contract(self):
         # P2-9 contract: the typed declaration resolves for the R source
@@ -811,12 +885,16 @@ class TestNoR:
         assert "crowd_control_immunity" not in survival
 
     def test_no_r_option_and_api_rejects_r_keys(self):
-        # Pinned actual (the brief's contract #2 "the options unchanged"):
-        # the module OPTIONS is empty and the API rejects every r_*
-        # champion option with a named 400 — the R cast is NOT an
-        # optional toggle.
+        # MERGE: the module declares one option now — Olaf's own missing
+        # health, which scales Berserker Rage.  The contract this test is
+        # about is untouched by that: there is still NO r_* toggle (the R
+        # cast is not optional), and the API rejects every r_* champion
+        # option with a named 400.
         meta = get_champion_options_meta("Olaf")
-        assert meta["options"] == []
+        assert [row["key"] for row in meta["options"]] == [
+            "olaf_missing_health_percent"
+        ]
+        assert not _r_option_keys(meta)
         with _testing_client() as client:
             for key in ("r", "r_time", "r_use", "r_activate"):
                 response = client.post(
@@ -856,14 +934,18 @@ class TestNoR:
 
     def test_r_cast_is_the_implicit_activation_no_option(self):
         # P2-9 contract: NO user option — the R cast IS the cleanse +
-        # immunity + stat-buff activation (the GP/Rengar precedent), and
-        # the option set stays unchanged (no new option unless the typed
-        # timing option lands — see S3).
+        # immunity + stat-buff activation (the GP/Rengar precedent).
+        # MERGE: the activation instant is read off the fight rather than
+        # pinned, because a priced R opens the rotation (see
+        # ``_r_activation_time``); what this asserts is that the receipts
+        # ride that cast and that no option can move them.
         meta = get_champion_options_meta("Olaf")
-        assert meta["options"] == []
+        assert not _r_option_keys(meta)
         combat = _app_combat()
         survival = _survival(combat)
-        assert survival["cleanse"]["activation_time"] == pytest.approx(0.5)
+        assert survival["cleanse"]["activation_time"] == pytest.approx(
+            _r_activation_time(combat)
+        )
         assert survival["cleanse"]["use_consumed"] is True
         assert _cleanse_event_count(combat) == 1
 
@@ -898,12 +980,19 @@ class TestRTiming:
 
     def test_r_activation_time_equals_cast_time(self):
         # P2-9 contract (the brief's contract #3): the R cast time IS the
-        # cleanse + immunity + stat-buff activation time — 0.5 in the
-        # timed fight, 0.0 in one_rotation — with no explicit-time option
-        # (the cast IS the activation, the GP/Rengar precedent).
+        # cleanse + immunity + stat-buff activation time, with no
+        # explicit-time option (the cast IS the activation, the
+        # GP/Rengar precedent).  MERGE: all four receipts share one
+        # instant — that is what ``_r_activation_time`` asserts — and the
+        # immunity window opens on it, three sourced seconds long.
         combat = _app_combat()
         survival = _survival(combat)
-        assert survival["cleanse"]["activation_time"] == pytest.approx(0.5)
+        activation = _r_activation_time(combat)
+        assert survival["cleanse"]["activation_time"] == pytest.approx(activation)
+        assert survival["ragnarok_immunity"]["start"] == pytest.approx(activation)
+        assert survival["ragnarok_immunity"]["until"] == pytest.approx(
+            activation + _R_DURATION
+        )
         assert survival["cleanse"]["decision"]["reason"] == "control_not_active"
         assert survival["cleanse"]["use_consumed"] is True
         assert _cleanse_event_count(combat) == 1
@@ -911,12 +1000,12 @@ class TestRTiming:
     def test_r_no_typed_timing_option_today(self):
         # Pinned actual (the brief's contract #3 tail): NO typed timing
         # option exists today — the cast timeline IS the activation
-        # clock and the options meta stays empty.  IF the coordinator
-        # later lands a typed timing option, its missing/invalid values
-        # must fail closed with a named denial (never a silent
-        # re-anchor of the cast) — the P2-9 contract is documented here
-        # for the completion.
-        assert get_champion_options_meta("Olaf")["options"] == []
+        # clock.  IF the coordinator later lands a typed timing option,
+        # its missing/invalid values must fail closed with a named denial
+        # (never a silent re-anchor of the cast) — the P2-9 contract is
+        # documented here for the completion.  MERGE: the module's one
+        # option scales Berserker Rage and cannot move the R cast.
+        assert not _r_option_keys(get_champion_options_meta("Olaf"))
 
 
 # ---------------------------------------------------------------------------
@@ -1037,62 +1126,49 @@ class TestCleanseOfActiveControls:
         assert decision.downtime_before == pytest.approx(2.0)
         assert decision.downtime_after == pytest.approx(2.0)
 
-    def test_charm_applies_untouched_today(self):
-        # Pinned actual (the brief's contract #4 + #6): with no R wiring
-        # the enemy Ahri charm (immobilize 1.8s at t=0) lands untouched —
-        # the full interval + the 1.8s action downtime, and no cleanse
-        # receipts anywhere.
+    def test_the_enemy_charm_never_blocks_olaf(self):
+        # MERGE (the brief's contract #4 + #6): with a priced R the
+        # rotation OPENS with Ragnarok, so the immunity window is already
+        # up when the enemy Ahri charm (immobilize 1.8s at t=0) would
+        # land — the charm is BLOCKED outright rather than truncated, and
+        # Olaf's action downtime is zero either way.  The cleanse still
+        # activates and still spends its one use; it simply finds nothing
+        # active to remove, which the decision names.
         combat = _app_combat(enemy="Ahri")
         survival = _survival(combat)
-        # P2-9: the R cast at 0.5 cleanses the active charm — the
-        # interval clamps at the cast (the Slice 4 truncation).
-        assert survival["crowd_control_until"] == pytest.approx(0.5)
-        assert survival["action_downtime"] == pytest.approx(0.5)
-        assert survival["crowd_control_intervals"] == [
-            {
-                "recipient": "main",
-                "kind": "immobilize",
-                "start": 0.0,
-                "end": 0.5,
-                "source": "E",
-            }
+        activation = _r_activation_time(combat)
+        assert survival["crowd_control_intervals"] == []
+        assert survival["crowd_control_until"] == pytest.approx(0.0)
+        assert survival["action_downtime"] == pytest.approx(0.0)
+        assert survival["ragnarok_immunity"]["blocked"] == [
+            {"time": 0.0, "source_key": "E", "control_kind": "immobilize"}
         ]
+        assert survival["ragnarok_immunity"]["start"] == pytest.approx(activation)
         assert survival["cleanse"]["item"] == _R_CLEANSE_ITEM
         assert _cleanse_event_count(combat) == 1
 
-    def test_r_cleanse_truncates_active_controls_at_cast(self):
-        # P2-9 contract (the brief's contract #4 + #6): the R cast at 0.5
-        # cleanses EVERY known active control except the displacement
-        # family — the Ahri charm [0, 1.8) clamps to [0, 0.5), the
-        # removed tail is receipted, the action downtime drops to 0.5,
-        # and the cleanse receipt carries the exact removed_controls list.
+    def test_r_cleanse_activates_at_the_cast_and_spends_its_use(self):
+        # MERGE (the brief's contract #4 + #6): the app-level truncation
+        # this used to assert is unreachable now — nothing hostile is
+        # still active once Ragnarok opens the rotation — so the
+        # truncation ITSELF is pinned at kernel level above
+        # (``test_slice4_*`` / ``test_r_denied_under_suppression``, which
+        # author the cleanse packet behind an active control).  What the
+        # app fight still proves is the wiring: one activation on the R
+        # cast, the declared item, the named control_not_active decision,
+        # and the one-use latch spent exactly once.
         combat = _app_combat(enemy="Ahri")
         survival = _survival(combat)
         cleanse = survival["cleanse"]
-        assert cleanse["activation_time"] == pytest.approx(0.5)
-        assert cleanse["eligible"] is True
+        assert cleanse["activation_time"] == pytest.approx(_r_activation_time(combat))
+        assert cleanse["eligible"] is False
+        assert cleanse["decision"]["reason"] == "control_not_active"
         assert cleanse["item"] == _R_CLEANSE_ITEM
-        assert cleanse["removed_controls"] == [
-            {
-                "control_kind": "immobilize",
-                "source": "E",
-                "start": 0.5,
-                "end": 1.8,
-                "reason": "",
-            }
-        ]
-        assert survival["crowd_control_intervals"] == [
-            {
-                "recipient": "main",
-                "kind": "immobilize",
-                "start": 0.0,
-                "end": 0.5,
-                "source": "E",
-            }
-        ]
-        assert survival["crowd_control_until"] == pytest.approx(0.5)
-        assert survival["action_downtime"] == pytest.approx(0.5)
+        assert cleanse["removed_controls"] == []
+        assert cleanse["rejected_controls"] == []
+        assert survival["cleanse_use"]["uses_before"] == 1
         assert survival["cleanse_use"]["uses_after"] == 0
+        assert survival["cleanse_use"]["activations"] == 1
         assert _cleanse_event_count(combat) == 1
 
     def test_r_cleanse_excludes_the_displacement_family(self):
@@ -1290,14 +1366,16 @@ class TestImmunityWindow:
 
     def test_r_immunity_surface_in_app_fight(self):
         # P2-9 contract: the app fight's survival row carries the
-        # crowd_control_immunity receipt after the R cast at 0.5 (window
-        # [0.5, 3.5), the R source) — the same row the Slice 3 machinery
-        # produces for the shield grant.
+        # crowd_control_immunity receipt from the R cast — the same row
+        # the Slice 3 machinery produces for the shield grant.  MERGE:
+        # the window opens on the cast the fight booked and runs the
+        # sourced 3 seconds from there.
         combat = _app_combat(enemy="Garen")
+        activation = _r_activation_time(combat)
         immunity = _survival(combat)["ragnarok_immunity"]
         assert immunity["source"] == _R_CLEANSE_SOURCE
-        assert immunity["start"] == pytest.approx(0.5)
-        assert immunity["until"] == pytest.approx(3.5)
+        assert immunity["start"] == pytest.approx(activation)
+        assert immunity["until"] == pytest.approx(activation + _R_DURATION)
 
 
 # ---------------------------------------------------------------------------
@@ -1395,16 +1473,40 @@ class TestCastability:
         assert _survival(combat)["support_shield_received"] == pytest.approx(130.0)
 
     def test_r_casts_while_crowd_controlled_and_cleanses(self):
-        # P2-9 contract (the brief's contract #5): the R cast at 0.5
-        # fires while the caster is charmed (canCastWhileDisabled — the
+        # P2-9 contract (the brief's contract #5): an R cast fires while
+        # the caster is charmed (canCastWhileDisabled — the
         # utility-before-gate dispatch), the cleanse truncates the charm
         # at the cast, and the caster use receipt names
         # fired_while_crowd_controlled true.
-        combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        #
+        # MERGE: the app fight no longer reaches this state — a priced R
+        # opens the rotation, so Olaf is never crowd-controlled when it
+        # casts (see ``test_the_enemy_charm_never_blocks_olaf``).  The
+        # contract is unchanged and is pinned at kernel level instead,
+        # the same path ``test_r_denied_under_suppression`` uses: the
+        # charm is active [0, 1.8) and the R packets arrive at 0.5.
+        result = _kernel_survival(
+            [_control_packet(0.0, "immobilize", 1.8, source="E")],
+            support=[
+                _ragnarok_cleanse_packet(0.5),
+                _ragnarok_immunity_packet(0.5),
+                _ragnarok_stat_buff_packet(0.5),
+            ],
+            duration=8.0,
+        )
+        survival = result["main"]
         assert survival["cleanse"]["activation_time"] == pytest.approx(0.5)
         assert survival["cleanse"]["eligible"] is True
         assert survival["cleanse_use"]["fired_while_crowd_controlled"] is True
+        assert survival["crowd_control_intervals"] == [
+            {
+                "recipient": "main",
+                "kind": "immobilize",
+                "start": 0.0,
+                "end": 0.5,
+                "source": "E",
+            }
+        ]
         assert survival["action_downtime"] == pytest.approx(0.5)
 
     def test_r_denied_under_suppression(self):
@@ -1461,7 +1563,7 @@ class TestCastability:
             support=[
                 {
                     **_ragnarok_cleanse_packet(1.0),
-                    **{"_priority": -2.0},
+                    **{SUPPORT_RANK_KEY: TransitionRank.STATE_GRANT},
                 }
             ],
             duration=8.0,
@@ -1578,11 +1680,13 @@ class TestBonusStateReceipts:
         assert panel["movement"]["speed_percent_seconds"] == pytest.approx(70.0)
 
     def test_r_stat_buff_rows_at_cast(self):
-        # P2-9 contract (the brief's contract #9): the R cast at 0.5
-        # authors a stat-buff row (rank-3 resistances 20 armor + 20 MR,
-        # 3s window, expires_at 3.5) — the public support_events row
-        # with the sourced values.
+        # P2-9 contract (the brief's contract #9): the R cast authors a
+        # stat-buff row (rank-3 resistances 20 armor + 20 MR over the
+        # sourced 3s window) — the public support_events row with the
+        # sourced values.  MERGE: the row is anchored on the cast the
+        # fight booked, and the window still runs 3 seconds from it.
         combat = _app_combat()
+        activation = _r_activation_time(combat)
         rows = [
             e
             for e in combat.get("support_events", [])
@@ -1591,10 +1695,11 @@ class TestBonusStateReceipts:
         assert rows, "R stat-buff row missing"
         buff = rows[0]
         assert buff["source"] == _R_CLEANSE_SOURCE
-        assert buff["bonus_armor"] == pytest.approx(20.0)
-        assert buff["bonus_magic_resistance"] == pytest.approx(20.0)
-        assert buff["time"] == pytest.approx(0.5)
-        assert buff["expires_at"] == pytest.approx(3.5)
+        assert buff["bonus_armor"] == pytest.approx(float(_R_RESISTANCES[2]))
+        assert buff["bonus_magic_resistance"] == pytest.approx(float(_R_RESISTANCES[2]))
+        assert buff["time"] == pytest.approx(activation)
+        assert buff["duration"] == pytest.approx(_R_DURATION)
+        assert buff["expires_at"] == pytest.approx(activation + _R_DURATION)
 
     def test_r_ad_and_size_receipted_named_unsupported(self):
         # P2-9 contract (the brief's contract #9): the bonus AD
@@ -1629,8 +1734,14 @@ class TestBonusStateReceipts:
             if row.get("wording")
         )
         combat = _app_combat(enemy="Ahri")
+        # MERGE: the fixed-window claim is the point, so it is asserted as
+        # a LENGTH — the window is the sourced 3 seconds from the cast,
+        # never 3 + 2.5 — rather than as a pinned end instant.
         immunity = _survival(combat)["ragnarok_immunity"]
-        assert immunity["until"] == pytest.approx(3.5)
+        assert immunity["until"] - immunity["start"] == pytest.approx(_R_DURATION)
+        assert immunity["until"] == pytest.approx(
+            _r_activation_time(combat) + _R_DURATION
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1729,16 +1840,22 @@ class TestSameTimeOrdering:
     def test_walk_dispatch_order_support_before_gate(self):
         # PASS kernel evidence (the brief's contract #10): the survival
         # walk dispatches SHIELD / STAT_BUFF / UTILITY actions BEFORE
-        # the attacker-state gate and the shield arm priority (-1.0)
-        # sorts before same-timestamp damage/control (0.0) — a shield
-        # cast at t must see a damage packet at t.  The R's own packets
-        # (cleanse/immunity/stat buff at the cast) all dispatch in this
-        # support band; the exact intra-band order is the walk's total
-        # order (action_key: phase, time, participant, sequence).
-        from src.calculator.delivery_eligibility import _SUPPORT_ARM_PRIORITY
+        # the attacker-state gate, and a barrier arms before the
+        # same-timestamp damage — a shield cast at t must see a damage
+        # packet at t.  The R's own packets (cleanse/immunity/stat buff
+        # at the cast) all dispatch in this support band; the exact
+        # intra-band order is the walk's total order (action_key: rank,
+        # time, participant, sequence).  Read off the one rank ladder:
+        # the parallel float table this used to read is retired.
+        from src.calculator.survival.actions import support_transition_rank
 
-        assert _SUPPORT_ARM_PRIORITY["shield"] == -1.0
-        assert _SUPPORT_ARM_PRIORITY["damage_modifier"] == -1.0
+        shield_rank = support_transition_rank({"kind": "shield"})
+        assert shield_rank is TransitionRank.BARRIER_GRANT
+        assert shield_rank < TransitionRank.DAMAGE
+        # A modifier already in force at its own timestamp declares the
+        # aura rank, which is the other pre-damage slot; the kind alone
+        # would arm it as a triggered debuff, after the damage.
+        assert TransitionRank.AURA_ARM < TransitionRank.DAMAGE
         # A same-timestamp control after a shield-with-immunity grant is
         # blocked (the shield arms first).
         result = _kernel_survival(
@@ -1799,14 +1916,18 @@ class TestSameTimeOrdering:
         # immunity window, then the stat rows) never re-prices damage.
         combat = _app_combat(enemy="Ahri")
         survival = _survival(combat)
-        assert survival["cleanse"]["activation_time"] == pytest.approx(0.5)
-        assert survival["ragnarok_immunity"]["start"] == pytest.approx(0.5)
+        # MERGE: "the same activation" is the claim, so it is read off the
+        # fight — ``_r_activation_time`` fails if the four receipts ever
+        # disagree — instead of restating one instant three times.
+        activation = _r_activation_time(combat)
+        assert survival["cleanse"]["activation_time"] == pytest.approx(activation)
+        assert survival["ragnarok_immunity"]["start"] == pytest.approx(activation)
         buffs = [
             e
             for e in combat.get("support_events", [])
             if e.get("attacker") == "main" and e.get("kind") == "stat_buff"
         ]
-        assert buffs[0]["time"] == pytest.approx(0.5)
+        assert buffs[0]["time"] == pytest.approx(activation)
 
 
 # ---------------------------------------------------------------------------
@@ -2067,9 +2188,12 @@ class TestUnchangedBoundaries:
         assert abilities["Q"]["cooldown"] == pytest.approx(9.0)
         assert abilities["E"]["name"] == "Reckless Swing"
         assert abilities["E"]["damage_type"] == "true"
-        # The packet module publishes the rank-1 cooldown row (11; the
-        # cached row is 11/10/9/8/7 by rank).
-        assert abilities["E"]["cooldown"] == pytest.approx(11.0)
+        # MERGE: the cooldown is published at the SELECTED rank now (the
+        # reference build maxes E, and the cached row is 11/10/9/8/7 by
+        # rank, so rank 5 is 7) — it used to come back as the rank-1 row
+        # whatever rank was asked for.
+        assert abilities["E"]["rank"] == 5
+        assert abilities["E"]["cooldown"] == pytest.approx(7.0)
         assert abilities["E"]["resource_cost"] == pytest.approx(100.0)
 
     def test_w_shield_e8c_surface_unchanged(self):
@@ -2186,7 +2310,10 @@ class TestRegressionSurface:
         # #15): the CP10 batch + the E8c shields + the support-effects
         # atom rows all name Olaf — they must stay green with the R
         # matrix (run in the footer command).
-        import tests.test_cp10_batch_05  # noqa: F401
+        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
+        # ``test_full_entry_packets.py`` (ours, 108872c8), which names the
+        # same 120 full-entry champions Olaf sat in.
+        import tests.test_full_entry_packets  # noqa: F401
         import tests.test_e8_shields  # noqa: F401
         import tests.test_support_effects  # noqa: F401
 

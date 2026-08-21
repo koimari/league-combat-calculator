@@ -22,21 +22,15 @@ Why each slot is non-generic:
   selects the active by the ABSENCE of the passive's '% maximum mana'
   modifier (robust to effect reordering on data re-pulls).
 - Q (Rocket Grab) is a clean generic read, kept explicit here.
-- P (Mana Barrier) is a defensive shield only — no slot function of its
-  own, but it is NOT unmodeled: ``_rocket_grab`` (Q) attaches the sourced
-  shield (35% max mana, up to 10s) as a ``self_shield_events`` payload the
-  survival ledger grants pre-fight, live-tested end to end
+- P (Mana Barrier) is a defensive shield with no cast of its own, so it
+  is absent from the slot map; ``_rocket_grab`` (Q) hangs the sourced
+  shield (35% max mana, up to 10s) on Q's damage event as a
+  ``self_shield_events`` payload the survival ledger grants pre-fight,
+  live-tested end to end
   (``tests/test_e8_shields.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
-  ``test_blitzcrank_api_mana_barrier_absorbs_sourced_amount``).
-
-Roadmap session 4 batch B (2026-08-21): closes the single out_of_scope
-slot (P). MODULE_COVERAGE was stale, still reading "out_of_scope" for a
-mechanic the shield kernel had already closed via Q — the identical
-stale-label pattern Anivia's P (Rebirth) was corrected under in Roadmap
-session 3 (``anivia.py``). Reclassified from out_of_scope to modeled; no
-behavior change, no new SLOTS entry (P stays absent from the ``abilities``
-dict — the shield surfaces through Q's payload and the survival receipt,
-not a standalone P row).
+  ``test_blitzcrank_api_mana_barrier_absorbs_sourced_amount``).  That
+  channel is why the coverage map calls P ``modeled`` rather than
+  out_of_scope, with no standalone P row in the ``abilities`` dict.
 """
 
 from typing import Any
@@ -51,6 +45,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Blitzcrank
@@ -107,9 +102,9 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    bonus = POWER_FIST_TOTAL_AD_RATIO * ctx.stats.get(
-        "attack_damage", 0.0
-    ) + POWER_FIST_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    bonus = POWER_FIST_TOTAL_AD_RATIO * ctx.stat(
+        "attack_damage"
+    ) + POWER_FIST_AP_RATIO * ctx.stat("ability_power")
 
     return {
         "name": ability.get("name", "Power Fist"),
@@ -119,6 +114,9 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": bonus,
         # "This damage is affected by critical strike modifiers" (wiki).
         "parts": (DamagePart("physical", bonus, crit_effectiveness=1.0),),
+        # One empowered swing, landing when it lands: the certified
+        # boundary the knock-up in MODULE_CC rides into the ledger.
+        "event_order_certified": "single_hit",
         # Damage lands only through the empowered basic attack: casts
         # are capped by the auto count; the attack reset costs no attack
         # time, so the auto stream (which already applies item on-hits
@@ -166,14 +164,15 @@ def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One detonation around Blitzcrank, no travel or tick phase.
+        event_order_certified="single_hit",
     )
 
 
 OPTIONS: list[dict[str, Any]] = []
 
 ASSUMPTIONS = [
-    "P (Mana Barrier) is modeled as a pre-fight granted shield (MODULE_"
-    "COVERAGE: modeled, not out_of_scope): the "
+    "P (Mana Barrier) is modeled as a pre-fight granted shield: the "
     "cached passive (35% of maximum mana for up to 10s, 90s cooldown) "
     "rides the first Q cast's event so the ledger grants it before "
     "incoming damage. The in-game trigger (damage taken while below "
@@ -203,7 +202,7 @@ def _rocket_grab(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = MANA_BARRIER_SHIELD_RATIO * ctx.stats.get("max_mana", 0.0)
+    shield = MANA_BARRIER_SHIELD_RATIO * ctx.stat("max_mana")
     entry["event_order_certified"] = "single_hit"
     return attach_self_shield(
         entry,
@@ -229,23 +228,21 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_q = SLOTS["Q"]
 SLOTS["Q"] = _rocket_grab
-parse_abilities = build_parser(SLOTS, "Blitzcrank")
+
+# Cached kit review.  Q applies two immobilizes at once ("stunning them for
+# 0.65 seconds, and pulling them towards Blitzcrank"), which is what the
+# un-narrowed kind states; E "knock[s] up the target for 1 second"; R's
+# active "silences them for 0.5 seconds" — real control, but neither an
+# immobilizing effect nor a slow.  W deals no damage.
+MODULE_CC = {"Q": "immobilize", "E": "knockup", "R": "silence"}
+
+parse_abilities = build_parser(SLOTS, "Blitzcrank", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
-        "revision_id": 4047544,
-        "revision_timestamp": "2026-07-29T20:05:52Z",
-    }
-]
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Blitzcrank")
+
+# P emits no cast row, so the derivation would call it out_of_scope; the
+# shield Q carries is what the engine prices (331.45 for 10s at level 18
+# with no items, 35% of max mana).
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

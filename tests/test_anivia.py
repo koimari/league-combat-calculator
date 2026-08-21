@@ -2,8 +2,10 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
-from src.calculator.champions import get_champion_module_meta
+from tests.ability_math import parts_raw_total
+from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.champions import anivia, get_champion_module_meta
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Q — Flash Frost
@@ -257,6 +259,90 @@ class TestFullCombo:
             + abilities["R"]["total_raw"]
         )
         assert total == pytest.approx(1690.0)
+
+
+class TestReviewedCrowdControl:
+    """Anivia's crowd-control review, and the slot that still withholds.
+
+    R's blizzard ticks ride their cached 0.5-second beat and each slows.
+    Q's row is the cached 'Total Magic Damage' of the slowing pass-through
+    and the stunning shatter, with no cached time for the shatter.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Anivia")
+        assert anivia.MODULE_CC == {"E": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_glacial_storms_ticks_ride_their_cached_beat(
+        self, anivia_data, parse_at
+    ) -> None:
+        text = cc_review.slot_text(cc_review.kit("Anivia"), "R")
+        assert (
+            "dealing magic damage every 0.5 seconds to enemies within and "
+            "slowing them for 1 second" in text
+        )
+        assert "the blizzard increases in size over 1.5 seconds" in text
+        _, abilities = parse_at(anivia_data, 18)
+        growing, empowered = abilities["R"]["parts"]
+        assert (growing.time_offset, growing.hit_interval) == (0.0, 0.5)
+        assert growing.count == 3
+        assert (empowered.time_offset, empowered.hit_interval) == (1.5, 0.5)
+
+    def test_the_blizzards_slow_stays_undeclared_by_decision_not_by_source(
+        self, anivia_data, parse_at
+    ):
+        """R's slow is cached and unambiguous; declaring it answers H6.
+
+        A ``cc_kind`` on these ticks makes Anivia the roster's first
+        ``enhanced_consume`` producer (R's chill feeding E's "Enhanced
+        Damage"), which empties the cast-dependency audit's dated
+        acknowledged-gap list - a ruling reserved for its own slice.
+        """
+        _, abilities = parse_at(anivia_data, 18)
+        assert all(part.cc_kind is None for part in abilities["R"]["parts"])
+
+    def test_flash_frosts_shatter_has_no_cached_time(self):
+        """The one slot that still withholds, and the sentence that proves it.
+
+        The shatter's stun IS sourced ("Stun Duration"), but Q's row is
+        the pass-through and the shatter summed into one "Total Magic
+        Damage" — two landings, so the row cannot certify a single hit,
+        and a kind on it would never reach the event ledger.
+        """
+        text = cc_review.slot_text(cc_review.kit("Anivia"), "Q")
+        assert (
+            "flash frost can be recast while the ice is in flight after its "
+            "cast time, and does so automatically at maximum range." in text
+        )
+        assert cc_review.unreviewed_ability_slots("Anivia") == ["Q", "R"]
+        coverage = cc_review.fimbulwinter_coverage("Anivia")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+def test_p_is_modeled_through_the_2114_rebirth_revive() -> None:
+    """P emits no cast row; Rebirth's revive state is what prices the slot.
+
+    At level 18 with no items Anivia's maximum health is 2114.0, and
+    Rebirth "restores all of her health" — the receipt behind P's
+    ``modeled`` label.
+    """
+    from src.calculator.champions import get_champion_module_contract
+    from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.stats import calculate_total_stats
+
+    contract = get_champion_module_contract("Anivia")
+    assert "P" not in contract.slots
+    assert contract.coverage["P"] == "modeled"
+    assert contract.coverage_channels["P"] == ("starting_revive_defense",)
+
+    data = cc_review.kit("Anivia")
+    defenses = resolve_starting_defenses(
+        "Anivia", 18, calculate_total_stats(data, 18, []), []
+    )
+    assert defenses.revive_source == "Rebirth"
+    assert defenses.revive_health_amount == pytest.approx(2114.0)
 
 
 # ---------------------------------------------------------------------------

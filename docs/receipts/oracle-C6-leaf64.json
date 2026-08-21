@@ -1,0 +1,102 @@
+{
+  "receipt_id": "oracle-C6-leaf64",
+  "runbook": "R-18 / R-19 (independent oracle, blind to diff/plan/src)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/order[7]",
+  "old_value": "<absent> (rotation order had 7 entries)",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": ["data/champions.json (Syndra)", "data/wiki-atoms/stack-transform-summon-resource.json", "data/practice-corpus/scenarios.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. | Ability Haste: 10 / 20 / 30"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.{Q,W,E,R}[0].cooldown",
+      "quote": "Q Dark Sphere: [7,7,7,7,7] (affectedByCdr false) | W Force of Will: [12,11,10,9,8] | E Scatter the Weak: [15,15,15,15,15] | R Unleashed Power: [120,100,80]"
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1, lines 59-68",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...`"
+    },
+    {
+      "id": "S6",
+      "file": "CLAUDE.md (domain knowledge, restated in docs/math-foundations.md usage)",
+      "quote": "Ability haste -> CDR: effective_cd = base_cd * 100 / (100 + ability_haste)"
+    },
+    {
+      "id": "S7",
+      "file": "data/worklists/f2-task.md",
+      "quote": "the /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: ...}  ... It must respect per-rank cooldowns in time-based mode (recast when off CD ...)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_scenario_reading": "The scenario suffix '120' is Syndra's Splinters of Wrath stack option: S1 caps the stack at exactly 120, and 120 is the top Transcendence threshold. At 120 stacks every Transcendent Bonus is live, including the 40-stack one (S2) which is the ONLY one of the four (40 Q-charge / 60 W true damage / 80 E slow / 100 R execute) that changes how many casts fit in a window.",
+
+    "step_1_effective_cooldowns": {
+      "formula": "effective_cd = base_cd * 100 / (100 + ability_haste)   [S6]; Q additionally receives 10/20/30 flat ability haste from R's passive [S3]",
+      "at_rank_Q5_W5_E3_R3_and_0_item_haste": {
+        "Q": "7 * 100 / (100 + 30) = 5.385 s",
+        "W": "8 * 100 / 100 = 8.000 s",
+        "E": "15 * 100 / 100 = 15.000 s",
+        "R": "80 * 100 / 100 = 80.000 s"
+      },
+      "dominance_proof": "Q is strictly the shortest-cooldown ability for EVERY rank and EVERY item-haste value AH: q = 700/(130+AH) < w = 800/(100+AH)  <=>  70000 + 700*AH < 104000 + 800*AH, true for all AH >= 0. W's floor is 8 s (rank 5) vs Q's flat 7 s, so this holds at every rank pair. Checked numerically at AH = 0/20/40/60: q = 5.385/4.667/4.118/3.684 vs w = 8.000/6.667/5.714/5.000. If Q's 7 s is instead treated as static (data/champions.json marks Q affectedByCdr=false), Q = 7 s is still < W's 8 s minimum. Either reading gives the same ordering q < w < e < r."
+    },
+
+    "step_2_shared_timeline_schedule_WITHOUT_the_charge": {
+      "model": "S5 greedy shared timeline, cast counted when it starts inside the window",
+      "epochs": [
+        "t = 0.00  Q   (cast time 'none')",
+        "t = 0.00  W   (cast time 'none')",
+        "t = 0.00  E   (cast time 0.25)",
+        "t = 0.25  R   (cast time 0.25)",
+        "t = 5.385 Q   (first Q recast, 700/130)",
+        "t = 8.000 W   (first W recast)",
+        "t = 10.769 Q  (second Q recast, 2 * 700/130)"
+      ],
+      "next_unscheduled": "E at t = 15.0, R at t = 80.0",
+      "result": "exactly 7 casts for any window T in [10.77, 15.0) -- order = [Q, W, E, R, Q, W, Q], index 7 ABSENT. This reproduces the OLD golden value exactly."
+    },
+
+    "step_3_schedule_WITH_the_120_stack_transcendent_bonus": {
+      "mechanic": "S2 -- at >= 40 Splinters Dark Sphere stocks charges up to a maximum of 2, so one additional Q cast is available inside the same window (the stocked charge is spent without waiting a full cooldown; the recharge timer then runs at the Q cooldown).",
+      "result": "the same window now contains 8 casts, and the added cast is a Q. Whether the engine spends the stocked charge early (order = [Q, Q, W, E, R, Q, W, Q]) or holds it to the tail (order = [Q, W, E, R, Q, W, Q, Q]), the element at index 7 is Q in both orderings, because the last cast in the window is a Q either way: E's next epoch is 15.0 s and R's is 80.0 s, both outside a window that previously held only 7 casts."
+    },
+
+    "step_4_uniqueness_of_the_added_cast": "No ability other than Q can supply the 8th cast. (a) By step 1, q < w < e < r for all ranks/haste, so any window whose 7-cast prefix ends on a Q recast has W/E/R epochs strictly later. (b) The 120-stack option adds cast capacity to Q only (S2); the 60/80/100 bonuses modify W damage, E slow and R execute, not cast counts. (c) With W at 8-12 s, E flat 15 s and R 80-120 s (S4), none of them has a spare epoch in the interval where Q gains one.",
+
+    "conclusion": "An 8th rotation entry equal to 'Q' is exactly what Syndra at 120 Splinters of Wrath must produce; the previous 7-entry order is the un-charged Dark Sphere schedule, i.e. the 40-stack Transcendent Bonus was not being reflected in the cast schedule."
+  },
+
+  "caveats": [
+    "The scenario definition itself (fight window length, level, ranks, item haste, and the literal 'custom order' input) lives outside the permitted evidence tree (scripts/, tests/), so the absolute cast epochs above are a reconstruction: I chose the parameter family that reproduces the OLD value exactly (window T in [10.77, 15) s, ranks Q5/W5/E3/R3, 0 item ability haste, R rank 3). The verdict does not depend on that choice -- the identity of the added cast is forced by the rank/haste-independent dominance proof in step 1 plus the charge mechanic in S2.",
+    "data/champions.json marks Syndra Q as affectedByCdr=false while granting it flat ability haste through R's passive (S3). Both readings were checked and give the same ability ordering, so the verdict is insensitive to that wiki-data quirk. Flagging it as an aside: 'affectedByCdr: false' on Dark Sphere looks like a wiki-template artifact rather than game behavior, and it is worth confirming wherever Q's effective cooldown is computed."
+  ]
+}

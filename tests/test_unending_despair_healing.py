@@ -3,9 +3,20 @@
 import math
 
 from src.calculator.data_fetcher import fetch_item_data, get_champion, get_item_by_name
-from src.calculator.item_effects import resolve_damage_effects
+from src.calculator.interpreters import periodic
 from src.calculator.passive_parser import parse_item_effect
 from src.calculator.pipeline import FightParams, _item_self_healing_events, run_fight
+
+
+def _periodic_slots(*owners: str) -> periodic.PeriodicSlots:
+    """The periodic strikes a build declares, read through their rules."""
+    return periodic.resolve_slots(
+        owners,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
+        holder_is_melee=False,
+    )
 
 
 def _timed_params(duration: float = 8.0) -> FightParams:
@@ -42,8 +53,8 @@ def test_anguish_emits_exact_periodic_damage_and_self_healing_events():
     damage_events = row["damage_events"]
     healing_events = result["self_healing_events"]
     multiplier = (
-        resolve_damage_effects([{"name": "Unending Despair"}])
-        .periodic[0]
+        _periodic_slots("Unending Despair")
+        .intervals[0]
         .self_heal_post_mitigation_multiplier
     )
 

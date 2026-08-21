@@ -18,19 +18,24 @@ Why E is non-generic:
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from ..healing_helpers import (
+    _ability,
+    _attributed_events,
+    _leveling_value,
+    _trigger_fields,
+)
+from .inputs import champion_stat
+from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
 
 PACKET_SHA256 = "f3732d39aae761199c06bfc606515aee50fa1cc74ea65f28a15b0ef78d02f366"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Maokai", PACKET_SHA256)
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED cadence: the attached-sapling burn ticks every 0.75 seconds
 # over 1.5 seconds (2 ticks) — wiki description of the brush-empowered
@@ -58,6 +63,10 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
             explosion,
             "magic",
         )
+        # One explosion, at the cast: the boundary claim that carries
+        # MODULE_CC's reviewed slow for E into the event ledger on this
+        # branch (the empowered branch's parts author their own timing).
+        entry["event_order_certified"] = "single_hit"
         entry["detail"] = (
             "Un-empowered Sapling: single explosion of the sourced Magic Damage "
             "row; set sapling_empowered to price the brush-empowered burn."
@@ -95,6 +104,50 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# Cached kit review: Q's shockwave "slows them by 99% for 0.25 seconds"
+# (the additional stun and knock-back land only on enemies "near
+# Maokai", a position this pair fight does not model), W's arrival
+# "roots them for a duration", E's sapling explosion slows "by 45% for 2
+# seconds", and each R bramble "roots them for 0.75 : 2.25 (based on
+# distance travelled) seconds".  P is a self-heal on-hit.
+MODULE_CC = {"Q": "slow", "W": "root", "E": "slow", "R": "root"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Maokai",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Sapling Toss defaults to the brush-empowered branch: the explosion deals 66.7% damage to "
+        "non-minion targets and attaches two Saplings that burn every 0.75s over 1.5s (2 ticks) — "
+        "the sourced Total Magic Damage / Total Attached Sapling Damage rows (E2 DoT tick-count "
+        "convention)",
+        "The sapling's 30-second sit duration, 2.5-second chase, 45% slow, reveal, and the 300 cap "
+        "against non-champions are state, not modeled",
+        "P (Sap Magic) is authored by this module's derive_self_healing rule: the periodic "
+        "empowered-attack heal (4% : 12.8% of maximum health by level, the cached Max Health "
+        "Damage row) fires on the first basic attack after the P cooldown (30 : 20 seconds by "
+        "level, affectedByCdr false) completes; each Q/W/E/R cast counts one trigger and each E "
+        "cast an additional sapling champion hit, each reducing the cooldown by 4 seconds.  "
+        "Incoming enemy ability strikes are not visible to the 1v1 outgoing ledger, so the "
+        "counted triggers undercount reality (the proc can only be delayed); the heal does not "
+        "trigger above 95% maximum health (live gate)",
+    ),
+    # The shockwave, the dash's arrival hit and each bramble deal
+    # their packet once, at the cast (none of the three carries a
+    # sourced travel time) — the boundary claim that carries
+    # MODULE_CC's reviewed kinds into the event ledger.
+    single_hit_slots=frozenset({"Q", "W", "R"}),
+    slot_parsers={
+        "E": _sapling_toss,
+    },
+    # W's arrival "roots them for a duration": the sourced Root Duration row
+    # carries MODULE_CC's reviewed kind and its control atom onto the packet.
+    slot_wrappers={
+        "W": partial(with_control, kind="root", duration_attr="Root Duration"),
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
+
 OPTIONS = [
     {
         "key": "sapling_empowered",
@@ -104,54 +157,9 @@ OPTIONS = [
     },
 ]
 
-ASSUMPTIONS = [
-    "Every slot is an explicit packet or sourced no-damage entry from the "
-    "pinned local Wiki cache; no runtime archetype inference is used.",
-    "Numeric packets preserve rank/level arrays, typed scaling, target-health "
-    "terms, and explicit variant selectors where the source lists them.",
-    "The complete parent Wiki entry was read before certifying this module.",
-    "Passive plus Q/W/E/R entries are represented by explicit packet or "
-    "no-damage slot declarations.",
-    "Rank arrays, cooldowns, typed target-health terms, and packet variants "
-    "remain sourced from the local reviewed-packet asset.",
-    "Non-damaging shields, buffs, movement, and utility branches remain "
-    "explicit state/out-of-scope rows rather than invented damage.",
-    "Sapling Toss defaults to the brush-empowered branch: the explosion deals "
-    "66.7% damage to non-minion targets and attaches two Saplings that burn "
-    "every 0.75s over 1.5s (2 ticks) — the sourced Total Magic Damage / Total "
-    "Attached Sapling Damage rows (E2 DoT tick-count convention)",
-    "The sapling's 30-second sit duration, 2.5-second chase, 45% slow, "
-    "reveal, and the 300 cap against non-champions are state, not modeled",
-    "P (Sap Magic) is authored by the HEALING_RULE_CHAMPIONS rule in "
-    "healing.py: the periodic empowered-attack heal (4% : 12.8% of "
-    "maximum health by level, the cached Max Health Damage row) fires on "
-    "the first basic attack after the P cooldown (30 : 20 seconds by "
-    "level, affectedByCdr false) completes; each Q/W/E/R cast counts one "
-    "trigger and each E cast an additional sapling champion hit, each "
-    "reducing the cooldown by 4 seconds.  Incoming enemy ability strikes "
-    "are not visible to the 1v1 outgoing ledger, so the counted triggers "
-    "undercount reality (the proc can only be delayed); the heal does "
-    "not trigger above 95% maximum health (live gate)",
-]
 
-SLOTS = {
-    "P": _BATCH_SLOTS["P"],
-    "Q": _BATCH_SLOTS["Q"],
-    "W": with_control(
-        _BATCH_SLOTS["W"],
-        kind="root",
-        duration_attr="Root Duration",
-    ),
-    "E": _sapling_toss,
-    "R": _BATCH_SLOTS["R"],
-}
-
-parse_abilities = build_parser(SLOTS, "Maokai")
-SOURCES = _BATCH_SOURCES
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"
-
-
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+# pylint: disable=too-many-branches,too-many-statements
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
@@ -162,15 +170,15 @@ def derive_self_healing(
 ) -> list[dict[str, Any]]:
     """Resolve Sap Magic's cooldown and empowered-attack heal."""
     del ability_damages
-    passive = _healing._ability(champion_data, "P")
-    level = max(1, int(champion_stats.get("level", 18) or 18))
+    passive = _ability(champion_data, "P")
+    level = max(1, int(champion_stat(champion_stats, "level")))
     cooldown_values: list[float] = []
     for modifier in (passive.get("cooldown") or {}).get("modifiers", []):
         values = modifier.get("values", [])
         if values:
             cooldown_values = [float(value) for value in values]
             break
-    percentage = _healing._leveling_value(passive, "Max Health Damage", level)
+    percentage = _leveling_value(passive, "Max Health Damage", level)
     if not cooldown_values or percentage <= 0.0:
         return []
     cooldown = cooldown_values[min(level - 1, len(cooldown_values) - 1)]
@@ -185,7 +193,7 @@ def derive_self_healing(
         return maximum_health * percentage / 100.0
 
     duration = max(0.0, float(fight_duration_seconds or 0.0))
-    auto_events = _healing._attributed_events(
+    auto_events = _attributed_events(
         damage_events, lambda source, _event: source == "auto_attacks"
     )
     trigger_by_time: dict[float, int] = {}
@@ -208,7 +216,7 @@ def derive_self_healing(
     trigger_index = 0
     auto_index = 0
     cycle_start = 0.0
-    healing = []
+    healing: list[dict[str, Any]] = []
     while trigger_index < len(trigger_times) or auto_index < len(auto_times):
         trigger_count = 0
         previous_trigger = cycle_start
@@ -253,7 +261,7 @@ def derive_self_healing(
                 "source": "Sap Magic",
                 "kind": "champion_passive",
                 "actor_wide": True,
-                **_healing._trigger_fields(proc_auto),
+                **_trigger_fields(proc_auto),
             }
         )
         proc_time = float(proc_auto.get("time", 0.0))
@@ -266,10 +274,5 @@ def derive_self_healing(
         auto_index += 1
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-from .healing_contract import (  # pylint: disable=wrong-import-position
-    declare_healing_rule,
-)
 
 SELF_HEALING_RULE = declare_healing_rule("Maokai", derive_self_healing)

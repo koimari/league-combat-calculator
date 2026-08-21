@@ -5,6 +5,14 @@ again after 1.5 seconds when the target remains in the zone. Its second hit is
 an explicit option because crowd control does not guarantee that condition.
 Soraka's passive and R do not damage enemies.
 
+R (Wish) is a zero-damage cast so the ally-support scanner prices the
+sourced team heal (350.0 to Soraka and every selected teammate at rank 3,
+0 AP); its "+50% on targets below 40% of their maximum health" is a
+live-health condition the scan cannot establish and is not priced.
+
+P (Salvation) stays ``out_of_scope`` on the movement-speed axis: its 90%
+bonus toward wounded allies has no ``stat_buff`` key at all.
+
 E8d: W (Astral Infusion) is an ally-only heal with no enemy damage.  The slot
 is declared here so the ability is CAST in the fight rotation; the engine's
 ally-support scanner then derives the heal packet from the cached W leveling
@@ -15,39 +23,18 @@ so the module documents it and does not author a mana resource cost.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
-from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
-
-
-def _astral_infusion(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: zero-damage cast so the ally-support scanner emits the heal.
-
-    Astral Infusion heals the selected ally (cached "Heal" row, 90-170 +
-    50% AP); it costs 10% of Soraka's maximum health per cast, which the
-    engine's mana/energy resource ledger does not model.  The entry carries
-    the cached cooldown so the ability is scheduled like any other cast.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
-    return {
-        "name": ability.get("name", "Astral Infusion"),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        # The cached cost row is 10% of maximum health per cast — a health
-        # cost, not mana.  Declare zero so the engine's mana stamp cannot
-        # mislabel it as a 10-mana cast; the cost is documented, not modeled.
-        "resource_cost": 0.0,
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": "Ally-only heal (sourced by the support scanner); "
-        "costs 10% of max health per cast, not modeled as mana.",
-    }
+from .healing_contract import declare_healing_rule
+from .slotlib import (
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    simple_damage,
+    support_cast,
+)
+from .source_receipts import load_champion_sources
 
 
 def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -124,40 +111,51 @@ ASSUMPTIONS = [
     "soraka.bin.json + ddragon Soraka.json).",
 ]
 
-SOURCES = [
-    {
-        "label": "Starcall",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Soraka/Starcall",
-        "revision_id": 3953362,
-        "revision_timestamp": "2025-09-11T19:22:43Z",
-    },
-    {
-        "label": "Equinox",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Soraka/Equinox",
-        "revision_id": 3907153,
-        "revision_timestamp": "2025-06-06T18:23:34Z",
-    },
-]
+SOURCES = load_champion_sources("Soraka")
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "W": _astral_infusion,
+    # One star, one landing ("dealing magic damage to enemies hit and
+    # slowing them by 30%"), so the row is a hit the ledger can time.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # Astral Infusion heals the selected ally (cached "Heal" row, 90-170 +
+    # 50% AP).  The cached cost row is 10% of maximum health per cast — a
+    # health cost, not mana — so the entry declares zero rather than let the
+    # engine's mana stamp mislabel it as a 10-mana cast.
+    "W": support_cast(
+        default_name="Astral Infusion",
+        resource_cost=0.0,
+        detail="Ally-only heal (sourced by the support scanner); "
+        "costs 10% of max health per cast, not modeled as mana.",
+    ),
     "E": _equinox,
+    # Wish heals Soraka and every selected teammate (cached "Heal" row,
+    # 150/250/350 + 50% AP).  The cached "Increased Heal" row is the +50%
+    # applied to a recipient below 40% of their maximum health, which is a
+    # live-health condition the scan cannot establish, so the base row is
+    # what is priced.
+    "R": support_cast(
+        default_name="Wish",
+        detail="Team heal (sourced by the support scanner); the "
+        "below-40%-health increase is not priced.",
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Soraka")
+# Reviewed crowd control, read from the cached kit.  Q (Starcall) deals
+# its damage "and slowing them by 30% for 1.5 seconds".  E (Equinox)
+# "deals magic damage to enemy champions within at the time of cast", then
+# "silences enemies within" for 1.5 seconds before the zone "erupts to
+# deal the same damage ... and root them for a duration" — the root is the
+# immobilizing half of what this row's two hits apply, and ``_equinox``
+# authors it as a sourced control event at the eruption's 1.5s offset when
+# the target-remains option arms that second hit.  W deals no damage.
+MODULE_CC = {"Q": "slow", "E": "root"}
+
+parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-
-
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -195,9 +193,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Soraka", derive_self_healing)

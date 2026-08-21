@@ -36,6 +36,7 @@ from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import extract_cooldown, extract_value, simple_damage
+from .source_receipts import load_champion_sources
 
 # Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers
 # are prose in the reviewed cache entry (Ashe Q effect 0: "basic attacks
@@ -108,7 +109,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     focus = TimedStackState(
         ASHE_FOCUS_STACK_RULE,
-        starting_stacks=max(0, min(int(ctx.options.get("q_focus_stacks", 4)), 4)),
+        starting_stacks=max(0, min(int(ctx.option("q_focus_stacks")), 4)),
     )
     if focus.stacks < focus.rule.max_stacks:
         return None
@@ -126,7 +127,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
 
     # Apply the bonus AS to the shared stats context (BUFF phase).
     as_ratio = ctx.stats["attack_speed_ratio"]
-    ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + as_ratio * (
+    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + as_ratio * (
         bonus_as_pct / 100.0
     )
 
@@ -235,23 +236,34 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": _rangers_focus,
     "P": _frost_shot,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One arrow's worth of damage lands on the target ("Enemies can
+    # intercept multiple arrows but do not take damage from any beyond the
+    # first"), and the crystal arrow shatters on the champion it hits:
+    # both are a single hit at the cast boundary.
+    "W": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _hawkshot,
 }
 
-parse_abilities = build_parser(SLOTS, "Ashe")
+# Cached kit review.  W applies "Critical Slow to enemy champions hit" and
+# R "stun[s] them for 1 : 3.5 (based on distance travelled) seconds".  Q
+# and P are auto-attack riders that emit no ability damage of their own —
+# their Frost Shot slow rides the basic attacks, which this scan does not
+# read as ability control.  E is vision only.
+MODULE_CC = {"W": "slow", "R": "stun", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ashe", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ashe",
-        "revision_id": 4015971,
-        "revision_timestamp": "2026-05-08T04:11:38Z",
-    }
-]
+SOURCES = load_champion_sources("Ashe")
+
+# E is emitted, but its row is a sourced zero — not a fact SLOTS derives.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",
@@ -259,4 +271,3 @@ MODULE_COVERAGE = {
     "E": "no_damage",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

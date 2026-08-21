@@ -67,10 +67,7 @@ jobs:
         # missing-file failure on top of the real one.
         if: ${{ !cancelled() && steps.matrices.conclusion != 'skipped' }}
         run: |
-          python scripts/validate_receipt.py             artifacts/backend/acceptance_matrix.json
-          # TODO(issue #139): add champion_optimizer_matrix.json here once
-          # the #139 envelope lands in scripts/champion_optimizer_matrix.py
-          # (that file is owned by the #136/#145 fix batch this cycle).
+          python scripts/validate_receipt.py artifacts/backend/acceptance_matrix.json artifacts/backend/champion_optimizer_matrix.json
 
       - name: Upload backend acceptance evidence
         if: ${{ always() }}
@@ -109,6 +106,27 @@ jobs:
 
       - name: Scan Python source
         run: bandit -r src -ll
+
+  coverage-census:
+    # Every champion x fight mode, legally slotted item, keystone, and
+    # certified-item x enemy cell through the real payload boundaries; the
+    # committed receipt must reproduce.  Its own job because the sweep is as
+    # long as the suite.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify the coverage census receipt
+        run: python scripts/coverage_census.py check docs/coverage-census.json
 
   container:
     runs-on: ubuntu-latest

@@ -65,12 +65,12 @@ from pathlib import Path
 import pytest
 
 from src.calculator.champions import (
+    get_champion_module_contract,
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.rumble import (
     ASSUMPTIONS,
-    MODULE_COVERAGE,
     _MAX_OVERHEAT_AUTOS,
 )
 from src.calculator.champions.scaling import (
@@ -158,6 +158,24 @@ def _parse(
     return champion_stats, abilities
 
 
+def _rider(level: int, autos: int, **kwargs):
+    """The Overheated on-hit payload, and what the declared swings cost.
+
+    Batch K priced P as a ``parts`` row on the ``passive`` slot. That row
+    can never reach a fight: ``passive`` is not an orderable cast
+    (``pipeline.validate_cast_order_for_kit`` refuses it), so the merged
+    module carries the same fail-closed count on the on-hit channel the
+    game actually uses, bounded by ``max_procs``. The per-swing number and
+    the count are unchanged; only where they live moved.
+    """
+    _, abilities = _parse(level, options={"overheat_autos": autos}, **kwargs)
+    entry = abilities["passive"]
+    on_hit = entry.get("on_hit")
+    if on_hit is None:
+        return 0.0, 0
+    return float(on_hit["damage_per_hit"]), int(on_hit["max_procs"])
+
+
 # ---------------------------------------------------------------------------
 # P — sourcing re-derived from the binary
 # ---------------------------------------------------------------------------
@@ -212,21 +230,15 @@ class TestOverheatDamage:
         [(1, 5.0), (11, 25.59), (18, 40.0), (20, 44.12)],
     )
     def test_per_auto_damage_is_the_sum_of_the_three_terms(self, level, flat):
-        stats, abilities = _parse(
-            level,
-            options={"overheat_autos": 1},
-            stats_override={"ability_power": 200.0},
-        )
+        per_swing, procs = _rider(level, 1, stats_override={"ability_power": 200.0})
         expected = flat + 0.25 * 200.0 + 0.04 * _TARGET_MAX_HEALTH
-        assert stats["ability_power"] == pytest.approx(200.0)
-        assert abilities["passive"]["total_raw"] == pytest.approx(expected)
+        assert procs == 1
+        assert per_swing == pytest.approx(expected)
 
     def test_level_twenty_value_is_hand_derived(self):
-        _, abilities = _parse(
-            20, options={"overheat_autos": 1}, stats_override={"ability_power": 200.0}
-        )
+        per_swing, _ = _rider(20, 1, stats_override={"ability_power": 200.0})
         # 44.12 + 50.00 (25% of 200 AP) + 100.00 (4% of 2500 max HP)
-        assert abilities["passive"]["total_raw"] == pytest.approx(194.12)
+        assert per_swing == pytest.approx(194.12)
 
     def test_target_max_health_term_is_actually_present(self):
         """The term the alias bug class silently drops; measured directly.
@@ -235,7 +247,7 @@ class TestOverheatDamage:
         is "% of THE target's maximum health"), a different code path from
         the ``_SIMPLE_UNITS`` alias repaired for W — so both need pinning.
         """
-        _, low = _parse(20, options={"overheat_autos": 1})
+        low_per_swing, _ = _rider(20, 1)
         data = copy.deepcopy(_RUMBLE)
         stats = calculate_total_stats(data, 20, [])
         doubled = parse_champion_abilities(
@@ -250,28 +262,24 @@ class TestOverheatDamage:
             },
             champion_options={"overheat_autos": 1},
         )
-        gain = doubled["passive"]["total_raw"] - low["passive"]["total_raw"]
+        gain = doubled["passive"]["on_hit"]["damage_per_hit"] - low_per_swing
         assert gain == pytest.approx(0.04 * _TARGET_MAX_HEALTH)
 
     @pytest.mark.parametrize("autos", [1, 2, 5, 12])
     def test_total_scales_linearly_in_the_auto_count(self, autos):
-        _, one = _parse(20, options={"overheat_autos": 1})
-        _, many = _parse(20, options={"overheat_autos": autos})
-        assert many["passive"]["total_raw"] == pytest.approx(
-            one["passive"]["total_raw"] * autos
-        )
-        assert [part.count for part in many["passive"]["parts"]] == [autos]
+        one_per_swing, _ = _rider(20, 1)
+        many_per_swing, procs = _rider(20, autos)
+        assert procs == autos
+        assert many_per_swing * procs == pytest.approx(one_per_swing * autos)
 
     def test_auto_count_is_clamped_to_the_rail(self):
-        _, capped = _parse(20, options={"overheat_autos": 10_000})
-        _, rail = _parse(20, options={"overheat_autos": _MAX_OVERHEAT_AUTOS})
-        assert capped["passive"]["total_raw"] == pytest.approx(
-            rail["passive"]["total_raw"]
-        )
+        capped = _rider(20, 10_000)
+        rail = _rider(20, _MAX_OVERHEAT_AUTOS)
+        assert capped == rail
+        assert capped[1] == _MAX_OVERHEAT_AUTOS
 
     def test_negative_auto_counts_floor_at_zero(self):
-        _, abilities = _parse(20, options={"overheat_autos": -5})
-        assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
+        assert _rider(20, -5) == (0.0, 0)
 
 
 class TestZeroAutosCostZero:
@@ -285,10 +293,9 @@ class TestZeroAutosCostZero:
         ) == pytest.approx(0.0)
 
     def test_zero_and_one_auto_are_not_identical(self):
-        _, none = _parse(20, options={"overheat_autos": 0})
-        _, one = _parse(20, options={"overheat_autos": 1})
-        assert none["passive"]["total_raw"] == pytest.approx(0.0)
-        assert one["passive"]["total_raw"] > 0.0
+        assert _rider(20, 0) == (0.0, 0)
+        per_swing, procs = _rider(20, 1)
+        assert per_swing > 0.0 and procs == 1
 
     def test_option_is_registered_with_a_zero_default(self):
         meta = get_champion_options_meta("Rumble")
@@ -315,14 +322,10 @@ class TestBonusDamageRowIsAMonsterCap:
         row = _leveling_row(_P_EFFECT, "Bonus Damage")
         level_twenty_cap = row["modifiers"][0]["values"][19]
         assert level_twenty_cap == pytest.approx(163.32)
-        _, abilities = _parse(
-            20, options={"overheat_autos": 1}, stats_override={"ability_power": 200.0}
-        )
+        per_swing, _ = _rider(20, 1, stats_override={"ability_power": 200.0})
         # 194.12 is the three sourced terms; the cap must not be a fourth.
-        assert abilities["passive"]["total_raw"] == pytest.approx(194.12)
-        assert abilities["passive"]["total_raw"] != pytest.approx(
-            194.12 + level_twenty_cap
-        )
+        assert per_swing == pytest.approx(194.12)
+        assert per_swing != pytest.approx(194.12 + level_twenty_cap)
 
     def test_withholding_is_documented(self):
         assumption = next(a for a in ASSUMPTIONS if "Junkyard Titan" in a)
@@ -338,6 +341,7 @@ class TestAttackSpeedSteroidIsWithheld:
     def test_no_attack_speed_buff_is_emitted(self):
         _, abilities = _parse(20, options={"overheat_autos": 3})
         assert "stat_buff" not in abilities["passive"]
+        assert abilities["passive"]["on_hit"]["max_procs"] == 3
 
     def test_withholding_names_the_lockout_it_is_bundled_with(self):
         assumption = next(a for a in ASSUMPTIONS if "Junkyard Titan" in a)
@@ -473,7 +477,14 @@ class TestMaximumHealthAliasBlastRadius:
 
 
 def test_module_coverage_has_no_out_of_scope_slots_left():
-    assert MODULE_COVERAGE == {
+    """Read off the contract, not a module constant.
+
+    Every slot is emitted and priced, so ``module_contract.default_coverage``
+    already derives exactly this map; the contract refuses a module-level
+    ``MODULE_COVERAGE`` that restates what SLOTS derive, so the assertion
+    reads the registry's answer instead.
+    """
+    assert get_champion_module_contract("Rumble").coverage == {
         "P": "modeled",
         "Q": "modeled",
         "W": "modeled",

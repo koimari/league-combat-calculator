@@ -145,6 +145,9 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -162,8 +165,23 @@ from src.calculator.cleanse_eligibility import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.participant_timeline import (
+    Combatant,
+    _simulate_survival as _simulate_survival_walk,
+)
 from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MILIO_DATA = _CHAMPION_DATA["Milio"]
@@ -357,7 +375,7 @@ def _r_flat(rank: int, ap: float) -> float:
 
 
 def _dummy_combatant(participant_id: str, team: str, health: float = 3000.0):
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -695,20 +713,21 @@ class TestSourceAndTypedValues:
 
 class TestNoR:
     def test_r_rank0_parse_and_option_set_unchanged(self):
-        # R rank 0 -> the parse receipt ranks 0 and the options surface
-        # is unchanged: Milio declares NO champion options (the packet
-        # module OPTIONS is empty) and /api/config declares none — the
-        # cleanse rides the R cast, it adds NO user option.
+        # R rank 0 -> the parse receipt ranks 0 and the options surface is
+        # unchanged: the cleanse rides the R cast and adds NO user option.
+        # Milio's one declared option belongs to P (Fired Up! proc count),
+        # so what this pins is that R contributes nothing to it — the same
+        # set at rank 0 and at rank 3.
         _, abilities = _parse(ranks={**_RANKS, "R": 0})
         # P2-7: an unlearned R is ABSENT (the packet-module rank gate —
         # no cast, no heal, no cleanse).
         assert "R" not in abilities
         meta = get_champion_options_meta("Milio")
-        assert meta["options"] == []
+        assert [option["key"] for option in meta["options"]] == ["p_procs"]
         with _testing_client() as client:
             config = client.get("/api/config").get_json()
         options = config["champion_options"]["Milio"]["options"]
-        assert options == []
+        assert [option["key"] for option in options] == ["p_procs"]
 
     def test_r_rank0_no_cleanse_anywhere_today(self):
         # Pinned actual (the brief's contract #2's absence half): with R
@@ -788,6 +807,8 @@ class TestRTiming:
         # control_not_active and the one use is consumed.
         assert cleanse["decision"]["reason"] == "control_not_active"
         assert cleanse["use_consumed"] is True
+        # One cast is one cleanse action: the per-recipient packets share a
+        # ``cleanse_group`` and the utility receipt folds them back into it.
         assert _cleanse_event_count(combat) == 1
 
 

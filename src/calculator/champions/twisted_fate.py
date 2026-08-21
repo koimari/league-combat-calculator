@@ -26,6 +26,7 @@ from typing import Any
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
+from ..ability_spec import DamagePart
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -38,11 +39,18 @@ from .slotlib import (
 # Pick a Card's three card branches, in the cycle order the game presents
 # (gold -> red -> blue).  The wiki JSON stores the "Magic Damage" rows as
 # three occurrences: 0 = Blue Card, 1 = Red Card, 2 = Gold Card.
+#
+# Each card's reviewed crowd control comes from its own cached bonus line,
+# which is why W's answer rides its part rather than MODULE_CC: "Blue Card
+# Bonus: Deals magic damage ... and restores mana" (no control), "Red Card
+# Bonus: ... All targets hit are slowed for 2.5 seconds", "Gold Card
+# Bonus: ... and stuns the target for a duration".
 _CARD_OCCURRENCES = (2, 1, 0)
 _CARD_NAMES = ("Gold Card", "Red Card", "Blue Card")
+_CARD_CC = ("stun", "slow", "none")
 
 
-def _card_parser(occurrence: int, name: str):
+def _card_parser(occurrence: int, name: str, cc_kind: str):
     """One selected card's magic damage (flat + 100% AD + AP ratio)."""
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -56,27 +64,40 @@ def _card_parser(occurrence: int, name: str):
         if leveling is None:
             return None
         value = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
-        return damage_entry(name, rank, extract_cooldown(ability, rank), value, "magic")
+        entry = damage_entry(
+            name, rank, extract_cooldown(ability, rank), value, "magic"
+        )
+        # One empowered basic attack, one blow — the row is a hit the
+        # ledger can time, so the card's own answer reaches its readers.
+        entry["parts"] = (DamagePart("magic", value, cc_kind=cc_kind),)
+        entry["event_order_certified"] = "single_hit"
+        return entry
 
     parse.phase = "damage"
     return parse
 
 
+# The Gold Card's stun rides a cached rank array ("Stun Duration",
+# 1 / 1.25 / 1.5 / 1.75 / 2 seconds), so its interval is sourced from the
+# packet.  The Red Card's slow has no such row — its cached "Slow" leveling
+# is the percentage, and the 2.5-second window lives in prose — so its part
+# carries the reviewed kind without an interval rather than reading a
+# percent as seconds.
 _CARDS = (
     with_control(
-        _card_parser(_CARD_OCCURRENCES[0], _CARD_NAMES[0]),
+        _card_parser(_CARD_OCCURRENCES[0], _CARD_NAMES[0], _CARD_CC[0]),
         kind="stun",
         duration_attr="Stun Duration",
     ),
-    _card_parser(_CARD_OCCURRENCES[1], _CARD_NAMES[1]),
-    _card_parser(_CARD_OCCURRENCES[2], _CARD_NAMES[2]),
+    _card_parser(_CARD_OCCURRENCES[1], _CARD_NAMES[1], _CARD_CC[1]),
+    _card_parser(_CARD_OCCURRENCES[2], _CARD_NAMES[2], _CARD_CC[2]),
 )
 
 
 def _pick_a_card(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: exactly one selected card (w_card option, default gold)."""
     try:
-        index = int(ctx.options.get("w_card", 0))
+        index = int(ctx.option("w_card"))
     except (TypeError, ValueError):
         index = 0
     index = max(0, min(index, len(_CARDS) - 1))
@@ -92,16 +113,24 @@ ASSUMPTIONS = [
     "P and R deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Twisted Fate"))
+SOURCES = load_champion_sources("Twisted Fate")
 
 SLOTS = {
     "P": no_damage_parser(
         "P",
         "Loaded Dice is a gold/utility passive; no enemy damage.",
     ),
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One card per pass ("Enemies can be damaged only once per pass") and
+    # one empowered attack: each row is one blow the ledger can time.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _pick_a_card,
-    "E": simple_damage(attr="Bonus Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Bonus Magic Damage",
+        dmg_type="magic",
+        event_order_certified="single_hit",
+    ),
     "R": no_damage_parser(
         "R",
         "Destiny reveals and teleports; no enemy damage.",
@@ -127,5 +156,11 @@ OPTIONS = [
     },
 ]
 
-parse_abilities = build_parser(SLOTS, "Twisted Fate")
-REVIEW_STATUS = "reviewed_module"
+# Reviewed crowd control, read from the cached kit.  Q (Wild Cards)
+# "throws a fan of three cards ... that each deal magic damage to enemies
+# hit" and applies no control; E (Stacked Deck)'s three-stack attack
+# "deal[s] bonus magic damage" and applies none either.  W's answer is the
+# selected card's and is authored on its part above.
+MODULE_CC = {"Q": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Twisted Fate", cc_kinds=MODULE_CC)

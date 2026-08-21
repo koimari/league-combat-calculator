@@ -301,8 +301,11 @@ def test_rengar_ferocity_empowers_q_w_e():
     first basic-ability cast, and the cap-at-5th empowers the next cast
     when the fight reaches it again — the live walk prices the per-level
     Ferocity Bonus values for those casts and the base values otherwise."""
-    empowered = _fight("Rengar", options={"p_ferocity": 4})
-    base = _fight("Rengar", options={"p_ferocity": 0})
+    # R's armour shred is off here: this test compares raw rows against
+    # mitigated totals, and a shredded target would move the mitigation
+    # rather than the row the Ferocity empowerment is about.
+    empowered = _fight("Rengar", options={"p_ferocity": 4, "r_thrill_attack": False})
+    base = _fight("Rengar", options={"p_ferocity": 0, "r_thrill_attack": False})
     stats = empowered["champion_stats"]
 
     q_emp = _resolve(

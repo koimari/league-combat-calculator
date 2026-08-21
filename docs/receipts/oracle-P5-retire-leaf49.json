@@ -1,0 +1,125 @@
+{
+  "receipt": "oracle-P5-retire-leaf49",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/aoe/Q",
+  "old_value": null,
+  "old_value_note": "<absent> - the leaf did not exist in the previous baseline",
+  "new_value": 5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/wiki-atoms/spell-tags.json",
+      "data/wiki-atoms/damage.json",
+      "data/champion-audit/batch-6.json (Syndra audit row)",
+      "data/champion-audit/batch-e9-1.json (Syndra audit row)",
+      "data/worklists/f2-task.md, data/worklists/f3-task.md (rotation-receipt contract)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "schema_reading": {
+    "claim": "`rotation` is the derived optimal-event-order receipt; `rotation.aoe` is its per-slot area-of-effect multiplicity map (the 'AoE weight' factor that F3 multiplies into the per-rank DPS ranking), keyed by ability slot.",
+    "support": [
+      "data/worklists/f2-task.md: '/api/calculate response gains a rotation receipt: {order: [Q,E,E,E,...], rationale: \"Q poisons, E consumes\"}'",
+      "data/worklists/f3-task.md, deliverable 1b: 'RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)'",
+      "docs/math-foundations.md Section 5: row 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation)' - the rotation family is the receipt this leaf hangs under",
+      "docs/math-foundations.md Section 1.2: the engine represents AoE multiplicity as a deterministic INTEGER target count ('Statikk Shiv's chain-lightning target count is a deterministic level-scaled integer, 4-8 by level') - so an integer 5 is the expected shape for this map, not a fractional weight"
+    ],
+    "residual_uncertainty": "The baseline file itself (scripts/golden_baseline.json) is outside the permitted evidence tree, so the sibling values (W, E) could not be inspected. The verdict below is therefore argued on two independent legs: (a) the leaf must EXIST, which is decidable from the cache alone and is by itself sufficient to retire <absent>; (b) the value 5, which is the only principled integer for an uncapped AoE."
+  },
+
+  "independent_computation": {
+    "step_1_is_syndra_Q_an_aoe_ability": {
+      "question": "Does Dark Sphere (Q) belong in the AoE map at all?",
+      "quoted_cache_fields": {
+        "data/champions.json > Syndra > abilities > Q[0] > spellEffects": "Aoe",
+        "data/champions.json > Syndra > abilities > Q[0] > affects": "Enemies",
+        "data/champions.json > Syndra > abilities > Q[0] > targeting": "Location",
+        "data/champions.json > Syndra > abilities > Q[0] > effectRadius": "210",
+        "data/champions.json > Syndra > abilities > Q[0] > effects[0].description": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+      },
+      "cross_check": "data/wiki-atoms/spell-tags.json maps the game's 'Trait_AoE' and 'Trait_MultiTargetAttack' traits onto the atom 'damage.aoe'; data/wiki-atoms/damage.json defines the AOE script tag as a first-class damage-event tag. The wiki cache's own spellEffects field is the AoE marker for Syndra Q.",
+      "conclusion": "Q is unambiguously an area-of-effect damage ability: a location-targeted 210-unit-radius burst that damages 'nearby enemies' (plural). An AoE map that omits Q is missing a real AoE slot. <absent> is therefore wrong on its face."
+    },
+    "step_2_what_multiplicity": {
+      "question": "How many enemies can one Dark Sphere cast damage?",
+      "search_for_a_target_cap": "Regex sweep of every ability description in data/champions.json for '(up to|maximum of|max) N (enemies|targets|champions)' returns 0 matches corpus-wide; Syndra Q's two description branches contain no target cap at all (the only 'maximum of 2' in Q is the Transcendent Bonus CHARGE cap, not a target cap), and Q's notes read 'There is no limit as to how many Dark Spheres can be active at a time.'",
+      "derivation": "raw damage per enemy = 90/125/160/195/230 (+70% AP) magic, applied once to every enemy inside the 210-unit effect radius. With no cap in the source text, the multiplicity is bounded only by the enemy roster; the standard Summoner's Rift enemy team is 5 champions, so max targets = 5.",
+      "consistency_check_against_siblings": {
+        "W Force of Will": "spellEffects=Aoe, effectRadius=225, 'dealing magic damage to them and nearby enemies once they land. All targets hit are slowed' -> uncapped AoE -> 5",
+        "E Scatter the Weak": "spellEffects=Aoe, cone (angle 56 deg / 84 deg, width 120/200), 'deals magic damage to enemies hit' -> uncapped AoE -> 5",
+        "R Unleashed Power": "spellEffects=spell, targeting=Unit, 'she barrages the TARGET ENEMY CHAMPION with all collected Dark Spheres' -> single target -> correctly NOT in the aoe map",
+        "reading": "Q, W and E carry the identical uncapped-AoE signature in the cache. Any convention that gives W and E a value must give Q the same value; the only slot that legitimately stays out of the map is R."
+      },
+      "computed_value": 5
+    },
+    "step_3_alternative_reading_tested_and_rejected": {
+      "alternative": "'aoe' as an AoE-mode CAST COUNT for Q rather than a target multiplicity.",
+      "test": "docs/math-foundations.md Section 1.1: casts are a shared-timeline deterministic renewal schedule, epochs 0, c, 2c, ... with c = cd * 100/(100+AH) (Section 5: 'Ability haste (effective_cooldown) | cd' = cd*100/(100+AH)'). Syndra Q cooldown = 7 s flat at all ranks (cache: cooldown.modifiers values [7,7,7,7,7], rechargeRate [7,7,7,7,7]). Five cast epochs (0,7,14,21,28) require a fight window T >= 28 s with zero ability haste; with R's passive Q haste (10/20/30 by rank, cache R effects[0] 'Ability Haste') c drops to 7*100/130 = 5.385 s and the count over any plausible window is 6+, never exactly 5. Syndra's module also carries a separate synthetic Q2 charge slot (data/champion-audit/batch-6.json: modeled slots ['P','Q','Q2','W','E','R'], 'synthetic Q2 (2nd charge)'), so Q's own cast count would not absorb the charge either.",
+      "conclusion": "The cast-count reading only reproduces 5 under an implausible 28-35 s zero-haste window and is inconsistent with the Q2 slot; the AoE-multiplicity reading reproduces 5 exactly and for a stated reason. Rejected."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json > Syndra > abilities > Q[0]",
+      "quote": "\"spellEffects\": \"Aoe\", \"targeting\": \"Location\", \"affects\": \"Enemies\", \"effectRadius\": \"210\", \"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}",
+      "use": "Q is a location-targeted AoE with a 210-unit radius; flat 7 s cooldown."
+    },
+    {
+      "source": "data/champions.json > Syndra > abilities > Q[0] > effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.",
+      "use": "Damages 'nearby enemies' - plural, no target cap."
+    },
+    {
+      "source": "data/champions.json > Syndra > abilities > Q[0] > notes",
+      "quote": "There is no limit as to how many Dark Spheres can be active at a time.",
+      "use": "The only limit the wiki states for Dark Sphere is (absent) - nothing caps targets hit."
+    },
+    {
+      "source": "data/champions.json > Syndra > abilities > R[0] > effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "use": "R is single-target (targeting 'Unit', spellEffects 'spell') - correctly absent from an AoE map, which shows the map is AoE-only rather than all-slots."
+    },
+    {
+      "source": "data/wiki-atoms/spell-tags.json",
+      "quote": "\"Trait_AoE\": [\"damage.aoe\", \"enemy\"], \"Trait_MultiTargetAttack\": [\"damage.aoe\", \"enemy\"]",
+      "use": "AoE is a first-class atomized damage classification in the cache."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.2",
+      "quote": "no item in the current cache needs a geometric chain (Statikk Shiv's chain-lightning target count is a deterministic level-scaled integer, 4-8 by level).",
+      "use": "Target counts are modeled as deterministic integers - an integer 5 is the expected shape for this leaf."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "| Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT |",
+      "use": "Locates the `rotation` receipt family and supplies the cast-schedule identity used to test and reject the cast-count reading."
+    },
+    {
+      "source": "data/worklists/f3-task.md, deliverable 1b",
+      "quote": "RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)",
+      "use": "Establishes that the derived-order engine carries a per-ability AoE weight, which is what `rotation.aoe` records."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json > Syndra",
+      "quote": "\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"synthetic Q2 (2nd charge)\"",
+      "use": "Q's second charge lives in its own slot, so Q's own leaf is not a charge-inflated cast count."
+    }
+  ],
+
+  "reasoning_summary": "Syndra's Dark Sphere is flagged 'Aoe' in the wiki cache, is location-targeted with a 210-unit effect radius, and its description damages 'nearby enemies' with no target cap anywhere in the cached text (the only 'maximum' on Q is the 2-charge Transcendent cap). It therefore must appear in the rotation receipt's AoE map, which makes the previous <absent> a real omission - Q carries the same uncapped-AoE signature as W (225-unit radius) and E (cone), the two slots that legitimately populate that map alongside it, while R (targeting Unit, 'barrages the target enemy champion') is correctly excluded. With no cap in the source, the multiplicity is bounded only by the enemy roster: 5 champions on Summoner's Rift. Computed value = 5, matching the new baseline. The competing cast-count reading was tested against the Section 1.1 renewal schedule with Q's cached 7 s cooldown and R's 10/20/30 Q ability haste and does not reproduce 5 for any plausible fight window.",
+
+  "caveats": [
+    "Sibling leaves (rotation/aoe/W, rotation/aoe/E) could not be inspected: scripts/golden_baseline.json is outside the permitted evidence tree. If the engine's convention were a fractional AoE weight rather than an integer target count, the magnitude 5 would need re-checking - but the leaf's EXISTENCE would still be correct, so <absent> is wrong either way and the old value cannot be restored.",
+    "No source file, test, plan or diff was read; this receipt is derived solely from the data/ cache and docs/math-foundations.md."
+  ],
+
+  "committed": false
+}

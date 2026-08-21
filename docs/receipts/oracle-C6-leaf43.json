@@ -1,0 +1,106 @@
+{
+  "receipt_id": "oracle-C6-leaf43",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[6]/source",
+  "old_value": "Q",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": [
+      "data/champions.json (Syndra entry)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/f2-task.md",
+      "data/worklists/f3-task.md",
+      "data/practice-corpus/scenarios.json",
+      "data/wiki-atoms/stack-transform-summon-resource.json",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[*].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[*].leveling",
+      "quote": "Magic Damage per Sphere = [80, 120, 160] + [20,20,20] % AP; Minimum Magic Damage = [240, 360, 480] + 60% AP; Maximum Magic Damage = [560, 840, 1120] + 140% AP"
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[*] (description + leveling)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | Magic Damage = [90, 125, 160, 195, 230] + 70% AP"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units ... knocking back enemies they hit over 70 units ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0..1] (passive)",
+      "quote": "Passive: Dark Sphere gains ability haste. / Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. (Ability Haste = [10, 20, 30])"
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S8",
+      "file": "data/worklists/f2-task.md",
+      "path": "CONTEXT paragraph",
+      "quote": "The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "path": "section 1.2 item 1 + line 465 table row",
+      "quote": "A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw (_mitigate_hits). | Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) ... R single-cast"
+    }
+  ],
+
+  "independent_computation": {
+    "question": "Should the damage event at fights/manual_target/damage_events[6] of the Syndra 120-splinter custom-cast-order fight be sourced Q (Dark Sphere) or R (Unleashed Power)?",
+    "step_1_what_R_prices": "S1 says R conjures 3 spheres and grabs up to 4 live ones, then barrages the target with ALL collected spheres, 'each dealing magic damage upon hit'. So R's damage instance count ranges 3..7.",
+    "step_2_arithmetic_proof_the_grabbed_spheres_are_R_damage": {
+      "check": "Minimum Magic Damage should equal 3 x Magic Damage per Sphere; Maximum should equal 7 x Magic Damage per Sphere, if and only if every barraged sphere (conjured AND grabbed) is priced at R's per-sphere rate.",
+      "rank_1": "3 x 80 = 240 = listed Minimum 240; 3 x 20% AP = 60% AP = listed 60% AP. 7 x 80 = 560 = listed Maximum 560; 7 x 20% = 140% AP = listed 140% AP.",
+      "rank_2": "3 x 120 = 360 = listed 360 (60% AP); 7 x 120 = 840 = listed 840 (140% AP).",
+      "rank_3": "3 x 160 = 480 = listed 480 (60% AP); 7 x 160 = 1120 = listed 1120 (140% AP).",
+      "conclusion": "All six identities hold exactly, flat and AP-ratio. The up-to-4 GRABBED spheres - which are Dark Spheres created by Q casts - are priced by R's 'Magic Damage per Sphere' row, not by Q's row. A Q-created sphere thrown by R therefore deals R damage, not Q damage."
+    },
+    "step_3_contrast_with_Q_row": "Q's own row (S3) is 90/125/160/195/230 (+70% AP) and pays out once, on the conjuring hit, at the sphere's spawn. It is numerically incompatible with R's per-sphere 80/120/160 (+20% AP). Labelling a barrage instance 'Q' would attach Q's name to a number Q's row never produces, and would break the min/max identities in step 2.",
+    "step_4_kit_internal_precedent": "S4 states an E-pushed Dark Sphere deals 'Scatter the Weak's damage' - E's number, not Q's - even though Q created the sphere. Riot's own rule for Syndra is that a propelled sphere's damage belongs to the ability that propelled it, never to the ability that spawned it. R is the same case.",
+    "step_5_is_there_any_mechanic_that_makes_a_genuine_Q_event_R": "R's only other Q-touching effect is its passive (S5): 10/20/30 ability haste on Dark Sphere, reducing Q's 7 s cooldown (Q is flagged affectedByCdr=false, so R's passive is the only haste it gets; at R3, 7 x 100/130 = 5.385 s). That changes Q's CADENCE, never its damage source. No effect anywhere in the kit converts a Dark Sphere conjuring hit into R damage. So there is no correct model in which an event that truly is a Q cast carries source 'R'.",
+    "step_6_event_layout_at_120_splinters": "At splinters=120 the module exposes (S6/S7) Q, Q2 (2nd charge, unlocked at 40), W magic + W bonus true (unlocked at 60), E, and R x r_spheres, with P applying a global 1.15x AP multiplier (attribution-neutral). Per S8 the damage_events order follows the fight's cast_order; per S9 R is single-cast, so R contributes one contiguous run of sphere instances. Index 6 falls inside that run for every cast order in which R is not scheduled ahead of the Q/W/E block - i.e. the whole Q,Q2,W(2 parts),E prefix is 5 events (indices 0-4), and R's spheres begin at index 5 and run to 5+r_spheres-1 (>= index 7 for r_spheres >= 3). Under the setup/consume edge the rotation resolver is built to detect (F3: an ability that APPLIES precedes the ability that CONSUMES), Q must precede R precisely because R consumes live Dark Spheres, so R-last is the derived and the sourced-optimal placement.",
+    "conclusion": "Index 6 is a sphere of the Unleashed Power barrage. Its correct source is R. 'Q' is the mis-attribution of a barrage sphere to the ability that spawned the sphere, which S1, S2 (the exact 3x/7x identities) and S4 (the E precedent) all contradict."
+  },
+
+  "residual_uncertainty": {
+    "note": "The scenario definition for 'syndra_custom_order_120' lives outside the permitted evidence tree (scripts/ and tests/ were not read), so the exact custom cast_order and r_spheres value could not be re-derived, only the event layout it must produce.",
+    "why_it_does_not_change_the_verdict": "Both mechanisms that can place R at index 6 - (a) relabelling barrage spheres from their spawning ability Q to the barraging ability R, and (b) a larger sphere run covering index 6 - land on R being the sourced-correct label for a barrage instance. The only way 'Q' could be right at index 6 is if the event there is a genuine Dark Sphere conjuring hit that the new code renames to R; step 5 shows no mechanic in Syndra's kit does that, so that failure mode is not available.",
+    "confidence": "high on the attribution rule (arithmetically proven from the cached leveling rows); medium on the index arithmetic (cast_order not visible from data/)."
+  }
+}

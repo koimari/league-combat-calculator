@@ -13,7 +13,11 @@ Why each slot is non-generic:
 - P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL
   percentage of target max health — champion-local ``_deathbringer_stance``.
 - E (Umbral Dash) is a dash with healing amp only — no enemy damage of
-  its own (its heal is already priced through ``derive_self_healing``).
+  its own, so ``_umbral_dash`` emits a sourced zero rather than leaving
+  the slot absent. It is still ``modeled``: ``derive_self_healing``
+  prices its heal share of every damaging hit, the
+  ``self_healing_rule`` channel the coverage map names. Only the dash
+  itself — mobility, an axis the engine lacks — is unpriced.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -28,13 +32,16 @@ non-persistent post-mitigation damage he deals against enemy champions"
 and the basic-attack-timer-reset/cast-interrupt clause (mobility/utility,
 not a combat number). No effect row carries a ``leveling`` entry at all —
 there is no enemy-damage attribute anywhere on this ability to model.
-Reclassified from out_of_scope to no_damage (an atoms-confirmed
-zero-HP-number effect on the enemy side), not left silently absent.
+So the slot emits an atoms-confirmed zero-HP-number row rather than
+staying silently absent, and its heal keeps it ``modeled`` through the
+``self_healing_rule`` channel.
 """
 
 import re
 from typing import Any
 
+from .healing_contract import declare_healing_rule
+from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -46,13 +53,16 @@ from .slotlib import (
     simple_damage,
     stat_buff,
 )
+
 from ..healing_helpers import (
+    HealAnchor,
     _ability,
-    _attributed_events,
     _is_persistent,
     _leveling_value,
+    _payments,
     _trigger_fields,
 )
+from .source_receipts import load_champion_sources
 
 _Q_SWEETSPOT_ATTRS = [
     "First Sweetspot Damage",
@@ -74,6 +84,15 @@ _Q_VARIANT_ATTRS = [
     "Maximum Non-Minion Non-Sweetspot Damage",
     "Maximum Non-Minion Sweetspot Damage",
 ]
+
+# The Darkin Blade's three strikes are one second apart: "Aatrox can
+# activate The Darkin Blade three times before the ability goes on
+# cooldown, with a 1-second static cooldown between casts" (data/
+# champions.json Aatrox Q), and the cache names each strike's damage on its
+# own row, so the triad reads as three strikes at 0, 1 and 2 seconds from
+# the first.  Still unauthored, but no longer for the reason it was: see
+# the comment above ``parse_abilities``.
+_Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED = 1.0
 
 
 def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -198,11 +217,47 @@ SLOTS = {
     "E": _umbral_dash,
 }
 
+# No MODULE_CC, and for neither row is the reason a missing cadence — both
+# cadences are cached, and both are refused by a committed receipt rather
+# than by the source.
+#
+# Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of
+# the area", which is this module's ``sweetspot`` option, and the cache
+# spaces its three casts ("with a 1-second static cooldown between casts")
+# while naming each strike's damage separately, so the triad reads as three
+# strikes at 0/1/2 seconds.  The engine no longer refuses that: an event
+# past the end of a roster fight used to leave the whole incoming packet
+# unusable (``roster_composition.resource_restores``, and Aatrox's last Q
+# in an eight-second roster fight lands its third strike at 8.85s), and
+# that check now drops the late event the way the survival walk skips every
+# other post-window action.  What is left is evidence:
+# data/practice-corpus/scenarios.json pins e9-e1-aatrox-umbral-dash-heal at
+# one Umbral Dash payment of 276.4 off a single Q event, and the triad pays
+# the same total as three (73.7 + 92.1 + 110.6) at 0/1/2 seconds — the heal
+# rule follows the hits honestly (``HealAnchor.DAMAGING_HIT``), but the
+# corpus scenario is pinned to a src-tree sha and re-pinning it is a
+# baseline re-capture, not a review.  The same split moves
+# docs/receipts/escalated-defects-P4-S9 and the live-amp roster scenarios,
+# which are pinned the same way.
+#
+# W (Infernal Chains) slows on the first hit ("slowing them for 1.5
+# seconds") and pulls on the second, which the cache times exactly ("a
+# tether is formed ... for 1.5 seconds", and at its end "the target is
+# dealt the same physical damage again and pulled to the center of the
+# area").  Splitting the cached Total into those two hits keeps every
+# total, including self-healing, but it splits Umbral Dash's heal from one
+# payment into two — the heal is a share of each hit's damage
+# (``HealAnchor.DAMAGING_HIT``), so two hits are honestly two shares — and
+# docs/receipts/oracle-P4B-leaf29.json pins that single payment
+# ("W 157.5 x 0.16 x 2.0 = 50.4") as corpus evidence.  Re-pinning an oracle
+# receipt is not this review's to do.
+#
+# R fears "nearby enemy minions and monsters" only and authors no damage
+# part; P is the on-hit stance row.
 parse_abilities = build_parser(SLOTS, "Aatrox")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,too-many-locals
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
@@ -214,9 +269,13 @@ def derive_self_healing(
     """Price Deathbringer Stance and Umbral Dash healing for Aatrox."""
     del cast_timeline, fight_duration_seconds
     healing: list[dict[str, Any]] = []
-    passive_events = _attributed_events(
+    # Both rules pay a share of what a hit dealt — Deathbringer Stance
+    # "heals for a percentage of the damage dealt" and Umbral Dash the same
+    # for every damage source — so both pay per hit that dealt some.
+    passive_payments = _payments(
+        HealAnchor.DAMAGING_HIT,
+        lambda source: "passive" in source.lower(),
         damage_events,
-        lambda source, _event: "passive" in source.lower(),
     )
     e_description = " ".join(
         effect.get("description", "")
@@ -230,13 +289,14 @@ def derive_self_healing(
     base_ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
     per_100 = float(ratio_match.group(2)) / 100.0 if ratio_match else 0.0
     e_ratio = base_ratio + per_100 * (
-        float(champion_stats.get("bonus_health", 0.0)) / 100.0
+        float(champion_stat(champion_stats, "bonus_health")) / 100.0
     )
     r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
     r_inc = _leveling_value(_ability(champion_data, "R"), "Increased Healing", r_rank)
     healing_amp = 1.0 + r_inc / 100.0 if r_rank > 0 else 1.0
 
-    for event in passive_events:
+    for payment in passive_payments:
+        event = payment.event
         amount = max(0.0, float(event.get("damage", 0.0))) * healing_amp
         if amount > 0:
             healing.append(
@@ -249,7 +309,10 @@ def derive_self_healing(
                 }
             )
 
-    for event in damage_events:
+    for payment in _payments(
+        HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+    ):
+        event = payment.event
         if _is_persistent(event):
             continue
         amount = max(0.0, float(event.get("damage", 0.0))) * e_ratio * healing_amp
@@ -266,26 +329,12 @@ def derive_self_healing(
     return healing
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aatrox",
-        "revision_id": 4013021,
-        "revision_timestamp": "2026-04-28T12:46:19Z",
-    }
-]
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Aatrox")
 
 SELF_HEALING_RULE = declare_healing_rule("Aatrox", derive_self_healing)
+
+# E's own row is a sourced zero, so SLOTS derives ``modeled`` without a
+# damage number behind it; what prices the slot is the rule above, which
+# pays Umbral Dash's heal off every damaging hit (821.5 over a level-18
+# timed fight with autos).
+COVERAGE_CHANNELS = {"E": ("self_healing_rule",)}

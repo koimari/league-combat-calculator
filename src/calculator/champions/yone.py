@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
     CRIT_DAMAGE_MULTIPLIER_FACTOR,
@@ -35,8 +35,13 @@ from .module_helpers import (
     no_damage,
 )
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_description_control_duration,
+    extract_named,
+    extract_value,
+)
 
 # P4: the crit-conversion rule is the shared module_helpers rule (the
 # 0.9 factor's atom hash is 1142fbe0a600fcc8 for Yone).
@@ -58,6 +63,11 @@ certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 # seconds, and automatically does so after the duration"); the stored
 # percentage is the cached "Damage Stored" row read live.
 _E_SPIRIT_FORM_SECONDS = 5.0
+
+# Fate Sealed's damage is the gust's, not the mark's: "After 0.3 seconds, a
+# gust rushes along the same area that deals equal parts physical and magic
+# damage to marked enemies" (cached R prose).
+_R_GUST_DELAY_SECONDS = 0.3
 
 PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf1"
 
@@ -91,6 +101,28 @@ def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# The Q3 knock-up has no cached leveling row: its only source is the
+# "Gathering Storm Bonus" branch of the Q description, which is also the
+# branch that states the empower exists at all.
+_Q3_BRANCH = "Gathering Storm Bonus"
+
+
+def _q3_knockup_duration(ability: dict[str, Any]) -> float:
+    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
+    for index, effect in enumerate(ability.get("effects") or []):
+        if _Q3_BRANCH not in str(effect.get("description") or ""):
+            continue
+        duration = extract_description_control_duration(ability, index)
+        if duration:
+            return float(duration)
+        break
+    raise ValueError(
+        f"Yone Q: the cached {_Q3_BRANCH!r} branch states no knock-up "
+        "duration, so the Q3 control fails closed rather than shipping an "
+        "invented interval"
+    )
+
+
 def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Mortal Steel, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
     ability = ctx.ability()
@@ -99,7 +131,7 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_gathering_storm", 0)), 0), 2)
+    stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Mortal Steel"),
@@ -109,36 +141,39 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     # P4: the flat/AD-ratio split (Yasuo's shape) — only the AD-ratio
-    # portion crits ("Steel Tempest's damage based on its AD ratio can
+    # portion crits ("Mortal Steel's damage based on its AD ratio can
     # critically strike"; the binary TotalDamageCrit = base + AD x
     # (crit stat x ratio)).
     flat = extract_value(ability, "Physical Damage", rank, 0)
     ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
-    ad_part = ctx.stats.get("attack_damage", 0.0) * ad_ratio
+    ad_part = ctx.stat("attack_damage") * ad_ratio
+    # Both parts are the one thrust — the split is crit eligibility, not a
+    # second hit — so the ledger sees ONE landing: the flat part carries
+    # the cast instant (and with it the control marker), and the AD part
+    # rides that same event rather than booking a second one.
+    #
+    # The knock-up is a property of the branch, not of the slot, so it is
+    # authored here rather than in MODULE_CC: only the 2-stack cast is the
+    # whirlwind that "additionally knock[s] up enemies hit in their path",
+    # and that sentence is where its duration is read from.
+    knockup = _q3_knockup_duration(ability) if stacks >= 2 else 0.0
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            flat,
+            time_offset=0.0,
+            cc_kind="knockup" if stacks >= 2 else "none",
+            cc_duration=knockup,
+        ),
+        DamagePart("physical", ad_part, crit_effectiveness=1.0),
+    )
     if stacks >= 2:
-        # The Q3 whirlwind: same sourced damage + the 0.75s knock-up
-        # (the binary Q3KnockupDuration 0.75) — CC state on the flat
-        # part, mirroring Yasuo's Q3.
-        entry["parts"] = (
-            DamagePart(
-                "physical",
-                flat,
-                cc_kind="knockup",
-                cc_duration=0.75,
-                time_offset=0.0,
-            ),
-            DamagePart("physical", ad_part, crit_effectiveness=1.0),
-        )
         entry["detail"] = (
             "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
-            "same sourced damage as a normal thrust, adding a 0.75s "
+            f"same sourced damage as a normal thrust, adding a {knockup:g}s "
             "knock-up (crowd-control state, not damage)."
         )
     else:
-        entry["parts"] = (
-            DamagePart("physical", flat),
-            DamagePart("physical", ad_part, crit_effectiveness=1.0),
-        )
         entry["detail"] = (
             f"Gathering Storm {stacks}/2 stacks; the Q3 whirlwind at 2 "
             "stacks deals the same sourced damage (the empower is the "
@@ -151,8 +186,16 @@ def _mixed_damage_entry(
     ctx: SlotCtx,
     *,
     attributes: tuple[tuple[str, str], ...],
+    time_offset: float,
 ) -> dict[str, Any] | None:
-    """Build one mixed packet from its sourced physical and magic rows."""
+    """Build one mixed packet from its sourced physical and magic rows.
+
+    ``time_offset`` is when the cast's one damage instance lands, relative
+    to the cast: both rows are "equal parts" of a single hit, so they share
+    it.  Authoring it is what carries the cast into the event ledger — a
+    two-part mixed entry cannot use the single-part ``single_hit``
+    certification.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -163,6 +206,7 @@ def _mixed_damage_entry(
         DamagePart(
             damage_type,
             extract_named(ability, attribute, rank, ctx.stats, ctx.target),
+            time_offset=time_offset,
         )
         for damage_type, attribute in attributes
     )
@@ -188,6 +232,7 @@ def _spirit_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
             ("physical", "Physical Damage"),
             ("magic", "Magic Damage"),
         ),
+        time_offset=0.0,
     )
 
 
@@ -199,18 +244,8 @@ def _fate_sealed(ctx: SlotCtx) -> dict[str, Any] | None:
             ("magic", "Magic Damage"),
             ("physical", "Physical Damage"),
         ),
+        time_offset=_R_GUST_DELAY_SECONDS,
     )
-
-
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module(
-        "Yone",
-        PACKET_SHA256,
-        single_hit_slots=frozenset({"W"}),
-        slot_parsers={"W": _spirit_cleave, "R": _fate_sealed},
-    )
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 
 def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -244,15 +279,47 @@ def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _way_of_the_hunter,
-    "Q": _mortal_steel,
-    "W": _spirit_cleave,
-    "R": _fate_sealed,
-    # E declares metadata consumed after the fight event ledger is authored.
-    "E": _soul_unbound,
-}
-parse_abilities = build_parser(SLOTS, "Yone")
+# Spirit Cleave only cleaves; Fate Sealed's gust "deals equal parts
+# physical and magic damage to marked enemies within and pulls them towards
+# the location Yone blinked to, then knocks them up for 0.75 seconds" — the
+# pull is the control that lands with the damage (the 1-second stun is
+# applied at the mark and "ends prematurely upon the pull").  Q is not here:
+# its knock-up belongs to the Gathering Storm branch, so the kind is
+# authored per part in ``_mortal_steel``.  P is the soul-mark state row.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Soul Unbound's recast controls nothing, but its true-damage event is
+# built by the fight engine from the ``stored_damage`` declaration, not
+# from a part this module authors — there is nothing here for a kind to be
+# stamped on, and a declaration that never reaches the ledger would claim a
+# review the coverage scan cannot see.
+MODULE_CC = {"W": "none", "R": "pull"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Yone",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal Q; its empower "
+        "is the 0.75s knock-up, modeled as crowd-control state, so q_gathering_storm only changes "
+        "the Q row's detail",
+        "P (Way of the Hunter) soul mark is state",
+        "E (Soul Unbound) stores the sourced percentage of post-mitigation physical and magic "
+        "champion damage from Q/W/R and basic attacks inside each five-second Spirit Form window. "
+        "The fight engine emits the stored amount as a true-damage recast event.",
+        "W (Spirit Cleave) uses the sourced physical row followed by the sourced magic row.",
+        "R (Fate Sealed) uses the sourced magic row followed by the sourced physical row.",
+    ),
+    single_hit_slots=frozenset({"W"}),
+    slot_parsers={
+        "W": _spirit_cleave,
+        "R": _fate_sealed,
+        "P": _way_of_the_hunter,
+        "Q": _mortal_steel,  # E declares metadata consumed after the fight event ledger is authored.
+        "E": _soul_unbound,
+    },
+    slot_order=("P", "Q", "W", "R", "E"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -264,22 +331,3 @@ OPTIONS = [
         "label": "Gathering Storm stacks (2 = Q3 ready)",
     },
 ]
-
-ASSUMPTIONS = [
-    "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a "
-    "normal Q; its empower is the 0.75s knock-up, modeled as crowd-"
-    "control state, so q_gathering_storm only changes the Q row's detail",
-    "P (Way of the Hunter) soul mark is state",
-    "E (Soul Unbound) stores the sourced percentage of post-mitigation "
-    "physical and magic champion damage from Q/W/R and basic attacks "
-    "inside each five-second Spirit Form window. The fight engine emits "
-    "the stored amount as a true-damage recast event.",
-    "W (Spirit Cleave) uses the sourced physical row followed by the "
-    "sourced magic row.",
-    "R (Fate Sealed) uses the sourced magic row followed by the sourced "
-    "physical row.",
-]
-
-SOURCES = load_champion_sources("Yone")
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

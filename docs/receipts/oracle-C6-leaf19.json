@@ -1,0 +1,77 @@
+{
+  "receipt_id": "oracle-C6-leaf19",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/ordinal",
+  "old_value": 2,
+  "new_value": 1,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": [
+      "data/champions.json (Syndra abilities)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/wiki-atoms/stack-transform-summon-resource.json (ammo atom)",
+      "data/practice-corpus/scenarios.json (setup-key vocabulary)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / the diff / the plan"
+    ]
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, section 1.1 (lines 59-66)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md, section 5 formula-audit table (line 465)",
+      "quote": "| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | **EXACT** | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast |"
+    },
+    {
+      "source": "docs/math-foundations.md, section 5 formula-audit table (line 462)",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | **EXACT** | R casts exactly once per timed fight (model constraint, documented) |"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"note\": \"No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\""
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary / notable_atoms",
+      "quote": "\"ammo (Q 2nd charge at 40 splinters)\", \"buff (120-splinter +15% total AP capstone)\" ... \"splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff\""
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> stack-transform-summon-resource.ammo (wiki page: Ability resource)",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators..."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities (cooldowns and cast times)",
+      "quote": "Q Dark Sphere cooldown [7,7,7,7,7] affectedByCdr=false, castTime 'none'; W Force of Will cooldown [12,11,10,9,8] affectedByCdr=true, castTime 'none'; E Scatter the Weak cooldown [15,15,15,15,15] affectedByCdr=true, castTime 0.25; R Unleashed Power cooldown [120,100,80] affectedByCdr=true, castTime 0.25"
+    }
+  ],
+  "independent_computation": {
+    "step_1_scenario_reading": "The scenario id decomposes as champion=Syndra, option=custom cast order, value=120. 120 is Syndra's signature option value in the cached audit data: the splinters option runs 0-120, 120 is its maximum and the +15% total-AP capstone. The corpus setup vocabulary (data/practice-corpus/scenarios.json) confirms `champion_options` is a real per-scenario setup key. Reading 120 as ability haste or as a fight duration cannot explain a change in a cast ORDINAL at all (see step 5), while reading it as splinters=120 does.",
+    "step_2_castable_slots": "At splinters >= 40 Dark Sphere becomes a stocked-charge (ammo) ability with a second charge, which the Syndra module exposes as its own SLOTS key `Q2` (\"synthetic Q2 (2nd charge)\", \"40+ Q charges via Q2 slot\"). The wiki ammo atom independently confirms Syndra's Dark Sphere is a stocked-cast ability. Hence at splinters=120 the champion has FIVE castable slots: Q, Q2, W, E, R (P is a passive buff, not a cast).",
+    "step_3_opening_schedule": "Apply the shared-timeline rule quoted from math-foundations 1.1. Every slot is off cooldown at t=0 (both Q charges are stocked at fight start), so mutual exclusion is the only constraint and the five first casts are laid down back-to-back, greedily in the user's custom order. Sourced cast times: Q 'none'=0, Q2=Q=0, W 'none'=0, E 0.25, R 0.25 => the five opening casts occupy 0 + 0 + 0 + 0.25 + 0.25 = 0.50 s total.",
+    "step_4_no_recast_can_intervene": "The earliest possible recast is at min_i c_i. From data/champions.json with cd' = cd*100/(100+AH): W rank 5 = 8 s -> 3.64 s at AH 120, 2.67 s even at an unreachable AH 200; Q = 7 s (cache marks it affectedByCdr=false; 3.18 s at AH 120 if haste were applied); E = 15 s -> 6.82 s at AH 120; R is single-cast per the documented model constraint. Every one of these is >> 0.50 s, so no recast can be scheduled before the fifth first cast. Therefore cast_timeline entries [0..4] are exactly the five slots' FIRST casts, in the scenario's custom order.",
+    "step_5_leaf_value": "cast_timeline[4] is the first cast of the fifth slot in the custom order, so its per-slot ordinal is 1. NEW VALUE = 1 is correct. The old value 2 requires a re-cast to occupy the 5th timeline position, which by step 4 can only happen when only FOUR castable slots exist -- i.e. when the 40+-splinter second Dark Sphere charge is missing from the shared timeline. That contradicts the splinters=120 setup and the module's own Q2 slot, so 2 is the pre-fix (four-slot) value.",
+    "answer": 1
+  },
+  "assumptions_and_residual_uncertainty": [
+    "The scenario definition itself lives in scripts/ (golden_snapshot.py) and tests/, which this oracle is forbidden to read; the setup was reconstructed from the scenario id plus the cached audit data. The identification 120 = splinters (max) is inference, though it is the only reading under which an ordinal at index 4 can legitimately change at all.",
+    "If `ordinal` were counted per ability LETTER rather than per cast SLOT, the Q2 entry would read as Q's 2nd cast (ordinal 2) and the value at index 4 would depend on where Q2 sits in the custom order. The module's SLOTS key is `Q2`, a first-class slot, so a per-slot count (=1 for its first cast) is the consistent reading; a per-letter count would also make the ordinal field ambiguous for any entry labelled Q2.",
+    "Independent of that labelling question, a 4-slot timeline can never produce ordinal 1 at index 4 and a 5-slot timeline can never produce ordinal 2 there via a recast; the verdict therefore rests on Syndra having five castable slots at splinters=120, which the cached audit data states directly."
+  ],
+  "generated_utc": "2026-08-09"
+}

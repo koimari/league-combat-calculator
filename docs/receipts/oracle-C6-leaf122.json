@@ -1,0 +1,106 @@
+{
+  "receipt_id": "oracle-C6-leaf122",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[9]/time",
+  "old_value": 10.0,
+  "new_value": 7.27,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] (Force of Will)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8], \"units\": [\"\",\"\",\"\",\"\",\"\"]}], \"affectedByCdr\": true}, \"castTime\": \"none\"",
+      "use": "Rank-5 W base cooldown = 8 s, reduced by ability haste, zero cast time (no shared-timeline drift)."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}, \"rechargeRate\": [7,7,7,7,7], \"castTime\": \"none\"; description: \"Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay\"",
+      "use": "Q base cooldown/recharge = 7 s at every rank; zero cast time."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0] (Unleashed Power) — passive effect + leveling row",
+      "quote": "\"Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.\" / leveling: {\"attribute\": \"Ability Haste\", \"modifiers\": [{\"values\": [10, 20, 30]}]}",
+      "use": "R rank 3 grants +30 ability haste to Q only (this is why Q's own cooldown row is flagged affectedByCdr=false — it carries a dedicated haste source)."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] / R[0]",
+      "quote": "E \"cooldown\": [15,15,15,15,15], \"affectedByCdr\": true, \"castTime\": 0.25; R \"cooldown\": [120,100,80], \"affectedByCdr\": true, \"castTime\": 0.25",
+      "use": "Shows the only two casts that occupy the shared timeline (0.25 s each) — neither overlaps t = 7.27."
+    },
+    {
+      "id": "S5",
+      "file": "docs/math-foundations.md",
+      "path": "Section 5 summary table (line 462)",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd·100/(100+AH)`; casts/unit time affine in AH | **EXACT** | R casts exactly once per timed fight (model constraint, documented) |",
+      "use": "The engine's cooldown identity used for the computation."
+    },
+    {
+      "id": "S6",
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1 (lines 59-67)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** ... each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress ... the cast epochs of a solo ability are `0, c_i, 2c_i, …`",
+      "use": "Cast epochs of an ability are integer multiples of its effective cooldown, shifted only by an in-progress cast."
+    },
+    {
+      "id": "S7",
+      "file": "data/practice-corpus/scenarios.json",
+      "path": "scenarios[*].setup",
+      "quote": "\"level\": 18, \"ranks\": {\"Q\": 5, \"W\": 5, \"E\": 5, \"R\": 3}, \"fight\": \"time_based\", \"fight_duration\": …",
+      "use": "Establishes the house convention for corpus/golden fights: level 18, max ranks Q5/W5/E5/R3. Used to fix the rank inputs, since the golden scenario definition itself lives under scripts/ (out of bounds for this oracle)."
+    },
+    {
+      "id": "S8",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra",
+      "quote": "\"E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.\"",
+      "use": "Explains the scenario suffix '_60' as the splinters option (60 splinters = W's bonus-true-damage tier); it is not an ability-haste or duration input, so haste had to be recovered by fit (see below)."
+    }
+  ],
+
+  "independent_computation": {
+    "unknowns": "The golden scenario's stat block (global ability haste) is defined under scripts/, which this oracle may not read. Ranks were taken from the corpus convention (S7): Q5 / W5 / E5 / R3.",
+    "identity": "effective cooldown  c = cd_base * 100 / (100 + AH)   [S5]; solo-ability cast epochs = 0, c, 2c, ...  [S6]",
+    "haste_recovery": {
+      "method": "Solve for the single global ability haste AH that makes BOTH the old and the new leaf value exact cast epochs of Syndra's sourced ability set (Q 7s +30 haste from R3 [S2,S3], W 8s [S1], E 15s, R 80s [S4]). Swept AH over [0, 200] in 0.1 steps; epochs n*c for n<=11; tolerance 0.005 s.",
+      "result": "AH = 10 is the UNIQUE solution in the swept range (1 hit out of 2001 grid points).",
+      "at_AH_10": {
+        "Q_effective_cd": "7 * 100 / (100 + 10 + 30) = 5.0 s   (global 10 + R rank-3 passive 30)",
+        "Q_cast_epochs": [0.0, 5.0, 10.0, 15.0, 20.0],
+        "W_effective_cd": "8 * 100 / (100 + 10) = 7.272727... s",
+        "W_cast_epochs": [0.0, 7.2727, 14.5455, 21.8182],
+        "E_effective_cd": "15 * 100 / 110 = 13.6364 s",
+        "R_effective_cd": "80 * 100 / 110 = 72.7273 s (single cast in the fight)"
+      }
+    },
+    "value_derivation": "New value: W 'Force of Will' rank 5, base cooldown 8 s [S1], hasted:  8 * 100/(100+10) = 7.27272... -> 7.27 at the snapshot's 2-decimal rounding. Its cast time is 'none' (0 s) [S1] and no other cast occupies t = 7.2727 (Q casts are instantaneous at 0/5/10; the only 0.25 s casts are E at 0 and 13.64 and R at 0 [S4]), so the shared-timeline mutual-exclusion rule [S6] leaves the epoch unshifted. Old value: 10.0 is ALSO an exact epoch of the same timeline — Q's third cast (2 * 5.0 = 10.0) — but it is the LATER of the two.",
+    "index_argument": "damage_events is time-ordered. The leaf at a FIXED index 9 moved EARLIER (10.0 -> 7.27), which is only possible if at least one damage event was inserted at or before index 9; no removal can move an index earlier. The event now occupying index 9 carries a timestamp that is exactly Syndra's sourced W-recast epoch, and the event previously there (Q's third cast at 10.0) remains a valid later epoch. So the ledger gained the W recast (its damage row, or its 60-splinter bonus-true-damage row per S8) that the old ledger was missing between t = 0 and t = 10; nothing in the sourced data supports a ledger in which W, on an 8 s hasted cooldown, produces no damage event between 0 s and 10 s of a 'custom order' fight.",
+    "arithmetic_checks": [
+      "8 * 100 / 110 = 7.2727272727 -> round(2) = 7.27  (matches the new value exactly)",
+      "7 * 100 / 140 = 5.0 ; 2 * 5.0 = 10.0            (explains the old value as the next-later epoch)",
+      "At AH = 0 neither 7.27 nor 10.0 is any epoch of {7 or 5.3846 (Q), 8 (W), 15 (E), 80 (R)} — so the scenario carries haste, and AH = 10 is the only value reproducing both numbers."
+    ]
+  },
+
+  "verdict_rationale": "7.27 is reproduced to the last digit by the cached wiki cooldown for Force of Will at rank 5 (8 s, affectedByCdr true) under the engine's documented haste identity cd' = cd*100/(100+AH), at the same ability haste (10) that simultaneously explains the old 10.0 as Syndra's Q cast epoch (Q 7 s + R rank-3 passive 30 haste = 5.0 s cadence). Both timestamps are legitimate; the fixed-index leaf moved earlier because a damage event was added in [0, 7.27], and the timestamp it carries is exactly the sourced W recast. The new value is the correct content for index 9.",
+  "confidence": "medium-high on the value (7.27 = 8*100/110 is exact and uniquely sourced); the ability-haste input (10) is recovered by a unique fit rather than read from the scenario definition, which lives under scripts/ and is out of bounds for this oracle.",
+  "caveats": [
+    "The scenario's exact stat block, cast order, fight duration and item list were NOT read (scripts/ is out of bounds); ranks were taken from the corpus convention Q5/W5/E5/R3 and haste recovered by unique fit.",
+    "This oracle verifies the timestamp's provenance, not the identity/magnitude of the inserted damage event (no access to the event's other leaves)."
+  ]
+}

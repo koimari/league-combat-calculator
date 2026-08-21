@@ -1,0 +1,118 @@
+{
+  "receipt_id": "oracle-C6-leaf67",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[4]",
+  "old_value": "proc_Luden's Echo",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/items.json (6655 Luden's Echo)",
+      "data/champion-audit/batch-6.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/e9-bis-a-task.md (timeline_coverage semantics)",
+      "data/worklists/f2-task.md (cast_order semantics)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "what_the_leaf_is": "timeline_coverage partitions the fight's damage sources into exact_sources (authored/certified event timing) and coarse_sources. Per data/worklists/e9-bis-a-task.md the gate is 'timeline_coverage complete==true, coarse_sources==[]'. The leaf is therefore a SOURCE LABEL at ordinal 4 of the exact-coverage list, not a damage number; the independent check is (a) which sources must be in the list and (b) where the label 'W' falls in it.",
+
+  "independent_computation": {
+    "step_1_scenario_decode": {
+      "claim": "'_120' is the Splinters of Wrath option set to its cap of 120, not a duration or haste value.",
+      "sourced_from": "data/champions.json Syndra P 'Transcendent': 'Syndra collects Splinters of Wrath ... stacking up to 120 times'; 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' Corroborated by data/champion-audit/batch-e9-1.json Syndra: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'."
+    },
+    "step_2_source_set_at_120_splinters": {
+      "claim": "At 120 splinters Syndra emits exactly five damaging ability sources: Q, Q2, W, E, R (P is a stat buff, not damage).",
+      "per_source_wiki_numbers": {
+        "Q Dark Sphere (rank 1-5)": "90/125/160/195/230 (+70% AP) magic, appears after a 0.6 s delay, cooldown 7 s (R passive adds 10/20/30 ability haste to Q).",
+        "Q2 (second Dark Sphere charge)": "'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 120 >= 40, so the second charge exists and is a real second damage instance (module slot 'Q2' per data/champion-audit/batch-6.json).",
+        "W Force of Will (recast)": "70/100/130/160/190 (+65% AP) magic on the throw, plus 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage'. 120 >= 60, so W is active AND carries a second (true) damage part.",
+        "E Scatter the Weak": "60/95/130/165/200 (+60% AP) magic, cast time 0.25 s.",
+        "R Unleashed Power": "80/120/160 (+20% AP) per sphere; minimum 240/360/480 (+60% AP) at 3 spheres, maximum 560/840/1120 (+140% AP) at 7 spheres; cast time 0.25 s."
+      },
+      "W_formula_cross_check": "The prose '12% (+ 2% per 100 AP) bonus true damage' applied to W's own magic damage reproduces the cached leveling table exactly: true(r) = (0.12 + 0.0002*AP) * (base_r + 0.65*AP) = 0.12*base_r + (0.078 + 0.0002*base_r)*AP + 0.00013*AP^2. Flat term -> 8.4 / 12 / 15.6 / 19.2 / 22.8 (matches cached 'Bonus True Damage' values exactly). AP term -> 9.2% / 9.8% / 10.4% / 11.0% / 11.6% (matches cached '% AP' modifiers exactly). Total mixed at rank 5 = 190 + 22.8 = 212.8 (+76.6% AP), matching the cached 'Total Mixed Damage' row. Conclusion: W is a non-zero, fully sourced, two-part damage source in this configuration and MUST appear in the coverage list.",
+      "conclusion": "Sorted, the five ability labels are E < Q < Q2 < R < W (ASCII). W therefore sits at ordinal 4 with exactly four ability sources ahead of it."
+    },
+    "step_3_luden_echo_placement": {
+      "item": "data/items.json id 6655 'Luden's Echo', passive 'Echo', cooldown 12 s.",
+      "wiki_text": "'Gain 6 Echo stacks. Dealing ability damage to an enemy consumes all Echo stacks to deal 75 magic damage (+ 5% AP) bonus magic damage to them and, for each stack consumed beyond the first, an additional enemy within 600 units ... If the number of additional targets fired at is less than the number of stacks consumed, deal an additional 20% damage to the primary target for each remaining Echo stack.'",
+      "single_target_value": "manual_target is a single target, so 0 secondary targets are fired at and all 5 remaining stacks re-fire on the primary: 75 * (1 + 5*0.20) = 150 magic damage (+ 5%*(1+5*0.20) = 10% AP), once per 12 s.",
+      "why_ordinal_4_is_impossible_for_the_proc": [
+        "SORTED-LIST reading: 'proc_Luden's Echo' begins with a lowercase 'p' (ASCII 112) and sorts strictly after every uppercase slot label (E/Q/R/W, ASCII 69-87). It can only ever occupy the LAST ordinal of the exact list. Ordinal 4 for the proc therefore requires the list to hold only 5 entries, i.e. only four ability sources - one of {Q2, W} missing. But both are sourced and active at 120 splinters (Q2 gated at 40, W's Transcendent true damage gated at 60), so a five-entry list is under-covered, and coverage 'complete' would be a false claim.",
+        "EVENT-ORDER reading: Luden's Echo fires on the FIRST instance of ability damage and then goes on a 12 s cooldown ('Dealing ability damage ... consumes all Echo stacks'; passive cooldown '12'). It is structurally impossible for four distinct ability damage sources to precede the proc inside one rotation - the first of them would already have consumed the stacks. So the proc belongs near the head of an event-ordered list (ordinal 0-1), never at ordinal 4 behind four other sources."
+      ],
+      "conclusion": "Under both candidate ordering conventions, 'proc_Luden's Echo' at ordinal 4 is inconsistent with the cached wiki data; 'W' at ordinal 4 is exactly what the sourced source-set predicts (E, Q, Q2, R, W, then the lowercase proc labels)."
+    },
+    "step_4_result": "exact_sources[4] == 'W'."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[2].description + leveling",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land. [Magic Damage: 70/100/130/160/190 (+65% AP)]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[3]",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. [Bonus True Damage: 8.4/12/15.6/19.2/22.8 (+9.2/9.8/10.4/11/11.6% AP); Total Mixed Damage: 78.4/112/145.6/179.2/212.8]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] / R[1]",
+      "quote": "E Magic Damage 60/95/130/165/200 (+60% AP); R Magic Damage per Sphere 80/120/160 (+20% AP), Minimum 240/360/480 (+60% AP), Maximum 560/840/1120 (+140% AP)"
+    },
+    {
+      "file": "data/items.json",
+      "path": "6655.passives[0] (name 'Echo', cooldown '12')",
+      "quote": "Gain 6 Echo stacks. Dealing ability damage to an enemy consumes all Echo stacks to deal 75 magic damage (+ 5% AP) bonus magic damage to them and, for each stack consumed beyond the first, an additional enemy within 600 units of them ... If the number of additional targets fired at is less than the number of stacks consumed, deal an additional 20% damage to the primary target for each remaining Echo stack."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots.modeled",
+      "quote": "[P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+    },
+    {
+      "file": "data/worklists/e9-bis-a-task.md",
+      "path": "line 9",
+      "quote": "Verify with: /api/calculate (timeline_coverage complete==true, coarse_sources==[]) then /api/bis (certified_candidate_count > 0)."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.2 / formula-audit table",
+      "quote": "Deterministic every-N-th-hit procs ... have exact count floor(n/N) - modular counting over the shared hit sequence; 'On-hit stacking ... Ability-carried on-hits lead the shared counter (ordering convention)'. Multi-hit parts are mitigated per hit and summed (linearity of expectation), so W's magic part and its Transcendent true part are two distinct authored damage parts of one source."
+    }
+  ],
+
+  "residual_uncertainty": "The exact ordering convention of exact_sources (lexicographic vs. first-appearance event time) could not be confirmed, because src/ and scripts/ are outside this investigation's evidence tree by construction. The verdict does not depend on it: under the lexicographic reading a lowercase 'proc_*' label can only occupy the final ordinal (so ordinal 4 = proc implies a missing ability source), and under the event-time reading Luden's 12 s, first-ability-damage trigger forbids four ability sources preceding it. Both readings place 'W' at ordinal 4 given the sourced five-ability source set {E, Q, Q2, R, W}.",
+
+  "verdict_statement": "new_value_correct - exact_sources[4] should be 'W'. The old value 'proc_Luden's Echo' at that ordinal is only reachable from a source list that omits one of the two splinter-gated Syndra damage sources (Q2 at 40 splinters, W's Transcendent true-damage part at 60 splinters), both of which are active at the scenario's 120 splinters and both of which are fully sourced in the cached wiki text."
+}

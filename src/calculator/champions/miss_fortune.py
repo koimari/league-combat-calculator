@@ -9,43 +9,44 @@ The wiki's "Maximum Total Physical Damage" row equals per-wave x waves
 at ranks 1 and 3; the rank-2 display (500) is a rounding artifact of
 16 x 30 == 480.
 
-E2 already fixed E (Make It Rain) to its 8 sourced ticks and Q double-up
-is modeled.  The roadmap slot session closes the module's last two
-``out_of_scope`` rows:
+E2 already fixed E (Make It Rain) to its 8 sourced ticks; Q double-up
+is modeled.  The coverage-frontier riders close P and W:
 
-  - P (Love Tap) is now ``modeled``.  The packet asset's stock reason
-    ("no enemy-damage formula for this slot") was simply wrong: the
-    cached entry states "If the enemy was unmarked, this also deals
-    50% : 100% (based on level) AD bonus physical damage" and carries
-    the six-tier "Per-Level Scaling" row 50/60/70/80/90/100.  The mark
-    "expires upon attacking a new enemy", so against ONE target the
-    bonus lands exactly once — the first basic attack of the fight.
-    That is priced as a one-application on-hit (``max_procs`` 1, the
-    Viktor Q Discharge convention), which also means a rotation with no
-    basic attacks prices zero, since Love Tap needs a swing to ride.
-    Boundary (understating, deliberately): weaving between targets
-    re-arms the mark and would proc it again, and the module does not
-    claim Double Up's "on-attack effects" re-arm it either — the cached
-    Love Tap prose says "basic attacks" and nothing more (the Ezreal W
-    single-always-applied-detonation precedent).
-  - W (Strut) becomes ``no_damage`` with a named receipt, replacing the
-    stale ``out_of_scope`` label; see ``_strut`` for the atom evidence
-    and for why the attack-speed window itself stays unpriced.
+- P (Love Tap) is an auto-attack rider, not an on-hit that item on-hits
+  proc from: "Miss Fortune's basic attacks are empowered to apply a mark
+  that expires upon attacking a new enemy.  If the enemy was unmarked,
+  this also deals 50% : 100% (based on level) AD bonus physical damage."
+  Its per-level ladder comes from the game binary (see the constants
+  below), which is the only source carrying the level-20 tier this
+  calculator can reach; the cached wiki row cross-checks the first six.
+  The mark never refreshes on the same enemy, so the number of Love Taps
+  is the number of times the player tags a NEW enemy — the ``p_procs``
+  option, defaulting to the one tap the duel target eats.  Neither the
+  minion-halved row nor Double Up's "on-attack effects" re-arming the
+  mark is claimed here.
+- W (Strut) carries no damage instance anywhere (data/atoms/
+  missfortune.atoms.json holds only MissFortuneStrutStacks,
+  MissFortuneViciousStrikes and Miss_Fortune_Strut_Cooldown).  What it
+  does carry is priced: the active's sourced Bonus Attack Speed row
+  (40-100% by rank) through the ``stat_buff`` channel, prorated over its
+  cached 4-second window so a 4s steroid does not take full uptime of an
+  arbitrary fight.  The movement-speed rows have no engine channel.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage_parser
+from .engine import BUFF, ONHIT, SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
-    ability_on_hit_entry,
+    STEROID_ZERO,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
+    on_hit_entry,
 )
 
 # HARDCODED game-file rule declaration — verify on patch updates.
@@ -107,65 +108,9 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     return ratio
 
 
-def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the first basic attack on an unmarked target, priced once.
-
-    One-application on-hit (``max_procs`` 1).  The mark only expires
-    "upon attacking a new enemy", so in this one-target fight model the
-    bonus fires on the opening swing and never again; a rotation with no
-    basic attacks prices nothing at all, because Love Tap has no swing to
-    ride (the engine caps the on-hit at the auto count).
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-
-    ratio = _love_tap_ad_ratio(ctx, ability)
-    per_hit = ratio * float(ctx.stats.get("attack_damage", 0.0))
-    name = ability.get("name", "Love Tap")
-    entry = ability_on_hit_entry(
-        name,
-        ctx.level,
-        "physical",
-        {
-            "name": f"{name} (first hit)",
-            "damage_per_hit": per_hit,
-            "damage_type": "physical",
-            "max_procs": 1,
-            "detail": (
-                f"{ratio * 100:.0f}% of total AD on the first basic attack "
-                "against an unmarked target"
-            ),
-        },
-        cooldown=0.0,
-    )
-    entry["detail"] = (
-        f"first basic attack on an unmarked target adds {ratio * 100:.0f}% "
-        f"of total AD ({per_hit:.6g}) as bonus physical damage; one "
-        "application against a single target — the mark only re-arms on a "
-        "NEW enemy, so multi-target weaving is understated"
-    )
-    return entry
-
-
-_love_tap.phase = ONHIT
-
-
-_STRUT_REASON = (
-    "Strut is state, not damage: its passive grants 30-50 / 60-100 bonus "
-    "movement speed and its active grants 40/55/70/85/100% bonus attack "
-    "speed for 4 seconds (cached W 'Bonus Attack Speed' row), with Love "
-    "Tap marking a NEW target refunding 2s of its cooldown.  No damage "
-    "instance exists anywhere in the slot — data/atoms/missfortune.atoms."
-    "json carries only MissFortuneStrutStacks (stack), "
-    "MissFortuneViciousStrikes (buff) and Miss_Fortune_Strut_Cooldown "
-    "(tag-activespell) for Strut, and no damage.damage-instance.  The "
-    "attack-speed window is deliberately NOT applied as a stat buff: the "
-    "engine's only timed attack-speed window "
-    "(auto_attack_override.active_duration) resolves its window start "
-    "from slot Q, so a plain stat_buff would spread a 4-second steroid on "
-    "a 12-second cooldown across the whole fight and overstate it."
-)
+# Cached W active prose: "Miss Fortune gains bonus attack speed for 4
+# seconds."  The window has no leveling row of its own.
+_STRUT_ACTIVE_SECONDS = 4.0
 
 
 def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -209,7 +154,76 @@ def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the AD-scaled bonus on each attack that tags a NEW enemy."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    ratio = _love_tap_ad_ratio(ctx, ability)
+    per_tap = ratio * ctx.stat("attack_damage")
+    if per_tap <= 0:
+        return None
+
+    taps = max(0, int(ctx.option("p_procs")))
+    entry = on_hit_entry(ability.get("name", "Love Tap"), per_tap, "physical")
+    entry["on_hit"]["max_procs"] = taps
+    entry["detail"] = (
+        f"{taps} Love Tap(s) of {per_tap:.2f} physical damage "
+        f"({ratio:.0%} of total AD at level {ctx.level}); the mark expires "
+        "only on attacking a NEW enemy, so a duel eats one tap unless the "
+        "player tags another target"
+    )
+    return entry
+
+
+_love_tap.phase = ONHIT
+
+
+def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the active's sourced bonus attack speed over its own window.
+
+    The slot deals no damage at all (no damage instance exists in the
+    atoms capture), so the row is the steroid: the cached Bonus Attack
+    Speed value, taken through :func:`buff_window_share` so a 4-second
+    active does not hold full uptime of a longer fight.  The two
+    movement-speed rows have no ``stat_buff`` key to land in.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)
+    entry = damage_entry(
+        ability.get("name", "Strut"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed for {_STRUT_ACTIVE_SECONDS:g}s "
+        f"({bonus_as:g}% over the fight window); the passive's 30-50 / "
+        "60-100 bonus movement speed has no stat_buff key"
+    )
+    return entry
+
+
+_strut.phase = BUFF
+
+
 PACKET_SHA256 = "3c5d28681b774a275e1c2b8bfd6150c08bad192051ac56c0a49c6a96462ad2f7"
+
+
+# Cached kit review: E's bullet storm deals damage every 0.25 seconds
+# "and slow[s] them by 40% (+ 6% per 100 AP)"; Q's shot only bounces and
+# R's waves only damage.  P is an on-hit mark and W a self-buff.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Miss Fortune",
@@ -222,12 +236,28 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 2.0,
         }
     },
+    # Double Up's shot deals its packet once, on the primary target, at
+    # the cast — the boundary claim that carries MODULE_CC's reviewed
+    # answer for Q into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "P": _love_tap,
+        "W": _strut,
+        "R": _bullet_time,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["R"] = _bullet_time
-SLOTS["W"] = no_damage_parser("W", reason=_STRUT_REASON)
-SLOTS["P"] = _love_tap
-parse_abilities = build_parser(SLOTS, "Miss Fortune")
+
+OPTIONS.append(
+    {
+        "key": "p_procs",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 20,
+        "label": "Love Taps (attacks that tag a new enemy)",
+    }
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (Bullet Time) prices the full channel: per-wave damage x the "
@@ -239,28 +269,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "130% + 9% per 10% critical strike chance (wiki R effect[1]); the "
     "fight model prices the whole wave as one event without rolling "
     "per-projectile crits.",
-    "P (Love Tap) is priced as a ONE-application on-hit: the first basic "
-    "attack against an unmarked target adds 50/60/70/80/90/100/110/120/"
-    "130% of TOTAL AD as bonus physical damage at levels 1/4/7/9/11/13/"
-    "20/25/30 (game file MissFortunePassive TotalDamage: mStat 2 with no "
-    "mStatFormula over a ByCharLevelBreakpoints ladder; the cached wiki "
-    "'Per-Level Scaling' row 50-100 reproduces the first six tiers and is "
-    "asserted against the ladder at parse time).  The mark expires only "
-    "on attacking a NEW enemy, so a one-target fight procs it exactly "
-    "once and multi-target weaving is understated; a rotation with no "
-    "basic attacks prices zero.  Love Tap is not modeled as critting and "
-    "its life-steal clause is out of scope (healing).",
-    "W (Strut) is an atoms-confirmed zero-damage state row.  Its 4-second "
-    "40-100% bonus-attack-speed active is NOT applied to the fight's "
-    "attack speed: the engine's only timed attack-speed window is "
-    "slot-Q-anchored, and an untimed stat buff would give a 4s/12s "
-    "steroid full uptime over an arbitrary fight length.",
+    "P (Love Tap) rides basic attacks that tag a NEW enemy, adding "
+    "50/60/70/80/90/100/110/120/130% of TOTAL AD as bonus physical "
+    "damage at levels 1/4/7/9/11/13/20/25/30 (game file "
+    "MissFortunePassive TotalDamage: mStat 2 with no mStatFormula over a "
+    "ByCharLevelBreakpoints ladder; the cached wiki 'Per-Level Scaling' "
+    "row 50-100 reproduces the first six tiers and is asserted against "
+    "the ladder at parse time).  The mark expires only on attacking a "
+    "different enemy, so the duel model gives it one tap by default "
+    "(p_procs); raise it to price a fight where the player taps back and "
+    "forth.  Love Tap modifies the attack rather than applying on-hit, so "
+    "item on-hit effects do not proc from it; it is not modeled as "
+    "critting, its life-steal clause is out of scope (healing), and the "
+    "against-minions half-value row is not priced (no minions here).",
+    "W (Strut) carries no damage instance in the atoms capture.  It "
+    "grants the sourced Bonus Attack Speed row (40-100% by rank) for the "
+    "cached 4-second active window, taken as that window's share of the "
+    "fight (whole bonus in one-rotation mode, prorated in a timed fight) "
+    "rather than as full uptime.  Both movement-speed rows are not "
+    "modeled (stat_buff has no movement-speed key).",
 ]
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"

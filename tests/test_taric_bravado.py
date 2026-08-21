@@ -27,11 +27,16 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.taric import (
-    MODULE_COVERAGE,
-    _bravado_window_terms,
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
 )
+from src.calculator.champions.taric import _bravado_window_terms
+
+# MERGE: coverage has one home — the validated module contract; a module
+# only restates it as ``MODULE_COVERAGE`` when it differs from what its
+# ``SLOTS`` derive, and Taric's does not.
+MODULE_COVERAGE = get_champion_module_contract("Taric").coverage
 from src.calculator.damage import (
     FightConfig,
     _empower_window_procs,

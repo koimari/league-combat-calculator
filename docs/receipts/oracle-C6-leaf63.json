@@ -1,0 +1,98 @@
+{
+  "receipt_id": "oracle-C6-leaf63",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/order[6]",
+  "old_value": "Q",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read_only_scope": "data/** and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never opened"
+  },
+  "scenario_decoding": {
+    "champion": "Syndra",
+    "the_120_in_the_name": "Splinters of Wrath = 120 (Syndra's Transcendent stack option), NOT ability haste and NOT a fight length",
+    "why": "data/champion-audit/batch-e9-1.json, Syndra entry: 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)'. 120 is the top of the splinters option range and it is >= the 40 threshold that gates the second Dark Sphere charge.",
+    "custom_order": "a non-default opening cast order (the default is Q,W,E,R). Shown below to be irrelevant to index 6: any permutation of the opening block leaves index 6 unchanged, because index 6 falls after the whole opening block in both models."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At 120 splinters (>= 40) Syndra enters the fight holding 2 stocked Dark Sphere casts, so the opening block contains TWO Q casts, not one."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0]",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7]; cooldown.affectedByCdr = false; rechargeRate = [7,7,7,7,7]; castTime = 'none'",
+      "use": "Dark Sphere recharges one stocked charge every 7 s (sequential per-charge recharge, standard ammo behaviour)."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (Force of Will)",
+      "quote": "cooldown.modifiers[0].values = [12,11,10,9,8]; cooldown.affectedByCdr = true; castTime = 'none'",
+      "use": "W recasts at 8 s at rank 5 (12 s at rank 1) with no ability haste."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] (Scatter the Weak) / R[0] (Unleashed Power)",
+      "quote": "E cooldown = [15,15,15,15,15], castTime 0.25; R cooldown = [120,100,80], castTime 0.25",
+      "use": "E's first recast is at 15 s, i.e. after both Q@14 and W@8; R contributes exactly one cast."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> atom 'Ammo / stocked charges'",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators ...",
+      "use": "Confirms Dark Sphere is an ammo/stocked-cast resource, i.e. banked charges are spendable back-to-back (same family as Spirit Rush / Powder Keg), not a plain single cooldown."
+    },
+    {
+      "source": "docs/math-foundations.md, lines 59-67",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "use": "The rotation order is the time-sorted superposition of per-ability renewal schedules; cast order only breaks ties (i.e. only permutes the t=0 block)."
+    },
+    {
+      "source": "docs/math-foundations.md, formula-audit table row 'Ability haste (effective_cooldown)'",
+      "quote": "`cd' = cd*100/(100+AH)`; casts/unit time affine in AH ... R casts exactly once per timed fight (model constraint, documented)",
+      "use": "With no ability haste in the scenario, effective cooldowns equal the sourced values; R occupies exactly one slot in the opening block."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge) ... ammo (Q 2nd charge at 40 splinters)",
+      "use": "Confirms the second stocked Dark Sphere is a real, separately-cast slot rather than a passive modifier."
+    }
+  ],
+  "independent_computation": {
+    "assumptions": [
+      "Level 18, max ranks (Q5 W5 E5 R3); no items => ability haste 0, so effective cooldown = sourced cooldown (cd*100/(100+0)).",
+      "Timed fight long enough to contain >= 7 casts (the OLD value Q sits at t=14 s, so the window is >= 14 s).",
+      "Dark Sphere charges recharge sequentially, 7 s per charge (rechargeRate 7), which is the standard ammo behaviour for the 'stocked ability casts' atom family.",
+      "The opening block (all abilities off cooldown at t=0) is ordered by the scenario's custom cast order; its internal permutation does not affect index 6."
+    ],
+    "sourced_cooldowns_s": { "Q": 7, "W": 8, "E": 15, "R": 80 },
+    "model_A_without_the_40_splinter_second_charge": {
+      "q_cast_epochs": [0, 7, 14, 21],
+      "w_cast_epochs": [0, 8, 16],
+      "e_cast_epochs": [0, 15, 30],
+      "r_cast_epochs": [0],
+      "time_sorted_order": ["Q@0", "W@0", "E@0", "R@0", "Q@7", "W@8", "Q@14", "E@15", "W@16", "Q@21"],
+      "index_6": "Q (the third Dark Sphere, t = 14 s)"
+    },
+    "model_B_with_the_40_splinter_second_charge_(120_splinters_>=_40)": {
+      "opening_block": "5 casts: Q, Q (second stocked charge), W, E, R -- all available at t=0",
+      "q_cast_epochs": [0, 0, 7, 14, 21],
+      "w_cast_epochs": [0, 8, 16],
+      "e_cast_epochs": [0, 15, 30],
+      "r_cast_epochs": [0],
+      "time_sorted_order": ["Q@0", "Q@0", "W@0", "E@0", "R@0", "Q@7", "W@8", "Q@14", "E@15", "W@16"],
+      "index_6": "W (the Force of Will recast, t = 8 s)"
+    },
+    "decisive_step": "The two stocked charges add exactly one extra cast to the t=0 opening block. That single insertion shifts every later entry by one slot, so the entry at index 6 moves from the third Dark Sphere (Q @ 14 s) to the second Force of Will (W @ 8 s). Since the scenario carries 120 Splinters of Wrath and the cached wiki text puts the second stocked charge at 40 splinters, model B is the game-correct one and index 6 must be W.",
+    "robustness_checks": [
+      "Custom opening order: index 6 lies strictly after the opening block in both models, so permuting the block (any 'custom order') cannot change it.",
+      "W rank: for every rank-5..rank-1 W cooldown (8, 9, 10, 11, 12 s) the second W recast still lands before the third Dark Sphere at 14 s -- index 6 = W in model B and Q in model A at all five ranks.",
+      "E and R cannot occupy index 6: E's first recast is at 15 s (> 14 s) and R casts once per timed fight.",
+      "Self-consistency: the model reproduces the reported OLD value exactly (model A gives Q@14 at index 6) and the reported NEW value exactly (model B gives W@8), so the only degree of freedom between them is whether the 40-splinter second charge is honoured -- and at 120 splinters it must be.",
+      "No other Syndra mechanic can insert a cast into the opening block: her passive at 120 splinters is a +15% total-AP buff (data/champion-audit/batch-6.json: 'P = 120-splinter +15% total AP BUFF'), not a cast."
+    ],
+    "caveat_considered_and_rejected": "Syndra Q's cached cooldown block is the charge-ability shape (cooldown 7 marked affectedByCdr=false plus rechargeRate 7), the same shape used for Amumu Q (cd 3 static / recharge 16-12), Gangplank E (0.5 / 17-13), Ivern W (0.5 / 20), Milio E and Nilah E. Reading Syndra's static gate as a full 7 s would make the documented 'up to a maximum of 2' charge a strict no-op at every haste value (the gate would always dominate the recharge), which contradicts the wiki text that the Transcendent bonus grants a stocked cast, and contradicts the ammo atom that groups Dark Sphere with Spirit Rush and Powder Keg as spendable stocked casts. The banked second charge is therefore castable in the opening block."
+  },
+  "conclusion": "With 120 Splinters of Wrath Syndra opens the fight holding two stocked Dark Spheres, so the opening block is 5 casts (Q, Q, W, E, R) rather than 4. The seventh cast of the fight is the Force of Will recast at t = 8 s, not the third Dark Sphere at t = 14 s. The new value W is correct; the old value Q corresponded to a rotation that ignored the 40-splinter second charge."
+}

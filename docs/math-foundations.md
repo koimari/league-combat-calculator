@@ -5,8 +5,7 @@ Engine: `src/calculator/` (`damage.py`, `participant_timeline.py`, `healing.py`,
 `optimizer.py`, `resistance.py`, `stats.py`)
 Input contract: deterministic combat outcomes derived from the League Wiki cache
 (`data/champions.json`, `data/items.json`) and game files. Every number below
-traces to a wiki/game source. Production attackers use validated named modules;
-the generic parser is restricted to explicit synthetic/development fixtures.
+traces to a wiki/game source. Every attacker is a validated named module.
 
 This document states, for every modeling family, the mathematical identity the
 engine instantiates, the theorem that justifies it, the cases where the engine

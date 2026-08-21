@@ -1,4 +1,12 @@
-const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/16.15.1/img";
+// Asset and patch identity come from the cache's own provenance, served on
+// /api/config as data_snapshot.patch — never pinned here. Empty until the
+// bootstrap lands: an unsourced patch shows no icon rather than a stale one.
+let ddragonBase = "";
+let servedPatchLabel = "";
+
+function ddragonAsset(suffix) {
+  return ddragonBase ? `${ddragonBase}/${suffix}` : "";
+}
 
 let DATA = { champions: [], items: [] };
 let BIS_PROFILES = {};
@@ -38,13 +46,15 @@ const PRACTICE_DUMMY_STAT_FIELDS = [
 ];
 const engine = {
   ready: false,
-  reviewed: new Set(),
-  backend: new Set(),
-  availability: new Map(),
+  // champion name -> /api/champions engine_registration: the validated
+  // module's kind, or null for a champion that may not attack.
+  registration: new Map(),
   itemOptions: {},
   championOptions: {},
   keystoneOptions: {},
   keystones: [],
+  runes: [],
+  runeShards: [],
   defaultTarget: { health: 1000, bonus_health: 0, armor: 100, mr: 100 },
   fightDefaults: {},
   exclusivityGroups: {},
@@ -57,6 +67,8 @@ const engine = {
   fightLimits: { fight_duration: [1, 10] },
   pendingTimer: null,
   requestId: 0,
+  // { a, b, requests: { a, b } }: the displayed /api/calculate results and
+  // the exact payloads that produced them; null while nothing is displayed.
   responses: null,
   pending: false,
   loadoutStats: null,
@@ -99,6 +111,12 @@ const state = {
     includeBootsB: true,
     keystoneA: "",
     keystoneB: "",
+    minorRunesA: ["", "", "", "", ""],
+    minorRunesB: ["", "", "", "", ""],
+    statShardsA: ["", "", ""],
+    statShardsB: ["", "", ""],
+    runeOptionsA: {},
+    runeOptionsB: {},
     keystoneOptionsA: {},
     keystoneOptionsB: {},
     comparisonEnabled: false,
@@ -112,7 +130,7 @@ const state = {
   },
   targets: [],
   allies: [],
-  fight: { rotations: 1, duration: 10, aaUptime: 0, aaUptimeMode: "calculated", enemiesAttack: true },
+  fight: { duration: 10, autosOnly: false, aaUptime: 0, aaUptimeMode: "calculated", enemiesAttack: true },
   optimizer: { running: false, summary: null, scope: null, rosterErrors: {}, availableGold: 0 },
 };
 
@@ -184,6 +202,22 @@ function usesLevelDerivedRanks(championName) {
 }
 
 const $ = (id) => document.getElementById(id);
+/** The one JSON POST: every backend write and scoring call goes through it. */
+function postJson(url, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+// The number a result headlines, from the response's own leaf: the engine
+// decides which row that is (validation_receipts.displayed_prediction), so
+// the rule is never re-derived here. null when nothing is displayed.
+function headlineTotal(result) {
+  if (!result) return null;
+  const total = Number(result.headline_total);
+  return Number.isFinite(total) ? total : null;
+}
 const fmt = (value) => Math.round(value).toLocaleString("en-US");
 const one = (value) => Number(value).toFixed(1).replace(/\.0$/, "");
 // An event's timestamp, or null when the receipt withheld one. Number(null)
@@ -195,6 +229,49 @@ const eventTime = (event) => {
   return Number.isFinite(time) ? time : null;
 };
 const percent = (value) => `${value.toFixed(value < 10 ? 1 : 0)}%`;
+// Phase 4 S9's one budgeted UI change: how a *withheld* leaf renders.
+//
+// A payload publishes numbers plus a parallel `dispositions` map keyed by leaf
+// path. Measured and structurally-zero leaves are unchanged bare numbers and
+// every renderer below reads them exactly as before. A WITHHELD leaf is
+// different in kind: coverage refused to model it, so the payload carries no
+// number for it at all and the map carries the receipts instead.
+//
+// Rendering that as a blank, a 0 or a NaN is the failure this whole campaign
+// is named after — a number nobody computed made indistinguishable from one
+// computed as zero. So it renders as a named refusal, in one place, and every
+// caller reaches it through `leafText`.
+// Why a leaf carries no number, in one sentence. Separate from the markup
+// below because two surfaces need the same words in two shapes: a rendered
+// cell needs the marker, a title attribute and an accessible name need the
+// sentence. One place decides what it says; each caller decides how.
+const withheldReason = (entry) => {
+  const receipts = (entry && entry.receipts) || [];
+  return receipts.length ? receipts.join("; ") : "no receipt was published";
+};
+const withheldMarker = (entry) =>
+  `<span class="leaf-withheld" title="${escapeHtml(withheldReason(entry))}">withheld</span>`;
+// One published leaf, rendered: the number when there is one, the named
+// refusal when the model declined to produce one.
+const leafText = (value, path, dispositions, format = fmt) => {
+  const entry = dispositions ? dispositions[path] : null;
+  if (entry && entry.disposition === "WITHHELD") return withheldMarker(entry);
+  if (value == null) return withheldMarker(entry);
+  return escapeHtml(format(value));
+};
+// Where one participant's survival leaf lives in the combat payload, so a
+// renderer can ask the map about the number it is about to print. The
+// participants list and the map's `participants[i]` index are the same list.
+const survivalLeafPath = (index, leaf) => `participants[${index}].survival.${leaf}`;
+// Whether the payload refused to produce this leaf rather than measuring it.
+// A refused leaf is *absent*, so `?? 0` would read it as a computed zero —
+// which is the failure this whole campaign is named after, and the reason a
+// total over a refused member is refused too rather than quietly short.
+const leafWithheld = (path, dispositions) =>
+  Boolean(dispositions && dispositions[path] && dispositions[path].disposition === "WITHHELD");
+const withheldEntry = (paths, dispositions) =>
+  (dispositions && paths.map((path) => dispositions[path]).find((entry) => entry && entry.disposition === "WITHHELD")) || null;
+
 const plural = (count, singular, pluralForm = `${singular}s`) => count === 1 ? singular : pluralForm;
 const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
 
@@ -231,61 +308,19 @@ function mergeAbilityCatalog(catalog) {
   });
 }
 
-// Display-only numeric fields the patch snapshot carries and /api/items
-// currently zeroes. The coverage endpoint answers "is this item modelled",
-// not "what does it give you", so a 0 there means "not reported", never
-// "the item lost this stat" — merging it verbatim blanked every item's stat
-// line and price in the UI.
-const SNAPSHOT_NUMERIC_FIELDS = [
-  "price", "ap", "ad", "hp", "mana", "armor", "mr", "haste", "pen", "percentPen",
-  "lethality", "percentArmorPen", "attackSpeed", "crit", "critDamage", "lifesteal",
-  "omnivamp", "healAndShieldPower", "healthRegen", "manaRegen", "goldPer10",
-  "tenacity", "moveSpeed", "tier",
-];
-
-function preferReportedNumbers(snapshotItem, metadata) {
-  return Object.fromEntries(SNAPSHOT_NUMERIC_FIELDS.map((field) => [
-    field,
-    Number(metadata[field]) ? metadata[field] : snapshotItem[field],
-  ]));
-}
-
-function mergeItemCoverage(catalog) {
-  if (!Array.isArray(catalog) || !catalog.length || !Array.isArray(DATA?.items)) return;
-  const byId = new Map(catalog.map((entry) => [Number(entry.id), entry]).filter(([id]) => id));
-  const existingIds = new Set(DATA.items.map((item) => Number(item.id)));
-  DATA.items = DATA.items.map((item) => {
-    const metadata = byId.get(Number(item.id));
-    if (!metadata) return { ...item, backendAvailable: false };
-    return {
-      ...item,
-      ...metadata,
-      ...preferReportedNumbers(item, metadata),
-      backendName: metadata.name,
-      backendAvailable: true,
-      modelCoverage: metadata.model_coverage || null,
-      targetModelCoverage: metadata.target_model_coverage || null,
-      supportQuestStage: metadata.support_quest_stage || metadata.supportQuestStage || null,
-      upgradeFrom: metadata.upgrade_from || metadata.upgradeFrom || null,
-      upgradeTo: metadata.upgrade_to || metadata.upgradeTo || null,
-    };
-  });
-  catalog.forEach((entry) => {
-    const id = Number(entry.id);
-    if (!id || existingIds.has(id)) return;
-    DATA.items.push({
-      ...entry,
-      backendName: entry.name,
-      backendAvailable: true,
-      modelCoverage: entry.model_coverage || null,
-      targetModelCoverage: entry.target_model_coverage || null,
-      into: entry.into || [],
-      categories: entry.categories || [],
-      supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
-      upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
-      upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
-    });
-  });
+// /api/items and /api/boots own the item catalogue outright — the patch
+// snapshot carries champions only, so nothing can outrank a served 0.
+function buildItemCatalog(catalog) {
+  if (!Array.isArray(catalog) || !catalog.length) return;
+  DATA.items = catalog.map((entry) => ({
+    ...entry,
+    backendName: entry.name,
+    modelCoverage: entry.model_coverage || null,
+    targetModelCoverage: entry.target_model_coverage || null,
+    supportQuestStage: entry.support_quest_stage || entry.supportQuestStage || null,
+    upgradeFrom: entry.upgrade_from || entry.upgradeFrom || null,
+    upgradeTo: entry.upgrade_to || entry.upgradeTo || null,
+  }));
   engine.itemCatalogReady = true;
 }
 
@@ -471,11 +506,7 @@ function maybeInitConsentAnalytics() {
   // page_view ping per session via the existing /api/metrics/event
   // endpoint; nothing is sent without explicit consent (localStorage).
   if (localStorage.getItem("scryglass_analytics_consent") === "true") {
-    fetch("/api/metrics/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "page_view", took_ms: 0 }),
-    }).catch(() => {});
+    postJson("/api/metrics/event", { event: "page_view", took_ms: 0 }).catch(() => {});
     return;
   }
   if (localStorage.getItem("scryglass_analytics_consent") !== null) return; // declined
@@ -492,11 +523,7 @@ function maybeInitConsentAnalytics() {
   banner.querySelector("#consentYes").addEventListener("click", () => {
     localStorage.setItem("scryglass_analytics_consent", "true");
     banner.remove();
-    fetch("/api/metrics/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "page_view", took_ms: 0 }),
-    }).catch(() => {});
+    postJson("/api/metrics/event", { event: "page_view", took_ms: 0 }).catch(() => {});
   });
   banner.querySelector("#consentNo").addEventListener("click", () => {
     localStorage.setItem("scryglass_analytics_consent", "false");
@@ -543,22 +570,58 @@ function championOptionCapability(kind, championName) {
   const base = capabilityFor(kind, "champion_options");
   if (base.supported === false) return base;
   if (!championName) return { ...base, supported: false, reason: "Choose a champion before setting champion-specific options." };
-  const availability = engine.availability.get(championName);
-  if (availability && availability.ready === false) {
-    const reason = availability.blockers?.[0]?.label || "This champion has no certified public option contract.";
-    return { ...base, supported: false, reason };
+  if (!engine.registration.get(championName)) {
+    return { ...base, supported: false, reason: "This champion has no certified public option contract." };
   }
   return base;
 }
 
+// One ability control bound to one sourced module option key.
+const SLOT_OPTION_BINDINGS = {
+  "R:ability_variants": "r_sweet_spot",
+};
+
+// Count options a module declares by a fixed name, and the slot they belong
+// to; every other option finds its slot by the name it carries (optionSlot).
+const SLOT_COUNT_OPTIONS = { passive_procs: "P", mines_hit: "E" };
+
+// Champion options the Variant buttons write, mapped to the variant index
+// that means `true`.  The backend types these as booleans, so the payload
+// must never carry the raw variant index (Gnar's `mega: 0`, Ziggs'
+// `r_sweet_spot: 0` and Jayce's `accelerated_q: 0` each answered "must be
+// true or false").  Indices follow the wiki's packet order: Gnar lists Mini
+// first (mega = 1), Jayce's hammer kit and Ziggs' epicenter blast come first
+// (0), and Jayce's Q flattens to To-the-Skies / Shock Blast / accelerated
+// Shock Blast (accelerated_q = 2).
+const VARIANT_BOOLEAN_OPTIONS = {
+  "mega": 1,
+  "hammer_stance": 0,
+  "r_sweet_spot": 0,
+  "accelerated_q": 2,
+};
+
+// The option keys one slot's Variant control claims by name.
+function slotVariantKeys(slot) {
+  const key = slot.toLowerCase();
+  return [
+    `${key}_variant`, `${key}_stance`, `${key}_mode`,
+    `${key}_form`, `${key}_charge`, `${key}_style`,
+    `accelerated_${key}`, `${key}_accelerated`,
+  ];
+}
+
+// The boolean options no single slot claims: global form toggles that
+// re-shape every Q/W/E entry rather than one slot's variant list.
+function globalFormToggles() {
+  const owned = new Set([
+    ...Object.values(SLOT_OPTION_BINDINGS),
+    ...ABILITY_SLOTS.flatMap(slotVariantKeys),
+  ]);
+  return Object.keys(VARIANT_BOOLEAN_OPTIONS).filter((key) => !owned.has(key));
+}
+
 function abilityOptionBinding(slot, field, championName = state.attacker.champion) {
-  // Legacy explicit overrides first (sourced module option keys).
-  const bindings = {
-    "P:ability_casts": "passive_procs",
-    "E:ability_hits": "mines_hit",
-    "R:ability_variants": "r_sweet_spot",
-  };
-  const overrideKey = bindings[`${slot}:${field}`];
+  const overrideKey = SLOT_OPTION_BINDINGS[`${slot}:${field}`];
   const options = engine.championOptions[championName]?.options || [];
   if (overrideKey) {
     return options.some((option) => option.key === overrideKey) ? overrideKey : null;
@@ -572,23 +635,59 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   // per-slot variant/stance/mode key, or a global form toggle (Jayce
   // hammer_stance, Gnar mega, stance) that re-shapes every Q/W/E/R entry.
   const slotKey = slot.toLowerCase();
-  const perSlot = [
-    `${slotKey}_variant`, `${slotKey}_stance`, `${slotKey}_mode`,
-    `${slotKey}_form`, `${slotKey}_charge`, `${slotKey}_style`,
-    `accelerated_${slotKey}`, `${slotKey}_accelerated`,
-  ];
   const declared = new Set(options.map((option) => option.key));
-  const direct = perSlot.find((key) => declared.has(key));
+  const direct = slotVariantKeys(slot).find((key) => declared.has(key));
   if (direct) return direct;
-  if (slot !== "R" && (declared.has("hammer_stance") || declared.has("mega"))) {
-    return declared.has("hammer_stance") ? "hammer_stance" : "mega";
+  if (slot !== "R") {
+    const toggle = globalFormToggles().find((key) => declared.has(key));
+    if (toggle) return toggle;
+    if (declared.has("stance")) return "stance";
   }
-  if (slot !== "R" && declared.has("stance")) return "stance";
   // A generic variant-family option for the slot (e.g. q_variant on Heimer).
   const family = [...declared].find((key) =>
     key.startsWith(slotKey) && /variant|stance|mode|form|style/.test(key)
   );
   return family || null;
+}
+
+/**
+ * The variant index a slot starts on: the one matching its bound option's
+ * module default.  Variant 0 is Jayce's hammer kit, but his module defaults
+ * hammer_stance to false (cannon) — a fresh pick must not flip the form.  A
+ * boolean toggle maps through VARIANT_BOOLEAN_OPTIONS; an option whose default
+ * is already an index is clamped to the slot's variant list.  Slots without a
+ * bound option start on their first variant.
+ */
+function defaultFormVariantIndex(slot, count = 1) {
+  const binding = abilityOptionBinding(slot, "ability_variants");
+  if (!binding) return 0;
+  const option = (engine.championOptions[state.attacker.champion]?.options || [])
+    .find((entry) => entry.key === binding);
+  const clamp = (index) => Math.max(0, Math.min(count - 1, Math.trunc(index)));
+  if (binding in VARIANT_BOOLEAN_OPTIONS) {
+    const trueIndex = VARIANT_BOOLEAN_OPTIONS[binding];
+    return clamp(option?.default ? trueIndex : 1 - trueIndex);
+  }
+  const value = Number(option?.default);
+  return Number.isFinite(value) ? clamp(value) : 0;
+}
+
+/**
+ * Mirror one slot's Variant selection onto every slot bound to the same
+ * global form toggle.  Q/W/E all bind the toggle, but the payload reads the
+ * first bound slot only — without the mirror, clicking Boulder Toss on Q
+ * would leave W/E rendering (and the user reading) the Mini kit.
+ */
+function syncGlobalFormVariants(slot, variantIndex) {
+  const binding = abilityOptionBinding(slot, "ability_variants");
+  if (!(binding in VARIANT_BOOLEAN_OPTIONS)) return;
+  activeAbilityKit().forEach((ability) => {
+    if (ability.slot === slot || !(ability.variants?.length > 1)) return;
+    if (abilityOptionBinding(ability.slot, "ability_variants") !== binding) return;
+    const input = abilityInput(ability.slot);
+    input.variant = Math.min(variantIndex, ability.variants.length - 1);
+    state.attacker.abilityInputs[ability.slot] = input;
+  });
 }
 
 function abilityCapability(slot, field, championName = state.attacker.champion) {
@@ -619,15 +718,6 @@ function activeAbilityKit() {
   return getChampion(state.attacker.champion)?.abilities || [];
 }
 
-function abilityVariantDefault(slot, count) {
-  const binding = abilityOptionBinding(slot, "ability_variants");
-  const definition = (engine.championOptions[state.attacker.champion]?.options || [])
-    .find((option) => option.key === binding);
-  const value = Number(definition?.default);
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(count - 1, Math.trunc(value)));
-}
-
 function resetAbilityInputs() {
   const defaultRanks = defaultAbilityRanks({
     champion: state.attacker.champion,
@@ -635,9 +725,7 @@ function resetAbilityInputs() {
   });
   state.attacker.abilityInputs = Object.fromEntries(activeAbilityKit().map((ability) => [ability.slot, {
     rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
-    casts: 1,
-    hits: 1,
-    variant: ability.variants?.length > 1 ? abilityVariantDefault(ability.slot, ability.variants.length) : 0,
+    variant: defaultFormVariantIndex(ability.slot, ability.variants?.length || 1),
   }]));
 }
 
@@ -666,12 +754,70 @@ function syncAbilityInputsToLevel() {
 }
 
 function abilityInput(slot) {
-  return state.attacker.abilityInputs[slot] || { rank: 0, casts: 0, hits: 1, variant: 0 };
+  return state.attacker.abilityInputs[slot] || { rank: 0, variant: 0 };
+}
+
+/** The highest rank a slot may hold at a level: R at 6/11/16, basics every other level. */
+function rankCapForLevel(slot, level) {
+  const lv = Number(level) || 1;
+  return slot === "R" ? (lv >= 16 ? 3 : lv >= 11 ? 2 : lv >= 6 ? 1 : 0) : Math.min(5, Math.floor((lv + 1) / 2));
+}
+
+/** Skill points the main champion has spent across Q/W/E/R. */
+function spentRankPoints() {
+  return ["Q", "W", "E", "R"].reduce((sum, slot) => sum + (Number(abilityInput(slot).rank) || 0), 0);
+}
+
+/**
+ * A level slider with the breakpoints that matter (1, 6, 11, 16, 18 and the
+ * role cap when it is higher). One component for the main champion and every
+ * roster card; the ± stepper beside it stays for single steps.
+ */
+function levelMarksHtml(path, level, cap, capabilityAttrs = "") {
+  const marks = [1, 6, 11, 16, 18, cap].filter((mark, index, all) => mark <= cap && all.indexOf(mark) === index);
+  return marks.map((mark) =>
+    `<button type="button" ${capabilityAttrs} data-level-set="${path}" data-value="${mark}" class="${Number(level) === mark ? "is-on" : ""}" aria-label="Set level ${mark}">${mark}</button>`).join("");
+}
+
+function levelQuickHtml(path, level, cap, capabilityAttrs = "") {
+  return `<input type="range" class="level-range" min="1" max="${cap}" step="1" value="${Number(level) || 1}" ${capabilityAttrs} data-level-range="${path}" aria-label="Level slider" /><div class="level-marks">${levelMarksHtml(path, level, cap, capabilityAttrs)}</div>`;
+}
+
+/** Set one participant's level: clamp, re-derive its ability ranks, recalc. */
+function setParticipantLevel(levelPath, value) {
+  const rosterMatch = levelPath.match(/^(targets|allies)\.(\d+)\.level$/);
+  const rosterLoadout = rosterMatch ? state[rosterMatch[1]]?.[Number(rosterMatch[2])] : null;
+  const cap = levelPath === "attacker.level"
+    ? attackerLevelCap()
+    : roleLevelCap(rosterLoadout?.role, Boolean(rosterLoadout?.roleQuestComplete), rosterLoadout?.level);
+  setPath(levelPath, Math.max(1, Math.min(cap, Number(value) || 1)));
+  if (levelPath === "attacker.level") syncAbilityInputsToLevel();
+  else if (rosterLoadout) rosterLoadout.abilityRanks = defaultAbilityRanks(rosterLoadout);
+  invalidateOptimization();
+}
+
+/** A fresh roster participant, at the main champion's level. */
+function newRosterLoadout(kind) {
+  const loadout = {
+    champion: null,
+    level: Math.max(1, Math.min(18, Number(state.attacker.level) || 1)),
+    role: "",
+    roleQuestComplete: false,
+    items: [0, 0, 0, 0, 0, 0],
+    itemStacks: [0, 0, 0, 0, 0, 0],
+    itemOptions: [{}, {}, {}, {}, {}, {}],
+    boots: 0,
+    includeBoots: true,
+    abilityRanks: {},
+    championOptions: {},
+  };
+  if (kind === "ally") loadout.allyEffectsEnabled = false;
+  return loadout;
 }
 
 function championImage(name) {
   const champion = getChampion(name);
-  return champion ? `${DDRAGON}/champion/${champion.key}.png` : "";
+  return champion ? ddragonAsset(`champion/${champion.key}.png`) : "";
 }
 
 function isPracticeDummy(loadout) {
@@ -688,22 +834,18 @@ function practiceDummyStatValue(loadout, key) {
 }
 
 function itemImage(id) {
-  return `${DDRAGON}/item/${Number(id)}.png`;
+  return ddragonAsset(`item/${Number(id)}.png`);
 }
 
 function abilityImage(ability) {
   if (!ability?.icon) return "";
   if (ability.icon.startsWith("http")) return ability.icon;
-  return `${DDRAGON}/${ability.slot === "P" ? "passive" : "spell"}/${ability.icon}`;
+  return ddragonAsset(`${ability.slot === "P" ? "passive" : "spell"}/${ability.icon}`);
 }
 
 function itemName(id, fallback = "Empty slot") {
   const item = getItem(id);
   return item?.backendName || item?.name || fallback;
-}
-
-function backendItemReady(item) {
-  return !engine.itemCatalogReady || item?.backendAvailable !== false;
 }
 
 function roleQuestStateForPath(path) {
@@ -1381,49 +1523,81 @@ function stackControl(path, id, compact = false) {
 }
 
 
+/**
+ * The ability card a champion option renders on, or null for the shared
+ * Scenario options block: a declared count option (passive procs), the
+ * option a slot's Variant control writes, or an option whose key or label
+ * names a slot ("Q Sweetspot hits", "q_sweet_spot", "passive_stacks").
+ */
+function optionSlot(option) {
+  const kit = activeAbilityKit();
+  const has = (slot) => kit.some((ability) => ability.slot === slot);
+  const key = String(option?.key || "");
+  if (SLOT_COUNT_OPTIONS[key] && has(SLOT_COUNT_OPTIONS[key])) return SLOT_COUNT_OPTIONS[key];
+  const variantSlot = kit.find((ability) =>
+    ability.variants?.length > 1 && abilityOptionBinding(ability.slot, "ability_variants") === key);
+  if (variantSlot) return variantSlot.slot;
+  const byLabel = String(option?.label || "").match(/^([PQWER])\b/);
+  if (byLabel && has(byLabel[1])) return byLabel[1];
+  const byKey = key.match(/^(passive|[qwer])(?:_|$)/i);
+  if (byKey) {
+    const slot = byKey[1].length === 1 ? byKey[1].toUpperCase() : "P";
+    if (has(slot)) return slot;
+  }
+  return null;
+}
+
 function abilityBindsChampionOption(key) {
-  const abilities = activeAbilityKit();
   const definitions = engine.championOptions[state.attacker.champion]?.options || [];
-  if (key === "passive_procs") return abilities.some((ability) => ability.slot === "P");
-  if (key === "mines_hit") return abilities.some((ability) => ability.slot === "E" && Number(ability.maxHits) > 1);
-  if (key === "r_sweet_spot") return abilities.some((ability) => ability.slot === "R" && ability.variants?.length > 1);
-  const bound = abilities.some((ability) =>
-    ability.variants?.length > 1
-      && abilityOptionBinding(ability.slot, "ability_variants") === key
-  );
-  if (bound) return true;
-  return definitions.some((option) =>
-    option.key !== key
-      && Array.isArray(option.legacy_keys)
-      && option.legacy_keys.includes(key)
-      && abilities.some((ability) =>
-        ability.variants?.length > 1
-          && abilityOptionBinding(ability.slot, "ability_variants") === option.key
-      )
+  const option = definitions.find((entry) => entry.key === key);
+  if (option && optionSlot(option)) return true;
+  // A legacy alias of an option that already renders on its ability card is
+  // the same control under an older name; the shared block must not repeat it.
+  return definitions.some((entry) =>
+    entry.key !== key
+      && Array.isArray(entry.legacy_keys)
+      && entry.legacy_keys.includes(key)
+      && Boolean(optionSlot(entry))
   );
 }
 
-function renderChampionOptions() {
+/**
+ * One main-champion option in the ability card's own idiom — the same row
+ * grammar as Rank and Variant: a micro-label, then segmented buttons (a
+ * switch is On/Off, a select is one button per choice) or the −/n/+ stepper
+ * for a number. The card and the Scenario options block share it, so an
+ * option reads the same wherever it lands.
+ */
+function championOptionControlHtml(option, slot = "") {
   const capability = championOptionCapability("main", state.attacker.champion);
   const optionAttributes = capabilityDescriptorAttributes("champion_options", capability);
+  const value = state.attacker.championOptions[option.key] ?? option.default;
+  const key = escapeHtml(option.key);
+  // On its own card the slot letter is already the heading.
+  const rawLabel = String(option.label || option.key);
+  const label = escapeHtml(slot ? rawLabel.replace(new RegExp(`^${slot}\\s+`), "") : rawLabel);
+  const segment = (choiceValue, choiceLabel, on) =>
+    `<button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-value="${escapeHtml(choiceValue)}" class="${on ? "active" : ""}" aria-pressed="${on}">${escapeHtml(choiceLabel)}</button>`;
+  if (option.type === "bool") {
+    return `<span class="ability-variants ability-option"><small>${label}</small>${segment("1", "On", Boolean(value))}${segment("0", "Off", !value)}</span>`;
+  }
+  if (option.type === "select") {
+    const choices = (option.choices || []).map((choice) =>
+      segment(choice.value, choice.label || choice.value, String(value) === String(choice.value))).join("");
+    return `<span class="ability-variants ability-option"><small>${label}</small>${choices}</span>`;
+  }
+  const step = Number(option.step ?? 1) || 1;
+  const number = Number(value) || 0;
+  const atMin = option.min != null && number <= Number(option.min);
+  const atMax = option.max != null && number >= Number(option.max);
+  return `<span class="ability-rank ability-option"><small>${label}</small><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${-step}" ${atMin ? "disabled" : ""} aria-label="Decrease ${label}">−</button><output>${escapeHtml(number)}${option.max != null ? `<i>/${escapeHtml(option.max)}</i>` : ""}</output><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${step}" ${atMax ? "disabled" : ""} aria-label="Increase ${label}">+</button></span>`;
+}
+
+function renderChampionOptions() {
   const definitions = (engine.championOptions[state.attacker.champion]?.options || [])
     .filter((option) => !abilityBindsChampionOption(option.key));
   if (!definitions.length) return "";
-  const controls = definitions.map((option) => {
-    const value = state.attacker.championOptions[option.key] ?? option.default;
-    const label = escapeHtml(option.label || option.key);
-    if (option.type === "bool") {
-      return `<label class="champion-option-toggle"><input type="checkbox" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" ${value ? "checked" : ""} /><span>${label}</span></label>`;
-    }
-    if (option.type === "select") {
-      const choices = (option.choices || []).map((choice) => `<option value="${escapeHtml(choice.value)}" ${String(value) === String(choice.value) ? "selected" : ""}>${escapeHtml(choice.label || choice.value)}</option>`).join("");
-      return `<label class="champion-option-field"><span>${label}</span><select ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="select">${choices}</select></label>`;
-    }
-    const step = option.step ?? (option.type === "int" ? 1 : "any");
-    const min = option.min == null ? "" : ` min="${option.min}"`;
-    const max = option.max == null ? "" : ` max="${option.max}"`;
-    return `<label class="champion-option-field"><span>${label}</span><input type="number" ${optionAttributes} data-champion-option="${escapeHtml(option.key)}" data-option-type="${escapeHtml(option.type)}" value="${escapeHtml(value)}" step="${step}"${min}${max} /></label>`;
-  }).join("");
+  const controls = definitions.map((option) => championOptionControlHtml(option)).join("");
   return `<div class="champion-options"><div class="champion-options-head"><strong>Scenario options</strong><span>These inputs are shared with the reviewed engine.</span></div><div class="champion-options-grid">${controls}</div></div>`;
 }
 
@@ -1562,9 +1736,35 @@ function engineBuild(side) {
     item_options: engineItemOptions(itemIds, itemStacks, itemOptionValues),
     keystone: state.attacker[`keystone${side}`] || "",
     keystone_options: engineKeystoneOptions(side),
+    minor_runes: (state.attacker[`minorRunes${side}`] || []).filter(Boolean),
+    stat_shards: statShardsPayload(side),
+    rune_options: runeOptionsPayload(side),
   };
 }
 
+/**
+ * The shard list is positional — entry i is the choice for shard row i+1 —
+ * so trailing empty rows are trimmed and interior ones stay as "".
+ */
+function statShardsPayload(side) {
+  const shards = [...(state.attacker[`statShards${side}`] || [])];
+  while (shards.length && !shards[shards.length - 1]) shards.pop();
+  return shards;
+}
+
+/** Only the options of runes this page actually selects reach the request. */
+function runeOptionsPayload(side) {
+  const selected = new Set([
+    state.attacker[`keystone${side}`] || "",
+    ...(state.attacker[`minorRunes${side}`] || []),
+  ].filter(Boolean));
+  const stored = state.attacker[`runeOptions${side}`] || {};
+  return Object.fromEntries(
+    Object.entries(stored).filter(([name, values]) => selected.has(name) && Object.keys(values || {}).length),
+  );
+}
+
+/** The selected keystone's own count options, clamped to their schema. */
 function engineKeystoneOptions(side) {
   const name = state.attacker[`keystone${side}`] || "";
   const schemas = engine.keystoneOptions[name]?.options || {};
@@ -1593,19 +1793,24 @@ function engineChampionOptions() {
     ]),
   );
   definition.options.forEach((option) => {
+    // A legacy alias never reaches the engine: the option it aliases carries
+    // the value, and the backend rejects both keys arriving together.
     if (legacyVariantKeys.has(option.key)) delete options[option.key];
-    if (option.key === "passive_procs" && abilityBindsChampionOption(option.key)) {
-      options[option.key] = abilityInput("P").casts;
-    } else if (option.key === "mines_hit" && abilityBindsChampionOption(option.key)) {
-      options[option.key] = abilityInput("E").hits;
-    } else if (option.key === "r_sweet_spot" && abilityBindsChampionOption(option.key)) {
-      options[option.key] = abilityInput("R").variant === 0;
-    }
     const variantAbility = activeAbilityKit().find((ability) =>
       ability.variants?.length > 1
         && abilityOptionBinding(ability.slot, "ability_variants") === option.key
     );
-    if (variantAbility) options[option.key] = abilityInput(variantAbility.slot).variant;
+    if (variantAbility) {
+      // Share-restore clears abilityInputs; without a real variant input the
+      // option keeps its stored/default value instead of reading the
+      // synthetic variant-0 fallback (which would flip Jayce to hammer).
+      const input = state.attacker.abilityInputs[variantAbility.slot];
+      if (option.key in VARIANT_BOOLEAN_OPTIONS) {
+        if (input) options[option.key] = input.variant === VARIANT_BOOLEAN_OPTIONS[option.key];
+      } else if (input) {
+        options[option.key] = input.variant;
+      }
+    }
   });
   return options;
 }
@@ -1616,9 +1821,7 @@ function engineAbilityRanks() {
   activeAbilityKit().forEach((ability) => {
     if (ability.slot === "P") return;
     const input = abilityInput(ability.slot);
-    const levelCap = ability.slot === "R"
-      ? (state.attacker.level >= 16 ? 3 : state.attacker.level >= 11 ? 2 : state.attacker.level >= 6 ? 1 : 0)
-      : Math.min(5, Math.floor((state.attacker.level + 1) / 2));
+    const levelCap = rankCapForLevel(ability.slot, state.attacker.level);
     requested[ability.slot] = Math.max(0, Math.min(ability.maxRank, levelCap, Number(input.rank) || 0));
   });
   let remaining = Math.min(state.attacker.level, attackerLevelCap());
@@ -1696,11 +1899,13 @@ function engineFightPayload(side) {
     role: state.attacker.role || "",
     role_quest_complete: state.attacker.roleQuestComplete,
     include_actives: true,
-    include_crossover: state.attacker.comparisonEnabled || state.fight.rotations > 1,
+    include_crossover: state.attacker.comparisonEnabled,
     champion_options: engineChampionOptions(),
     support_target_selections: { ...(state.attacker.supportTargetSelections || {}) },
     ability_ranks: engineAbilityRanks(),
-    rotations: state.fight.rotations,
+    // The engine's rotation count is not a public control: the window is
+    // the one number a user sets (the Fight length slider).
+    rotations: 1,
   };
   payload.auto_attack_uptime_mode = state.fight.aaUptimeMode || "calculated";
   // The Enemy Hits constraint: unchecked, every enemy deals zero damage.
@@ -1709,9 +1914,12 @@ function engineFightPayload(side) {
   // is back up inside it (the engine's shared cast schedule). one_rotation —
   // a fixed 5s window where every ability casts exactly once — is only sent
   // for the few champions whose module certifies nothing else.
-  const timedMode = championSupportsTimedWindow(state.attacker.champion)
-    ? "time_based"
-    : "one_rotation";
+  // "Autos only" is the engine's own public mode: no casts, no summons.
+  const timedMode = state.fight.autosOnly
+    ? "auto_only"
+    : championSupportsTimedWindow(state.attacker.champion)
+      ? "time_based"
+      : "one_rotation";
   if (state.fight.aaUptimeMode === "calculated") {
     payload.fight_mode = timedMode;
     payload.fight_duration = configuredFightWindow();
@@ -1743,14 +1951,14 @@ function championSupportsTimedWindow(championName) {
 }
 
 /**
- * The fight window the constraints bar configures: rotations × seconds per
- * rotation, capped by the engine's fight-duration limit. This is the same
- * number engineFightPayload requests, so the fight timeline's x-axis and the
- * calculation window can never disagree.
+ * The fight window the constraints bar configures, inside the engine's
+ * fight-duration limits. This is the same number engineFightPayload
+ * requests, so the fight timeline's x-axis and the calculation window can
+ * never disagree.
  */
 function configuredFightWindow() {
-  const maxWindow = Number(engine.fightLimits.fight_duration?.[1] || 30);
-  return Math.min(maxWindow, Math.max(1, state.fight.duration * state.fight.rotations));
+  const [minWindow, maxWindow] = engine.fightLimits.fight_duration || [1, 30];
+  return Math.min(Number(maxWindow || 30), Math.max(Number(minWindow || 1), state.fight.duration));
 }
 
 
@@ -1911,9 +2119,8 @@ function renderExactBreakdown(aResult, bResult) {
   ingestCombatSources(aResult, "a");
   if (bResult) ingestCombatSources(bResult, "b");
   const body = [...rows.values()].map((row) => `<tr><td><strong>${escapeHtml(row.source)}</strong>${certaintyChipHtml(row.slot)}<small>${escapeHtml(row.detail)}</small></td><td>${fmt(row.a)}</td>${bResult ? `<td>${fmt(row.b)}</td><td>${Math.abs(row.a - row.b) < .5 ? "—" : `${row.a > row.b ? "+" : ""}${fmt(row.a - row.b)}`}</td>` : ""}</tr>`).join("");
-  const mainTotal = (result) => Number(result?.combat?.breakdown?.find((entry) => entry.participant_id === "main")?.total_damage ?? result?.total_damage ?? 0);
-  const aMainTotal = mainTotal(aResult);
-  const bMainTotal = bResult ? mainTotal(bResult) : 0;
+  const aMainTotal = headlineTotal(aResult) ?? 0;
+  const bMainTotal = bResult ? headlineTotal(bResult) ?? 0 : 0;
   const totalB = bResult ? `<td>${fmt(bMainTotal)}</td><td>${Math.abs(aMainTotal - bMainTotal) < .5 ? "—" : `${aMainTotal > bMainTotal ? "+" : ""}${fmt(aMainTotal - bMainTotal)}`}</td>` : "";
   const combatRows = (aResult?.combat?.participants || []).map((participant) => {
     const entry = (aResult?.combat?.breakdown || []).find((row) => row.participant_id === participant.participant_id) || {};
@@ -1959,7 +2166,7 @@ function renderExactBreakdown(aResult, bResult) {
   const allocationNote = targetAllocation && targetAllocation.secondary_packet_count ? `<p class="utility-target-allocation" role="status">Target allocation: ${targetAllocation.complete ? "complete" : "withheld"} · ${fmt(targetAllocation.allocated_secondary_packet_count || 0)}/${fmt(targetAllocation.secondary_packet_count || 0)} secondary packets use the authored roster-index policy.</p>` : "";
   const eventSection = healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Recovery and support <span>Healing · protection · utility</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Recovery and support audit"><header><div><p class="eyebrow">Recovery and support</p><h2>Applied effects</h2></div><span>Healing · protection · utility</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Effect</th><th>Applied value</th></tr></thead><tbody>${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
-  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${state.fight.rotations} ${plural(state.fight.rotations, "rotation")}</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+  $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${one(configuredFightWindow())}s window</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
   if (supportControls) $("damageBreakdown").insertAdjacentHTML("beforeend", supportControls);
 }
 
@@ -2060,7 +2267,7 @@ function syncPracticeDummyStatsFromResponse(result) {
 function scheduleEngineCalculation() {
   if (engine.pendingTimer) clearTimeout(engine.pendingTimer);
   if (!engine.ready || !state.attacker.champion || !state.targets.length || !state.targets.every((target) => target.champion)) return;
-  if (!engine.reviewed.has(state.attacker.champion) && !engine.backend.has(state.attacker.champion)) return;
+  if (!engine.registration.get(state.attacker.champion)) return;
   engine.pendingTimer = setTimeout(() => {
     const requestId = ++engine.requestId;
     engine.pending = true;
@@ -2071,19 +2278,13 @@ function scheduleEngineCalculation() {
     }
     hideEngineError();
     const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
-    const buildPayloads = builds.map((side) => engineFightPayload(side));
-    const comparisonRequest = buildPayloads.length === 2
-      ? fetch("/api/compare", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ builds: buildPayloads }),
-      })
-      : fetch("/api/calculate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayloads[0]),
-      });
-    comparisonRequest.then((response) => response.json())
+    // Two builds go behind one request boundary (/api/compare); one build
+    // posts itself. Either way the response is normalised to a result list.
+    const payloads = builds.map((side) => engineFightPayload(side));
+    const request = payloads.length === 2
+      ? postJson("/api/compare", { builds: payloads })
+      : postJson("/api/calculate", payloads[0]);
+    request.then((response) => response.json())
       .then((results) => {
         if (requestId !== engine.requestId) return;
         const calculationResults = Array.isArray(results.results)
@@ -2107,11 +2308,14 @@ function scheduleEngineCalculation() {
         engine.responses = {
           a: calculationResults[0],
           b: calculationResults[1] || null,
+          requests: { a: payloads[0], b: payloads[1] || null },
         };
         syncPracticeDummyStatsFromResponse(engine.responses.a);
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
         renderScenarioRail();
+        // feedback.js re-reads the displayed payload off this signal.
+        document.dispatchEvent(new Event("scryglass:result"));
       })
       .catch((error) => {
         if (requestId === engine.requestId) {
@@ -2160,9 +2364,10 @@ const STEP_IDS = ["champion", "roster"];
 /**
  * List-price total of one side's build.
  *
- * Prices are ingested catalogue data from the patch snapshot — the same field
- * the item picker already shows — not a modeled number, so summing them here
- * does not break the receipts-only contract (no formula, no item-id literal).
+ * Prices are the cached item table's list price served by /api/items — the
+ * same field the item picker already shows — not a modeled number, so summing
+ * them here does not break the receipts-only contract (no formula, no item-id
+ * literal).
  */
 function buildListPrice(side) {
   return buildIdsForSide(side).reduce((total, id) => total + Number(getItem(id)?.price || 0), 0);
@@ -2192,8 +2397,8 @@ function renderChampionBrief() {
   if (chips) {
     chips.innerHTML = activeAbilityKit().map((ability) => {
       const input = abilityInput(ability.slot);
-      const rank = ability.slot === "P" ? "—" : String(Number(input.rank) || 0);
-      return `<div class="brief-chip"><b>${escapeHtml(ability.slot)}</b><span>${escapeHtml(rank)}·${Number(input.casts) || 0}</span></div>`;
+      const rank = ability.slot === "P" ? `Lv${state.attacker.level}` : String(Math.min(Number(input.rank) || 0, rankCapForLevel(ability.slot, state.attacker.level)));
+      return `<div class="brief-chip"><b>${escapeHtml(ability.slot)}</b><span>${escapeHtml(rank)}</span></div>`;
     }).join("");
   }
   const summary = $("championSummary");
@@ -2229,6 +2434,7 @@ function windowSummary() {
   const uptime = state.fight.aaUptimeMode === "calculated"
     ? "AA calc"
     : `${Math.round(state.fight.aaUptime * 100)}% AA`;
+  if (state.fight.autosOnly) return `${one(configuredFightWindow())}s · autos only · ${uptime}`;
   // A restricted module runs the engine's fixed one-cast rotation instead of
   // the timed window; say so where the window is read, not just in the body.
   if (state.attacker.champion && !championSupportsTimedWindow(state.attacker.champion)) {
@@ -2318,7 +2524,7 @@ function applyRailDisclosure() {
   if (patch && editing) {
     patch.textContent = `SETUP · STEP ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} OF ${STEP_IDS.length}`;
   } else if (patch) {
-    patch.textContent = "26.15";
+    patch.textContent = servedPatchLabel || "PATCH UNKNOWN";
   }
 }
 
@@ -2374,15 +2580,16 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
   const rows = participantRows(result);
   const main = rows.find((row) => row.participant_id === "main") || {};
   const enemies = rows.filter((row) => String(row.participant_id || "").startsWith("enemy:"));
-  // Damage is the selected team's output.  Enemy retaliation belongs in the
+  // Damage is the selected team's output, and the engine already folded it:
+  // `combat.objective.main_team_damage_before_death` is the same number
+  // bis.py scores an ally candidate on.  Enemy retaliation belongs in the
   // survival ledger, never in the main team's damage objective.
-  const alliedRows = rows.filter((row) => row.team === "main" || row.participant_id === "main" || String(row.participant_id || "").startsWith("ally:"));
-  const teamDamage = alliedRows.reduce((sum, row) => sum + Number(row.total_damage || 0), 0);
-  // Main-participant healing is serialized under the survival ledger.  Keep
-  // the legacy top-level field as a compatibility fallback for older payloads.
-  const healingReceived = result?.healing_received ?? main.survival?.healing_received;
+  const teamDamage = Number(result?.combat?.objective?.main_team_damage_before_death);
+  // Recovery and support land on the main participant's own survival ledger;
+  // the utility objective mirrors bis.py (healing + support shield received).
+  const healingReceived = main.survival?.healing_received;
   const hasHealingReceipt = healingReceived !== null && healingReceived !== undefined;
-  const supportShield = result?.support_shield_received ?? main.survival?.support_shield_received;
+  const supportShield = main.survival?.support_shield_received;
   const hasSupportShieldReceipt = supportShield !== null && supportShield !== undefined;
   // `Number(null)` is 0, which used to turn an alive enemy into an instant
   // kill. Only explicit finite death timestamps qualify for this objective.
@@ -2394,12 +2601,12 @@ function exactObjectiveMetric(result, fallbackDamage = 0) {
     .sort((a, b) => a - b)[0];
   return {
     overall: Number(main.total_damage ?? fallbackDamage),
-    damage: alliedRows.length ? teamDamage : Number(main.total_damage ?? fallbackDamage),
+    damage: Number.isFinite(teamDamage) ? teamDamage : Number(main.total_damage ?? fallbackDamage),
     kill: firstDeath == null ? null : firstDeath,
     survival: Number(main.survival?.effective_health),
-    utility: result?.shield_absorbed == null && !hasHealingReceipt && !hasSupportShieldReceipt
+    utility: !hasHealingReceipt && !hasSupportShieldReceipt
       ? null
-      : Number(result?.shield_absorbed || 0) + Number(healingReceived || 0) + Number(supportShield || 0),
+      : Number(healingReceived || 0) + Number(supportShield || 0),
   };
 }
 
@@ -2435,16 +2642,49 @@ function prototypeStats(stats) {
   return rows.map(([label, value, icon]) => `<div class="stat"><span><i class="stat-icon" aria-hidden="true">${escapeHtml(icon)}</i>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join("");
 }
 
+/** How many times the engine cast each slot in the displayed window. */
+function castCountsFromResult() {
+  const counts = new Map();
+  (engine.responses?.a?.cast_timeline || []).forEach((cast) => {
+    counts.set(cast.slot, (counts.get(cast.slot) || 0) + 1);
+  });
+  return counts;
+}
+
 function prototypeAbilityCards(champion) {
+  const casts = castCountsFromResult();
+  const level = state.attacker.level;
+  const spent = spentRankPoints();
+  const options = engine.championOptions[state.attacker.champion]?.options || [];
   return (champion?.abilities || []).map((ability) => {
     const input = abilityInput(ability.slot);
-    const rank = ability.slot === "P" ? 1 : input.rank;
-    const rankControl = ability.slot === "P" ? `<span class="ability-rank"><small>Level scales</small><output>Lv ${state.attacker.level}</output></span>` : `<span class="ability-rank"><small>Rank</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="-1">−</button><output>${rank}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_ranks")} data-ability-rank="${ability.slot}" data-delta="1">+</button></span>`;
-    const hitControl = ability.maxHits ? `<span class="ability-casts ability-hits"><small>Hits</small><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="-1" ${input.hits <= 1 ? "disabled" : ""}>−</button><output>${input.hits}</output><button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_hits")} data-ability-hits="${ability.slot}" data-delta="1" ${input.hits >= ability.maxHits ? "disabled" : ""}>+</button></span>` : "";
-    const variantBinding = abilityOptionBinding(ability.slot, "ability_variants");
-    const variantControl = ability.variants?.length > 1 && variantBinding ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(ability.slot, "ability_variants")} data-ability-variant="${ability.slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>` : "";
-    const castAttributes = `${abilityCapabilityAttributes(ability.slot, "ability_casts")} data-ability-casts="${ability.slot}"`;
-    return `<article class="ability-card"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong>${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}<span class="ability-casts"><small>${ability.slot === "P" ? "Procs" : "Casts"}</small><button type="button" ${castAttributes} data-delta="-1">−</button><output>${input.casts}</output><button type="button" ${castAttributes} data-delta="1">+</button></span>${hitControl}${variantControl}</article>`;
+    const slot = ability.slot;
+    let rankControl;
+    if (slot === "P") {
+      rankControl = `<span class="ability-rank"><small>Level scales</small><output>Lv ${level}</output></span>`;
+    } else {
+      const cap = Math.min(ability.maxRank, rankCapForLevel(slot, level));
+      const rank = Math.min(input.rank, cap);
+      const atCap = rank >= cap;
+      const noPoints = spent >= level;
+      const plusReason = atCap
+        ? (rank >= ability.maxRank ? "Max rank" : `Rank ${rank + 1} needs level ${slot === "R" ? [6, 11, 16][rank] : rank * 2 + 1}`)
+        : noPoints ? `No skill points left at level ${level}` : "";
+      rankControl = `<span class="ability-rank"><small>Rank</small><button type="button" ${abilityCapabilityAttributes(slot, "ability_ranks")} data-ability-rank="${slot}" data-delta="-1" ${rank <= 0 ? "disabled" : ""}>−</button><output>${rank}<i>/${cap}</i></output><button type="button" ${abilityCapabilityAttributes(slot, "ability_ranks")} data-ability-rank="${slot}" data-delta="1" ${plusReason ? `disabled title="${escapeHtml(plusReason)}"` : ""}>+</button></span>`;
+    }
+    const bound = ability.variants?.length > 1 && abilityOptionBinding(slot, "ability_variants");
+    const variantControl = bound
+      ? `<span class="ability-variants"><small>Variant</small>${ability.variants.map((variant, index) => `<button type="button" ${abilityCapabilityAttributes(slot, "ability_variants")} data-ability-variant="${slot}" data-value="${index}" class="${input.variant === index ? "active" : ""}">${escapeHtml(variant.name)}</button>`).join("")}</span>`
+      : "";
+    const optionControls = options
+      .filter((option) => optionSlot(option) === slot && !(bound && option.key === bound))
+      .map((option) => championOptionControlHtml(option, slot))
+      .join("");
+    const castCount = casts.get(slot);
+    const readout = slot !== "P" && engine.responses?.a
+      ? `<span class="ability-readout">${castCount ? `${castCount}× cast in ${one(Number(engine.responses.a.combat?.duration || configuredFightWindow()))}s` : "not cast in window"}</span>`
+      : "";
+    return `<article class="ability-card" data-ability-slot="${slot}"><img class="ability-icon-image" src="${abilityImage(ability)}" alt="" /><div><strong><b class="ability-key">${slot}</b> ${escapeHtml(ability.name)}</strong><small>${escapeHtml(ability.formulaSource === "Wiki-derived local cache" ? "Wiki formula" : "Reviewed formula")}</small></div>${rankControl}${readout}${variantControl}${optionControls}</article>`;
   }).join("");
 }
 
@@ -2487,6 +2727,12 @@ function renderPracticeDummyCard(root, index, loadout, label) {
   return `<article class="roster-card roster-card--dummy"><div class="roster-pick roster-pick--dummy"><img src="${PRACTICE_DUMMY_IMAGE}" alt="Practice Dummy" /></div><div class="roster-card-copy"><strong>${PRACTICE_DUMMY_NAME}</strong><span>League Practice Tool · no abilities</span><div class="roster-meta">Passive target · exact stats</div></div><button class="remove-roster" type="button" data-remove-${label === "enemy" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="practice-dummy-note"><strong>No skills or outgoing actions</strong><span>Items can add target effects. Each edited field is the final value sent to the engine.</span></div><div class="practice-dummy-stat-grid" aria-label="Practice Dummy exact stats">${statControls}</div><button class="practice-dummy-reset" type="button" data-reset-dummy-stats="${root}.${index}">Use item totals for every stat</button><p class="roster-strip-label">Items · target effects only</p><div class="roster-item-strip">${itemSlots}</div></div></article>`;
 }
 
+/**
+ * What the stat card asks the server for. The rune page rides along because
+ * runes grant stats: without it the card would show pre-rune numbers under a
+ * page the fight prices with them. `loadoutStatsKey` is this payload, so
+ * editing a rune or a shard refreshes the card like editing an item does.
+ */
 function loadoutStatsPayload() {
   const build = engineFightPayload("A");
   return {
@@ -2497,6 +2743,10 @@ function loadoutStatsPayload() {
     item_options: build.item_options,
     role: build.role || "",
     role_quest_complete: Boolean(build.role_quest_complete),
+    keystone: build.keystone,
+    minor_runes: build.minor_runes,
+    stat_shards: build.stat_shards,
+    rune_options: build.rune_options,
   };
 }
 
@@ -2561,11 +2811,7 @@ function scheduleLoadoutStats() {
   engine.loadoutStatsPending = true;
   engine.loadoutStatsTimer = setTimeout(() => {
     engine.loadoutStatsTimer = null;
-    fetch("/api/loadout-stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(loadoutStatsPayload()),
-    })
+    postJson("/api/loadout-stats", loadoutStatsPayload())
       .then((response) => response.json())
       .then((result) => {
         if (requestId !== engine.loadoutStatsRequestId) return;
@@ -2627,6 +2873,16 @@ function renderPrototypeChampion() {
     button.dataset.capabilityField = "level";
   });
   $("levelOutput").textContent = state.attacker.level;
+  const levelRange = $("levelRange");
+  if (levelRange) {
+    levelRange.max = attackerLevelCap();
+    levelRange.value = state.attacker.level;
+    levelRange.disabled = levelCapability.supported === false;
+  }
+  const levelMarks = $("levelMarks");
+  if (levelMarks) {
+    levelMarks.innerHTML = levelMarksHtml("attacker.level", state.attacker.level, attackerLevelCap(), capabilityAttributes("main", "level"));
+  }
   const questCapability = capabilityFor("main", "role_quest_complete");
   $("questToggle").textContent = state.attacker.roleQuestComplete ? "Quest on" : "Quest off";
   $("questToggle").setAttribute("aria-pressed", String(state.attacker.roleQuestComplete));
@@ -2682,7 +2938,7 @@ function renderPrototypeRoster(kind) {
     const effectToggle = kind === "allies"
       ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${effectsCapability} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
       : "";
-    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button></div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
+    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button>${levelQuickHtml(`${root}.${index}.level`, loadout.level, roleLevelCap(loadout.role, Boolean(loadout.roleQuestComplete), loadout.level), levelCapability)}</div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
   }).join("") || `<p class="roster-empty">${kind === "targets" ? "No enemies yet — the coupled timeline needs at least one." : "No allies in context."}</p>`;
   // The 2b mock shows a "…pushes your best fifth slot from X to Y" callout
   // here. No backend receipt produces that sentence today, and the renderer
@@ -2698,12 +2954,20 @@ function renderPrototypeBuilder() {
   $("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";
   renderPrototypeRoster("targets");
   renderPrototypeRoster("allies");
-  $("rotationOutput").textContent = state.fight.rotations;
-  $("rotationRange").value = state.fight.rotations;
-  const rotationCapability = scenarioCapabilityFor("rotations");
-  $("rotationRange").disabled = rotationCapability.supported === false;
-  $("rotationRange").title = capabilityTitle(rotationCapability);
-  $("rotationRange").dataset.capabilityField = "rotations";
+  const levelAll = $("rosterLevelAll");
+  if (levelAll) {
+    levelAll.hidden = ![...state.targets, ...state.allies].some((loadout) => loadout.champion && !isPracticeDummy(loadout));
+    const mainButton = $("rosterLevelMain");
+    if (mainButton) mainButton.textContent = `= main (Lv ${state.attacker.level})`;
+  }
+  const actionsCapability = scenarioCapabilityFor("actions");
+  document.querySelectorAll("[data-fight-mode]").forEach((button) => {
+    const selected = (button.dataset.fightMode === "autos") === Boolean(state.fight.autosOnly);
+    button.classList.toggle("is-on", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    button.disabled = actionsCapability.supported === false;
+    button.dataset.capabilityField = "actions";
+  });
   const durationRange = $("durationRange");
   const durationOutput = $("durationOutput");
   const durationCapability = scenarioCapabilityFor("window");
@@ -2765,25 +3029,39 @@ const TIMELINE_EVENT_LIMIT = 60;
  * The proportional tick keeps the at-a-glance sense of when it landed, and
  * data-event-index ties each lane to the matching ledger-table line.
  */
-function renderEventTimeline(combatEvents, duration, eventLabel) {
+function renderEventTimeline(combatEvents, duration, eventLabel, sourceLabel = (event) => event.source || "event", defeatedAt = null) {
   const timed = combatEvents
     .map((event, index) => ({ event, index, time: eventTime(event) }))
     .filter(({ time }) => time !== null);
   if (!timed.length) return `<p class="roster-empty">No participant event ledger returned.</p>`;
-  const shown = timed.slice(0, TIMELINE_EVENT_LIMIT);
+  // Once every enemy is down, the engine keeps scheduling swings that land
+  // for nothing. One lane says so instead of a column of "no damage".
+  const spent = defeatedAt == null
+    ? []
+    : timed.filter(({ event, time }) => time >= defeatedAt && !(Number(event.damage || 0) > 0));
+  const spentIndexes = new Set(spent.map(({ index }) => index));
+  const live = timed.filter(({ index }) => !spentIndexes.has(index));
+  const shown = live.slice(0, TIMELINE_EVENT_LIMIT);
   const lanes = shown.map(({ event, index, time }) => {
     const position = Math.min(100, Math.max(0, time / duration * 100));
     const precision = event.event_precision && event.event_precision !== "exact" ? ` · ${event.event_precision}` : "";
     const damage = Number(event.damage || 0);
-    const value = damage > 0 ? `${fmt(damage)} damage` : event.skipped_reason || "no damage";
+    const value = damage > 0 ? `${fmt(damage)} damage` : String(event.skipped_reason || "no damage").replace(/_/g, " ");
     return `<li class="timeline-event" data-event-index="${index}">
       <span class="timeline-time">${one(time)}s</span>
-      <span class="timeline-what"><b>${escapeHtml(eventLabel(event.attacker))}</b> → ${escapeHtml(eventLabel(event.target))} · ${escapeHtml(event.source || "event")}${escapeHtml(precision)}</span>
+      <span class="timeline-what"><b>${escapeHtml(eventLabel(event.attacker))}</b> → ${escapeHtml(eventLabel(event.target))} · ${escapeHtml(sourceLabel(event))}${escapeHtml(precision)}</span>
       <b class="timeline-value">${escapeHtml(value)}</b>
       <span class="timeline-tick" style="--at:${position}%" aria-hidden="true"></span>
     </li>`;
-  }).join("");
-  const note = shown.length === combatEvents.length
+  }).join("") + (spent.length
+    ? `<li class="timeline-event is-collapsed">
+      <span class="timeline-time">${one(defeatedAt)}s</span>
+      <span class="timeline-what"><b>Every enemy is down</b> · ${spent.length} later ${plural(spent.length, "event")} landed on nobody</span>
+      <b class="timeline-value">no damage</b>
+      <span class="timeline-tick" style="--at:${Math.min(100, Math.max(0, defeatedAt / duration * 100))}%" aria-hidden="true"></span>
+    </li>`
+    : "");
+  const note = shown.length === live.length
     ? `${combatEvents.length} ordered ${plural(combatEvents.length, "event")}, oldest first`
     : `First ${shown.length} of ${combatEvents.length} ordered events`;
   return `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div>
@@ -2903,21 +3181,285 @@ function renderDuelSide(side) {
     return `<label class="keystone-option"><span>${escapeHtml(option.label || key)}</span><input type="number" ${capabilityAttributes("main", "keystone")} data-keystone-option="${escapeHtml(side)}" data-keystone-option-key="${escapeHtml(key)}" value="${escapeHtml(value)}" step="1"${min}${max} /></label>`;
   }).join("");
   const keystoneRow = `<div class="duel-slot"><button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="${escapeHtml(keystone.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>${keystoneControls ? `<div class="duel-slot-controls keystone-options">${keystoneControls}</div>` : ""}</div>`;
+  const runeHead = `<div class="duel-side-head duel-rune-head"><span class="duel-side-kicker">Runes</span><span class="duel-side-note">any row opens the page</span></div>`;
   const invite = filled.length || keystone
     ? ""
     : `<p class="duel-empty">Build ${side} is empty<small>click any slot below to add an item</small></p>`;
   const foot = filled.length
     ? `<p class="duel-foot">${filled.length} ${plural(filled.length, "item")} · ${fmt(buildListPrice(side))}g list price</p>`
     : "";
-  host.innerHTML = `${head}${invite}${rows.join("")}${keystoneRow}${foot}`;
+  host.innerHTML = `${head}${invite}${rows.join("")}${runeHead}${keystoneRow}${runePageRows(side)}${foot}`;
+}
+
+// --- The rune page dialog -------------------------------------------------
+// One dialog for the whole page: keystone, the primary path's three rows,
+// two rows from one other path, three shards, and every rune option. The
+// per-row duel pickers stay for changing one rune; this is the one-open way
+// to set the page. The server's validate_rune_page remains the authority.
+let runePageSide = null;
+
+function runePaths() {
+  return [...new Set((engine.runes || []).map((rune) => rune.path).filter(Boolean))];
+}
+
+function secondaryPath(side) {
+  return (state.attacker[`minorRunes${side}`] || []).slice(3).map(getRune).find(Boolean)?.path || "";
+}
+
+function pickKeystone(side, name) {
+  const previous = getKeystone(state.attacker[`keystone${side}`]);
+  const next = getKeystone(name);
+  state.attacker[`keystone${side}`] = previous?.name === name ? "" : name;
+  const minors = [...(state.attacker[`minorRunes${side}`] || ["", "", "", "", ""])];
+  if (!next || previous?.path !== next.path) minors.fill("", 0, 3);
+  if (next && secondaryPath(side) === next.path) minors.fill("", 3, 5);
+  state.attacker[`minorRunes${side}`] = minors;
+}
+
+function pickMinorRune(side, name) {
+  const rune = getRune(name);
+  if (!rune) return;
+  const primary = getKeystone(state.attacker[`keystone${side}`])?.path || "";
+  const minors = [...(state.attacker[`minorRunes${side}`] || ["", "", "", "", ""])];
+  if (rune.path === primary) {
+    minors[rune.row - 1] = minors[rune.row - 1] === name ? "" : name;
+  } else {
+    // Two runes of one other path, different rows: a new path restarts the
+    // pair, a same-row pick replaces, a third pick drops the oldest.
+    let taken = minors.slice(3).map(getRune).filter(Boolean);
+    if (taken.some((entry) => entry.path !== rune.path)) taken = [];
+    if (taken.some((entry) => entry.name === name)) taken = taken.filter((entry) => entry.name !== name);
+    else taken = [...taken.filter((entry) => entry.row !== rune.row), rune].slice(-2);
+    minors[3] = taken[0]?.name || "";
+    minors[4] = taken[1]?.name || "";
+  }
+  state.attacker[`minorRunes${side}`] = minors;
+}
+
+function pickStatShard(side, row, name) {
+  const shards = [...(state.attacker[`statShards${side}`] || ["", "", ""])];
+  shards[row] = shards[row] === name ? "" : name;
+  state.attacker[`statShards${side}`] = shards;
+}
+
+function runePickButton(kind, side, rune, selected, row = "") {
+  const locked = rune.implemented === false;
+  return `<button type="button" class="rune-pick ${selected ? "is-on" : ""} ${locked ? "locked" : ""}" data-rune-pick="${kind}" data-rune-side="${side}" data-rune-name="${escapeHtml(rune.name)}" data-rune-row="${row}" ${locked ? 'disabled title="This rune is not modeled yet; its numbers would be estimates."' : ""} aria-pressed="${selected}">${rune.icon ? `<img src="${escapeHtml(rune.icon)}" alt="" loading="lazy" />` : ""}<span>${escapeHtml(rune.name)}</span></button>`;
+}
+
+function renderRunePage() {
+  const side = runePageSide;
+  const body = $("runePageBody");
+  if (!side || !body) return;
+  const runes = engine.runes || [];
+  const keystoneName = state.attacker[`keystone${side}`] || "";
+  const primary = getKeystone(keystoneName)?.path || "";
+  const minors = state.attacker[`minorRunes${side}`] || ["", "", "", "", ""];
+  const shards = state.attacker[`statShards${side}`] || ["", "", ""];
+  const secondary = secondaryPath(side);
+  const group = (title, note, inner, focus = "") => `<section class="rune-group" ${focus ? `data-rune-focus="${focus}"` : ""}><h3>${title}<small>${note}</small></h3>${inner}</section>`;
+  const pathRows = (path, rows, kind, focusPrefix = "") => rows.map((row) =>
+    `<div class="rune-row" ${focusPrefix ? `data-rune-focus="${focusPrefix}-${row}"` : ""}><b>Row ${row}</b>${runes.filter((rune) => rune.path === path && rune.row === row).map((rune) =>
+      runePickButton(kind, side, rune, minors.includes(rune.name))).join("")}</div>`).join("");
+  const keystones = runePaths().map((path) =>
+    `<div class="rune-row"><b>${escapeHtml(path)}</b>${runes.filter((rune) => rune.path === path && rune.row === 0).map((rune) =>
+      runePickButton("keystone", side, rune, rune.name === keystoneName)).join("")}</div>`).join("");
+  const primaryRows = primary
+    ? pathRows(primary, [1, 2, 3], "minor", "primary")
+    : `<p class="rune-note">Choose a keystone first — it sets the primary path.</p>`;
+  const secondaryRows = runePaths().filter((path) => path !== primary).map((path) =>
+    `<div class="rune-path ${secondary === path ? "is-on" : ""}"><b>${escapeHtml(path)}</b>${pathRows(path, [1, 2, 3], "minor")}</div>`).join("");
+  const shardRows = (engine.runeShards || []).map((row, index) =>
+    `<div class="rune-row" data-rune-focus="shard-${index + 1}"><b>${escapeHtml(row.name || `Row ${index + 1}`)}</b>${(row.options || []).map((option) =>
+      runePickButton("shard", side, { ...option, implemented: option.implemented !== false }, shards[index] === option.name, index)).join("")}</div>`).join("");
+  const chosen = [keystoneName, ...minors].filter(Boolean).length + shards.filter(Boolean).length;
+  $("runePageTitle").textContent = `Build ${side} runes`;
+  $("runePageKicker").textContent = `Rune page · ${chosen} of 9 chosen${primary ? ` · ${primary}${secondary ? ` + ${secondary}` : ""}` : ""}`;
+  body.innerHTML = group("Keystone", "sets the primary path", keystones, "keystone")
+    + group("Primary", primary ? `one rune per row of ${escapeHtml(primary)}` : "", primaryRows, "primary")
+    + group("Secondary", "two runes from one other path, different rows", secondaryRows, "secondary")
+    + group("Shards", "one per row", shardRows)
+    + runeOptionControls(side);
+}
+
+/** The dialog section a duel rune row points at: keystone, primary-n, secondary, shard-n. */
+function runeFocusFor(type, path) {
+  const index = Number(path.split(".").pop());
+  if (type === "keystone") return "keystone";
+  if (type === "stat-shard") return `shard-${index + 1}`;
+  return index < 3 ? `primary-${index + 1}` : "secondary";
+}
+
+function openRunePage(side, focus = "") {
+  runePageSide = side;
+  if (side === "B") state.attacker.comparisonEnabled = true;
+  renderRunePage();
+  const dialog = $("runePage");
+  dialog.showModal();
+  // A row that does not exist yet (primary rows before a keystone) lands on
+  // its section instead.
+  const target = focus
+    ? dialog.querySelector(`[data-rune-focus="${focus}"]`) || dialog.querySelector(`[data-rune-focus="${focus.split("-")[0]}"]`)
+    : null;
+  if (target) {
+    target.scrollIntoView({ block: "start" });
+    target.classList.add("is-focus");
+    target.querySelector("button:not([disabled])")?.focus({ preventScroll: true });
+  }
+}
+
+function closeRunePage() {
+  $("runePage").close();
+  runePageSide = null;
+}
+
+/** Copy one side's whole rune page onto the other. */
+function copyRunePage(from, to) {
+  state.attacker[`keystone${to}`] = state.attacker[`keystone${from}`];
+  state.attacker[`minorRunes${to}`] = [...(state.attacker[`minorRunes${from}`] || [])];
+  state.attacker[`statShards${to}`] = [...(state.attacker[`statShards${from}`] || [])];
+  state.attacker[`runeOptions${to}`] = Object.fromEntries(
+    Object.entries(state.attacker[`runeOptions${from}`] || {}).map(([name, values]) => [name, { ...values }]),
+  );
+  state.attacker[`keystoneOptions${to}`] = { ...(state.attacker[`keystoneOptions${from}`] || {}) };
+}
+
+/** One rune by name from the whole roster the config published. */
+function getRune(name) {
+  return name ? (engine.runes || []).find((entry) => entry.name === name) || null : null;
+}
+
+/**
+ * The minor runes a slot may legally hold, as an affordance only — the
+ * server owns the rules and refuses anything illegal that reaches it.
+ * Slots 0-2 are the primary path's three rows in order; slots 3-4 are the
+ * secondary path's two.
+ */
+function minorRuneChoices(side, index) {
+  const minors = (engine.runes || []).filter((entry) => entry.row > 0);
+  const primary = getKeystone(state.attacker[`keystone${side}`])?.path || "";
+  if (index < 3) {
+    return minors.filter((entry) => entry.row === index + 1 && (!primary || entry.path === primary));
+  }
+  const taken = (state.attacker[`minorRunes${side}`] || [])
+    .filter((name, slot) => slot >= 3 && slot !== index)
+    .map((name) => getRune(name))
+    .filter(Boolean);
+  const secondary = taken[0]?.path || "";
+  return minors.filter((entry) => (
+    entry.path !== primary
+    && (!secondary || entry.path === secondary)
+    && !taken.some((other) => other.row === entry.row)
+  ));
+}
+
+/** The options one shard row offers, from the published shard table. */
+function statShardChoices(index) {
+  const row = (engine.runeShards || [])[index];
+  return (row?.options || []).map((option) => ({ ...option, row: row.row, path: row.name }));
+}
+
+/** The five minor-rune rows, the three shard rows, and any rune options. */
+function runePageRows(side) {
+  const minors = state.attacker[`minorRunes${side}`] || [];
+  const shards = state.attacker[`statShards${side}`] || [];
+  const minorRows = minors.map((name, index) => {
+    const rune = getRune(name);
+    const label = index < 3 ? `Primary row ${index + 1}` : `Secondary row ${index - 2}`;
+    return `<button type="button" class="duel-row is-rune ${rune ? "" : "is-empty"}" ${capabilityAttributes("main", "minor_runes")} data-picker="minor-rune" data-path="attacker.minorRunes${side}.${index}" aria-label="${rune ? `Change ${escapeHtml(rune.name)}` : `Add a ${label.toLowerCase()} rune`}"><span class="item-icon">${rune ? `<img src="${escapeHtml(rune.icon)}" alt="${escapeHtml(rune.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${rune ? escapeHtml(rune.name) : "Add rune"}</strong><small>${rune ? `${escapeHtml(rune.path || "")} row ${rune.row}` : escapeHtml(label)}</small></span></button>`;
+  });
+  const shardRows = shards.map((name, index) => {
+    const row = (engine.runeShards || [])[index];
+    return `<button type="button" class="duel-row is-shard ${name ? "" : "is-empty"}" ${capabilityAttributes("main", "stat_shards")} data-picker="stat-shard" data-path="attacker.statShards${side}.${index}" aria-label="${name ? `Change ${escapeHtml(name)}` : "Add a stat shard"}"><span class="item-icon"></span><span class="duel-row-copy"><strong>${name ? escapeHtml(name) : "Add shard"}</strong><small>${escapeHtml(row?.name || `Shard row ${index + 1}`)}</small></span></button>`;
+  });
+  return `<div class="duel-runes">${minorRows.join("")}${shardRows.join("")}${runeOptionControls(side)}</div>`;
+}
+
+/**
+ * A control per declared option of every rune this page selects. The
+ * default is the rune's own disclosed default; nothing is inferred.
+ */
+function runeOptionControls(side) {
+  const selected = [state.attacker[`keystone${side}`] || "", ...(state.attacker[`minorRunes${side}`] || [])].filter(Boolean);
+  const stored = state.attacker[`runeOptions${side}`] || {};
+  const controls = selected.flatMap((name) => {
+    const rune = getRune(name);
+    return (rune?.options || []).map((option) => {
+      const value = stored[name]?.[option.key] ?? option.default;
+      const control = option.kind === "switch"
+        ? `<input type="checkbox" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" ${Number(value) ? "checked" : ""} />`
+        : `<input type="number" step="1" min="${Number(option.minimum)}" max="${Number(option.maximum)}" value="${Number(value)}" data-rune-option="${escapeHtml(option.key)}" data-rune-name="${escapeHtml(name)}" data-rune-side="${side}" />`;
+      return `<label class="rune-option" title="${escapeHtml(option.disclosure || "")}">${control}<span>${escapeHtml(name)}: ${escapeHtml(option.label)}</span></label>`;
+    });
+  });
+  return controls.length ? `<div class="duel-rune-options">${controls.join("")}</div>` : "";
 }
 
 function prototypeParticipants(result) {
   return result?.combat?.participants || [];
 }
 
+/** Every enemy participant, with the roster index its leaf paths are keyed by.
+    One predicate, because a dispositions path is `participants[i].survival.x`
+    and a caller that needed `i` re-spelled the filter inline to get it — two
+    copies of "which row is an enemy", identical until the day one of them is
+    updated. */
+function enemyRows(result) {
+  return (result?.combat?.participants || [])
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+}
+
 function enemyParticipants(result) {
-  return (result?.combat?.participants || []).filter((row) => row.team === "enemy" || String(row.participant_id || "").startsWith("enemy:"));
+  return enemyRows(result).map(({ row }) => row);
+}
+
+/**
+ * A ledger event's source as a person reads it: the ability's name for a
+ * slot key, the item for an on-hit key, the keystone for a rune key, plain
+ * words for the engine's snake_case channels. One home for every key.
+ */
+function eventSourceLabel(event, result) {
+  const source = String(event?.source || "");
+  if (!source) return "event";
+  if (source === "auto_attacks") return "Auto attack";
+  if (source === "on_hit_ability_passive") return "On-hit passive";
+  const slot = source.match(/^([PQWER])(\d*)$/);
+  if (slot) {
+    const participant = (result?.combat?.participants || []).find((row) => row.participant_id === event.attacker);
+    const champion = participant?.champion || (event.attacker === "main" ? state.attacker.champion : "");
+    const ability = (getChampion(champion)?.abilities || []).find((entry) => entry.slot === slot[1]);
+    return ability ? `${slot[1]}${slot[2]} · ${ability.name}` : source;
+  }
+  const onHit = source.match(/^on_hit_(.+)$/);
+  if (onHit) return `${onHit[1]} on-hit`;
+  const proc = source.match(/^proc_(.+)$/);
+  if (proc) return `${proc[1]} proc`;
+  const rune = source.match(/^rune_(.+)$/);
+  if (rune) return `${rune[1]} (rune)`;
+  const keystone = source.match(/^keystone_(.+?)( amp)?$/);
+  if (keystone) return keystone[2] ? `${keystone[1]} amp` : keystone[1];
+  const words = source.replace(/_/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * When every enemy died inside the window: the moment the last one fell,
+ * the attacker's raw output and the overkill the headline leaves out. Null
+ * while any enemy is standing.
+ */
+function enemyDefeat(result) {
+  const enemies = enemyParticipants(result);
+  if (!enemies.length || !enemies.every((row) => row.survival?.survived_window === false)) return null;
+  const times = enemies
+    .map((row) => Number(row.survival?.first_death_time ?? row.survival?.death_time))
+    .filter(Number.isFinite);
+  return {
+    count: enemies.length,
+    time: times.length ? Math.max(...times) : null,
+    raw: Number(result?.total_damage || 0),
+    overkill: Number(result?.overkill || 0),
+  };
 }
 
 function enemyEffectiveHealth(result) {
@@ -2931,11 +3473,20 @@ function enemyEffectiveHealth(result) {
 }
 
 function enemyHealthRemaining(result) {
-  const enemies = enemyParticipants(result);
-  if (!enemies.length) return "";
-  const ending = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.ending_health ?? 0)), 0);
+  const dispositions = result?.combat?.dispositions || null;
+  const enemyIndexes = enemyRows(result);
+  if (!enemyIndexes.length) return "";
+  // A total that reads one refused member as zero is a total that quietly
+  // counted a number nobody produced. If any enemy's ending health was
+  // withheld, the sum is withheld and says which receipt refused it.
+  const refused = withheldEntry(
+    enemyIndexes.map(({ index }) => survivalLeafPath(index, "ending_health")),
+    dispositions,
+  );
+  if (refused) return `alive · health withheld (${withheldReason(refused)})`;
+  const ending = enemyIndexes.reduce((sum, { row }) => sum + Math.max(0, Number(row.survival?.ending_health ?? 0)), 0);
   if (ending <= 0) return "";
-  const max = enemies.reduce((sum, row) => sum + Math.max(0, Number(row.survival?.max_health ?? row.survival?.effective_health ?? 0)), 0);
+  const max = enemyIndexes.reduce((sum, { row }) => sum + Math.max(0, Number(row.survival?.max_health ?? row.survival?.effective_health ?? 0)), 0);
   const pct = max > 0 ? Math.round((ending / max) * 100) : null;
   return `alive · ${fmt(ending)} HP${pct != null ? ` (${pct}%)` : ""}`;
 }
@@ -3004,10 +3555,16 @@ function castMarkIcons(slots) {
  * stay readable even when their timestamps interleave.
  */
 function chartMarksHtml(result, side, duration) {
-  return castMarkers(result).map((mark) =>
-    `<span class="chart-mark mark-${side}${mark.ultimate ? " is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%">
-      <i></i><span class="mark-icons">${castMarkIcons(mark.slots)}</span>${side === "a" ? `<span class="mark-time">${one(mark.time)}s</span>` : ""}
-    </span>`).join("");
+  // A timestamp label needs ~4% of the axis; closer marks keep their tick
+  // and icons and drop the label rather than print over the last one.
+  let lastLabelled = -Infinity;
+  return castMarkers(result).map((mark) => {
+    const labelled = side === "a" && (mark.time - lastLabelled) / duration >= 0.045;
+    if (labelled) lastLabelled = mark.time;
+    return `<span class="chart-mark mark-${side}${mark.ultimate ? " is-ult" : ""}" style="left:${((mark.time / duration) * 100).toFixed(2)}%">
+      <i></i><span class="mark-icons">${castMarkIcons(mark.slots)}</span>${labelled ? `<span class="mark-time">${one(mark.time)}s</span>` : ""}
+    </span>`;
+  }).join("");
 }
 
 /** Round an axis top up to a readable 1/2/5-family value. */
@@ -3093,8 +3650,8 @@ function renderFightChart(aResult, bResult) {
     Number(bResult?.combat?.duration || 0),
   );
   const duration = Math.max(reported > 0 ? reported : configuredFightWindow(), ...times, 1);
-  const aTotal = mainTotalDamage(aResult);
-  const bTotal = bResult ? mainTotalDamage(bResult) : null;
+  const aTotal = headlineTotal(aResult);
+  const bTotal = bResult ? headlineTotal(bResult) : null;
   const top = niceCeiling(Math.max(seriesA?.total || 0, seriesB?.total || 0, aTotal || 0, bTotal || 0, 1));
   const low = chartAxisFloor([seriesA, seriesB].filter(Boolean), duration, top);
   if (title) title.textContent = `Fight timeline · 0 → ${one(duration)} s`;
@@ -3181,13 +3738,6 @@ function renderBuyBand() {
     </div>`;
 }
 
-function mainTotalDamage(result) {
-  if (!result) return null;
-  const row = (result.combat?.breakdown || []).find((entry) => entry.participant_id === "main");
-  const total = Number(row?.total_damage ?? result.total_damage ?? 0);
-  return Number.isFinite(total) ? total : null;
-}
-
 function heroValue(value, objectiveKey) {
   if (value == null) return "—";
   if (objectiveDefinition(objectiveKey)?.direction === "lower") return escapeHtml(killTimeLabel(value) || "—");
@@ -3250,8 +3800,8 @@ function renderStartBand(ready) {
 }
 
 function renderPrototypeResult(aResult = null, bResult = null) {
-  const aTotal = aResult ? Number(aResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? aResult.total_damage ?? 0) : null;
-  const bTotal = bResult ? Number(bResult.combat?.breakdown?.find((row) => row.participant_id === "main")?.total_damage ?? bResult.total_damage ?? 0) : null;
+  const aTotal = headlineTotal(aResult);
+  const bTotal = headlineTotal(bResult);
   const aValues = aResult ? exactObjectiveMetric(aResult, aTotal) : { overall: null, damage: null, kill: null, survival: null, utility: null };
   const bValues = bResult ? exactObjectiveMetric(bResult, bTotal) : { overall: null, damage: null, kill: null, survival: null, utility: null };
   const aValue = aValues[state.ui.objective];
@@ -3308,6 +3858,20 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   };
   $("verdictSubA").textContent = sideSummary("A");
   $("verdictSubB").textContent = duelling ? sideSummary("B") : "";
+  // The headline is damage dealt before the enemy dies; once it dies the
+  // number is the enemy's health, not the build's output. Say so where the
+  // number is read, with the raw output the cap hides.
+  const defeatA = enemyDefeat(aResult);
+  const defeatB = bResult ? enemyDefeat(bResult) : null;
+  const defeatLine = (defeat) => defeat
+    ? `${defeat.count > 1 ? "ALL ENEMIES" : "ENEMY"} DOWN${defeat.time == null ? "" : ` AT ${one(defeat.time)} S`} · ${fmt(defeat.raw)} RAW${defeat.overkill > 0 ? ` · ${fmt(defeat.overkill)} OVERKILL` : ""}`
+    : "";
+  [["verdictNoteA", defeatA], ["verdictNoteB", duelling ? defeatB : null]].forEach(([id, defeat]) => {
+    const note = $(id);
+    if (!note) return;
+    note.textContent = defeatLine(defeat);
+    note.hidden = !defeat;
+  });
   document.querySelector(".verdict")?.classList.toggle("is-solo", !duelling);
 
   $("resultSummary").textContent = !aResult
@@ -3317,7 +3881,9 @@ function renderPrototypeResult(aResult = null, bResult = null) {
         ? "Build A is the selected build for this scenario. Enable Build B to compare a second build."
         : `${objective.label} is unavailable until the reviewed event ledger supplies that outcome.`
       : outcome.winner === "tie"
-        ? `Build A and Build B are level on ${objective.label.toLowerCase()} against this roster.`
+        ? (defeatA && defeatB && ["overall", "damage"].includes(state.ui.objective)
+          ? `Both builds kill every enemy inside the window, so damage dealt is capped at their health — compare Kill time, or raise the enemy level.`
+          : `Build A and Build B are level on ${objective.label.toLowerCase()} against this roster.`)
         : outcome.winner
           ? `${outcome.winner === "A" ? "Build A" : "Build B"} carries the strongest ${objective.label.toLowerCase()} package against this roster.`
           : "The selected objective is unavailable for this comparison.";
@@ -3354,7 +3920,8 @@ function renderPrototypeResult(aResult = null, bResult = null) {
 
   // --- team-fight health ---------------------------------------------------
   const participants = prototypeParticipants(aResult);
-  $("healthRows").innerHTML = participants.map((person) => {
+  const healthDispositions = aResult?.combat?.dispositions || null;
+  $("healthRows").innerHTML = participants.map((person, personIndex) => {
     const survival = person.survival || {};
     const max = Number(survival.max_health || survival.effective_health || person.stats?.health || person.health || 0);
     const explicitHealth = survival.ending_health ?? survival.health_remaining ?? survival.current_health;
@@ -3365,9 +3932,21 @@ function renderPrototypeResult(aResult = null, bResult = null) {
       ? 0
       : explicitHealth != null ? Math.max(0, Number(explicitHealth)) : Math.max(0, max - incoming);
     const pct = max > 0 ? Math.max(0, Math.min(100, health / max * 100)) : 0;
-    const status = survival.survived_window === false ? "defeated" : max > 0 ? `${fmt(health)} · ${Math.round(pct)}%` : incoming > 0 ? `−${fmt(incoming)} dmg` : "alive";
+    // Every number in this line goes through `leafText`, so a leaf the model
+    // refused renders as a named refusal instead of the 0 that `?? 0` above
+    // would otherwise have printed as a measurement.
+    const healthPath = survivalLeafPath(personIndex, "ending_health");
+    const status = survival.survived_window === false
+      ? "defeated"
+      : leafWithheld(healthPath, healthDispositions)
+        ? leafText(null, healthPath, healthDispositions)
+        : max > 0
+          ? `${escapeHtml(fmt(health))} · ${Math.round(pct)}%`
+          : incoming > 0
+            ? `−${escapeHtml(fmt(incoming))} dmg`
+            : "alive";
     const enemy = person.team === "enemy" || String(person.participant_id || "").startsWith("enemy:");
-    return `<div class="health-row ${enemy ? "is-enemy" : ""}"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${escapeHtml(status)}</b></div>`;
+    return `<div class="health-row ${enemy ? "is-enemy" : ""}"><div class="health-person"><img src="${championImage(person.champion)}" alt="" /><span><strong>${escapeHtml(person.champion || person.participant_id || "Participant")}</strong><small>${escapeHtml(person.team || "participant")}</small></span></div><div class="health-track"><span style="width:${pct}%"></span></div><b>${status}</b></div>`;
   }).join("") || `<p class="roster-empty">Participant health appears after the reviewed engine returns.</p>`;
   renderFightChart(aResult, bResult);
   const participantLabels = new Map((aResult?.combat?.participants || []).map((person) => [person.participant_id, person.champion || person.participant_id]));
@@ -3376,19 +3955,30 @@ function renderPrototypeResult(aResult = null, bResult = null) {
   const supportEvents = Array.isArray(aResult?.combat?.support_events) ? aResult.combat.support_events : [];
   const duration = Math.max(1, Number(aResult?.combat?.duration || state.fight.duration));
   const eventLabel = (participantId) => participantLabels.get(participantId) || participantId || "Participant";
-  $("timeline").innerHTML = renderEventTimeline(combatEvents, duration, eventLabel);
-  const healingRows = healingEvents.slice(0, 12).map((event) => {
+  const defeat = enemyDefeat(aResult);
+  $("timeline").innerHTML = renderEventTimeline(
+    combatEvents,
+    duration,
+    eventLabel,
+    (event) => eventSourceLabel(event, aResult),
+    defeat?.time ?? null,
+  );
+  // A heal that healed nothing is noise in a receipt list; count them instead.
+  const healingShown = healingEvents.filter((event) => Number(event.applied_amount ?? event.amount ?? 0) > 0 || Number(event.temporary_health || 0) > 0);
+  const healingSkipped = healingEvents.length - healingShown.length;
+  const healingRows = healingShown.slice(0, 12).map((event) => {
     const time = eventTime(event);
     const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const temporaryHealth = Number(event.temporary_health || 0);
     const value = `${fmt(Number(event.applied_amount ?? event.amount ?? 0))} healing${temporaryHealth ? ` + ${fmt(temporaryHealth)} temporary health` : ""}`;
-    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} · ${escapeHtml(event.source || "healing")}</span><strong>${value}</strong></div>`;
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} · ${escapeHtml(eventSourceLabel(event, aResult))}</span><strong>${value}</strong></div>`;
   });
+  if (healingSkipped > 0) healingRows.push(`<div class="ledger-line"><span>Heals that restored nothing (full health or no trigger)</span><strong>${healingSkipped}</strong></div>`);
   const supportRows = supportEvents.slice(0, 12).map((event) => {
     const time = eventTime(event);
     const timeLabel = time === null ? "time withheld" : `${one(time)}s`;
     const recipient = eventLabel(event.target || event.recipient);
-    const policy = event.target_policy || event.target_scope || "explicit recipient";
+    const policy = String(event.target_policy || event.target_scope || "explicit recipient").replace(/_/g, " ");
     const details = [
       Number.isFinite(Number(event.bonus_attack_speed_percent)) ? `${fmt(event.bonus_attack_speed_percent)}% AS` : "",
       Number.isFinite(Number(event.on_hit_magic_damage)) ? `${fmt(event.on_hit_magic_damage)} on-hit magic` : "",
@@ -3403,17 +3993,19 @@ function renderPrototypeResult(aResult = null, bResult = null) {
       Number.isFinite(Number(event.ward_uses)) && Number(event.ward_uses) ? `${fmt(event.ward_uses)} wards` : "",
       event.cleanse ? "cleanse" : "",
     ].filter(Boolean).join(" · ");
-    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(event.source || "support")}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${fmt(Number(event.applied_amount ?? event.amount ?? 0))} ${escapeHtml(event.kind || "support")} · ${escapeHtml(policy)}</strong></div>`;
+    const kind = String(event.kind || "support").replace(/_/g, " ");
+    const amount = Number(event.applied_amount ?? event.amount ?? 0);
+    return `<div class="ledger-line"><span>${escapeHtml(timeLabel)} · ${escapeHtml(eventLabel(event.attacker))} → ${escapeHtml(recipient)} · ${escapeHtml(eventSourceLabel(event, aResult))}${details ? ` · ${escapeHtml(details)}` : ""}</span><strong>${amount ? `${fmt(amount)} ` : ""}${escapeHtml(kind)} · ${escapeHtml(policy)}</strong></div>`;
   });
-  const overflow = healingEvents.length > 12 || supportEvents.length > 12
-    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${healingEvents.length > 12 ? healingEvents.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
+  const overflow = healingShown.length > 12 || supportEvents.length > 12
+    ? `<div class="ledger-line"><span>Additional receipts</span><strong>${healingShown.length > 12 ? healingShown.length - 12 : 0} healing · ${supportEvents.length > 12 ? supportEvents.length - 12 : 0} support</strong></div>`
     : "";
   const enemyEhp = enemyEffectiveHealth(aResult);
   const overkill = aTotal == null ? 0 : enemyOverkill(aResult, aTotal);
-  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${healingRows.join("")}${supportRows.join("")}${overflow}`;
+  $("ledgerTable").innerHTML = `<div class="ledger-line"><span>Selected objective</span><strong>${escapeHtml(objective.label)}</strong></div><div class="ledger-line"><span>Event order</span><strong>${escapeHtml(coverage.certification || "pending")}</strong></div><div class="ledger-line"><span>Main output</span><strong>${aTotal == null ? "—" : `${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}`}</strong></div><div class="ledger-line"><span>Enemy effective HP</span><strong>${enemyEhp > 0 ? fmt(enemyEhp) : "—"}</strong></div>${defeat ? `<div class="ledger-line"><span>Enemy defeated</span><strong>${defeat.time == null ? "inside the window" : `${one(defeat.time)}s`}${defeat.overkill > 0 ? ` · ${fmt(defeat.overkill)} overkill` : ""}</strong></div>` : ""}${healingRows.join("")}${supportRows.join("")}${overflow}`;
   // P4: the per-ability damage table carries a certainty chip next to every
   // sourced number. It re-renders on every result so chips track the loaded
-  // /api/certainty contract (or its placeholder fallback).
+  // /api/certainty contract.
   renderExactBreakdown(aResult, bResult);
   // F0: the starting-defense and shield/healing receipts ride the same
   // result pass, now in the visible result column.
@@ -3433,10 +4025,57 @@ function render() {
   document.dispatchEvent(new Event("scryglass:engine-ready"));
 }
 
+/** What each picker calls its catalogue, and what it asks for. */
+const PICKER_KIND = {
+  champion: "Champion roster",
+  item: "Item catalogue",
+};
+const PICKER_TITLE = {
+  champion: "Choose a champion",
+  item: "Choose an item",
+};
+/** The picker types that are rune rows; they open the rune page, not this dialog. */
+const RUNE_PICKERS = new Set(["keystone", "minor-rune", "stat-shard"]);
+
+/**
+ * The next empty ordinary slot after ``path`` in the same build, or null.
+ * Picking an item then continues there, so a six-item build is one open and
+ * six picks rather than six opens.
+ */
+function nextEmptyItemPath(path) {
+  const main = path.match(/^(attacker\.build[AB])\.(\d+)$/);
+  const roster = path.match(/^((targets|allies)\.\d+\.items)\.(\d+)$/);
+  if (!main && !roster) return null;
+  const prefix = main ? main[1] : roster[1];
+  const index = Number(main ? main[2] : roster[3]);
+  const slots = pathValue(prefix) || [];
+  const count = main
+    ? ordinarySlotCount(main[1].endsWith("B") ? "B" : "A")
+    : rosterOrdinarySlotCount(pathValue(roster[1].replace(/\.items$/, "")));
+  for (let next = index + 1; next < Math.min(count, slots.length); next += 1) {
+    if (!slots[next]) return `${prefix}.${next}`;
+  }
+  return null;
+}
+
+function pickerSlotLabel(path) {
+  const main = path.match(/^attacker\.build([AB])\.(\d+)$/);
+  const roster = path.match(/^(targets|allies)\.(\d+)\.items\.(\d+)$/);
+  if (main) return `Build ${main[1]} · slot ${Number(main[2]) + 1} of ${ordinarySlotCount(main[1])}`;
+  if (roster) {
+    const loadout = state[roster[1]]?.[Number(roster[2])];
+    return `${loadout?.champion || (roster[1] === "targets" ? "Enemy" : "Ally")} · slot ${Number(roster[3]) + 1} of ${rosterOrdinarySlotCount(loadout)}`;
+  }
+  return "";
+}
+
 function openPicker(type, path) {
-  pickerContext = { type, path };
-  $("pickerKind").textContent = type === "champion" ? "Champion roster" : type === "keystone" ? "Rune keystones" : "Item catalogue";
-  $("pickerTitle").textContent = type === "champion" ? "Choose a champion" : type === "keystone" ? "Choose a keystone" : "Choose an item";
+  pickerContext = { type, path, side: pickerSide(path) };
+  const slotLabel = type === "item" ? pickerSlotLabel(path) : "";
+  $("pickerKind").textContent = slotLabel
+    ? `${slotLabel}${nextEmptyItemPath(path) ? " · picking continues to the next empty slot · Esc to stop" : ""}`
+    : (PICKER_KIND[type] || "Item catalogue");
+  $("pickerTitle").textContent = PICKER_TITLE[type] || "Choose an item";
   $("pickerSearch").value = "";
   renderPicker("");
   $("picker").showModal();
@@ -3456,22 +4095,20 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   };
 
   if (includeEmpty) {
-    const isKeystone = pickerContext.type === "keystone";
     const button = document.createElement("button");
     const icon = document.createElement("span");
     button.type = "button";
-    button.className = `picker-option ${(isKeystone ? !selected : Number(selected) === 0) ? "selected" : ""}`;
-    button.dataset.pickerValue = isKeystone ? "" : "0";
+    button.className = `picker-option ${Number(selected) === 0 ? "selected" : ""}`;
+    button.dataset.pickerValue = "0";
     icon.className = "empty-icon";
     icon.textContent = "×";
-    button.append(icon, makeText(isKeystone ? "No keystone" : "Empty slot", isKeystone ? "Remove keystone" : "Remove item"));
+    button.append(icon, makeText("Empty slot", "Remove item"));
     fragment.append(button);
   }
 
   entries.forEach((entry) => {
-    const isKeystone = pickerContext.type === "keystone";
     const value = pickerContext.type === "item" ? entry.id : entry.name;
-    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : isKeystone ? entry.icon : itemImage(entry.id);
+    const imageUrl = pickerContext.type === "champion" ? championImage(entry.name) : itemImage(entry.id);
     const targetItem = pickerContext.type === "item" && pickerContext.path.startsWith("targets.");
     const itemCoverage = pickerContext.type === "item"
       ? (targetItem ? entry.targetModelCoverage : entry.modelCoverage)
@@ -3486,20 +4123,16 @@ function createPickerContent(entries, selected, query, includeEmpty) {
     );
     const detail = pickerContext.type === "champion"
       ? `${entry.tags.join(" · ")} · ${entry.resource}`
-      : isKeystone
-        ? `${entry.path} keystone${entry.implemented ? "" : " · not modeled yet"}`
-        : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
+      : `${itemStatsLine(entry)}${itemCoverage?.status ? ` · ${itemCoverage.status.replaceAll("_", " ")}` : ""}${roleQuestReason ? ` · ${roleQuestReason}` : ""}`;
     const button = document.createElement("button");
     const image = document.createElement("img");
     button.type = "button";
-    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${(isKeystone && !entry.implemented) || itemBlocked ? "locked" : ""}`;
+    button.className = `picker-option ${String(selected) === String(value) ? "selected" : ""} ${itemBlocked ? "locked" : ""}`;
     button.dataset.pickerValue = String(value);
     if (pickerContext.type === "item") button.dataset.itemTooltip = String(entry.id);
-    if ((isKeystone && !entry.implemented) || itemBlocked) {
+    if (itemBlocked) {
       button.disabled = true;
-      button.title = itemBlocked
-        ? (roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.")
-        : "This keystone is not modeled yet; its numbers would be estimates.";
+      button.title = roleQuestReason || itemCoverage?.reason || "This item is withheld until its selected model is supported.";
     }
     image.src = imageUrl;
     image.alt = "";
@@ -3517,15 +4150,31 @@ function createPickerContent(entries, selected, query, includeEmpty) {
   return fragment;
 }
 
+/**
+ * Which build a picker path belongs to. The rune paths spell the side in
+ * the state key itself (`attacker.minorRunesB.2`), so it is read once here
+ * rather than sniffed at each use.
+ */
+function pickerSide(path) {
+  return /^attacker\.[A-Za-z]+B(\.|$)/.test(path) ? "B" : "A";
+}
+
+/** The catalogue the open picker chooses from. */
+function pickerSource() {
+  const index = Number(pickerContext.path.split(".").pop());
+  const side = pickerContext.side;
+  if (pickerContext.type === "champion") return DATA.champions;
+  return DATA.items;
+}
+
 function renderPicker(query) {
   if (!pickerContext) return;
   const normalized = query.trim().toLowerCase();
   const selected = pathValue(pickerContext.path);
-  const source = pickerContext.type === "champion" ? DATA.champions : pickerContext.type === "keystone" ? engine.keystones : DATA.items;
+  const source = pickerSource();
   const entries = source.filter((entry) => {
     if (!entry.name.toLowerCase().includes(normalized)) return false;
     if (pickerContext.type !== "item") return true;
-    if (!backendItemReady(entry)) return false;
     const dedicatedBoot = isRoleBoot(entry.id);
     if (pickerContext.path.includes("questBoot")) {
       return questBootIds().includes(Number(entry.id));
@@ -3667,11 +4316,7 @@ async function openBackendBis(path) {
   }
   $("bis").showModal();
   try {
-    const response = await fetch("/api/bis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postJson("/api/bis", payload);
     const result = await response.json();
     if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
     const certifiedRows = result.candidates || [];
@@ -3739,15 +4384,17 @@ async function openBackendBis(path) {
 function optimizerDamagePackageReady() {
   const champion = getChampion(state.attacker.champion);
   const completeSourcedKit = activeAbilityKit().filter((ability) => ["Q", "W", "E", "R"].includes(ability.slot)).length === 4;
-  const selectedAbilities = completeSourcedKit && activeAbilityKit().some((ability) => abilityInput(ability.slot).casts > 0 && (ability.slot === "P" || abilityInput(ability.slot).rank > 0));
+  // The engine schedules casts itself, so a kit counts as selected once the
+  // passive is in it or a slot holds a rank.
+  const selectedAbilities = completeSourcedKit && activeAbilityKit().some((ability) => ability.slot === "P" || abilityInput(ability.slot).rank > 0);
   const manualPackage = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
   // The backend has a dedicated reviewed module for every cached champion.
   // A sparse client formula catalogue (for example a passive-only tank kit)
   // must not make the optimizer button appear dead; the sourced BIS profile
   // still supplies the selectable package while the engine remains the
   // authority for the final score.
-  const reviewedBackend = Boolean(champion && (engine.reviewed.has(champion.name) || engine.backend.has(champion.name)));
-  return reviewedBackend && (selectedAbilities || manualPackage || Boolean(bisChampionProfile(state.attacker)));
+  const registered = Boolean(champion && engine.registration.get(champion.name));
+  return registered && (selectedAbilities || manualPackage || Boolean(bisChampionProfile(state.attacker)));
 }
 
 
@@ -3759,11 +4406,7 @@ function rosterOptimizationPaths(rootOrPath) {
 async function requestBis(path) {
   const payload = bisBackendPayload(path);
   if (!payload) throw new Error("Invalid roster optimization path");
-  const response = await fetch("/api/bis", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const response = await postJson("/api/bis", payload);
   const result = await response.json();
   if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
   return result;
@@ -3773,11 +4416,7 @@ async function requestBisBatch(path, slots) {
   const payload = bisBackendPayload(path);
   if (!payload) throw new Error("Invalid roster optimization path");
   payload.slots = slots;
-  const response = await fetch("/api/bis/batch", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const response = await postJson("/api/bis/batch", payload);
   const result = await response.json();
   if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
   return result;
@@ -3874,11 +4513,7 @@ async function optimizeMainBuildFromBackend() {
     payload.locked_items = [];
     payload.locked_boots = "";
     payload.max_legendary_slots = ordinarySlotCount("A");
-    const response = await fetch("/api/optimize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postJson("/api/optimize", payload);
     const result = await response.json();
     if (!response.ok || result.error) {
       const message = result.error_code === "no_complete_event_order"
@@ -3959,11 +4594,7 @@ async function startPurchaseOptimize() {
     payload.objective = "total_damage";
     payload.locked_items = ownedNames;
     payload.locked_boots = state.attacker.questBootA ? itemName(state.attacker.questBootA) : "";
-    const response = await fetch("/api/optimize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await postJson("/api/optimize", payload);
     const result = await response.json();
     if (!response.ok || result.error) throw new Error(result.error || "Best-buy search unavailable");
     if (result.recommendation_type === "no_affordable_purchase") {
@@ -4153,6 +4784,12 @@ document.addEventListener("click", (event) => {
     applyRailDisclosure();
     return;
   }
+  const fightModeButton = event.target.closest("[data-fight-mode]");
+  if (fightModeButton) {
+    invalidateOptimization();
+    state.fight.autosOnly = fightModeButton.dataset.fightMode === "autos";
+    return render();
+  }
   if (event.target.closest("#uptimeModeToggle")) {
     invalidateOptimization();
     if (state.fight.aaUptimeMode === "calculated") {
@@ -4178,7 +4815,21 @@ document.addEventListener("click", (event) => {
       );
     setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))));
     if (levelPath === "attacker.level") syncAbilityInputsToLevel();
+    else if (rosterLoadout) rosterLoadout.abilityRanks = defaultAbilityRanks(rosterLoadout);
     invalidateOptimization();
+    return render();
+  }
+  const levelSet = event.target.closest("[data-level-set]");
+  if (levelSet) {
+    setParticipantLevel(levelSet.dataset.levelSet, levelSet.dataset.value);
+    return render();
+  }
+  const levelAll = event.target.closest("[data-roster-level-all]");
+  if (levelAll) {
+    const value = levelAll.dataset.rosterLevelAll === "main" ? state.attacker.level : Number(levelAll.dataset.rosterLevelAll);
+    ["targets", "allies"].forEach((root) => state[root].forEach((loadout, index) => {
+      if (loadout.champion && !isPracticeDummy(loadout)) setParticipantLevel(`${root}.${index}.level`, value);
+    }));
     return render();
   }
   const bisObjectiveButton = event.target.closest("[data-bis-objective]");
@@ -4212,8 +4863,7 @@ document.addEventListener("click", (event) => {
     state.attacker[`build${to}Stacks`] = [...state.attacker[`build${from}Stacks`]];
     state.attacker[`build${to}ItemOptions`] = (state.attacker[`build${from}ItemOptions`] || []).map((entry) => ({ ...entry }));
     state.attacker[`questBoot${to}`] = state.attacker[`questBoot${from}`];
-    state.attacker[`keystone${to}`] = state.attacker[`keystone${from}`];
-    state.attacker[`keystoneOptions${to}`] = { ...(state.attacker[`keystoneOptions${from}`] || {}) };
+    copyRunePage(from, to);
     state.attacker.comparisonEnabled = true;
     invalidateOptimization();
     return render();
@@ -4235,7 +4885,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#addEnemy")) {
     if (state.targets.length >= 5) return;
     const index = state.targets.length;
-    state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+    state.targets.push(newRosterLoadout("enemy"));
     render();
     return openPicker("champion", `targets.${index}.champion`);
   }
@@ -4267,7 +4917,7 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#addAlly")) {
     if (state.allies.length >= 4) return;
     const index = state.allies.length;
-    state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
+    state.allies.push(newRosterLoadout("ally"));
     render();
     return openPicker("champion", `allies.${index}.champion`);
   }
@@ -4323,15 +4973,17 @@ document.addEventListener("click", (event) => {
       state.attacker.buildBStacks = [...state.attacker.buildAStacks];
       state.attacker.buildBItemOptions = (state.attacker.buildAItemOptions || []).map((entry) => ({ ...entry }));
       state.attacker.questBootB = state.attacker.questBootA;
-      state.attacker.keystoneB = state.attacker.keystoneA;
-      state.attacker.keystoneOptionsB = { ...(state.attacker.keystoneOptionsA || {}) };
+      copyRunePage("A", "B");
     }
     return render();
   }
   const pickerButton = event.target.closest("[data-picker]");
   if (pickerButton) {
-    if (pickerButton.dataset.path?.startsWith("attacker.buildB")) state.attacker.comparisonEnabled = true;
-    return openPicker(pickerButton.dataset.picker, pickerButton.dataset.path);
+    const { picker: type, path } = pickerButton.dataset;
+    if (path?.startsWith("attacker.buildB")) state.attacker.comparisonEnabled = true;
+    // A rune row opens the whole page, scrolled to that row's choices.
+    if (RUNE_PICKERS.has(type)) return openRunePage(pickerSide(path), runeFocusFor(type, path));
+    return openPicker(type, path);
   }
   const bisButton = event.target.closest("[data-bis-path]");
   if (bisButton) return openBis(bisButton.dataset.bisPath);
@@ -4376,7 +5028,7 @@ document.addEventListener("click", (event) => {
     const forms = BIS_PROFILES[loadout?.champion]?.abilities?.[slot] || [];
     const maxRank = Math.max(...forms.map((ability) => ability.maxRank || (slot === "R" ? 3 : 5)), slot === "R" ? 3 : 5);
     const current = bisRankFor(loadout, slot, maxRank);
-    const cap = slot === "R" ? ((loadout.level >= 16 ? 3 : loadout.level >= 11 ? 2 : loadout.level >= 6 ? 1 : 0)) : Math.min(5, Math.floor((loadout.level + 1) / 2));
+    const cap = rankCapForLevel(slot, loadout.level);
     const next = { ...defaultAbilityRanks(loadout), ...(loadout.abilityRanks || {}) };
     next[slot] = Math.max(0, Math.min(maxRank, cap, current + Number(rosterRankButton.dataset.delta)));
     const total = () => ["Q", "W", "E", "R"].reduce((sum, key) => sum + Number(next[key] || 0), 0);
@@ -4396,6 +5048,20 @@ document.addEventListener("click", (event) => {
     setStackValue(path, Math.max(0, Math.min(spec.max, stackValue(path) + Number(stackButton.dataset.delta))));
     return render();
   }
+  const runeOptionBox = event.target.closest("[data-rune-option]");
+  if (runeOptionBox) {
+    const { runeOption, runeName, runeSide } = runeOptionBox.dataset;
+    const stored = state.attacker[`runeOptions${runeSide}`] || {};
+    const value = runeOptionBox.type === "checkbox"
+      ? (runeOptionBox.checked ? 1 : 0)
+      : Math.round(Number(runeOptionBox.value) || 0);
+    state.attacker[`runeOptions${runeSide}`] = {
+      ...stored,
+      [runeName]: { ...(stored[runeName] || {}), [runeOption]: value },
+    };
+    invalidateOptimization();
+    return render();
+  }
   const itemOptionButton = event.target.closest("[data-item-option-path]");
   if (itemOptionButton) {
     const path = itemOptionButton.dataset.itemOptionPath;
@@ -4412,32 +5078,39 @@ document.addEventListener("click", (event) => {
     setItemOptionValue(path, key, next);
     return render();
   }
+  const optionButton = event.target.closest("button[data-champion-option]");
+  if (optionButton) {
+    const { championOption: key, optionType: type } = optionButton.dataset;
+    const definition = (engine.championOptions[state.attacker.champion]?.options || [])
+      .find((option) => option.key === key);
+    if (!definition) return;
+    if (type === "bool") {
+      state.attacker.championOptions[key] = optionButton.dataset.value === "1";
+    } else if (type === "select") {
+      state.attacker.championOptions[key] = optionButton.dataset.value;
+    } else {
+      const current = Number(state.attacker.championOptions[key] ?? definition.default) || 0;
+      let next = current + Number(optionButton.dataset.delta || 0);
+      if (definition.min != null) next = Math.max(Number(definition.min), next);
+      if (definition.max != null) next = Math.min(Number(definition.max), next);
+      state.attacker.championOptions[key] = type === "int" ? Math.round(next) : Number(next.toFixed(4));
+    }
+    invalidateOptimization();
+    return render();
+  }
   const abilityRankButton = event.target.closest("[data-ability-rank]");
   if (abilityRankButton) {
     invalidateOptimization();
     const slot = abilityRankButton.dataset.abilityRank;
     const ability = activeAbilityKit().find((entry) => entry.slot === slot);
     const input = abilityInput(slot);
-    input.rank = Math.max(0, Math.min(ability.maxRank, input.rank + Number(abilityRankButton.dataset.delta)));
-    state.attacker.abilityInputs[slot] = input;
-    return render();
-  }
-  const abilityCastButton = event.target.closest("[data-ability-casts]");
-  if (abilityCastButton) {
-    invalidateOptimization();
-    const slot = abilityCastButton.dataset.abilityCasts;
-    const input = abilityInput(slot);
-    input.casts = Math.max(0, Math.min(10, input.casts + Number(abilityCastButton.dataset.delta)));
-    state.attacker.abilityInputs[slot] = input;
-    return render();
-  }
-  const abilityHitButton = event.target.closest("[data-ability-hits]");
-  if (abilityHitButton) {
-    invalidateOptimization();
-    const slot = abilityHitButton.dataset.abilityHits;
-    const ability = activeAbilityKit().find((entry) => entry.slot === slot);
-    const input = abilityInput(slot);
-    input.hits = Math.max(1, Math.min(ability.maxHits, input.hits + Number(abilityHitButton.dataset.delta)));
+    const delta = Number(abilityRankButton.dataset.delta);
+    const cap = Math.min(ability.maxRank, rankCapForLevel(slot, state.attacker.level));
+    const current = Math.min(Number(input.rank) || 0, cap);
+    // A rank the level cannot hold, or a point the level has not earned,
+    // is refused here rather than trimmed silently on the way out.
+    if (delta > 0 && (current >= cap || spentRankPoints() >= state.attacker.level)) return;
+    input.rank = Math.max(0, Math.min(cap, current + delta));
     state.attacker.abilityInputs[slot] = input;
     return render();
   }
@@ -4448,6 +5121,7 @@ document.addEventListener("click", (event) => {
     const input = abilityInput(slot);
     input.variant = Number(abilityVariantButton.dataset.value);
     state.attacker.abilityInputs[slot] = input;
+    syncGlobalFormVariants(slot, input.variant);
     return render();
   }
   const resetDummyStats = event.target.closest("[data-reset-dummy-stats]");
@@ -4457,13 +5131,6 @@ document.addEventListener("click", (event) => {
     loadout.targetStats = { ...PRACTICE_DUMMY_STATS };
     loadout.targetStatOverrides = {};
     invalidateOptimization();
-    return render();
-  }
-  const fightButton = event.target.closest("[data-fight]");
-  if (fightButton) {
-    invalidateOptimization();
-    const key = fightButton.dataset.fight;
-    state.fight[key] = Number(fightButton.dataset.value);
     return render();
   }
   const removeButton = event.target.closest("[data-remove-target]");
@@ -4476,7 +5143,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.targets.length < 5) {
       const index = state.targets.length;
-      state.targets.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {} });
+      state.targets.push(newRosterLoadout("enemy"));
       render();
       return openPicker("champion", `targets.${index}.champion`);
     }
@@ -4492,7 +5159,7 @@ document.addEventListener("click", (event) => {
     invalidateOptimization();
     if (state.allies.length < 4) {
       const index = state.allies.length;
-      state.allies.push({ champion: null, level: 1, role: "", roleQuestComplete: false, items: [0, 0, 0, 0, 0, 0], itemStacks: [0, 0, 0, 0, 0, 0], itemOptions: [{}, {}, {}, {}, {}, {}], boots: 0, includeBoots: true, abilityRanks: {}, championOptions: {}, allyEffectsEnabled: false });
+      state.allies.push(newRosterLoadout("ally"));
       render();
       return openPicker("champion", `allies.${index}.champion`);
     }
@@ -4532,9 +5199,27 @@ document.addEventListener("click", (event) => {
       loadout.abilityRanks = defaultAbilityRanks(loadout);
       resetRosterChampionOptions(loadout);
     }
+    // An item pick walks on to the next empty slot of the same build; the
+    // "Empty slot" choice (0) and a full build end the run.
+    const next = pickerContext.type === "item" && Number(option.dataset.pickerValue) > 0
+      ? nextEmptyItemPath(selectedPath)
+      : null;
     closePicker();
-    return render();
+    render();
+    if (next) openPicker("item", next);
+    return undefined;
   }
+  const runePick = event.target.closest("[data-rune-pick]");
+  if (runePick) {
+    const { runePick: kind, runeSide: side, runeName: name, runeRow: row } = runePick.dataset;
+    if (kind === "keystone") pickKeystone(side, name);
+    else if (kind === "minor") pickMinorRune(side, name);
+    else if (kind === "shard") pickStatShard(side, Number(row), name);
+    invalidateOptimization();
+    render();
+    return renderRunePage();
+  }
+
   const bisOption = event.target.closest("[data-bis-value]");
   if (bisOption && bisContext) {
     setStackValue(bisContext.path, 0);
@@ -4545,6 +5230,22 @@ document.addEventListener("click", (event) => {
 }, true);
 
 document.addEventListener("input", (event) => {
+  const levelRange = event.target.closest("[data-level-range]");
+  if (levelRange) {
+    const path = levelRange.dataset.levelRange;
+    setParticipantLevel(path, levelRange.value);
+    if (path === "attacker.level") return render();
+    // A roster slider lives inside a card that render() rebuilds, and
+    // rebuilding it mid-drag drops the thumb. Update the card's readout in
+    // place and leave the rebuild (and the recalculation) to "change".
+    const control = levelRange.closest(".roster-level-control");
+    const level = pathValue(path);
+    control?.querySelector("output")?.replaceChildren(`Lv ${level}`);
+    control?.querySelectorAll("[data-level-set]").forEach((button) => {
+      button.classList.toggle("is-on", Number(button.dataset.value) === Number(level));
+    });
+    return undefined;
+  }
   const protoRange = event.target.closest("[data-proto-range]");
   if (protoRange) {
     invalidateOptimization();
@@ -4553,20 +5254,10 @@ document.addEventListener("input", (event) => {
     state.fight[key] = key === "aaUptime" ? Number(protoRange.value) / 100 : Number(protoRange.value);
     return render();
   }
-  const range = event.target.closest("[data-fight-range]");
-  if (!range) return;
-  invalidateOptimization();
-  const key = range.dataset.fightRange;
-  if (key === "aaUptime") state.fight.aaUptimeMode = "explicit";
-  state.fight[key] = key === "aaUptime" ? Number(range.value) / 100 : Number(range.value);
-  const output = range.parentElement.querySelector("output");
-  if (output) output.textContent = key === "aaUptime" ? `${Math.round(state.fight.aaUptime * 100)}%` : `${one(state.fight.duration)}s`;
-  render();
-  $("scenarioSentence").innerHTML = scenarioSentence();
-  scheduleEngineCalculation();
 });
 
 document.addEventListener("change", (event) => {
+  if (event.target.closest("[data-level-range]")) return render();
   const supportSelection = event.target.closest(".support-target-selection");
   if (supportSelection) {
     const owner = supportSelectionOwner(supportSelection.dataset.value);
@@ -4620,29 +5311,6 @@ document.addEventListener("change", (event) => {
   const enemyHits = event.target.closest("#enemyHitsToggle");
   if (enemyHits) {
     state.fight.enemiesAttack = Boolean(enemyHits.checked);
-    invalidateOptimization();
-    return render();
-  }
-  const championOption = event.target.closest("[data-champion-option]");
-  if (championOption) {
-    const key = championOption.dataset.championOption;
-    const type = championOption.dataset.optionType || "bool";
-    const definition = (engine.championOptions[state.attacker.champion]?.options || [])
-      .find((option) => option.key === key);
-    if (type === "bool") {
-      state.attacker.championOptions[key] = Boolean(championOption.checked);
-    } else if (type === "select") {
-      state.attacker.championOptions[key] = championOption.value;
-    } else {
-      const parsed = type === "int"
-        ? Number.parseInt(championOption.value, 10)
-        : Number(championOption.value);
-      const fallback = Number(definition?.default ?? 0);
-      const bounded = Number.isFinite(parsed) ? parsed : fallback;
-      const minimum = definition?.min == null ? bounded : Math.max(Number(definition.min), bounded);
-      const maximum = definition?.max == null ? minimum : Math.min(Number(definition.max), minimum);
-      state.attacker.championOptions[key] = type === "int" ? Math.round(maximum) : maximum;
-    }
     invalidateOptimization();
     return render();
   }
@@ -4702,10 +5370,6 @@ document.addEventListener("change", (event) => {
   render();
 });
 
-document.addEventListener("change", (event) => {
-  if (event.target.closest("[data-fight-range]")) render();
-});
-
 // Hovering a build's cumulative-damage label spotlights its curve on the
 // fight timeline and greys the other one out (CSS owns the treatment).
 {
@@ -4729,6 +5393,9 @@ $("pickerSearch").addEventListener("input", (event) => renderPicker(event.target
 $("pickerClose").addEventListener("click", closePicker);
 $("picker").addEventListener("click", (event) => { if (event.target === $("picker")) closePicker(); });
 $("bisClose").addEventListener("click", closeBis);
+$("runePageClose").addEventListener("click", closeRunePage);
+$("runePage").addEventListener("click", (event) => { if (event.target === $("runePage")) closeRunePage(); });
+$("runePage").addEventListener("close", () => { runePageSide = null; });
 $("bis").addEventListener("click", (event) => { if (event.target === $("bis")) closeBis(); });
 for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) {
     const element = $(id);
@@ -4738,7 +5405,7 @@ for (const id of ["baseDamage", "apRatio", "physicalDamage", "adRatio"]) {
 Promise.all([
   fetch("/static/data.json").then((response) => { if (!response.ok) throw new Error("Patch snapshot failed to load"); return response.json(); }),
   fetch("/api/champions").then((response) => { if (!response.ok) throw new Error("Champion availability failed to load"); return response.json(); }),
-  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], input_limits: {} }),
+  fetch("/api/config").then((response) => response.ok ? response.json() : { item_options: {}, champion_options: {}, keystones: [], runes: [], rune_shards: [], input_limits: {} }),
   fetch("/api/items").then((response) => response.ok ? response.json() : []),
   fetch("/api/boots").then((response) => response.ok ? response.json() : []),
   fetch("/static/ability-catalog.json").then((response) => { if (!response.ok) throw new Error("Ability catalogue failed to load"); return response.json(); }),
@@ -4746,29 +5413,34 @@ Promise.all([
   fetch("/static/effect-catalog.json").then((response) => { if (!response.ok) throw new Error("Wiki effect catalogue failed to load"); return response.json(); }),
 ])
   .then(([data, championAvailability, config, itemCoverage, bootCatalog, abilityCatalog, bisProfiles, effectCatalog]) => {
-    DATA = data;
-    mergeItemCoverage([...(itemCoverage || []), ...(bootCatalog || [])]);
+    // Champions are all the snapshot carries; items arrive served.
+    DATA = { champions: data.champions || [], items: [] };
+    buildItemCatalog([...(itemCoverage || []), ...(bootCatalog || [])]);
     mergeAbilityCatalog(abilityCatalog);
     mergeBisProfiles(bisProfiles);
     mergeEffectCatalog(effectCatalog);
     championAvailability.forEach((entry) => {
       const champion = DATA.champions.find((candidate) => candidate.name === entry.name);
       if (champion) {
-        champion.engineRegistration = entry.engine_registration || null;
         champion.supportedFightModes = entry.supported_fight_modes || null;
         champion.fightModeReason = entry.unsupported_fight_mode_reason || "";
       }
-      engine.availability.set(entry.name, entry.availability || {});
-      if (entry.availability?.ready && entry.engine_registration === "reviewed_module") engine.reviewed.add(entry.name);
-      if (entry.engine_backend_enabled) engine.backend.add(entry.name);
+      engine.registration.set(entry.name, entry.engine_registration || null);
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
     engine.keystoneOptions = config.keystone_options || {};
+    const servedPatch = config.data_snapshot?.patch || {};
+    ddragonBase = servedPatch.source_version
+      ? `https://ddragon.leagueoflegends.com/cdn/${servedPatch.source_version}/img`
+      : "";
+    servedPatchLabel = servedPatch.public || "";
     engine.capabilities = config.capabilities || { participants: {}, scenario: { fields: {} } };
     applyControlCapabilities();
     maybeInitConsentAnalytics();
     engine.keystones = config.keystones || [];
+    engine.runes = config.runes || [];
+    engine.runeShards = config.rune_shards || [];
     engine.defaultTarget = config.default_target || engine.defaultTarget;
     engine.fightDefaults = config.fight_defaults || {};
     engine.exclusivityGroups = config.exclusivity_groups || {};
@@ -4808,8 +5480,8 @@ Promise.all([
 // Build sharing + trust labels
 // A self-contained layer on top of the analyst engine above. It owns:
 //   - build sharing (POST /api/builds + POST /api/share + ?share=<token>)
-//   - trust chips (GET /api/certainty, GET /api/not-modeled) with a
-//     contract-shaped mock fallback until the P7 backend routes deploy.
+//   - trust chips (GET /api/certainty, GET /api/not-modeled); a failed
+//     fetch renders as an unavailable state, never as placeholder chips.
 // (The casual Quick view that used to live here left with its DOM in
 // 2026-08; the analyst view is the app.)
 // ============================================================================
@@ -4821,47 +5493,29 @@ const PRACTICE_TARGETS = [
 ];
 
 // --- Trust labels (P4) ------------------------------------------------------
-// Consumed contract (owned by the P7 backend agent):
+// Consumed contract (src/app.py api_certainty / api_not_modeled):
 //   GET /api/certainty?champion=X -> {"champion": "...", "slots": {"Q": {"certainty": "exact|estimate|boundary", "reason": "..."}}}
 //   GET /api/not-modeled?champion=X -> {"champion": "...", "items": ["..."]}
-// A missing/erroring route falls back to a contract-shaped mock; the UI shows
-// a "placeholder" note whenever the fallback is active so no chip is ever
+// A non-2xx answer (unknown champion, engine refusal, outage) renders no
+// chips and names the failure in the legend note, so nothing is ever
 // presented as sourced data it is not.
 const CERTAINTY_LABELS = {
   exact: { label: "EXACT", detail: "Fully sourced formula, no player-controlled options." },
   estimate: { label: "ESTIMATE", detail: "Uses a defaulted player-controlled option." },
   boundary: { label: "BOUNDARY", detail: "Documented mechanic that is not computed." },
 };
-const CERTAINTY_STATE = { source: "api", champion: null, slots: {}, loading: false };
-const NOT_MODELED_STATE = { source: "api", champion: null, items: [], loading: false };
+const CERTAINTY_STATE = { error: "", champion: null, slots: {}, loading: false };
+const NOT_MODELED_STATE = { error: "", champion: null, items: [], loading: false };
 
-function certaintyMock(champion) {
-  return {
-    champion,
-    slots: {
-      P: { certainty: "boundary", reason: "Passive mechanics are documented but not computed by the shared event model." },
-      Q: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-      W: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-      E: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-      R: { certainty: "estimate", reason: "Placeholder contract — per-champion certainty data is pending from the validation service." },
-    },
-  };
-}
-
-function notModeledMock(champion) {
-  return { champion, items: [] };
-}
-
-async function fetchTrustContract(path, champion, mockBuilder) {
+async function fetchTrustContract(path, champion) {
   try {
     const response = await fetch(`${path}?champion=${encodeURIComponent(champion)}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error || `HTTP ${response.status}`);
     if (!payload || typeof payload !== "object") throw new Error("malformed payload");
-    return { ...payload, source: "api" };
+    return { ...payload, error: "" };
   } catch (error) {
-    const mock = mockBuilder(champion);
-    return { ...mock, source: "mock", reason: `endpoint unavailable (${error.message})` };
+    return { error: `${path} unavailable (${error.message})` };
   }
 }
 
@@ -4872,13 +5526,13 @@ async function loadTrustLabels(champion) {
   CERTAINTY_STATE.loading = true;
   NOT_MODELED_STATE.loading = true;
   const [certainty, notModeled] = await Promise.all([
-    fetchTrustContract("/api/certainty", champion, certaintyMock),
-    fetchTrustContract("/api/not-modeled", champion, notModeledMock),
+    fetchTrustContract("/api/certainty", champion),
+    fetchTrustContract("/api/not-modeled", champion),
   ]);
-  CERTAINTY_STATE.source = certainty.source === "api" ? "api" : "mock";
-  CERTAINTY_STATE.slots = (certainty && certainty.slots) || {};
-  NOT_MODELED_STATE.source = notModeled.source === "api" ? "api" : "mock";
-  NOT_MODELED_STATE.items = Array.isArray(notModeled && notModeled.items) ? notModeled.items : [];
+  CERTAINTY_STATE.error = certainty.error;
+  CERTAINTY_STATE.slots = certainty.slots || {};
+  NOT_MODELED_STATE.error = notModeled.error;
+  NOT_MODELED_STATE.items = Array.isArray(notModeled.items) ? notModeled.items : [];
   CERTAINTY_STATE.loading = false;
   NOT_MODELED_STATE.loading = false;
   renderTrustPanels();
@@ -4906,16 +5560,14 @@ function certaintyChipHtml(slot) {
 
 function renderTrustPanels() {
   const champion = state.attacker.champion || "";
-  const placeholder = CERTAINTY_STATE.source === "mock" || NOT_MODELED_STATE.source === "mock";
+  const failure = [CERTAINTY_STATE.error, NOT_MODELED_STATE.error].filter(Boolean).join(" · ");
   const legend = document.getElementById("trustLegend");
   if (legend) {
     legend.hidden = !champion;
     const note = legend.querySelector(".trust-legend-note");
     if (note) {
-      note.textContent = placeholder
-        ? "Placeholder chips — certainty endpoints are not deployed yet."
-        : "";
-      note.hidden = !placeholder;
+      note.textContent = failure ? `Certainty unavailable — ${failure}` : "";
+      note.hidden = !failure;
     }
   }
   const panel = document.getElementById("notModeledPanel");
@@ -4930,14 +5582,6 @@ function renderTrustPanels() {
       .map((item) => `<li>${escapeHtml(item)}</li>`)
       .join("");
   }
-}
-
-function postJson(url, body) {
-  return fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
 }
 
 async function mintShareUrl(payload, slug) {
@@ -5069,6 +5713,9 @@ function loadSharedBuildIntoAnalyst(payload) {
   state.attacker.questBootA = bootId;
   state.attacker.includeBootsA = bootName ? Boolean(bootId) : true;
   state.attacker.keystoneA = "";
+  state.attacker.minorRunesA = ["", "", "", "", ""];
+  state.attacker.statShardsA = ["", "", ""];
+  state.attacker.runeOptionsA = {};
   state.attacker.abilityInputs = {};
   state.attacker.championOptions = {};
   // Restore the authored rank allocation so the analyst engine scores the
@@ -5130,8 +5777,8 @@ function loadSharedBuildIntoAnalyst(payload) {
   fillSide(state.targets, request.enemies || []);
   fillSide(state.allies, request.allies || []);
   const fightParams = request.fight_params || request;
-  state.fight.rotations = Number(fightParams.rotations || 1);
   state.fight.duration = Number(fightParams.fight_duration || 10);
+  state.fight.autosOnly = fightParams.fight_mode === "auto_only" || fightParams.auto_attacks_only === true;
   state.fight.aaUptimeMode = fightParams.auto_attack_uptime_mode || "calculated";
   state.fight.aaUptime = Number(fightParams.auto_attack_uptime || 0);
   state.fight.enemiesAttack = fightParams.enemies_attack !== false;
@@ -5221,6 +5868,11 @@ function dismissShareBanner() {
 document.addEventListener("scryglass:engine-ready", () => {
   loadTrustLabels(state.attacker.champion || "");
 });
+
+// feedback.js validates the number on screen: the hook hands it the exact
+// /api/calculate payload behind the displayed Build A result (null while
+// nothing is displayed), so a receipt's prediction is that same total.
+window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null, postJson };
 
 initShareControls();
 

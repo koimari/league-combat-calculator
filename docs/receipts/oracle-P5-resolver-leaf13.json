@@ -1,0 +1,118 @@
+{
+  "receipt_id": "oracle-P5-resolver-leaf13",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/dependencies",
+
+  "evidence_tree": {
+    "construction": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle13",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/wiki-atoms/stack-transform-summon-resource.json", "data/bin/behavior-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "old_value": "<absent> (leaf did not exist)",
+  "new_value": "dependencies ledger with 8 rows: six empty per-slot ledgers plus two rows marked `unconsulted`; row order decided by a hand-authored seed",
+
+  "identification_of_the_eight_rows": {
+    "method": "The row counts are not arbitrary - they match Syndra's module shape exactly, as recorded in the cached audit data.",
+    "six": "data/champion-audit/batch-6.json, Syndra.module_slots.modeled = [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] - exactly six slots (note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'). These are the six empty ledgers.",
+    "two": "data/champion-audit/batch-e9-1.json, Syndra.gap_summary names exactly two module options: `splinters` and `r_spheres` ('splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)'). These are the two `unconsulted` rows.",
+    "confidence": "high on the 6+2 mapping; the leaf schema itself is defined nowhere in data/ or docs/math-foundations.md (grep for 'dependencies'/'unconsulted' across the whole exported data/ tree returns zero hits)."
+  },
+
+  "independent_computation": {
+    "premise": "The scenario fixes splinters = 120 (the cap). From the cached wiki text, that state activates every Transcendent threshold, so the rotation's numbers are functions of the splinter count. A dependency ledger for this scenario therefore cannot be empty and cannot mark `splinters` unconsulted.",
+
+    "step_1_wiki_thresholds_at_120_splinters": [
+      "P Transcendent (data/champions.json Syndra.abilities.P): 'Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times.' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'  =>  AP_effective = 1.15 x AP",
+      "Q Dark Sphere: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'  =>  the synthetic Q2 slot exists only because splinters >= 40",
+      "W Force of Will: 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'  =>  W true damage is a function of AP, which is itself the P-derived 1.15x value (a two-level derived chain)",
+      "E Scatter the Weak: 'Collecting 80 Splinters of Wrath ... increased scatter angle and slow enemies hit by 70%'  =>  utility only; E damage legitimately carries no splinter dependency",
+      "R Unleashed Power: 'Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target ... below 15% of their maximum health.'  =>  audit records this as explicitly not modeled ('the fight target never dies'), so its absence from the ledger is legitimate",
+      "R sphere count: 'Magic Damage per Sphere' leveling row [80,120,160] + 20% AP, consumed against the user-set sphere count  =>  R depends on the `r_spheres` option"
+    ],
+
+    "step_2_wiki_leveling_rows_used": {
+      "Q Magic Damage": "[90,125,160,195,230] + 70% AP",
+      "W Magic Damage": "[70,100,130,160,190] + 65% AP",
+      "W Bonus True Damage": "pct = 12% + 2% per 100 AP, applied to W's magic damage",
+      "E Magic Damage": "[60,95,130,165,200] + 60% AP",
+      "R Magic Damage per Sphere": "[80,120,160] + 20% AP; Minimum Magic Damage [240,360,480] + 60% AP (= 3 spheres, consistent)"
+    },
+
+    "step_3_formula_cross_check": {
+      "claim": "W total = (base + 0.65*AP) * (1 + 0.12 + 0.0002*AP)",
+      "expansion_rank5": "190*1.12 = 212.8 ; linear = 0.65*1.12 + 190*0.0002 = 0.728 + 0.038 = 0.766 ; quadratic = 0.65*0.0002 = 0.00013",
+      "wiki_precomputed_row": "W 'Total Mixed Damage' rank 5 = 212.8 + 76.6% AP + (quadratic term)",
+      "verdict": "My independent expansion reproduces the wiki's own precomputed constant (212.8) and linear coefficient (76.6% AP) exactly. At AP=575 my W total = 696.23125 and the wiki row = 212.8 + 0.766*575 + 0.00013*575^2 = 696.23125. Exact agreement.",
+      "aside": "The wiki prints the quadratic term as '1.14% AP'; the exact value implied by its own stated 12% + 2%/100 AP and 65% AP terms is 1.3% AP per 100 AP. Minor wiki rounding/typo, flagged, not load-bearing for this receipt."
+    },
+
+    "step_4_materiality": {
+      "config": "level-18 Syndra, ranks Q5/W5/E5/R3, raw AP = 500, R at the minimum 3 spheres, pre-mitigation",
+      "splinters_consulted_120": {
+        "AP": 575.0,
+        "Q": 632.5,
+        "Q2": 632.5,
+        "W_magic": 563.75,
+        "W_true_pct": 0.235,
+        "W_true": 132.48,
+        "E": 545.0,
+        "R": 825.0,
+        "total": 3331.23
+      },
+      "splinters_unconsulted": {
+        "AP": 500.0,
+        "Q": 580.0,
+        "Q2": 0.0,
+        "W_magic": 515.0,
+        "W_true": 0.0,
+        "E": 500.0,
+        "R": 780.0,
+        "total": 2375.0
+      },
+      "delta": 956.23,
+      "ratio": 1.4026,
+      "understatement_if_unconsulted": "28.7% of the consulted total"
+    },
+
+    "correct_value": "A non-empty dependencies ledger. At minimum: `splinters` consulted (by P for the 1.15x total-AP buff, by Q/Q2 for the >=40 second charge, by W for the >=60 true-damage term) and `r_spheres` consulted (by R for the per-sphere damage count). Legitimately absent: E's splinter bonus (utility-only slow) and R's 100-splinter execute (audited as explicitly not modeled). Neither the empty per-slot ledgers nor the two `unconsulted` option rows express any of this."
+  },
+
+  "sources_quoted": [
+    {"file": "data/champions.json", "path": "Syndra.abilities.P[0].effects[].description", "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.P[0].effects[].description", "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.Q[0].effects[].description", "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.W[0].effects[].description", "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.E[0].effects[].description", "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds..."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.R[0].effects[].description", "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."},
+    {"file": "data/champions.json", "path": "Syndra.abilities.W[0].effects[].leveling['Total Mixed Damage']", "quote": "rank-5 row: 212.8 base, 76.6% AP (used as the independent cross-check of my W expansion)"},
+    {"file": "data/champion-audit/batch-6.json", "path": "Syndra.module_slots", "quote": "modeled: [P, Q, Q2, W, E, R] ... 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'"},
+    {"file": "data/champion-audit/batch-6.json", "path": "Syndra.gap_summary", "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters...) is explicitly documented as not modeled."},
+    {"file": "data/champion-audit/batch-e9-1.json", "path": "Syndra.gap_summary", "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."},
+    {"file": "docs/math-foundations.md", "path": "section 5, Ability rotation casts row", "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT"},
+    {"file": "docs/math-foundations.md", "path": "negative result", "quote": "No definition of a `dependencies` ledger, of an `unconsulted` marker, or of any derived-resolution ordering exists anywhere in the document; grep for 'dependencies'/'unconsulted'/'consult'/'resolver' over the whole exported data/ tree and the document returns zero relevant hits. The leaf's schema is therefore undocumented in every source I am permitted to read."}
+  ],
+
+  "verdict": "both_wrong",
+
+  "verdict_reasoning": [
+    "The new value is wrong on content. The scenario is defined by splinters = 120. From the cached wiki text alone, that state changes the rotation by 28.7% (3331.23 vs 2375.00 pre-mitigation at the stated config) through three independent channels: P's 1.15x total AP, Q2's existence at >=40, and W's 12% + 2%/100 AP true damage at >=60. R additionally depends on `r_spheres`. A ledger whose six per-slot entries are all empty and whose only two option rows are both marked `unconsulted` records that the rotation consulted nothing - which contradicts the wiki-sourced mechanics and the repo's own cached audit of what this module models.",
+    "The old value is also wrong. `<absent>` is not the correct value either: the leaf should exist and should carry the splinters -> {P, Q, Q2, W} and r_spheres -> {R} edges. Reverting to absence does not produce the correct value, so `old_value_correct` is not available.",
+    "Independent of which value wins, the ordering is unverifiable. A hand-authored seed deciding row order means the recorded order carries no information derived from the dependency graph; no source under data/ or in docs/math-foundations.md constrains it. A leaf named for `derived_order` whose order is authored rather than derived pins an artifact, not a computation."
+  ],
+
+  "caveats": [
+    "The `dependencies` ledger schema is undocumented in the permitted sources, so I judged the leaf's CONTENT against the mechanics it must reflect, not its SHAPE. If the ledger is scoped narrowly to cross-scenario coupling (the leaf does live under /coupled_scenarios/) rather than to per-slot derived inputs, then empty + unconsulted could be a truthful report of no cross-scenario coupling. I could not distinguish these readings without reading src/, which runbook R-18/R-19 forbids.",
+    "Under that alternative reading the leaf would still be uninformative for a scenario whose entire premise is the 120-splinter derived chain - it would provide zero coverage of the thing it is named for.",
+    "The 6+2 row identification rests on the exact match to Syndra's six module slots (P, Q, Q2, W, E, R) and two options (splinters, r_spheres) recorded in data/champion-audit/. That match is strong but is inference, not a read of the leaf's own key names."
+  ],
+
+  "asides": [
+    "Wiki data quirk, off-task but worth flagging: Syndra W's 'Bonus True Damage' / 'Total Mixed Damage' leveling rows carry a quadratic AP coefficient printed as 1.14% AP. Expanding the wiki's own stated terms (base + 65% AP) x (1 + 12% + 2% per 100 AP) gives 1.3% AP. The constant (212.8) and linear (76.6% AP) terms match exactly, so the 1.14 is a wiki-side rounding or typo in the quadratic term only. Anything reading that precomputed row instead of expanding the primary text inherits a ~0.8% understatement at 575 AP."
+  ],
+
+  "committed": false
+}

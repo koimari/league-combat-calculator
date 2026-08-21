@@ -83,14 +83,15 @@ def test_tear_denied_cast_never_consumes_a_charge():
     # A low-mana fight denies late casts; the ledger's spend denials must
     # not produce Tear hits (no charge consumed, no grant).
     champ = get_champion("Karthus")
-    champ = {**champ, "name": "Resource Timeline Fixture"}
+    # MERGE: the synthetic parser is retired - a named champion module is
+    # the one runtime path (CLAUDE.md rule 7), so the fixture drives the
+    # real Karthus module instead of a renamed copy of it.
     items = [get_item_by_name("Tear of the Goddess")]
     result = run_fight(
         champ,
         18,
         items,
-        _params(duration=10.0, cast_order=["Q", "W", "E", "R"]),
-        synthetic=True,
+        _params(duration=10.0),
     )
     ledger = result["resource_ledger"]
     tear = ledger["tear"]
@@ -244,26 +245,28 @@ def test_lost_chapter_level_up_outside_window_is_receipted():
 
 
 def test_lost_chapter_level_up_can_enable_a_later_cast():
+    # MERGE: the window is long enough for the real Karthus module to run
+    # its mana out - a fight that never starves cannot show a restore
+    # enabling anything (at 10s both walks spend the same 996).
     champ = get_champion("Karthus")
-    champ = {**champ, "name": "Resource Timeline Fixture"}
+    # MERGE: the synthetic parser is retired - a named champion module is
+    # the one runtime path (CLAUDE.md rule 7), so the fixture drives the
+    # real Karthus module instead of a renamed copy of it.
     items = [get_item_by_name("Lost Chapter")]
     without = run_fight(
         champ,
         18,
         items,
-        _params(duration=10.0, cast_order=["Q", "W", "E", "R"]),
-        synthetic=True,
+        _params(duration=20.0),
     )
     with_level = run_fight(
         champ,
         18,
         items,
         _params(
-            duration=10.0,
-            cast_order=["Q", "W", "E", "R"],
+            duration=20.0,
             item_options={"Lost Chapter": {"enlighten_level_up_seconds": 2.0}},
         ),
-        synthetic=True,
     )
     spent_without = sum(
         r["amount"]

@@ -1,0 +1,77 @@
+{
+  "receipt_id": "oracle-C6-leaf51",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[9]/damage_type",
+  "old_value": "magic",
+  "new_value": "true",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "how_built": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c6-fresh",
+    "read": ["data/champions.json", "data/items.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-mechanics.json", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "data/bin/behavior-index.json", "docs/math-foundations.md (headings only)"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3].leveling",
+      "quote": "attribute 'Bonus True Damage': modifiers values [8.4, 12, 15.6, 19.2, 22.8] ; [9.2, 9.8, 10.4, 11, 11.6] '% AP' ; [1.14 x5] '% AP'. attribute 'Total Mixed Damage': [78.4, 112, 145.6, 179.2, 212.8] ; [74.2, 74.8, 75.4, 76, 76.6] '% AP' ; [1.14 x5] '% AP'."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].leveling",
+      "quote": "attribute 'Magic Damage': values [70, 100, 130, 160, 190] and [65 x5] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].damageType",
+      "quote": "MAGIC_DAMAGE  (the slot-level tag covers the base Recast instance only; the Transcendent row carries its own 'Bonus True Damage' attribute)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters ...) is explicitly documented as not modeled."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "source": "data/items.json -> 447113 Detonation Orb .modes",
+      "quote": "{'classic sr 5v5': False, 'aram': False, 'nb': False, 'ar': True}  (Arena-only; withheld from an ordinary SR build, so it cannot be the true-damage source here)"
+    },
+    {
+      "source": "data/items.json -> 2139 Elixir of Sorcery",
+      "quote": "While active, damaging a champion or turret deals 25 bonus true damage (5s against champions).  (a consumable, not a build slot)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_reading": "The scenario id 'syndra_custom_order_120' pins the splinters option at its cap of 120 (data/champions.json P: 'stacking up to 120 times'; data/champion-audit/batch-6.json: 'splinters option (0-120)'). 120 >= 60, so the W Transcendent Bonus is ACTIVE.",
+    "step_2_kit_scan_for_true_damage": "Scanned every Syndra ability description in data/champions.json for a damage-type tag. Q Dark Sphere = 'magic damage'. E Scatter the Weak = 'magic damage'. R Unleashed Power = 'magic damage upon hit' per sphere. P Transcendent = mana/AP buff, no damage. W Force of Will Recast = 'magic damage'. The ONLY true-damage instance anywhere in the kit is the W Transcendent Bonus at >=60 splinters. Item scan: the only SR-legal build items whose text contains 'true damage' (Shadowflame, Cosmic Drive) merely REFERENCE true damage (crit condition / move-speed trigger) and do not create it; Detonation Orb, the one item that converts stored damage into a true-damage detonation, is Arena-only ('classic sr 5v5': False) and is therefore withheld from this build. So no item can author a true-damage event in this scenario.",
+    "step_3_structure_of_the_W_event": "The W is TWO damage instances, not one. The wiki leveling carries both a 'Bonus True Damage' row and a 'Total Mixed Damage' row; 'mixed' is the wiki's word for magic + true coexisting in one cast. Total Mixed = Magic + Bonus True, verified term by term: flat 70+8.4=78.4, 100+12=112, 130+15.6=145.6, 160+19.2=179.2, 190+22.8=212.8; %AP 65+9.2=74.2, 65+9.8=74.8, 65+10.4=75.4, 65+11=76, 65+11.6=76.6. Therefore the correct rendering is one 'magic' event (base recast) plus one separate 'true' event (Transcendent bonus) -- not a single event whose type flips.",
+    "step_4_algebraic_confirmation_of_the_true_row": "Prose formula: bonus_true = (0.12 + 0.02 * AP/100) * W_magic, where W_magic = base[rank] + 0.65*AP. Expanding gives flat = 0.12*base ; %AP coefficient = 0.12*65 + 0.02*base ; quadratic %AP^2/100 = 0.02*0.65*100 = 1.3. Computed: rank1 flat 8.4 / %AP 9.2, rank2 12 / 9.8, rank3 15.6 / 10.4, rank4 19.2 / 11.0, rank5 22.8 / 11.6 -- an exact match to the cached 'Bonus True Damage' row on all ten flat/linear coefficients. This proves the 12% + 2%/100AP multiplier is taken against the W's own magic damage and that the resulting instance is typed TRUE by the wiki.",
+    "step_5_worked_number": "Level 18, W rank 5, AP 500 (post-Transcendence AP, whatever its source): W_magic = 190 + 0.65*500 = 515.0 magic. Bonus = (0.12 + 0.02*5) * 515.0 = 0.22 * 515.0 = 113.3 TRUE. Total mixed = 628.3, of which 113.3 is true. Reading the cached leveling row directly with the corrected quadratic 1.3 reproduces it: 22.8 + 0.116*500 + 0.013*500^2/100 = 22.8 + 58.0 + 32.5 = 113.3.",
+    "conclusion": "A true-damage event in the manual_target damage_events list of a 120-splinter Syndra fight is not only permissible, it is REQUIRED: the Transcendent W bonus is the kit's one true-damage instance and it is unconditionally live at 120 splinters. Typing that instance 'magic' (the old value) understates the target's effective HP pool by making the bonus subject to 100/(100+MR) mitigation, which docs/math-foundations.md 2.1 applies to magic damage and which true damage bypasses entirely (CLAUDE.md domain rule: 'True damage ignores all resistances entirely'). The new value 'true' is correct."
+  },
+
+  "residual_uncertainty": {
+    "statement": "This oracle could not read the scenario definition or the golden baseline (both live under scripts/ and tests/, out of bounds for R-18/R-19), so it could not confirm by index arithmetic that damage_events[9] is specifically the W Transcendent bonus rather than a neighbouring Q/Q2/E/R-sphere event.",
+    "why_it_does_not_change_the_verdict": "The identification is forced by exclusion rather than by index. Syndra's kit and the SR-legal item pool contain exactly one true-damage instance, so any event that legitimately reads 'true' in this scenario is the W Transcendent bonus, and any event that is NOT the W bonus could not have been flipped to 'true' without also changing its amount and its sibling leaves. A single damage_type leaf moving magic -> true, in the one scenario where the 60-splinter W gate is open, matches the W-bonus fix and matches nothing else.",
+    "falsifier": "If damage_events[9] turns out to be a Q, Q2, E, or R-sphere instance, or if the W is emitted as a SINGLE combined event whose type was flipped wholesale (which would wrongly make the base 190 + 65% AP unmitigable rather than only the 12% + 2%/100AP bonus), the verdict flips to both_wrong. Checking which event index 9 is settles it."
+  },
+
+  "asides": [
+    "Cached-wiki parse quirk, unrelated to this leaf: the 'Bonus True Damage' and 'Total Mixed Damage' rows in data/champions.json give the quadratic AP term as 1.14 '% AP' on every rank, but the prose formula requires 0.02 * 0.65 * 100 = 1.3. At 500 AP the stale 1.14 undercounts the true instance by 4.0 (109.3 vs 113.3), and the error grows with AP^2. Any code reading that third modifier straight out of the JSON inherits the shortfall; the flat and linear terms are exact.",
+    "Both W leveling rows also mis-tag their first modifier's units as '  2' (a mangled '2%' capture from the '+ 2% per 100 AP' clause) rather than an empty flat unit -- same failure family as the known-degraded parses listed in CLAUDE.md."
+  ],
+
+  "committed": false
+}

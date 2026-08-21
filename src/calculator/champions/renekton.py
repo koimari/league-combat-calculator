@@ -3,26 +3,48 @@
 E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
 30 sourced 0.5s ticks (this module's packet timing declaration).
 
-Roadmap session 4 batch F (2026-08-21): P (Reign of Anger) is the Fury
-resource system only — all three cached P effects (data/champions.json)
-are Fury generation/decay/empower-gating prose with zero leveling rows,
-no enemy-damage formula anywhere. The pinned reviewed packet (static/
-reviewed-packets.json) independently declares P ``kind: "no_damage"``
-with a sourced reason, and P is not a slot this module reassigns away
-from ``build_packet_module``'s cast slots, so it already emits the
-packet's sourced zero-damage row today — MODULE_COVERAGE was simply
-stale, still reading "out_of_scope" for an already-covered slot (the
-Malzahar/Nasus precedent, roadmap session 4 batch D). Reclassified to
-"no_damage"; zero fight-computation change.
+Coverage: P (Reign of Anger) is the Fury meter that empowers the next
+ability. Its empowered rows are priced on the abilities themselves; all
+three cached P effects (generation/decay, the 50-Fury empower gate, the
+sub-50%-health rule) carry zero leveling rows, and the pinned reviewed
+packet declares P ``kind: "no_damage"`` on that basis. P is a cast slot
+here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
+"no_damage", not "out_of_scope".
 """
 
+from functools import partial
+
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
+from .slotlib import extract_named, with_item_on_hits
+from ..healing_helpers import _ability, _event_source, _heal_from_damage, _rank
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
+
+# Cached kit review.  Q "deal[s] physical damage to nearby enemies and
+# heal[s] himself"; E's dash "deal[s] physical damage to enemies he passes
+# through" and its empowered recast "inflicts armor reduction", a
+# resistance shred rather than a control class; R "deals magic damage every
+# 0.5 seconds to nearby enemies" while buffing Renekton's own stats.  W is
+# the kit's one control: the empowered attack "strike[s] the target twice,
+# dealing modified physical damage and stunning them for 0.75 seconds".  P
+# is Fury bookkeeping with no damage row.
+MODULE_CC = {"Q": "none", "W": "stun", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Renekton",
     PACKET_SHA256,
+    slot_wrappers={
+        "W": partial(
+            with_item_on_hits, effectiveness=1.0, hits=2, triggers=("on_hit",)
+        ),
+    },
+    cc_kinds=MODULE_CC,
+    # Cull the Meek cleaves once around Renekton and Slice's dash damages
+    # what it passes through once — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.  W and R already
+    # author their own strike and tick timings below.
+    single_hit_slots=frozenset({"Q", "E"}),
     packet_tick_fixes={
         "Ruthless Predator": {
             "count": 2,
@@ -37,23 +59,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         },
     },
 )
-PACKET_SPEC = SLOTS.packet_spec
-_ON_HIT_SPECS: dict[str, dict] = {
-    "W": {"effectiveness": 1.0, "hits": 2, "triggers": ("on_hit",)},
-}
-
-_parse_abilities = parse_abilities
-
-
-def parse_abilities(*args, **kwargs):
-    """Parse abilities, then declare wiki-sourced item on-hit application."""
-    result = _parse_abilities(*args, **kwargs)
-    for slot, spec in _ON_HIT_SPECS.items():
-        entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
-        if entry is not None:
-            entry["applies_item_on_hits"] = dict(spec)
-    return result
-
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Reign of Anger) has no enemy-damage formula: all three cached "
@@ -69,12 +74,9 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -83,21 +85,15 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Renekton self-healing events from its authored packet."""
-    healing = []
-    ability = _healing._ability(champion_data, "Q")
-    rank = _healing._rank(ability_damages, "Q")
-    amount = _healing.extract_named(
-        ability, "Champion Healing", rank, champion_stats, {}
-    )
+    """Cull the Meek pays its heal on every Q hit that lands."""
+    healing: list[dict] = []
+    ability = _ability(champion_data, "Q")
+    rank = _rank(ability_damages, "Q")
+    amount = extract_named(ability, "Champion Healing", rank, champion_stats, {})
     for event in damage_events:
-        if _healing._event_source(event) == "Q":
-            _healing._heal_from_damage(healing, event, amount, "Cull the Meek")
+        if _event_source(event) == "Q":
+            _heal_from_damage(healing, event, amount, "Cull the Meek")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Renekton", derive_self_healing)

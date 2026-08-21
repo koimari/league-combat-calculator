@@ -1,0 +1,113 @@
+{
+  "slice": "P4-S7H5-kernel",
+  "status": "declared",
+  "stage": "P4-S7H5 — the compiled-kernel extension H5 scopes, its own stage after Phase 4 S7",
+  "decisions": [
+    "D-69",
+    "D-97",
+    "D-98",
+    "D-101"
+  ],
+  "what_the_stage_does": {
+    "one_sentence": "The compiled score kernel is taught timed, typed damage modifiers: unrepresentable_template_receipt stops rejecting the kind categorically, the one SurvivalAction constructor gains the armed-modifier branch, and the amp rules' Compilability flips from ReceiptOnly to Compilable in a one-symbol commit under D-98.",
+    "why_it_is_a_stage_and_not_a_relaxation": "The umbrella's [H] table records H5 as SCOPED and rules that the extension is folded into no existing stage: it lands after S7 with its own equivalence fixture, and the flip is that stage's own revert unit. Phase 3's criterion 16 is unchanged in its own branch; Phase 4's criterion 16 is re-read against the compiled lane only once this stage's flip lands, on the evidence of the fixture rather than on the ruling.",
+    "the_kernel_already_had_the_transition": "survival/transitions._apply_damage_modifier and _apply_cross_participant_modifiers are kernel functions both adapters already drive. What refused was compilation, not the walk: survival/compile.unrepresentable_template_receipt returned support_kind=damage_modifier for every armed modifier and program/compile.add_support_templates raised on it. This stage moves the refusal, not the mechanic."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "fingerprints_bench": "docs/receipts/campaign-fingerprints.json bench{}",
+    "rule": "R-17 / R-32 / D-97 — no baseline moves inside a semantic commit of this stage; the code lands against the committed baselines plus this allowlist."
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "enumerated_at_commit": "03aba5e",
+    "rule": "R-20's second half. The occurrence count is not readable off the pre-change tree by inspection — the stage changes which engine prices an evaluation, not what a formula computes — so the population is enumerated from committed artifacts and from one measurement of the live refusal, and its membership bounds what may qualify. An occurrence outside it stops the stage.",
+    "golden": {
+      "size": 0,
+      "why": "scripts/golden_snapshot.py enters through pipeline.run_fight (R-11): the pair engine only. This stage edits survival/compile.py's template refusal, program/compile.py's compiled support branch and the amp rules' Compilability field. None of the three is reachable from a one-pair fight, and no pair-engine pricer moves. D-93 is why this is stated rather than assumed: golden proves no pair-engine leak and nothing else."
+    },
+    "coupled_golden": {
+      "size": 2,
+      "instrument": "scripts/golden_snapshot.py's COUPLED_SCENARIOS, read rather than typed: the members carrying score_mode=True are the only ones that build a CoupledSearchContext, and a search context is the only way a snapshot reaches the compiled score path at all.",
+      "members": [
+        {
+          "scenario": "score_event_view_holder",
+          "equips": [
+            "Imperial Mandate",
+            "Luden's Echo"
+          ],
+          "producer": "Imperial Mandate — Command",
+          "today": "the fresh compiler raises support_kind=damage_modifier on Command's armed packet and the evaluation falls back to the receipt walk",
+          "after": "the same packet compiles and the compiled walk prices it"
+        },
+        {
+          "scenario": "score_event_scan_holder",
+          "equips": [
+            "Black Cleaver",
+            "Luden's Echo"
+          ],
+          "producer": "Black Cleaver — Carve",
+          "today": "the fresh compiler raises support_kind=damage_modifier on Carve's armed packet and the evaluation falls back to the receipt walk",
+          "after": "the same packet compiles and the compiled walk prices it"
+        }
+      ],
+      "non_members": {
+        "score_plain_tuple": "score_mode, but equips no damage_modifier producer, so no armed modifier exists to stage",
+        "the_ten_receipt_mode_scenarios": "mandate_abyssal_curse_roster, cleaver_bloodsong_roster, dream_maker_roster, catalyst_roster and the six Syndra pins all carry score_mode=False, so they compose through the receipt walk and never build a search context. Four of them equip a damage_modifier producer and none of the four can reach the compiled path."
+      },
+      "expected_qualifying_occurrences": 0,
+      "why_zero_is_a_prediction_and_not_an_assumption": "A fallback evaluation is priced by the receipt walk. Both members are priced by the receipt walk today for exactly that reason. If the compiled lane reproduces the receipt walk leaf for leaf — which is this stage's own equivalence fixture, and the condition on which it may ship at all — then the two members' snapshots are unchanged and the coupled-golden diff is empty. A non-empty diff means the compiled lane and the walk disagree, which is a stop under the stage's own rule, not a diff to absorb with an oracle."
+    },
+    "bench": {
+      "size": 716,
+      "per_scenario_sizes": {
+        "cassiopeia_3champ": 17,
+        "cassiopeia_5champ": 13,
+        "mundo_3champ": 16,
+        "syndra_mandate_3champ": 670
+      },
+      "instrument": "scripts/bench_coupled_optimizer.py's SCENARIOS, each run at the --fixed-work budget with participant_timeline._score_with_search_context wrapped to tally the UncompilableActionError receipt every candidate-local fallback names. Every fallback passes that one raise site (participant_timeline.py:3257), so the tally is the population and not a sample.",
+      "measured_at_commit": "03aba5e",
+      "what_the_number_is": "The published rung histogram reports receipt_walk_candidate as one number — 175 / 134 / 88 / 775 in the committed bench receipt — and does not say which mechanic asked for the fallback. The sizes above are the subset whose named receipt is exactly support_kind=damage_modifier, which is the population this stage can move and the ceiling on how far the histogram may travel.",
+      "measured_receipt_tallies": {
+        "cassiopeia_3champ": {
+          "receipt_walk_candidate": 175,
+          "support_kind=damage_modifier": 17
+        },
+        "cassiopeia_5champ": {
+          "receipt_walk_candidate": 134,
+          "support_kind=damage_modifier": 13
+        },
+        "mundo_3champ": {
+          "receipt_walk_candidate": 88,
+          "support_kind=damage_modifier": 16
+        },
+        "syndra_mandate_3champ": {
+          "receipt_walk_candidate": 775,
+          "support_kind=damage_modifier": 670
+        }
+      },
+      "declared_moves": {
+        "rungs": "At most the per-scenario size above moves from receipt_walk_candidate to compiled. At most, and not exactly: the receipt a fallback names is the FIRST refusal its compilation hit, so a candidate freed of the modifier refusal may still be refused by a later one — Abyssal Mask's Unmake keeps a named refusal of its own at this stage (the compiled panels hold no arming ledger, so the aura's cross-holder dedupe question has no answer there), and a candidate holding one alongside another producer moves nowhere.",
+        "residual": "Moves as a consequence of exactly those evaluations changing engine, downward, and most visibly on syndra_mandate_3champ whose residual is 1422 against 796 evaluations because 775 of them are priced by the receipt walk. The residual is pair_run_fight_calls − evaluations × n_enemies (R-25) and the two engines do not do the same pair work, so a rung move is a residual move by construction. The direction is declared here; the value is recorded in the landing commit body.",
+        "public_evaluations": "unchanged",
+        "measured_proposals": "unchanged",
+        "score_memo_misses": "unchanged",
+        "winner": "unchanged",
+        "score": "unchanged"
+      },
+      "what_falsifies_the_stage": "A moved winner or a moved score. Both are read off the same numbers the equivalence fixture pins, so either one moving means the compiled lane priced a build differently from the walk that is its authority — the divergent compiled lane this stage is forbidden to ship."
+    }
+  },
+  "expected_leaf_diffs": [],
+  "oracle_receipts": [],
+  "gates": {
+    "R-01 row 2": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json — zero diffs",
+    "R-01 row 3": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json — zero diffs",
+    "R-01 row 8": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json — rungs and residual move as declared above; every other counter, the winner and the score identical",
+    "R-01 row 10": "pytest tests/test_survival_kernel.py — the standing compiled-vs-receipt suite",
+    "the stage's own": "pytest tests/test_amp_kernel.py — the compiled-vs-receipt equivalence fixture this stage ships, covering every delta_amp producer the kernel now stages from both the candidate and an ally holder"
+  }
+}

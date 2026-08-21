@@ -7,6 +7,9 @@ changes outgoing damage, so no stack slot is added — the chunk heal row
 the packet prices as target-max-health damage is the passive's existing
 packet read and is left untouched (not part of the E3 worklist).
 
+Coverage: P is ``modeled`` through the revive channel, not through its
+own packet row; Q/W/E/R price their cached damage rows.
+
 E4 boundary: the E4-3 worklist skips Zac — R (Let's Bounce!) is the
 self-movement rework, not a summoned unit (the "Champion summoned
 units" page lists only Zac's Cell Division Bloblets, which are a death
@@ -26,42 +29,24 @@ data for the self-heal ledger.  Verified live: parse_champion_abilities
 emits P (surfaced as the "passive" key) with total_raw=0.0, and P/passive
 never appears in the fight breakdown — Zac's DEFAULT_CAST_ORDER
 (Q, Q2, W, E, R) never casts P, so the packet's target-scaled part is
-never evaluated for enemy damage. Correct semantic: "no_damage" (a
-self/state effect, not an unresolved enemy formula), matching the
-Cho'Gath P precedent (kill/self effect only). MODULE_COVERAGE was stale,
-reading "out_of_scope"; reclassified to "no_damage". Zero
-fight-computation change — the packet row already computed zero enemy
-damage and was already excluded from the cast order before this pass.
+never evaluated for enemy damage.  So P's own row prices nothing; what
+the engine prices for the slot is the revive and the Goo chunk heal, and
+``COVERAGE_CHANNELS`` names both — the slot is ``modeled`` through those
+channels, not through its packet row.
 """
 
+from dataclasses import replace
+
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
+from .inputs import champion_stat
+from .engine import SlotCtx
 from .packet_module import build_packet_module, full_plus_reduced_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zac",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
-        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
-        "Damage).",
-    ),
-    slot_parsers={
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage Per Hit",
-            reduced_attr="Reduced Damage Per Hit",
-            dmg_type="magic",
-            reduced_count=3,
-            time_offset=1.0,
-            hit_interval=1.0,
-            dot_duration=3.0,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # E8d: sourced Cell Division revive values.  Cached passive prose (data/
 # champions.json, Zac P Cell Division): "enters resurrection for 8 / 7 / 6 /
@@ -85,7 +70,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     """Return Zac's sourced Cell Division revive fields for StartingDefenses."""
     delay = next(d for threshold, d in _REVIVE_DELAY_BRACKETS if level >= threshold)
     return {
-        "revive_health_amount": float(stats.get("health", 0.0))
+        "revive_health_amount": float(champion_stat(stats, "health"))
         * _REVIVE_MAX_HEALTH_RATIO,
         "revive_delay": delay,
         "revive_cooldown": REVIVE_COOLDOWN_SECONDS,
@@ -127,14 +112,83 @@ def _stretching_strikes(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _stretching_strikes
-parse_abilities = build_parser(SLOTS, "Zac")
+def _lets_bounce(packet_r):
+    """R: the opening bounce displaces; the later bounces only slow.
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+    "Each bounce deals magic damage to enemies hit, knocks them back over 1
+    second, and slows them by 20% ... ones beyond the first deal 50% damage
+    to them and do not apply the knock back" — one cast, two answers, so
+    they are authored per part instead of in ``MODULE_CC``.  The parts are
+    already the same split: the full-damage opening bounce, then the three
+    reduced ones.
+    """
+
+    def parse(ctx: SlotCtx):
+        entry = packet_r(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, cc_kind="knockback" if index == 0 else "slow")
+            for index, part in enumerate(entry.get("parts") or ())
+        )
+        return entry
+
+    return parse
+
+
+# Stretching Strikes catches the first enemy hit, "dealing magic damage,
+# slowing them by 40% for 0.5 seconds" (its root and knock-up need a
+# *second*, different target, which a duel does not have); Unstable Matter
+# only "explodes to deal magic damage to nearby enemies"; Elastic
+# Slingshot lands "deal[ing] magic damage to nearby enemies and knock[ing]
+# them up and stun[ning] them for 0.5 seconds".  R is not here: its opening
+# bounce and its later ones apply different control, so the kinds are
+# authored per part in ``_lets_bounce``.  P is the Goo/revive state row.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zac",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
+        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
+        "Damage).",
+    ),
+    # E's landing and W's explosion are one hit each at the cast.  W states
+    # its certification through a slot parser because it is a
+    # ``wiki_attribute`` slot, which ``single_hit_slots`` does not reach.
+    single_hit_slots=frozenset({"E"}),
+    slot_parsers={
+        "W": simple_damage(
+            attr="Magic Damage",
+            dmg_type="magic",
+            source=("W", 0),
+            event_order_certified="single_hit",
+        ),
+        "R": full_plus_reduced_parser(
+            full_attr="Magic Damage Per Hit",
+            reduced_attr="Reduced Damage Per Hit",
+            dmg_type="magic",
+            reduced_count=3,
+            time_offset=1.0,
+            hit_interval=1.0,
+            dot_duration=3.0,
+        ),
+        "Q": _stretching_strikes,
+    },
+    slot_wrappers={
+        "R": _lets_bounce,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+# All five slots are emitted, so the derived map already calls them
+# modeled.  P's own packet row is the one that prices nothing (its cached
+# chunk percentage is read as target-max-health damage and resolves to
+# zero); what the engine prices for the slot is the revive — 1269.0, half
+# of Zac's level-18 itemless maximum health — plus the Goo chunk heal the
+# healing rule authors, so P names both channels.
+COVERAGE_CHANNELS = {"P": ("starting_revive_defense", "self_healing_rule")}
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced "
     "per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row "
@@ -150,17 +204,14 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the packet's 'targetMaxHp' ratio is a mislabeled self-heal-on-chunk "
     "term ('heal for 4% : 8.47% of HIS maximum health', not the "
     "target's); P is never cast (absent from DEFAULT_CAST_ORDER), so "
-    "the fight ledger never invents an enemy hit from it (MODULE_COVERAGE: "
-    "no_damage, not out_of_scope). The real revive mechanic above is "
-    "modeled separately via starting_revive_defense/StartingDefenses, "
-    "not through this packet row.",
+    "the fight ledger never invents an enemy hit from it. The revive and "
+    "the chunk heal are what the engine prices for the slot, through the "
+    "starting_revive_defense and self_healing_rule channels this module "
+    "names in COVERAGE_CHANNELS, not through this packet row.",
 ]
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -172,7 +223,7 @@ def derive_self_healing(
     """Resolve Zac self-healing events from its authored packet."""
     healing = []
     p = _healing._ability(champion_data, "P")
-    level = int(champion_stats.get("level", 18) or 18)
+    level = int(champion_stat(champion_stats, "level"))
     chunk_pct = _healing.extract_named(
         p, "Max Health Damage", level, champion_stats, {}
     )
@@ -199,9 +250,5 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Zac", derive_self_healing)

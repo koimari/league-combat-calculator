@@ -1,0 +1,86 @@
+{
+  "receipt_id": "oracle-C6-leaf33",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[2]/source",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/wiki-atoms/stack-transform-summon-resource.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/*", "git history", "the diff", "the plan"],
+    "note": "The scenario definition itself lives outside the permitted evidence tree, so the cast order was not observed directly; the computation below turns on ability availability and slot adjacency, which are fully determined by the cached wiki text."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description (wiki, patchLastChanged 26.12)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] fields",
+      "quote": "rechargeRate: [7, 7, 7, 7, 7]; cooldown.modifiers[0].values: [7, 7, 7, 7, 7]; cooldown.affectedByCdr: false; castTime: \"none\"",
+      "reading": "Q is modeled by the wiki as an ammo/recharge ability (rechargeRate present), not a plain cooldown ability, and its cast occupies zero cast time."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0] and effects[2] (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "reading": "The '120' in the scenario name is the maximum splinter count, i.e. every Transcendent threshold (Q 40, W 60, E 80, R 100, P 120) is active in this scenario."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0]",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster ... Recast: Syndra throws the grabbed target ... cooldown [12, 11, 10, 9, 8], affectedByCdr: true",
+      "reading": "W is a distinct ability on its own cooldown; it consumes a Dark Sphere that Q creates."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. — Ability Haste [10, 20, 30]",
+      "reading": "R's passive further shortens the Q recharge, so nothing pushes the second Q cast later than W."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "\"module_slots\": {\"modeled\": [\"P\", \"Q\", \"Q2\", \"W\", \"E\", \"R\"] ... \"note\": \"... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\"} ... \"notable_atoms\": [... \"ammo (Q 2nd charge at 40 splinters)\" ...]",
+      "reading": "'Q2' is the sourced name of Syndra's second Dark Sphere charge, and in the slot roster Q2 sits between Q and W."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)",
+      "reading": "Confirms the scenario option: splinters = 120 unlocks the Q2 slot."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> ammo/charges atom",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere) ...",
+      "reading": "Syndra's Dark Sphere is classified as a stocked-charge (ammo) cast, not a cooldown-gated recast."
+    },
+    {
+      "source": "docs/math-foundations.md sec 1.1 (shared cast timeline)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "reading": "Ordering of damage events is greedy by cast order subject to availability; an ability that is available (a stocked charge) is not deferred behind a later-listed ability."
+    },
+    {
+      "source": "docs/math-foundations.md sec 4 table",
+      "quote": "| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT |"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_reading": "The scenario name decomposes as champion=Syndra, mode=custom (caller-supplied) cast order, option splinters=120. 120 is the splinter cap from the P text, and batch-e9-1 records 'splinters option: 120' as the Syndra module option, so at this setting every Transcendent threshold is met, including the 40-splinter Q threshold.",
+    "step_2_is_Q2_a_real_event": "At >= 40 splinters the wiki grants a stocked Dark Sphere charge 'up to a maximum of 2'. Two stocked charges means two Q casts can be fired back to back with zero wait. batch-6 names that second charge the 'Q2' slot ('synthetic Q2 (2nd charge)', atom 'ammo (Q 2nd charge at 40 splinters)'). So a damage event whose source is 'Q2' is a sourced, legitimate event in this scenario and must appear in the event stream.",
+    "step_3_availability_at_t0": "Charges recharge at rechargeRate 7 s and Syndra enters the fight out of combat, so the stock is at its 2-charge maximum at t = 0. Q's castTime is 'none' (0 s), so the second charge is castable immediately after the first with no cooldown gate. Under sec 1.1's greedy-by-cast-order superposition, an available cast is taken at its turn in the order; it is not deferred behind an ability listed after it.",
+    "step_4_falsifying_the_old_value": "The only way W legitimately occupies the event slot immediately after the first Q is if the second Dark Sphere charge were unavailable, i.e. if Q were treated as a plain 7 s cooldown ability. Test that counterfactual: with R's passive alone (Ability Haste 10/20/30) and the CDR formula effective_cd = base_cd x 100/(100 + AH) from CLAUDE.md domain knowledge, a cooldown-only second Q would land at 7 x 100/110 = 6.36 s (R1) or 7 x 100/130 = 5.38 s (R3), while W at rank 5 (8 s, affectedByCdr) recurs at 8 x 100/110 = 7.27 s. So a cooldown model pushes the second Q roughly 5-6 s downstream and lets W take the adjacent slot -- exactly the old baseline's shape. But the wiki explicitly overrides that model at >= 40 splinters: the charge is already stocked, wait time 0 s. The cooldown-only reading is therefore contradicted by the cached wiki text for this scenario's option value.",
+    "step_5_ordering": "Q2 is the second charge of the same ability as Q, so it is adjacent to Q in any cast order, and the module's own slot roster orders it Q -> Q2 -> W -> E -> R. Placing W at the index where the second stocked charge belongs both drops a sourced damage instance from its correct position and mis-attributes the damage: Q/Q2 deal 90/125/160/195/230 (+70% AP) magic damage, whereas W deals 70/100/130/160/190 (+65% AP) plus, at >= 60 splinters, 12% (+2% per 100 AP) bonus true damage. The two are numerically and typologically different, so this is a material leaf, not a cosmetic label.",
+    "conclusion": "damage_events[2].source = 'Q2' is the value the cached wiki text supports; 'W' at that index implies Syndra's second stocked Dark Sphere charge is missing or deferred at splinters = 120, which the Q Transcendent Bonus text directly contradicts."
+  },
+
+  "caveats": [
+    "The scenario's literal cast order is defined outside the permitted evidence tree (src/tests/scripts), so index 2 was not confirmed by re-executing the scenario. The argument establishes (a) that a 'Q2'-sourced event must exist at splinters = 120 and (b) that it precedes W in both charge availability and slot order; both are sufficient to reject 'W' at the slot the second charge occupies, and neither depends on the unread scenario file.",
+    "If the scenario's custom order deliberately places some third ability at index 2 (i.e. neither Q2 nor W), this receipt's positional claim would be too strong -- but the observed old value (W) is then also wrong, so the verdict would move to both_wrong rather than to old_value_correct. No reading of the cached wiki text makes 'W' the correct value at an index where the second stocked Dark Sphere charge is available."
+  ],
+
+  "verdict_rationale": "The 40-splinter Transcendent Bonus stocks a second Dark Sphere charge (max 2, recharge 7 s, cast time 0). At the scenario's splinters = 120 setting that charge is stocked at fight start, so the second Q cast ('Q2', the module's named second-charge slot, per data/champion-audit/batch-6.json) fires immediately after Q and ahead of W. The new value restores a sourced damage event that the old baseline omitted from that position.",
+  "committed": false
+}

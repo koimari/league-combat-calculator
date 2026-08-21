@@ -5,14 +5,17 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
 )
+from .source_receipts import load_champion_sources
 
 
 def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -47,7 +50,9 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = max(1, min(rank, 4 if renewal else 5))
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     holds = bool(ctx.options.get("w_tether_holds", True))
-    parts = [DamagePart("magic", value, time_offset=0.1)]
+    # The opening hit only tethers and reveals; the root arrives with the
+    # second hit, "if the tether is not broken by the end of its duration".
+    parts = [DamagePart("magic", value, time_offset=0.1, cc_kind="none")]
     if holds:
         parts.append(
             DamagePart(
@@ -92,7 +97,12 @@ SLOTS = {
         reason="Mantra empowers the next Q/W/E variant; the toggle itself has no outgoing damage.",
     ),
 }
-parse_abilities = build_parser(SLOTS, "Karma")
+# Inner Flame's explosion "slow[s] them by 40% for 1.5 seconds" and its
+# Mantra field slows by 50%, so Q has one answer either way.  W's two hits
+# do not (see _focused_resolve).  P, E and R author no damage part.
+MODULE_CC = {"Q": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Karma", cc_kinds=MODULE_CC)
 OPTIONS = [
     {"key": "q_mantra", "type": "bool", "default": False, "label": "Mantra Soulflare"},
     {"key": "w_renewal", "type": "bool", "default": False, "label": "Mantra Renewal"},
@@ -117,45 +127,18 @@ ASSUMPTIONS = [
     "spread of the enhanced shield fails closed instead of inventing a "
     "value.",
 ]
-SOURCES = [
-    source_row(
-        "Karma parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Karma",
-        4001401,
-        "2026-03-20T15:07:52Z",
-    ),
-    source_row(
-        "Karma Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/Q",
-        2863960,
-        "2019-11-03T19:57:17Z",
-    ),
-    source_row(
-        "Karma W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/W",
-        2864255,
-        "2019-11-03T20:10:04Z",
-    ),
-    source_row(
-        "Karma E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/E",
-        2864401,
-        "2019-11-03T20:12:35Z",
-    ),
-    source_row(
-        "Karma R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Karma/R",
-        2864547,
-        "2019-11-03T20:16:00Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Karma")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# Renewal (Mantra-empowered W): "Karma heals for 17% (+ 1% per 100 AP) of
+# her missing health once on-cast, and again once the tether lasts its
+# full duration or the target dies while tethered."  The tether lasts 2
+# seconds (the module prices the completion hit at +2.0s).  The heal is a
+# missing-health formula priced by the coupled timeline at each heal's
+# timestamp (Darius pattern); the Mantra variant only exists when the
+# parse picked it (its parsed name is "Renewal").  The heal lands on cast,
+# even if the paired W packet was fully blocked.
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -167,7 +150,7 @@ def derive_self_healing(
     """Resolve Karma self-healing events from its authored packet."""
     healing = []
     if str(ability_damages.get("W", {}).get("name", "")) == "Renewal":
-        ap = float(champion_stats.get("ability_power", 0.0) or 0.0)
+        ap = champion_stat(champion_stats, "ability_power")
         ratio = 0.17 + ap / 10000.0
 
         def _renewal_heal(current_health: float, maximum_health: float) -> float:
@@ -190,9 +173,5 @@ def derive_self_healing(
                 )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Karma", derive_self_healing)

@@ -18,19 +18,17 @@ P1-3 closures:
   ShieldAmount + ShieldPerChampion + (75% + 40%) AP for 2 seconds
   (ShieldDuration), riding the R damage event via self_shield_events.
 
-Roadmap session 4 batch E (2026-08-21): P (Inherent Glamour, the disguise
-passive) is a pure state/utility ability with no enemy-damage formula.
-The pinned reviewed packet already declares P ``kind: "no_damage"`` with
-a sourced reason, and this module never overrides P, so it already emits
-the packet's zero-damage row (``build_packet_module``'s ``no_damage``
-branch) — MODULE_COVERAGE was simply stale, still reading "out_of_scope"
-for an already-covered slot. Reclassified to "no_damage" (the
-Malzahar/Nasus precedent, roadmap session 4 batch D); zero
-fight-computation change.
+Coverage: P (Inherent Glamour) disguises Neeko as an allied champion or
+unit — vision and stealth are axes the engine does not have, and the
+disguise carries no enemy-damage formula. The pinned reviewed packet
+declares P ``kind: "no_damage"`` with a sourced reason and this module
+never overrides P, so the slot already emits the packet's zero-damage
+row (``build_packet_module``'s ``no_damage`` branch): MODULE_COVERAGE
+reads "no_damage", not "out_of_scope".
 """
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -42,10 +40,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Neeko", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — game-file-sourced R shield rows
 # (the cached wiki page omits the shield; neeko.bin.json NeekoR mSpell
@@ -115,7 +109,7 @@ def _pop_blossom(ctx: SlotCtx):
         "magic",
     )
     shield_rank = min(max(rank, 1), 3) - 1
-    ap = float(ctx.stats.get("ability_power", 0.0) or 0.0)
+    ap = float(ctx.stat("ability_power") or 0.0)
     shield = (
         _R_SHIELD_AMOUNT[shield_rank]
         + _R_SHIELD_PER_CHAMPION[shield_rank]
@@ -136,15 +130,37 @@ def _pop_blossom(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _blooming_burst
-SLOTS["E"] = with_control(
-    SLOTS["E"],
-    kind="root",
-    duration_attr="Root Duration",
+# Cached kit review.  Q's seed and re-blooms only "deal magic damage"; W's
+# consumed stacks "deal bonus magic damage and grant her bonus movement
+# speed".  E's spiral "deals magic damage to enemies hit and roots them for
+# a duration".  R is the kit's one two-control cast, but its parts do not
+# apply both: the leap knocks up first and deals nothing, and the landing
+# burst "deals magic damage to nearby enemies and stuns them" — the stun is
+# what the damaging part applies, so it is the kind that rides it.  P is
+# absent because Inherent Glamour is a disguise with no damage (its
+# "immobilized" wording is about Neeko losing the disguise, not about
+# control she applies).
+MODULE_CC = {"Q": "none", "W": "none", "E": "root", "R": "stun"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Neeko",
+    PACKET_SHA256,
+    # Shapesplitter's empowered attack and Tangle-Barbs' spiral each deal
+    # their packet once, at the cast — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"W", "E"}),
+    slot_parsers={
+        "Q": _blooming_burst,
+        "R": _pop_blossom,
+    },
+    # Tangle-Barbs carries its sourced root duration onto the spiral's hit.
+    slot_wrappers={
+        "E": lambda parser: with_control(
+            parser, kind="root", duration_attr="Root Duration"
+        ),
+    },
+    cc_kinds=MODULE_CC,
 )
-SLOTS["R"] = _pop_blossom
-parse_abilities = build_parser(SLOTS, "Neeko")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Blooming Burst) prices the full three-burst chain: Initial Magic "
@@ -166,4 +182,3 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

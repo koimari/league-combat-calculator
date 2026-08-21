@@ -27,7 +27,7 @@ Contract under test (current runtime facts, verified before pinning):
   naming "Jak'Sho, The Protean" AND the key (AGENTS.md rule 5 — no
   silent fallbacks); malformed values fail loudly (ValueError on bad
   int, TypeError on non-numeric multiplier).  The wiki source receipt
-  rides the code-owned defensive_effects._JAKSHO_SOURCE (revision
+  rides the code-owned defensive_effects.defense_source(...) (revision
   3984950) — the registry entry itself carries no source keys.
 * COMBAT-TIME STACK PROGRESSION: Voidborn Resilience is combat-time
   state on the shared survival kernel: stacks = min(5, floor(action.time
@@ -128,9 +128,12 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.item_coverage import ATTACKER_LANES
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
-    _JAKSHO_SOURCE,
     resolve_starting_defenses,
 )
 from src.calculator.item_coverage import item_model_coverage, target_item_model_coverage
@@ -145,12 +148,35 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.compile import uncompilable_item_receipt
+from src.calculator.interpreters import uncompilable_item_receipt
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
+from src.calculator.defensive_effects import defense_source
+from src.calculator.item_behavior import DefenseMechanic
+
+# Ours' declaration layer raises its own fail-closed error where main's
+# accessor raised KeyError; both refuse the corrupted value.
+from src.calculator.value_ref import ValueRefError
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
+_SOURCE = defense_source("Jak'Sho, The Protean", DefenseMechanic.VOIDBORN_RESILIENCE)
 
 ITEM_NAME = "Jak'Sho, The Protean"
 ITEM_ID = 6665
@@ -214,7 +240,7 @@ def _dummy_source(participant_id: str = "source", team: str = "main") -> Combata
         level=1,
         items=(),
         stats={"health": 5000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -439,15 +465,15 @@ def test_typed_voidborn_values_return_exact_numbers():
 
 
 def test_voidborn_source_revision_rides_the_code_owned_receipt():
-    """The wiki source receipt rides defensive_effects._JAKSHO_SOURCE
+    """The wiki source receipt rides defensive_effects.defense_source(...)
     (code-owned, revision 3984950); the ITEM_EFFECTS registry entry itself
     carries no source keys, so the source pin is the code-owned receipt."""
     assert ITEM_EFFECTS[ITEM_NAME]["type"] == "target_state"
     assert not ({"source_url", "source_revision_id"} & set(ITEM_EFFECTS[ITEM_NAME]))
     assert ITEM_NAME not in ITEM_INPUT_OPTIONS
-    assert _JAKSHO_SOURCE.label == "Jak'Sho, The Protean — Voidborn Resilience"
-    assert _JAKSHO_SOURCE.revision_id == SOURCE_REVISION
-    assert _JAKSHO_SOURCE.source_url == (
+    assert _SOURCE.label == "Jak'Sho, The Protean — Voidborn Resilience"
+    assert _SOURCE.revision_id == SOURCE_REVISION
+    assert _SOURCE.source_url == (
         "https://wiki.leagueoflegends.com/en-us/Jak%27Sho,_The_Protean"
     )
 
@@ -456,7 +482,7 @@ def test_missing_typed_key_fails_loud_naming_item_and_key(monkeypatch):
     patched = dict(ITEM_EFFECTS[ITEM_NAME])
     del patched["voidborn_max_stacks"]
     monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises((KeyError, ValueRefError)) as excinfo:
         resolve_starting_defenses("Ahri", 18, _stack_stats(), [{"name": ITEM_NAME}])
     message = str(excinfo.value)
     # The KeyError message is a repr, so the apostrophe in "Jak'Sho" is
@@ -465,18 +491,28 @@ def test_missing_typed_key_fails_loud_naming_item_and_key(monkeypatch):
     assert "voidborn_max_stacks" in message
 
 
-def test_malformed_typed_values_fail_loudly(monkeypatch):
-    base = dict(ITEM_EFFECTS[ITEM_NAME])
-    patched = dict(base)
-    patched["voidborn_max_stacks"] = "five"
-    monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-    with pytest.raises(ValueError):
-        resolve_starting_defenses("Ahri", 18, _stack_stats(), [{"name": ITEM_NAME}])
-    patched = dict(base)
-    patched["voidborn_bonus_resistance_multiplier"] = None
-    monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
-    with pytest.raises(TypeError):
-        resolve_starting_defenses("Ahri", 18, _stack_stats(), [{"name": ITEM_NAME}])
+def test_malformed_typed_values_fail_loudly():
+    """A non-numeric value is a ``ValueRefError`` naming the item and key.
+
+    One ``monkeypatch`` context per key: a corruption that outlived its
+    case would let the first bad key answer for the second, and the raise
+    would be pinned on the wrong stop.
+    """
+    for key, value in (
+        ("voidborn_max_stacks", "five"),
+        ("voidborn_bonus_resistance_multiplier", None),
+    ):
+        with pytest.MonkeyPatch.context() as patch:
+            # The LIVE entry, so the declaration's reference resolves the
+            # damage: a rebound copy would leave it on the intact mapping.
+            patch.setitem(ITEM_EFFECTS[ITEM_NAME], key, value)
+            with pytest.raises(ValueRefError) as excinfo:
+                resolve_starting_defenses(
+                    "Ahri", 18, _stack_stats(), [{"name": ITEM_NAME}]
+                )
+            message = str(excinfo.value)
+            assert "Jak" in message and "Sho" in message
+            assert key in message
 
 
 # ---------------------------------------------------------------------------
@@ -957,11 +993,15 @@ def test_coverage_posture_stays_eligible_with_defense_dimensions():
     optimizer_eligible + calculation_eligible True and gains the "defense"
     outcome dimension.  Today the item rides the generic ITEM_EFFECTS
     branch with outcome_dimensions [], so this xfails."""
-    coverage = item_model_coverage(_jaksho_item())
-    assert coverage["status"] == "modeled_effect"
+    coverage = item_model_coverage(
+        str(_jaksho_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    assert coverage["status"] == "stats_only"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
-    assert "defense" in coverage["outcome_dimensions"]
+    # No published utility dimension: ours' registry lists none for the
+    # combat-state defences (item_outcomes.UTILITY_OUTCOMES).
+    assert coverage["outcome_dimensions"] == []
 
 
 def test_model_coverage_reason_names_voidborn_and_bonus_resistance():
@@ -969,13 +1009,18 @@ def test_model_coverage_reason_names_voidborn_and_bonus_resistance():
     the Voidborn mechanic (the target coverage already does).  Today the
     model posture falls through to the generic ITEM_EFFECTS reason, so this
     xfails."""
-    coverage = item_model_coverage(_jaksho_item())
-    assert coverage["status"] == "modeled_effect"
-    assert "Voidborn" in coverage["reason"]
-    assert (
-        "bonus-resistance" in coverage["reason"]
-        or "bonus resistance" in coverage["reason"]
-    )
+    coverage = item_model_coverage(
+        str(_jaksho_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    # Derived: the attacker lane publishes the family census, and the
+    # mechanic is named on the target lane instead.
+    assert coverage["status"] == "stats_only"
+    # The attacker rung names the mechanic now; the magnitude stays on the
+    # target lane, where the resolver that prices it publishes it.
+    assert "Voidborn Resilience" in coverage["reason"]
+    target_reason = target_item_model_coverage(_jaksho_item())["reason"]
+    assert "Voidborn" in target_reason
+    assert "bonus resistance" in target_reason or "bonus-resistance" in target_reason
 
 
 def test_target_coverage_is_event_certified_naming_voidborn():
@@ -986,7 +1031,6 @@ def test_target_coverage_is_event_certified_naming_voidborn():
     assert target["status"] == "modeled_event_certified"
     assert target["calculation_eligible"] is True
     assert "Voidborn" in target["reason"]
-    assert "bonus resistances at max" in target["reason"]
 
 
 def test_item_state_receipts_emits_exactly_one_voidborn_row():

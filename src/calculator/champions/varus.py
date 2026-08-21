@@ -19,29 +19,24 @@ Why each slot is non-generic:
   0-50% charge ramp is the wiki prose).
 - E (Hail of Arrows) is physical damage ("Physical Damage" — the packet's
   magic label was wrong; in-game and the JSON both say physical).
-- P (Living Vengeance) is an on-takedown attack-speed buff: no enemy
-  damage, emitted as a zero-damage row.
+- P (Living Vengeance) is an on-takedown steroid: +30% bonus attack
+  speed and, derived from the resulting TOTAL bonus attack speed, 33% of
+  it again as both attack damage and ability power.  All three numbers
+  are cached prose (the passive has no leveling row), and the whole
+  thing is gated on ``p_champion_takedown`` because a takedown is not
+  implied by a damage package.
 - R (Chain of Corruption) reads "Magic Damage" and attaches the sourced
   2-second root to the primary hit; secondary chain spread stays outside the
   single-target model.
-
-Roadmap session 4 batch H (2026-08-21): P (Living Vengeance) has no
-enemy-damage formula: its one cached effect is a self on-takedown
-attack-speed buff, no enemy damage anywhere in the entry. The pinned
-reviewed packet (static/reviewed-packets.json) independently declares P
-``kind: "no_damage"`` with a sourced reason, and P is already wired below
-(``_living_vengeance``) to a hand-authored zero-``total_raw``, no-``parts``
-entry — MODULE_COVERAGE was simply stale, still reading "out_of_scope"
-for an already-covered slot (the Malzahar/Nasus precedent, roadmap
-session 4 batch D; the Ryze/Senna/Swain/Tahm Kench precedent, batch G).
-Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import missing_hp_fraction
 from .slotlib import (
+    STEROID_ZERO,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -58,12 +53,6 @@ from .source_receipts import load_champion_sources
 # Blight stacks to 3 on basic attacks; abilities detonate all stacks.
 _BLIGHT_MAX_STACKS = 3
 _BLIGHT_DETONATION_ATTR = "Bonus Magic Damage per Stack"
-
-
-def _missing_hp_fraction(ctx: SlotCtx) -> float:
-    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.options.get("target_missing_hp_pct", 50))
-    return min(max(pct, 0.0), 100.0) / 100.0
 
 
 def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
@@ -87,8 +76,8 @@ def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
     # starts at full health), so the percent is read flat and priced
     # against the shared target_missing_hp_pct option.
     percent = extract_value(ability, "Active Maximum Magic Damage", rank)
-    missing_health = float(ctx.target.get("target_max_health", 0.0) or 0.0) * (
-        _missing_hp_fraction(ctx)
+    missing_health = float(ctx.target_stat("target_max_health") or 0.0) * (
+        missing_hp_fraction(ctx)
     )
     return percent / 100.0 * missing_health
 
@@ -129,7 +118,7 @@ def _charge_fraction(ctx: SlotCtx) -> float:
     them; the detonation and W-active empower keep the module's existing
     reviewed rows (test-locked) — see ASSUMPTIONS.
     """
-    fraction = float(ctx.options.get("q_charge_fraction", 1.0))
+    fraction = float(ctx.option("q_charge_fraction"))
     return min(max(fraction, 0.0), 1.0)
 
 
@@ -174,7 +163,7 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     if detonation > 0 or empower > 0:
         stacks = min(
             _BLIGHT_MAX_STACKS,
-            max(0, int(ctx.options.get("blight_stacks", _BLIGHT_MAX_STACKS))),
+            max(0, int(ctx.option("blight_stacks"))),
         )
         parts = []
         detail = []
@@ -185,7 +174,7 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
             parts.append(DamagePart("magic", empower, time_offset=0.0))
             empower_detail = (
                 f"W-active empower: {empower:g} magic "
-                f"({_missing_hp_fraction(ctx) * 100:g}% missing health "
+                f"({missing_hp_fraction(ctx) * 100:g}% missing health "
                 f"x Active Maximum Magic Damage {rank} points in W)"
             )
             detail.append(empower_detail)
@@ -230,20 +219,63 @@ def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# HARDCODED: verify on patch updates — Living Vengeance carries no
+# leveling row at all; every number is cached P prose.  Only the
+# champion-takedown branch is priced, because it is the one whose
+# magnitudes the cache states without level breakpoints: "30% bonus
+# attack speed as well as bonus attack damage and ability power equal to
+# 33% of his total bonus attack speed".  The unit-kill branch's
+# "10% / 15% / 20% (based on level)" names no breakpoint levels, so
+# pricing it would mean inventing them.
+_P_TAKEDOWN_ATTACK_SPEED = 30.0
+_P_TAKEDOWN_DERIVED_RATIO = 0.33
+
+
 def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: takedown attack-speed buff — no enemy damage."""
+    """P: the takedown-empowered attack speed, and the AD/AP it derives."""
     ability = ctx.ability()
     if ability is None:
         return None
-    return {
-        "name": ability.get("name", "Living Vengeance"),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": ("On-takedown attack speed: self buff only, no enemy damage."),
+
+    armed = bool(ctx.option("p_champion_takedown"))
+    bonus_as = _P_TAKEDOWN_ATTACK_SPEED if armed else 0.0
+    total_bonus_as = ctx.stat("bonus_attack_speed") + bonus_as
+    derived = _P_TAKEDOWN_DERIVED_RATIO * total_bonus_as if armed else 0.0
+    if armed:
+        ctx.stats["bonus_attack_speed"] = total_bonus_as
+        ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + derived
+        ctx.stats["attack_damage"] = ctx.stat("attack_damage") + derived
+        ctx.stats["ability_power"] = ctx.stat("ability_power") + derived
+    entry = damage_entry(
+        ability.get("name", "Living Vengeance"),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {
+        "bonus_attack_speed": bonus_as,
+        "bonus_attack_damage": derived,
+        "ability_power": derived,
     }
+    entry["detail"] = (
+        f"champion takedown: +{bonus_as:g}% bonus attack speed, and "
+        f"+{derived:.2f} attack damage and ability power "
+        f"({_P_TAKEDOWN_DERIVED_RATIO * 100:g}% of the resulting "
+        f"{total_bonus_as:g}% total bonus attack speed)"
+        if armed
+        else (
+            "not armed: Living Vengeance needs a kill or takedown, which "
+            "a damage package does not imply.  The unit-kill branch "
+            "(10%/15%/20% by level) is unpriced either way — the cache "
+            "states no level breakpoints for it"
+        )
+    )
+    return entry
+
+
+_living_vengeance.phase = BUFF
 
 
 # HARDCODED: verify on patch updates — wiki prose in the cached E JSON
@@ -265,6 +297,19 @@ OPTIONS: list[dict[str, Any]] = [
         ),
     },
     {
+        "key": "q_charge_fraction",
+        "type": "float",
+        "default": 1.0,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.25,
+        "label": (
+            "Piercing Arrow channel charge (1.0 = fully charged; the "
+            "arrow interpolates between the sourced Minimum and Maximum "
+            "damage rows)"
+        ),
+    },
+    {
         "key": "w_active_empower",
         "type": "bool",
         "default": True,
@@ -280,6 +325,20 @@ OPTIONS: list[dict[str, Any]] = [
         "min": 0,
         "max": 100,
         "label": "Target missing health %",
+    },
+    {
+        "key": "p_champion_takedown",
+        "type": "bool",
+        "default": False,
+        "label": "Living Vengeance is empowered by a champion takedown",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "A takedown outside the modeled rotation arms P's own "
+                "buff — self-state, with no cross-slot cast edge."
+            ),
+        },
     },
 ]
 
@@ -303,8 +362,13 @@ ASSUMPTIONS = [
     "arrow",
     "Q detonation requires the Q cast; with blight_stacks=0 the option "
     "models a fresh target and no detonation fires",
-    "P (Living Vengeance) is a takedown attack-speed buff — no enemy "
-    "damage, emitted as a zero-damage row",
+    "P (Living Vengeance) prices its champion-takedown branch when "
+    "p_champion_takedown is on (default off, because a takedown is not "
+    "implied by a damage package): +30% bonus attack speed, and attack "
+    "damage and ability power each equal to 33% of the resulting total "
+    "bonus attack speed — cached P prose, since the passive carries no "
+    "leveling row.  Its unit-kill branch (10%/15%/20% by level) is not "
+    "priced: the cache names no level breakpoints for it",
     "E is physical damage (JSON and in-game); the reviewed packet's "
     "magic label was a parser error, corrected here",
     "E's desecrated ground applies Grievous Wounds for 3 seconds (wiki "
@@ -312,50 +376,42 @@ ASSUMPTIONS = [
     "patch-wide 40% window",
     "R's primary-target root is a sourced 2-second action lock; secondary "
     "chain spread and Q's self-slow are outside the single-target model",
-    "P (Living Vengeance) has no enemy-damage formula: the on-takedown "
-    "attack-speed buff is self-directed only (confirmed by the pinned "
-    "reviewed packet's kind='no_damage' declaration for P). P is a cast "
-    "slot in this module (already wired to a hand-authored zero-damage "
-    "entry, _living_vengeance), so MODULE_COVERAGE reflects a sourced "
-    "no-damage classification rather than an unmodeled gap (no_damage, "
-    "not out_of_scope).",
+    "P (Living Vengeance) deals no enemy damage — the pinned reviewed "
+    "packet declares it kind='no_damage' — so the slot's priced row is "
+    "the self steroid it grants (a zero-damage stat buff), not a hit.",
 ]
-
-
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
 
 
 SLOTS = {
     "Q": _piercing_arrow,
     "W": _blighted_quiver,
-    "E": _certified_single_hit(
-        simple_damage(attr="Physical Damage", dmg_type="physical")
+    "E": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
     ),
-    "R": _certified_single_hit(
-        with_control(
-            simple_damage(attr="Magic Damage", dmg_type="magic"),
-            kind="root",
-            duration_attr="Root Duration",
-        )
+    # The root is sourced off the cached "Root Duration" row rather than
+    # only declared, so the part carries its own duration and atom.
+    "R": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="root",
+        duration_attr="Root Duration",
     ),
     "P": _living_vengeance,
 }
 
-parse_abilities = build_parser(SLOTS, "Varus")
+# Reviewed crowd control, read from the cached kit.  Q (Piercing Arrow)
+# "deals physical damage to enemies hit" — the 20% slow in its text is on
+# Varus himself while he charges, not on the target.  E (Hail of Arrows)
+# lands, then "the area then becomes desecrated for 4 seconds, slowing
+# enemies within".  R (Chain of Corruption) infects the first champion
+# hit, "dealing magic damage and rooting them for 2 seconds".  W is an
+# on-hit Blight rider with no cast damage and P is a kill-triggered stat
+# buff.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "root"}
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+parse_abilities = build_parser(SLOTS, "Varus", cc_kinds=MODULE_CC)
+
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 SOURCES = load_champion_sources("Varus")

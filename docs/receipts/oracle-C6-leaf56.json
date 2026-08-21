@@ -1,0 +1,83 @@
+{
+  "receipt_id": "oracle-C6-leaf56",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/cast_order[3]",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_respected": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never opened. The scenario definition itself (scripts/) was therefore NOT consulted; the derivation below reconstructs the correct ordering from cached source data alone."
+  },
+  "independent_computation": {
+    "step_1_scenario_parameter": {
+      "claim": "The '120' in the scenario id is Syndra's Splinters of Wrath stack count at its cap, i.e. every Transcendent threshold is open.",
+      "support": [
+        "data/champions.json Syndra P Transcendent: 'Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.'",
+        "data/champions.json Syndra P: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+        "data/champion-audit/batch-e9-1.json Syndra: 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)'"
+      ]
+    },
+    "step_2_cast_count": {
+      "claim": "At 120 splinters the rotation has FIVE casts, not four: the second Dark Sphere charge (modelled as the synthetic Q2 slot) is live.",
+      "support": [
+        "data/champions.json Syndra Q Dark Sphere: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+        "data/champion-audit/batch-6.json Syndra module_slots.modeled = [P, Q, Q2, W, E, R]; note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; notable_atoms includes 'ammo (Q 2nd charge at 40 splinters)'; gap_summary 'splinters option (0-120) gates Q2 second charge'.",
+        "120 >= 40, so the Q2 gate is open in this scenario: any correct cast_order for it contains Q, Q2, W, E and R."
+      ],
+      "consequence": "A four-entry order (the documented DEFAULT fallback Q,W,E,R) puts R at index 3. A five-entry order with R last puts E at index 3 and R at index 4. The leaf change R -> E is exactly the signature of the missing second Q charge being restored / R being pushed to the tail."
+    },
+    "step_3_R_is_last": {
+      "claim": "R belongs at the END of the order on two independent grounds, so it cannot occupy index 3 of a five-cast rotation.",
+      "ground_a_setup_consume_edge": {
+        "reasoning": "R is a pure CONSUMER of live Dark Spheres, so every sphere-producing cast (Q, Q2, W) must precede it; its damage is a per-sphere sum bounded by the spheres on the field.",
+        "quotes": [
+          "R Unleashed Power (data/champions.json): 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.'",
+          "R leveling rows: 'Magic Damage per Sphere' 80/120/160 (+20% AP); 'Minimum Magic Damage' 240/360/480 (+60% AP) = 3 spheres; 'Maximum Magic Damage' 560/840/1120 (+140% AP) = 7 spheres.",
+          "Q Dark Sphere: 'The Dark Sphere then remains on the ground for 6 seconds.'  W Force of Will: 'If a Dark Sphere is grabbed, its duration is refreshed.'",
+          "docs/math-foundations.md 1.1: the shared-timeline superposition is 'resolved greedily by cast order' — ordering is the free parameter, so the setup-before-consume edge decides it."
+        ]
+      },
+      "ground_b_dps_rank": {
+        "reasoning": "Ranking the damaging casts by raw damage / effective cooldown (the sustained reward-rate of docs/math-foundations.md 1.1, E[cycle damage]/E[cycle time]) puts R strictly last at any realistic AP.",
+        "inputs_from_data_champions_json": {
+          "Q_rank5": "230 (+70% AP), cooldown 7 s, further reduced by R's passive 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' = 10/20/30 -> at R3: 7 x 100/130 = 5.38 s",
+          "W_rank5": "190 (+65% AP) magic, plus the 60-splinter 'Bonus True Damage' row -> 'Total Mixed Damage' 212.8 (+~76.6% AP), cooldown 8 s",
+          "E_rank5": "200 (+60% AP), cooldown 15 s",
+          "R_rank3": "480 (+60% AP) at the 3-sphere minimum, 1120 (+140% AP) at the 7-sphere maximum, cooldown 80 s"
+        },
+        "results_raw_per_second": {
+          "AP_0": {"Q": 42.71, "W": 26.60, "E": 13.33, "R_max7": 14.00, "R_min3": 6.00},
+          "AP_100": {"Q": 55.71, "W": 36.17, "E": 17.33, "R_max7": 15.75, "R_min3": 6.75},
+          "AP_300": {"Q": 81.71, "W": 55.33, "E": 25.33, "R_max7": 19.25, "R_min3": 8.25},
+          "AP_600": {"Q": 120.71, "W": 84.05, "E": 37.33, "R_max7": 24.50, "R_min3": 10.50}
+        },
+        "crossover": "E overtakes even a full 7-sphere R above 29.6 AP: 200/15 + 0.60A/15 > 1120/80 + 1.40A/80  <=>  A > 29.63. Against the 3-sphere minimum R is last at every AP. A Syndra scenario with 120 splinters (the +15% AP capstone is only meaningful with AP) is far above that threshold, so the rank is Q > W > E > R.",
+        "note": "The single-cast convention for ultimates is documented in docs/math-foundations.md line 465: '...; R single-cast', so R contributes one cast at the tail rather than recasting."
+      }
+    },
+    "step_4_conclusion": {
+      "correct_order": "Q, Q2, W, E, R  (equivalently any five-cast order that keeps the two sphere-producing Q casts and W ahead of the consumers and R at the tail, e.g. Q, W, Q2, E, R) ",
+      "index_3": "E",
+      "why_old_was_wrong": "R at index 3 is the four-entry DEFAULT fallback order Q,W,E,R — it drops the second Dark Sphere charge that 120 splinters unlocks, and it terminates the rotation on the ability that must be last (R consumes the live spheres the earlier casts create, and it is the lowest reward-rate cast by a factor of ~2 against E at any AP above ~30)."
+    }
+  },
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.P Transcendent (120-stack cap; 'At 120 Splinters of Wrath ... increasing her ability power by 15%')",
+    "data/champions.json -> Syndra.abilities.Q Dark Sphere (90/125/160/195/230 +70% AP; cooldown 7; 6 s sphere lifetime; 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2')",
+    "data/champions.json -> Syndra.abilities.W Force of Will (70..190 +65% AP; cooldown 12/11/10/9/8; 60-splinter Bonus True Damage row; 'If a Dark Sphere is grabbed, its duration is refreshed')",
+    "data/champions.json -> Syndra.abilities.E Scatter the Weak (60..200 +60% AP; cooldown 15; cast time 0.25)",
+    "data/champions.json -> Syndra.abilities.R Unleashed Power (per-sphere 80/120/160 +20% AP; min 240/360/480 +60% AP; max 560/840/1120 +140% AP; cooldown 120/100/80; passive Q ability haste 10/20/30; 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones')",
+    "data/champion-audit/batch-6.json -> Syndra (module slots incl. synthetic Q2; 'ammo (Q 2nd charge at 40 splinters)'; 'splinters option (0-120) gates Q2 second charge')",
+    "data/champion-audit/batch-e9-1.json -> Syndra ('splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage')",
+    "docs/math-foundations.md line 66 ('the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order')",
+    "docs/math-foundations.md line 465 (ability rotation casts row: 'cast starts within window ... R single-cast')",
+    "docs/math-foundations.md 1.1 renewal-reward ('The expected-damage-per-second of a rotation is the reward rate E[cycle damage]/E[cycle time]')"
+  ],
+  "residual_uncertainty": [
+    "The scenario definition lives outside the permitted evidence tree, so the exact five-entry sequence (Q,Q2,W,E,R vs Q,W,Q2,E,R) and any explicitly supplied custom order could not be read. Both admissible five-cast orderings, and every ordering consistent with the setup/consume edge and the reward-rate rank, place E at index 3 and R at index 4 — the verdict does not depend on which of them the engine emits.",
+    "The engine exposes R's sphere count as a user option ('R reads Magic Damage per Sphere x user-set sphere count', data/champion-audit/batch-6.json), so R's in-engine damage does not itself vary with the order; the R-last conclusion is carried independently by the reward-rate rank above, which holds for the 3-sphere minimum at every AP."
+  ]
+}

@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -26,7 +27,7 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    recasts = min(max(int(ctx.options.get("q_recasts", 3)), 0), 3)
+    recasts = min(max(int(ctx.option("q_recasts")), 0), 3)
     marked = bool(ctx.options.get("q_marked_target", True))
     dart = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     spike = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -113,6 +114,8 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    # One whip (or one dash landing on the target), no sub-cast phase.
+    entry["event_order_certified"] = "single_hit"
     entry["target_max_health_sensitive"] = True
     # Wiki: Whiplash applies on-hit effects (empowered variant only to the
     # primary target — the module models the primary hit).
@@ -156,7 +159,13 @@ SLOTS = {
     "E": _whiplash,
     "R": _last_caress,
 }
-parse_abilities = build_parser(SLOTS, "Evelynn")
+# Cached kit review.  Q's dart and its recast spikes, E's whip, and R's
+# cone all deal damage and apply nothing else.  W is absent rather than
+# "none": Allure's expunge does slow and charm, but W emits no damage row,
+# so the answer would have no event to ride.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Evelynn", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -212,37 +221,4 @@ ASSUMPTIONS = [
     "target-health threshold.",
 ]
 
-SOURCES = [
-    source_row(
-        "Evelynn parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Evelynn",
-        4034409,
-        "2026-06-22T16:08:34Z",
-    ),
-    source_row(
-        "Evelynn Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/Q",
-        2863936,
-        "2019-11-03T19:56:53Z",
-    ),
-    source_row(
-        "Evelynn W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/W",
-        2864231,
-        "2019-11-03T20:09:40Z",
-    ),
-    source_row(
-        "Evelynn E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/E",
-        2864377,
-        "2019-11-03T20:12:10Z",
-    ),
-    source_row(
-        "Evelynn R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Evelynn/R",
-        2864523,
-        "2019-11-03T20:15:35Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Evelynn")

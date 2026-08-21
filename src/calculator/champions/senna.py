@@ -20,24 +20,20 @@ E3 additions over the CP10.7 packet module:
 - The remaining slots keep their reviewed packet reads; Q/W/R scale off
   the Mist-buffed AD because P runs first in the BUFF phase.
 
-Roadmap session 4 batch G (2026-08-21): E (Curse of the Black Mist) is a
-camouflage/movement-speed aura, not enemy damage: all five cached effects
-(data/champions.json E) are self/ally utility prose — the mist's
-camouflage duration, allied Wraith Form, obscured-vision rules, the
-20%-plus-5%-per-100-AP bonus movement speed, and the free-cast-during-cast
-note — with zero enemy-damage leveling anywhere in the entry. The pinned
-reviewed packet (static/reviewed-packets.json) independently declares E
-``kind: "no_damage"`` with a sourced reason, and E is not one of the four
-slots this module reassigns (only P, P2, R, W, Q are overridden below), so
-it already emits the packet's sourced zero-damage row today — MODULE_COVERAGE
-was simply stale, still reading "out_of_scope" for an already-covered slot
-(the Malzahar/Nasus precedent, roadmap session 4 batch D). Reclassified to
-"no_damage"; zero fight-computation change.
+Coverage: E (Curse of the Black Mist) wraps Senna and her team in
+camouflage — all five cached effects are self/ally utility prose
+(camouflage duration, allied Wraith Form, obscured vision, bonus movement
+speed) with no enemy-damage leveling. The pinned reviewed packet
+(``static/reviewed-packets.json``) declares E ``kind: "no_damage"``, and
+this module does not reassign E, so the slot is emitted as a sourced zero
+row rather than left unmodeled.
 """
 
+from functools import partial
 from typing import Any
 
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -46,13 +42,10 @@ from .slotlib import (
     with_control,
     with_item_on_hits,
 )
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Senna", PACKET_SHA256)
-)
-PACKET_SPEC = _packet_slots.packet_spec
 
 # HARDCODED: verify on patch updates — Mist's per-stack values (0.75 AD,
 # 20 range and 10% crit per 20 stacks) are wiki prose; the JSON only
@@ -168,7 +161,7 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    stacks = int(ctx.options.get("senna_mist_stacks", 40))
+    stacks = int(ctx.option("senna_mist_stacks"))
     stacks = min(max(stacks, 0), 300)
     bonus_ad = _MIST_AD_PER_STACK * stacks
     thresholds = stacks // _MIST_STACKS_PER_THRESHOLD
@@ -176,21 +169,19 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_range = _MIST_RANGE_PER_THRESHOLD * thresholds
 
     # BUFF phase guarantee: Q/W/R parse against the Mist-buffed AD.
-    ctx.stats["bonus_attack_damage"] = (
-        ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("base_attack_damage") + ctx.stat(
+        "bonus_attack_damage"
     )
-    ctx.stats["attack_damage"] = ctx.stats.get(
-        "base_attack_damage", 0.0
-    ) + ctx.stats.get("bonus_attack_damage", 0.0)
     ctx.stats["critical_strike_chance"] = (
-        ctx.stats.get("critical_strike_chance", 0.0) + bonus_crit
+        ctx.stat("critical_strike_chance") + bonus_crit
     )
 
     # Weakened Soul: bonus physical damage = level-scaled % of the
     # target's current health on the consuming hit. Max-health proxy
     # (see module docstring).
     percent = extract_value(ability, "Current Health Damage", ctx.level)
-    max_health = ctx.target.get("target_max_health", 0.0)
+    max_health = ctx.target_stat("target_max_health")
     per_proc = percent / 100.0 * max_health
 
     return {
@@ -234,7 +225,7 @@ def _relic_cannon(ctx: SlotCtx) -> dict[str, Any] | None:
     attack damage — the Mist-buffed total (P runs first in the BUFF
     phase; item AD included by the pipeline).
     """
-    per_hit = _RELIC_CANNON_AD_RATIO * float(ctx.stats.get("attack_damage", 0.0))
+    per_hit = _RELIC_CANNON_AD_RATIO * ctx.stat("attack_damage")
     return {
         "name": "Absolution",
         "rank": ctx.level,
@@ -256,7 +247,7 @@ def _relic_cannon(ctx: SlotCtx) -> dict[str, Any] | None:
 _relic_cannon.phase = BUFF
 
 
-def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
+def _dawning_shadow(packet_r):
     """R: the reviewed physical hit plus Senna's own shield payload.
 
     The light wave shields Senna herself as well as allies; the self
@@ -266,47 +257,76 @@ def _dawning_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
     selected teammates (it cannot price the Mist term), so the two
     halves do not overlap on Senna herself.
     """
-    entry = _packet_r(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    ability = ctx.ability()
-    shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
-    stacks = int(ctx.options.get("senna_mist_stacks", 40))
-    shield += _DAWNING_SHADOW_MIST_RATIO * stacks
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_DAWNING_SHADOW_SHIELD_DURATION_SECONDS,
-        source=entry.get("name", "Dawning Shadow"),
-        detail=(
-            f"R also shields Senna for {shield:g} for "
-            f"{_DAWNING_SHADOW_SHIELD_DURATION_SECONDS:g}s "
-            f"(flat + 50% AP + 150% of {stacks} Mist stacks)"
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_r(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        ability = ctx.ability()
+        shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
+        stacks = int(ctx.option("senna_mist_stacks"))
+        shield += _DAWNING_SHADOW_MIST_RATIO * stacks
+        entry["event_order_certified"] = "single_hit"
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=_DAWNING_SHADOW_SHIELD_DURATION_SECONDS,
+            source=entry.get("name", "Dawning Shadow"),
+            detail=(
+                f"R also shields Senna for {shield:g} for "
+                f"{_DAWNING_SHADOW_SHIELD_DURATION_SECONDS:g}s "
+                f"(flat + 50% AP + 150% of {stacks} Mist stacks)"
+            ),
+        )
+
+    return parse
+
+
+# Cached kit review.  Q's shadow ray "deals physical damage to enemies hit
+# and slows them by 15% (+ 15% per 100 bonus AD) (+ 7% per 100 AP)".  W's
+# globule "deals physical damage to the first enemy hit and attaches to
+# them", then "the black mist spreads out of the target, rooting them and
+# surrounding enemies".  R's shadow wave only "deals physical damage to
+# enemy champions hit and reveals them"; the light wave shields allies.  E
+# (camouflage) deals no damage, and P is a stat/on-hit innate whose mark
+# consume rides the auto stream, so neither carries an ability event.
+MODULE_CC = {"Q": "slow", "W": "root", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Senna",
+    PACKET_SHA256,
+    # Piercing Darkness' shadow ray and Last Embrace's globule each
+    # deal their packet once, like Dawning Shadow already did — the
+    # boundary claim that carries MODULE_CC's reviewed answers into
+    # the event ledger.
+    single_hit_slots=frozenset({"Q", "W"}),
+    slot_parsers={
+        "P": _absolution,
+        # The Relic Cannon rider rides a SECOND BUFF-phase slot (P2) so
+        # the engine's existing ability-on-hit loop prices it with its
+        # own row — the P slot already owns the Weakened Soul payload.
+        # The packet compiles no P2, so this appends one; both run in the
+        # BUFF phase, P first, which is what makes P2's total AD the
+        # Mist-buffed one.
+        "P2": _relic_cannon,
+    },
+    slot_wrappers={
+        "R": _dawning_shadow,
+        "Q": partial(
+            with_item_on_hits,
+            effectiveness=1.0,
+            hits=1,
+            triggers=("on_hit", "on_attack"),
         ),
-    )
-
-
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _absolution
-# P4: the Relic Cannon rider rides a SECOND BUFF-phase slot (P2) so the
-# engine's existing ability-on-hit loop prices it with its own row —
-# zero engine changes, other champions untouched.
-SLOTS["P2"] = _relic_cannon
-_packet_r = SLOTS["R"]
-SLOTS["R"] = _dawning_shadow
-SLOTS["W"] = with_control(
-    SLOTS["W"],
-    kind="root",
-    duration_attr="Root Duration",
+        # The root's duration is sourced ("Root Duration"), so W states
+        # the interval rather than only the kind MODULE_CC declares.
+        "W": partial(with_control, kind="root", duration_attr="Root Duration"),
+    },
+    cc_kinds=MODULE_CC,
 )
-SLOTS["Q"] = with_item_on_hits(
-    SLOTS["Q"], effectiveness=1.0, hits=1, triggers=("on_hit", "on_attack")
-)
-parse_abilities = build_parser(SLOTS, "Senna")
 
-OPTIONS = list(_packet_options) + [
+OPTIONS = list(OPTIONS) + [
     {
         "key": "senna_mist_stacks",
         "type": "int",
@@ -318,7 +338,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Mist stack count is user-set (default 40 — the expected mid-game "
     "state); Wraith-farming and mark-consume Mist generation are not "
     "simulated",
@@ -356,17 +376,13 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "rather than an unmodeled gap (no_damage, not out_of_scope).",
 ]
 
-SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -380,17 +396,14 @@ def derive_self_healing(
     q = _healing._ability(champion_data, "Q")
     q_rank = _healing._rank(ability_damages, "Q")
     q_heal = _healing.extract_named(q, "Healing", q_rank, champion_stats)
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "Q"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
+        event = payment.event
         _healing._heal_from_damage(
             healing, event, q_heal, "Piercing Darkness", link_to_damage=False
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Senna", derive_self_healing)

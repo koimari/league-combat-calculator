@@ -1,0 +1,112 @@
+{
+  "receipt_id": "oracle-C6-leaf40",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[5]/source",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "question": "Which ability owns the 6th (index 5) damage event of a Syndra rotation at 120 Splinters of Wrath?",
+    "method": "Enumerate the damage instances Syndra's kit emits at 120 splinters, in cast order, straight from the cached wiki text in data/champions.json. The scenario's '120' fixes the splinter state, which is what fixes the size of the pre-ultimate event prefix.",
+
+    "step_1_damage_instance_inventory_at_120_splinters": [
+      {
+        "slot": "Q (Dark Sphere)",
+        "instances": 2,
+        "why": "Base Q is one magic-damage instance (90/125/160/195/230 + 70% AP). Wiki Q: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' At 120 splinters the 40-splinter gate is open, so a rotation casts two charges -> 2 damage instances. Corroborated by data/champion-audit/batch-6.json, which lists Syndra's modeled slots as ['P','Q','Q2','W','E','R'] with 'ammo (Q 2nd charge at 40 splinters)' and 'splinters option (0-120) gates Q2 second charge'."
+      },
+      {
+        "slot": "W (Force of Will)",
+        "instances": 2,
+        "why": "Wiki W recast: 'dealing magic damage to them and nearby enemies once they land' (70/100/130/160/190 + 65% AP) -> one magic instance. Wiki W: 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage', carried as its own leveling row ('Bonus True Damage', distinct from 'Total Mixed Damage') -> a second, true-damage instance. At 120 splinters the 60-splinter gate is open."
+      },
+      {
+        "slot": "E (Scatter the Weak)",
+        "instances": 1,
+        "why": "Wiki E: 'deals magic damage to enemies hit' (60/95/130/165/200 + 60% AP). The sphere-knockback branch explicitly does NOT double-dip: 'dealt Scatter the Weak's damage if they were not damaged by the initial cast'. The 80-splinter Transcendent Bonus is scatter angle + 70% slow only, no added damage."
+      },
+      {
+        "slot": "P (Transcendent)",
+        "instances": 0,
+        "why": "Wiki P: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' A stat buff, not a damage instance (batch-6.json: '120-splinter +15% total AP capstone' listed under buff atoms)."
+      },
+      {
+        "slot": "R (Unleashed Power)",
+        "instances": "N, 3 <= N <= 7",
+        "why": "Wiki R: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.' The leveling rows arithmetically confirm per-sphere instancing: Minimum 240/360/480 (+60% AP) = 3 x per-sphere 80/120/160 (+20% AP); Maximum 560/840/1120 (+140% AP) = 7 x per-sphere. Wiki note 'Spell shield will only block the damage of a single sphere' confirms the spheres are separate damage instances, not one packet. The 100-splinter execute adds no damage instance (batch-6.json: 'execute (R at 100 splinters - not modeled)')."
+      }
+    ],
+
+    "step_2_prefix_arithmetic": {
+      "non_ultimate_damage_instances_at_120": 5,
+      "breakdown": "Q charge 1 (1) + Q charge 2 [40+ gate] (1) + W magic (1) + W bonus true [60+ gate] (1) + E (1) = 5",
+      "consequence": "For any cast order that finishes on the ultimate - the ordinary case, and the case for every reordering of the three basic abilities - the five basic-ability instances occupy indices 0..4 and R's first sphere lands exactly at index 5.",
+      "index_5_source": "R",
+      "index_5_value_formula": "per-sphere magic damage = 80/120/160 (by R rank) + 20% AP, mitigated by 100/(100+MR) (docs/math-foundations.md 2.1)"
+    },
+
+    "step_3_why_E_at_index_5_is_not_reachable": {
+      "argument": "E can occupy index 5 only if exactly five damage instances precede it. The instances available to precede E are Q (1), Q2 (1), W magic + W true (2) = 4, plus however many R spheres precede it. 4 + 0 = 4 (E before R) and 4 + N with N >= 3 gives >= 7. The only way to hit exactly 5 is 4 + 1, i.e. an ultimate that contributes a SINGLE damage instance - which contradicts the wiki's per-sphere instancing (min 3 spheres; 'each dealing magic damage upon hit'; spell shield blocks one sphere). Collapsing the barrage into one event would also break the per-event semantics docs/math-foundations.md relies on (shield clipping 'absorbed = min(shield, damage)' and 'Candidate revive authored after every damage event' both price per damage event).",
+      "residual_ways_E_could_legitimately_sit_at_index_5": "Only exotic orderings that fire the ultimate before E while withholding one or both basic abilities until after it (e.g. W -> R(3 spheres) -> E -> Q -> Q2, or Q -> Q2 -> R(3) -> E -> W). Both require R to grab zero live spheres despite Q spheres being on the ground ('The Dark Sphere then remains on the ground for 6 seconds'; W 'refreshes' a grabbed sphere's duration), so a Q-before-R order should yield N = 3 + (live spheres) = 5, not 3. Under the wiki's own sphere accounting these orderings do not produce E at index 5 either."
+    },
+
+    "conclusion": "At 120 Splinters of Wrath the pre-ultimate ledger is exactly five instances long, so damage_events[5] is Unleashed Power's first sphere. 'R' is the wiki-correct source; 'E' requires a one-instance ultimate, which the wiki text contradicts."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2. | leveling: Magic Damage 90/125/160/195/230 (+70% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land. | Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. | leveling: Magic Damage 70/100/130/160/190 (+65% AP); Bonus True Damage row separate from Total Mixed Damage row"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects",
+      "quote": "Active: Syndra propels a wave of force in a cone in the target direction that deals magic damage to enemies hit ... | Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast. | Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% ... | leveling: Magic Damage 60/95/130/165/200 (+60% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0]",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. | leveling: Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP) | notes: Spell shield will only block the damage of a single sphere."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R] ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters ...) is explicitly documented as not modeled."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "section 2.1 / section 5 table",
+      "quote": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py) ... | Revive (survival walk) | ... Candidate revive authored after every damage event ... | Shield absorption (survival walk) | clipping identity absorbed = min(shield, damage) ..."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "CONTEXT paragraph",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    }
+  ],
+
+  "caveats": [
+    "The scenario's own definition (its cast_order and any r_spheres / auto-attack settings) lives outside the permitted evidence tree - it is not present anywhere under data/ or in docs/math-foundations.md - so the cast order could not be read, only reasoned about.",
+    "The derivation is order-robust for every cast order that ends on the ultimate (R last): under all of those, at 120 splinters index 5 is R's first sphere and E cannot reach index 5.",
+    "The verdict would only flip if the scenario interleaves basic attacks into the same damage_events stream, or fires R before at least one basic ability AND models the barrage as fewer spheres than the wiki's 3-conjured floor plus live Q spheres. Both are ruled out by the wiki text as read here; neither could be confirmed or denied from the permitted tree.",
+    "'E' at index 5 is reachable only with a single-instance ultimate, which contradicts 'each dealing magic damage upon hit', the 3x/7x arithmetic of the Minimum/Maximum rows, and the spell-shield note."
+  ]
+}

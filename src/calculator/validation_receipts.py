@@ -124,22 +124,50 @@ def parse_observed_paste(text: str) -> dict[str, Any]:
     return {"tdd": total, "sources": sources}
 
 
+def displayed_prediction(
+    payload: Mapping[str, Any],
+) -> tuple[float, dict[str, float]]:
+    """The total and per-source figures app.js headlines for a result.
+
+    A roster fight is simulated and the UI shows the attacker's combat row
+    (the real enemies' stats and any death shape it); a solo fight shows the
+    rotation total and its per-slot breakdown.
+    """
+    combat = payload.get("combat")
+    rows = combat.get("breakdown", ()) if isinstance(combat, Mapping) else ()
+    for row in rows:
+        if isinstance(row, Mapping) and row.get("participant_id") == "main":
+            sources = {
+                str(source["name"]): validate_damage_number(
+                    source["total_damage"], f"predicted combat source {source['name']}"
+                )
+                for source in row.get("sources", ())
+                if source.get("total_damage")
+            }
+            total = validate_damage_number(
+                row["total_damage"], "predicted combat total_damage"
+            )
+            return total, sources
+    total = validate_damage_number(
+        payload.get("total_damage", 0.0), "predicted total_damage"
+    )
+    sources = {}
+    breakdown = payload.get("breakdown", {})
+    if isinstance(breakdown, Mapping):
+        for key, row in breakdown.items():
+            if isinstance(row, Mapping) and row.get("total_damage"):
+                sources[str(key)] = validate_damage_number(
+                    row["total_damage"], f"predicted breakdown.{key}"
+                )
+    return total, sources
+
+
 def evaluate_validation_receipt(
     predicted_payload: Mapping[str, Any],
     observed_input: Mapping[str, Any] | str | None,
 ) -> dict[str, Any]:
     """Return public comparison fields plus the unrounded persistence delta."""
-    predicted_tdd = validate_damage_number(
-        predicted_payload.get("total_damage", 0.0), "predicted total_damage"
-    )
-    predicted_sources: dict[str, float] = {}
-    breakdown = predicted_payload.get("breakdown", {})
-    if isinstance(breakdown, Mapping):
-        for key, row in breakdown.items():
-            if isinstance(row, Mapping) and row.get("total_damage"):
-                predicted_sources[str(key)] = validate_damage_number(
-                    row["total_damage"], f"predicted breakdown.{key}"
-                )
+    predicted_tdd, predicted_sources = displayed_prediction(predicted_payload)
     if observed_input is None:
         observed = {"tdd": predicted_tdd, "sources": predicted_sources}
     elif isinstance(observed_input, str):

@@ -2,10 +2,9 @@
 
 Absorption order and state mutation live here and nowhere else.  Every walk
 in the calculator drives :func:`absorb`: the two ordered damage walks in
-``damage.py``, the authoritative receipt walk in ``participant_timeline.py``,
-and both damage branches of its compiled score walk.  They differ only in
-where the :class:`ShieldPools` they mutate is stored -- a fight-local, a key
-in the participant state dict, or one slot of a per-participant list.
+``damage.py`` and the one survival kernel in ``survival/transitions.py``
+that both the receipt and compiled-score compositions run.  They differ
+only in where the :class:`ShieldPools` they mutate is stored.
 
 Adding a shield mechanic or changing absorption order is one edit here.
 """
@@ -68,6 +67,9 @@ class ThresholdHealth:
     the bonus health in full, and as much of the heal as the defender's
     missing health can take.  Protoplasm Harness sources the rest "over the
     same duration", which is a heal author's job, not absorption's.
+
+    ``expires_at`` is stamped when the Lifeline arms, so the temporary
+    maximum has a modeled end the way every timed shield does.
     """
 
     bonus: float
@@ -75,6 +77,8 @@ class ThresholdHealth:
     health_ratio: float
     duration: float
     triggered: bool = False
+    expires_at: float | None = None
+    expired: bool = False
 
 
 @dataclass(slots=True)
@@ -116,12 +120,16 @@ class Absorption(NamedTuple):
     threshold_shield_triggered: bool = False
     threshold_shield_expires_at: float | None = None
     threshold_health_triggered: bool = False
-    #: The full heal a threshold-health Lifeline started, as sourced.
+    #: The heal a threshold-health Lifeline started, after any live Grievous
+    #: window cut it -- what a heal author still owes the defender.
     threshold_health_heal: float = 0.0
     #: The part of it the arming instant could take -- the transition has to
     #: apply this itself, because it lands before the crossing damage does.
     #: Anything left over belongs to the caller's own heal author.
     threshold_health_healed: float = 0.0
+    #: What the live Grievous window took off the sourced heal, for the
+    #: caller's ``healing_reduced`` receipt.
+    threshold_health_reduced: float = 0.0
 
 
 def build_pools(
@@ -250,8 +258,53 @@ def expire_timed(pools: ShieldPools, event_time: float) -> float:
     return expired_total
 
 
+def expire_temporary_max_health(pools: ShieldPools, amount: float) -> float:
+    """Remove a temporary maximum-health grant; return what was removed.
+
+    The sourced rule, from the Wiki's Health page — whose worked example is
+    Protoplasm Harness itself: "A decrease in maximum health does not change
+    current health (unless it would exceed the new maximum health). ... When
+    the passive runs out, maximum health decreases by 200 from 1200 to 1000.
+    Current health remains at 700."  So a defender that spent more than the
+    grant keeps every point it has; only an overhang above the new maximum
+    is clamped away.
+
+    https://wiki.leagueoflegends.com/en-us/Health
+    Cached locally by ``python scripts/decompose_wiki.py --fetch "Health"``
+    (``data/wiki-raw/Health.wiki``; the sentence is the Overview section's).
+
+    This is the only implementation of that rule.  Both walks that carry a
+    temporary maximum call it: the survival walk's temporary-health ledger
+    (``survival.transitions.expire_temporary_health``) and the ordered damage
+    walk's Lifeline expiry (:func:`expire_threshold_health`).
+    """
+    removed = min(max(0.0, amount), pools.max_health)
+    pools.max_health -= removed
+    pools.health = min(pools.health, pools.max_health)
+    return removed
+
+
+def expire_threshold_health(pools: ShieldPools, event_time: float) -> float:
+    """Close an armed temporary-health Lifeline whose window has lapsed."""
+    health = pools.threshold_health
+    if (
+        health is None
+        or not health.triggered
+        or health.expired
+        or health.expires_at is None
+        or event_time < health.expires_at - 1e-9
+    ):
+        return 0.0
+    health.expired = True
+    return expire_temporary_max_health(pools, health.bonus)
+
+
 def absorb(
-    pools: ShieldPools, damage: float, damage_type: str, event_time: float
+    pools: ShieldPools,
+    damage: float,
+    damage_type: str,
+    event_time: float,
+    healing_factor: float = 1.0,
 ) -> Absorption:
     """Apply one post-mitigation damage instance to a defender's pools.
 
@@ -259,6 +312,11 @@ def absorb(
     Lifelines arm against the damage still coming, the general pool absorbs,
     and whatever is left reaches health -- damage past health being overkill
     rather than more effective HP.
+
+    ``healing_factor`` is the defender's live healing multiplier at this
+    instant: a Lifeline's heal is healing, so a Grievous window open when it
+    arms cuts it exactly as it cuts an authored heal.  A walk with no wound
+    model leaves it at 1.0 and the arithmetic is unchanged.
     """
     if (
         not pools.timed
@@ -309,7 +367,9 @@ def absorb(
 
     armed = None
     if pools.threshold_shield is not None or pools.threshold_health is not None:
-        armed = _arm_thresholds(pools, remaining, damage_type, event_time)
+        armed = _arm_thresholds(
+            pools, remaining, damage_type, event_time, healing_factor
+        )
         if armed.shield_pool is not None and armed.shield_pool != GENERAL:
             # A typed Lifeline (Maw's magic shield) blocks the very hit that
             # armed it, but its own pool was already drained above.
@@ -345,6 +405,7 @@ def absorb(
         threshold_health_triggered=armed.health_triggered,
         threshold_health_heal=armed.health_heal,
         threshold_health_healed=armed.health_healed,
+        threshold_health_reduced=armed.health_reduced,
     )
 
 
@@ -356,13 +417,18 @@ class _Armed(NamedTuple):
     health_triggered: bool = False
     health_heal: float = 0.0
     health_healed: float = 0.0
+    health_reduced: float = 0.0
 
 
 _NOTHING_ARMED = _Armed()
 
 
 def _arm_thresholds(
-    pools: ShieldPools, remaining: float, damage_type: str, event_time: float
+    pools: ShieldPools,
+    remaining: float,
+    damage_type: str,
+    event_time: float,
+    healing_factor: float = 1.0,
 ) -> _Armed:
     """Arm whichever Lifelines this damage would carry past their threshold.
 
@@ -411,11 +477,16 @@ def _arm_thresholds(
 
     heal = 0.0
     healed = 0.0
+    reduced = 0.0
     if health_due:
         pools.max_health += health.bonus
         pools.health += health.bonus
         health.triggered = True
-        heal = health.heal
+        health.expires_at = event_time + health.duration
+        # The bonus health is a grant, not healing, so a Grievous window
+        # leaves it alone and cuts only the heal beside it.
+        heal = health.heal * healing_factor
+        reduced = health.heal - heal
         # The heal lands before the crossing damage, so it can only take the
         # health the defender was already missing.  Whatever the sourced heal
         # has left over is the caller's heal author to deliver.
@@ -427,6 +498,7 @@ def _arm_thresholds(
         health_triggered=health_due,
         health_heal=heal,
         health_healed=healed,
+        health_reduced=reduced,
     )
 
 

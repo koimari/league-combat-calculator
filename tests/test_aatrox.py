@@ -5,6 +5,8 @@ import pytest
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import aatrox
+from tests import cc_review
 
 
 class TestQThreeCasts:
@@ -293,14 +295,106 @@ class TestEUmbralDash:
         assert entry["detail"]
 
 
-class TestModuleCoverage:
-    def test_all_five_slots_covered(self) -> None:
-        from src.calculator.champions.aatrox import MODULE_COVERAGE
+class TestReviewedCrowdControl:
+    """Aatrox declares nothing, and not for want of a cached cadence.
 
-        assert MODULE_COVERAGE == {
+    Q knocks up only in the Sweetspot - this module's own option - and the
+    cache spaces its three casts by a second; W slows on the chain hit and
+    pulls on the tether hit 1.5 cached seconds later.  Both are refused by
+    a committed receipt, not by the source: see the module comment above
+    ``parse_abilities``.
+    """
+
+    def test_the_kit_declares_nothing(self):
+        assert not hasattr(aatrox, "MODULE_CC")
+
+    def test_the_darkin_blades_knockup_is_the_sweetspot_branchs(self):
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
+        assert "enemies hit within a sweetspot of the area" in text
+        assert "are also knocked up for 0.25 seconds" in text
+        assert any(row["key"] == "sweetspot" for row in aatrox.OPTIONS)
+
+    def test_infernal_chains_two_hits_do_not_control_alike(self):
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")
+        assert "slowing them for 1.5 seconds" in text
+        assert "pulled to the center of the area" in text
+
+    def test_the_darkin_blade_states_its_own_cadence(self):
+        """The spacing is cached; what refuses it now is a pinned receipt.
+
+        ``roster_composition.resource_restores`` used to reject the whole
+        incoming packet for any event past the fight duration — Aatrox's
+        last Q in an eight-second roster fight lands its third strike at
+        8.85s — and that check now drops the late event instead
+        (tests/test_roster_composition.py).  What still holds the cadence
+        back is evidence, not the engine: the corpus pins one Umbral Dash
+        payment off a single Q event.
+        """
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
+        assert "with a 1-second static cooldown between casts" in text
+        assert aatrox._Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED == 1.0
+
+    def test_infernal_chains_states_when_its_second_hit_lands(self):
+        text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")
+        assert (
+            "a tether is formed between the target and the ground beneath them "
+            "for 1.5 seconds" in text
+        )
+        assert (
+            "if the tether is not broken by the end of its duration, the target "
+            "is dealt the same physical damage again and pulled to the center of "
+            "the area" in text
+        )
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Aatrox") == ["Q", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Aatrox")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
+    """E's own row is a sourced zero; the heal rule is what prices the slot.
+
+    A level-18 itemless timed fight with autos pays Umbral Dash 821.5 —
+    the receipt behind E's ``modeled`` label.
+    """
+    from src.calculator.calculate import calculate_payload
+    from src.calculator.champions import get_champion_module_contract
+
+    contract = get_champion_module_contract("Aatrox")
+    assert set(contract.coverage.values()) == {"modeled"}
+    assert contract.coverage_channels["E"] == ("self_healing_rule",)
+
+    payload = calculate_payload(
+        {
+            "champion": "Aatrox",
+            "level": 18,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+    )
+    paid = sum(
+        float(event["amount"])
+        for event in payload["self_healing_events"]
+        if event["source"] == "Umbral Dash"
+    )
+    assert paid == pytest.approx(821.5, abs=0.1)
+
+
+class TestModuleCoverage:
+    """Every slot is covered: E's emitted row is a sourced zero and the
+    heal channel is what prices it, so no slot is left out_of_scope."""
+
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions import get_champion_module_contract
+
+        contract = get_champion_module_contract("Aatrox")
+        assert contract.coverage == {
             "P": "modeled",
             "Q": "modeled",
             "W": "modeled",
-            "E": "no_damage",
+            "E": "modeled",
             "R": "modeled",
         }
+        assert contract.slots["E"] is aatrox.SLOTS["E"]

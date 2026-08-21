@@ -51,6 +51,7 @@ from typing import Any
 
 from .engine import SlotCtx, build_parser
 from .slotlib import extract_cooldown, extract_value, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: wiki-prose soldier mechanics with no JSON home — verify on
 # patch updates. https://wiki.leagueoflegends.com/en-us/Azir
@@ -89,9 +90,9 @@ def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_soldier = _soldier_attack_damage(
-        ability, rank, ctx.level, ctx.stats.get("ability_power", 0.0)
+        ability, rank, ctx.level, ctx.stat("ability_power")
     )
-    soldiers = max(1, int(ctx.options.get("soldier_count", 1)))
+    soldiers = max(1, int(ctx.option("soldier_count")))
     per_attack = per_soldier * (1.0 + SOLDIER_EXTRA_DAMAGE * (soldiers - 1))
 
     # Charge ability: rechargeRate is the sustained-use cooldown (the
@@ -158,25 +159,35 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Each of the three lands its damage once on a given target — Q states
+    # it outright ("Enemies hit by subsequent soldiers take no additional
+    # damage or slow"), E damages "enemies within his path" as it passes,
+    # and R's phalanx impacts once — so all three certify the cast boundary.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _arise,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Azir")
+# Cached kit review.  Q slows enemies the soldiers pass through "by 25% for
+# 1 second"; E only deals damage along the dash (its shield is Azir's own);
+# R's phalanx knocks enemies "away over 1 second to a line 650 units in
+# front of Azir".  W summons a soldier and emits no damage row of its own.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Azir", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Azir",
-        "revision_id": 4023792,
-        "revision_timestamp": "2026-05-29T16:53:08Z",
-    }
-]
+SOURCES = load_champion_sources("Azir")
+
+# P is not absent for want of a parser: Sun Disc is a separate destroyed-tower
+# entity that deals no enemy damage, which the derived map cannot say.
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in SLOTS else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

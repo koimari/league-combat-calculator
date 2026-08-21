@@ -20,6 +20,8 @@ from src.calculator.champions import (
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions import caitlyn
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -464,6 +466,46 @@ class TestHeadshotTimedFight:
         assert abilities["passive"]["total_raw"] == pytest.approx(835.0)
         assert "forced" in abilities["passive"]["detail"]
 
+    def test_autos_only_window_grants_no_e_or_trap_headshots(
+        self, caitlyn_data
+    ) -> None:
+        """`auto_attacks_only` casts nothing: only the every-6th cadence.
+
+        Same 10s window as ``test_cadence_plus_grants`` (12 autos), but
+        neither E nor W is ever cast, so the E-granted and trap
+        conversions vanish: 2 x 200 = 400, not 835.
+        """
+        abilities = parse_abilities(
+            caitlyn_data,
+            13,
+            0.0,
+            ability_ranks={"Q": 5, "W": 1, "E": 1, "R": 2},
+            champion_stats=self._stats(),
+            champion_options=dict(TIMED_10S, auto_attacks_only=True),
+        )
+        assert abilities["passive"]["total_raw"] == pytest.approx(400.0)
+        assert abilities["passive"]["detail"] == (
+            "2 headshot(s) over 10s: 2 cadence + 0 E-granted + 0 trap"
+        )
+
+    def test_autos_only_without_an_auto_stream_has_no_headshot(
+        self, caitlyn_data
+    ) -> None:
+        """Zero uptime and no casts: nothing forces a basic attack."""
+        abilities = parse_abilities(
+            caitlyn_data,
+            13,
+            0.0,
+            ability_ranks={"Q": 5, "W": 1, "E": 1, "R": 2},
+            champion_stats=self._stats(),
+            champion_options={
+                "fight_duration_seconds": 10.0,
+                "auto_attack_uptime": 0.0,
+                "auto_attacks_only": True,
+            },
+        )
+        assert "passive" not in abilities
+
     def test_e_casts_on_cooldown_grant_more_headshots(self, caitlyn_data) -> None:
         """E rank 5 (8s cd) over 10s = 2 casts: 2 cadence + 2 E + 1 trap
         -> 4 x 200 + 235 = 1035."""
@@ -629,13 +671,54 @@ class TestOptionsMeta:
         assert [option["key"] for option in meta["options"]] == [
             "p_pre_stacks",
             "w_traps",
+            # Piltover Peacemaker's pass-through count: the formula reads
+            # it, so it is a declared row the frontend renders rather than
+            # a parse-only key with a call-site default (D-24).
+            "q_secondary_targets",
         ]
         assert meta["options"][0]["min"] == 0
         assert meta["options"][0]["max"] == 5
         assert meta["options"][0]["default"] == 0
         assert meta["options"][1]["min"] == 0
         assert meta["options"][1]["default"] == 1
+        assert meta["options"][2]["min"] == 0
+        assert meta["options"][2]["max"] == 5
+        assert meta["options"][2]["default"] == 0
 
     def test_assumptions_documented(self) -> None:
         meta = get_champion_options_meta("Caitlyn")
         assert meta["assumptions"]
+
+
+class TestReviewedCrowdControl:
+    """Only 90 Caliber Net controls among the casts this module prices.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        assert caitlyn.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
+        assert caitlyn.parse_abilities.cc_kinds == caitlyn.MODULE_CC
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Caitlyn")
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert "slows them by 50% for 1 second" in cc_review.slot_text(data, "E")
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_the_traps_root_belongs_to_a_row_this_module_does_not_price(self):
+        """W's row reports the sprung-trap count; the damage it contributes
+        is the trap Headshot the passive prices, so W authors no part."""
+        text = cc_review.slot_text(cc_review.kit("Caitlyn"), "W")
+        assert "springs the trap is rooted for 1.5 seconds" in text
+        assert "W" not in caitlyn.MODULE_CC
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Caitlyn") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Caitlyn")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -5,17 +5,21 @@ update so the judgment part (deciding whether code must change, explaining
 golden diffs in the commit) starts from a focused report:
 
   1. Pull    — clear lolstaticdata's page caches (a stale cache silently
-               "re-pulls" the old patch) and run data_updater.update_data().
+               "re-pulls" the old patch) and run data_updater.update_data(),
+               then refresh data/economics-sourced.json from DDragon for the
+               release the new cache pins (refresh_economics_data).
   2. Audit   — diff the new data against the last committed data (git HEAD;
                data/ is tracked, so HEAD *is* the previous patch). Detail is
                limited to what the calculator implements: registered
                champions and items in the parse config, plus net-new /
                removed items shop-wide and a roster add/remove roll-call.
+               The economics file is audited for currency the same way.
   3. Gates   — reviewed-packet freshness, full-entry audit, staleness
-               (patch_regression), then pytest and golden compare. The
-               baseline is re-captured only when every gate is green: a
-               stale packet asset, a review-pending entry, or a stale wiki
-               cache aborts the run before capture (issue #134).
+               (patch_regression), the coverage census, then pytest and
+               golden compare. The baseline is re-captured only when every
+               gate is green: a stale packet asset, a review-pending entry,
+               a stale wiki cache, or an unacknowledged coverage frontier
+               entry aborts the run before capture (issue #134).
 
 Reviewed-packet gate (issue #134): the checked-in
 ``static/reviewed-packets.json`` must prove it was built from the current
@@ -50,16 +54,29 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from src.calculator.champions import registered_champion_names
 from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
-from src.calculator.item_effects import _STATIC_VALUE_KEYS_BY_ITEM
+from src.calculator.item_effects import (
+    ALLY_ITEM_EFFECTS,
+    _STATIC_VALUE_KEYS_BY_ITEM,
+)
 from src.calculator.item_source import branch_losses, source_audit
 from src.calculator.patch_identity import client_patch
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 REVIEWED_PACKETS = REPO_ROOT / "static" / "reviewed-packets.json"
+#: Cached-data defects whose only fix route is a re-pull, so this run is their
+#: scheduled home and the audit prints them.
+ESCALATED_CACHED_DATA = (
+    REPO_ROOT / "docs" / "receipts" / "escalated-defects-cached-data.json"
+)
 DEFAULT_AUDIT_OUTPUT = REPO_ROOT / "docs" / "wiki-full-entry-audit.json"
 DEFAULT_STALENESS_OUT = REPO_ROOT / "data" / "staleness.json"
+DEFAULT_CENSUS_OUTPUT = REPO_ROOT / "docs" / "coverage-census.json"
+ECONOMICS_TABLES = REPO_ROOT / "data" / "economics-sourced.json"
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
 NOISE_SUBSTRINGS = ("icon", "releaseDate", "patchLastChanged", "price", "salePrice")
+# The two provenance keys every hand-authored ally record carries; the rest
+# of the record is the sourced numbers patch day must re-read.
+_ALLY_SOURCE_KEYS = frozenset({"source_url", "source_revision_id"})
 
 try:
     from build_reviewed_modules import (  # pylint: disable=import-error
@@ -67,6 +84,8 @@ try:
         resolve_axword_source,
         resolve_wiki_db,
     )
+    from patch_regression import extract_ddragon_version
+    from refresh_economics_data import stale_reasons
     from source_receipt import source_receipt
 except ImportError:  # imported as scripts.patch_update in tests
     from scripts.build_reviewed_modules import (
@@ -74,6 +93,8 @@ except ImportError:  # imported as scripts.patch_update in tests
         resolve_axword_source,
         resolve_wiki_db,
     )
+    from scripts.patch_regression import extract_ddragon_version
+    from scripts.refresh_economics_data import stale_reasons
     from scripts.source_receipt import source_receipt
 
 
@@ -237,7 +258,7 @@ def item_audit_lines(old_items, new_items):
         if static_keys:
             lines.append(
                 f"    NOTE: code-owned values {sorted(static_keys)} — verify "
-                "against the new wiki text (item_effects._OFFLINE_ITEM_EFFECTS)"
+                "against the new wiki text (item_effects._REFERENCE_ITEM_EFFECTS)"
             )
     if len(lines) == 1:
         lines.append("  (no changes)")
@@ -306,11 +327,123 @@ def item_source_lines(old_items, new_items):
     return lines, not blocking
 
 
+def _authored_keys(record):
+    """The hand-typed numeric keys of one ALLY_ITEM_EFFECTS record."""
+    return sorted(key for key in record if key not in _ALLY_SOURCE_KEYS)
+
+
+def ally_effect_lines(old_items, new_items):
+    """Audit section for the hand-authored cross-participant item values.
+
+    ``ALLY_ITEM_EFFECTS`` is typed by hand from the Wiki and is where four of
+    the six ``damage_modifier`` producers read their numbers.  A data refresh
+    rewrites ``data/items.json`` and leaves this table exactly where it was:
+    it is refresh-**inert**, which is worse than stale-cached, because a
+    stale cache at least shows up as a diff while an inert table shows up as
+    nothing at all (D-47).  So patch day prints, for every item in that
+    table, whether the cached entry it was read from moved.
+
+    Blocking is reserved for an item that left the shop entirely, where the
+    hand-authored record now prices something that does not exist.  A moved
+    entry is NEEDS REVIEW: the audit's job is to put the numbers in front of
+    a human, and ``item_source`` owns the release gate.
+    """
+    lines = ["== Hand-authored ally item effects =="]
+    blocking = False
+    for name in sorted(ALLY_ITEM_EFFECTS):
+        record = ALLY_ITEM_EFFECTS[name]
+        if name not in new_items:
+            blocking = True
+            lines.append(
+                f"  BLOCKING: {name} is no longer in the cached shop, but "
+                f"ALLY_ITEM_EFFECTS still prices {_authored_keys(record)}"
+            )
+            continue
+        diffs = drop_noise(list(leaf_diffs(old_items.get(name), new_items.get(name))))
+        if not diffs:
+            continue
+        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
+        lines.append(f"  {name} ({flag}):")
+        lines.extend(_detail_lines(diffs))
+        lines.append(
+            f"    NOTE: hand-authored values {_authored_keys(record)} do not "
+            "refresh — re-read the Wiki entry and update "
+            "item_effects.ALLY_ITEM_EFFECTS (with its source_revision_id)"
+        )
+    if len(lines) == 1:
+        lines.append("  (every hand-authored ally value's cached entry is unchanged)")
+    if blocking:
+        lines.append(
+            "  ** BLOCKING — an item priced by ALLY_ITEM_EFFECTS left the shop; "
+            "remove or re-source its record before continuing. **"
+        )
+    return lines, not blocking
+
+
+def escalated_cached_data_lines(receipt_path=None):
+    """Audit section for the cached-data defects waiting on a re-pull.
+
+    ``docs/receipts/escalated-defects-cached-data.json`` holds defects in
+    cached wiki text that no lane may fix in place: ``data/`` has one writer,
+    so hand-editing the cache is a fix the next pull silently reverts.  Their
+    scheduled home is therefore this run — it is the only act that rewrites
+    the text, and its rebuild step regenerates the two consumers the entries
+    name.  A filed defect nobody is told about on the one day somebody can
+    act on it is a receipt with a filename, so the run prints them.
+
+    Informational, never blocking: neither defect reaches a damage number
+    (rule 5 keeps every runtime item value in ``item_effects.py``), and a
+    section that blocked on an upstream text would block every patch day
+    until the wiki changed.
+    """
+    path = receipt_path or ESCALATED_CACHED_DATA
+    lines = ["== Cached-data defects scheduled on this run =="]
+    if not path.exists():
+        lines.append(f"  (no receipt at {path.name})")
+        return lines
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    for defect in receipt.get("defects", ()):
+        home = defect.get("scheduled_home", {})
+        lines.append(f"  {defect['id']} (filed {defect['dated']}):")
+        lines.append(f"    {defect['what']}")
+        lines.append(f"    fires on: {home.get('what_fires_it', '(no home named)')}")
+        lines.append(f"    closes by: {home.get('how_it_closes_from_there', '')}")
+    if len(lines) == 1:
+        lines.append("  (none open)")
+    return lines
+
+
+def economics_lines(tables, new_items, ddragon_version):
+    """Audit section for the sourced gold table the purchase optimizer prices from.
+
+    ``data/economics-sourced.json`` is DDragon's item gold table pinned to one
+    release, written only by ``refresh_economics_data.py``.  A pull that moves
+    the cache without it leaves every purchase plan priced at the previous
+    patch, and the runtime fails closed on an item it does not carry, so any
+    reason the file is not current for the new cache blocks the run.
+    """
+    lines = ["== Item economics (data/economics-sourced.json) =="]
+    reasons = stale_reasons(tables, new_items, ddragon_version)
+    for reason in reasons:
+        lines.append(f"  BLOCKING: {reason}")
+    if reasons:
+        lines.append(
+            "  ** BLOCKING — run scripts/refresh_economics_data.py, or record a "
+            "reviewed total divergence in its ACKNOWLEDGED_TOTAL_DIVERGENCES. **"
+        )
+    else:
+        lines.append(
+            f"  (current for DDragon {ddragon_version}: every ordinary item priced)"
+        )
+    return lines, not reasons
+
+
 def print_audit():
     """Print the full audit report (champions, items, deltas).
 
-    Returns whether the source-completeness section is clear enough to
-    proceed; the prose sections above it are informational.
+    Returns whether the source-completeness, hand-authored ally, and item
+    economics sections are clear enough to proceed; the prose sections above
+    them are informational.
     """
     old_champs, new_champs, old_items, new_items = load_old_and_new()
     print()
@@ -324,8 +457,20 @@ def print_audit():
     source_lines, source_ok = item_source_lines(old_items, new_items)
     for line in source_lines:
         print(line)
+    ally_lines, ally_ok = ally_effect_lines(old_items, new_items)
+    for line in ally_lines:
+        print(line)
+    economics, economics_ok = economics_lines(
+        json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8")),
+        new_items,
+        extract_ddragon_version(new_champs),
+    )
+    for line in economics:
+        print(line)
+    for line in escalated_cached_data_lines():
+        print(line)
     print()
-    return source_ok
+    return source_ok and ally_ok and economics_ok
 
 
 def print_detail(names):
@@ -388,6 +533,24 @@ def run_pull():
     return patch
 
 
+def refresh_economics() -> int:
+    """Re-pull DDragon's gold table for the pulled cache; non-zero aborts the run."""
+    print("== Refreshing item economics (refresh_economics_data) ==", flush=True)
+    result = subprocess.run(
+        [sys.executable, "scripts/refresh_economics_data.py"],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(
+            "\nFAIL: data/economics-sourced.json was not refreshed — DDragon may not\n"
+            "have published the release the new cache pins yet. Re-run when it has;\n"
+            "the economy engine must not price the new patch from the old table.",
+            flush=True,
+        )
+    return result.returncode
+
+
 # ---------------------------------------------------------------------------
 # Gates
 # ---------------------------------------------------------------------------
@@ -396,10 +559,10 @@ def run_pull():
 def rebuild_static_artifacts():
     """Rebuild the derived catalogues the web UI fetches at runtime.
 
-    app.js loads ability-catalog, bis-profiles, and effect-catalog directly, so
-    a patch that refreshes data/ without rebuilding these leaves the UI serving
-    the previous patch's abilities and item effects. Skipping this step is what
-    left them stale before.
+    app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
+    directly, so a patch that refreshes data/ without rebuilding these leaves
+    the UI serving the previous patch's champions, abilities and item effects.
+    Skipping this step is what left them stale before.
 
     bis-profiles is deliberately not rebuilt here: it merges an Axword Meraki
     kit reference from a sibling repo that supplies damage packets the wiki
@@ -408,10 +571,11 @@ def rebuild_static_artifacts():
     """
     print("== Rebuilding static catalogues ==", flush=True)
     for builder in (
+        "build_static_data.py",
         "build_ability_catalog.py",
         "build_effect_catalog.py",
-        # Issue #163: entity receipts read the unified Atomizer item domain;
-        # a red builder would leave stale receipts in the release tree.
+        # Writes only gitignored trees; it runs here because it fails closed
+        # when the unified item-atom domain disagrees with the Atomizer manifest.
         "build_receipts.py",
     ):
         result = subprocess.run(
@@ -633,6 +797,31 @@ def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int
     return result.returncode
 
 
+def run_coverage_census(output: Path | None = None) -> int:
+    """Sweep every champion x mode/item/keystone cell and refresh its receipt.
+
+    The receipt legitimately moves on patch day (new items and champions
+    change the counts), so the gate is the sweep's own verdict: non-zero
+    means a frontier entry no residue row acknowledges, or an acknowledgement
+    that no longer reproduces, and it aborts the run.
+    """
+    output = output or DEFAULT_CENSUS_OUTPUT
+    print("== Gate: coverage census (full sweep, ~10 min) ==", flush=True)
+    result = subprocess.run(
+        [sys.executable, "scripts/coverage_census.py", "run", "--output", str(output)],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(
+            "\nFAIL: the coverage census reports a frontier entry nothing acknowledges\n"
+            "(or a docs/coverage-residue.json row that no longer reproduces) — close\n"
+            "it or record it before re-capturing golden.",
+            flush=True,
+        )
+    return result.returncode
+
+
 def run_gates():
     """pytest, golden compare, and (only on green tests) baseline re-capture.
 
@@ -684,19 +873,23 @@ def run_full(
 ):
     """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
 
-    Order (issue #134 — golden capture stays last and conditional):
-    source-completeness audit, catalogue rebuild, reviewed-packet freshness,
-    full parent-entry audit, staleness vs game files, then pytest + capture.
-    Any gate failure aborts before ``run_gates()`` so a stale packet asset or
-    a review-pending entry can never be re-blessed into the new baseline.
+    Order (issue #134 — golden capture stays last and conditional): wiki pull,
+    economics refresh, source-completeness audit, catalogue rebuild,
+    reviewed-packet freshness, full parent-entry audit, staleness vs game
+    files, coverage census, then pytest + capture.  Any gate failure aborts
+    before ``run_gates()`` so a stale packet asset or a review-pending entry
+    can never be re-blessed into the new baseline.
     """
     clear_wiki_caches()
     pulled_patch = run_pull()
     print(f"\nPulled patch: {pulled_patch}")
+    refresh_rc = refresh_economics()
+    if refresh_rc:
+        return refresh_rc
     if not print_audit():
         print(
-            "\nFAIL: the item cache lost source coverage. Resolve the BLOCKING\n"
-            "entries above before rebuilding artifacts or re-capturing golden."
+            "\nFAIL: the audit found BLOCKING entries. Resolve them above before\n"
+            "rebuilding artifacts or re-capturing golden."
         )
         return 1
     rebuild_failed = rebuild_static_artifacts()
@@ -726,6 +919,9 @@ def run_full(
     staleness_rc = run_staleness_gate(staleness_out, patch)
     if staleness_rc:
         return staleness_rc
+    census_rc = run_coverage_census()
+    if census_rc:
+        return census_rc
     return run_gates()
 
 

@@ -21,26 +21,60 @@ atomized ability data, never from a hand-maintained combo database**:
 > the go seems faster than having a database of every single possible
 > combo for every champion."
 
-F3 makes that derivation fully algorithmic for ALL 173 champions.  The
-ten F2 seeds stay as **documented overrides** (verified by hand); every
-other champion's order is computed per request by
-`src/calculator/rotation_resolver.py`.
+F3 makes that derivation fully algorithmic for ALL 173 champions.  What
+is left of the F2 seeds stays as **documented overrides** (verified by
+hand) — seven of them today, listed under *The hand seeds remain
+documented overrides* below; every other champion's order is computed per
+request by `src/calculator/rotation_resolver.py`.
 
 ## Design
 
 ### Resolution chain (explicit order wins)
 
 ```
-/api/calculate payload cast_order  (user-supplied, validated permutation)
-   -> COMBO_TABLE rule              (10 verified F2 seeds — documented overrides)
+/api/calculate payload cast_order  (user-supplied, validated permutation,
+                                    checked against the declarations)
+   -> CAST_ORDER_OVERRIDES rule     (hand seeds — each with an override_reason)
    -> ALGORITHMIC DERIVATION        (this module — every champion with atomized data)
+        declarations + inference merged  (resolved_edges, the precedence table)
         edges?  -> constrained topological order + matrix-consistent DPS tie-break
         no edges -> certified module CAST_ORDER or DEFAULT_CAST_ORDER (honest flat-kit)
 ```
 
+### The declared lane
+
+Two surfaces make ordering claims and `resolved_edges` is where they
+meet.  A champion module DECLARES what its own kit requires in
+`CAST_DEPENDENCIES` (`src/calculator/cast_dependency.py` owns the
+vocabulary: `cc_enabler`, `damage_enabler`, `resource_enabler`,
+`recast_of`); the detector INFERS ordering from the markers it parses
+(`INFERRED_EDGE_KINDS`, twelve kinds).  The two vocabularies are closed
+and asserted disjoint, and every merged edge carries an `origin` naming
+the surface that produced it.
+
+`merge_declared_edges` folds one over the other for an unordered pair
+{A, B}:
+
+| declared A→B | inferred A→B | inferred B→A | active suppression B→A | outcome |
+|---|---|---|---|---|
+| – | ✓ | – | – | inferred A→B — the 170 non-declaring champions' path |
+| ✓ | – | – | – | declared A→B |
+| ✓ | ✓ | – | – | declared A→B, deduped; receipt flags `confirmed_by_inference` |
+| ✓ | – | ✓ | ✓ | declared A→B; B→A dropped; receipt cites the suppression |
+| ✓ | – | ✓ | ✗ | **`ConflictingInferenceError`** |
+| ✓ | – | – | ✓ matching nothing | declared A→B; suppression `latent`, with its reason |
+
+A suppression nests inside its parent declaration and can express only
+the exact reverse pair, so an over-broad suppression is unwriteable
+rather than merely discouraged.  A declaration is *active* only when
+both endpoints exist in this parse — Syndra's `E requires Q2` is inert
+below 40 splinters — and an inactive declaration takes its suppression
+out of force with it.  What the merge did rides the response as
+`rotation.dependencies`.
+
 `resolve_cast_order` returns a rule for EVERY champion in the cached
-data.  The derived rule carries `derived=True`; the ten seeds are the
-only `derived=False` rules.
+data.  The derived rule carries `derived=True`; the surviving seeds are
+the only `derived=False` rules.
 
 ### The four signals (unchanged priorities)
 
@@ -93,9 +127,21 @@ The edge taxonomy (closed, asserted by the tests):
 | `execute` | burst → execute | missing-health / stored-damage executes cast after the burst (Veigar R, Mel R, Pantheon Q) |
 | `shred` | shredder → burst | resistance-reduction `target_debuff` opens so the burst benefits (Sion E, Corki E, Jayce R) |
 | `buff` | buffer → burst | damage-amp `stat_buff` resolves before the abilities it amplifies (Vayne R, Twitch R, Darius E pen) |
-| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst (Ahri charm, Pantheon stun) |
+| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst — **retired for champion modules**, see below (Ahri charm, Pantheon stun) |
 | `amp` | amplifier → burst | damage-taken amplifiers resolve first (Vladimir R Hemoplague) |
 | `recast` | parent → recast | a recast rides its parent's casts on the shared timeline (Q → Q2, Ambessa) |
+
+**`cc_setup` no longer fires from a champion module's own `cc_kind`.** A
+module recording its reviewed crowd control — per slot in `MODULE_CC` or
+on the part at its construction site — states what a cast *applies*, not
+when to cast it, and recording a true fact must not move published
+damage. Ordering from crowd control is a `CAST_DEPENDENCIES` declaration
+(`cc_enabler`), which is where `architecture.md` puts a module's
+assertions about its own kit. The inference survives only for kits with
+no champion module (synthetic and development fixtures) and for the three
+slots in `rotation_resolver._PRE_CAMPAIGN_CC_ORDERING`, whose orders were
+published before the rule; that table is closed and shrinks by moving the
+ordering into the kit's own declaration.
 
 Consumers that are also detonators (e.g. Varus Q — `post_hit_proc` +
 missing-health rider) are positioned by the consume relationship; the
@@ -131,13 +177,36 @@ atomized ability data — no DoT/poison/mark/stack consumer, no resistance
 shred, no damage-amplifying buff, no missing-health execute".  This is
 the data-driven, honest fallback — not a hidden combo database.
 
-### The ten F2 seeds remain documented overrides
+### The hand seeds remain documented overrides
 
-`COMBO_TABLE` is unchanged from F2 (Cassiopeia, Varus, Brand, Vladimir,
-Aatrox, Jhin, Annie, Lux, Zed, Aphelios).  The resolver checks the table
-FIRST; the derivation never touches those ten.  Two seeds deliberately
-deviate from a detected data edge (the seed's judgment wins, documented
-in `tests/test_f3_rotation_all.py`):
+`CAST_ORDER_OVERRIDES` (renamed from `COMBO_TABLE`) holds the surviving
+hand-verified seeds — Annie, Brand, Cassiopeia, Lux, Varus, Vladimir, Zed.
+The resolver checks the table FIRST; the derivation never touches them.
+
+Four names left the table in Phase 5 and none of them may be named above.
+Syndra's module declares `E requires Q` and `E requires Q2`, the derivation
+reproduces the order the seed pinned, and the seed retired against that
+declaration (D-89) — which is the only ground on which a seed may be
+retired.  Aatrox, Jhin and Aphelios were **redundant** rather than
+converted: the derivation already returned their seeded order with no
+declaration at all, which their deletion commits proved on both baselines.
+Zed and Brand keep their seeds and additionally declare a head-only
+dependency, so a declaration is not by itself a retirement.
+
+Every surviving entry carries an `override_reason` from the closed
+`ORDER_OVERRIDE_REASONS` set (`scheduling_preference`, `dps_tiebreak`,
+`defensive_precast`, `pending_primitive`), so "why is this order still held
+by hand?" is a countable field rather than a claim in this document; the
+count, its reason histogram and its `head_only` list — the seeds whose
+champion also declares, derived from `get_champion_cast_dependencies` rather
+than named — are published in `docs/cast-dependency-audit.json` under
+`order_override_frontier`, and this section's name list is asserted against
+the live table by `tests/test_f2_rotation.py`.  After the retirements every
+survivor carries the same reason, so `head_only` is the only place the
+frontier can tell Zed's and Brand's disposition from a seed held by hand end
+to end.  Two seeds deliberately deviate from a
+detected data edge (the seed's judgment wins, documented in
+`tests/test_f3_rotation_all.py`):
 
 - **Cassiopeia**: W (Miasma) also applies poison → data says W→E, but
   the seed casts E before W to start the 0.75s Twin Fang spam cadence
@@ -195,8 +264,8 @@ Unchanged from F2 (`static/js/eventorder.js` is self-contained).
   champions: (a) a derived order never violates a detected edge (setup
   before consume); (b) the rationale cites real atoms; (c) the order is
   deterministic and stable across the level/build matrix; (d) the order
-  is a permutation of the certified/base slots and the ten seeds stay as
-  overrides.  The two documented seed exceptions are pinned.
+  is a permutation of the certified/base slots and the surviving seeds
+  stay as overrides.  The two documented seed exceptions are pinned.
 - `tests/test_f2_rotation.py` — unchanged (F2 contract).
 - `docs/rotation-verification-gaps.md` — champions whose derivation is
   ambiguous (conflicting atoms, or no data signal where a known combo

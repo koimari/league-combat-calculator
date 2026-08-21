@@ -49,15 +49,12 @@ from pathlib import Path
 import pytest
 
 from src.calculator.champions import (
+    get_champion_module_meta,
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.mordekaiser import (
-    MODULE_COVERAGE as MORDE_COVERAGE,
-)
 from src.calculator.champions.naafiri import (
     ASSUMPTIONS,
-    MODULE_COVERAGE,
     _HUNT_AD_PERCENT,
     _HUNT_DURATION,
     _PACKMATE_CAP_BY_LEVEL,
@@ -418,7 +415,11 @@ class TestPackRowFailsClosed:
 
 class TestCoverageAndOptions:
     def test_naafiri_has_no_out_of_scope_slots_left(self):
-        assert MODULE_COVERAGE == {slot: "modeled" for slot in "PQWER"}
+        # Every slot emits a priced row, so the contract DERIVES the
+        # coverage from SLOTS and the module declares no MODULE_COVERAGE
+        # (restating the derived table is a contract error).
+        coverage = get_champion_module_meta("Naafiri")["coverage"]
+        assert coverage == {slot: "modeled" for slot in "PQWER"}
 
     def test_w_hunt_option_is_exposed_and_defaults_on(self):
         meta = get_champion_options_meta("Naafiri")
@@ -426,13 +427,14 @@ class TestCoverageAndOptions:
         assert hunt["type"] == "bool"
         assert hunt["default"] is True
 
-    def test_mordekaiser_w_and_r_are_no_damage_receipts_not_gaps(self):
-        """Morde's closure was a relabel only — no slot parser changed."""
-        assert MORDE_COVERAGE == {
-            "P": "modeled",
-            "Q": "modeled",
-            "W": "no_damage",
-            "E": "modeled",
-            "R": "no_damage",
-        }
-        assert "out_of_scope" not in set(MORDE_COVERAGE.values())
+    def test_mordekaiser_has_no_out_of_scope_slots_left(self):
+        """Morde's W and R are priced, not relabelled zero-damage rows.
+
+        W's Potential Shield recast heal is authored by the E8a
+        grey-health primitive and R's soul drain by this branch's
+        module-owned self-heal rule, so both slots are ``modeled`` and
+        the contract derives the whole table from SLOTS.
+        """
+        coverage = get_champion_module_meta("Mordekaiser")["coverage"]
+        assert coverage == {slot: "modeled" for slot in "PQWER"}
+        assert "out_of_scope" not in set(coverage.values())

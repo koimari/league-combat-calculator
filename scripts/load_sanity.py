@@ -11,7 +11,7 @@ Procedure
 ---------
 1. Warm up the server (one calculate + one bis request).
 2. Cold pass: every request misses and computes.
-3. Checkpoint the server's cache counters (/api/cache-status).
+3. Checkpoint the server's cache counters (/api/health/deep -> checks.cache).
 4. Warm pass: the exact same request list is replayed at low concurrency so
    cache_set lands between gets; nearly every response must come from cache.
 5. Re-read the counters; hit ratio = (hits_delta / (hits+misses)_delta) over
@@ -279,15 +279,17 @@ async def _run_pass(
 
 
 async def _cache_counters(client: httpx.AsyncClient, base_url: str) -> dict:
-    response = await client.get(f"{base_url}/api/cache-status")
+    response = await client.get(f"{base_url}/api/health/deep")
     response.raise_for_status()
-    body = response.json()
-    if not body.get("cache_enabled"):
+    cache = response.json()["checks"]["cache"]
+    if cache["status"] != "ok":
+        raise RuntimeError(f"/api/health/deep reports the cache check as {cache}")
+    if not cache["enabled"]:
         raise RuntimeError(
-            "/api/cache-status reports cache_enabled=false — the result cache "
-            "is off. Start the server with DATABASE_URL (or REDIS_URL) set."
+            "/api/health/deep reports checks.cache.enabled=false — the result "
+            "cache is off. Start the server with DATABASE_URL (or REDIS_URL) set."
         )
-    return body
+    return cache
 
 
 async def _run(

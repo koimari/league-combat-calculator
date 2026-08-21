@@ -1,0 +1,74 @@
+{
+  "receipt_id": "oracle-C6-leaf82",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/slot",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch dir>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6-clean",
+    "read": [
+      "data/champions.json (Syndra abilities: cooldowns, cast times, effect text)",
+      "data/worklists/f2-task.md",
+      "data/champion-audit/batch-p1-3.json (Vladimir entry)",
+      "data/practice-corpus/scenarios.json (checked: contains no Syndra scenario)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (including golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / the diff / the plan"
+    ],
+    "note": "A stray file 'syndra.txt' was found sitting in an adjacent scratch directory from outside this export. It was NOT part of the git-archive evidence tree and was deliberately not used."
+  },
+  "independent_computation": {
+    "step_1_what_the_leaf_is": "cast_timeline[3]/slot is the ability slot of the 4th cast on the fight's shared cast timeline, in the 'manual_target' fight of scenario syndra_custom_order_60.",
+    "step_2_scheduling_law": "docs/math-foundations.md §1.1 fixes the scheduling law: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.' The §5 audit table adds the timed-fight constraint 'R casts exactly once per timed fight (model constraint, documented)'.",
+    "step_3_all_four_slots_are_ready_at_t0": "From data/champions.json, Syndra's sourced cooldowns are Q 'Dark Sphere' 7/7/7/7/7 s, W 'Force of Will' 12/11/10/9/8 s, E 'Scatter the Weak' 15/15/15/15/15 s, R 'Unleashed Power' 120/100/80 s; cast times are Q none, W none, E 0.25 s, R 0.25 s. Every slot is off cooldown at fight start, so no cooldown gate can reorder the opening. Under the mutual-exclusion rule the first casts merely serialize (t = 0, 0, 0, +0.25, +0.25...), all inside the first ~0.5 s of the 60 s window.",
+    "step_4_consequence": "Because nothing is cooldown-gated at t=0, cast_timeline[0..3] is a verbatim echo of the configured cast order. Therefore cast_timeline[3]/slot == the 4th entry of the order the scenario configures. It is an input echo, not a derived physical quantity: no cooldown arithmetic can put E 4th unless E is 4th in the order.",
+    "step_5_ruling_out_E_as_a_recast": "E cannot reach index 3 as a *recast*. Its cooldown is 15 s at every rank (the longest of the three basics) and it would have been cast at most ~0.5 s earlier; the first ability to come back up is always Q (7 s, or 4.375 s at 60 haste) or W (8-12 s base). So 'E at index 3' is only reachable as a first cast in 4th position.",
+    "step_6_what_the_old_value_means": "data/worklists/f2-task.md states the engine's fallback: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)'. The 4th entry of that default order is exactly R — the old value. So the old timeline reproduced the naive default order in a scenario whose whole identity is a *custom* order; i.e. at position 4 the custom order was not being honoured.",
+    "step_7_what_the_new_value_means": "E at index 3 means the resolved order's 4th entry is E, i.e. an order of the form [_,_,_,E] — a non-default order. This repo's own audit evidence attests that explicit 4-letter custom orders of exactly this shape are a real supported input: data/champion-audit/batch-p1-3.json records for Vladimir 'Q 176/W 330/R 385 with cast_order R,Q,W,E'. The order R,Q,W,E has E as its 4th entry — precisely the new value's shape.",
+    "step_8_domain_cross_check": "Nothing in Syndra's cached wiki text forbids E being cast 4th, and nothing requires R to be 4th. R 'Unleashed Power' has no resource or sphere prerequisite ('Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'), so R is legally castable at any position; conversely R is the one ability whose value *rises* the later it is cast relative to sphere generation, so pinning R to the 4th cast is not a rule the game imposes. The 60 s window is far shorter than R's 80-120 s cooldown, consistent with the documented 'R casts exactly once per timed fight' either way — the R/E swap at index 3 is an ordering change, not a cast-count change.",
+    "conclusion": "cast_timeline[3]/slot = the 4th element of the scenario's configured custom cast order. The old value R is bit-for-bit the DEFAULT_CAST_ORDER (Q,W,E,R) 4th slot, which is the value a custom-order scenario shows when the custom order is being ignored; the new value E is the value it shows when a non-default order is honoured. New value is correct."
+  },
+  "sources": [
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§1.1 Renewal theory for cast + auto timing schedules",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "§5 Formula-audit table, rows 'Ability haste (effective_cooldown)' and 'Ability rotation casts'",
+      "quote": "R casts exactly once per timed fight (model constraint, documented) | ... | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities cooldown / castTime",
+      "quote": "Q Dark Sphere cooldown values [7,7,7,7,7], castTime none; W Force of Will cooldown [12,11,10,9,8], castTime none; E Scatter the Weak cooldown [15,15,15,15,15], castTime 0.25; R Unleashed Power cooldown [120,100,80], castTime 0.25"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "locator": "CONTEXT paragraph",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)."
+    },
+    {
+      "file": "data/champion-audit/batch-p1-3.json",
+      "locator": "Vladimir entry, gap_summary",
+      "quote": "Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E"
+    }
+  ],
+  "confidence": "medium-high",
+  "caveat": "cast_timeline[3]/slot is an echo of a scenario input (the configured custom cast order), and the scenario definition lives in scripts//tests/, which this runbook forbids reading. The verdict therefore rests on: (a) the proof that index 3 must equal the 4th element of the configured order, (b) the old value being bit-identical to the documented DEFAULT_CAST_ORDER's 4th slot in a scenario named 'custom_order', and (c) an in-tree attestation that non-default orders of the form R,Q,W,E (4th entry E) are a real supported input. It would be falsified only if the scenario's declared custom order genuinely ends in R at position 4, in which case the pre-change timeline coincided with the default by accident."
+}

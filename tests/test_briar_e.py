@@ -10,9 +10,10 @@ The E packet authors one timed self damage-modifier (multiplier 1 - 35/100
 derived from the ``ability.damage_reduction`` atom, window = min of the
 ``e_charge_seconds`` option and the ``timing.active_duration`` atom) plus,
 with the wall option, two control-only events priced from the
-``timing.control_duration_sequence`` atom.  The modifier template carries
-``_priority = -1.0`` so it sorts before same-timestamp damage in the
-survival walk (shield priority, not heal priority).
+``timing.control_duration_sequence`` atom.  The modifier template declares
+``AURA_ARM`` so it sorts before same-timestamp damage in the survival
+walk: an amplification in force at its own timestamp prices the hit that
+lands there, which a triggered debuff's rank would not.
 """
 
 import copy
@@ -21,11 +22,22 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import app
-from src.calculator.ability_atoms import AbilityAtomQuery, required_ability_atom
+from src.calculator.ability_atoms import (
+    _ABILITY_ATOMS_MEMO,
+    AbilityAtomQuery,
+    required_ability_atom,
+)
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.briar import OPTIONS
 from src.calculator.data_fetcher import get_champion
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.defensive_effects import (
+    StartingDefenses,
+    resolve_starting_defenses,
+)
+from src.calculator.program.build import roster_program
+from src.calculator.program.compile import action_from_event
+from src.calculator.program.views.survival import survival
+from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
@@ -40,12 +52,15 @@ from src.calculator.survival import (
     ReceiptLedger,
     SurvivalAction,
     TransitionContext,
-    assemble_survival_rows,
     build_states,
-    finalize_states,
-    run_survival_walk,
 )
-from src.calculator.survival.actions import ActionKind
+from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.survival.actions import (
+    EVENT_SLOTS,
+    SUPPORT_RANK_KEY,
+    ActionKind,
+    TransitionRank,
+)
 
 # Rank pins for hand-math tests (independent of level/skill order).
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 2}
@@ -175,7 +190,7 @@ def _run_modifier_window_walk():
         level=1,
         items=(),
         stats={"health": 10000.0, "is_melee": True},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -185,9 +200,18 @@ def _run_modifier_window_walk():
 
     def hit(time: float, amount: float, damage_type: str, aidx: int, event_id: str):
         return SurvivalAction(
-            sort_key=(time, 0.0, 0, 0, 0, "target", "hit", event_id),
+            sort_key=(
+                time,
+                TransitionRank.DAMAGE,
+                0,
+                0,
+                0,
+                "target",
+                "hit",
+                event_id,
+            ),
             time=time,
-            phase=0.0,
+            phase=TransitionRank.DAMAGE,
             kind=ActionKind.PLAIN_DAMAGE,
             subject=0,
             attacker=0,
@@ -196,15 +220,17 @@ def _run_modifier_window_walk():
             damage_type=damage_type,
             source_key="auto_attacks",
             source="auto_attacks",
-            event_id=event_id,
+            event_slot=EVENT_SLOTS.slot(event_id),
             sequence=0,
             event={},
         )
 
     modifier = SurvivalAction(
-        sort_key=(0.0, -1.0, 0, 0, 0, "target", "mod", "mod"),
+        # ``-1.0`` on a damage modifier is C4's rank: an amplification in
+        # force at its own timestamp prices the damage at that timestamp.
+        sort_key=(0.0, TransitionRank.AURA_ARM, 0, 0, 0, "target", "mod", "mod"),
         time=0.0,
-        phase=-1.0,
+        phase=TransitionRank.AURA_ARM,
         kind=ActionKind.DAMAGE_MODIFIER,
         subject=0,
         attacker=0,
@@ -214,8 +240,13 @@ def _run_modifier_window_walk():
         all_sources=True,
         source="Chilling Scream · damage reduction",
         source_key="E",
-        event_id="mod",
+        event_slot=EVENT_SLOTS.slot("mod"),
         sequence=0,
+        # D-04: an armed modifier declares the classes it prices, and
+        # empty-means-all is banned.  ``all_sources`` is Briar's own
+        # "from all sources", so every class is declared.
+        damage_classes=frozenset(DamageClass),
+        attack_classes=frozenset(AttackClass),
         event={},
     )
     actions = [
@@ -229,24 +260,42 @@ def _run_modifier_window_walk():
         hit(1.001, 700.0, "physical", 7, "h6"),
         hit(1.5, 800.0, "magic", 8, "h7"),
     ]
-    states = build_states([combatant])
-    ledger = ReceiptLedger(actions=actions, index_of={"target": 0}, annotating=True)
+    states = build_states([combatant], (0.0,))
+    ledger = ReceiptLedger(
+        actions=actions,
+        index_of={"target": 0},
+        compile_event=action_from_event,
+        annotating=True,
+    )
     ctx = TransitionContext(
         duration=5.0,
         states=states,
         combatants=[combatant],
         index_of={"target": 0},
         ledger=ledger,
+        regeneration_windows=(None,),
     )
-    run_survival_walk(actions, ctx)
-    finalize_states(states, 5.0)
-    row = assemble_survival_rows(states, [combatant])["target"]
+    result = run_one_walk(actions, ctx)
+    row = survival(roster_program([combatant]), result)["target"]
     return actions, row
 
 
 class TestAtoms:
     """The exact atoms resolve through the typed accessor with documented
     sources; a wrong query raises naming the source (no literal fallback)."""
+
+    @pytest.fixture(autouse=True)
+    def _fresh_atom_memo(self):
+        """Atomization is memoized on ``(data_version, champion_name)``.
+
+        The key does not include the ability data, so a case that hands in
+        a *tampered* copy would otherwise be answered from rows atomized
+        out of the intact cache — the corruption would never reach the
+        parser and the raise it should provoke would silently not happen.
+        """
+        _ABILITY_ATOMS_MEMO.clear()
+        yield
+        _ABILITY_ATOMS_MEMO.clear()
 
     def test_damage_reduction_and_active_duration_atoms_resolve(self, briar_data):
         champion_data = {"name": "Briar", "abilities": briar_data["abilities"]}
@@ -367,7 +416,7 @@ class TestPacket:
         assert packet["duration"] == pytest.approx(1.0)
         assert packet["source"] == "Chilling Scream · damage reduction"
         assert packet["all_sources"] is True
-        assert packet["_priority"] == -1.0
+        assert packet[SUPPORT_RANK_KEY] is TransitionRank.AURA_ARM
         assert [atom["source"] for atom in packet["source_atoms"]] == [
             _REDUCTION_SOURCE,
             _DURATION_SOURCE,
@@ -599,9 +648,15 @@ class TestTerrainCollisionControl:
         controls = _events(combat, attacker="main", target="enemy:Aatrox", source="E")
         knockup = next(event for event in controls if event.get("cc_kind") == "knockup")
         stun = next(event for event in controls if event.get("cc_kind") == "stun")
-        assert knockup["time"] == 0.0
+        # The scream lands at the END of the full charge, which is where
+        # ``champions/briar.py`` puts both its damage part and its control
+        # events (``E_FULL_CHARGE_SECONDS``).  Main pinned these at 0.0,
+        # from a module whose damage part carried no offset either; the
+        # merged module offsets both together, so the sequence is unchanged
+        # and only its anchor moved.
+        assert knockup["time"] == pytest.approx(1.0)
         assert knockup["cc_duration"] == pytest.approx(0.5)
-        assert stun["time"] == pytest.approx(0.5)
+        assert stun["time"] == pytest.approx(1.5)
         assert stun["cc_duration"] == pytest.approx(1.5)
         for event in (knockup, stun):
             atoms = event["control_source_atoms"]
@@ -612,13 +667,13 @@ class TestTerrainCollisionControl:
 
         survival = _survival(combat, "enemy:Aatrox")
         assert survival["action_downtime"] == pytest.approx(2.0)
-        assert survival["crowd_control_until"] == pytest.approx(2.0)
+        assert survival["crowd_control_until"] == pytest.approx(3.0)
         assert [
             (interval["kind"], interval["start"], interval["end"])
             for interval in survival["crowd_control_intervals"]
         ] == [
-            ("knockup", 0.0, 0.5),
-            ("stun", 0.5, 2.0),
+            ("knockup", 1.0, 1.5),
+            ("stun", 1.5, 3.0),
         ]
         # The wall damage bonus still lands with the control packet.
         e_damage = next(
@@ -641,7 +696,13 @@ class TestTerrainCollisionControl:
             }
         )
         controls = _events(combat, attacker="main", target="enemy:Aatrox", source="E")
-        assert all("cc_kind" not in event for event in controls)
+        # The merged module authors the full-charge knockback the wiki names
+        # ("enemies hit are also knocked back 575 units") on the damage part
+        # itself, so a cc_kind IS present without a wall -- but it carries no
+        # authored duration, which is what "no control" measured: the wall
+        # sequence is still the only thing that locks the target out.
+        assert [event.get("cc_kind") for event in controls] == ["knockback"]
+        assert all("cc_duration" not in event for event in controls)
         assert _survival(combat, "enemy:Aatrox")["action_downtime"] == 0.0
 
     def test_module_parses_control_events_with_atoms(self, briar_data):
@@ -652,8 +713,8 @@ class TestTerrainCollisionControl:
         assert [
             (event.kind, event.duration, event.time_offset) for event in events
         ] == [
-            ("knockup", 0.5, 0.0),
-            ("stun", 1.5, 0.5),
+            ("knockup", 0.5, 1.0),
+            ("stun", 1.5, 1.5),
         ]
         assert e["control_source_atoms"][0]["source"] == _CONTROL_SOURCE
         assert e["control_source_atoms"][0]["values"] == [0.5, 1.5]
@@ -794,17 +855,23 @@ class TestExactBoundaryTimes:
 
     def test_hit_exactly_at_window_end_is_not_reduced(self):
         actions, _ = _run_modifier_window_walk()
-        end = next(action for action in actions if action.event_id == "h5")
+        end = next(
+            action for action in actions if EVENT_SLOTS.text(action.event_slot) == "h5"
+        )
         assert end.time == 1.0  # exactly start + sourced duration
         assert "support_damage_multiplier" not in end.event
         assert end.event["damage"] == pytest.approx(600.0)
-        just_outside = next(action for action in actions if action.event_id == "h6")
+        just_outside = next(
+            action for action in actions if EVENT_SLOTS.text(action.event_slot) == "h6"
+        )
         assert "support_damage_multiplier" not in just_outside.event
         assert just_outside.event["damage"] == pytest.approx(700.0)
 
     def test_hit_just_inside_the_window_end_is_reduced(self):
         actions, _ = _run_modifier_window_walk()
-        inside = next(action for action in actions if action.event_id == "h4")
+        inside = next(
+            action for action in actions if EVENT_SLOTS.text(action.event_slot) == "h4"
+        )
         assert inside.time == pytest.approx(0.999)
         assert inside.event["support_damage_multiplier"] == {
             "source": "Chilling Scream · damage reduction",
@@ -831,13 +898,21 @@ class TestExactBoundaryTimes:
         packet after the window is full with no receipt."""
         actions, _ = _run_modifier_window_walk()
         for event_id, amount in (("h0", 100.0), ("h1", 200.0), ("h2", 300.0)):
-            action = next(item for item in actions if item.event_id == event_id)
+            action = next(
+                item
+                for item in actions
+                if EVENT_SLOTS.text(item.event_slot) == event_id
+            )
             assert action.event["support_damage_multiplier"]["multiplier"] == (
                 pytest.approx(0.65)
             )
             assert action.event["damage"] == pytest.approx(amount * 0.65)
         for event_id, amount in (("h5", 600.0), ("h6", 700.0), ("h7", 800.0)):
-            action = next(item for item in actions if item.event_id == event_id)
+            action = next(
+                item
+                for item in actions
+                if EVENT_SLOTS.text(item.event_slot) == event_id
+            )
             assert "support_damage_multiplier" not in action.event
             assert action.event["damage"] == pytest.approx(amount)
 
@@ -924,23 +999,29 @@ class TestScoreAndReceiptAgreement:
             "source": "Chilling Scream · damage reduction",
             "source_key": "E",
             "_event_id": "self_state:E:0:0",
-            "_priority": -1.0,
+            SUPPORT_RANK_KEY: TransitionRank.AURA_ARM,
             "attacker": "enemy:Briar",
         }
         compiler.add_support_templates([template], 1, {"main": 0, "enemy:Briar": 1})
         action = compiler.actions[0]
         assert action.kind is ActionKind.DAMAGE_MODIFIER
-        assert action.phase == -1.0
+        # A modifier in force at its own timestamp arms at C4's
+        # ``AURA_ARM`` -- before the damage there, which is the fact the
+        # retired float encoded and the author now names.
+        assert action.phase is TransitionRank.AURA_ARM
         assert action.multiplier == pytest.approx(0.65)
         assert action.duration == pytest.approx(1.0)
         assert action.all_sources is True
         assert action.persistent is False
         assert action.next_event_only is False
-        assert action.owner == ""
+        # ``owner`` is a participant id the packet declares; the kernel
+        # keeps the roster slot it resolves to, and ``-1`` is the integer
+        # spelling of the empty owner string.
+        assert action.holder == -1
         assert action.source_participant == ""
         assert action.source == "Chilling Scream · damage reduction"
         assert action.source_key == "E"
-        assert action.event_id == "self_state:E:0:0"
+        assert EVENT_SLOTS.text(action.event_slot) == "self_state:E:0:0"
 
     def test_compiled_walk_prices_the_control_sequence(self):
         """Current observable for the wall option: the terrain-collision
@@ -956,13 +1037,15 @@ class TestScoreAndReceiptAgreement:
         )
         survival = fast["participants"][1]["survival"]
         assert survival["action_downtime"] == pytest.approx(2.0)
-        assert survival["crowd_control_until"] == pytest.approx(2.0)
+        # Anchored at the end of the full charge -- see
+        # ``test_wall_collision_control_receipts_and_downtime``.
+        assert survival["crowd_control_until"] == pytest.approx(3.0)
         assert [
             (interval["kind"], interval["start"], interval["end"])
             for interval in survival["crowd_control_intervals"]
         ] == [
-            ("knockup", 0.0, 0.5),
-            ("stun", 0.5, 2.0),
+            ("knockup", 1.0, 1.5),
+            ("stun", 1.5, 3.0),
         ]
 
     @pytest.mark.parametrize(
@@ -1070,7 +1153,10 @@ class TestDeterministicReceipts:
         assert len(one) == len(two) == 1  # exactly one packet, no duplicate
         assert one == two  # byte-identical receipts across identical fights
         assert one[0]["event_id"] == "self_state:E:0:0"
-        assert one[0]["priority"] == -1.0
+        # The ordering float is transport between the author and the walk;
+        # the published receipt serializes an explicit key list and never
+        # sees it (``survival.actions.SUPPORT_RANK_KEY``).
+        assert "priority" not in one[0]
         assert one[0]["duration"] == pytest.approx(1.0)
         assert one[0]["expires_at"] == pytest.approx(1.0)
 
@@ -1081,7 +1167,10 @@ class TestDeterministicReceipts:
                 for event in _events(
                     combat, attacker="main", target="enemy:Aatrox", source="E"
                 )
-                if "cc_kind" in event
+                # The full-charge knockback also carries a ``cc_kind`` now
+                # and authors no duration; this row is about the sourced
+                # knockup/stun sequence, which is what carries one.
+                if "cc_duration" in event
             ]
 
         first = controls(self._wall_fight())

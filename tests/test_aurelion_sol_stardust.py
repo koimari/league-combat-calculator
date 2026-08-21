@@ -8,7 +8,7 @@ RUNTIME FACTS (verify-before-pin completed, all pinned in S1):
   ticks at 0.125 s + 3 bursts at each full second), a timed-fight variant
   that channels the whole duration (``fight_duration_seconds`` injected by
   the pipeline; cooldown 999 in timed mode), the sourced 50%-strength
-  secondary beam via the parse-level undeclared ``q_secondary_targets``
+  secondary beam via the declared ``q_secondary_targets``
   option (clamped 0..5), and W's 108-112% flat-beam modifier.  The burst's
   Stardust %maxHP term is a HARDCODED module constant (0.031% of target
   max HP per stack) beside the degraded wiki parse (values [0,...],
@@ -736,11 +736,16 @@ class TestDefaultAbsentParity:
         assert snapshot["cooldown"] == pytest.approx(3.0)
         assert snapshot["resource_cost"] == pytest.approx(13.75)
         assert snapshot["resource_type"] == "MANA"
+        # Both parts carry the slot's reviewed ``cc_kind`` — Aurelion
+        # Sol's Q declares "none", the explicit reviewed-no-CC answer, and
+        # the engine stamps it on every part of the cast.
         assert snapshot["parts"] == [
             "DamagePart(magic, amount=13.125, count=26, hp_scaled=no, "
-            "crit_effectiveness=0.0, time_offset=0.125, hit_interval=0.125)",
+            "crit_effectiveness=0.0, time_offset=0.125, hit_interval=0.125, "
+            "cc_kind='none')",
             "DamagePart(magic, amount=100.0, count=3, hp_scaled=no, "
-            "crit_effectiveness=0.0, time_offset=1.0, hit_interval=1.0)",
+            "crit_effectiveness=0.0, time_offset=1.0, hit_interval=1.0, "
+            "cc_kind='none')",
         ]
 
 
@@ -964,14 +969,17 @@ class TestPrimaryAndSecondaryBeam:
         assert len(primary["Q"]["parts"]) == 2
 
     def test_secondary_target_count_clamped_to_5(self):
-        # The parse-level q_secondary_targets control clamps to 0..5 (the
-        # key is deliberately NOT declared in OPTIONS - the read-only
-        # option-meta test pins the declared set).
+        # The q_secondary_targets control clamps to 0..5, and it is a
+        # DECLARED option row like every other secondary-target count in
+        # the roster (Orianna's Command: Attack, Xayah's Clean Cuts): a formula
+        # reads its options through the rows the frontend renders, so the
+        # number it falls back to and the number the user sees are one.
         _, five = _parse({"stardust_stacks": 0, "q_secondary_targets": 5})
         _, six = _parse({"stardust_stacks": 0, "q_secondary_targets": 6})
         assert five["Q"]["total_raw"] == six["Q"]["total_raw"]
         meta = get_champion_options_meta("Aurelion Sol")
-        assert all(o["key"] != "q_secondary_targets" for o in meta["options"])
+        row = next(o for o in meta["options"] if o["key"] == "q_secondary_targets")
+        assert (row["default"], row["min"], row["max"]) == (0, 0, 5)
 
     def test_w_modifier_applies_to_primary_and_secondary_beam_only(self):
         # W rank 5 multiplies the beam flat damage by 112% - primary AND
@@ -1121,21 +1129,23 @@ class TestApiValidation:
         assert _api({"stardust_stacks": 999}).status_code == 200
 
     def test_unknown_keys_rejected_400(self):
-        # Unknown option keys fail closed with a named receipt; the
-        # deliberately undeclared q_secondary_targets is rejected too (the
-        # parse-level control is not an API option).
+        # Unknown option keys fail closed with a named receipt.
         response = _api({"stardust_stackz": 5})
         assert response.status_code == 400
         assert (
             response.get_json()["error"]
             == "champion_options contains unknown option stardust_stackz"
         )
-        response = _api({"q_secondary_targets": 2})
+        response = _api({"q_secondary_targetz": 2})
         assert response.status_code == 400
         assert (
             response.get_json()["error"]
-            == "champion_options contains unknown option q_secondary_targets"
+            == "champion_options contains unknown option q_secondary_targetz"
         )
+        # ...and the declared secondary-target row is accepted, which is
+        # what makes the rejection above a vocabulary check rather than a
+        # blanket refusal.
+        assert _api({"q_secondary_targets": 2}).status_code == 200
 
     def test_non_number_rejected_400(self):
         for bad in ("abc", True, None):

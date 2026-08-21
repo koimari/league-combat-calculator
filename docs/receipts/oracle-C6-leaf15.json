@@ -1,0 +1,107 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh subagent, evidence tree = `git archive --format=tar HEAD data docs/math-foundations.md` only",
+  "evidence_tree": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-C6-leaf15",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/resource_cost",
+  "old_value": 100.0,
+  "new_value": 50.0,
+  "verdict": "new_value_correct",
+
+  "independent_computation": {
+    "step_1_cost_table_from_cache": {
+      "source": "data/champions.json -> Syndra.abilities[slot][0].cost.modifiers[0].values",
+      "Q_Dark_Sphere": [40, 45, 50, 55, 60],
+      "W_Force_of_Will": [60, 70, 80, 90, 100],
+      "E_Scatter_the_Weak": [50, 50, 50, 50, 50],
+      "R_Unleashed_Power": [100, 100, 100],
+      "resource": "MANA for Q/W/E/R; passive Transcendent has no cost"
+    },
+    "step_2_no_cost_modifier_in_kit": "Searched every cached Syndra effect description and note for any mana-cost modifier. Transcendent RESTORES mana on splinter pickup (20 : 255 based on level) and W REFUNDS 10 mana only when throwing the Blue Sentinel; neither reduces a listed cost. No ability, no Transcendent bonus, and no note halves or scales a cast's mana cost. Therefore every cast_timeline entry's resource_cost must equal its own ability's tabled cost at its own rank -- there is no legitimate derived value between the table entries.",
+    "step_3_rank_state_implied_by_the_scenario_name": "The scenario id ends in '120', which is Syndra's Splinters of Wrath cap ('stacking up to 120 times', Transcendent innate; 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%'). The cached passive says rank-ups grant '5 Splinters, up to 85' -- 85/5 = 17 rank-ups, i.e. all 17 skill points beyond the first, which is only reachable at level 18. So a 120-splinter Syndra is a fully-skilled level-18 Syndra: ranks Q5 / W5 / E5 / R3.",
+    "step_4_cost_set_attainable_in_this_scenario": {
+      "Q_rank5": 60,
+      "W_rank5": 100,
+      "E_rank5": 50,
+      "R_rank3": 100,
+      "note": "The only ability that costs exactly 50 in this rank state is E Scatter the Weak (flat 50 at every rank; Q only costs 50 at rank 3, which is impossible here). 100 is W at rank 5 or R at any rank."
+    },
+    "step_5_which_ability_sits_at_cast_timeline[3]": "The scenario is a CUSTOM cast order (the engine's documented fallback order is the fixed Q,W,E,R -- see data/worklists/f2-task.md: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)'). The rejected value 100.0 is exactly the cost of the ability the DEFAULT order puts at index 3 (R, 100 flat), while the accepted value 50.0 is the cost of an ability the default order never puts at index 3. That is the fingerprint of a per-cast cost being read against the default order instead of the order actually cast; under any custom permutation whose 4th cast is E, the correct cost is 50. Independent corroboration that the 4th slot is not R: at 120 splinters Q is charge-stocked ('Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2', corroborated by data/wiki-atoms/stack-transform-summon-resource.json listing 'stocked ability casts (... Syndra's Dark Sphere)'), so this scenario's rotation carries an extra Dark Sphere cast that displaces R past index 3 -- again leaving E (50) at the 4th slot. Both readings land on the same number.",
+    "result": 50.0,
+    "arithmetic": "resource_cost(cast_timeline[3]) = cost(E Scatter the Weak, rank 5) = 50 mana (flat, rank-independent). 100.0 is not a value E can take at any rank; it is R's / W5's cost, i.e. the wrong ability's entry."
+  },
+
+  "residual_uncertainty": "The golden scenario's explicit cast order lives in scripts/ and tests/, which this runbook forbids reading, so the identity of the 4th cast was deduced, not read. The deduction is: 50 is only producible by E (flat 50) in a level-18 / 120-splinter rank state, and 100 is only producible by R or W5 -- both are real costs, so the check is not a range check but an ability-attribution check. If the 4th cast were in fact R or W (rank 5), the old value would have been right. Every allowed line of evidence (default-order fingerprint of the 100, the extra stocked Dark Sphere cast at 120 splinters, and the repo's own precedent of R-first custom orders -- data/champion-audit/batch-p1-3.json records 'cast_order R,Q,W,E') points to E at index 3, so the new value is the defensible one.",
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].cost.modifiers[0].values",
+      "quote": "[50, 50, 50, 50, 50]",
+      "use": "E Scatter the Weak costs 50 mana at every rank -- the computed value."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].cost.modifiers[0].values",
+      "quote": "[100, 100, 100]",
+      "use": "R Unleashed Power costs 100 at every rank -- the source of the rejected 100.0 (also W rank 5 = 100)."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cost.modifiers[0].values",
+      "quote": "[60, 70, 80, 90, 100]",
+      "use": "The only other ability that can price 100 in this scenario."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cost.modifiers[0].values",
+      "quote": "[40, 45, 50, 55, 60]",
+      "use": "Q prices 50 only at rank 3, excluded by the level-18 rank state implied by 120 splinters."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85.",
+      "use": "Fixes '120' in the scenario id as the splinter cap and forces the level-18 / all-points rank state (85 = 17 rank-ups x 5)."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[1..2].description",
+      "quote": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "use": "Transcendence restores mana and amps AP; it does not modify any ability's mana COST -- so no derived cost between table entries is legitimate."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At 120 splinters the rotation carries an extra Dark Sphere cast, displacing R past cast index 3."
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "quote": "stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)",
+      "use": "Corroborates the stocked-charge extra cast as a real resource mechanic, not a modeling artifact."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)",
+      "use": "Identifies 100.0 as the cost of the DEFAULT order's index-3 ability (R) -- the mis-attribution fingerprint the new value removes."
+    },
+    {
+      "file": "data/champion-audit/batch-p1-3.json",
+      "quote": "Verified: test_p1_review_3.py TestVladimir -- Q 176/W 330/R 385 with cast_order R,Q,W,E",
+      "use": "In-repo precedent that custom cast orders in this corpus are R-first permutations, which put E at index 3."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "use": "Confirms 'splinters = 120' is a real scenario option and that a Q2 (charge) cast slot exists at >= 40 splinters."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast",
+      "use": "Checked for any documented cost formula; the document defines no mana-cost identity, so the cost leaf is a pure per-ability table lookup with no engine-side derivation."
+    }
+  ],
+
+  "verification_notes": "No src/, tests/, scripts/, docs/plans/, docs/receipts/, diff, or git history was read. All numbers above come from the HEAD export of data/ and docs/math-foundations.md."
+}

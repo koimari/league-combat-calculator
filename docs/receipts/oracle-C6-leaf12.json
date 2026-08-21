@@ -1,0 +1,143 @@
+{
+  "receipt_id": "oracle-C6-leaf12",
+  "runbook": "R-18 / R-19 (independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[3]/name",
+  "old_value": "Unleashed Power",
+  "new_value": "Scatter the Weak",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "build_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "isolation_note": "Only data/ and docs/math-foundations.md were exported and read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan, and git history were never opened. The scenario definition itself was therefore NOT read; the correct cast order was re-derived from cached wiki text."
+  },
+
+  "step_0_decoding_the_scenario_name": {
+    "claim": "The '120' in 'syndra_custom_order_120' is Syndra's splinters option at its cap, not a cooldown or ability-haste value.",
+    "support": [
+      "data/champions.json > Syndra > P Transcendent: 'Syndra collects Splinters of Wrath ... stacking up to 120 times' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+      "data/champion-audit/batch-e9-1.json > Syndra: 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).'",
+      "data/champion-audit/batch-6.json > Syndra: module_slots.modeled = [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'"
+    ],
+    "consequence": "At splinters = 120 every Transcendent threshold is live: 40 (Q stocks a 2nd charge -> the Q2 slot), 60 (W bonus true damage), 80 (E slow), 100 (R execute), 120 (+15% AP)."
+  },
+
+  "independent_computation": {
+    "question": "What is the 4th entry (index 3) of a correct Syndra cast timeline at 120 splinters?",
+    "derivation": [
+      {
+        "step": 1,
+        "title": "The rotation is 5 casts, not 4, because Q is a stocked-charge ability at >= 40 splinters",
+        "reasoning": "Cached Q text: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' The cached Q block also carries rechargeRate [7,7,7,7,7] and cooldown affectedByCdr=false — i.e. the 7 s figure is a charge recharge, not a cast-blocking cooldown. Syndra therefore opens a full rotation with two back-to-back Dark Sphere casts (the audit's synthetic 'Q2' slot). Any 4-entry timeline [Q, W, E, R] is under-counting one cast at this splinter level.",
+        "result": "cast_timeline length = 5: two Q casts plus W, E, R."
+      },
+      {
+        "step": 2,
+        "title": "R must be LAST, so R cannot occupy index 3 of a 5-cast timeline",
+        "reasoning_a_sphere_scaling": "Cached R text: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target ... each dealing magic damage upon hit.' Leveling rows: Magic Damage per Sphere [80,120,160] (+20% AP); Minimum Magic Damage [240,360,480] (+60% AP) = 3 spheres; Maximum Magic Damage [560,840,1120] (+140% AP) = 7 spheres. Arithmetic check: 3x80=240, 7x80=560, 3x120=360, 7x120=840, 3x160=480, 7x160=1120 — the Minimum/Maximum rows are exactly the 3-sphere and 7-sphere cases, confirming R's damage is linear in grabbed sphere count with a 7/3 = 2.33x swing. Q spheres persist 6 s ('The Dark Sphere then remains on the ground for 6 seconds'), W only repositions a sphere ('If a Dark Sphere is grabbed, its duration is refreshed' -> thrown, still live), and E only knocks spheres back ('Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra'), so every pre-R cast leaves live spheres for R to grab. R therefore strictly gains from being cast after Q/Q/W/E and strictly loses from being cast earlier.",
+        "quantified": "At rank 3 with the two stocked Q spheres live: R grabs 3 conjured + 2 live = 5 spheres = 5x(160 + 20% AP) = 800 + 100% AP. With only one Q cast ahead of it (the old 4-cast shape): 4 spheres = 640 + 80% AP. Casting R at index 3 of a rotation that still has a damage cast after it is strictly dominated.",
+        "reasoning_b_execute": "This scenario is at 120 splinters, i.e. past the 100 threshold: 'Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health.' An execute is only reachable after the rest of the rotation has spent the target's health, which independently forces R to the tail of the order.",
+        "result": "index 3 (a non-final slot of a 5-cast timeline) cannot be 'Unleashed Power'. The old value is the 4th element of the naive fixed order Q,W,E,R — see the DEFAULT_CAST_ORDER note quoted below — which is exactly the fingerprint of a timeline that ignored the second Dark Sphere charge / the scenario's custom order."
+      },
+      {
+        "step": 3,
+        "title": "Of the two remaining non-final casts, W precedes E, putting E at index 3",
+        "reasoning": "W's cached text: 'Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location' (targetRange '925 * 950 * 500'). E's cached text: 'Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast.' Casting E first flings the live spheres 950-1200 units away — beyond W's 500-unit grab radius — so an E-before-W order destroys W's own setup, while a W-before-E order leaves the thrown (duration-refreshed) sphere sitting on the target where E's cone can knock it into them for the stun-plus-damage. The application-before-consumption direction is one-way here.",
+        "result": "Order = Dark Sphere, Dark Sphere (2nd charge), Force of Will, Scatter the Weak, Unleashed Power."
+      }
+    ],
+    "computed_timeline": [
+      {"index": 0, "name": "Dark Sphere"},
+      {"index": 1, "name": "Dark Sphere"},
+      {"index": 2, "name": "Force of Will"},
+      {"index": 3, "name": "Scatter the Weak"},
+      {"index": 4, "name": "Unleashed Power"}
+    ],
+    "computed_value_at_index_3": "Scatter the Weak"
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0]",
+      "quote": "cooldown {values [7,7,7,7,7], affectedByCdr false}; rechargeRate [7,7,7,7,7]; 'The Dark Sphere then remains on the ground for 6 seconds.'"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. If a Dark Sphere is grabbed, its duration is refreshed"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects + leveling",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. | Magic Damage per Sphere [80,120,160] (+20% AP); Minimum Magic Damage [240,360,480] (+60% AP); Maximum Magic Damage [560,840,1120] (+140% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... note: 'No MODULE_COVERAGE dict; hand-written module. modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "S1.1, lines 59-67",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "CONTEXT",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R). ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "path": "DELIVERABLE 1a",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata: an ability whose row names indicate application (poison/blemish/stack/mark/amp/slow/root/stun/on-hit) must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing)"
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "stack-transform-summon-resource.ammo",
+      "quote": "stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    }
+  ],
+
+  "why_the_old_value_is_wrong": "'Unleashed Power' at index 3 is exactly the 4th element of the naive DEFAULT_CAST_ORDER (Q,W,E,R) quoted in data/worklists/f2-task.md. It requires a 4-cast timeline, which contradicts the cached Q text at this scenario's splinter level (two stocked Dark Sphere charges -> the module's Q2 slot), and it places R — whose damage is linear in the live spheres it grabs (3 -> 7 spheres, a 2.33x swing) and which gains a sub-15%-HP execute at 100 splinters — ahead of a remaining damage cast, which is strictly dominated by casting it last.",
+
+  "confidence_and_caveats": {
+    "confidence": "high on 'index 3 is not Unleashed Power'; moderate-high on the specific replacement 'Scatter the Weak' rather than 'Force of Will'",
+    "caveats": [
+      "The scenario definition (a tests/ or scripts/ fixture) is outside the permitted evidence tree, so the literal custom order it feeds was not read. The derivation above reconstructs the correct order from cached wiki text and the audit's slot inventory.",
+      "The W-vs-E ordering at indices 2/3 rests on the range geometry in the cached E/W text (E knocks spheres 950-1200 units away, past W's 500-unit grab radius), not on an explicit ordering statement in the data.",
+      "If the scenario's custom order deliberately specifies an order in which R is 4th of five, that order is not the damage-optimal one by the sphere-count and execute arguments above; the observed new value is consistent with the optimal order."
+    ]
+  }
+}

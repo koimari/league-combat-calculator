@@ -1,0 +1,139 @@
+{
+  "receipt_id": "oracle-C6-leaf100",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[10]",
+  "old_value": null,
+  "old_value_note": "<absent> - the old baseline's damage_events array had exactly 10 entries (indices 0..9)",
+  "new_value": {
+    "damage": 650.0,
+    "damage_type": "magic",
+    "phase": "ability",
+    "source": "Q",
+    "time": 10.0
+  },
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/staleness.json",
+      "data/practice-corpus/scenarios.json",
+      "data/champion-audit/batch-6.json",
+      "data/champion-audit/batch-e9-1.json",
+      "data/worklists/f2-task.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_damage_type_and_source": {
+      "claim": "A `Q` event on Syndra must be magic damage.",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].damageType = \"MAGIC_DAMAGE\"; effects[0] attribute = \"Magic Damage\"",
+      "result": "damage_type=\"magic\", source=\"Q\", phase=\"ability\" are all consistent. PASS"
+    },
+    "step_2_magnitude": {
+      "wiki_formula": "Dark Sphere (Q): 90 / 125 / 160 / 195 / 230 (+ 70% AP) magic damage",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].leveling[0].modifiers = [{values:[90,125,160,195,230], units:[\"\"]}, {values:[70,70,70,70,70], units:[\"% AP\"]}]",
+      "verified_against_game_files": "data/staleness.json -> champions.Syndra: stale=false, ability_rows_stale=0, note \"Q[0] Magic Damage matched BaseDamage\" (patch 16.15)",
+      "solve": "650.0 = base(rank) + 0.70 x AP  =>  AP = (650 - base)/0.7",
+      "lattice": [
+        {"rank": 1, "base": 90, "required_AP": 800.0},
+        {"rank": 2, "base": 125, "required_AP": 750.0},
+        {"rank": 3, "base": 160, "required_AP": 700.0},
+        {"rank": 4, "base": 195, "required_AP": 650.0},
+        {"rank": 5, "base": 230, "required_AP": 600.0}
+      ],
+      "result": "650.0 lands EXACTLY on Syndra Q's damage lattice for an integer AP at every rank (600/650/700/750/800). docs/math-foundations.md Section 5 pins `calculate_total_stats` to 'display-level integer rounding of health/AD/AP/armor/MR before damage', so an integer AP is exactly what the engine feeds the scaling - i.e. 650.0 is a value Q can actually produce, not an arbitrary float. PASS",
+      "mitigation_check": "docs/math-foundations.md 2.1: post = raw x 100/(100+R). A damage_event's `damage` field is post-mitigation (data/practice-corpus/scenarios.json e9-e5-veigar-primordial-burst: raw_damage 325.0 -> damage 213.8 vs 52 MR). Solving 650 = raw x 100/(100+MR) with raw on the Q lattice and integer AP forces MR_effective to be a multiple of 7 (65*MR/7 must be an integer); MR_effective = 0 (a manual target with no MR, or full magic pen) is the only natural solution, giving raw = post = 650. PASS/consistent."
+    },
+    "step_3_no_transcendence_buff_active": {
+      "claim": "The value proves Syndra's 120-splinter Transcendence (+15% AP) is NOT applied to this cast, which is self-consistent for a scenario at 60 splinters.",
+      "source": "data/champions.json -> Syndra.abilities.P effects: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%'; data/champion-audit/batch-e9-1.json -> Syndra: 'splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage'",
+      "check": "With the buff, 650 = base + 0.70 x 1.15 x AP gives AP in {695.65, 652.17, 608.70, 565.22, 521.74} - not an integer at any rank. Without the buff every rank yields an integer AP. So the leaf is consistent with splinters < 120 (e.g. the scenario's 60), and inconsistent with an erroneously applied capstone buff. PASS",
+      "also": "At 60 splinters the W Transcendent bonus is true damage; this event is magic, so it is not a mis-attributed W true-damage packet."
+    },
+    "step_4_should_the_event_exist_at_all": {
+      "model": "docs/math-foundations.md 1.1: 'Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window'; Section 5 row 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT', with the documented model constraint 'R casts exactly once per timed fight'.",
+      "sourced_cooldowns": {
+        "Q": "7 / 7 / 7 / 7 / 7 (data/champions.json Syndra.Q.cooldown; affectedByCdr=false; rechargeRate [7]x5; 2 charges at 40+ splinters per the Transcendent bonus)",
+        "W": "12 / 11 / 10 / 9 / 8",
+        "E": "15 at every rank",
+        "R": "120 / 100 / 80"
+      },
+      "count_lower_bound_over_a_60s_window_at_zero_haste": {
+        "Q_epochs_0_7_14_..._56": 9,
+        "W_rank5_epochs_0_8_..._56": 8,
+        "E_epochs_0_15_30_45": 4,
+        "R": 1,
+        "total_damaging_ability_casts": ">= 22"
+      },
+      "conclusion": "A 60-second Syndra fight cannot contain only 10 damage events. Cast times are at most 0.25 s (E, R; Q and W are castTime 'none'), so shared-timeline mutual exclusion cannot compress 22+ cast epochs down to 10. The OLD baseline (array length exactly 10, nothing at or after t = 10.0 s) is therefore under-populated for this window; growing the array is the direction the sourced model demands. The added event is required, not spurious."
+    },
+    "step_5_the_timestamp": {
+      "check": "t = 10.0 is not a multiple of Q's unhasted 7 s cooldown (epochs 0, 7, 14, ...).",
+      "reconciliation": "Syndra's R passive explicitly grants Q ability haste: 'Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' = 10 / 20 / 30 (data/champions.json Syndra.R effects[0]). With effective_cooldown = cd x 100/(100+AH) (docs/math-foundations.md Section 5, EXACT), 40 total ability haste on Q gives 7 x 100/140 = 5.000 s exactly, whose epochs are 0, 5, 10, 15, ... - t = 10.0 is the third Q cast. 40 AH = R rank 3 (30) + 10 item/rune haste, or R rank 2 (20) + 20 haste.",
+      "cross_check_of_the_scheduling_convention": "The same convention is visible in the verified corpus: data/practice-corpus/scenarios.json e9-e8-rengar-battle-roar-grey (time_based, 16 s, no items) shows Battle Roar events at t = 0.0 and t = 10.0, and Rengar W rank 5 cooldown is 10 (data/champions.json) - i.e. events land at exact multiples of the effective cooldown, 0, cd, 2cd, ... So an event at a clean 10.0 s is the engine's ordinary epoch arithmetic, not a fabricated timestamp.",
+      "residual_uncertainty": "The scenario's cast order, ranks, AP and ability haste live outside the evidence tree (scenario fixtures are not under data/; data/practice-corpus/scenarios.json contains no Syndra scenario). I therefore verify the magnitude exactly and the existence of the event decisively, while t = 10.0 is verified as *attainable and conventional* (exactly 40 ability haste on Q, or the custom order's queueing) rather than uniquely pinned. Nothing in the sourced data contradicts it; a 7 s unhasted Q would put the cast at 14.0 instead, which is the only competing reading and one that cannot produce a shorter old array either."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0]",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. ... Magic Damage: values [90,125,160,195,230] + [70] % AP; damageType MAGIC_DAMAGE; cooldown [7,7,7,7,7] (affectedByCdr false); rechargeRate [7,7,7,7,7]; castTime none"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste: [10, 20, 30]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%. / Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/staleness.json",
+      "path": "champions.Syndra",
+      "quote": "{\"stale\": false, \"stat_drift\": {}, \"ability_rows_checked\": 15, \"ability_rows_stale\": 0, \"note\": \"... Q[0] Magic Damage matched BaseDamage ...\"} (patch 16.15)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). With c_i the effective cooldown of ability i, the cast epochs of a solo ability are 0, c_i, 2c_i, ..."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 5 (formula-audit table)",
+      "quote": "Ability haste (effective_cooldown) | cd' = cd*100/(100+AH) ... EXACT | R casts exactly once per timed fight (model constraint, documented)  ///  Stat rounding (calculate_total_stats) | display-level integer rounding of health/AD/AP/armor/MR before damage"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.1",
+      "quote": "m(R) = 100 / (100 + R) (apply_resistance, resistance.py); post = raw * m(R)"
+    },
+    {
+      "file": "data/practice-corpus/scenarios.json",
+      "path": "scenarios[e9-e5-veigar-primordial-burst].expected",
+      "quote": "{\"kind\": \"ability_event\", \"source\": \"R\", \"raw_damage\": 325.0, \"damage\": 213.8, \"time\": 0.0} - establishes that a damage_event's `damage` field is post-mitigation and `time` is the cast epoch"
+    },
+    {
+      "file": "data/practice-corpus/scenarios.json",
+      "path": "scenarios[e9-e8-rengar-battle-roar-grey].expected",
+      "quote": "healing_events at time 0.0 and time 10.0 in a 16 s time_based fight - Rengar W rank 5 cooldown is 10 (data/champions.json), confirming events land on exact 0, cd, 2cd epochs"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra",
+      "quote": "\"E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.\""
+    }
+  ],
+
+  "conclusion": "650.0 magic damage from Syndra's Q is exactly reproducible from the patch-16.15 wiki row 90/125/160/195/230 (+70% AP) at an integer AP (600 at rank 5, 650/700/750/800 at ranks 4..1) with no magic resistance in the way, and it is inconsistent with an erroneously applied 120-splinter +15% AP capstone - i.e. the number is right and is applying the right buff set. Independently, the sourced cooldowns (Q 7, W 8-12, E 15, R 80-120) put a floor of ~22 damaging ability casts in a 60-second window, so the old 10-event array was structurally short and the array had to grow. The timestamp 10.0 s is the third epoch of a Q at exactly 40 ability haste (7 x 100/140 = 5.0 s), which Syndra's own R passive supplies 10/20/30 of, and matches the engine's demonstrated 0/cd/2cd epoch convention (Rengar W at 0.0 and 10.0). No sourced value contradicts any field of the new leaf.",
+  "verdict_final": "new_value_correct",
+  "committed": false
+}

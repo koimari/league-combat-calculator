@@ -10,21 +10,27 @@ and "Increased Damage per Stack" 20/25/30 + 5% AP) is modeled through
 the ``r_arcane_perfection`` option — each barrage beyond the first
 carries the accumulated per-stack bonus (capped at the sourced Maximum
 Stacks), 0 by default so the unoptioned price is the sourced Total row.
+
+Coverage: P (Mana Surge) restores mana on his basic attacks. A resource
+refund is an axis the engine does not have, so the slot is out of
+scope.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764db"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Xerath", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
+# Both basic-ability hits land 0.528 seconds after their cast: Arcanopulse's
+# recast makes Xerath "unable to act for 0.528 seconds and afterwards fires
+# a beam", and Eye of Destruction "strikes the target location after 0.528
+# seconds" (cached Q and W prose).
+_BLAST_DELAY_SECONDS = 0.528
+
 
 # HARDCODED: verify on patch updates — the 0.627-second barrage cadence is
 # prose in the cached R description ("Each cast has a static cooldown of
@@ -43,7 +49,7 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     recasts = int(round(extract_named(ability, "Number of Recasts", rank)))
     per_shot = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    stacks = min(max(int(ctx.options.get("r_arcane_perfection", 0)), 0), 6)
+    stacks = min(max(int(ctx.option("r_arcane_perfection")), 0), 6)
     if stacks > 0:
         maximum_stacks = int(round(extract_named(ability, "Maximum Stacks", rank)))
         per_stack = extract_named(
@@ -101,9 +107,28 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["R"] = _rite_of_the_arcane
-parse_abilities = build_parser(SLOTS, "Xerath")
+# Eye of Destruction lands "dealing magic damage to enemies hit and slowing
+# them by 25% for 2.5 seconds"; Shocking Orb "deals magic damage to the
+# first enemy hit and stuns them for 0.75 : 2.25 ... seconds".  Arcanopulse
+# only beams (its 0% : 40% slow is Xerath's own charge penalty) and the
+# Arcane Barrages only strike.  P restores mana on a basic attack and
+# authors no ability part.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "stun", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Xerath",
+    PACKET_SHA256,
+    # E's orb has no sourced travel number to place — the packet is one hit.
+    single_hit_slots=frozenset({"E"}),
+    packet_part_timings={
+        "Q": {"time_offset": _BLAST_DELAY_SECONDS},
+        "W": {"time_offset": _BLAST_DELAY_SECONDS},
+    },
+    slot_parsers={
+        "R": _rite_of_the_arcane,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -143,4 +168,3 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

@@ -1,0 +1,45 @@
+{
+  "artifact": "escalated_defects",
+  "slice": "P3-3.7",
+  "escalated_in": "the 3.7 sign-off repair commit that adds champions/inputs.py",
+  "why_this_file_exists": "D-24's guard — a source assertion forbidding a `.get(key, <literal>)` fallback on a champion input block — is what makes the declared zero_policy default honest. Implementing it required routing 370 reads through declared vocabularies, and the vocabularies are asserted against their producers. That assertion is what a guard is for, and it immediately found one name no producer emits: Akshan's Heroic Swing reads `bonus_attack_speed_percent` from the build's stat block, which `calculate_total_stats` has never emitted. The literal fallback answered 0.0 every time, so the ability's attack-speed scaling term has always priced zero. Correcting it moves a number, and phase 3's criterion 17 allows a golden diff for exactly one slice (Shadowflame), which is not this one; a numeric correction here would also be a second semantic change in a commit that already carries one (R-30). So the zero is stated at the site with this id rather than defaulted, and the defect is recorded as a dated, gated artifact — commit-body prose is what the next baseline re-capture absorbs.",
+  "gate": "tests/test_champion_inputs.py::TestTheEscalatedDefectIsStillTracked",
+  "defects": [
+    {
+      "id": "akshan_heroic_swing_reads_a_stat_no_producer_emits",
+      "dated": "2026-08-11",
+      "origin": "pre-campaign; the read and its literal fallback predate phase 3",
+      "raised_by": [
+        {
+          "signoff": "verify-P3-3.7",
+          "finding": "Phase 3 criterion 7 NOT DISCHARGED — the `.get(key, <literal>)` guard shipped as a 412-site ratchet instead of the assertion the criterion names, so the exact failure shape (an unwired input defaulting to a literal, its zero then stamped MEASURED) remained live and silent.",
+          "corrected_here": "The assertion was implemented, the 370 input reads were routed through champions/inputs.py, and every vocabulary name is asserted against the producer that is supposed to emit it. Akshan's read is the one name that assertion rejected."
+        }
+      ],
+      "site": [
+        {
+          "file": "src/calculator/champions/akshan.py",
+          "fragment": "ESCALATED DEFECT akshan-bonus-attack-speed-percent"
+        },
+        {
+          "file": "src/calculator/stats.py",
+          "fragment": "\"bonus_attack_speed\": total_as_bonus"
+        }
+      ],
+      "defect": "Akshan's E (Heroic Swing) prices `Physical Damage per Shot`, whose third wiki modifier carries the unit ' + 0.3 per 100% bonus attack speed'. `_extract_e_per_shot`'s unusual-unit override resolved that term as `as_ratio * (stats_context.get(\"bonus_attack_speed_percent\", 0.0) / 100.0) * value`. `calculate_total_stats` emits `bonus_attack_speed`, never `bonus_attack_speed_percent`, so the read has always returned its literal and the term has always been zero: Heroic Swing prices its flat and %AD rows and none of its attack-speed scaling. The literal fallback is exactly what hid it — the formula kept running and produced a number, and D-24's declared default would have stamped a zero total MEASURED. Removing the fallback is what surfaced it.",
+      "live_signature": {
+        "champion": "Akshan",
+        "slot": "E",
+        "attribute": "Physical Damage per Shot",
+        "stat_read": "bonus_attack_speed_percent",
+        "stat_the_producer_emits": "bonus_attack_speed",
+        "producer": "calculator.stats.calculate_total_stats",
+        "reproducer": "calculate_total_stats(champions['Akshan'], 18, []) has no 'bonus_attack_speed_percent' key; _extract_e_per_shot(E, 5, stats) returns 65.75 at rank 5 both with bonus_attack_speed=68.0 and with bonus_attack_speed=1.5, i.e. the term does not move with attack speed at all",
+        "measured_per_shot_rank_5": 65.75
+      },
+      "reaches_the_committed_coupled_baseline": true,
+      "not_fixed_here_because": "Correcting the read moves Akshan's E damage in both baselines. Phase 3's criterion 17 permits a golden diff for exactly one slice and this is not it, and R-30 forbids batching a second semantic correction into a commit that already carries one. The correction also owes its own R-20 population — every scenario whose Akshan E is priced — and an oracle receipt per qualifying leaf (R-19).",
+      "resolution": "A named follow-on slice: resolve the term from the declared `bonus_attack_speed` stat, confirming its unit against the cached wiki text first (the producer's value is 68.0 for a 68% build, so the term is `as_ratio * bonus_attack_speed / 100.0` and not `/ 10000.0`); enumerate the qualifying population from the committed baselines before the edit; carry an oracle receipt per occurrence; re-capture at the phase boundary."
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "receipt": "oracle-C6-leaf9",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD -- data docs/math-foundations.md, nothing else read)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[2]/name",
+  "old_value": "Scatter the Weak",
+  "new_value": "Force of Will",
+  "verdict": "new_value_correct",
+  "confidence": "high on the value, medium on the mechanism (the scenario's declared cast_order string lives in scripts/, which the runbook forbids reading; the reconstruction below is from cached data only)",
+
+  "independent_computation": {
+    "step_1_decode_the_scenario_id": {
+      "claim": "'120' is the Splinters of Wrath stack count (the champion module's `splinters` option), not ability haste, not a duration.",
+      "evidence": "data/champions.json Syndra P 'Transcendent': 'Syndra collects Splinters of Wrath ... stacking up to 120 times' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' Corroborated by data/champion-audit/batch-e9-1.json Syndra: 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)' and data/champion-audit/batch-6.json Syndra: 'splinters option (0-120) gates Q2 second charge'.",
+      "conclusion": "120 = max splinters, so EVERY Transcendent threshold is active in this scenario: 40 (Q charges), 60 (W true damage), 80 (E scatter angle/slow), 100 (R execute, documented not modeled), 120 (+15% AP)."
+    },
+    "step_2_slot_to_name_mapping": {
+      "source": "data/champions.json -> Syndra.abilities",
+      "mapping": {
+        "Q": "Dark Sphere",
+        "W": "Force of Will",
+        "E": "Scatter the Weak",
+        "R": "Unleashed Power"
+      },
+      "note": "Both the old and the new leaf values are legitimate Syndra ability names, so this is a timeline-position question, not a naming-typo question."
+    },
+    "step_3_the_40_splinter_second_dark_sphere_is_a_real_extra_cast": {
+      "wiki_text": "data/champions.json Syndra Q 'Dark Sphere' effect: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "supporting": [
+        "data/champions.json Syndra Q rechargeRate = [7,7,7,7,7] (an ammo/recharge mechanic, i.e. stocked charges, not a plain cooldown).",
+        "data/wiki-atoms/stack-transform-summon-resource.json 'ammo' atom explicitly lists 'stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)'.",
+        "data/champion-audit/batch-6.json Syndra module_slots.modeled = ['P','Q','Q2','W','E','R'] with note 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)' and notable_atoms 'ammo (Q 2nd charge at 40 splinters)'."
+      ],
+      "conclusion": "At splinters = 120 (>= 40) Syndra enters the fight with two stocked Dark Spheres, and the engine models the second one as a distinct cast slot 'Q2'. A rotation cast timeline at 120 splinters must therefore contain TWO Dark Sphere casts, not one."
+    },
+    "step_4_reconstruct_the_timeline": {
+      "slot_order_from_cached_audit": "P, Q, Q2, W, E, R (data/champion-audit/batch-6.json)",
+      "engine_semantics_quoted": "docs/math-foundations.md 1.1: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... resolved greedily by cast order.' Cast times from data/champions.json: Q castTime 'none', W castTime 'none', E 0.25, R 0.25 — no cooldown lets any of Q/W/E return inside the opening burst (Q 7s recharge, W 12-8s, E 15s), so the opening cast_timeline is exactly the cast order, one entry per slot.",
+      "timeline_without_the_second_charge": ["Dark Sphere (Q)", "Force of Will (W)", "Scatter the Weak (E)", "Unleashed Power (R)"],
+      "timeline_with_the_120-splinter_second_charge": ["Dark Sphere (Q)", "Dark Sphere (Q2)", "Force of Will (W)", "Scatter the Weak (E)", "Unleashed Power (R)"],
+      "index_2": {
+        "without_Q2": "Scatter the Weak  <- the old golden value",
+        "with_Q2": "Force of Will      <- the new golden value"
+      },
+      "conclusion": "The 120-splinter state mandates the second Dark Sphere cast, which shifts every later cast one slot right. Index 2 is Force of Will."
+    },
+    "step_5_independent_cross_check_via_the_custom_cast_order_reading": {
+      "why": "The id also says 'custom_order'. The engine exposes a cast_order option written as a slot list — cached evidence: data/champion-audit/batch-p1-3.json, 'Verified: test_p1_review_3.py TestVladimir — Q 176/W 330/R 385 with cast_order R,Q,W,E'.",
+      "argument": "Whatever the declared order is, 'Scatter the Weak at index 2' is precisely the DEFAULT Q,W,E,R answer — i.e. the value a timeline produces when the custom order (or the Q2 charge, or both) had no effect. A scenario whose entire purpose is to exercise a non-default cast order cannot legitimately reproduce the default third cast. Every non-default reconstruction I can build from cached data that explains a CHANGE at this index lands on the W slot: (a) Q,W,E,R + Q2 inserted after Q; (b) the repo's own documented custom order R,Q,W,E (R->Q->W). Both give 'Force of Will' at index 2.",
+      "domain_sanity_check": "Syndra's W 'telekinetically grabs the nearest Dark Sphere' and her E knocks Dark Spheres back (stun); both consume spheres, so a correct Syndra rotation opens with the Dark Sphere cast(s) and only then spends them. Opening Q, Q(2nd charge), W is the mechanically correct 120-splinter rotation. (data/champions.json Syndra W and E active prose.)"
+    },
+    "residual_risk": "The one reconstruction that would make BOTH values wrong is a custom order that is R-first AND has Q2 auto-inserted after Q (R, Q, Dark Sphere(Q2), W -> index 2 = 'Dark Sphere'). I found no evidence for an R-first Syndra order: the cached R-first precedent is Vladimir, justified there by the Hemoplague damage-amp debuff being applied at fight start (data/champion-audit/batch-p1-3.json), and Syndra's R carries no fight-opening debuff — its only pre-cast rider, the 100-splinter execute, is documented as not modeled ('the fight target never dies', batch-6.json). Syndra's R also consumes live spheres ('grabs up to 4 nearby live ones'), which argues against an R-first order on domain grounds too."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.name / .W.name / .E.name",
+      "quote": "Q = 'Dark Sphere', W = 'Force of Will', E = 'Scatter the Weak', R = 'Unleashed Power'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P.effects[0] / [2].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath ... stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q.rechargeRate / W.effects[0] / E.effects[0]",
+      "quote": "Q rechargeRate [7,7,7,7,7]; W 'Syndra telekinetically grabs the nearest Dark Sphere ... She prioritizes grabbing the nearest unit, then Dark Spheres.'; E 'Dark Spheres can be knocked back for 950 units ... Targets hit are also stunned for 1.25 seconds'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.{Q,W}.castTime / {E,R}.castTime",
+      "quote": "Q castTime 'none', W castTime 'none', E castTime 0.25, R castTime 0.25"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots / notable_atoms",
+      "quote": "modeled: ['P','Q','Q2','W','E','R'] ... note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.' ... 'ammo (Q 2nd charge at 40 splinters)' ... 'splinters option (0-120) gates Q2 second charge'"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "file": "data/champion-audit/batch-p1-3.json",
+      "locator": "Vladimir.gap_summary",
+      "quote": "Verified: test_p1_review_3.py TestVladimir — Q 176/W 330/R 385 with cast_order R,Q,W,E"
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "locator": "atom stack-transform-summon-resource.ammo",
+      "quote": "stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "section 1.1, lines 59-67",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    }
+  ],
+
+  "method_note": "Evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`. No src/, tests/, scripts/, docs/plans/, docs/receipts/, diff, or git history was read.",
+  "date": "2026-08-09"
+}

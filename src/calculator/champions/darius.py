@@ -35,6 +35,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -44,6 +45,8 @@ from .slotlib import (
     sum_modifiers,
     with_control_event,
 )
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # HARDCODED: verify on patch updates — the passive's bonus-AD ratios
 # exist ONLY in the description prose; its modifier ``units`` are all
@@ -143,7 +146,7 @@ def _starting_stacks(ctx: SlotCtx) -> int:
     stack count, the bleed's rate and the steroid can agree: asking for
     5 stacks without the buff describes a state the game cannot reach.
     """
-    stacks = int(ctx.options.get("starting_hemorrhage_stacks", 5))
+    stacks = int(ctx.option("starting_hemorrhage_stacks"))
     return min(max(stacks, 0), P_BLEED_MAX_STACKS)
 
 
@@ -160,7 +163,7 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    bonus_ad = ctx.stats.get("bonus_attack_damage", 0.0)
+    bonus_ad = ctx.stat("bonus_attack_damage")
     single_stack = (
         _per_level(ability, _P_BLEED_EFFECT, _P_PER_STACK_TOTAL, ctx.level)
         + P_BLEED_BONUS_AD_RATIO * bonus_ad
@@ -222,6 +225,10 @@ def _decimate(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["applies_dot_stack"] = True
     entry["cast_time"] = Q_CAST_TIME
+    # One swing on one target ("swinging it around himself to deal physical
+    # damage to nearby enemies") — the certification that carries the row's
+    # reviewed control answer into the event ledger.
+    entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -260,7 +267,11 @@ def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["empowers_next_auto"] = True
     entry["applies_dot_stack"] = True
-    if ctx.options.get("w_kill_assertion", False):
+    # "empowers his next basic attack" — one empowered swing per cast, so
+    # one part and one hit, which is what carries W's reviewed slow into
+    # the event ledger.
+    entry["event_order_certified"] = "single_hit"
+    if ctx.option("w_kill_assertion"):
         # P4-14: the kill is asserted (the model's target never dies, so
         # the input cannot prove it — the w_kill_assertion option is the
         # r_execute_recast precedent).  Every accepted W empowered attack
@@ -342,7 +353,8 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
         ),
     ]
     total = base + per_stack * stacks
-    if ctx.options.get("r_execute_recast", False):
+    execute_recast = bool(ctx.option("r_execute_recast"))
+    if execute_recast:
         # The recast lands after the 0.15s death check and its own leap
         # (R cast time again), at the same stack count the first R left.
         recast_offset = R_CAST_TIME + 0.15 + R_CAST_TIME
@@ -374,7 +386,7 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
         "true",
     )
     entry["parts"] = tuple(parts)
-    if ctx.options.get("r_execute_recast", False):
+    if execute_recast:
         entry["detail"] = (
             f"execute recast: both casts at {stacks} Hemorrhage stack(s) "
             f"({base:g} + {stacks} x {per_stack:g} per cast)"
@@ -505,27 +517,32 @@ SLOTS["E"] = with_control_event(
     effect_index=1,
 )
 
-parse_abilities = build_parser(SLOTS, "Darius")
+# Reviewed crowd control, read from the cached kit.  Q (Decimate) swings
+# "to deal physical damage to nearby enemies" with no control clause.  W
+# (Crippling Strike) empowers the next attack to "deal bonus physical
+# damage and slow the target by 90% for 1 second".  R (Noxian Guillotine)
+# is the pull/airborne/slow row, but it deals no damage of its own; P is
+# the Hemorrhage bleed.
+#
+# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Noxian Guillotine is control-free against the champion it damages — it
+# "attempts to execute the target enemy champion ... to deal true damage",
+# and fears only on a kill and only "nearby minions and monsters".  Its
+# row being two parts is no longer the obstacle (a shared instant is
+# certifiable since the engine's wave-6 rule); the per-Hemorrhage-stack
+# term is, because it hits once per stack and a repeated part is a
+# schedule, which ``single_hit`` refuses and which has no cadence to
+# author — the stacks land together, not in sequence.  Stating that would
+# take a "scale the amount by stacks" part the spec does not have.
+MODULE_CC = {"Q": "none", "W": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Darius",
-        "revision_id": 4022598,
-        "revision_timestamp": "2026-05-27T00:45:14Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Darius")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -534,11 +551,19 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Darius self-healing events from its authored packet."""
+    """Resolve Darius self-healing events from its authored packet.
+
+    Decimate's outer blade heals for 17% of missing health per enemy
+    champion hit, capped at 51% for three or more champions.  The heal is
+    paid on the CAST — one activation, however many hits the row authors —
+    and pair packets mark the cast so the coupled timeline coalesces those
+    per-target receipts before applying one live heal.
+    """
     healing = []
-    for event in damage_events:
-        if _healing._event_source(event) != "Q":
-            continue
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        event = payment.event
         trigger_time = float(event.get("time", 0.0))
         trigger_sequence = int(event.get("sequence", 0) or 0)
 
@@ -562,9 +587,5 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Darius", derive_self_healing)

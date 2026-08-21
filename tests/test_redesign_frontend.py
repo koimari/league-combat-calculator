@@ -282,35 +282,29 @@ def test_item_prices_come_from_the_catalogue_not_a_formula(source: str):
         assert banned not in source
 
 
-def test_zeroed_coverage_metadata_never_blanks_the_snapshot_stats(source: str):
-    """/api/items reports 0 for every stat in this cache generation; merging
-    it verbatim blanked every item's stat line and price in the UI."""
-    assert "SNAPSHOT_NUMERIC_FIELDS" in source
-    body = function_body(source, "function preferReportedNumbers(")
-    assert "Number(metadata[field]) ? metadata[field] : snapshotItem[field]" in body
-    for field in ("price", "ap", "ad", "hp", "armor", "mr", "haste", "lethality"):
-        assert f'"{field}"' in source.split("SNAPSHOT_NUMERIC_FIELDS")[1][:600], field
+def test_served_item_numbers_win_over_the_snapshot(source: str):
+    """buildItemCatalog publishes the served entries verbatim: a served 0 is
+    a real 0, and static/data.json carries no item that could outrank them."""
+    assert "SNAPSHOT_NUMERIC_FIELDS" not in source
+    assert "preferReportedNumbers" not in source
+    body = function_body(source, "function buildItemCatalog(")
+    assert "DATA.items = catalog.map((entry) => ({" in body
+    assert "...entry," in body
 
 
-def test_item_stat_lines_actually_resolve_from_the_served_catalogues():
-    """The merge fix is only real if the two served sources still disagree the
-    way it assumes: the snapshot carries stats, /api/items reports zeroes."""
+def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
+    """The stat line the UI shows is the served entry, so /api/items must
+    carry real numbers (an older cache generation sent zeroes for all)."""
     client = app_module.app.test_client()
     served = {entry["name"]: entry for entry in client.get("/api/items").get_json()}
-    snapshot = {
-        entry["name"]: entry
-        for entry in __import__("json").loads(
-            (ROOT / "static" / "data.json").read_text(encoding="utf-8")
-        )["items"]
-    }
-    shared = set(served) & set(snapshot)
-    assert shared
     with_stats = [
         name
-        for name in shared
-        if any(snapshot[name].get(field) for field in ("ap", "ad", "hp", "armor", "mr"))
+        for name, entry in served.items()
+        if any(entry[field] for field in ("ap", "ad", "hp", "armor", "mr"))
     ]
-    assert with_stats, "the patch snapshot must carry the stat block the UI shows"
+    assert len(with_stats) > len(served) // 2, "served catalogue must carry stats"
+    deathcap = served["Rabadon's Deathcap"]
+    assert deathcap["ap"] > 0 and deathcap["price"] > 0
 
 
 # ---------------------------------------------------------------------------
@@ -485,6 +479,28 @@ def test_feedback_widget_is_a_collapsed_disclosure_that_waits_for_a_scenario():
     assert "if (!STATE.champion)" in feedback
     # The old refreshContext re-parsed its own rendered HTML with a regex.
     assert "statusMarkup().match(" not in feedback
+
+
+def test_feedback_widget_validates_the_displayed_payload(source: str):
+    """A receipt's loadout is the exact /api/calculate payload behind the
+    number on screen, published by app.js. The widget's old DOM re-capture
+    (a different fight mode, an 18 cap, an empty roster) is gone, so the
+    /api/validation bias flag is measured against what the UI displayed."""
+    feedback = (ROOT / "static" / "js" / "feedback.js").read_text(encoding="utf-8")
+    for gone in ("captureFromDom", "_snapshot", 'byId("championName")', "Math.min(18"):
+        assert gone not in feedback, gone
+    assert "window.scryglass.getCurrentLoadout" in feedback
+    assert 'addEventListener("scryglass:result", refreshContext)' in feedback
+    assert (
+        "window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a"
+        " ?? null, postJson };" in source
+    )
+    # C3: the widget posts through app.js's one JSON POST, not its own fetch.
+    assert "fetch(" not in feedback
+    assert 'window.scryglass.postJson("/api/receipts", body)' in feedback
+    calculation = function_body(source, "function scheduleEngineCalculation()")
+    assert "requests: { a: payloads[0], b: payloads[1] || null }" in calculation
+    assert 'dispatchEvent(new Event("scryglass:result"))' in calculation
 
 
 def test_the_dead_quick_mode_layer_is_gone(source: str):

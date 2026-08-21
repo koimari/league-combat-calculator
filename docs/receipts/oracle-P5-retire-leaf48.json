@@ -1,0 +1,100 @@
+{
+  "receipt": "oracle-P5-retire-leaf48",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[7]",
+  "old_value": "<absent>",
+  "new_value": "free slots ranked by per-rank DPS (total_raw / effective cooldown) - consistent across the matrix",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle48",
+    "read": ["data/champions.json (Syndra)", "data/.champions.json.meta", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "docs/math-foundations.md, Section 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Theorem (renewal-reward). For a renewal process with interarrival times X_i and i.i.d. rewards R_i attached to each cycle, the long-run average reward rate is E[R]/E[X] ... The expected-damage-per-second of a rotation is the reward rate E[cycle damage]/E[cycle time]; every sustained fight number in the engine is this finite-horizon renewal-reward functional.",
+      "bears_on": "Justifies the metric itself: for a single ability considered alone the cycle is one cast, so E[R]/E[X] = total_raw / effective_cooldown exactly. The proposed ranking key is not an ad-hoc heuristic, it is the engine's own reward rate restricted to one ability."
+    },
+    {
+      "id": "S2",
+      "where": "docs/math-foundations.md, Section 1.1",
+      "quote": "the cast epochs of a solo ability are 0, c_i, 2c_i, ... - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "bears_on": "Confirms a cast-order priority exists and is the tie-break for the mutual-exclusion greedy schedule, i.e. there is a well-defined thing for 'free slots ranked by ...' to determine."
+    },
+    {
+      "id": "S3",
+      "where": "docs/math-foundations.md, Section 5 formula-audit table, ability-haste row",
+      "quote": "| Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT | R casts exactly once per timed fight (model constraint, documented) |",
+      "bears_on": "Supplies the effective-cooldown denominator used below, and establishes that R occupies a forced/single slot rather than competing for free slots - so R's position in the DPS ranking is inert."
+    },
+    {
+      "id": "S4",
+      "where": "data/champions.json -> Syndra.abilities (cached wiki text; data/.champions.json.meta fetched_at 1786113324.862417)",
+      "quote": "Q Dark Sphere: cooldown [7,7,7,7,7], affectedByCdr false, rechargeRate [7,7,7,7,7]; Magic Damage [90,125,160,195,230] (+70% AP). W Force of Will: cooldown [12,11,10,9,8], affectedByCdr true; Magic Damage [70,100,130,160,190] (+65% AP); Total Mixed Damage [78.4,112,145.6,179.2,212.8] (+[74.2,74.8,75.4,76,76.6]% AP). E Scatter the Weak: cooldown [15,15,15,15,15], affectedByCdr true; Magic Damage [60,95,130,165,200] (+60% AP). R Unleashed Power: cooldown [120,100,80], affectedByCdr true; Minimum Magic Damage [240,360,480] (+60% AP); Maximum Magic Damage [560,840,1120] (+140% AP).",
+      "bears_on": "All numerator/denominator inputs to the independent computation."
+    },
+    {
+      "id": "S5",
+      "where": "data/champions.json -> Syndra.abilities.R, first effect description (cached wiki text)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. [Ability Haste 10 / 20 / 30]",
+      "bears_on": "Independent proof from the cache that Dark Sphere's cooldown IS a haste-responsive quantity - so the `affectedByCdr: false` flag on Q is a data-model artifact of the rechargeRate/charge representation, not a claim that haste does not apply to Q. This is what makes the ranking haste-invariant (see caveat)."
+    }
+  ],
+
+  "independent_computation": {
+    "formula": "per_rank_DPS(ability) = total_raw(rank, AP) / effective_cooldown(rank, AH),  effective_cooldown = base_cd * 100/(100+AH)   [S1, S3]",
+    "rank_set": "Level 18 derived order gives Q5 / W5 / E5 / R3 (5+5+5+3 = 18 skill points), i.e. the free slots after the three forced R slots at levels 6/11/16.",
+    "numerators_at_those_ranks": {
+      "Q5": "230 + 0.70*AP",
+      "W5_total_mixed": "212.8 + 0.766*AP  (magic-only alternative: 190 + 0.65*AP)",
+      "E5": "200 + 0.60*AP",
+      "R3_min_3_spheres": "480 + 0.60*AP",
+      "R3_max_7_spheres": "1120 + 1.40*AP"
+    },
+    "denominators": {
+      "Q5": "7 * 100/(100+AH)",
+      "W5": "8 * 100/(100+AH)",
+      "E5": "15 * 100/(100+AH)",
+      "R3": "80 * 100/(100+AH)"
+    },
+    "worked_example_AH_0_AP_0": {
+      "Q": "230 / 7 = 32.86",
+      "W": "212.8 / 8 = 26.60",
+      "E": "200 / 15 = 13.33",
+      "R_min": "480 / 80 = 6.00",
+      "R_max": "1120 / 80 = 14.00",
+      "order": "Q > W > E > R (R_max edges E only in the degenerate AP=0, all-7-spheres reading)"
+    },
+    "worked_example_AH_120_AP_200": {
+      "note": "all four cooldowns scale by the same factor 100/220 = 0.4545, so the ranking is scale-invariant",
+      "Q": "(230+140) / 3.182 = 116.3",
+      "W": "(212.8+153.2) / 3.636 = 100.7",
+      "E": "(200+120) / 6.818 = 46.9",
+      "R_min": "(480+120) / 36.36 = 16.5",
+      "order": "Q > W > E > R"
+    },
+    "matrix_swept": {
+      "ability_haste": [0, 40, 80, 120],
+      "ability_power": [0, 100, 200, 400],
+      "result": "Q > W > E > R in all 16 cells (using the R minimum / 3-sphere reading, which is the only one that describes a cast with no pre-placed spheres). The single exception anywhere in the sweep is R_max slipping above E at AP=0 exactly, which is a corner of the sweep with no AP and a full 7-sphere board, and it does not touch the free-slot order because R is a forced slot [S3]."
+    },
+    "free_slot_order_derived": "Q first, then W, then E (R never competes: forced at 6/11/16 and 'R casts exactly once per timed fight' [S3]).",
+    "external_sanity_check": "That derivation reproduces the real-game Syndra max order (Q max first, W second, E last, R on cooldown) - an independent confirmation that the metric picks the right ability, not just a self-consistent one.",
+    "on_the_leaf_appearing": "sources[7] going from absent to present means the derived-order rotation list is one entry longer than the previous fixed list. Nothing in the cached data or in docs/math-foundations.md contradicts an eighth entry: the shared-timeline greedy schedule [S2] with Q5/W5/E5/R3 cooldowns (7 / 8 / 15 / 80 s before haste) plus the 0.25 s sourced cast times produces the cast sequence Q, W, E, R, Q, W, Q, E ... - an eighth cast exists at every haste level in the matrix, so the slot is real rather than a padding artifact."
+  },
+
+  "caveat_flagged": {
+    "issue": "Haste-invariance of the ranking depends on Q being treated as ability-haste affected.",
+    "detail": "data/champions.json marks Syndra Q `cooldown.affectedByCdr: false` (it is stored as a rechargeRate ability). If an implementation honors that flag literally, Q's per-rank DPS is frozen at 230/7 = 32.86 while W's grows linearly in AH, and W overtakes Q at AH = 23.5 (AP=0), 18.5 (AP=100), 15.5 (AP=200), 12.3 (AP=400). Under that reading the order at the '120' cell of the matrix would be W > Q > E > R, and the change note's claim of being 'consistent across the matrix' would be false.",
+    "resolution": "The cache itself refutes the literal reading: Syndra's R passive is stated as 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' [S5]. A cooldown that ability haste demonstrably reduces is haste-affected; the flag is describing the charge/recharge representation, not haste immunity. With Q haste-affected, all four denominators carry the same 100/(100+AH) factor, the ratios are haste-invariant, and 'consistent across the matrix' holds exactly as claimed.",
+    "action_for_owner": "Confirm the engine applies ability haste to Syndra Q's recharge. If it does not, this leaf is still correct at AH=0 but the 'consistent across the matrix' justification is not, and the derived order at high-haste cells would be wrong (W-first)."
+  },
+
+  "verdict_reasoning": "The ranking key is the engine's own renewal-reward rate specialized to one ability [S1], so it is principled rather than ad hoc. Computed independently from the cached wiki numbers [S4], it yields Q > W > E > R in every cell of a 4x4 haste x AP sweep, which reproduces Syndra's real max order and leaves R inert because R holds forced slots [S3]. The eighth rotation slot is supported by the shared-timeline schedule [S2] at every haste level tested. No cached datum contradicts the new value; the one way it could fail (literal reading of Q's affectedByCdr flag) is itself contradicted by the cached R passive text [S5]."
+}

@@ -13,13 +13,9 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable
 
 from .data_fetcher import fetch_item_data
+from .data_registry import data_version
 from .economics_data import sourced_combine_cost, sourced_sell_value, sourced_total
-from .loadout_rules import (
-    ITEM_TO_EXCLUSIVITY_GROUPS,
-    inventory_capacity,
-    required_boots_tier,
-    support_quest_item_stage,
-)
+from .loadout_rules import ITEM_TO_EXCLUSIVITY_GROUPS, inventory_capacity
 
 BASIC = "BASIC"
 EPIC = "EPIC"
@@ -32,41 +28,43 @@ _STACKABLE_RANKS = {BASIC}
 
 
 _ITEM_BY_ID_SOURCE: dict[str, Any] | None = None
+_ITEM_BY_ID_VERSION: int = -1
 _ITEM_BY_ID_MEMO: dict[int, dict[str, Any]] = {}
 
 
 def _item_by_id() -> dict[int, dict[str, Any]]:
-    """Id-keyed view of the item cache, memoized by cache-object identity.
+    """Id-keyed view of the item cache, memoized by cache generation.
 
     The optimizer prices thousands of plans per request; rebuilding this
-    mapping per call dominated enumeration.  A data refresh returns a new
-    cache object, which invalidates the memo on the next call.
+    mapping per call dominated enumeration.  The memo is valid while both
+    the cache object and ``data_version()`` are unchanged: the identity
+    check catches a replaced cache, and the version catches a cache
+    refreshed in place, which identity alone cannot see (D-49).
     """
     global _ITEM_BY_ID_SOURCE, _ITEM_BY_ID_MEMO  # pylint: disable=global-statement
+    global _ITEM_BY_ID_VERSION  # pylint: disable=global-statement
     source = fetch_item_data()
-    if source is not _ITEM_BY_ID_SOURCE:
+    version = data_version()
+    if source is not _ITEM_BY_ID_SOURCE or version != _ITEM_BY_ID_VERSION:
         _ITEM_BY_ID_SOURCE = source
+        _ITEM_BY_ID_VERSION = version
         _ITEM_BY_ID_MEMO = {int(item_id): item for item_id, item in source.items()}
     return _ITEM_BY_ID_MEMO
 
 
 def item_total(item: dict[str, Any]) -> int:
-    """Return the sourced total shop price, failing closed on missing data.
+    """Return the sourced DDragon total shop price, failing closed.
 
-    Prefers the DDragon total from the atomized economics tables: the wiki
-    cache can carry stale buy prices (Redemption cached at 2250 while the
-    real total is 2300).  Falls back to the cache when no sourced row exists.
+    The atomized economics table is the only home: the wiki cache carries
+    stale buy prices (Redemption cached at 2250 while the real total is
+    2300), so an item with no sourced row is withheld, never priced from it.
     """
     name = str(item.get("name") or "Unknown item")
-    sourced = sourced_total(item)
-    if sourced is not None:
-        return sourced
-    prices = item.get("shop", {}).get("prices", {})
-    if "total" not in prices:
-        raise KeyError(f"{name}: shop.prices.total")
-    total = int(prices["total"])
+    total = sourced_total(item)
+    if total is None:
+        raise KeyError(f"{name}: economics-sourced per_item_sell.total")
     if total <= 0:
-        raise ValueError(f"{name}: shop.prices.total must be positive")
+        raise ValueError(f"{name}: economics-sourced total must be positive")
     return total
 
 
@@ -448,65 +446,6 @@ def plan_incomplete_combine(plan: PurchasePlan) -> bool:
     """Recompute the incomplete_combine receipt for a priced plan's inventory."""
     inventory = collections.Counter(int(item["id"]) for item in plan.final_items)
     return bool(combine_candidates(inventory, _item_by_id()))
-
-
-def validate_economy_loadout(
-    plan: PurchasePlan,
-    *,
-    role: str = "",
-    role_quest_complete: bool = False,
-) -> None:
-    """Validate the resolved final loadout with stackability-aware duplicates.
-
-    Reuses the strict loadout rules when no duplicates survive (the common
-    shop_combine case); duplicate stackable components are allowed only for
-    items whose stackability is reviewed.
-    """
-    names = [item["name"] for item in plan.final_items]
-    if len(names) == len(set(names)):
-        from .loadout_rules import validate_resolved_loadout
-
-        validate_resolved_loadout(
-            plan.final_items,
-            boots=plan.final_boots,
-            role=role,
-            role_quest_complete=role_quest_complete,
-        )
-        return
-    counts = collections.Counter(names)
-    for name, count in counts.items():
-        if count > 1 and not is_stackable(_find_by_name(plan.final_items, name)):
-            raise ValueError(f"{name} cannot appear {count} times in one inventory")
-    equipped = ([plan.final_boots] if plan.final_boots else []) + plan.final_items
-    if len(equipped) > inventory_capacity(role, role_quest_complete):
-        raise ValueError("Selected items exceed the available inventory slots")
-    boot_items = [
-        item
-        for item in plan.final_items
-        if BOOTS in {str(r).upper() for r in item.get("rank", []) or []}
-    ]
-    if boot_items:
-        raise ValueError("Boots must use the dedicated boots slot")
-    if plan.final_boots is not None:
-        expected_tier = required_boots_tier(role, role_quest_complete)
-        if int(plan.final_boots.get("tier", 0)) != expected_tier:
-            raise ValueError(
-                f"{plan.final_boots['name']} is tier {plan.final_boots.get('tier')}; "
-                f"this role state requires tier-{expected_tier} boots"
-            )
-    support_items = [
-        name for name in names if support_quest_item_stage(name) is not None
-    ]
-    if support_items:
-        raise ValueError("Support quest items require the support role and stage rules")
-    seen_groups: dict[str, str] = {}
-    for name in names:
-        for group in ITEM_TO_EXCLUSIVITY_GROUPS.get(name, ()):
-            if group in seen_groups and seen_groups[group] != name:
-                raise ValueError(
-                    f"{seen_groups[group]} and {name} cannot be equipped together ({group} group)"
-                )
-            seen_groups[group] = name
 
 
 def _find_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any]:

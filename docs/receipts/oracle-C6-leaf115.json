@@ -1,0 +1,100 @@
+{
+  "receipt_id": "oracle-C6-leaf115",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[7]/source",
+  "old_value": "W",
+  "new_value": "Q",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/*.md", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].cooldown / rechargeRate / castTime",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7]; cooldown.affectedByCdr = false; rechargeRate = [7,7,7,7,7]; castTime = \"none\""
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].cooldown, E[0].cooldown, R[0].cooldown",
+      "quote": "W cooldown = [12,11,10,9,8] (affectedByCdr true); E cooldown = [15,15,15,15,15] (affectedByCdr true, castTime 0.25); R cooldown = [120,100,80] (affectedByCdr true, castTime 0.25)"
+    },
+    {
+      "id": "S6",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -> Ability Haste [10, 20, 30]"
+    },
+    {
+      "id": "S7",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].effects[3].leveling['Bonus True Damage']",
+      "quote": "Bonus True Damage flat values = [8.4, 12, 15.6, 19.2, 22.8] (rank 5 = 22.8), plus % AP terms [9.2..11.6] and 1.14"
+    },
+    {
+      "id": "S8",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots / gap_summary",
+      "quote": "modeled = [P, Q, Q2, W, E, R] ... 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads Magic Damage per Sphere x user-set sphere count'"
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.1, shared-timeline scheduling",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts)."
+    },
+    {
+      "id": "S10",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, ability haste row",
+      "quote": "Ability haste (effective_cooldown) | cd' = cd*100/(100+AH) | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "id": "S11",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.2, multi-hit abilities",
+      "quote": "Multi-hit abilities. A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw (_mitigate_hits)."
+    },
+    {
+      "id": "S12",
+      "file": "data/worklists/e4-task-1.md, e5-task-1.md (house scenario convention)",
+      "quote": "a /api/calculate fight (level 18, rank 5 / R rank 3, no items)"
+    }
+  ],
+  "independent_computation": {
+    "step_0_scenario_reading": "The scenario id decomposes as champion=Syndra, config=custom cast order, splinters=60. 60 is the exact Splinters-of-Wrath threshold named in S3, and the Syndra module exposes a 0-120 splinters option (S8); a golden scenario pinned at 60 exists to sit on that boundary. R casts once per timed fight (S10), so the fight is a timed/multi-cast fight (a one-rotation fight cannot reach index 7).",
+    "step_1_which_transcendent_bonuses_are_live_at_60": "At 60 splinters BOTH thresholds below 60 are satisfied: Q's 2nd Dark Sphere charge (40, S2) and W's bonus true damage (60, S3 - 'Collecting 60' is inclusive at 60). Not live: E's 80-splinter enhancement, R's 100-splinter execute, P's 120-splinter AP buff. Confirmed as the module's own gating in S8.",
+    "step_2_opening_burst_membership": "All four abilities are off cooldown at t=0, so the shared timeline (S9) fires them back-to-back inside the first ~0.5 s (Q/W castTime none, E and R 0.25 s). The damage events authored in that opening burst are exactly six: (a) Q - Dark Sphere, (b) Q second charge (the synthetic Q2 slot, live because 60 >= 40), (c) W magic packet, (d) W bonus TRUE packet (live because 60 >= 60; true damage ignores resistances so it cannot be merged into the magic packet), (e) E, (f) R. R is one multi-hit event, not one event per sphere: the module reads 'Magic Damage per Sphere x user-set sphere count' (S8) and multi-hit parts are summed inside a single part (S11). Cross-check: if R authored one event per sphere the burst would be 5 + 3..7 >= 8 events and damage_events[7] would necessarily be an R sphere - neither the old nor the new value is R, which independently confirms burst size 6 and R-as-one-event.",
+    "step_3_the_next_two_events": "Indices 0-5 are consumed by the opening burst, so index 7 is the SECOND event after it. After the burst, Q's banked pair is spent and only one charge regenerates per recharge period (S2 'periodically stock a Dark Sphere charge', rechargeRate 7 in S4) - Q cannot fire twice again simultaneously. Effective cooldowns via cd' = cd*100/(100+AH) (S10), at the house convention level 18 / rank 5 / R rank 3 / no items (S12): Q = 7*100/(100+30) = 5.385 s (30 ability haste to Dark Sphere from R rank 3, S6), W = 8*100/100 = 8.000 s, E = 15.000 s. Ordering: 5.385 < 8.000 < 10.769 (= 2 x Q), i.e. Q < W < 2Q. So the next two events are Q at t=5.385 (index 6) and the W magic packet at t=8.000 (index 7).",
+    "step_4_result": "damage_events[7].source = W.",
+    "step_5_robustness": "The result is invariant to (i) the custom cast order - permuting the order only permutes the six events inside the t=0 burst, it does not change how many there are; (ii) R's rank - at R1/R2 Q = 700/110 = 6.364 s / 700/120 = 5.833 s, still < 8 and 2Q still > 8; (iii) the ambiguous Q 'affectedByCdr: false' flag (S4) - with no items AH = 0 so both readings give the same 5.385 s, and if Q IS haste-scaled then Q = 700/(130+AH) and W = 800/(100+AH) satisfy Q < W < 2Q for every AH >= 0 (700(100+AH) < 800(130+AH) always; 1400(100+AH) > 800(130+AH) always), so index 7 is W for any build. Sensitivities that would flip it, none of which hold here: W at rank 1 (12 s cooldown, then two Qs fit before the second W), or Q honouring affectedByCdr:false while the build carries >= ~49 ability haste (W drops below 5.385 s). Both are excluded by the level 18 / rank 5 / no items convention (S12).",
+    "step_6_what_new_value_Q_implies": "index 7 = Q requires an opening burst of exactly five events (then indices are burst 0-4, Q at 5, W at 6, Q at 7) - i.e. exactly one of the two 60-splinter-live components missing: either the Q second-charge event (contradicting S2, 60 >= 40) or the W bonus-true-damage event (contradicting S3, 60 >= 60 - the classic '> 60' instead of '>= 60' off-by-one at the very threshold this scenario pins). Both are wiki-contradicted at 60 splinters. The alternative route to Q, a seven-event burst, would require an extra authored event that nothing at 60 splinters justifies (P's buff needs 120, the execute needs 100).",
+    "step_7_supporting_magnitude_check": "The W true packet is non-zero and therefore a real event: at rank 5 the bonus is 12% + 2% per 100 AP of the W magic packet (190 + 65% AP). At AP = 0 that is 0.12 * 190 = 22.80, which reproduces the cached 'Bonus True Damage' rank-5 flat value 22.8 exactly (S7); at AP = 300 it is 0.18 * 385 = 69.30. So W genuinely authors two damage events at 60 splinters."
+  },
+  "conclusion": "Under the wiki-correct 60-splinter model (Q second charge live from 40, W bonus true damage live from 60), the opening burst holds six damage events and the cooldown ordering Q(5.385 s) < W(8 s) < 2Q(10.769 s) puts the W magic packet at index 7. The new value 'Q' is only reachable by dropping one of the two Transcendent components that the cached wiki text says are active at exactly 60 splinters.",
+  "caveat": "The scenario definition itself lives outside the permitted evidence tree (scripts/), so the fight length, item build and the literal custom cast order were not observed. The derivation above is stated as a function of those inputs and shown to be invariant over the whole plausible range under the repo's documented house convention (level 18, rank 5 / R rank 3, no items). It would flip only at W rank 1 or at >= ~49 ability haste combined with a literal reading of Q's affectedByCdr:false flag."
+}

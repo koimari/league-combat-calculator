@@ -83,6 +83,33 @@ def request_bool(data: Mapping[str, object], key: str, default: bool) -> bool:
     return value
 
 
+def request_positional_string_list(
+    data: Mapping[str, object], key: str, *, maximum: int
+) -> list[str]:
+    """Read a bounded list of trimmed public strings whose positions matter.
+
+    The sibling of :func:`request_string_list` for a field where entry *i*
+    names slot *i*: an empty entry is an empty slot rather than nothing, and
+    two entries may repeat because their positions tell them apart. The stat
+    shards are that field — the same shard is offered in two of the three
+    rows.
+    """
+    value = data.get(key, [])
+    if not isinstance(value, list):
+        raise ValueError(f"{key} must be a list")
+    if len(value) > maximum:
+        raise ValueError(f"{key} may contain at most {maximum} entries")
+    names: list[str] = []
+    for entry in value:
+        if not isinstance(entry, str):
+            raise ValueError(f"{key} entries must be strings")
+        name = entry.strip()
+        if len(name) > 100:
+            raise ValueError(f"{key} entries must be at most 100 characters")
+        names.append(name)
+    return names
+
+
 def request_string_list(
     data: Mapping[str, object], key: str, *, maximum: int
 ) -> list[str]:

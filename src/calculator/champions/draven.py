@@ -6,8 +6,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -27,6 +28,8 @@ def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", bonus, crit_effectiveness=1.0),)
     entry["empowers_next_auto"] = True
+    # One empowered swing, landing with that swing.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "One empowered basic attack; the caught axe readies the next cast."
     )
@@ -87,7 +90,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    passes = min(max(int(ctx.options.get("r_passes", 2)), 1), 2)
+    passes = min(max(int(ctx.option("r_passes")), 1), 2)
     per_pass = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Whirling Death"),
@@ -109,7 +112,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _league_of_draven(ctx: SlotCtx) -> dict[str, Any] | None:
-    stacks = min(max(int(ctx.options.get("adoration_stacks", 0)), 0), 10000)
+    stacks = min(max(int(ctx.option("adoration_stacks")), 0), 10000)
     cash_in = bool(ctx.options.get("adoration_cash_in", False))
     reason = (
         f"{stacks} Adoration stack(s); cash-in yields {25 + 2 * stacks} bonus gold."
@@ -131,7 +134,14 @@ SLOTS = {
     "E": _stand_aside,
     "R": _whirling_death,
 }
-parse_abilities = build_parser(SLOTS, "Draven")
+# Cached kit review.  Q's empowered attack and R's two axe passes only add
+# damage (R's threshold clause executes, it does not control), while E
+# "knock[s] them aside ... and slow[s] them for 2 seconds" — a forced
+# displacement, which is the Wiki's airborne class.  W grants Draven attack
+# and movement speed and P is a gold counter, neither with a damage part.
+MODULE_CC = {"Q": "none", "E": "airborne", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Draven", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -164,37 +174,4 @@ ASSUMPTIONS = [
     "Adoration is an explicit economy state and never silently contributes to TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Draven parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Draven",
-        4022602,
-        "2026-05-27T00:56:11Z",
-    ),
-    source_row(
-        "Draven Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/Q",
-        2863933,
-        "2019-11-03T19:56:50Z",
-    ),
-    source_row(
-        "Draven W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/W",
-        2864228,
-        "2019-11-03T20:09:37Z",
-    ),
-    source_row(
-        "Draven E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/E",
-        2864374,
-        "2019-11-03T20:12:07Z",
-    ),
-    source_row(
-        "Draven R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Draven/R",
-        2864520,
-        "2019-11-03T20:15:32Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Draven")

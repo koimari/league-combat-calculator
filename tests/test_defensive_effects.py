@@ -164,7 +164,7 @@ def test_noxian_boots_resolve_sourced_reactive_shield(item, damage_type):
     assert defenses.reactive_shield_damage_type == damage_type
     assert defenses.reactive_shield_duration == 5.0
     assert defenses.reactive_shield_cooldown == 15.0
-    assert defenses.sources[0].revision_id in {4013702, 4013705}
+    assert defenses.sources[0].receipt.revision_id in {4013702, 4013705}
 
 
 def test_celestial_opposition_resolves_blessed_reduction():

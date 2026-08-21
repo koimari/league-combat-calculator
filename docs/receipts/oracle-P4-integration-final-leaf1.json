@@ -1,0 +1,148 @@
+{
+  "receipt": "oracle-P4-integration-final-leaf1",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md)",
+  "date": "2026-08-14",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/dispositions",
+  "old_value": "<absent>",
+  "new_value": "S9 dispositions map: 1344 entries of {disposition, view_tag}",
+  "verdict": "old_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle18",
+    "contents_seen": [
+      "data/champions.json (173 champions, 6.48 MB)",
+      "data/items.json (324 items, 3.61 MB)",
+      "data/runes.json, data/atoms/, data/item-atoms/, data/wiki/, data/wiki-atoms/, data/worklists/, data/champion-audit/, data/practice-corpus/, data/economics-sourced.json, data/staleness.json, data/onhit-matrix.json",
+      "docs/math-foundations.md (523 lines)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_term_existence": {
+      "method": "case-insensitive recursive grep over the entire exported tree (data/ ~10.4 MB + docs/math-foundations.md)",
+      "results": {
+        "disposition (and any 'dispos*' variant)": "0 occurrences in data/, 0 in docs/math-foundations.md",
+        "view_tag / 'view tag' / viewTag": "0 occurrences in data/, 0 in docs/math-foundations.md",
+        "tag-like keys present in data/": "only \"tags\" (324 = one per item, all empty lists) and a single \"tag\"; no categorical label vocabulary of any kind",
+        "S9": "0 occurrences anywhere in the evidence tree"
+      },
+      "conclusion": "Neither the field name nor the concept exists in the cached wiki corpus or in the formula document. There is no source text from which a 'disposition' or a 'view_tag' can be derived."
+    },
+
+    "step_2_what_the_sources_say_this_leaf_should_hold": {
+      "quote_A": "docs/math-foundations.md, Section 4: \"The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios.\"",
+      "quote_B": "docs/math-foundations.md, Section 0: \"T = E[ D | model, config ]      (point estimate under the expectation heuristic)\"",
+      "quote_C": "docs/math-foundations.md, Section 5 enumerates the complete set of engine families that produce combat output (mitigation, penetration, stat growth, attack speed, ability haste, auto counting, crit expectation, shared-timeline casts, DoT partition, stacking DoT, on-hit stacking, phantom hits, burn, grievous wounds, shield clipping, grey health, revive, BIS score, stat rounding, Terminus/BC ramps). Every row's output is a number or a numeric identity.",
+      "conclusion": "No documented engine family emits a per-entry categorical 'disposition' paired with a presentation-layer 'view_tag'. A combat golden leaf is a numeric point estimate (CLAUDE.md likewise calls golden_snapshot.py the 'Numeric regression gate'). A 1344-entry map of non-numeric labels is not a combat point estimate."
+    },
+
+    "step_3_what_the_scenario_actually_is": {
+      "cleaver": {
+        "source": "data/items.json id 3071 Black Cleaver, passives[].branches (read per CLAUDE.md rule 6)",
+        "quoted_text": "Carve (unique): \"Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.\"; Fervor: \"Dealing {{as|physical damage}} grants you {{as|20 '''bonus''' movement speed}} for 2 seconds.\"",
+        "derived": "max shred = 5 x 6% = 30% percentage armor reduction, 6 s stack duration"
+      },
+      "bloodsong": {
+        "source": "data/items.json id 3877 Bloodsong, passives[].branches / active[].branches",
+        "quoted_text": "Spellblade (unique): \"After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack).\"",
+        "rd_template_calibration": "{{rd|melee|ranged}} verified against other cached items in the same cache: Phage {{rd|20|10}} bonus MS, Muramana {{rd|4%|3%}} max mana, Experimental Hexplate {{rd|50%|35%}} bonus AS. So Expose Weakness = 8% amp for a melee holder, 5% for a ranged holder.",
+        "derived": "spellblade = 100% base AD bonus physical on-hit; Expose Weakness = x1.08 (melee) / x1.05 (ranged) damage taken from ALL sources for 4 s"
+      },
+      "why_roster": "Expose Weakness amplifies damage 'from all sources', and Carve's armor shred is likewise shared - both couple the Bloodsong/Cleaver holder to every other damage dealer on the team. That is exactly what makes the scenario a *coupled* roster scenario, and what its combat leaves must quantify: damage numbers per roster member, not labels."
+    },
+
+    "step_4_the_number_the_leaf_should_have_produced": {
+      "formula_quoted": "docs/math-foundations.md Section 2.2: \"R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)\" and Section 5: mitigation m(R) = 100/(100+R)",
+      "bc_ramp_formula_quoted": "docs/math-foundations.md Section 2.3: \"the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos\"",
+      "worked_example_target_armor_100": {
+        "baseline_no_items": "m = 100/(100+100) = 0.500000",
+        "bc_full_5_stacks_30pct": "R = 100*(1-0.30) = 70 -> m = 100/170 = 0.588235",
+        "bc_cesaro_mean_h=10": "stacks = 5 - 5*4/(2*10) = 4.0 -> 24% -> R = 76 -> m = 100/176 = 0.568182 (equals the engine's 0.8*max_stacks constant, as the doc states)",
+        "plus_bloodsong_expose_weakness_melee_8pct": {
+          "full_bc": "0.588235 * 1.08 = 0.635294 -> roster-wide coupling gain vs baseline = 1.270588 (+27.06%)",
+          "cesaro_bc": "0.568182 * 1.08 = 0.613636 -> +22.73%"
+        }
+      },
+      "conclusion": "Every quantity this coupled scenario's combat section can carry is a scalar of this kind. Nothing in the two items' wiki text, and nothing in any formula in math-foundations.md, produces a categorical enumeration."
+    },
+
+    "step_5_cardinality_falsification_of_1344": {
+      "method": "recursively enumerated every dict/list in every JSON file under data/ and collected sizes in [1200, 1500]",
+      "result": "no collection anywhere in data/ has between 1200 and 1500 members",
+      "domain_cardinalities_measured": {
+        "items_total": 324,
+        "items_legal_on_classic_sr_5v5": 237,
+        "items_sr_without_champion_restriction": 232,
+        "items_sr_without_acquisition_note": 208,
+        "champions": 173,
+        "champion_ability_entries": 937,
+        "ability_effect_branches": 2570,
+        "leveling_rows": 2037,
+        "modifier_blocks": 3672,
+        "item_passives": 306,
+        "item_actives": 48,
+        "item_passives_plus_actives": 354,
+        "rune_nodes": 384,
+        "champion_roles_entries": 462,
+        "champion_positions_entries": 248
+      },
+      "products_tested": "each cardinality above times roster sizes 1..12",
+      "hits": "none - the only exact factorization against a measured cardinality is 48 item actives x 28, which is meaningless here (Black Cleaver has 0 actives, Bloodsong has 1)",
+      "ratios": "1344/324=4.148, /237=5.671, /232=5.793, /208=6.462, /173=7.769, /937=1.434, /354=3.797 - all non-integral",
+      "conclusion": "1344 is not the cardinality of any set the cached data defines, nor of any (roster member x candidate item/ability/rune) cross product it can form. Even granting the concept, the count is unreproducible from source."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "path": "data/items.json",
+      "locator": "id 3071 'Black Cleaver' -> passives[0] 'Carve' .branches",
+      "text": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "path": "data/items.json",
+      "locator": "id 3877 'Bloodsong' -> passives[0] 'Spellblade' .branches",
+      "text": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 4, 'How a validation corpus turns point estimates into calibrated statements'",
+      "text": "The golden snapshot (`scripts/golden_snapshot.py`) and the E-series corpus pin point estimates against game-verified scenarios."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 0",
+      "text": "T = E[ D | model, config ]      (point estimate under the expectation heuristic)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.2",
+      "text": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)"
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.3, item 2 (Black Cleaver average stacks)",
+      "text": "the exact Cesaro mean of the capped ramp min(k, C) over h hits is C - C(C-1)/(2h) for h >= C; the constant model equals the exact mean at ~10 autos and deviates by up to +/-20% at the extremes."
+    },
+    {
+      "path": "docs/math-foundations.md",
+      "locator": "Section 5, formula-audit table (full enumeration of engine output families)",
+      "text": "Resistance mitigation | Penetration | Percent reduction on negative armor | Stat growth | Attack speed | Ability haste | Auto DPS/auto count | Crit expectation | Ability rotation casts | DoT totals | Stacking DoT | Ability DoT event authoring | On-hit stacking | Phantom hits | Burn/DoT items | Grievous Wounds | Shield absorption | Grey health | Revive | BIS score | Stat rounding | Terminus/BC ramps"
+    }
+  ],
+
+  "reasoning_for_verdict": [
+    "The new value asserts 1344 entries of a two-field record ({disposition, view_tag}) inside a *combat* golden leaf. Neither field name, nor the concept 'disposition', nor 'view_tag', nor 'S9' occurs anywhere in the 10.4 MB cached wiki corpus or in the formula document - so there is no source against which any entry of that map can be checked, let alone all 1344.",
+    "The formula document defines what a combat leaf is: a point estimate E[D | model, config], pinned by the golden snapshot; its Section 5 table enumerates every engine family that contributes combat output and all of them are numeric. A categorical label map with a presentation-layer 'view_tag' is not a combat quantity - 'view_tag' is a rendering concern, and rendering concerns have no game-verifiable value at all.",
+    "The count itself is unreproducible: no collection in data/ has 1200-1500 members, and 1344 is not any measured domain cardinality nor any product of one with a roster size. A 1344-entry payload also dwarfs the scenario it belongs to - the sourced content of 'cleaver_bloodsong_roster' is two items (Black Cleaver: 5 x 6% = 30% armor shred, 6 s; Bloodsong: 100% base AD spellblade + Expose Weakness 8%/5% amp, 4 s) applied across a five-man roster.",
+    "Project rule 5 ('no unsourced numeric literals; missing keys must raise') and the fail-closed posture of rules 6-7 both point the same way: an unsourceable 1344-entry blob does not belong in the numeric regression baseline. The prior state (<absent>) is consistent with every source in the evidence tree.",
+    "I cannot assert a *third* value (which is what 'both_wrong' would require), because the sources support no dispositions content at this path in any quantity. Absent is the sourced-supported state."
+  ],
+
+  "caveat": "This oracle is scoped to data/ and docs/math-foundations.md by runbook R-18/R-19 and did not read src/, tests/, scripts/, or the diff. If the engine legitimately emits a disposition ledger as a non-combat audit artifact, that is a question about engine structure this oracle cannot see; what it can certify is that (a) no cached wiki text or quoted formula defines 'disposition' or 'view_tag', and (b) the 1344 count is not reproducible from any cardinality the cache defines. On the sourced question this leaf poses, the leaf should be absent.",
+
+  "verdict_final": "old_value_correct"
+}

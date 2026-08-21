@@ -14,9 +14,11 @@ deals no damage.  Secondary targets ("Burst Fire Secondary Target
 Damage" 80-100%) are outside this single-target model.
 """
 
-from .packet_module import build_packet_module, repeat_damage_parser
+from typing import Any
+
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser, ONHIT
+from .engine import ONHIT, SlotCtx
+from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 # P4: Living Battery (execute range) — the uncharged zap's flat damage
@@ -77,29 +79,20 @@ ZERI_P_EXECUTE_RULE = _LivingBatteryExecuteRule()
 
 PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Zeri",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
-        "Total Physical Damage).",
-    ),
-    slot_parsers={
-        "Q": repeat_damage_parser(
-            attr="Physical Damage per Hit",
-            dmg_type="physical",
-            count=7,
-            time_offset=0.0,
-            hit_interval=0.0,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
+# Burst Fire fires 7 rounds (Total Physical Damage / per-hit on Q, locked
+# by tests/test_e2_dot_3.py) "in the target direction over the cast time",
+# and the cached Q entry carries no castTime of its own ("Burst Fire's
+# cooldown and cast time are reduced with attack speed"), so the burst is
+# authored at the cast with no interval between rounds.  E's Lightning
+# Rounds bonus rides these same seven rounds, so both slots read the
+# placement from here — a rider on Burst Fire cannot land anywhere else.
+_BURST_ROUNDS = 7
+_BURST_ROUND_TIME_OFFSET = 0.0
+_BURST_ROUND_INTERVAL = 0.0
 
-# Burst Fire fires 7 rounds (Total Physical Damage / per-hit on Q,
-# locked by tests/test_e2_dot_3.py); Lightning Rounds empowers each
-# round's first-enemy hit.
-_E_LIGHTNING_ROUNDS_ROUNDS = 7
+
+# Lightning Rounds empowers each round's first-enemy hit.
+_E_LIGHTNING_ROUNDS_ROUNDS = _BURST_ROUNDS
 # Lightning Rounds bonus "increased by 0% : 100% (+ 0% : 30%) (based on
 # critical strike chance)": x2.3 at 100% crit -> 1 + 1.3 x crit_chance.
 _E_BONUS_CRIT_MULTIPLIER_AT_MAX = 2.3
@@ -129,13 +122,13 @@ def _living_battery(ctx: SlotCtx):
         return None
     rank = ctx.level
     zap_flat = extract_named(ability, "Per-Level Scaling", rank, ctx.stats, ctx.target)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     zap = zap_flat + _ZAP_AP_RATIO * ap
     # extract_named already resolves the "% AP" modifier (the 20% AP
     # unit survived the degraded parse); _ZAP_EXECUTE_AP_RATIO is the
     # receipt constant, never added twice.
     threshold = extract_named(ability, "Bonus Damage", rank, ctx.stats, ctx.target)
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
+    target_max = ctx.target_stat("target_max_health")
     entry = on_hit_entry(ability.get("name", "Living Battery"), zap, "magic")
     if target_max > 0.0:
         entry["execute_threshold_ratio"] = threshold / target_max
@@ -180,9 +173,7 @@ def _spark_surge(ctx: SlotCtx):
     per_round = extract_named(
         ability, "Burst Fire Bonus Magic Damage", rank, ctx.stats, ctx.target
     )
-    crit_chance = min(
-        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
-    )
+    crit_chance = min(max(float(ctx.stat("critical_strike_chance")) / 100.0, 0.0), 1.0)
     multiplier = 1.0 + (_E_BONUS_CRIT_MULTIPLIER_AT_MAX - 1.0) * crit_chance
     per_round *= multiplier
     total = per_round * _E_LIGHTNING_ROUNDS_ROUNDS
@@ -198,6 +189,8 @@ def _spark_surge(ctx: SlotCtx):
             "magic",
             amount=per_round,
             count=_E_LIGHTNING_ROUNDS_ROUNDS,
+            time_offset=_BURST_ROUND_TIME_OFFSET,
+            hit_interval=_BURST_ROUND_INTERVAL,
         ),
     )
     entry["detail"] = (
@@ -207,10 +200,39 @@ def _spark_surge(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _living_battery
-SLOTS["E"] = _spark_surge
-parse_abilities = build_parser(SLOTS, "Zeri")
+# Ultrashock Laser's pulse "deals physical damage to the first enemy hit
+# and slows them for 2 seconds".  Burst Fire's rounds and Lightning Crash's
+# nova only damage — the nova empowers Zeri (Overcharged), not the enemies
+# it hits.  Spark Surge's dash and its Lightning Rounds bonus control
+# nothing either: the buff "empower[s] Burst Fire to deal bonus magic
+# damage to the first enemy hit ... and pierce through enemies".  P is
+# absent: Living Battery rides the basic-attack stream as an on-hit
+# rider, not an ability event the ledger reviews.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Zeri",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Burst Fire prices all 7 rounds (Physical Damage per Hit x 7 == "
+        "Total Physical Damage).",
+    ),
+    # W's pulse and R's nova are one hit each at the cast; neither packet
+    # carries a travel or tick phase to place.
+    single_hit_slots=frozenset({"W", "R"}),
+    slot_parsers={
+        "P": _living_battery,
+        "Q": repeat_damage_parser(
+            attr="Physical Damage per Hit",
+            dmg_type="physical",
+            count=_BURST_ROUNDS,
+            time_offset=_BURST_ROUND_TIME_OFFSET,
+            hit_interval=_BURST_ROUND_INTERVAL,
+        ),
+        "E": _spark_surge,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst "
@@ -224,8 +246,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Damage' (80-100%) applies to enemies past the first and is outside "
     "this single-target model.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

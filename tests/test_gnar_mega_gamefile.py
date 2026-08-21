@@ -103,6 +103,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
@@ -791,7 +792,7 @@ class TestSourceAndAtomReceipts:
             assert domains[domain]["sha256"] == hash_domain_file(
                 Path(f"data/atoms/{domain}.json")
             )
-        actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
+        actual = sha256_as_committed("data/champions.json")
         assert domains["champions"]["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"
         )
@@ -867,11 +868,19 @@ class TestApiFightOutput:
     def test_api_damage_events_both_forms(self) -> None:
         mega = _api(18, True)["damage_events"]
         mini = _api(18, False)["damage_events"]
-        first = mega[0]
-        assert first["source"] == "R"
+        # Every Mega row lands at the cast boundary, so the ledger orders
+        # them by the rotation's cast order rather than putting the
+        # ultimate first.
+        assert [event["source"] for event in mega] == ["Q", "W", "E", "R"]
+        first = next(event for event in mega if event["source"] == "R")
         assert first["damage"] == 300.0
-        assert first["cc_kind"] == "stun"
-        assert first["cc_duration"] == 1.75
+        # MERGE: R's own reviewed kind is the knock away the damage lands
+        # with ("knocking away nearby enemies", cached R description).  The
+        # 1.75s terrain stun belongs to the WALL branch, which the ``r_wall``
+        # option selects and which authors it as a separate control event --
+        # so the default rotation's row carries the knockback and no stun.
+        assert first["cc_kind"] == "knockback"
+        assert "cc_duration" not in first
         assert first["skillshot"] is True
         assert {e["source"] for e in mega} == {"R", "Q", "W", "E"}
         assert {e["source"] for e in mini} == {"Q", "E"}
@@ -931,7 +940,7 @@ class TestApiFightOutput:
 
 class TestRegressionSurface:
     def test_gnar_test_file_set_is_pinned(self) -> None:
-        # grep -il gnar tests/ (--include="*.py"): the exact 17-file set.
+        # grep -il gnar tests/ (--include="*.py"): the exact 21-file set.
         # The Gnar-CODE surfaces are test_gnar.py, test_damage.py,
         # test_jayce_form_transition.py, test_e3_stacks_1.py (Hyper),
         # test_mechanics_packets.py (Q secondary targets) and
@@ -952,12 +961,16 @@ class TestRegressionSurface:
             "test_briar.py",
             "test_camille.py",
             "test_chogath.py",
+            # MERGE: ours-side files that name Gnar in prose -- the coverage
+            # claim census, the UI-panel rule and the wave-2 stat-buff suite.
+            "test_coverage_claims.py",
             "test_damage.py",
             "test_diana.py",
             "test_dr_mundo.py",
             "test_e3_stacks_1.py",
             # ci-evidence scanner names gnar bin paths as calibration fixtures
             "test_ci_evidence_parity.py",
+            "test_f0_frontend.py",
             "test_gnar.py",
             "test_gnar_mega_gamefile.py",
             "test_interaction_atoms.py",
@@ -967,6 +980,7 @@ class TestRegressionSurface:
             "test_olaf_r_cleanse.py",
             "test_quinn_p_crit.py",
             "test_rengar_w_cleanse.py",
+            "test_wave2_stat_buffs.py",
             # weekly_ingest fetches the gnar/gnarbig authority pair, so its
             # test module names them (added 2026-08-20 with weekly_ingest.py).
             "test_weekly_ingest.py",

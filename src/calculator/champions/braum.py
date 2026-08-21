@@ -11,9 +11,10 @@ Why each slot is non-generic:
   (16 + 10 x level), stun, and immunity period exist only in
   description prose, so the formula lives here. Timed fights walk the
   fight's auto/Q hit timeline (via the pipeline-injected
-  ``fight_duration_seconds`` / ``auto_attack_uptime`` reserved
-  options); one-rotation mode emits nothing — a single Q application
-  never reaches 4 stacks.
+  ``fight_duration_seconds`` / ``auto_attack_uptime`` /
+  ``auto_attacks_only`` reserved options — an autos-only window casts
+  no Q, so only the ambient swings stack); one-rotation mode emits
+  nothing — a single Q application never reaches 4 stacks.
 - Q (Winter's Bite) scales with 2.5% of BRAUM'S OWN max health — the
   JSON unit ("% of Braum's maximum health") is champion-named, which
   ``scaling.resolve_scaling`` cannot map, so a ``sum_modifiers``
@@ -46,6 +47,7 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Concussive Blows' trigger damage,
 # stack count, stack duration, and immunity period exist only in
@@ -89,12 +91,13 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     with ``rate = attack_speed x auto_attack_uptime`` (uptime 0 means no
     autos), and Q is cast at t=0 then on cooldown (ability haste plus
     basic-ability haste), giving ``1 + duration // cd`` casts — the same
-    count the rotation computes.
+    count the rotation computes.  An ``auto_attacks_only`` window
+    schedules zero casts, so the stream is the ambient swings alone.
     """
     events: list[tuple[float, int]] = []
 
-    uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-    autos_per_second = ctx.stats.get("attack_speed", 0.0) * uptime
+    uptime = float(ctx.option("auto_attack_uptime"))
+    autos_per_second = ctx.stat("attack_speed") * uptime
     if autos_per_second > 0:
         events.extend(
             (i / autos_per_second, _AUTO)
@@ -103,10 +106,8 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
 
     q_ability = ctx.ability("Q")
     q_rank = ctx.rank_for("Q")
-    if q_ability is not None and q_rank >= 1:
-        haste = ctx.stats.get("ability_haste", 0.0) + ctx.stats.get(
-            "basic_ability_haste", 0.0
-        )
+    if q_ability is not None and q_rank >= 1 and not ctx.option("auto_attacks_only"):
+        haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
         cd = effective_cooldown(extract_cooldown(q_ability, q_rank), haste)
         casts = 1 + int(duration / cd) if cd > 0 else 1
         events.extend((i * cd, _Q_HIT) for i in range(casts))
@@ -218,18 +219,21 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
 
     def own_max_health(unit: str, value: float) -> float | None:
         if "Braum" in unit and "maximum health" in unit:
-            return value / 100.0 * ctx.stats.get("health", 0.0)
+            return value / 100.0 * ctx.stat("health")
         return None
 
     total = sum_modifiers(
         leveling, rank, ctx.stats, ctx.target, modifier_override=own_max_health
     )
+    # One shot of ice on "the first enemy hit" — one part and one hit,
+    # which carries Q's reviewed slow into the event ledger.
     return damage_entry(
         ability.get("name", "Winter's Bite"),
         rank,
         extract_cooldown(ability, rank),
         total,
         "magic",
+        event_order_certified="single_hit",
     )
 
 
@@ -255,7 +259,7 @@ def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
     def self_buff(attr: str, bonus_stat: str) -> float:
         flat = extract_value(ability, attr, rank)
         percent = extract_value(ability, attr, rank, modifier_index=1)
-        return flat + percent / 100.0 * ctx.stats.get(bonus_stat, 0.0)
+        return flat + percent / 100.0 * ctx.stat(bonus_stat)
 
     entry["stat_buff"] = {
         "armor": self_buff("Self Bonus Armor", "bonus_armor"),
@@ -277,8 +281,8 @@ def _unbreakable(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     reduction = extract_value(ability, "Damage reduction", rank) / 100.0
     duration = extract_value(ability, "Barrier Duration", rank)
-    active = bool(ctx.options.get("e_active", False))
-    selected_duration = float(ctx.options.get("e_active_seconds", 0.0) or 0.0)
+    active = bool(ctx.option("e_active"))
+    selected_duration = float(ctx.option("e_active_seconds") or 0.0)
     if selected_duration > 0.0:
         duration = min(duration, selected_duration)
     return {
@@ -294,7 +298,7 @@ def _unbreakable(ctx: SlotCtx) -> dict[str, Any] | None:
             "duration": duration if active else 0.0,
             "damage_reduction": reduction,
             "full_block_first": True,
-            "blocked_sources": list(ctx.options.get("e_blocked_skillshots", [])),
+            "blocked_sources": list(ctx.option("e_blocked_skillshots")),
         },
         "detail": (
             "Directional barrier: first selected champion hit is fully "
@@ -373,6 +377,9 @@ ASSUMPTIONS = [
     "auto/Q timeline, with Q assumed cast on cooldown from t=0); in "
     "one-rotation mode a single Q application never reaches 4 stacks, so "
     "no passive damage is shown",
+    "An autos-only fight casts no Q, so only the ambient swings stack "
+    "(the pipeline states this with the auto_attacks_only reserved "
+    "option)",
     "Passive stacks last 4s (refreshing) — with autos in the timeline "
     "they never expire mid-buildup; without autos (Q-only stacking) the "
     "expiry IS modeled, so the passive correctly never procs off Q alone",
@@ -398,27 +405,32 @@ SLOTS = {
     "Q": _winters_bite,
     "W": _stand_behind_me,
     "E": _unbreakable,
+    # One fissure sweep on one target, so one part and one hit — the
+    # certification that carries R's reviewed knockup into the ledger,
+    # with the interval itself read off the cached rank row.
     "R": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
         kind="knockup",
         duration_attr="Maximum Knock up Duration",
     ),
     "P": _concussive_blows,
 }
 
-parse_abilities = build_parser(SLOTS, "Braum")
+# Reviewed crowd control, read from the cached kit.  Q (Winter's Bite)
+# deals "magic damage to the first enemy hit and slow[s] them by 70%
+# decaying over 2 seconds".  R (Glacial Fissure) damages "enemies within
+# its path as well as those around Braum", and "the first target hit is
+# knocked up for at least 0.6 seconds.  All other enemies hit are knocked
+# up for 0.6 seconds".  W is the shield/dash row with no damage part and
+# E is the directional barrier, which controls nobody.  P's Concussive
+# Blows stun is not declared here because the proc is not a cast: the
+# slot authors its own timeline events and stamps the level-scaled stun
+# interval on the one that procs.
+MODULE_CC = {"Q": "slow", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Braum", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Braum",
-        "revision_id": 4022592,
-        "revision_timestamp": "2026-05-27T00:32:44Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Braum")

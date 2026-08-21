@@ -11,9 +11,12 @@ Hand-validated against revision-backed patch 26.15 wiki data:
 import pytest
 
 from src.calculator import item_effects
+from src.calculator.interpreters import charged_strike, on_hit_strike
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.champions import belveth
+from tests import cc_review
 
 
 def _parse(
@@ -384,11 +387,24 @@ class TestFightEngineIntegration:
         assert "passive" not in result["breakdown"]
 
 
+def _declared_per_hits(*owners: str, level: int = 18):
+    """The on-hit strikes a build declares, through their own rules."""
+    return on_hit_strike.per_hit_effects(
+        owners,
+        level=level,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+
+
 def _per_hit_raw(item, stats, target_health, current_health=None):
     """One item on-hit application's raw damage, from the item source
     of truth (the same compiled spec the fight engine reads)."""
-    effects = item_effects.resolve_damage_effects([item])
-    assert effects.per_hits, "expected an on-hit item"
+    effects = _declared_per_hits(
+        str(item.get("name", "")), level=int(stats.get("level", 18))
+    )
+    assert effects, "expected an on-hit item"
     inputs = item_effects.DamageInputs(
         champion_stats=stats,
         level=int(stats.get("level", 18)),
@@ -398,7 +414,7 @@ def _per_hit_raw(item, stats, target_health, current_health=None):
             target_health if current_health is None else current_health
         ),
     )
-    return sum(effect.source.raw_damage(inputs) for effect in effects.per_hits)
+    return sum(effect.source.raw_damage(inputs) for effect in effects)
 
 
 class TestAbilityItemOnHits:
@@ -536,8 +552,14 @@ class TestAbilityItemOnHits:
 def _kraken_raw_full_hp(kraken, stats, target_health):
     """Kraken's per-proc raw damage at full target HP, from the item
     source of truth (the compiled stacking spec)."""
-    effects = item_effects.resolve_damage_effects([kraken])
-    assert effects.stacking_on_hits, "expected a stacking on-hit item"
+    slots = charged_strike.resolve_slots(
+        [str(kraken.get("name", ""))],
+        level=int(stats.get("level", 18)),
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slots.stacking_on_hits, "expected a stacking on-hit item"
     inputs = item_effects.DamageInputs(
         champion_stats=stats,
         level=int(stats.get("level", 18)),
@@ -545,7 +567,7 @@ def _kraken_raw_full_hp(kraken, stats, target_health):
         target_max_health=target_health,
         target_current_health=target_health,
     )
-    return effects.stacking_on_hits[0].source.raw_damage(inputs)
+    return slots.stacking_on_hits[0].source.raw_damage(inputs)
 
 
 class TestSharedOnHitCounter:
@@ -777,3 +799,55 @@ class TestStatsBonusAttackSpeed:
         stats, with_item = parse_at(belveth_data, 18, items=[nashors])
         assert stats["bonus_attack_speed"] > 0.0
         assert with_item["E"]["parts"][0].count > bare["E"]["parts"][0].count
+
+
+class TestReviewedCrowdControl:
+    """Bel'Veth's reviewed crowd control, and the slots that still withhold.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Bel'Veth")
+        assert belveth.MODULE_CC == {"W": "knockup", "R": "slow"}
+        w_text = cc_review.slot_text(data, "W")
+        assert "knocks them up for a duration" in w_text
+        assert "slows them by 30% for 2 seconds" in w_text
+        assert "slowing nearby enemies by 25%" in cc_review.slot_text(data, "R")
+
+    def test_royal_maelstroms_slashes_spread_over_the_cached_duration(
+        self, belveth_data, parse_at
+    ):
+        text = cc_review.slot_text(cc_review.kit("Bel'Veth"), "E")
+        assert "bel'veth enters a frenzy for 1.5 seconds" in text
+        assert (
+            "she rapidly slashes at the nearest enemy with the lowest current "
+            "health percentage for up to 6 (+ 1 per 40% bonus attack speed) "
+            "times over the duration" in text
+        )
+        _, abilities = parse_at(belveth_data, 18)
+        (part,) = abilities["E"]["parts"]
+        assert part.hit_interval == pytest.approx(1.5 / part.count)
+        assert part.time_offset == 0.0
+        assert part.cc_kind == "none"
+
+    def test_void_surge_has_no_cached_spacing(self):
+        """The one slot that still withholds, and the sentence that proves it.
+
+        Q is control-free in the cache, but its row is the four cardinal
+        dashes in one part and the only spacing the cache offers is a
+        cooldown it never names.
+        """
+        data = cc_review.kit("Bel'Veth")
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert (
+            "void surge can be cast only within a cardinal direction that is "
+            "off cooldown, and incurs a cooldown between casts."
+            in cc_review.slot_text(data, "Q")
+        )
+        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["Q"]
+        coverage = cc_review.fimbulwinter_coverage("Bel'Veth")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

@@ -364,7 +364,11 @@ def test_d1_unknown_unmarked_delivery_has_no_receipt():
     for event in e_events:
         assert event["damage_type"] == "true"
         assert "skillshot" not in event
-        assert event["damage"] == pytest.approx(324.0)
+        # 250 (rank 5) + 50% AD, and the AD is Olaf's own steroid-averaged
+        # figure: R grants 30 + 25% AD = 67 for 3s of this 6s fight, which
+        # olaf.py applies at the window share (0.5) — so 148 + 33.5 = 181.5
+        # total AD and 250 + 90.75 = 340.75.
+        assert event["damage"] == pytest.approx(340.8)
         assert "projectile_defense" not in event
     # Only the selected skillshot (Olaf Q) is ever listed; the unmarked E
     # packets never reach the defense.

@@ -3,6 +3,7 @@
 import hmac
 import base64
 import binascii
+import functools
 import hashlib
 import ipaddress
 import json
@@ -11,7 +12,6 @@ import os
 import re
 import secrets
 import sqlite3
-import subprocess
 import sys
 import tempfile
 import time
@@ -42,26 +42,32 @@ from flask import (
 from src.calculator.calculate import calculate_payload
 from src.calculator.comparison import compare_payload
 from src.calculator.application_errors import ApplicationError
+
+# The sys.path bootstrap above forces every first-party import below it;
+# this one line carries the disable rather than the whole block, because
+# widening it is another lane's file to change.
+from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
+    StarvedSignal,
+)
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
     classify_assumption as _classify_assumption,
     derive_certainty,
 )
-from src.calculator.data_fetcher import (
-    fetch_champion_data,
-    get_champion,
-)
+from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.item_effects import (
     item_input_options_meta,
     refresh_item_effects,
     stat_conversion_metadata,
 )
 from src.calculator.rune_effects import (
-    keystone_catalog,
     keystone_input_options_meta,
     refresh_rune_effects,
+    rune_catalog,
+    shard_catalog,
 )
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -77,26 +83,29 @@ from src.calculator.champions import (
     get_champion_module_meta,
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
+    registered_champion_names,
 )
-from src.calculator.champion_coverage import attacker_availability
 from src.calculator.capabilities import public_capability_contract
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_selectable_items,
+    item_gold,
     optimize_build,
     optimize_purchase,
 )
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.stats import get_item_stats
 from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
+from src.calculator.program.views import (  # pylint: disable=wrong-import-position
+    UnrankableNumber,
+)
 from src.calculator.public_response import (
     ICON_HOSTS as _ICON_HOSTS,
     https_icon as _https_icon,
     public_loadout_summary,
 )
 from src.calculator.scenario import (
-    ENGINE_CHAMPIONS as _ENGINE_CHAMPIONS,
-    VERIFIED_CHAMPIONS as _VERIFIED_CHAMPIONS,
     ChampionLoadout,
     load_public_champion as _load_public_champion,
     parse_scenario_request,
@@ -116,7 +125,6 @@ from src.calculator.pipeline import (
     DEFAULT_FIGHT_MODE,
     DEFAULT_TARGET,
     ONE_ROTATION_DURATION,
-    MAX_ROTATIONS,
     PUBLIC_INPUT_LIMITS,
     rank_allocation_contract,
 )
@@ -133,6 +141,8 @@ from src.rate_limit import TokenBucketStore
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from src.db import (
+    METRIC_EVENT_MAX_TOOK_MS,
+    METRIC_EVENT_NAMES,
     CacheUnavailable,
     add_feedback,
     cache_backend,
@@ -141,7 +151,6 @@ from src.db import (
     cache_set,
     cache_stats,
     create_share_link,
-    get_build,
     get_share_link,
     is_configured,
     is_postgres,
@@ -163,6 +172,13 @@ app.json.sort_keys = False
 app.config.update(
     MAX_CONTENT_LENGTH=32 * 1024,
     RATE_LIMIT_ENABLED=True,
+    # The benchmark harness's seam into the optimizer (campaign runbook
+    # R-24): ``{"work_counters": <sink>, "use_compiled_walk": <bool>}``.
+    # ``scripts/bench_coupled_optimizer.py`` installs it before posting, so
+    # the counters CI reads come out of the shipped request path instead of
+    # a patched copy of it.  Empty in production, where it costs one dict
+    # lookup per optimize request.
+    OPTIMIZER_INSTRUMENTATION={},
 )
 # The test client hammers /api/calculate across the per-champion suites;
 # the shared token bucket would 429 long runs. Rate limiting is a
@@ -225,11 +241,16 @@ _RATE_LIMIT_POLICIES = {
     # session; a generous burst budget still bounds scripted spam to one
     # write every five seconds sustained.
     "metrics_event": (60, 0.2),
+    # Saving a build and minting its share link are two persistent rows per
+    # click of the share button. The burst covers a session of re-shares
+    # while one token every two seconds bounds scripted row creation.
+    "build_write": (20, 0.5),
 }
 _SCOPE_LABELS = {
     "calculate": "Calculator",
     "optimize": "Optimizer",
     "metrics_event": "Metrics",
+    "build_write": "Build sharing",
 }
 # One table for the per-operation cache/rate-limit policy (issue #138).
 # ``rate_limit_scope`` names the token bucket; ``cache_namespace`` names the
@@ -249,7 +270,6 @@ _OPERATION_POLICY = {
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
-_DEV_UPDATE_TOKEN = secrets.token_urlsafe(32)
 _ICON_SOURCES = " ".join(f"https://{host}" for host in sorted(_ICON_HOSTS))
 _SECURITY_HEADERS = {
     "Content-Security-Policy": "; ".join(
@@ -342,7 +362,7 @@ def _current_session() -> dict | None:
 
 
 # Anonymous beta-metrics session (P1b). The id is a random cookie value that
-# never encodes account material, so activation/retention are measurable
+# never encodes account material, so retention is measurable
 # without a user table and without PII (see docs/beta-metrics.md).
 _ANON_SESSION_COOKIE = "scryglass_anon"
 _ANON_SESSION_MAX_AGE = 90 * 24 * 60 * 60
@@ -543,6 +563,18 @@ def _request_too_large(_error):
     return jsonify({"error": "Request body exceeds 32 KiB"}), 413
 
 
+@app.errorhandler(UnrankableNumber)
+def _unrankable_number(error):
+    """A ranking surface refused a number it may not fold into a score.
+
+    ``UnrankableNumber`` is deliberately a ``TypeError`` so it bypasses the
+    candidate loops' ``except (KeyError, ValueError)`` instead of being
+    swallowed into a withheld row; the route clauses therefore never see it,
+    and this one handler turns it into the caller's 400 for every endpoint.
+    """
+    return jsonify({"error": str(error)}), 400
+
+
 @app.errorhandler(500)
 def _internal_error(error):
     """Capture unhandled exceptions and keep the API's JSON error shape.
@@ -552,6 +584,51 @@ def _internal_error(error):
     """
     _capture_exception(getattr(error, "original_exception", error))
     return jsonify({"error": "Internal server error"}), 500
+
+
+def _within_starvation_boundary(view):
+    """Wrap one view in the campaign's single ``StarvedSignal`` catch.
+
+    A ``StarvedSignal`` means a leaf has no value a rule computed and the
+    only honest answer is to say so — either because a projection cannot
+    answer the question a consumer asked, or because a write-once record
+    holds two answers to one question and so can answer neither.  Both are
+    programming errors rather than data conditions, both are raised where
+    they are discovered, and both are handled in exactly one place: here,
+    where they become a 500 carrying the ``STARVED`` receipt (D-25, as the
+    umbrella's Amendment G reads its "exactly one catch" — one *place*, not
+    one exception type).  Everywhere else they propagate: a named refusal
+    that is quietly absorbed is the zero this campaign exists to kill, and
+    an absorbed ``OutcomeRewritten`` in particular is the last-write-wins the
+    write-once ledger was landed to replace.
+
+    One wrapper over every registered view rather than one ``except`` per
+    route, because "exactly one catch" is the rule and repeating it would be
+    a second place the rule lives.
+    """
+
+    @functools.wraps(view)
+    def _guarded(*args, **kwargs):
+        try:
+            return view(*args, **kwargs)
+        except StarvedSignal as starved:
+            _capture_exception(starved)
+            return (
+                jsonify(
+                    {
+                        "error": "Internal server error",
+                        "disposition": starved.disposition.value,
+                        "starved": {
+                            "field": starved.field,
+                            "producer": starved.producer,
+                            "reason": starved.reason,
+                        },
+                    }
+                ),
+                500,
+            )
+
+    return _guarded
 
 
 @app.errorhandler(429)
@@ -595,11 +672,6 @@ def _json_object() -> dict:
     return data
 
 
-def _public_loadout_summary(loadout) -> dict:
-    """Sanitize one resolved loadout for the browser."""
-    return public_loadout_summary(loadout, _VERIFIED_CHAMPIONS)
-
-
 def _dev_mode() -> bool:
     """True when LOL_CALC_DEV=1 (run_web.bat sets it; deployments don't).
 
@@ -608,6 +680,17 @@ def _dev_mode() -> bool:
     (see docs/deploy.md).
     """
     return os.environ.get("LOL_CALC_DEV") == "1" and os.environ.get("RENDER") != "true"
+
+
+def _dev_update_token() -> str:
+    """The shared secret guarding /api/update-data; empty disables it.
+
+    The cookie is minted by one worker and presented to another, so a token
+    minted per import would only ever match inside the worker that made it.
+    It comes from ``LOL_CALC_DEV_UPDATE_TOKEN`` instead, and an unset value
+    fails closed: no cookie, and the endpoint stays 404.
+    """
+    return os.environ.get("LOL_CALC_DEV_UPDATE_TOKEN", "").strip()
 
 
 def _local_dev_request() -> bool:
@@ -874,11 +957,11 @@ def _health_golden_check() -> dict:
 
 
 def _health_engine_check() -> dict:
-    """Engine registration counts; an empty registry means broken data."""
+    """Engine registration count; an empty registry means broken data."""
+    registered = len(registered_champion_names())
     return {
-        "status": "ok" if _ENGINE_CHAMPIONS else "degraded",
-        "registered": len(_ENGINE_CHAMPIONS),
-        "reviewed": len(_VERIFIED_CHAMPIONS),
+        "status": "ok" if registered else "degraded",
+        "registered": registered,
         "module_contract": "champion_module_v1",
     }
 
@@ -913,26 +996,31 @@ def api_health_deep():
     )
 
 
+def _cached_champion_field(champ_data: Mapping[str, Any], key: str) -> Any:
+    """Read one cache-owned champion field, failing closed on the key.
+
+    ``data/champions.json`` owns every value this endpoint republishes; a
+    literal default here would serve a plausible blank for a parser that
+    stopped writing the field.
+    """
+    if key not in champ_data:
+        name = champ_data.get("name", "unknown champion")
+        raise KeyError(f"{name}: cached champion record has no {key}")
+    return champ_data[key]
+
+
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
-    """Return bounded descriptive metadata without exposing raw formula graphs."""
+    """Slot identity for /api/champions: name, icon, and whether it was ingested.
+
+    Descriptive text (blurb, damage type, targeting) is the static ability
+    catalogue's job (``static/ability-catalog.json``), not the API's.
+    """
     entries = ability_list if isinstance(ability_list, list) else []
     first = entries[0] if entries and isinstance(entries[0], dict) else {}
-    descriptions = []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        for effect in entry.get("effects", []):
-            description = str(effect.get("description", "")).strip()
-            if description and description not in descriptions:
-                descriptions.append(description)
     return {
         "slot": slot,
         "name": first.get("name", slot),
         "icon": _https_icon(first.get("icon", "")),
-        "blurb": first.get("blurb") or "",
-        "description": " ".join(descriptions),
-        "damage_type": first.get("damageType"),
-        "targeting": first.get("targeting"),
         "ingested": bool(first),
     }
 
@@ -941,22 +1029,21 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 def api_champions():
     """Return champion identity and fail-closed attacker readiness.
 
-    ``verified`` and ``engine_registered`` are backed by the complete
-    dedicated-module registry. Source receipts and packet assumptions remain
-    available through the config metadata.
+    ``engine_registration`` is the module registry and the one field that
+    carries it: the validated module's kind, or ``null`` for a cached
+    champion no module registers -- which is exactly when it may not attack.
+    Source receipts and packet assumptions remain available through the
+    config metadata.
     """
     champions = fetch_champion_data()
     result = []
     for champ_data in champions.values():
-        availability = attacker_availability(champ_data, _VERIFIED_CHAMPIONS)
+        registration = engine_registration_kind(champ_data["name"])
         ability_slots = {}
-        for slot in ("P", "Q", "W", "E", "R"):
-            ability = _public_ability_entry(
+        for slot in BASE_CAST_SLOTS:
+            ability_slots[slot] = _public_ability_entry(
                 champ_data.get("abilities", {}).get(slot, []), slot
             )
-            ability_slots[slot] = {
-                key: ability[key] for key in ("slot", "name", "icon", "ingested")
-            }
         # A module that certifies only a subset of fight modes publishes that
         # restriction (and its sourced reason) so the interface can request a
         # supported mode instead of failing closed at calculation time. None
@@ -965,19 +1052,17 @@ def api_champions():
         result.append(
             {
                 "name": champ_data["name"],
-                "icon": _https_icon(champ_data.get("icon", "")),
-                "verified": availability["ready"],
-                "engine_registered": champ_data["name"] in _ENGINE_CHAMPIONS,
-                "engine_registration": engine_registration_kind(champ_data["name"]),
-                "engine_backend_enabled": (champ_data["name"] in _ENGINE_CHAMPIONS),
+                "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
+                "engine_registration": registration,
                 "supported_fight_modes": (
                     list(supported_modes) if supported_modes is not None else None
                 ),
                 "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
                     champ_data["name"]
                 ),
-                "availability": availability,
-                "patch_last_changed": champ_data.get("patchLastChanged"),
+                "patch_last_changed": _cached_champion_field(
+                    champ_data, "patchLastChanged"
+                ),
                 "abilities": ability_slots,
                 "ability_ingestion": {
                     "complete": all(
@@ -992,20 +1077,41 @@ def api_champions():
         )
     result = sorted(
         result,
-        key=lambda c: (not c["verified"], c["name"]),
+        key=lambda c: (c["engine_registration"] is None, c["name"]),
     )
     return jsonify(result)
 
 
 def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
-    """Expose the cached sustain/stat families the browser can display."""
+    """Every number the item picker and hover card display, from the typed
+    stats accessor and the sourced shop price — never a literal fallback on
+    the cached record, whose numbers live under ``stats`` (rule 5)."""
     stats = get_item_stats(item)
     return {
+        "ap": stats["ability_power"],
+        "hp": stats["health"],
+        "mana": stats["mana"],
+        "ad": stats["attack_damage"],
+        "armor": stats["armor"],
+        "mr": stats["magic_resistance"],
+        "haste": stats["ability_haste"],
+        "pen": stats["magic_penetration_flat"],
+        "percentPen": stats["magic_penetration_percent"],
+        "lethality": stats["lethality"],
+        # The split routes one wiki percentage into exactly one channel; the
+        # card shows that percentage whichever armour it reaches.
+        "percentArmorPen": stats["armor_penetration_percent"]
+        + stats["armor_penetration_bonus_percent"],
+        "attackSpeed": stats["attack_speed_percent"],
+        "crit": stats["critical_strike_chance"],
+        "price": item_gold(item),
         "lifesteal": stats["lifesteal_percent"],
         "omnivamp": stats["omnivamp_percent"],
         "healAndShieldPower": stats["heal_and_shield_power_percent"],
         "healthRegen": stats["health_regen_percent"],
         "tenacity": stats["tenacity_percent"],
+        "moveSpeed": stats["move_speed_flat"],
+        "moveSpeedPercent": stats["move_speed_percent"],
         "manaRegen": stats["mana_regen_percent"],
         "goldPer10": stats["gold_per_10"],
         "critDamage": stats["critical_strike_damage_percent"],
@@ -1022,25 +1128,12 @@ def api_items():
                 "id": item["id"],
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
-                "ap": item.get("ap", 0),
-                "hp": item.get("hp", 0),
-                "mana": item.get("mana", 0),
-                "ad": item.get("ad", 0),
-                "armor": item.get("armor", 0),
-                "mr": item.get("mr", 0),
-                "haste": item.get("haste", 0),
-                "pen": item.get("pen", 0),
-                "percentPen": item.get("percentPen", 0),
-                "lethality": item.get("lethality", 0),
-                "percentArmorPen": item.get("percentArmorPen", 0),
-                "attackSpeed": item.get("attackSpeed", 0),
-                "crit": item.get("crit", 0),
                 **_item_picker_stat_fields(item),
-                "price": item.get("price", 0),
-                "into": item.get("into") or [],
-                "categories": item.get("categories") or [],
+                "tier": item["tier"],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
-                "model_coverage": item_model_coverage(item),
+                "model_coverage": item_model_coverage(
+                    str(item.get("name", "")), ATTACKER_LANES
+                ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
             for item in get_selectable_items()
@@ -1061,24 +1154,8 @@ def api_boots():
                 "id": item["id"],
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
-                "ap": item.get("ap", 0),
-                "hp": item.get("hp", 0),
-                "mana": item.get("mana", 0),
-                "ad": item.get("ad", 0),
-                "armor": item.get("armor", 0),
-                "mr": item.get("mr", 0),
-                "haste": item.get("haste", 0),
-                "pen": item.get("pen", 0),
-                "percentPen": item.get("percentPen", 0),
-                "lethality": item.get("lethality", 0),
-                "percentArmorPen": item.get("percentArmorPen", 0),
-                "attackSpeed": item.get("attackSpeed", 0),
-                "crit": item.get("crit", 0),
                 **_item_picker_stat_fields(item),
-                "price": item.get("price", 0),
-                "into": item.get("into") or [],
-                "categories": item.get("categories") or [],
-                "tier": item.get("tier"),
+                "tier": item["tier"],
                 "upgrade_from": upgrade_from.get(item.get("name")),
                 "upgrade_to": next(
                     (
@@ -1088,7 +1165,9 @@ def api_boots():
                     ),
                     None,
                 ),
-                "model_coverage": item_model_coverage(item),
+                "model_coverage": item_model_coverage(
+                    str(item.get("name", "")), ATTACKER_LANES
+                ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
             for item in get_eligible_boots(tier=None)
@@ -1114,6 +1193,7 @@ def api_config():
     cache_meta_path = (
         Path(__file__).resolve().parent.parent / "data" / ".champions.json.meta"
     )
+    cache_meta: dict = {}
     try:
         cache_meta = json.loads(cache_meta_path.read_text(encoding="utf-8"))
         fetched_at = datetime.fromtimestamp(
@@ -1121,6 +1201,7 @@ def api_config():
         ).isoformat()
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         fetched_at = None
+    runes = rune_catalog()
     response = jsonify(
         {
             "exclusivity_groups": exclusivity_groups(),
@@ -1147,49 +1228,47 @@ def api_config():
             },
             "capabilities": public_capability_contract(
                 input_limits=PUBLIC_INPUT_LIMITS,
-                max_rotations=MAX_ROTATIONS,
                 champion_option_count=len(champion_options_meta_map()),
                 item_option_count=len(item_input_options_meta()),
             ),
             "champion_engine": {
-                "registered_count": len(_ENGINE_CHAMPIONS),
-                "reviewed_count": len(_VERIFIED_CHAMPIONS),
+                "registered_count": len(registered_champion_names()),
                 "module_contract": "champion_module_v1",
             },
-            "keystones": keystone_catalog(),
+            # The rune page: the whole roster with its path, row and model
+            # coverage, and the stat-shard table.  "keystones" is the
+            # keystone row of that one catalog, not a second list.
+            "runes": runes,
+            "keystones": [entry for entry in runes if entry["row"] == 0],
+            "rune_shards": shard_catalog(),
             "dev_mode": local_dev,
             "data_snapshot": {
                 "source": "League of Legends Wiki cache",
                 "fetched_at": fetched_at,
                 "champion_count": len(fetch_champion_data()),
+                # The patch the cache was pulled on, from its own provenance
+                # receipt (data_registry writes it through patch_identity).
+                # The page pins its patch label and its Data Dragon asset
+                # version to this, never to a literal.
+                "patch": {
+                    "public": cache_meta.get("public_patch"),
+                    "client": cache_meta.get("client_patch"),
+                    "source_version": cache_meta.get("source_version"),
+                },
             },
         }
     )
-    if local_dev:
+    dev_update_token = _dev_update_token()
+    if local_dev and dev_update_token:
         response.set_cookie(
             _DEV_UPDATE_COOKIE,
-            _DEV_UPDATE_TOKEN,
+            dev_update_token,
             max_age=3600,
             httponly=True,
             samesite="Strict",
             path="/api/update-data",
         )
     return response
-
-
-@app.route("/api/abilities/<champion_name>")
-def api_abilities(champion_name: str):
-    """Return descriptive metadata for all five ingested ability slots."""
-    try:
-        champion_data = get_champion(champion_name)
-    except KeyError:
-        return jsonify({"error": f"Champion '{champion_name}' not found"}), 404
-
-    abilities = champion_data.get("abilities", {})
-    result = {}
-    for key in ("P", "Q", "W", "E", "R"):
-        result[key] = _public_ability_entry(abilities.get(key, []), key)
-    return jsonify(result)
 
 
 @app.route("/api/loadout-stats", methods=["POST"])
@@ -1203,7 +1282,7 @@ def api_loadout_stats():
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"'{missing}' not found"}), 404
-    return jsonify(_public_loadout_summary(loadout))
+    return jsonify(public_loadout_summary(loadout))
 
 
 @app.route("/api/calculate", methods=["POST"])
@@ -1483,8 +1562,11 @@ def api_optimize():
     if rate_limit_response is not None:
         return rate_limit_response
 
+    instrumentation = app.config.get("OPTIMIZER_INSTRUMENTATION") or {}
     try:
         common_optimizer_args = {
+            "work_counters": instrumentation.get("work_counters"),
+            "use_compiled_walk": instrumentation.get("use_compiled_walk", True),
             "champion_data": champion_data,
             "level": level,
             "fight_params": fight_params,
@@ -1568,25 +1650,16 @@ def api_save_build():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
+    rate_limit_response = _spend_rate_limit("build_write")
+    if rate_limit_response is not None:
+        return rate_limit_response
+
     try:
         build_id = save_build(data, session_id=_anon_session_id())
     except SQLAlchemyError as exc:  # surface DB failure to the client
         app.logger.exception("Failed to save build")
         return jsonify({"error": f"Database unavailable: {exc}"}), 503
     return jsonify({"build_id": build_id}), 201
-
-
-@app.route("/api/builds/<int:build_id>")
-def api_get_build(build_id: int):
-    """Return one saved build payload, or 404."""
-    try:
-        build = get_build(build_id)
-    except SQLAlchemyError as exc:  # surface DB failure to the client
-        app.logger.exception("Failed to load build")
-        return jsonify({"error": f"Database unavailable: {exc}"}), 503
-    if build is None:
-        return jsonify({"error": f"Build {build_id} not found"}), 404
-    return jsonify(build)
 
 
 @app.route("/api/share", methods=["POST"])
@@ -1606,6 +1679,10 @@ def api_create_share():
             raise ValueError("slug must be at most 50 characters")
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+
+    rate_limit_response = _spend_rate_limit("build_write")
+    if rate_limit_response is not None:
+        return rate_limit_response
 
     try:
         share = create_share_link(
@@ -1634,56 +1711,17 @@ def api_get_share(token: str):
     return jsonify(payload)
 
 
-@app.route("/api/feedback", methods=["POST"])
-def api_add_feedback():
-    """Record one validation observation for the champion-module loop."""
-    try:
-        data = _json_object()
-        champion = _request_string(data, "champion", required=True)
-        source = _request_string(data, "source", "manual")
-        if source not in {"manual", "combat_log", "practice_tool"}:
-            raise ValueError("source must be manual, combat_log, or practice_tool")
-        for key in ("loadout", "expected", "actual"):
-            value = data.get(key, {})
-            if not isinstance(value, dict):
-                raise ValueError(f"{key} must be a JSON object")
-        matched = data.get("matched", False)
-        if not isinstance(matched, bool):
-            raise ValueError("matched must be true or false")
-        note = data.get("note")
-        if note is not None:
-            if not isinstance(note, str):
-                raise ValueError("note must be a string")
-            note = note.strip()
-            if len(note) > 2000:
-                raise ValueError("note must be at most 2000 characters")
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    try:
-        feedback_id = add_feedback(
-            champion=champion,
-            loadout=data.get("loadout", {}),
-            expected=data.get("expected", {}),
-            actual=data.get("actual", {}),
-            source=source,
-            matched=matched,
-            note=note,
-            session_id=_anon_session_id(),
-        )
-    except SQLAlchemyError as exc:  # surface DB failure to the client
-        app.logger.exception("Failed to record feedback")
-        return jsonify({"error": f"Database unavailable: {exc}"}), 503
-    return jsonify({"feedback_id": feedback_id}), 201
+# Largest /api/feedback and /api/validation page; the default page is 50.
+_FEEDBACK_PAGE_MAX = 200
 
 
 @app.route("/api/feedback")
 def api_list_feedback():
     """Return recent validation feedback for the review loop."""
-    champion = request.args.get("champion", "").strip() or None
-    source = request.args.get("source", "").strip() or None
     try:
-        limit = int(request.args.get("limit", "50"))
+        champion = _request_string(request.args, "champion") or None
+        source = _request_string(request.args, "source") or None
+        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
         rows = list_feedback(champion=champion, source=source, limit=limit)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1798,12 +1836,9 @@ def api_validation():
     the champion (not just the returned page) so the +-15% / n>=5 flag is
     stable.
     """
-    champion = request.args.get("champion", "").strip() or None
     try:
-        limit = int(request.args.get("limit", "50"))
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    try:
+        champion = _request_string(request.args, "champion") or None
+        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
         rows = list_feedback(champion=champion, limit=limit)
         systematic = validation_summary(champion=champion)
     except ValueError as exc:
@@ -1826,18 +1861,14 @@ def api_validation_champions():
 
 
 # --- Beta metrics (P1b) ---------------------------------------------------
-# Whitelist mirrors db._VALID_METRIC_EVENTS; keep the two in sync.
-_METRICS_EVENT_NAMES = frozenset({"quick_complete", "page_view"})
-_METRICS_EVENT_MAX_TOOK_MS = 3_600_000
 
 
 @app.route("/api/metrics/event", methods=["POST"])
 def api_metrics_event():
     """Record one anonymous, session-scoped product event (no PII).
 
-    Body: ``{"event": "quick_complete", "took_ms": 1234}`` where
-    ``took_ms`` is the wall-clock time the user took to complete
-    champion -> role -> Best-next-item (the beta activation funnel).  The
+    Body: ``{"event": "page_view", "took_ms": 0}`` where ``took_ms`` is the
+    optional wall-clock duration of the instrumented flow.  The
     anonymous session id is a first-party cookie (``scryglass_anon``)
     minted here when missing; it never contains account material.  The
     route is deliberately pre-auth so funnel events can be collected from
@@ -1846,15 +1877,15 @@ def api_metrics_event():
     try:
         data = _json_object()
         event = _request_string(data, "event", required=True)
-        if event not in _METRICS_EVENT_NAMES:
-            raise ValueError(f"event must be one of {sorted(_METRICS_EVENT_NAMES)}")
+        if event not in METRIC_EVENT_NAMES:
+            raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
         took_ms = data.get("took_ms")
         if took_ms is not None:
             if not isinstance(took_ms, int) or isinstance(took_ms, bool):
                 raise ValueError("took_ms must be an integer")
-            if took_ms < 0 or took_ms > _METRICS_EVENT_MAX_TOOK_MS:
+            if took_ms < 0 or took_ms > METRIC_EVENT_MAX_TOOK_MS:
                 raise ValueError(
-                    f"took_ms must be between 0 and {_METRICS_EVENT_MAX_TOOK_MS}"
+                    f"took_ms must be between 0 and {METRIC_EVENT_MAX_TOOK_MS}"
                 )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1916,9 +1947,10 @@ def api_certainty():
     * ``boundary`` — a documented non-computed mechanic exists (utility-
       only slot, death-only trigger, out-of-scope row).
     """
-    champion = request.args.get("champion", "").strip()
-    if not champion:
-        return jsonify({"error": "champion is required"}), 400
+    try:
+        champion = _request_string(request.args, "champion", required=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     try:
         champion_data = _load_public_champion(champion)
     except LookupError as exc:
@@ -1942,9 +1974,10 @@ def api_not_modeled():
     ``stays state``).  Computed approximations (ESTIMATE) are deliberately
     excluded — they belong in /api/certainty, not here.
     """
-    champion = request.args.get("champion", "").strip()
-    if not champion:
-        return jsonify({"error": "champion is required"}), 400
+    try:
+        champion = _request_string(request.args, "champion", required=True)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     try:
         _champion_data = _load_public_champion(champion)  # existence + mode gate
     except LookupError as exc:
@@ -1959,26 +1992,6 @@ def api_not_modeled():
         if _classify_assumption(line) == _CERTAINTY_BOUNDARY
     ]
     return jsonify({"champion": champion, "items": items})
-
-
-@app.route("/api/cache-status")
-def api_cache_status():
-    """Cache hit/miss counters plus live entry count."""
-    try:
-        stats = cache_stats()
-    except (SQLAlchemyError, CacheUnavailable) as exc:
-        # surface backend failure (database or Redis) to the client
-        app.logger.exception("Failed to read cache status")
-        return jsonify({"error": f"Cache backend unavailable: {exc}"}), 503
-    return jsonify(
-        {
-            "cache_enabled": _result_cache_enabled(),
-            "database_configured": is_configured(),
-            "database": "postgresql" if is_postgres() else "sqlite",
-            "cache_backend": cache_backend(),
-            **stats,
-        }
-    )
 
 
 def _staleness_path() -> Path:
@@ -2012,66 +2025,17 @@ def api_staleness():
     return jsonify(report)
 
 
-@app.route("/api/staleness/regenerate", methods=["POST"])
-def api_staleness_regenerate():
-    """Re-run the patch regression against the game files. Dev-only, guarded
-    exactly like /api/update-data (local dev mode + update cookie)."""
-    supplied_token = request.cookies.get(_DEV_UPDATE_COOKIE, "")
-    if not _local_dev_request() or not hmac.compare_digest(
-        supplied_token, _DEV_UPDATE_TOKEN
-    ):
-        return (
-            jsonify({"error": "Staleness regeneration is disabled on this server"}),
-            404,
-        )
-
-    repo_root = Path(__file__).resolve().parent.parent
-    script = repo_root / "scripts" / "patch_regression.py"
-    if not script.exists():
-        return jsonify({"error": "patch_regression.py not found"}), 500
-    try:
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(script),
-                "check",
-                "--data-dir",
-                str(repo_root / "data"),
-                "--cache-dir",
-                str(repo_root / "data" / "gamefiles"),
-                "--out",
-                str(_staleness_path()),
-            ],
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            timeout=1800,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "patch regression timed out"}), 504
-    report = _read_staleness()
-    if result.returncode != 0 or report is None:
-        return (
-            jsonify(
-                {
-                    "error": "patch regression failed",
-                    "exit": result.returncode,
-                    "stderr": result.stderr[-2000:],
-                }
-            ),
-            500,
-        )
-    return jsonify(report)
-
-
 @app.route("/api/update-data")
 def api_update_data():
-    """Stream data update progress via Server-Sent Events. Dev-only:
-    404s unless LOL_CALC_DEV=1 (see _dev_mode)."""
+    """Stream data update progress via Server-Sent Events. Dev-only: 404s
+    unless LOL_CALC_DEV=1 (see _dev_mode) and LOL_CALC_DEV_UPDATE_TOKEN is
+    configured (see _dev_update_token)."""
+    token = _dev_update_token()
     supplied_token = request.cookies.get(_DEV_UPDATE_COOKIE, "")
-    if not _local_dev_request() or not hmac.compare_digest(
-        supplied_token, _DEV_UPDATE_TOKEN
+    if (
+        not token
+        or not _local_dev_request()
+        or not hmac.compare_digest(supplied_token, token)
     ):
         return jsonify({"error": "Data updates are disabled on this server"}), 404
 
@@ -2087,6 +2051,14 @@ def api_update_data():
         cache_delete_all()
 
     return Response(generate(), mimetype="text/event-stream")
+
+
+# The request boundary, applied once every route above is registered: the
+# single ``except StarvedSignal`` in ``src/`` reaches every endpoint from
+# here, and a source assertion allowlists it and forbids every other — over
+# the class, so a member added later is converted rather than newly anonymous.
+for _endpoint, _view in list(app.view_functions.items()):
+    app.view_functions[_endpoint] = _within_starvation_boundary(_view)
 
 
 if __name__ == "__main__":

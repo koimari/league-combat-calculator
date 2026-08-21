@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-C6-leaf90",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/name",
+  "old_value": "Force of Will",
+  "new_value": "Dark Sphere",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-leaf90",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-e9-1.json (Syndra entry)",
+      "data/wiki-atoms/stack-transform-summon-resource.json",
+      "data/worklists/f2-task.md, f3-task.md (cast_order semantics)",
+      "docs/math-foundations.md sections 1.1 and 5"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "cooldown: {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}; rechargeRate: [7, 7, 7, 7, 7]; castTime: none"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q effects[1]",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power) effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. — Ability Haste: 10 / 20 / 30"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "cooldown: {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8]}], \"affectedByCdr\": true}; castTime: none"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "quote": "cooldown: [15, 15, 15, 15, 15], affectedByCdr: true; castTime: 0.25"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power)",
+      "quote": "cooldown: [120, 100, 80], affectedByCdr: true; castTime: 0.25"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). With c_i the effective cooldown of ability i, the cast epochs of a solo ability are 0, c_i, 2c_i, ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table",
+      "quote": "Ability haste (effective_cooldown) | cd' = cd*100/(100+AH) ... | EXACT | R casts exactly once per timed fight (model constraint, documented)"
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    }
+  ],
+  "independent_computation": {
+    "step_1_effective_cooldowns": {
+      "formula": "cd' = cd * 100 / (100 + AH)   [docs/math-foundations.md Sec. 5]",
+      "level_18_ranks": "Q5 / W5 / E5 / R3 (5+5+5+3 = 18 points)",
+      "at_zero_item_haste": {
+        "Q_Dark_Sphere": "7 * 100 / (100 + 30 R-passive AH) = 5.3846 s (5.3846 s per stocked charge)",
+        "W_Force_of_Will": "8 * 100 / 100 = 8.000 s",
+        "E_Scatter_the_Weak": "15.000 s",
+        "R_Unleashed_Power": "80 s, and the engine casts R exactly once per timed fight"
+      }
+    },
+    "step_2_Q_strictly_beats_W_for_every_haste_and_rank": {
+      "claim": "cd'_Q < cd'_W for all item haste H >= 0 and all rank pairings",
+      "algebra": "700/(130+H) < 800/(100+H)  <=>  700*(100+H) < 800*(130+H)  <=>  70000 + 700H < 104000 + 800H  <=>  0 < 34000 + 100H  (true for all H >= 0)",
+      "without_R_passive": "700/(100+H) < 800/(100+H) trivially; at W ranks 1-4 (12/11/10/9 s) the margin only widens",
+      "checked_numerically": "H = 0,20,40,60,80,100,150,200 -> cd'_Q = 5.385/4.667/4.118/3.684/3.333/3.043/2.500/2.121 vs cd'_W = 8.000/6.667/5.714/5.000/4.444/4.000/3.200/2.667",
+      "corollary": "Whenever Q and W are both started at the fight opener, Q always becomes available again strictly before W. There is no rank, no item-haste value, and no wiki-sourced mechanic under which Force of Will recurs ahead of Dark Sphere."
+    },
+    "step_3_opener_and_the_sixth_cast": {
+      "opener": "Dark Sphere is a stocked (ammo) cast holding up to 2 charges once Syndra has 40+ Splinters of Wrath, which the cached module evidence records as the modeled default (splinters 120 -> Q2 slot live). The opener therefore spends 5 casts: Q, Q (second charge), W, E, R at t = 0, 0, 0, 0.25, 0.50 s (Q and W castTime 'none'; E and R castTime 0.25 s) -> cast_timeline[0..4].",
+      "next_event": "cast_timeline[5] is the first post-opener recast; candidate epochs are Q recharge t = 5.385 s, W recast t = 8.000 s, E recast t = 0.25 + 15 = 15.25 s, R never again (single-cast constraint).",
+      "min": "min(5.385, 8.000, 15.25) = 5.385 s -> Dark Sphere",
+      "robustness": "The only parameterisation that yields Force of Will at index 5 is a 4-cast opener with no second Q charge (Q,W,E,R then Q@cd_Q at index 4, W@cd_W at index 5). That requires Splinters < 40, contradicting the cached Transcendent modelling, and even then two Q casts can never precede one W cast (2*cd'_Q < cd'_W is false for every H, verified numerically above), so the timeline is Q-dense either way."
+    },
+    "step_4_sixty_second_sanity_check": {
+      "cast_counts_over_60_s_at_zero_item_haste": "Q ~13 (5.385 s per charge, 2 stocked), W 8 (8 s), E 5 (15 s), R 1 (single-cast constraint)",
+      "reading": "Dark Sphere is by a wide margin the most frequent cast in a 60 s Syndra timeline; a timeline whose sixth entry is Force of Will under-represents Q relative to the sourced cooldowns."
+    }
+  },
+  "caveats": [
+    "The scenario's own input tuple (its explicit custom cast_order, level, item haste, splinter option) lives outside the permitted evidence tree (scripts/, src/, tests/), so it was not read. The derivation above is therefore parameter-free where it matters: Q's effective cooldown is strictly shorter than W's for every rank and every ability-haste value, so any cooldown-gated shared-timeline schedule puts Dark Sphere, not Force of Will, at the first post-opener recast slot.",
+    "If cast_timeline were a literal, non-cooldown-gated cycling of a user-supplied order, index 5 would mirror index 1; the reported change touches index 5 alone, which is inconsistent with pure cycling and consistent with cooldown-gated scheduling as documented in docs/math-foundations.md Sec. 1.1."
+  ],
+  "conclusion": "Independently derived value for fights/manual_target/cast_timeline[5]/name = 'Dark Sphere'. The new value matches; the old value 'Force of Will' is not reachable from the cached cooldowns."
+}

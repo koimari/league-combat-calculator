@@ -1,0 +1,121 @@
+{
+  "receipt_id": "oracle-C6-leaf74",
+  "runbook": "R-18 / R-19 (independent oracle, blind to diff/plan/src/tests/scripts)",
+  "generated_at": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/breakdown/Q2",
+  "old_value": "<absent>",
+  "new_value": {
+    "casts": 1,
+    "name": "Dark Sphere (2nd charge)",
+    "total_damage": 650.0
+  },
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read_only_paths": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[0].leveling[0] ('Magic Damage')",
+      "quote": "modifiers: values [90, 125, 160, 195, 230] units [\"\",\"\",\"\",\"\",\"\"]; values [70, 70, 70, 70, 70] units [\"% AP\", ...]",
+      "reading": "Dark Sphere per-cast magic damage = 90/125/160/195/230 (+ 70% AP)"
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "reading": "At >= 40 splinters the ability banks a second charge. The wiki text attaches NO damage modifier to the stocked charge and NO separate leveling row: the stocked charge is an ordinary Dark Sphere cast at full damage. Max charges 2 => exactly one extra cast beyond the primary Q cast."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0] (Transcendent) effects[2]",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "reading": "The AP amplifier threshold is 120, NOT 60. At 60 splinters no AP buff applies, so a Dark Sphere cast at 60 splinters uses unmodified AP."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0] Transcendent Bonus",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "reading": "Confirms the splinter ladder 40 (Q charge) / 60 (W true damage) / 80 (E) / 100 (R execute) / 120 (AP buff). The scenario suffix '60' sits above the 40 threshold, so the Q second charge IS unlocked."
+    },
+    {
+      "id": "S6",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots / notable_atoms",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; atoms: 'ammo (Q 2nd charge at 40 splinters)'",
+      "reading": "Q2 is the sourced, audited slot name for the 40-splinter stocked Dark Sphere charge."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "reading": "Independent confirmation that a splinters=60 configuration must expose the Q2 slot (60 >= 40)."
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 5 formula-audit table, rows 'Resistance mitigation' and 'Stat rounding'",
+      "quote": "m(R)=100/(100+R) ... EXACT | Stat rounding (calculate_total_stats): display-level integer rounding of health/AD/AP/armor/MR before damage",
+      "reading": "Mitigation is exactly raw * 100/(100+MR), and AP entering a scaling is an integer. Both facts are used in the feasibility check below."
+    }
+  ],
+  "independent_computation": {
+    "step_1_should_the_leaf_exist": {
+      "rule": "S3 + S5: the stocked Dark Sphere charge unlocks at 40 Splinters of Wrath.",
+      "scenario_splinters": 60,
+      "check": "60 >= 40",
+      "conclusion": "A Q2 ('Dark Sphere (2nd charge)') entry MUST appear in the breakdown for this scenario. The old state (<absent>) omitted damage the champion demonstrably deals, i.e. it under-counted the rotation by one full Dark Sphere."
+    },
+    "step_2_cast_count": {
+      "rule": "S3: 'up to a maximum of 2' charges.",
+      "conclusion": "The banked charge yields exactly one extra Dark Sphere cast beyond the primary Q cast in a single burst rotation. casts = 1 is correct; casts = 2 would double-count the primary Q."
+    },
+    "step_3_per_cast_damage_formula": {
+      "formula": "Dark Sphere damage = base(rank) + 0.70 * AP,  base = [90, 125, 160, 195, 230] for ranks 1..5   (source S2)",
+      "modifiers_that_do_NOT_apply_at_60_splinters": [
+        "P Transcendence +15% AP (threshold 120, source S4)",
+        "W 60-splinter bonus true damage (W-only, source S5)",
+        "any charge-specific damage penalty (none exists in the wiki text, source S3)"
+      ],
+      "therefore": "Q2.total_damage must equal exactly one Q cast: base(rank) + 0.70 * AP, with no splinter amplification."
+    },
+    "step_4_lattice_check_of_650": {
+      "method": "Solve 650 = base(rank) + 0.70 * AP for each rank; a correct engine value must land on this lattice with a realizable (integer, per S8) AP.",
+      "solutions": [
+        {"rank": 1, "base": 90, "required_AP": 800.0},
+        {"rank": 2, "base": 125, "required_AP": 750.0},
+        {"rank": 3, "base": 160, "required_AP": 700.0},
+        {"rank": 4, "base": 195, "required_AP": 650.0},
+        {"rank": 5, "base": 230, "required_AP": 600.0}
+      ],
+      "note": "Every solution is an exact whole number (the 35-per-rank base step divided by the 0.70 AP ratio is exactly 50 AP), so 650.0 lies exactly on the Dark Sphere damage lattice. Rank 5 + 600 AP is the natural reading for a maxed-Q, full-AP-build scenario.",
+      "mitigation_feasibility": "If total_damage were post-mitigation instead of raw, then raw = 650*(100+MR)/100 = 650 + 6.5*MR, and integrality of AP (S8) forces 65*MR/7 to be an integer, i.e. MR must be a multiple of 7. Sweeping MR = 0..150 leaves only MR in {0, 7, 14, 21, ...}; for any conventional target MR (25, 30, 40, 50, 100) no integer AP reproduces 650.0. So 650.0 is consistent only with a zero-MR / pre-mitigation reading of this breakdown row - a self-consistent, non-arbitrary number in either case.",
+      "falsification_attempts": [
+        "If the engine had wrongly amplified the charge by the 120-splinter +15% AP buff, the value would be base + 0.70*1.15*AP, which is off-lattice for round AP (e.g. rank 5, AP 600 -> 713.0, not 650.0).",
+        "If the engine had wrongly charged the W 60-splinter true-damage rider onto Q2, the value would carry a 12% + 2%/100AP true-damage term (e.g. +24% at 600 AP), again off-lattice.",
+        "If the engine had halved or otherwise discounted the stocked charge, the value would not equal a whole Dark Sphere; the wiki text authorizes no such discount.",
+        "650.0 survives all three: it is exactly one unmodified Dark Sphere."
+      ]
+    },
+    "step_5_verdict_logic": "The leaf must exist (60 >= 40 threshold), must carry casts = 1 (max 2 charges), must be named for the second Dark Sphere charge, and must equal one unmodified Dark Sphere = base(rank) + 0.70*AP. The new value satisfies all four constraints and 650.0 sits exactly on that lattice. The old state omitted the slot entirely, which contradicts the 40-splinter Transcendent Bonus quoted in S3."
+  },
+  "limitations": {
+    "note": "The scenario's attacker stats (level, ability ranks, item build / AP) and the manual target's resistances are defined outside the permitted evidence tree (scripts/, tests/), so the exact (rank, AP) pair behind 650.0 could not be read directly. The verification is therefore: (a) structural - the slot's existence, name and cast count are forced by the cached wiki text; and (b) numeric-lattice - 650.0 is an exact solution of the sourced Dark Sphere formula for a realizable whole-number AP at every rank, and is NOT reproducible by any of the plausible mis-modelings enumerated in step_4.falsification_attempts.",
+    "residual_risk": "A scenario whose true AP/rank pair is not one of the five listed pairs would make 650.0 wrong; nothing readable from data/ suggests that, and all five pairs are ordinary Syndra configurations."
+  },
+  "verdict": "new_value_correct"
+}

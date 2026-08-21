@@ -741,36 +741,6 @@ def initial_full_block_uses(composition: DefenseComposition) -> int | None:
 # use consumption, blocked effect, triggered heal
 # ---------------------------------------------------------------------------
 
-# One shared arming-priority table for combat-state support packets.  The
-# receipt and score adapters previously duplicated this rule
-# (participant_timeline support routing and compile.add_support_templates).
-_SUPPORT_ARM_PRIORITY: dict[str, float] = {
-    "stasis": -2.0,
-    "invulnerability": -2.0,
-    "untargetable": -2.0,
-    "spell_shield": -2.0,
-    "crowd_control_resist": -2.0,
-    "shield": -1.0,
-    "damage_modifier": -1.0,
-    "temporary_health": -1.0,
-}
-
-
-def support_packet_priority(kind: str, explicit: float | None = None) -> float:
-    """One arm priority for a support packet kind.
-
-    Combat states (stasis, invulnerability, untargetable, spell shield)
-    arm BEFORE same-timestamp damage (a shield cast at t must see a
-    damage packet at t); plain shields and damage modifiers arm before
-    damage too; recovery packets apply after damage.  An authored
-    ``explicit`` priority wins when present (the receipt walk honors
-    ``_priority`` on a template and both adapters must sort identically).
-    """
-    if explicit is not None:
-        return float(explicit)
-    return _SUPPORT_ARM_PRIORITY.get(kind, 1.0)
-
-
 # The sourced categorical rules of the spell-shield lifecycle.  Each rule
 # is a typed declaration with its cache receipt; the kernel never invents
 # a policy the cache does not evidence (HANDOVER section 11).
@@ -1161,5 +1131,4 @@ __all__ = [
     "spell_shield_group_key",
     "spell_shield_rules_receipt",
     "stable_event_key",
-    "support_packet_priority",
 ]

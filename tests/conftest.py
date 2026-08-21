@@ -23,6 +23,16 @@ accordingly:
 - **Adding a champion:** no new tests are needed while it rides the
   generic path; write a test file only when the champion gets a custom
   module (see the /add-champion skill).
+
+Coverage-evidence tiers
+-----------------------
+The hooks at the bottom of this file serve the coverage-claim resolver
+(``tests/coverage_resolver.py``): they stash the collected node set and
+answer whether this session collected everything.  They are purely additive
+— no item is mutated and nothing depends on collection order — except for
+the one deliberate removal: in a *filtered* session the full-session tier is
+**not collected**, because ``pytest.skip`` prints green and a tier that
+reports skipped is a tier that reports nothing.
 """
 
 import pytest
@@ -31,6 +41,13 @@ from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests.coverage_resolver import (
+    COLLECTED_NODES,
+    FULL_SESSION,
+    FULL_SESSION_MARKER,
+    node_facts,
+    record_session,
+)
 
 
 @pytest.fixture
@@ -292,3 +309,63 @@ def fight():
         )
 
     return _run
+
+
+# ---------------------------------------------------------------------------
+# Coverage-evidence tiers (Phase 1)
+# ---------------------------------------------------------------------------
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Register the marker the full-session tier is gated on."""
+    config.addinivalue_line(
+        "markers",
+        f"{FULL_SESSION_MARKER}: a coverage check only a complete collection "
+        "can answer (exact node ids, marker facts, duplicate node ids). "
+        "Deselected — never skipped — when -k, -m or a path narrowed the run.",
+    )
+
+
+def _is_full_session(config: pytest.Config) -> bool:
+    """True when no ``-k``, ``-m``, or path filter narrowed collection.
+
+    The three are read off the parsed options rather than off the raw command
+    line: ``file_or_dir`` is where pytest puts every positional argument, so
+    a single test file, a directory and a bare node id all answer the same
+    way, and an option spelled ``--keyword`` rather than ``-k`` cannot slip
+    past a string match.
+    """
+    option = config.option
+    return not (
+        getattr(option, "keyword", "")
+        or getattr(option, "markexpr", "")
+        or getattr(option, "file_or_dir", [])
+    )
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Stash the collected node set; a filtered session never collects the full tier.
+
+    Deselection rather than ``pytest.skip`` is the ruling (D-22): a skipped
+    check takes the green path and reports success for work it did not do,
+    which is this campaign's own failure shape inside its own gate.  A
+    deselected node is absent from the report entirely, and the resolution
+    tier proves the weaker fact by source scan in its place.
+    """
+    full = _is_full_session(config)
+    config.stash[FULL_SESSION] = full
+    if not full:
+        deselected = [
+            item for item in items if item.get_closest_marker(FULL_SESSION_MARKER)
+        ]
+        if deselected:
+            config.hook.pytest_deselected(items=deselected)
+            items[:] = [
+                item
+                for item in items
+                if item.get_closest_marker(FULL_SESSION_MARKER) is None
+            ]
+    config.stash[COLLECTED_NODES] = node_facts(items)
+    record_session(config)

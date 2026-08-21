@@ -3,6 +3,7 @@
 import pytest
 
 import src.app as app_module
+from src.calculator import rune_effects
 
 
 @pytest.fixture(autouse=True)
@@ -24,28 +25,14 @@ def _payload(**overrides):
     return payload
 
 
-def test_config_serves_keystone_roster_with_coverage():
+def test_config_serves_the_whole_keystone_roster_as_implemented():
     config = app_module.app.test_client().get("/api/config").get_json()
 
     keystones = config["keystones"]
     assert len(keystones) == 17
     by_name = {entry["name"]: entry for entry in keystones}
-    assert by_name["Electrocute"]["implemented"] is True
     assert by_name["Electrocute"]["path"] == "Domination"
-    assert by_name["First Strike"]["implemented"] is True
-    assert by_name["Press the Attack"]["implemented"] is True
-    assert by_name["Arcane Comet"]["implemented"] is True
-    assert by_name["Guardian"]["implemented"] is True
-    assert by_name["Aftershock"]["implemented"] is True
-    assert by_name["Grasp of the Undying"]["implemented"] is True
-    assert by_name["Hail of Blades"]["implemented"] is True
-    assert by_name["Lethal Tempo"]["implemented"] is True
-    assert by_name["Dark Harvest"]["implemented"] is True
-    assert by_name["Glacial Augment"]["implemented"] is True
-    assert by_name["Stormraider's Surge"]["implemented"] is True
-    assert by_name["Fleet Footwork"]["implemented"] is True
-    assert by_name["Conqueror"]["implemented"] is True
-    assert by_name["Deathfire Touch"]["implemented"] is True
+    assert all(entry["implemented"] is True for entry in keystones)
     assert (
         config["keystone_options"]["Fleet Footwork"]["options"]["starting_charges"][
             "max"
@@ -57,9 +44,71 @@ def test_config_serves_keystone_roster_with_coverage():
         == 12
     )
     assert all(entry["icon"] for entry in keystones)
+    assert all(entry["row"] == 0 for entry in keystones)
     # Paths arrive grouped in wiki order for direct picker rendering.
     paths = [entry["path"] for entry in keystones]
     assert paths.index("Precision") < paths.index("Domination") < paths.index("Sorcery")
+
+
+def test_config_serves_the_whole_rune_page_beside_the_keystone_row():
+    config = app_module.app.test_client().get("/api/config").get_json()
+
+    runes = config["runes"]
+    assert len(runes) == 62
+    assert config["keystones"] == [entry for entry in runes if entry["row"] == 0]
+    # The keystone row leads each path, as the picker renders it.
+    paths = [entry["path"] for entry in runes]
+    assert paths.index("Precision") == 0
+    assert [entry["row"] for entry in runes if entry["path"] == "Precision"] == [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+    ]
+    shards = config["rune_shards"]
+    assert [row["row"] for row in shards] == [1, 2, 3]
+    assert [option["name"] for option in shards[0]["options"]] == [
+        "Adaptive Force",
+        "Attack Speed",
+        "Cooldown Reduction",
+    ]
+
+
+def test_every_keystone_computes_through_the_calculate_route():
+    """Criterion 5: no keystone in the roster refuses."""
+    client = app_module.app.test_client()
+    keystones = [
+        entry["name"]
+        for entry in client.get("/api/config").get_json()["keystones"]
+        if entry["implemented"]
+    ]
+    for keystone in keystones:
+        response = client.post(
+            "/api/calculate",
+            json=_payload(
+                keystone=keystone,
+                fight_mode="time_based",
+                include_auto_attacks=True,
+                fight_duration=10.0,
+                auto_attack_uptime=1.0,
+            ),
+        )
+        assert response.status_code == 200, keystone
+        result = response.get_json()
+        # Every keystone either books a row or publishes a receipt saying
+        # why it did not; silence is the one answer that is not allowed.
+        assert f"keystone_{keystone}" in result["breakdown"] or any(
+            note.startswith(keystone) for note in result["notes"]
+        ), keystone
 
 
 def test_calculate_includes_electrocute_breakdown_row():
@@ -472,16 +521,82 @@ def test_calculate_deathfire_exposes_typed_burn_receipt():
     assert all("deathfire_category" in event for event in burn_events)
 
 
-@pytest.mark.parametrize(
-    "keystone",
-    ["Unsealed Spellbook", "Fake Rune", 42],
-)
-def test_calculate_and_optimize_reject_unmodeled_keystones(keystone):
+@pytest.mark.parametrize("keystone", ["Fake Rune", 42])
+def test_calculate_and_optimize_reject_unknown_keystones(keystone):
     client = app_module.app.test_client()
     for endpoint in ("/api/calculate", "/api/optimize"):
         response = client.post(endpoint, json=_payload(keystone=keystone))
         assert response.status_code == 400
         assert response.get_json()["error"]
+
+
+def test_an_uncompiled_keystone_is_still_rejected(monkeypatch):
+    """The withhold survives: a rune with no compiler still 400s."""
+    monkeypatch.setitem(
+        rune_effects.RUNE_EFFECTS, "Synthetic Keystone", {"name": "Synthetic"}
+    )
+    response = app_module.app.test_client().post(
+        "/api/calculate", json=_payload(keystone="Synthetic Keystone")
+    )
+    assert response.status_code == 400
+    assert "not modeled" in response.get_json()["error"]
+
+
+@pytest.mark.parametrize(
+    # ``grants_attack_speed`` marks the two that also empower the swings the
+    # baseline counted, so their row is a floor on what they added rather
+    # than the whole of it.
+    "keystone,expected_row,grants_attack_speed",
+    [
+        ("Summon Aery", True, False),
+        ("Hail of Blades", True, True),
+        ("Grasp of the Undying", True, False),
+        ("Lethal Tempo", True, True),
+        ("Deathfire Touch", True, False),
+        ("Dark Harvest", True, False),
+        ("Aftershock", True, False),
+        ("Conqueror", False, False),
+        ("Fleet Footwork", False, False),
+        ("Guardian", False, False),
+        ("Glacial Augment", False, False),
+        ("Stormraider's Surge", False, False),
+        ("Unsealed Spellbook", False, False),
+    ],
+)
+def test_the_thirteen_new_keystones_price_exactly_what_they_declare(
+    keystone, expected_row, grants_attack_speed
+):
+    """Each new keystone either adds its own row to the total, or nothing.
+
+    A keystone that books damage adds at least its row — exactly its row
+    unless it also empowers the autos; one that books none leaves the total
+    bit-identical to the same fight without it. Either way the receipt
+    reaches the user through the notes.
+    """
+    fight = {
+        "fight_mode": "time_based",
+        "include_auto_attacks": True,
+        "fight_duration": 10.0,
+        "auto_attack_uptime": 1.0,
+    }
+    client = app_module.app.test_client()
+    result = client.post(
+        "/api/calculate", json=_payload(keystone=keystone, **fight)
+    ).get_json()
+    baseline = client.post("/api/calculate", json=_payload(**fight)).get_json()
+
+    row = result["breakdown"].get(f"keystone_{keystone}")
+    if expected_row:
+        assert row is not None and row["total_damage"] > 0
+        with_row = baseline["total_damage"] + row["total_damage"]
+        if grants_attack_speed:
+            assert result["total_damage"] > with_row
+        else:
+            assert result["total_damage"] == pytest.approx(with_row, rel=1e-6)
+    else:
+        assert row is None
+        assert result["total_damage"] == pytest.approx(baseline["total_damage"])
+    assert any(note.startswith(keystone) for note in result["notes"])
 
 
 def test_empty_keystone_is_the_default():

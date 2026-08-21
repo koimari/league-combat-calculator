@@ -47,6 +47,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -60,6 +61,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Akshan
@@ -67,6 +69,11 @@ from .slotlib import (
 # chance) and scale up to +200% based on the target's missing health.
 _R_CRIT_EFFECTIVENESS = 0.3
 _R_MISSING_HP_MAX_BONUS = 2.0
+
+# Heroic Swing's shots are on a cached beat, not on Akshan's attack speed:
+# "While swinging, he fires at the nearest visible enemy every 0.231
+# seconds" (data/champions.json Akshan E).
+_E_SHOT_INTERVAL_S = 0.231
 
 
 def _extract_e_per_shot(
@@ -102,11 +109,16 @@ def _extract_e_per_shot(
         if not match:
             return 0.0
         as_ratio = float(match.group(1))
-        bonus_as_pct = (
-            stats_context.get("bonus_attack_speed_percent", 0.0)
-            if stats_context
-            else 0.0
-        )
+        # ESCALATED DEFECT akshan-bonus-attack-speed-percent (issue #214,
+        # docs/receipts/escalated-defects-P3-3.7.json): the stat block this
+        # reads has no ``bonus_attack_speed_percent`` key and never has —
+        # ``calculate_total_stats`` emits ``bonus_attack_speed`` — so this
+        # term has always resolved to zero and Heroic Swing has never priced
+        # its attack-speed scaling.  Removing the fallback is what surfaced
+        # it; correcting it moves a number, which this slice may not do
+        # (criterion 17 allows a golden diff for exactly one slice, and this
+        # is not it).  The zero is therefore stated rather than defaulted.
+        bonus_as_pct = 0.0
         return as_ratio * (bonus_as_pct / 100.0) * value
 
     return sum_modifiers(
@@ -163,7 +175,7 @@ def _parse_passive_proc_damage(
         ap_match = re.search(r"\+\s*(\d+)%\s*AP", desc)
         ap_ratio = float(ap_match.group(1)) / 100.0 if ap_match else 0.0
 
-        ap = stats_context.get("ability_power", 0.0) if stats_context else 0.0
+        ap = champion_stat(stats_context or {}, "ability_power")
         return base + ap_ratio * ap
 
     return 0.0
@@ -184,12 +196,12 @@ def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
 
 
 def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: per-shot damage x ``e_shots`` option (default 5)."""
+    """E: per-shot damage x ``e_shots`` option (default 5), on its cadence."""
     ability = ctx.ability()
     if ability is None:
         return None
     rank = ctx.rank_for()
-    shots = int(ctx.options.get("e_shots", 5))
+    shots = int(ctx.option("e_shots"))
     if rank < 1 or shots <= 0:
         return None
 
@@ -200,6 +212,20 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
     name = ability.get("name", "Heroic Swing")
     cooldown = extract_cooldown(ability, rank)
     entry = damage_entry(name, rank, cooldown, per_shot * shots, "physical")
+    # The swing's shots have a cached beat: "While swinging, he fires at the
+    # nearest visible enemy every 0.231 seconds to deal them physical damage
+    # and apply on-hit effects for each shot" (data/champions.json Akshan E).
+    # "Akshan immediately fires one shot at the beginning of his swing", so
+    # the first shot sits on the cast start and the rest follow on the beat.
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            per_shot,
+            count=shots,
+            time_offset=0.0,
+            hit_interval=_E_SHOT_INTERVAL_S,
+        ),
+    )
     # Wiki: every Heroic Swing shot applies on-hit effects at 25% effectiveness.
     entry["applies_item_on_hits"] = {
         "effectiveness": 0.25,
@@ -380,7 +406,6 @@ ASSUMPTIONS = [
     "R assumes full channel (max bullets at max damage)",
     "R crit scaling at 30% effectiveness applied",
     "Double shot applies on-hit effects and can crit",
-    "W is utility only (no damage)",
     "Dirty Fighting stacks up to 3 (cap) on the target and the third "
     "stack consumes them all: each passive_procs entry is one completed "
     "3-stack detonation (15/40/80/150 by level + 60% AP, the level "
@@ -406,18 +431,25 @@ SLOTS = {
     "W": _going_rogue,
 }
 
-parse_abilities = build_parser(SLOTS, "Akshan")
+# Cached kit review.  R's bullets, P's 3-stack detonation and E's swing
+# shots only damage — nothing in the cached text controls the target they
+# hit (Q's and W's reveals and camouflage are vision, not control).  E's
+# shots now land on their cached 0.231-second beat, which is what lets that
+# review reach the event ledger.
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan: its
+# row is the cached "Total Physical Damage" of both boomerang passes, and
+# the return pass has no cached arrival time — the cache gives the two
+# speeds ("1500 • 2400") but no distance to fly, and a speed without a
+# distance is half a schedule.
+MODULE_CC = {"R": "none", "P": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Akshan",
-        "revision_id": 4007947,
-        "revision_timestamp": "2026-04-12T23:55:44Z",
-    }
-]
+SOURCES = load_champion_sources("Akshan")
+
+# W is emitted, but its row is a sourced zero — a fact SLOTS cannot derive.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",
@@ -425,4 +457,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

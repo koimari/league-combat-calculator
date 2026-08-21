@@ -11,6 +11,10 @@ Why each slot is non-generic:
   and the cooldown is pinned to 999 s so the fight engine casts it
   exactly once per fight.
 - W (utility wall) deals no damage — see the Roadmap session note below.
+- P (Rebirth) is never cast, so it is absent from the slot map;
+  ``starting_revive_defense`` below prices its revive state, which is
+  why the coverage map calls P ``modeled`` through the
+  ``starting_revive_defense`` channel.
 
 Roadmap session 3 (2026-08-20): closes both of Anivia's out_of_scope slots
 (P, W).
@@ -59,9 +63,21 @@ hardcoded.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_named, simple_damage, with_control
+from .slotlib import damage_entry, extract_named, simple_damage
+from .source_receipts import load_champion_sources
+
+# Glacial Storm's own cadence: the blizzard "deal[s] magic damage every 0.5
+# seconds to enemies within and slow[s] them for 1 second, refreshing every
+# 0.5 seconds while they remain inside", and "increases in size over 1.5
+# seconds", after which it "is empowered to deal 300% damage" (data/
+# champions.json Anivia R).  Both numbers are cached, so the ticks are
+# authored rather than summed onto the cast boundary.
+_R_TICK_INTERVAL = 0.5
+_R_GROWTH_SECONDS = 1.5
 
 
 def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -73,7 +89,7 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    duration = max(float(ctx.options.get("r_duration", 5.0)), 1.5)
+    duration = max(float(ctx.option("r_duration")), 1.5)
     total_ticks = int(duration / 0.5)
     initial_ticks = min(3, total_ticks)
     empowered_ticks = total_ticks - initial_ticks
@@ -84,9 +100,40 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Empowered Damage per Tick", rank, ctx.stats, ctx.target
     )
     total = initial_ticks * initial + empowered_ticks * empowered
-    return damage_entry(
+    entry = damage_entry(
         ability.get("name", "Glacial Storm"), rank, 999.0, total, "magic"
     )
+    # Every tick slows what it damages ("slowing them for 1 second,
+    # refreshing every 0.5 seconds while they remain inside"), growing phase
+    # and empowered alike — a fact this module does NOT declare, and not
+    # because the ledger cannot see it: with the ticks authored below, a
+    # ``cc_kind`` here (or a ``dot_duration``) makes Anivia the roster's
+    # first ``enhanced_consume`` producer, R's chill feeding E's "Enhanced
+    # Damage".  That empties the cast-dependency audit's dated
+    # acknowledged-gap list, which answers recorded ruling H6 / D-88 —
+    # reserved by docs/plans/phase-5-cast-dependency.md for its own slice
+    # with its own investigator receipt, not a side effect of this review.
+    parts = [
+        DamagePart(
+            "magic",
+            initial,
+            count=initial_ticks,
+            time_offset=0.0,
+            hit_interval=_R_TICK_INTERVAL,
+        )
+    ]
+    if empowered_ticks:
+        parts.append(
+            DamagePart(
+                "magic",
+                empowered,
+                count=empowered_ticks,
+                time_offset=_R_GROWTH_SECONDS,
+                hit_interval=_R_TICK_INTERVAL,
+            )
+        )
+    entry["parts"] = tuple(parts)
+    return entry
 
 
 def _crystallize(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -151,7 +198,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
     resurrection window on the cached 240-second cooldown.
     """
     return {
-        "revive_health_amount": float(stats.get("health", 0.0))
+        "revive_health_amount": float(champion_stat(stats, "health"))
         * REVIVE_MAX_HEALTH_RATIO,
         "revive_delay": REVIVE_DELAY_SECONDS,
         "revive_cooldown": REVIVE_COOLDOWN_SECONDS,
@@ -176,28 +223,39 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": with_control(
-        simple_damage(attr="Total Magic Damage", dmg_type="magic"),
-        kind="stun",
-        duration_attr="Stun Duration",
-    ),
+    "Q": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "W": _crystallize,
-    "E": simple_damage(attr="Enhanced Damage", dmg_type="magic"),
+    # One targeted blast, no travel or tick phase in the cached packet.
+    "E": simple_damage(
+        attr="Enhanced Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _glacial_storm,
 }
 
-parse_abilities = build_parser(SLOTS, "Anivia")
+# Cached kit review.  E "blasts a freezing wind at the target enemy that
+# deals magic damage" and applies nothing else (Chilled comes from Q and
+# R, and only doubles E's damage).  R's ticks now land on their cached
+# every-0.5-second beat, but their slow stays undeclared for a reason that
+# is not the ledger's (see ``_glacial_storm``).
+#
+# Q stays UNREVIEWED regardless, so this kit keeps the coarse control-armed
+# scan: its row is the cached "Total Magic Damage" of the pass-through
+# (which slows) and the recast shatter (which stuns), and the cache times
+# neither — the recast happens "while the ice is in flight after its cast
+# time", on a flight the cache gives a speed for and no distance.  The
+# shatter's stun IS sourced ("Stun Duration" 1.1 : 1.5), but one row that
+# is two landings cannot certify a single hit, so a kind on it would never
+# reach the event ledger.  W's wall pushes and authors no damage part.
+MODULE_CC = {"E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Anivia", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Anivia",
-        "revision_id": 3891994,
-        "revision_timestamp": "2025-05-01T05:31:01Z",
-    }
-]
+SOURCES = load_champion_sources("Anivia")
+
+# P emits no cast row, so the derivation would call it out_of_scope; the
+# revive above is what the engine prices (2114.0 restored at level 18 with
+# no items).  W is the explicit zero-damage row ``_crystallize`` authors.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",
@@ -205,4 +263,4 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"
+COVERAGE_CHANNELS = {"P": ("starting_revive_defense",)}

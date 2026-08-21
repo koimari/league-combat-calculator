@@ -1,0 +1,117 @@
+{
+  "receipt": "oracle-C6-leaf36",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[4]/damage",
+  "old_value": 614.0,
+  "new_value": 164.7,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "stat_context_recovered_from_the_two_leaf_values": {
+    "method": "Neither the scenario spec nor the golden baseline is inside the permitted evidence tree, so the fight's stats were solved for from the leaf values themselves and cross-checked for consistency.",
+    "scenario_name_signal": "'_120' = 120 Splinters of Wrath, the Transcendence threshold in Syndra's innate.",
+    "transcendence": "At 120 Splinters Syndra's ability power is increased by 15% (data/champions.json, Syndra P 'Transcendent').",
+    "solved": "AP_base = 600 -> AP_eff = 600 * 1.15 = 690 (an integer, consistent with the documented display-level integer stat rounding).",
+    "independent_confirmation": [
+      "Equation 1 (old value): Scatter the Weak rank 5 = 200 + 0.60 * AP_eff = 614.0  ->  AP_eff = 690 exactly. Ranks 1-4 would require AP_eff of 923.33 / 865.0 / 806.67 / 748.33 - none integer-clean.",
+      "Equation 2 (new value): Force of Will rank 5 Transcendent bonus true damage at AP_eff = 690 = 164.733 -> 164.7.",
+      "Two independent leaf values landing on the same integer AP_eff = 690 pins the stat context. Rank 5 on Q/W/E with R rank 3 is exactly 18 skill points, i.e. level 18."
+    ],
+    "target": "Both numbers are unmitigated at face value (E's raw 614.0 appears verbatim), so the manual target carries 0 MR; the true-damage leaf is unmitigated by definition either way (CLAUDE.md: 'True damage ignores all resistances entirely')."
+  },
+
+  "independent_computation": {
+    "what_the_new_value_is": "Syndra W - Force of Will - Transcendent Bonus true damage (unlocked at 60 Splinters; the scenario is at 120).",
+    "formula_from_source": "bonus_true = (12% + 2% per 100 AP) * (W magic damage) ; W magic damage = base(rank) + 65% AP",
+    "steps": [
+      "AP_eff = 600 * 1.15 = 690",
+      "W rank 5 magic damage = 190 + 0.65 * 690 = 190 + 448.5 = 638.5",
+      "true-damage fraction = 0.12 + 0.02 * (690 / 100) = 0.12 + 0.138 = 0.258",
+      "bonus true damage = 638.5 * 0.258 = 164.733  ->  164.7 (1 dp)"
+    ],
+    "cross_check_against_the_cached_wiki_leveling_row": {
+      "row": "Syndra W effect 'Transcendent Bonus', attribute 'Bonus True Damage', rank-5 modifiers: flat 22.8, 11.6% AP, plus the quadratic AP term (0.65 * 0.02 per 100 AP = 0.00013 per AP^2)",
+      "evaluation": "22.8 + 0.116 * 690 + 0.00013 * 690^2 = 22.8 + 80.04 + 61.893 = 164.733",
+      "note": "The wiki's flat column is itself the expansion of the description text: 0.12 * 70/100/130/160/190 = 8.4/12/15.6/19.2/22.8, and 0.078 + 0.0002*base gives 9.2/9.8/10.4/11.0/11.6 %AP. This confirms the bonus is a percentage of Force of Will's OWN damage, not of target max health.",
+      "agreement": "164.733 by both routes - exact agreement to all digits."
+    },
+    "what_the_old_value_is": "Syndra E - Scatter the Weak - rank 5 magic damage = 200 + 0.60 * 690 = 614.0. A real Syndra number, but a different event.",
+    "other_events_at_the_same_stats_for_disambiguation": {
+      "Q_rank5": 713.0,
+      "W_rank5_magic": 638.5,
+      "W_rank5_true": 164.7,
+      "E_rank5": 614.0,
+      "R_rank3_per_sphere": 298.0,
+      "R_rank3_seven_spheres": 2086.0
+    }
+  },
+
+  "why_new_value_correct": {
+    "1_the_new_value_is_exactly_reproducible_from_source": "164.7 is reproduced to the digit by two independent routes (description text and the parsed leveling row) from the cached wiki data, at the stat context both leaf values agree on. It is not an artifact.",
+    "2_the_event_is_mandated_at_this_scenario": "The scenario runs at 120 Splinters; the wiki text unlocks the Force of Will bonus true damage at 60. A 120-Splinter Syndra fight that casts W MUST emit a bonus-true-damage event. The audit record confirms the module models it: data/champion-audit/batch-e9-1.json, Syndra: '60+ W true damage'.",
+    "3_the_old_value_is_the_default_order_answer_in_a_custom_order_scenario": "Under Syndra's default cast order at 120 Splinters (Q, then the Q2 charge slot unlocked at 40 Splinters, then W magic, then W true, then E) index 4 is exactly E = 614.0. The scenario is named 'custom_order': index 4 holding the default-order event is the signature of the custom order not being honoured (or of the W true event not being emitted at all, which the same leaf shift produces if an auto-attack event leads the list). Under any order that casts W fourth, index 4 is the W bonus true damage = 164.7.",
+    "4_no_damage_is_lost": "614.0 does not disappear from the fight - it moves to a neighbouring index. The leaf changed identity, not correctness; the total is conserved."
+  },
+
+  "residual_uncertainty": "The scenario definition and the cast order live in src/ and scripts/, which runbook R-18/R-19 forbids this oracle from reading. I therefore verified the VALUE at the leaf against source (exact) and the event's REQUIRED PRESENCE at 120 Splinters (mandated by the wiki text), and identified 614.0 as the default-cast-order occupant of index 4. Both lines point the same way; the ordering itself was inferred, not read.",
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0] 'Transcendent'",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] 'Force of Will', Transcendent Bonus effect",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] 'Force of Will', Recast effect leveling",
+      "quote": "{\"attribute\": \"Magic Damage\", \"modifiers\": [{\"values\": [70, 100, 130, 160, 190]}, {\"values\": [65, 65, 65, 65, 65], \"units\": [\"% AP\", ...]}]}"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0], Transcendent Bonus leveling",
+      "quote": "{\"attribute\": \"Bonus True Damage\", \"modifiers\": [{\"values\": [8.4, 12, 15.6, 19.2, 22.8]}, {\"values\": [9.2, 9.8, 10.4, 11, 11.6], \"units\": [\"% AP\", ...]}, {\"values\": [1.14, ...], \"units\": [\"% AP\", ...]}]}"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] 'Scatter the Weak' leveling",
+      "quote": "{\"attribute\": \"Magic Damage\", \"modifiers\": [{\"values\": [60, 95, 130, 165, 200]}, {\"values\": [60, 60, 60, 60, 60], \"units\": [\"% AP\", ...]}]}"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] 'Dark Sphere', Transcendent Bonus",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "audit table, 'Stat rounding (calculate_total_stats)'",
+      "quote": "display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX | Riot computes with full precision; rounding drifts mitigation and scalings by <1 unit - corpus-wide convention, pinned by golden"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "audit table, 'Resistance mitigation (apply_resistance)'",
+      "quote": "m(R)=100/(100+R); EHP round-trip raw = post*(1+R/100) - EXACT (used to confirm the 0-MR manual target: 614.0 is E's raw value verbatim)"
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "CONTEXT paragraph",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R). ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    }
+  ]
+}

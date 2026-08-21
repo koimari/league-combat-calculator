@@ -11,7 +11,9 @@ level 18):
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
+from src.calculator.champions import vayne
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -650,3 +652,37 @@ class TestChampionOptions:
             champion_stats=stats,
         )
         assert abilities["E"]["total_raw"] == pytest.approx(240.0, abs=1.0)
+
+
+class TestReviewedCrowdControl:
+    """Vayne's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Vayne")
+        assert vayne.MODULE_CC == {"Q": "none", "E": "knockback"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        # Condemn knocks back on every cast; the terrain stun is the
+        # conditional second control, not the one the slot always applies.
+        assert "knocks them back 475 units" in cc_review.slot_text(data, "E")
+        assert "collides with terrain" in cc_review.slot_text(data, "E")
+        # W and R are absent rather than "none": Silver Bolts is an on-hit
+        # shell that rides a basic attack and Final Hour is a pure stat
+        # buff, so neither authors an ability part a review could reach.
+        assert "W" not in vayne.MODULE_CC and "R" not in vayne.MODULE_CC
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Vayne") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Vayne")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

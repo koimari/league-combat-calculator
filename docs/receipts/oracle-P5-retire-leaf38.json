@@ -1,0 +1,84 @@
+{
+  "receipt": "oracle-P5-retire-leaf38",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/rotation/sources[5]",
+  "old_value": "<absent>",
+  "new_value": "option splinters (self_state, slot P)",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle38",
+    "read": ["data/champions.json (Syndra)", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0] (\"Transcendent\"), effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. She gains Splinters of Wrath from the following: Dealing two instances of ability damage to an enemy champion within 4 seconds grants 1 / 2 / 3 (based on level) Splinters. ... Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85. Killing a large minion grants 1 Splinter."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0] metadata",
+      "quote": "\"targeting\": \"Passive\", \"affects\": \"Self\""
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] (\"Force of Will\"), effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0], effects[3].leveling",
+      "quote": "attribute \"Bonus True Damage\": values [8.4, 12, 15.6, 19.2, 22.8]; [9.2, 9.8, 10.4, 11, 11.6] % AP; [1.14, 1.14, 1.14, 1.14, 1.14] % AP. attribute \"Total Mixed Damage\": [78.4, 112, 145.6, 179.2, 212.8]; [74.2, 74.8, 75.4, 76, 76.6] % AP; [1.14,...] % AP"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0], effects[2].leveling (\"Magic Damage\")",
+      "quote": "values [70, 100, 130, 160, 190]; [65, 65, 65, 65, 65] % AP"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] effects[1] / E[0] effects[2] / R[0] effects[4] (other thresholds)",
+      "quote": "Q: \"Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\" E: \"Collecting 80 Splinters of Wrath ...\" R: \"Collecting 100 Splinters of Wrath enhances Unleashed Power to execute ...\" P: \"At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.\""
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "lines 6-9 (input contract)",
+      "quote": "Input contract: deterministic combat outcomes derived from the League Wiki cache (data/champions.json, data/items.json) and game files. Every number below traces to a wiki/game source.",
+      "note": "math-foundations.md contains no text on Syndra, Splinters, or the golden 'sources' provenance list (grep for syndra|splinter|transcendent returns nothing); it is cited only for the traceability contract."
+    }
+  ],
+  "independent_computation": {
+    "question_restated": "At exactly 60 Splinters, does the Splinter stack count materially drive the rotation result (so it must be listed as a rotation source), and is 'splinters' correctly typed self_state and homed at slot P?",
+    "step_1_threshold_is_inclusive_and_met": "The scenario name pins 60 Splinters. The cached W text gates its bonus on 'Collecting 60 Splinters of Wrath', i.e. active at exactly 60. The Q gate (40) is also cleared at 60; E (80), R (100) and the P +15% AP Transcendence (120) are not.",
+    "step_2_closed_form_of_the_60_gate": "bonus_true = (12% + 2%·AP/100) × W_damage, with W_damage = base_W + 0.65·AP, base_W = [70,100,130,160,190] by rank.",
+    "step_3_reconcile_with_the_cached_leveling_table": {
+      "expansion": "0.12·base + 0.12·0.65·AP + (0.02·base/100)·AP + (0.02·0.65/100)·AP^2",
+      "constant_term": "0.12 × [70,100,130,160,190] = [8.4, 12, 15.6, 19.2, 22.8] — matches the cached 'Bonus True Damage' constants exactly",
+      "linear_AP_term": "7.8% (=0.12·65%) + 0.02·base/100 → rank1 7.8+1.4=9.2%, rank2 7.8+2.0=9.8%, rank3 10.4%, rank4 11.0%, rank5 7.8+3.8=11.6% — matches the cached %AP row exactly",
+      "quadratic_AP_term": "0.02·0.65/100 = 0.00013·AP^2 = (0.0114·AP)^2 — matches the cached 1.14 %AP entry read as a squared term",
+      "total_mixed_check": "base·1.12 = [78.4,112,145.6,179.2,212.8] and 65% + 9.2..11.6% = [74.2,74.8,75.4,76,76.6] %AP — matches the cached 'Total Mixed Damage' row exactly"
+    },
+    "step_4_numeric_instance": {
+      "inputs": "W rank 5, AP = 500",
+      "W_magic_damage": "190 + 0.65·500 = 515.0",
+      "splinter_multiplier": "12% + 2%·(500/100) = 22%",
+      "bonus_true_damage": "0.22 × 515.0 = 113.30",
+      "cross_check_from_table": "22.8 + 11.6%·500 + (1.14%·500)^2 = 22.8 + 58.0 + 32.49 = 113.29",
+      "total_W": "515.0 + 113.3 = 628.30 (table: 212.8 + 76.6%·500 + 32.49 = 628.29)",
+      "conclusion": "Flipping the splinter count from <60 to 60 changes the rotation total by a strictly positive, ~+22%-of-W true-damage term. The option is load-bearing, not inert."
+    },
+    "step_5_classification": {
+      "self_state": "Splinters of Wrath are Syndra's own accumulated stack counter — P is recorded as \"targeting\": \"Passive\", \"affects\": \"Self\", and every gain source (ability damage, ability rank-ups, large-minion kills) mutates only Syndra's state. It is not a target property and not an enemy-side toggle, so self_state is the correct category.",
+      "slot_P": "The counter is defined and capped by the innate ('stacking up to 120 times'); Q/W/E/R only *read* thresholds off it (40/60/80/100) and P itself consumes 120. One counter, one home: the option belongs to slot P, not to the W that happens to consume the 60 threshold in this scenario."
+    },
+    "step_6_verdict_reasoning": "Under the traceability contract, an input whose value changes the computed rotation must appear in that rotation's provenance/source list. At 60 Splinters the W enhancement is on and adds 113.30 damage in the worked instance (and the 40-gate Q charge stock is on as well), so the old state — the splinters option absent from rotation sources — under-reports a materially load-bearing input. The new entry states the option's identity ('splinters'), category (self_state) and owning slot (P) exactly as the cached wiki text supports."
+  },
+  "caveats": [
+    "The evidence tree excludes scripts/ and the golden baseline itself, so the *index* 5 (position within the sources array) cannot be independently verified — only the identity, category and slot of the added entry, and the fact that it must be present at all.",
+    "docs/math-foundations.md documents no rotation-provenance schema; the classification judgement rests on the cached wiki text plus the doc's traceability contract."
+  ]
+}

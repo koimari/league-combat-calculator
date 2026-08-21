@@ -13,9 +13,9 @@ hold:
 
 | Criterion | Threshold |
 | --- | --- |
-| Activation | ≥ 60% of engaged sessions complete champion → role → Best-next-item in < 10 s |
 | 7-day retention | ≥ 25% of sessions return within 7 days of their first activity |
-| Validation receipts | ≥ 20 receipts per week, with ≤ 2 champions flagged by the bias scan |
+| Validation receipts | ≥ 20 receipts per week |
+| Bias scan | ≤ 2 champions flagged (n ≥ 5 receipts, \|bias\| > 15%) |
 | Staleness SLA | no staleness flag older than 72 h (patch-regression report fresh) |
 
 A beta **FAILS** when **any criterion is missed 2 weeks running** (the
@@ -43,32 +43,11 @@ metric that is "per user" is measured through an **anonymous session id**:
 
 This is a proxy, and the proxy is documented: "users" below means
 "sessions", and a session that never touches an instrumented endpoint is
-invisible.  Activation is therefore measured among **engaged sessions**
-(sessions that saved a build, shared one, posted feedback, or fired an
-event) — a conservative funnel that cannot over-count.
+invisible.  Every per-session metric therefore counts **engaged sessions**
+(sessions that saved a build, shared one, posted a receipt, or fired an
+event) — a conservative population that cannot over-count.
 
 ## Metric definitions
-
-### Activation — `quick_complete` funnel
-
-The frontend fires `POST /api/metrics/event` with
-`{"event": "quick_complete", "took_ms": <ms>}` when a user completes the
-onboarding flow champion → role → Best-next-item.  `took_ms` is the
-wall-clock time from flow start to the Best-next-item result.
-
-```
-activation = sessions with a quick_complete event (took_ms < 10000)
-           / sessions with any activity in the window
-```
-
-- The `< 10 s` boundary is strict: `took_ms < 10000` counts,
-  `took_ms >= 10000` does not.
-- The event is **anonymous** (session-scoped, no PII), **rate-limited**
-  (60-burst / 1 per 5 s sustained) and **pre-auth** so funnel events are
-  collectable even from sessions that never log in.
-- The event whitelist lives in two mirrored places — `src/db.py`
-  (`_VALID_METRIC_EVENTS`) and `src/app.py` (`_METRICS_EVENT_NAMES`).
-  Adding a funnel step is a one-line extension of both.
 
 ### 7-day retention
 
@@ -90,8 +69,8 @@ retention = sessions whose first observed activity is followed by another
 ### Validation receipts + bias scan
 
 - **Receipts** = `validation_feedback` rows with a signed `delta`
-  (exactly the population `POST /api/receipts` writes; plain P6 feedback
-  rows have `delta = NULL` and do not count).  Threshold: **≥ 20 per
+  (exactly the population `POST /api/receipts` writes; legacy rows with
+  `delta = NULL` do not count).  Threshold: **≥ 20 per
   week**.
 - **Bias scan** = the `db.validation_summary` semantics, re-derived by the
   scorecard at each week boundary: a champion is **flagged** when it has
@@ -139,27 +118,29 @@ Overall gate:
 | `fail` | any criterion missed 2 weeks running (or a cohort/SLA criterion failed at its single evaluation) |
 
 An empty database fails `receipts` (0 < 20 in both weeks) and leaves
-`activation`/`retention` `insufficient_data` → gate `fail` (any criterion
+`retention` `insufficient_data` → gate `fail` (any criterion
 failing 2 weeks running fails the gate).  Operators should start the clock with
 `--beta-start` at the real beta launch instead of the default (14 days
 before the run).
 
 ## Endpoints
 
-### `POST /api/metrics/event` — anonymous funnel events
+### `POST /api/metrics/event` — anonymous product events
 
 ```json
-{"event": "quick_complete", "took_ms": 1234}
+{"event": "page_view", "took_ms": 0}
 ```
 
-- `event` must be a whitelisted name; `took_ms` an integer in
-  `[0, 3_600_000]`.  Rejections are `400` with a JSON `error`.
+- `event` must be a name in `src/db.py::METRIC_EVENT_NAMES` (currently only
+  `page_view`, the consent-gated analytics ping `app.js` fires once per
+  session); `took_ms` an optional integer in `[0, 3_600_000]`.  Rejections
+  are `400` with a JSON `error`.
 - Rate-limited via the shared token-bucket store (policy
   `metrics_event`); `429` when the budget is spent.
 - Pre-auth (exempt from the auth gate) so it works in any browser session.
 - Mints/sets the `scryglass_anon` cookie on first use; the recorded
   `session_id` is that cookie's value.
-- `201 {"event_id": N, "event": "quick_complete"}`.
+- `201 {"event_id": N, "event": "page_view"}`.
 
 ### `GET /api/metrics` — scorecard (auth-gated)
 
@@ -201,14 +182,13 @@ app and queries `builds`, `share_links`, `validation_feedback`,
     "cache": {"backend": "...", "hits": 100, "misses": 20, "hit_ratio": 0.83, "cached_entries": 5}
   },
   "criteria": {
-    "activation": {
+    "retention": {
       "status": "pass|fail|at_risk|insufficient_data",
-      "value": 0.7, "threshold": 0.6,
-      "numerator": 35, "denominator": 50, "detail": "...",
-      "weeks": [{"week": 1, "complete": true, "status": "pass", "value": 0.68,
-                 "numerator": 17, "denominator": 25}]
+      "value": 0.3, "threshold": 0.25,
+      "numerator": 15, "denominator": 50, "detail": "...",
+      "weeks": [{"week": 1, "complete": true, "status": "pass", "value": 0.3,
+                 "numerator": 15, "denominator": 50}]
     },
-    "retention": { /* same shape, threshold 0.25 */ },
     "receipts": {
       "status": "pass", "value": 47, "threshold": 20,
       "weeks": [{"week": 1, "complete": true, "count": 25, "status": "pass"}]
@@ -225,7 +205,7 @@ app and queries `builds`, `share_links`, `validation_feedback`,
     }
   },
   "gate": {"status": "pass|pending|fail", "rule": "...",
-           "missed_weeks": {"activation": 0, "receipts": 0, "bias": 0, "staleness": 0},
+           "missed_weeks": {"receipts": 0, "bias": 0, "staleness": 0},
            "verdict": "PASS|PENDING|FAIL"}
 }
 ```

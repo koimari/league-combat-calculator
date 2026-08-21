@@ -6,8 +6,11 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -44,12 +47,33 @@ def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.35),)
+    # Terrify's control is a property of the branch, not of the slot, so it
+    # is authored here rather than in MODULE_CC: the doubled branch is
+    # reached only against a target that "cannot be affected by it again",
+    # i.e. one this cast does not fear.
+    entry["parts"] = (
+        DamagePart(
+            "magic", value, time_offset=0.35, cc_kind="none" if feared else "fear"
+        ),
+    )
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
         "Already-feared target uses the sourced doubled current-health branch."
     )
     return entry
+
+
+# The sourced fear interval rides the branch that actually fears: the
+# doubled branch is reached only against a target that "cannot be affected
+# by it again", so wrapping it would source a duration for a fear the cast
+# does not apply.
+_terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Duration")
+
+
+def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
+    if bool(ctx.options.get("q_target_already_feared", False)):
+        return _terrify(ctx)
+    return _terrify_fearing(ctx)
 
 
 def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -59,7 +83,7 @@ def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    ticks = min(max(int(ctx.options.get("w_ticks", 8)), 1), 8)
+    ticks = min(max(int(ctx.option("w_ticks")), 1), 8)
     per_instance = extract_named(
         ability, "Damage per Instance", rank, ctx.stats, ctx.target
     )
@@ -110,7 +134,7 @@ def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    ticks = min(max(int(ctx.options.get("r_ticks", 20)), 1), 20)
+    ticks = min(max(int(ctx.option("r_ticks")), 1), 20)
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
     )
@@ -130,16 +154,18 @@ def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _scarecrow,
-    "Q": with_control(
-        _terrify,
-        kind="fear",
-        duration_attr="Fear Duration",
-    ),
+    "Q": _terrify_slot,
     "W": _bountiful_harvest,
     "E": _reap,
     "R": _crowstorm,
 }
-parse_abilities = build_parser(SLOTS, "Fiddlesticks")
+# W tethers and reveals, R's crows only tick damage; E "slow[s] them for
+# 1.25 seconds" (its centre silence is not an immobilize and is not in the
+# vocabulary).  Q is absent because its fear is branch-conditional and is
+# authored on the part in _terrify; P carries no damage part at all.
+MODULE_CC = {"W": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Fiddlesticks", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -181,45 +207,10 @@ ASSUMPTIONS = [
     "Fear, silence, reveal, healing and Effigy behavior are recorded as state/utility, not invented TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Fiddlesticks parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Fiddlesticks",
-        3969000,
-        "2025-11-22T11:05:32Z",
-    ),
-    source_row(
-        "Fiddlesticks Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/Q",
-        2863938,
-        "2019-11-03T19:56:56Z",
-    ),
-    source_row(
-        "Fiddlesticks W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/W",
-        2953918,
-        "2020-03-31T18:45:28Z",
-    ),
-    source_row(
-        "Fiddlesticks E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/E",
-        2953919,
-        "2020-03-31T18:45:42Z",
-    ),
-    source_row(
-        "Fiddlesticks R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiddlesticks/R",
-        2864525,
-        "2019-11-03T20:15:37Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Fiddlesticks")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -245,9 +236,5 @@ def derive_self_healing(
         _healing._heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Fiddlesticks", derive_self_healing)

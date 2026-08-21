@@ -7,6 +7,8 @@ the scaled damage contribution.
 
 import re
 
+from .inputs import scaling_input
+
 # ---------------------------------------------------------------------------
 # Unit string → stat key mapping
 # ---------------------------------------------------------------------------
@@ -99,7 +101,7 @@ def resolve_scaling(
         if stat_key in target_stats:
             stat_value = target_stats[stat_key]
         else:
-            stat_value = champion_stats.get(stat_key, 0.0)
+            stat_value = scaling_input(champion_stats, stat_key)
         return (value / divisor) * stat_value
 
     # Per-100 scaling
@@ -108,7 +110,7 @@ def resolve_scaling(
         if per_100_key in target_stats:
             stat_value = target_stats[per_100_key]
         else:
-            stat_value = champion_stats.get(per_100_key, 0.0)
+            stat_value = scaling_input(champion_stats, per_100_key)
         return (value / 100.0) * (stat_value / 100.0) * 100.0
         # e.g. 2% per 100 AP with 300 AP = 2 * 3 = 6% = 6.0 (returned as flat)
 
@@ -157,7 +159,7 @@ def _parse_compound_unit(
     # Map to the stat key convention used in target_stats
     hp_type_key = {"maximum": "max", "current": "current", "missing": "missing"}
     hp_key = f"target_{hp_type_key.get(hp_type, hp_type)}_health"
-    target_hp = stats.get(hp_key, 0.0)
+    target_hp = scaling_input(stats, hp_key)
 
     # Base percentage is the value itself
     total_percent = value
@@ -172,7 +174,7 @@ def _parse_compound_unit(
     for bonus_pct, stat_name in per_100_matches:
         bonus = float(bonus_pct)
         stat_key = _normalize_per_100_stat(stat_name)
-        stat_val = stats.get(stat_key, 0.0)
+        stat_val = scaling_input(stats, stat_key)
         total_percent += bonus * (stat_val / 100.0)
 
     return (total_percent / 100.0) * target_hp

@@ -4,8 +4,8 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 
 * :mod:`actions` — typed :class:`SurvivalAction`/:class:`ActionKind`
   interface plus the shared ordering helpers;
-* :mod:`transitions` — the single kernel: :func:`apply_transition` per
-  kind, the shared :func:`run_survival_walk` loop, and the embedded
+* :mod:`transitions` — the single kernel: the :func:`run_survival_walk`
+  loop with the one dispatch ladder per kind, and the embedded
   transitions (reactive shields, Maw omnivamp, Defy).  Shield and health
   absorption itself belongs to :mod:`calculator.shield_ledger`, which the
   one-pair engine drives too (issue #159);
@@ -13,46 +13,85 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 * :mod:`score_state` — the parallel-array ledger adapter (optimizer);
 * :mod:`compile` — the packet compiler with fail-closed capability
   receipts (:class:`UncompilableActionError`);
+* :mod:`pricing` — raw declared damage becoming a mitigated number: the
+  one arithmetic home a family's declaration reaches the walk through,
+  inert until a retirement slice hands it a packet;
 * :mod:`accumulate` — per-attacker float-sum order, rounded death-time
   cutoff, breakdown rows.
+
+``__all__`` is the package's declared API, so growing it is an API change.
+0A.4 grew it by six names — ``TransitionRank``, ``SUPPORT_RANK_KEY``,
+``BARRIER_GRANT_KINDS``, ``legacy_phase``, ``public_phase`` and
+``support_transition_rank`` — which is the transition vocabulary the item
+layer and the public schema now author against instead of writing floats.
+``BARRIER_GRANT_KINDS`` is additionally a rename: it was ``_BARRIER_GRANT_KINDS``
+until the published support ordering needed the kernel's one spelling of it.
+``legacy_phase`` was temporary by design and left this list at Phase 4 S2,
+when the sort key started carrying a ``TransitionRank`` and the float
+projection was deleted; the fold two groups of ranks still share
+(``actions.ordering_slot``) is kernel-internal and deliberately not
+re-exported, because no packet author outside this package orders anything.
+Phase 4 S1 grew it by one,
+``EVENT_SLOTS``: the four ``str | None`` reference fields became integer
+slots, and the composition that authors packets outside this package has to
+resolve an id string to the same slot the kernel will compare.  0A.8 shrank it by one: the
+export was a second dispatch ladder over the same kinds, with zero
+callers, and a declared API is exactly where such a thing survives long
+enough to drift from the loop that is actually run.
+
+**Phase 4 S4 shrank it by three, which is a breaking API change and is
+recorded as one.**  ``WalkCompiler``, ``revive_candidate_actions`` and this
+package's own from-event action builder left it: the first two moved to
+``calculator.program.compile`` unchanged, and the third is that module's
+``action_from_event`` -- same body, new layer, and its old name is pinned at
+zero occurrences in ``src/``, so ``from calculator.survival import
+WalkCompiler`` stopped resolving.  They cannot be re-exported from here --
+``program -> survival`` runs one way and a re-export would be the kernel
+importing the logical layer -- so an importer moves to
+``calculator.program.compile`` rather than being kept working from both
+places.  S4 also grew it by two, ``trigger_time_key`` and
+``TRIGGER_TIME_KEY_DIGITS``: the tolerance a trigger lookup keys on lives on
+this side of that same one-way boundary, because ``heal_trigger_key`` is its
+reader and cannot import the registry that would otherwise own it.
 """
 
 from .actions import (
+    BARRIER_GRANT_KINDS,
+    EVENT_SLOTS,
+    SUPPORT_RANK_KEY,
     ActionKind,
     SurvivalAction,
+    TransitionRank,
     action_key,
     classify_event_kind,
     event_sequence,
     participant_order,
-    survival_action_from_event,
+    public_phase,
+    support_transition_rank,
 )
 from .compile import (
-    COMPILED_WALK_UNREPRESENTABLE_ITEMS,
+    TRIGGER_TIME_KEY_DIGITS,
     UncompilableActionError,
-    WalkCompiler,
     champion_wound_tuple,
     coalesce_darius_q_heals,
     heal_trigger_key,
-    revive_candidate_actions,
-    stage_knights_vow_heals,
-    stage_knights_vow_redirect_actions,
     thorns_return_damage,
-    uncompilable_item_receipt,
+    trigger_time_key,
     unrepresentable_damage_receipt,
     unrepresentable_heal_receipt,
+    unrepresentable_modifier_receipt,
     unrepresentable_template_receipt,
 )
 from .receipt_state import (
     ReceiptLedger,
-    assemble_survival_rows,
     build_state,
     build_states,
 )
 from .accumulate import accumulate_damage_totals, accumulate_support_values
 from .score_state import ScoreLedger
 from .transitions import (
+    RegenerationWindow,
     TransitionContext,
-    apply_transition,
     evaluate_live_raw_formula,
     expire_temporary_health,
     finalize_states,
@@ -63,18 +102,20 @@ from .transitions import (
 
 __all__ = [
     "ActionKind",
-    "COMPILED_WALK_UNREPRESENTABLE_ITEMS",
+    "BARRIER_GRANT_KINDS",
+    "EVENT_SLOTS",
+    "SUPPORT_RANK_KEY",
+    "TRIGGER_TIME_KEY_DIGITS",
     "ReceiptLedger",
     "ScoreLedger",
     "SurvivalAction",
+    "RegenerationWindow",
     "TransitionContext",
+    "TransitionRank",
     "UncompilableActionError",
-    "WalkCompiler",
     "accumulate_damage_totals",
     "accumulate_support_values",
     "action_key",
-    "apply_transition",
-    "assemble_survival_rows",
     "build_state",
     "build_states",
     "champion_wound_tuple",
@@ -87,12 +128,14 @@ __all__ = [
     "heal_trigger_key",
     "participant_pools",
     "participant_order",
+    "public_phase",
     "resolve_grievous",
     "run_survival_walk",
-    "survival_action_from_event",
+    "support_transition_rank",
     "thorns_return_damage",
-    "uncompilable_item_receipt",
+    "trigger_time_key",
     "unrepresentable_damage_receipt",
     "unrepresentable_heal_receipt",
+    "unrepresentable_modifier_receipt",
     "unrepresentable_template_receipt",
 ]

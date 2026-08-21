@@ -37,16 +37,12 @@ an already-covered slot (the Malzahar/Nasus precedent, roadmap session
 4 batch D). Reclassified to "no_damage"; zero fight-computation change.
 """
 
-from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .engine import BUFF, ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
 
 PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b8"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Riven", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the current R1 AD buff is a flat
 # 20% of bonus AD at every rank (riven.bin.json RivenFengShuiEngine
@@ -69,12 +65,10 @@ def _blade_of_the_exile(ctx: SlotCtx):
     rank = ctx.rank_for("R")
     if rank < 1:
         return None
-    value = _R_BONUS_AD_RATIO * float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0)
-    ctx.stats["attack_damage"] = (
-        float(ctx.stats.get("attack_damage", 0.0) or 0.0) + value
-    )
+    value = _R_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
+    ctx.stats["attack_damage"] = float(ctx.stat("attack_damage") or 0.0) + value
     ctx.stats["bonus_attack_damage"] = (
-        float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0) + value
+        float(ctx.stat("bonus_attack_damage") or 0.0) + value
     )
     entry = damage_entry(
         ability.get("name", "Blade of the Exile"),
@@ -103,16 +97,37 @@ def _runic_blade(ctx: SlotCtx):
     percent = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )
-    per_hit = float(ctx.stats.get("attack_damage", 0.0) or 0.0) * percent / 100.0
+    per_hit = float(ctx.stat("attack_damage") or 0.0) * percent / 100.0
     return on_hit_entry(ability.get("name", "Runic Blade"), per_hit, "physical")
 
 
 _runic_blade.phase = ONHIT
 
-SLOTS = dict(SLOTS)
-SLOTS["R_buff"] = _blade_of_the_exile
-SLOTS["P"] = _runic_blade
-parse_abilities = build_parser(SLOTS, "Riven")
+
+# Cached kit review.  W "deal[s] physical damage to nearby enemies and
+# stun[s] them for 0.75 seconds", and R's Wind Slash only damages.  Q is
+# the priced *per-cast* slash ("Physical Damage", the row each of the three
+# casts deals), which "deal[s] physical damage to enemies struck within an
+# area" and applies nothing; only the third cast adds a 75-unit knock back,
+# and this module prices one slash rather than that specific one.  E deals
+# no damage, P is an on-hit rider on the auto stream, and R_buff is the AD
+# steroid with a zero-damage row, so none of the three carries an event.
+MODULE_CC = {"Q": "none", "W": "stun", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Riven",
+    PACKET_SHA256,
+    # Each priced row is one blow: the packet's Q is a single Broken Wings
+    # slash ("Physical Damage" 45 : 165, not the three-cast total), Ki
+    # Burst is one flash and Wind Slash one wave — the boundary claim that
+    # carries MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "W", "R"}),
+    slot_parsers={
+        "R_buff": _blade_of_the_exile,
+        "P": _runic_blade,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Runic Blade) prices the wiki's per-level AD ratio: empowered "
@@ -128,19 +143,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "AD, flat at all ranks — the retired 20/25/30% rank array was "
     "patched to a flat 20% bonus AD), factored at cast; the Wind Slash "
     "stays priced by the R slot and now scales off the buffed AD.",
-    "E (Valor) shield is documented no_damage: 70-170 + 110% bonus AD "
-    "for 1.5s is a defensive shield on a no-damage dash, outside the "
-    "packet's damage model.",
     "E (Valor) has no enemy-damage formula: both cached effects are "
-    "self-directed (the shield above; the cast-during-dash utility "
-    "note), confirmed by the pinned reviewed packet's kind='no_damage' "
-    "declaration for E. E is a cast slot in this module (never "
-    "reassigned away from build_packet_module's no_damage branch), so "
-    "MODULE_COVERAGE reflects a sourced no-damage classification "
-    "rather than an unmodeled gap (no_damage, not out_of_scope).",
+    "self-directed — the 70-170 + 110% bonus AD shield for 1.5s on a "
+    "no-damage dash, and the cast-during-dash utility note — which the "
+    "pinned reviewed packet confirms with kind='no_damage' for E. E is "
+    "a cast slot here: it emits that sourced zero-damage row while the "
+    "support scanner prices its Valor shield, so the slot is modeled.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

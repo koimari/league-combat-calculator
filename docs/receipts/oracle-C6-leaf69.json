@@ -1,0 +1,97 @@
+{
+  "receipt": "oracle-C6-leaf69",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/ability_damage",
+  "old_value": 4998.4,
+  "new_value": 5648.4,
+  "delta": 650.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] 'Dark Sphere', effect 'Active: ... dealing magic damage to nearby enemies'",
+      "leveling": "attribute 'Magic Damage': base [90, 125, 160, 195, 230]; modifier [70,70,70,70,70] units '% AP'",
+      "used_as": "Q(rank5) = 230 + 0.70 * AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0], effect 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "used_as": "at the scenario's 60 splinters Dark Sphere holds up to 2 stocked charges, so two Q casts may be fired back to back and the recharge cycle runs continuously"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cooldown / rechargeRate = [7,7,7,7,7]",
+      "used_as": "Dark Sphere base recharge 7 s"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0], effect 'Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste', leveling 'Ability Haste' [10, 20, 30]",
+      "used_as": "at R rank 3 Dark Sphere's recharge is 7 * 100/(100+30) = 5.3846 s (ability-haste identity quoted below)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] 'Force of Will' recast",
+      "leveling": "attribute 'Magic Damage': base [70, 100, 130, 160, 190]; modifier [65,...] units '% AP'",
+      "used_as": "W(rank5) magic = 190 + 0.65 * AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0], effect 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'",
+      "cross_check": "the same entry's parsed rows reproduce that text: 'Bonus True Damage' base [8.4, 12, 15.6, 19.2, 22.8] = 12% of [70,100,130,160,190], and %AP row [9.2, 9.8, 10.4, 11, 11.6] = 0.12*0.65 + 0.02*base/100; 'Total Mixed Damage' base [78.4, ...] = 1.12 * base",
+      "used_as": "W true bonus = (0.12 + 0.0002*AP) * (W magic); at the scenario's 60 splinters this term is live"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0], 'Magic Damage per Sphere' base [80, 120, 160] + [20,20,20] '% AP'; cross-checked by the same entry's 'Minimum Magic Damage' [240,360,480]+60% AP (= 3 spheres) and 'Maximum Magic Damage' [560,840,1120]+140% AP (= 7 spheres)",
+      "used_as": "R sphere(rank3) = 160 + 0.20 * AP, priced per sphere for a user-set sphere count"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] 'Scatter the Weak': base [60, 95, 130, 165, 200] + [60,...] '% AP'",
+      "used_as": "E(rank3) = 130 + 0.60 * AP"
+    },
+    {
+      "source": "docs/math-foundations.md, section 5 formula-audit table",
+      "quotes": [
+        "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` | EXACT",
+        "Resistance mitigation (`apply_resistance`) | `m(R)=100/(100+R)` | EXACT",
+        "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT"
+      ],
+      "used_as": "cooldown-to-cast-count conversion, and the mitigation identity used to confirm the leaf is unmitigated (m(0)=1)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra, and data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count",
+      "used_as": "confirms the '60' in the scenario name is the splinters option value (60 = the W true-damage threshold, above the 40 threshold for the second Dark Sphere charge and below the 100/120 thresholds), and that all five slots are priced from these wiki rows"
+    }
+  ],
+  "independent_computation": {
+    "method": "The scenario's input tuple is not present in the permitted evidence tree (data/ carries no golden scenario definitions), so the leaf was reconstructed by exact decomposition: every Syndra damage term is an affine (W: quadratic) function of AP built only from the wiki rows above, so both the old and the new total were solved for an integer AP and an integer cast/sphere multiset. A search over all rank tuples (Q,W,E in 1-5, R in 1-3), cast counts 0-6 and sphere counts 0-10, requiring an integer AP and requiring the 650.0 delta to equal one whole wiki-sourced component, returned 32 exact fits - and every one of them attributes the delta to exactly one additional Dark Sphere (Q) cast (a handful of AP=750 fits allow 'one E cast' as an alternate label for the same 650). No fit exists in which the delta is a formula/scaling change, a true-damage term, or a partial cast.",
+    "reconstructed_inputs": {
+      "AP": 600,
+      "splinters": 60,
+      "ranks": "Q5 W5 E3 R3 (= 16 points, i.e. level 16; R3 supplies the 30 ability haste on Dark Sphere)",
+      "r_spheres": 4,
+      "casts_in_window": "W x2, E x1, R x1, Q x3 (old) vs Q x4 (new)",
+      "target": "effective magic resist 0 - both totals are exact sums of raw wiki damage, so m(R)=100/(100+R)=1"
+    },
+    "per_cast_values_at_AP_600": {
+      "Q_rank5": "230 + 0.70*600 = 650.0 magic",
+      "W_rank5_magic": "190 + 0.65*600 = 580.0 magic",
+      "W_rank5_true_bonus_at_60_splinters": "(0.12 + 0.02*600/100) * 580 = 0.24 * 580 = 139.2 true",
+      "W_rank5_total": "580.0 + 139.2 = 719.2",
+      "E_rank3": "130 + 0.60*600 = 490.0 magic",
+      "R_rank3_per_sphere": "160 + 0.20*600 = 280.0 magic"
+    },
+    "old_total_check": "3*650.0 + 2*719.2 + 1*490.0 + 4*280.0 = 1950.0 + 1438.4 + 490.0 + 1120.0 = 4998.4  (matches old exactly)",
+    "new_total_check": "4*650.0 + 2*719.2 + 1*490.0 + 4*280.0 = 2600.0 + 1438.4 + 490.0 + 1120.0 = 5648.4  (matches new exactly)",
+    "alternate_fit_same_conclusion": "AP=600, Q5 W5, R rank 2 (sphere = 120+0.20*600 = 240), no E cast: 4*650 + 2*719.2 + 4*240 = 4998.4 and 5*650 + 2*719.2 + 4*240 = 5648.4. Different rank/cast bookkeeping, identical delta semantics: one extra Dark Sphere cast worth 650.0.",
+    "delta_semantics": "delta = 650.0 = exactly one Dark Sphere cast at rank 5 with 600 AP (230 + 70% AP), unmitigated. The change adds one Q cast to the fight window; it does not alter any per-cast formula (every per-cast value above is unchanged between old and new).",
+    "why_the_added_cast_is_the_correct_side": [
+      "Two wiki-sourced mechanics both push Dark Sphere's cast count UP in this exact scenario state, and both are live at 60 splinters / R rank 3: (a) 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2' - two charges are available at window open; (b) R's passive 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' [10,20,30] - at R3 the 7 s recharge becomes 7*100/130 = 5.3846 s by the quoted ability-haste identity.",
+      "Cast-count walk with both mechanics honoured: casts at t=0, t=0 (the two stocked charges), t=5.3846, t=10.769 -> 4 casts, which is exactly the new value's Q count. Dropping either mechanic yields 3 casts over the same window (7 s recharge -> t=0,0,7; or a single charge -> t=0,5.3846,10.769), which is exactly the old value's Q count.",
+      "No text in the cached wiki data supports withholding either mechanic at 60 splinters: 60 is above the 40-splinter charge threshold, and the R ability-haste passive is unconditional. The old value is therefore the state in which one wiki-stated Dark Sphere mechanic was not being paid; the new value pays it."
+    ]
+  },
+  "residual_uncertainty": "The fight window length and the attacker's non-R ability haste are not present in the permitted evidence tree (no golden scenario definitions live under data/), so the cast-count walk above is reconstructed rather than read. The reconstruction pins the delta with certainty - it is exactly one Dark Sphere cast of 650.0, and both totals decompose exactly - and the direction of the change is the direction the cached wiki text supports (2 stocked charges at >=40 splinters; R's 10/20/30 ability haste on Dark Sphere's cooldown). The verdict would only flip if the engine's fight window were short enough (< 10.77 s at R3 haste) that a fourth Dark Sphere charge could not have recharged in time; that window length is exactly the datum the evidence tree does not carry. Confidence: moderate-high on new_value_correct, high on 'the delta is one Dark Sphere cast and no per-cast formula changed'.",
+  "no_commit": true
+}

@@ -6,35 +6,36 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_recharge
+from .source_receipts import load_champion_sources
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q", min(max(int(ctx.options.get("q_variant", 0)), 0), 1))
+    ability = ctx.ability("Q", min(max(int(ctx.option("q_variant")), 0), 1))
     if ability is None:
         return None
-    variant = min(max(int(ctx.options.get("q_variant", 0)), 0), 1)
+    variant = min(max(int(ctx.option("q_variant")), 0), 1)
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    turret_count = min(max(int(ctx.options.get("q_turrets", 3)), 1), 3)
-    attacks = min(max(int(ctx.options.get("q_turret_attacks", 3)), 1), 12)
+    turret_count = min(max(int(ctx.option("q_turrets")), 1), 3)
+    attacks = min(max(int(ctx.option("q_turret_attacks")), 1), 12)
     if variant == 0:
         shot = (
             7.0
             + (23.0 - 7.0) * (ctx.level - 1) / 17.0
-            + 0.35 * ctx.stats.get("ability_power", 0.0)
+            + 0.35 * ctx.stat("ability_power")
         )
-        beam = 40.0 + 20.0 * (rank - 1) + 0.55 * ctx.stats.get("ability_power", 0.0)
+        beam = 40.0 + 20.0 * (rank - 1) + 0.55 * ctx.stat("ability_power")
         name = "H-28G Evolution Turret"
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
-        shot = 80.0 + 20.0 * (r_rank - 1) + 0.35 * ctx.stats.get("ability_power", 0.0)
-        beam = 100.0 + 40.0 * (r_rank - 1) + 0.70 * ctx.stats.get("ability_power", 0.0)
+        shot = 80.0 + 20.0 * (r_rank - 1) + 0.35 * ctx.stat("ability_power")
+        beam = 100.0 + 40.0 * (r_rank - 1) + 0.70 * ctx.stat("ability_power")
         name = "H-28Q Apex Turret"
     total_shots = turret_count * attacks
-    beam_count = min(max(int(ctx.options.get("q_beams", 1)), 0), turret_count)
+    beam_count = min(max(int(ctx.option("q_beams")), 0), turret_count)
     parts = [
         DamagePart(
             "magic",
@@ -202,7 +203,7 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("W")
     if rank < 1:
         return None
-    rockets = min(max(int(ctx.options.get("w_rockets", 5)), 1), 5)
+    rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
     _require_row(ability, "Initial Rocket Magic Damage")
     _require_row(ability, "Subsequent Rocket Magic Damage")
     first = extract_named(
@@ -237,7 +238,7 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.options.get("e_upgrade", 0)), 0), 1)
+    variant = min(max(int(ctx.option("e_upgrade")), 0), 1)
     ability = ctx.ability("E", variant)
     if ability is None:
         return None
@@ -249,8 +250,8 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
-        value = _E_UPGRADED_VALUES[r_rank - 1] + _E_UPGRADED_AP_RATIO * ctx.stats.get(
-            "ability_power", 0.0
+        value = _E_UPGRADED_VALUES[r_rank - 1] + _E_UPGRADED_AP_RATIO * ctx.stat(
+            "ability_power"
         )
     entry = damage_entry(
         ability.get("name", "CH-2 Electron Storm Grenade"),
@@ -285,7 +286,13 @@ SLOTS = {
     "E": _grenade,
     "R": _upgrade,
 }
-parse_abilities = build_parser(SLOTS, "Heimerdinger")
+# Turret attacks/beams and both rocket waves only damage.  Both grenade
+# variants "slow them by 35% for 2 seconds" on every enemy they damage;
+# the 1.5-second stun needs a centre hit the module does not model, so the
+# unconditional slow is the reviewed kind.  P and R author no damage part.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Heimerdinger", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "q_variant",
@@ -349,37 +356,4 @@ ASSUMPTIONS = [
     "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one champion hit is counted for the upgraded grenade.",
     "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not extra direct champion damage.",
 ]
-SOURCES = [
-    source_row(
-        "Heimerdinger parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Heimerdinger",
-        4025016,
-        "2026-06-04T11:15:04Z",
-    ),
-    source_row(
-        "Heimerdinger Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/Q",
-        2863948,
-        "2019-11-03T19:57:05Z",
-    ),
-    source_row(
-        "Heimerdinger W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/W",
-        2864243,
-        "2019-11-03T20:09:52Z",
-    ),
-    source_row(
-        "Heimerdinger E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/E",
-        2864389,
-        "2019-11-03T20:12:23Z",
-    ),
-    source_row(
-        "Heimerdinger R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/R",
-        2864535,
-        "2019-11-03T20:15:47Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Heimerdinger")

@@ -412,14 +412,18 @@ class TestSourceEvidence:
         assert quinn_module.PACKET_SHA256 == (
             "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
         )
-        assert quinn_module.MODULE_COVERAGE["P"] == "modeled"
-        # Roadmap session 4 batch F (2026-08-21): W (Heightened Senses) was
-        # a stale label — the pinned reviewed packet already declares W
-        # kind='no_damage' (pure AS/MS self-buff + vision reveal, no
-        # enemy-damage row) and W was already a cast slot emitting that
-        # zero-damage row; only the MODULE_COVERAGE label moved.
-        assert quinn_module.MODULE_COVERAGE["W"] == "no_damage"
-        assert quinn_module.REVIEW_STATUS == "reviewed_module"
+        # MERGE: coverage and review status have ONE home — the validated
+        # module contract.  Quinn now prices every slot (W included), so
+        # the module derives its coverage instead of restating it.  Main's
+        # session-4 batch F pin (MODULE_COVERAGE["W"] == "no_damage") moved
+        # because this branch's W emits its own attack-speed steroid rather
+        # than the packet's zero-damage row.
+        from src.calculator.champions import get_champion_module_contract
+
+        contract = get_champion_module_contract("Quinn")
+        assert contract.coverage["P"] == "modeled"
+        assert contract.coverage["W"] == "modeled"
+        assert contract.review_status == "reviewed_module"
         assert quinn_module._harrier.phase == "onhit"
         meta = get_champion_options_meta("Quinn")
         assert any(

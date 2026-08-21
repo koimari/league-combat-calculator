@@ -52,6 +52,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home
 # (the P entry has no leveling data; R's crit scaling is prose).
@@ -93,24 +94,28 @@ def _trap_grants(ctx: SlotCtx) -> int:
     ``w_traps`` (default 1) is the player-controlled count of traps the
     enemy steps on, capped by W's "Maximum Number of Traps" at rank
     (3/3/4/4/5).  Each sprung trap grants exactly one trap Headshot.
+    An autos-only fight never casts W, so no trap is ever laid.
     """
     ability = ctx.ability("W")
     if ability is None or ctx.rank_for("W") < 1:
         return 0
+    if ctx.option("auto_attacks_only"):
+        return 0
     rank = ctx.rank_for("W")
     cap = max(1, int(extract_value(ability, "Maximum Number of Traps", rank) or 5))
-    return min(max(int(ctx.options.get("w_traps", 1)), 0), cap)
+    return min(max(int(ctx.option("w_traps")), 0), cap)
 
 
 def _e_cast_count(ctx: SlotCtx, duration: float) -> int:
-    """E casts over a timed fight: t=0 then on cooldown (rotation's count)."""
+    """E casts over a timed fight: t=0 then on cooldown (rotation's count).
+
+    An autos-only fight casts nothing, so it grants no headshots.
+    """
     ability = ctx.ability("E")
     rank = ctx.rank_for("E")
-    if ability is None or rank < 1:
+    if ability is None or rank < 1 or ctx.option("auto_attacks_only"):
         return 0
-    haste = ctx.stats.get("ability_haste", 0.0) + ctx.stats.get(
-        "basic_ability_haste", 0.0
-    )
+    haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
     cd = effective_cooldown(extract_cooldown(ability, rank), haste)
     return 1 + int(duration / cd) if cd > 0 else 1
 
@@ -131,11 +136,11 @@ def _headshot_counts(ctx: SlotCtx, trap_grants: int) -> tuple[int, int, int, int
     a headshot is on the auto that would land the 5th stack, so pre-stacked
     stacks advance the cadence — heads = (pre_stacks + autos) // 6.
     """
-    pre_stacks = min(max(int(ctx.options.get("p_pre_stacks", 0)), 0), 5)
+    pre_stacks = min(max(int(ctx.option("p_pre_stacks")), 0), 5)
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-        num_autos = math.floor(ctx.stats.get("attack_speed", 0.0) * uptime * duration)
+        uptime = float(ctx.option("auto_attack_uptime"))
+        num_autos = math.floor(ctx.stat("attack_speed") * uptime * duration)
         if num_autos > 0:
             remaining = num_autos
             trap_used = min(trap_grants, remaining)
@@ -181,9 +186,9 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    total_ad = ctx.stats.get("attack_damage", 0.0)
-    crit_chance = min(ctx.stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
-    bonus_crit_damage = ctx.stats.get("crit_damage_bonus", 0.0)
+    total_ad = ctx.stat("attack_damage")
+    crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
+    bonus_crit_damage = ctx.stat("crit_damage_bonus")
     bonus = total_ad * (
         _headshot_level_ratio(ctx.level) + crit_chance * (1.0 + bonus_crit_damage)
     )
@@ -228,11 +233,9 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
     it passes through, after which it expands in width but deals only
     60% damage to enemies it hits thereafter" — the "Reduced Damage"
     row is exactly 60% of "Physical Damage" at every rank (flat and
-    % AD).  Each secondary target selected via the parse/API-level
+    % AD).  Each secondary target selected via the declared
     ``q_secondary_targets`` champion option takes one reduced hit;
-    traps-revealed enemies (full damage) are not distinguished.  The
-    key is deliberately not declared in OPTIONS because the read-only
-    option-meta test pins Caitlyn's declared option list.
+    traps-revealed enemies (full damage) are not distinguished.
     """
     ability = ctx.ability()
     if ability is None:
@@ -243,7 +246,7 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
 
     primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
-    secondary = min(max(int(ctx.options.get("q_secondary_targets", 0)), 0), 5)
+    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
         ability.get("name", "Piltover Peacemaker"),
@@ -252,13 +255,26 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "physical",
     )
-    parts = [DamagePart("physical", primary)]
     if secondary:
-        parts.append(DamagePart("physical", reduced, count=secondary))
+        # The widened bolt reaches its secondary targets in the same
+        # instant as the primary, so both parts are timed at the cast
+        # boundary — the timing that carries Q's reviewed no-control
+        # answer into the event ledger once the row is no longer one hit.
+        parts = [
+            DamagePart("physical", primary, time_offset=0.0),
+            DamagePart(
+                "physical", reduced, count=secondary, time_offset=0.0, hit_interval=0.0
+            ),
+        ]
         entry["detail"] = (
             f"primary hit + {secondary} secondary target(s) at the sourced "
             f"{reduced / primary * 100:g}% Reduced Damage row each"
         )
+    else:
+        # One bolt on "the first enemy it passes through" — one part and
+        # one hit, the certification that carries the same answer.
+        parts = [DamagePart("physical", primary)]
+        entry["event_order_certified"] = "single_hit"
     entry["parts"] = tuple(parts)
     return entry
 
@@ -277,6 +293,10 @@ def _ace_in_the_hole(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=_R_CRIT_EFFECTIVENESS,
             ),
         )
+        # One homing bullet on "the first enemy champion it hits" — one
+        # part, one hit, which carries R's reviewed control answer into
+        # the event ledger.
+        entry["event_order_certified"] = "single_hit"
     return entry
 
 
@@ -328,6 +348,18 @@ OPTIONS: list[dict[str, Any]] = [
         "max": 5,
         "label": "Sprung Yordle Snap Traps",
     },
+    {
+        "key": "q_secondary_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Enemies the shot passes through beyond the first (each "
+            "takes the sourced 60% Reduced Damage row)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
 ]
 
 ASSUMPTIONS = [
@@ -344,6 +376,9 @@ ASSUMPTIONS = [
     "headshots convert existing autos rather than adding attacks — with "
     "no auto stream (one-rotation mode, or auto attacks disabled) they "
     "are the forced basic attacks themselves (swing + headshot)",
+    "An autos-only fight casts neither E nor W, so only the every-6th "
+    "cadence lands (the pipeline states this with the auto_attacks_only "
+    "reserved option)",
     "Headshot (swing and rider) is basic damage: basic-damage "
     "amplifiers (Hexoptics C44) apply to it",
     "Q prices the primary hit at full damage plus one sourced 60% "
@@ -363,26 +398,31 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
+    # Q and E are each one shot on one target — the piercing bolt's first
+    # enemy, the net's first enemy — so one part and one hit, which is the
+    # certification that carries their reviewed control into the ledger.
+    # Q's own parser states that per parse, since a widened bolt selected
+    # through q_secondary_targets is more than one landing.
     "Q": _piltover_peacemaker,
     "W": _yordle_snap_trap,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _ace_in_the_hole,
     "P": _headshot,
 }
 
-parse_abilities = build_parser(SLOTS, "Caitlyn")
+# Reviewed crowd control, read from the cached kit.  Q (Piltover
+# Peacemaker) "deals physical damage to the first enemy it passes
+# through" with no control clause.  E (90 Caliber Net) "deals magic
+# damage to the first enemy hit and slows them by 50% for 1 second".  R
+# (Ace in the Hole) "deals physical damage to the first enemy champion it
+# hits" and reveals, which is not control.  W is the trap row — its root
+# is real, but the row prices the trap Headshot the passive owns, not a
+# cast of Caitlyn's own, and P is that passive.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Caitlyn", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Caitlyn",
-        "revision_id": 4022594,
-        "revision_timestamp": "2026-05-27T00:34:15Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Caitlyn")

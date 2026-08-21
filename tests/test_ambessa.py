@@ -2,10 +2,15 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
+from tests.ability_math import parts_raw_total
 
+from src.calculator.calculate import calculate_payload
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.scenario import load_public_champion
+from src.calculator.champions import ambessa
+from tests import cc_review
 
 
 class TestQ1CunningSweep:
@@ -305,3 +310,134 @@ class TestPassiveDrakehoundsStep:
         assert parts_raw_total(with_item["passive"]["parts"], "physical") > (
             parts_raw_total(no_items["passive"]["parts"], "physical")
         )
+
+    def test_passive_declares_the_auto_stack_certification(
+        self, ambessa_data, parse_at
+    ) -> None:
+        """Each proc rides exactly one empowered basic attack."""
+        _, abilities = parse_at(ambessa_data, 9)
+        passive = abilities["passive"]
+        assert passive["event_order_certified"] == "auto_stack_proc"
+        assert passive["auto_stack_every"] == 1
+        # The coupling flag stays: it is what clamps procs to real swings
+        # in one-rotation mode, where the stack certification does not.
+        assert passive["requires_auto_timeline_coupling"] is True
+
+
+class TestPassiveEventCertification:
+    """Wave 1B: the passive's ledger rides the real swing schedule."""
+
+    @staticmethod
+    def _timed_params():
+        return FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 0.8,
+                "target_health": 1000,
+                "target_armor": 100,
+                "target_mr": 100,
+            },
+            deterministic=True,
+        )
+
+    def test_timed_payload_probe_certifies_full_timeline(self) -> None:
+        """The campaign probe: bare-kit timed Ambessa has no coarse sources."""
+        result = calculate_payload(
+            {
+                "champion": "Ambessa",
+                "level": 18,
+                "items": [],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []
+        assert "passive" in coverage["exact_sources"]
+
+    def test_timed_passive_events_land_on_the_swing_schedule(self) -> None:
+        result = run_fight(
+            load_public_champion("Ambessa"), 18, [], self._timed_params()
+        )
+        assert result["timeline_coverage"]["complete"] is True
+        passive = result["breakdown"]["passive"]
+        events = passive["damage_events"]
+        assert len(events) == passive["count"]
+        assert {event["event_precision"] for event in events} == {"exact"}
+        times = [event["time"] for event in events]
+        assert times == sorted(times)
+        assert times[0] == pytest.approx(0.0)  # proc 1 rides the first swing
+        assert sum(event["damage"] for event in events) == pytest.approx(
+            passive["total_damage"]
+        )
+
+    def test_one_rotation_without_swings_still_prices_no_procs(
+        self, ambessa_data, parse_at
+    ) -> None:
+        """The coupling clamp survives certification: no attacks, no procs."""
+        stats, abilities = parse_at(ambessa_data, 9)
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2000,
+                target_armor=100,
+                target_magic_resistance=60,
+                fight_duration_seconds=5.0,
+                one_rotation=True,
+            ),
+        )
+        assert "passive" not in result["breakdown"]
+
+
+class TestReviewedCrowdControl:
+    """Ambessa's crowd-control review, and the slot that still withholds.
+
+    R's strike lands on the far side of its cached suppression, stunning
+    what it damages.  E's row is the cached 'Total Physical Damage' of
+    both spins, and the cache never times the second one.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Ambessa")
+        assert ambessa.MODULE_CC == {
+            "Q": "none",
+            "Q2": "none",
+            "W": "none",
+            "R": "stun",
+        }
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert (
+            "afterwards dealing physical damage and stunning them for 0.4 seconds"
+            in cc_review.slot_text(data, "R")
+        )
+
+    def test_public_execution_lands_after_the_cached_suppression(
+        self, ambessa_data, parse_at
+    ):
+        text = cc_review.slot_text(cc_review.kit("Ambessa"), "R")
+        assert "suppresses them for 0.75 seconds" in text
+        _, abilities = parse_at(ambessa_data, 18)
+        (part,) = abilities["R"]["parts"]
+        # 0.7 cached cast time, then the 0.75-second suppression.
+        assert part.time_offset == pytest.approx(1.45)
+        assert part.cc_kind == "stun"
+
+    def test_lacerates_second_spin_has_no_cached_time(self):
+        """The one slot that still withholds, and the sentence that proves it."""
+        text = cc_review.slot_text(cc_review.kit("Ambessa"), "E")
+        assert (
+            "drakehound's step's dash may be buffered during the lockout or "
+            "initiated within 0.275 seconds of the lockout ending; in either "
+            "case, she will spin a second time at the end of the dash to apply "
+            "the same effects at no additional cost." in text
+        )
+        assert cc_review.unreviewed_ability_slots("Ambessa") == ["E"]
+        coverage = cc_review.fimbulwinter_coverage("Ambessa")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

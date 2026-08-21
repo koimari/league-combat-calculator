@@ -1,0 +1,115 @@
+{
+  "receipt_id": "oracle-C6-leaf99",
+  "runbook": "R-18 / R-19 (fresh independent oracle investigator)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[7]",
+  "old_value": "<absent> (cast_timeline had only 7 entries; there was no 8th cast)",
+  "new_value": {
+    "name": "Dark Sphere",
+    "ordinal": 3,
+    "resource_after": 1273.2,
+    "_note": "remaining fields of the leaf were elided in the question and are not adjudicated here"
+  },
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle_c6",
+    "read": ["data/champions.json", "data/items.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/*.md", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "scope_and_limits": "The golden scenario definition for 'syndra_custom_order_60' (level, ranks, items, fight window, cast order) lives outside the permitted evidence tree (scripts/). This receipt therefore adjudicates the leaf by (a) checking every quantity in it against the cached wiki source, and (b) a closed-form consistency argument that pins the leaf's cast time from its own resource_after value and cross-checks it against the sourced Dark Sphere cooldown. Both independent routes agree; that agreement is the finding.",
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0]",
+      "quote": "name: 'Dark Sphere'; cost modifiers values [40, 45, 50, 55, 60]; cooldown modifiers values [7, 7, 7, 7, 7] with affectedByCdr: false",
+      "used_for": "the leaf's 'name' field; Q mana cost per rank; Q base cooldown is 7 s at every rank and takes NO item ability haste"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (passive effect)",
+      "quote": "'Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.' Ability Haste modifiers values [10, 20, 30]",
+      "used_for": "the ONLY cooldown reduction Dark Sphere can receive: 10/20/30 ability haste by R rank"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1] (Transcendent Bonus)",
+      "quote": "'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "used_for": "the alternative (charge-stocked) schedule for a 3rd Dark Sphere, which the arithmetic below rules out"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P (2nd effect)",
+      "quote": "'Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana.' Per-Level Scaling values [20,25,30,35,40,48,56,64,72,80,95,110,125,140,155,175,195,215,235,255]",
+      "used_for": "level-18 splinter mana restore = 215; admitted as a free term in the mana search"
+    },
+    {
+      "source": "data/champions.json -> Syndra.stats",
+      "quote": "mana: {flat: 480, perLevel: 40}; manaRegen: {flat: 8, perLevel: 0.8}",
+      "used_for": "mana pool and mp5 at level 18"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (restated in the growth math below)",
+      "quote": "Stat growth formula: base + growth x (level - 1) x (0.7025 + 0.0175 x (level - 1)); Ability haste -> CDR: effective_cd = base_cd x 100 / (100 + ability_haste)",
+      "used_for": "the two closed-form conversions used throughout"
+    },
+    {
+      "source": "docs/math-foundations.md, section 1.1",
+      "quote": "'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). With c_i the effective cooldown of ability i, the cast epochs of a solo ability are 0, c_i, 2c_i, ...'",
+      "used_for": "the cast-epoch model: the 3rd cast of an ability lands at 2 x effective cooldown"
+    },
+    {
+      "source": "data/items.json (mana-granting, non-removed items)",
+      "quote": "mana flat values present in the cache: 240 (Tear), 300, 350, 375, 400, 500, 600 (Malignance / Luden's Echo / Blackfire Torch / Archangel's Staff / Everfrost / Detonation Orb / Crown), 1000 (Seraph's Embrace / Muramana / Fimbulwinter)",
+      "used_for": "the admissible item-mana totals in the closure search"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_mana_pool_level_18": {
+      "formula": "base + growth x (L-1) x (0.7025 + 0.0175 x (L-1))",
+      "max_mana": "480 + 40 x 17 x (0.7025 + 0.0175 x 17) = 480 + 40 x 17 x 1.0 = 1160.0",
+      "mp5": "8 + 0.8 x 17 x 1.0 = 21.6 per 5 s  (= 4.32 mana/s)"
+    },
+    "step_2_fractional_fingerprint": {
+      "observation": "resource_after = 1273.2 has fractional part .2. Every other term in a Syndra mana ledger is an integer: max mana at L18 is exactly 1160, item mana is integral, ability costs are integral (Q 40-60, W 60-100, E 50, R 100), and the P splinter restore is integral (215 at L18). The ONLY non-integral contributor is mana regeneration.",
+      "tick_model": "regen accrued = 21.6 x floor(t/5). frac(21.6 n) = .2 only for n = 2, 7, 12, ... -> t in [10,15) or [35,40) or [60,65) s.",
+      "continuous_model": "regen accrued = 4.32 t. frac(4.32 t) = .2 (with all other terms multiples of 5) only for t = 10.00, 41.25, 72.50 s.",
+      "conclusion": "Under EITHER regen model the leaf's own value forces its cast time into one of three widely separated slots, the first of which is t = 10 s (tick) / t = 10.00 s (continuous)."
+    },
+    "step_3_cross_check_against_the_sourced_cooldown": {
+      "dark_sphere_effective_cd": {
+        "no_R": "7 x 100/100 = 7.0000 s   -> 3rd cast epoch 2c = 14.000 s",
+        "R_rank_1": "7 x 100/110 = 6.3636 s -> 3rd cast epoch 12.727 s",
+        "R_rank_2": "7 x 100/120 = 5.8333 s -> 3rd cast epoch 11.667 s",
+        "R_rank_3": "7 x 100/130 = 5.3846 s -> 3rd cast epoch 10.769 s"
+      },
+      "result": "For every possible R rank, the 3rd Dark Sphere (ordinal 3) lands at 10.77-14.00 s, i.e. squarely inside [10,15) - exactly and only the first of the three slots that step 2 allows. The later slots are impossible: a 3rd Dark Sphere at 35-40 s or 60-65 s would require Q to have been cast only twice in 35+ s, whereas the sourced 7 s (or shorter) cooldown puts at least 6 Dark Spheres inside 35 s.",
+      "significance": "'ordinal: 3' and 'resource_after: 1273.2' are two independently sourced quantities (Q's cooldown table vs. Syndra's mana-regen growth) that pin the same cast time to the same ~11-14 s slot. They corroborate each other; a fabricated or mis-scheduled entry would not."
+    },
+    "step_4_ledger_closure": {
+      "identity": "resource_after = (1160 + item_mana) - mana_spent_through_this_cast + 43.2 + 215 x (splinters collected)",
+      "required": "item_mana - mana_spent + 215k = 70",
+      "closures_with_maxed_ranks_and_real_cached_item_mana_totals": [
+        "1160 + 700 - 630 + 43.2 = 1273.2   (700 = 300+400 cached mana; 630 = 3xQ@60 + 4x100-cost casts + 1xE@50, i.e. exactly 8 casts with 3 Dark Spheres)",
+        "1160 + 600 - 530 + 43.2 = 1273.2   (600 = Malignance / Blackfire Torch / Archangel's / Luden's Echo; 530 = 3xQ@60 + 2x100-cost + 3xE@50)",
+        "1160 + 500 - 430 + 43.2 = 1273.2",
+        "1160 + 750 - 680 + 43.2 = 1273.2"
+      ],
+      "note": "A brute-force search over every cached item-mana total (all sums of up to 6 mana items), every ability-rank combination, splinter restores k=0..4 and cast times on a 0.05 s grid returns solutions ONLY at t = 10.00 / 41.25 / 72.50 s - and, per step 3, only t ~ 10 s is compatible with 'ordinal 3'. The value 1273.2 is therefore not an arbitrary number: it closes exactly, with 2 elapsed regen ticks, for standard Syndra mana items."
+    },
+    "step_5_what_this_rules_out": {
+      "charge_stocked_third_Q": "If the 3rd Dark Sphere had come from the 40-splinter Transcendent charge stock (Q1 and Q2 fired back-to-back at t~0, Q3 one recharge later at 5.38-7.00 s), only ONE regen tick would have elapsed and resource_after would have ended in .6, not .2. The observed .2 is consistent only with a plain cooldown-driven 3rd cast at 10.77-14.00 s.",
+      "old_value": "The old baseline had no 8th cast at all. That requires the timeline to stop before the 3rd Dark Sphere, i.e. before ~10.8-14.0 s - yet it already contained 7 casts, of which 2 were Dark Spheres. Dark Sphere is the shortest-cooldown ability Syndra has (7 s flat, further reduced by R's passive haste, and stockable to 2 charges at 40+ splinters); there is no sourced schedule in which seven casts elapse and the third Dark Sphere is still unavailable. The old state is a truncated timeline, not a correct one."
+    }
+  },
+
+  "adjudication": {
+    "name": "CORRECT - 'Dark Sphere' is the exact cached name of Syndra's Q (data/champions.json).",
+    "ordinal": "CORRECT - 3rd Dark Sphere is the sourced next Q cast epoch (2 x effective cooldown = 10.77 s at R3, 14.00 s with no R), and it is corroborated independently by the resource_after fractional fingerprint.",
+    "resource_after": "CORRECT / CONSISTENT - 1273.2 closes exactly as (level-18 pool 1160 + cached item mana) - ability costs + 43.2 mana of regeneration (2 x mp5 21.6), and the 43.2 term independently dates the cast to [10,15) s, matching the Q cooldown. It is below any level-18-with-a-mana-item pool, so it is not an over-cap value.",
+    "caveat": "The exact item build and fight window of the scenario could not be read from the permitted evidence tree, so the ledger closure is a consistency proof over the admissible parameter space rather than a single-point recomputation. No admissible parameterisation makes the OLD state (no 8th cast) correct."
+  },
+
+  "verdict_final": "new_value_correct"
+}

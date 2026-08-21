@@ -69,6 +69,7 @@ import pytest
 
 import src.app as app_module
 import src.calculator.item_effects as item_effects_module
+from src.calculator.item_coverage import ATTACKER_LANES
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
@@ -600,7 +601,7 @@ def test_coverage_wording_names_the_minion_only_boundary():
     ``tests/test_stats_only_items.py``.  Only the reason WORDING changed:
     the old text claimed the model "has no minion targets", which P3-3M
     made false."""
-    coverage = item_model_coverage(_helm())
+    coverage = item_model_coverage(str(_helm()["name"]), ATTACKER_LANES).as_payload()
     assert coverage["status"] == "stats_only"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True

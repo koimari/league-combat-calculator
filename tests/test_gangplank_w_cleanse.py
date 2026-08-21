@@ -99,6 +99,9 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -111,9 +114,29 @@ from src.calculator.cleanse_eligibility import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.healing import _leveling_ratio, derive_self_healing
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.healing import derive_self_healing
+
+# MERGE: the shared healing readers moved out of ``healing.py`` into
+# ``healing_helpers.py`` (HEALING-API); ``healing.py`` only loads
+# declarations and sorts receipts now.
+from src.calculator.healing_helpers import _leveling_ratio
+from src.calculator.participant_timeline import (
+    Combatant,
+    _simulate_survival as _simulate_survival_walk,
+)
 from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _GANPLANK_DATA = _CHAMPION_DATA["Gangplank"]
@@ -300,7 +323,7 @@ def _enemy_damage_before(combat: dict, time: float) -> float:
 
 
 def _dummy_combatant(participant_id: str, team: str, health: float = 3000.0):
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -999,17 +1022,18 @@ class TestCrowdControlAndSuppression:
         assert result["main"]["action_downtime"] == pytest.approx(2.0)
         assert result["main"]["cleanse_use"]["uses_after"] == 1
 
-    def test_w_unknown_control_fails_closed(self):
-        # P2-5 contract: an unknown control kind at the activation fails
-        # closed with the named unknown_control denial and nothing is
-        # truncated.  Absent today.
+    def test_w_a_control_with_no_cleanse_declaration_fails_closed(self):
+        # P2-5 contract: a control kind the cleanse table does not carry
+        # fails closed with the named unknown_control denial and nothing is
+        # truncated.  ``pull`` is such a kind; a *misspelled* kind never
+        # reaches this layer at all (see the test below).
         combatants = [
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
         result = _simulate_survival(
             combatants,
-            {"main": [_control_packet(1.0, "dance", 2.0, source="E")]},
+            {"main": [_control_packet(1.0, "pull", 2.0, source="E")]},
             {},
             {
                 "main": [
@@ -1034,6 +1058,23 @@ class TestCrowdControlAndSuppression:
         assert cleanse["removed_controls"] == []
         assert result["main"]["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
         assert result["main"]["cleanse_use"]["uses_after"] == 1
+
+    def test_w_a_kind_outside_the_vocabulary_is_refused_at_the_seam(self):
+        # ``cc_kind`` is a closed vocabulary: a misspelling is a raise at
+        # the timeline seam, before any cleanse decision exists, so it can
+        # never author a no-op stun the W would then "fail to remove".
+        combatants = [
+            _dummy_combatant("enemy", "enemy"),
+            _dummy_combatant("main", "main"),
+        ]
+        with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+            _simulate_survival(
+                combatants,
+                {"main": [_control_packet(1.0, "dance", 2.0, source="E")]},
+                {},
+                {},
+                10.0,
+            )
 
     def test_w_airborne_displacement_override_named_boundary(self):
         # P2-5 contract: the airborne displacement-override note is a

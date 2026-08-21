@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-C6-leaf107",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[4]/source",
+  "old_value": "E",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "excluded_from_reasoning": [
+      "src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff, the plan - none were read",
+      "A stray file 'syndra_abilities.txt' pre-existed in the scratch directory. `git ls-files` confirms it is NOT tracked in HEAD, so it was not part of the export. It was NOT used as evidence; all Syndra ability text below was re-read directly from the exported data/champions.json."
+    ]
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location, granting sight of their surroundings as they fall and dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] leveling rows",
+      "quote": "effects[2] attribute 'Magic Damage' = [70, 100, 130, 160, 190] (+65% AP); effects[3] attribute 'Bonus True Damage' = [8.4, 12, 15.6, 19.2, 22.8] (+[9.2, 9.8, 10.4, 11, 11.6]% AP, + 1.14%AP quadratic term); effects[3] attribute 'Total Mixed Damage' = [78.4, 112, 145.6, 179.2, 212.8]",
+      "note": "The wiki publishes W's magic and true portions as two separate leveling rows plus a 'Total MIXED Damage' row - i.e. two damage instances of different damage types, not one."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects[0..2]",
+      "quote": "Active: Syndra propels a wave of force in a cone ... deals magic damage to enemies hit ... / Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage IF THEY WERE NOT DAMAGED BY THE INITIAL CAST. / Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds",
+      "note": "E has exactly ONE damage leveling row ('Magic Damage' [60,95,130,165,200] +60% AP), the sphere-push damage is explicitly non-stacking on a single target, and E's own Transcendent threshold is 80 (CC only, no damage) - so a single E cast against one manual target contributes exactly one damage event, and E gains nothing at 60 splinters."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1] / R[0].effects[3] / P[0].effects[2]",
+      "quote": "Q: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' | R: 'Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target...' | P: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+      "note": "Splinter thresholds are 40 / 60 / 80 / 100 / 120 and are inclusive ('Collecting N', 'At 120'). At exactly 60 splinters the ONLY threshold that adds a damage instance is W's."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.gap_summary",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count"
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)"
+    },
+    {
+      "file": "CLAUDE.md domain knowledge (restated in docs/math-foundations.md scope)",
+      "path": "Resistance math",
+      "quote": "actual_damage = raw x 100 / (100 + resistance); True damage ignores all resistances entirely",
+      "note": "docs/math-foundations.md contains no Syndra- or splinter-specific rule (grep for 'syndra|splinter|transcend' returns nothing); it only defines the generic mitigation and DoT-partition identities. A true-damage portion is mitigated by a different rule than the magic portion, so it CANNOT be folded into the magic damage event - it must be its own event."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_parameter": "The scenario name 'syndra_custom_order_60' pins the splinters option to 60. 60 is exactly Syndra's W Transcendent threshold. At 60 splinters: Q's 40-threshold (extra charge, slot Q2) is active but adds no damage instance by itself; E's threshold is 80 (not reached, and is CC-only anyway); R's is 100 (execute, documented not modeled); P's is 120 (AP buff, no event). W's 60-threshold is the ONLY splinter effect at this stack count that creates an additional damage instance.",
+
+    "step_2_W_emits_two_instances": "Verified the wiki text formula reproduces the cached leveling row exactly, proving the true portion is a separate instance layered on top of W's magic damage rather than a re-typing of it. bonus_true = (0.12 + 0.02*AP/100) * (base_magic + 0.65*AP). Expanding: flat = 0.12*base ; AP coefficient = 0.12*0.65 + 0.0002*base ; AP^2 coefficient = 0.65*0.0002.",
+    "step_2_table": [
+      {"rank": 1, "base_magic": 70,  "computed_flat_true": 8.4,  "cached_flat_true": 8.4,  "computed_pct_AP": 9.2,  "cached_pct_AP": 9.2},
+      {"rank": 2, "base_magic": 100, "computed_flat_true": 12.0, "cached_flat_true": 12,   "computed_pct_AP": 9.8,  "cached_pct_AP": 9.8},
+      {"rank": 3, "base_magic": 130, "computed_flat_true": 15.6, "cached_flat_true": 15.6, "computed_pct_AP": 10.4, "cached_pct_AP": 10.4},
+      {"rank": 4, "base_magic": 160, "computed_flat_true": 19.2, "cached_flat_true": 19.2, "computed_pct_AP": 11.0, "cached_pct_AP": 11},
+      {"rank": 5, "base_magic": 190, "computed_flat_true": 22.8, "cached_flat_true": 22.8, "computed_pct_AP": 11.6, "cached_pct_AP": 11.6}
+    ],
+    "step_2_conclusion": "5/5 ranks match on both the flat and the %AP term (the quadratic AP^2 term is present in both, wiki-rounded to 1.14 vs computed 1.3 per 100 AP^2 - a wiki rounding artefact that does not affect instance COUNT). Cross-check: 'Total Mixed Damage' rank 1 = 78.4 = 70 (magic) + 8.4 (true). The wiki's own label 'Total MIXED Damage' is decisive: mixed = two damage types = two mitigation paths = two damage events, both sourced 'W'.",
+
+    "step_3_event_count_model": "Per cast against a single manual target: Q -> 1 event; Q2 (second charge, unlocked at 40) -> 1 event; W -> 1 event below 60 splinters, 2 events at >=60 (magic, then bonus true); E -> exactly 1 event (single 'Magic Damage' row; the pushed-sphere hit is explicitly suppressed on a target already damaged by the initial cast); R -> 1 event per sphere, sphere count in [3, 7] (cross-checked against the cached rows: Minimum Magic Damage 240 = 3 x 80 per-sphere, Maximum 560 = 7 x 80).",
+
+    "step_4_index_arithmetic": "Under the correct model, casting W at 60 splinters inserts exactly one additional W-sourced event immediately after W's magic event, shifting every later event right by one. The observed leaf change is precisely that signature: the E event that occupied index 4 under a model with only one W instance moves to index 5, and index 4 becomes W's bonus-true-damage event. A concrete order consistent with the observed indices is R(3 spheres) -> W -> E: old = [0]R,[1]R,[2]R,[3]W,[4]E ; new = [0]R,[1]R,[2]R,[3]W(magic),[4]W(true),[5]E.",
+
+    "step_5_robustness": "The only competing explanation that also yields new[4]='W' is a de-duplication of a spurious second E event earlier in the list, pulling a later W event from index 5 up to index 4 - and that too is a correction, since the cached E text forbids a target being damaged twice by one E cast. Both candidate mechanisms independently make 'W' the correct occupant of index 4. For 'E' to be correct at index 4 the tree would have to either omit W's 60-splinter true-damage instance (contradicted by the cached wiki text and the 5/5 leveling-row reproduction above) or drop a genuine earlier event; nothing in the cached data supports either.",
+
+    "conclusion": "At 60 Splinters of Wrath, Force of Will deals magic damage AND a separate bonus true-damage instance. Both are sourced 'W'. The event at damage_events[4] is a W-sourced instance; the previous 'E' reflected a tree missing W's second instance."
+  },
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "confidence": "high",
+    "caveats": [
+      "The scenario definition (exact cast order, ability ranks, r_spheres) lives outside the permitted evidence tree (data/ and docs/math-foundations.md), so the cast order in step_4 is a reconstruction consistent with the observed indices, not a read of the scenario file. The verdict does not depend on that reconstruction: it depends only on (a) 60 splinters activating W's second damage instance and (b) that instance being W-sourced, both established directly from cached wiki text.",
+      "docs/math-foundations.md is silent on Syndra and on damage-event ordering; it contributed only the generic true-damage/mitigation rule that forces the true portion into its own event."
+    ]
+  }
+}

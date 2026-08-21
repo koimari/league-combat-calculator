@@ -30,6 +30,7 @@ hardcoded.
 
 from typing import Any
 
+from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
@@ -61,7 +62,7 @@ def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
     # "% of damage stored" has no stat the scaling layer can resolve.
     ad_percent = extract_value(ability, "Physical Damage", rank, 0)
     stored_percent = extract_value(ability, "Physical Damage", rank, 1)
-    ad_damage = (ad_percent / 100.0) * float(ctx.stats.get("attack_damage", 0.0))
+    ad_damage = (ad_percent / 100.0) * float(ctx.stat("attack_damage"))
 
     # The stored pool: pre-mitigation raw spell damage the fight rotation
     # prices for the kit's damaging abilities (Q + E).  R is evaluated
@@ -110,7 +111,7 @@ ASSUMPTIONS = [
     "P and W deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Zed"))
+SOURCES = load_champion_sources("Zed")
 
 SLOTS = {
     "P": no_damage_parser(
@@ -118,12 +119,22 @@ SLOTS = {
         "Contempt for the Weak is a % max-HP on-hit rider on basic attacks; "
         "no separate enemy-damage formula is priced for the passive slot.",
     ),
-    "Q": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # One shuriken, one slash — neither packet has a travel or tick phase
+    # to place, which is what carries the cast into the event ledger.
+    "Q": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "W": no_damage_parser(
         "W",
         "Living Shadow is a shadow/utility placement; no enemy damage.",
     ),
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "E": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "R": _death_mark,
 }
 
@@ -137,5 +148,56 @@ MODULE_COVERAGE = {
 
 OPTIONS: list[dict[str, Any]] = []
 
-parse_abilities = build_parser(SLOTS, "Zed")
-REVIEW_STATUS = "reviewed_module"
+# The revision these declarations were read from, in the shape
+# scripts/cast_dependency_audit.py will resolve against the committed
+# wiki audit once this phase's audit slice lands -- that script is not
+# in the tree yet, so today this string is shape-checked and pinned
+# equal to SOURCES by test, nothing more. It is the parent entry
+# SOURCES publishes.
+_WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Zed@4026038"
+
+_SHADOW_MIMICS_Q_AND_E = (
+    "Living Shadow's Shadow mimics Razor Shuriken and Shadow Slash "
+    "'regardless of range', so the same cast is one instance before the "
+    "Shadow is placed and two after it. The Shadow's copies are outside "
+    "this module's single-instance pricing, which is why the ordering is "
+    "declared rather than priced: the rotation still has to open on the "
+    "placement for the kit it models to be the kit Zed casts."
+)
+
+# Head only (D-89). W first is the mechanic above; the rest of the seed
+# order — E before Q, R last — is a DPS and scheduling preference no
+# declaration can honestly express, so the resolver's hand seed keeps it.
+# R in particular is deliberately undeclared: Marked for Death stores the
+# damage dealt *during* the mark, so the wiki puts R first while this
+# module prices it last off Q and E's raw totals with a 3-second
+# detonation offset. Neither direction is a dependency both surfaces
+# would agree to, and a declaration that contradicts one of them is worse
+# than the seed it would retire.
+CAST_DEPENDENCIES = (
+    CastDependency(
+        slot="Q",
+        requires="W",
+        kind="damage_enabler",
+        reason=_SHADOW_MIMICS_Q_AND_E,
+        source=_WIKI_SOURCE,
+    ),
+    CastDependency(
+        slot="E",
+        requires="W",
+        kind="damage_enabler",
+        reason=_SHADOW_MIMICS_Q_AND_E,
+        source=_WIKI_SOURCE,
+    ),
+)
+
+# Razor Shuriken only "deals physical damage to enemies hit"; Shadow Slash
+# is "Zed slashes to deal physical damage to nearby enemies" and its slow
+# belongs to a different caster — "enemies hit by a *Shadow's* slash are
+# slowed for 1.5 seconds", and the Shadow's copies are outside this
+# module's single-instance pricing; Death Mark only stores and detonates
+# damage.  P is the on-hit execute rider and W is the Shadow placement;
+# both are explicit no-damage slots.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Zed", cc_kinds=MODULE_CC)

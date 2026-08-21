@@ -15,29 +15,35 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
    Q cast that follows the auto-applied stacks.
 """
 
+import re
+from pathlib import Path
+from typing import Iterable
+
 import pytest
 
+from src.calculator.cast_dependency import CustomOrderViolatesDependencyError
+from src.calculator.champions import registered_champion_names
 from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from src.calculator.rotation_resolver import (
-    COMBO_TABLE,
+    CAST_ORDER_OVERRIDES,
+    ORDER_OVERRIDE_REASONS,
+    ComboRule,
+    _validate_override_reasons,
     build_rotation_receipt,
     rank_ability_dps,
     resolve_cast_order,
 )
 
-_COMBO_CHAMPIONS = [
+_OVERRIDE_CHAMPIONS = [
     "Cassiopeia",
     "Varus",
     "Brand",
     "Vladimir",
-    "Aatrox",
-    "Jhin",
     "Annie",
     "Lux",
     "Zed",
-    "Aphelios",
 ]
 
 _EXPECTED_ORDERS = {
@@ -45,12 +51,9 @@ _EXPECTED_ORDERS = {
     "Varus": ["Q", "E", "R", "W"],
     "Brand": ["Q", "R", "E", "W"],
     "Vladimir": ["R", "Q", "E", "W"],
-    "Aatrox": ["R", "Q", "W", "E"],  # E rides as no_damage (session 4)
-    "Jhin": ["Q", "W", "E", "R"],
     "Annie": ["E", "R", "Q", "W"],
     "Lux": ["E", "Q", "R", "W"],
     "Zed": ["W", "E", "Q", "R"],
-    "Aphelios": ["Q", "W", "R", "E"],  # E rides as no_damage (session 4)
 }
 
 _RATIONALE_FRAGMENTS = {
@@ -58,13 +61,18 @@ _RATIONALE_FRAGMENTS = {
     "Varus": ("Blight", "detonat"),
     "Brand": ("Blaze", "spread"),
     "Vladimir": ("amplif", "mark"),
-    "Aatrox": ("bonus AD", "buff"),
-    "Jhin": ("4th shot", "crit"),
     "Annie": ("stun", "Tibbers", "shield"),
     "Lux": ("slow", "root"),
     "Zed": ("shadow", "Death Mark"),
-    "Aphelios": ("weapon", "swap"),
 }
+
+
+# The engine's ``DEFAULT_CAST_ORDER`` still names ``Q2`` positionally, which
+# is the resolver's own fallback and not something a caller may request: a
+# requested order may name only slots the champion's parse offers, and
+# neither Cassiopeia nor Zed has a recast row (D-11).  The Q2 element was
+# always inert for them, so dropping it is what "the fixed order" meant here.
+FIXED_ORDER = [slot for slot in DEFAULT_CAST_ORDER if slot != "Q2"]
 
 
 @pytest.fixture(scope="module")
@@ -93,6 +101,27 @@ def _params(one_rotation=True, duration=None, uptime=0.0, cast_order=None):
     )
 
 
+def _parse_for(champion_data, *, level=18, splinters=None):
+    """One champion's parse, optionally at a splinter count, for receipts."""
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.stats import calculate_total_stats
+
+    stats = calculate_total_stats(dict(champion_data), level, [])
+    return parse_champion_abilities(
+        dict(champion_data),
+        level,
+        stats["ability_power"],
+        ability_ranks=None,
+        champion_stats=stats,
+        target_stats={
+            "target_max_health": 2000.0,
+            "target_current_health": 2000.0,
+            "target_missing_health": 0.0,
+        },
+        champion_options=None if splinters is None else {"splinters": splinters},
+    )
+
+
 def _run(champion_data, level=11, one_rotation=True, duration=None, uptime=0.0):
     return run_fight(
         champion_data,
@@ -106,13 +135,225 @@ def _run(champion_data, level=11, one_rotation=True, duration=None, uptime=0.0):
 # Combo table shape
 # ---------------------------------------------------------------------------
 
+_RESOLVER_PATH = (
+    Path(__file__).resolve().parents[1] / "src" / "calculator" / "rotation_resolver.py"
+)
+_OVERRIDES_LITERAL_OPEN = "CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {"
+_ENTRY_LINE = re.compile(r'^ {4}"([^"]+)": ComboRule\($')
 
-class TestComboTable:
-    def test_batch_has_ten_combo_champions(self) -> None:
-        assert set(COMBO_TABLE) == set(_COMBO_CHAMPIONS)
+
+def resolver_source() -> str:
+    """The resolver module as text, for the source-shape assertions below."""
+    return _RESOLVER_PATH.read_text(encoding="utf-8")
+
+
+def seed_comment_blocks(source: str) -> tuple[tuple[str | None, tuple[str, ...]], ...]:
+    """Every comment block inside the ``CAST_ORDER_OVERRIDES`` literal.
+
+    Each pair is ``(the entry the block introduces, the block's lines)``.
+    A ``None`` champion is a block that introduces nothing — the shape a
+    retirement leaves behind when it takes the ``ComboRule`` and not the
+    paragraph above it.  Only column-4 comment lines are blocks; the
+    trailing notes inside an entry body sit deeper and are that entry's.
+    """
+    body = source.split(_OVERRIDES_LITERAL_OPEN, 1)[1].split("\n}\n", 1)[0]
+    blocks: list[tuple[str | None, tuple[str, ...]]] = []
+    block: list[str] = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#") and len(line) - len(line.lstrip()) == 4:
+            block.append(stripped.lstrip("#").strip())
+            continue
+        entry = _ENTRY_LINE.match(line)
+        if entry:
+            blocks.append((entry.group(1), tuple(block)))
+            block = []
+    if block:
+        blocks.append((None, tuple(block)))
+    return tuple(blocks)
+
+
+def seed_comment_faults(source: str, roster: Iterable[str]) -> tuple[str, ...]:
+    """Every seed comment that describes something other than its entry.
+
+    The empty tuple is the pass condition.  A block must introduce an
+    entry, name that entry's champion, and name no other champion in the
+    cached roster — which is what makes a retirement that leaves its
+    paragraph behind a failure instead of a reading hazard.
+    """
+    names = tuple(roster)
+    faults: list[str] = []
+    for champion, block in seed_comment_blocks(source):
+        text = " ".join(block)
+        if champion is None:
+            faults.append(f"a comment block introduces no entry: {text[:60]!r}")
+            continue
+        if not block:
+            faults.append(f"{champion} carries no comment block")
+            continue
+        named = [name for name in names if re.search(rf"\b{re.escape(name)}\b", text)]
+        if champion not in named:
+            faults.append(f"{champion}'s comment never names {champion}")
+        faults.extend(
+            f"{champion}'s comment describes {other}"
+            for other in named
+            if other != champion
+        )
+    return tuple(faults)
+
+
+class TestCastOrderOverrides:
+    def test_the_table_holds_exactly_the_hand_seeds(self) -> None:
+        assert set(CAST_ORDER_OVERRIDES) == set(_OVERRIDE_CHAMPIONS)
+
+    def test_every_override_says_why_it_is_still_hand_held(self) -> None:
+        """P5-f: the retirement frontier is counted, not claimed.
+
+        A seed that cannot name its reason from the closed set is either a
+        mechanic its module should declare or a preference nobody wrote
+        down — and it would sit in the table forever either way.
+        """
+        for name, rule in CAST_ORDER_OVERRIDES.items():
+            assert (
+                rule.override_reason in ORDER_OVERRIDE_REASONS
+            ), f"{name} declares override_reason {rule.override_reason!r}"
+
+    def test_the_suite_agrees_with_the_published_frontier(self) -> None:
+        """Criterion 13: the frontier is counted, and the counts agree.
+
+        ``docs/cast-dependency-audit.json`` publishes which seeds survive
+        and why.  A suite that listed a different set would let the
+        frontier be driven down in the receipt while the tests kept
+        passing against a set nobody had retired.
+        """
+        import json
+        from pathlib import Path
+
+        receipt = json.loads(
+            (
+                Path(__file__).resolve().parents[1]
+                / "docs"
+                / "cast-dependency-audit.json"
+            ).read_text(encoding="utf-8")
+        )
+        from collections import Counter
+
+        from src.calculator.champions import get_champion_cast_dependencies
+
+        frontier = receipt["order_override_frontier"]
+        assert sorted(_OVERRIDE_CHAMPIONS) == frontier["champions"]
+        assert frontier["entries"] == len(_OVERRIDE_CHAMPIONS)
+        # The WHOLE histogram, not one key of it: after the retirements
+        # every survivor carries `dps_tiebreak` and three of the four
+        # closed reasons have no user, so gating `pending_primitive`
+        # alone left the other three unwatched in both directions.
+        measured = Counter(
+            rule.override_reason for rule in CAST_ORDER_OVERRIDES.values()
+        )
+        assert frontier["reasons"] == {
+            reason: measured.get(reason, 0) for reason in ORDER_OVERRIDE_REASONS
+        }
+        assert frontier["unclassified"] == []
+        # D-89's head-only seeds: a declaration decides the head, the seed
+        # still decides the tail.  Nothing else in the frontier can tell
+        # them from a seed held by hand end to end.
+        assert frontier["head_only"] == sorted(
+            name
+            for name in CAST_ORDER_OVERRIDES
+            if get_champion_cast_dependencies(name)
+        )
+
+    def test_the_design_doc_names_the_surviving_seeds_and_no_others(self) -> None:
+        """The prose list is gated like the table it describes.
+
+        ``docs/rotation-design.md``'s seed section named ten champions for
+        a seven-entry table after three retirements moved the code and left
+        the sentence alone — the plan auditor reaches ``docs/plans`` only,
+        so nothing saw it.  This is what sees it: every live seed is named
+        in that section and every retired one is absent from it.
+        """
+        from pathlib import Path
+
+        design = (
+            Path(__file__).resolve().parents[1] / "docs" / "rotation-design.md"
+        ).read_text(encoding="utf-8")
+        heading = "### The hand seeds remain documented overrides"
+        section = design.split(heading, 1)[1].split("\n### ", 1)[0]
+        named = section.split("\n\nFour names left the table", 1)[0]
+        for champion in CAST_ORDER_OVERRIDES:
+            assert champion in named, f"{champion} seeds but the doc omits it"
+        for retired in ("Syndra", "Aatrox", "Jhin", "Aphelios"):
+            assert (
+                retired not in named
+            ), f"{retired} retired but the doc still lists it as a seed"
+
+    def test_every_seed_comment_describes_the_seed_it_introduces(self) -> None:
+        """The table's own prose is gated like the table.
+
+        The four retirements deleted their ``ComboRule`` entries and left
+        their comment paragraphs behind: Aatrox's and Jhin's ended up
+        directly above Annie's surviving entry, where two paragraphs about
+        two retired champions read as documentation of hers, and
+        Aphelios' dangled against the closing brace describing nothing.
+        No commit body mentioned them and nothing could see them — the
+        campaign's own prose-outruns-code shape, inside the table the
+        campaign counts.  This is what sees them.
+        """
+        assert seed_comment_faults(resolver_source(), registered_champion_names()) == ()
+
+    def test_the_comment_gate_sees_a_retirement_that_left_its_paragraph(self) -> None:
+        """R-05: the exact drift the retirements caused, made to happen."""
+        orphaned = resolver_source().replace(
+            '    "Annie": ComboRule(',
+            "    # Aatrox — R grants bonus AD as a percentage of total AD\n"
+            "    # before Q/W are priced.\n"
+            '    "Annie": ComboRule(',
+        )
+        faults = seed_comment_faults(orphaned, registered_champion_names())
+        assert any("describes Aatrox" in fault for fault in faults), faults
+
+    def test_the_comment_gate_sees_a_block_that_introduces_nothing(self) -> None:
+        """R-05: the dangling half of the same drift."""
+        closing = (
+            '        aoe={"E": 5},  # Shadow Slash around Zed and the shadow\n    ),\n}'
+        )
+        dangling = resolver_source().replace(
+            closing,
+            closing[:-1] + "    # Aphelios — the main-hand weapon's Q form opens.\n}",
+        )
+        faults = seed_comment_faults(dangling, registered_champion_names())
+        assert any("introduces no entry" in fault for fault in faults), faults
+
+    def test_the_comment_gate_sees_an_entry_nobody_introduced(self) -> None:
+        """R-05: the third shape — an entry whose block went away instead."""
+        unintroduced = resolver_source().replace(
+            "    # Lux — E slows so the root lands; Q roots; R consumes the\n"
+            "    # Illumination mark.\n",
+            "",
+        )
+        faults = seed_comment_faults(unintroduced, registered_champion_names())
+        assert faults == ("Lux carries no comment block",)
+
+    def test_a_derived_rule_carries_no_override_reason(self) -> None:
+        assert (
+            ComboRule(champion="X", order=("Q",), rationale="").override_reason is None
+        )
+
+    def test_an_unreasoned_override_fails_at_import(self) -> None:
+        """The check is reachable: it fires on a table with a bad entry."""
+        original = dict(CAST_ORDER_OVERRIDES)
+        CAST_ORDER_OVERRIDES["Synthetic"] = ComboRule(
+            champion="Synthetic", order=("Q",), rationale="", override_reason="vibes"
+        )
+        try:
+            with pytest.raises(ValueError, match="override_reason"):
+                _validate_override_reasons()
+        finally:
+            CAST_ORDER_OVERRIDES.clear()
+            CAST_ORDER_OVERRIDES.update(original)
 
     def test_every_rule_has_order_rationale_and_sources(self) -> None:
-        for name, rule in COMBO_TABLE.items():
+        for name, rule in CAST_ORDER_OVERRIDES.items():
             assert rule.champion == name
             assert rule.order, f"{name} combo has an empty order"
             assert rule.rationale, f"{name} combo has no rationale"
@@ -123,6 +364,7 @@ class TestComboTable:
             for slot in rule.order:
                 assert slot in {
                     "Q",
+                    "Q2",  # a recast slot rides its parent's schedule
                     "W",
                     "E",
                     "R",
@@ -144,8 +386,173 @@ class TestComboTable:
 # ---------------------------------------------------------------------------
 
 
+class TestDerivedPathRotations:
+    """Champions whose order the derivation computes, not a hand seed.
+
+    Every row here used to live in ``_OVERRIDE_CHAMPIONS``.  A retirement
+    moves its assertions rather than deleting them: the same order, the
+    same mechanic, now asserted on the path that computes it.  Syndra's
+    row additionally demands the declared kind and the wiki revision in
+    the rationale, which a hand seed's prose never carried; the others
+    were seeds the derivation already reproduced, held only until a
+    deletion commit proved it on both baselines (``pending_primitive``).
+
+    The rows pin the receipt's whole ordering projection — ``cast_order``,
+    ``setup``, ``consume`` and ``aoe`` — because a retirement moves more of
+    it than the order.  ``order`` is what the engine executes; the other
+    four are published beside it through ``build_rotation_receipt`` and
+    reach the public API, and for Aatrox, Jhin and Aphelios no numeric gate
+    can see them at all: none is a coupled attacker, and the pair snapshot
+    holds no rotation receipt.  A seed hand-listed these fields; a derived
+    rule computes them, so each retirement moved them and the moves are
+    recorded in ``_SEED_PUBLISHED`` rather than left to be rediscovered.
+    """
+
+    # What each retired seed published, for the fields the derivation now
+    # computes.  Kept beside the live expectations so the delta a retirement
+    # caused is legible instead of implicit: the derivation reads its AoE
+    # caps from the structured targeting rows and its setup/consume sets
+    # from the edges it actually ordered against, where the seed carried
+    # whatever its author wrote down.  None of these deltas moves a damage
+    # number — ``aoe`` weights the DPS tie-break by ``min(target_count,
+    # cap)`` and the derivation ranks at ``target_count=1``, so every cap
+    # collapses to 1 there, and ``setup``/``consume`` are receipt fields no
+    # engine reads back.
+    _SEED_PUBLISHED = {
+        "Syndra": {
+            "setup": ["Q"],
+            "consume": ["E"],
+            "aoe": {"E": 5},
+            "moved": {"setup", "consume", "aoe"},
+        },
+        "Aatrox": {
+            "setup": ["R"],
+            "consume": [],
+            "aoe": {"Q": 5, "W": 2},  # W's hand-written cap of 2 becomes 1
+            "moved": {"consume", "aoe"},
+        },
+        "Jhin": {
+            "setup": [],
+            "consume": ["R"],
+            "aoe": {"Q": 4, "E": 5},  # Q's hand-written cap of 4 becomes 5
+            "moved": {"consume", "aoe"},
+        },
+        "Aphelios": {
+            "setup": ["Q", "W"],
+            "consume": ["R"],
+            "aoe": {"R": 5, "Q": 5},  # gains W and passive at 1
+            "moved": {"setup", "consume", "aoe"},
+        },
+    }
+
+    @pytest.mark.parametrize(
+        ("champion", "order", "setup", "consume", "aoe", "fragments"),
+        [
+            (
+                "Syndra",
+                ["Q", "Q2", "E", "W", "R"],
+                # W joined the setup set with main's Syndra execute edge
+                # (R is a missing-health/stored execute, so it follows
+                # W's damage).  The ORDER is unchanged: a new edge that
+                # agrees with the pinned sequence adds a member here and
+                # moves nothing.
+                ["E", "Q", "Q2", "W"],
+                ["E", "Q2", "R", "W"],
+                {"Q": 5, "Q2": 5, "W": 5, "E": 5, "R": 1, "passive": 1},
+                ("sphere", "stun", "cc_enabler", "@4024662"),
+            ),
+            (
+                "Aatrox",
+                ["R", "Q", "W", "E"],
+                ["R"],
+                ["Q", "W"],
+                {"Q": 5, "W": 1, "E": 5, "R": 1, "passive": 1},
+                ("stat_buff(bonus_attack_damage)", "amplifies ability damage"),
+            ),
+            # Jhin's seed named a mechanic the atomized data does not carry:
+            # his kit detects no setup/consume edge at all, so the derivation
+            # keeps the certified order and SAYS it found no signal.  The
+            # order is the seed's; the claim behind it is not, which is the
+            # honest half of retiring a seed nothing could check.  Its
+            # ``consume=("R",)`` went with the claim: there is no edge to
+            # consume anything, so the derived sets are empty.
+            (
+                "Jhin",
+                ["Q", "W", "E", "R"],
+                [],
+                [],
+                {"Q": 5, "W": 1, "E": 5, "R": 1, "passive": 1},
+                ("no detectable setup/consume signal", "kept exactly as reviewed"),
+            ),
+            # Aphelios is Jhin's case again: the weapon-swap story his seed
+            # told is a module OPTION, not a parsed setup/consume atom, so
+            # the derivation keeps the certified order and names the absence
+            # — and publishes empty setup/consume for the same reason.
+            (
+                "Aphelios",
+                ["Q", "W", "E", "R"],
+                [],
+                [],
+                {"Q": 5, "W": 1, "E": 1, "R": 5, "passive": 1},
+                ("no detectable setup/consume signal", "aphelios_main_weapon"),
+            ),
+        ],
+    )
+    def test_the_derivation_reproduces_the_order_the_seed_pinned(
+        self, champion, order, setup, consume, aoe, fragments, champion_by_name
+    ) -> None:
+        rotation = _run(champion_by_name[champion])["rotation"]
+        assert rotation["cast_order"] == order
+        assert rotation["order"][: len(order)] == order
+        assert rotation["setup"] == setup
+        assert rotation["consume"] == consume
+        assert rotation["aoe"] == aoe
+        rationale = rotation["rationale"].lower()
+        for fragment in fragments:
+            assert (
+                fragment.lower() in rationale
+            ), f"{champion} rationale should mention {fragment!r}: {rationale}"
+
+    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin", "Aphelios"])
+    def test_the_published_projection_moved_off_the_seed(
+        self, champion, champion_by_name
+    ) -> None:
+        """Each retirement moved a published field, and this says which.
+
+        A retirement is allowed to move these — they are the derivation's
+        own account of what it ordered against, and the seed's were hand
+        entries.  What is not allowed is moving them invisibly, which is
+        what happens when the only pins are on ``order``.
+        """
+        rotation = _run(champion_by_name[champion])["rotation"]
+        seed = self._SEED_PUBLISHED[champion]
+        moved = {
+            field
+            for field in ("setup", "consume", "aoe")
+            if rotation[field] != seed[field]
+        }
+        assert moved == seed["moved"], (
+            f"{champion}'s derived rotation moves {sorted(moved)} off its "
+            f"seed, not {sorted(seed['moved'])} — record the move rather "
+            "than letting a published field drift unrecorded"
+        )
+
+    @pytest.mark.parametrize("champion", ["Syndra", "Aatrox", "Jhin", "Aphelios"])
+    def test_the_rule_is_derived_and_carries_no_override_reason(
+        self, champion, champion_by_name
+    ) -> None:
+        _, rule = resolve_cast_order(
+            champion,
+            _parse_for(champion_by_name[champion]),
+            champion_data=champion_by_name[champion],
+        )
+        assert rule is not None and rule.derived is True
+        assert rule.override_reason is None
+        assert champion not in CAST_ORDER_OVERRIDES
+
+
 class TestParseLevelRotations:
-    @pytest.mark.parametrize("champion", _COMBO_CHAMPIONS)
+    @pytest.mark.parametrize("champion", _OVERRIDE_CHAMPIONS)
     def test_derived_cast_order_matches_the_combo_table(
         self, champion, champion_by_name
     ) -> None:
@@ -154,7 +561,7 @@ class TestParseLevelRotations:
         assert rotation["cast_order"] == _EXPECTED_ORDERS[champion]
         assert rotation["order"] == _EXPECTED_ORDERS[champion]
 
-    @pytest.mark.parametrize("champion", _COMBO_CHAMPIONS)
+    @pytest.mark.parametrize("champion", _OVERRIDE_CHAMPIONS)
     def test_rationale_names_the_driving_mechanic(
         self, champion, champion_by_name
     ) -> None:
@@ -195,13 +602,6 @@ class TestParseLevelRotations:
         assert rotation["setup"] == ["R"]
         assert "10%" in rotation["rationale"]
 
-    def test_aatrox_buffs_with_r_before_damage(self, champion_by_name) -> None:
-        result = _run(champion_by_name["Aatrox"])
-        rotation = result["rotation"]
-        assert rotation["cast_order"][0] == "R"
-        assert rotation["setup"] == ["R"]
-        assert "bonus AD" in rotation["rationale"]
-
     def test_lux_slows_roots_then_ults(self, champion_by_name) -> None:
         result = _run(champion_by_name["Lux"])
         rotation = result["rotation"]
@@ -216,13 +616,6 @@ class TestParseLevelRotations:
         assert rotation["setup"] == ["W"]
         assert rotation["consume"] == ["R"]
 
-    def test_aphelios_weapon_q_opens_then_swap_then_r(self, champion_by_name) -> None:
-        result = _run(champion_by_name["Aphelios"])
-        rotation = result["rotation"]
-        assert rotation["cast_order"] == ["Q", "W", "R", "E"]
-        assert rotation["setup"] == ["Q", "W"]
-        assert "weapon" in rotation["rationale"].lower()
-
     @pytest.mark.parametrize(
         ("champion", "aoe_slots"),
         [
@@ -230,12 +623,9 @@ class TestParseLevelRotations:
             ("Varus", {"E": 5}),
             ("Brand", {"W": 5, "E": 5}),
             ("Vladimir", {"W": 5, "E": 5, "R": 5}),
-            ("Aatrox", {"Q": 5, "W": 2}),
-            ("Jhin", {"Q": 4, "E": 5}),
             ("Annie", {"W": 5, "R": 5}),
             ("Lux", {"E": 5, "R": 5, "Q": 2}),
             ("Zed", {"E": 5}),
-            ("Aphelios", {"R": 5, "Q": 5}),
         ],
     )
     def test_receipt_carries_aoe_target_caps(
@@ -385,7 +775,7 @@ class TestTimedCadence:
             _params(
                 one_rotation=False,
                 duration=3.0,
-                cast_order=list(DEFAULT_CAST_ORDER),
+                cast_order=FIXED_ORDER,
             ),
         )
         assert combo["breakdown"]["E"]["casts"] > default["breakdown"]["E"]["casts"]
@@ -420,10 +810,18 @@ class TestTimedCadence:
         self, champion_by_name
     ) -> None:
         """The W-shadow opener costs zero cast time, so E fires at t=0 and
-        again at t=5.0 — two casts instead of the fixed order's one."""
+        again at t=5.0 — two casts instead of the later E's one.
+
+        The control was the engine's fixed default order until Zed's module
+        declared that Q and E each require the Shadow placement: an order
+        opening on Q now inverts that declaration and is refused outright
+        (D-86, asserted in the next test).  So the control moved to the
+        nearest legal order — W still first, E one slot later — which is
+        what isolates E's cadence rather than the opener.
+        """
         data = champion_by_name["Zed"]
         combo = _run(data, one_rotation=False, duration=5.0, uptime=1.0)
-        default = run_fight(
+        late_e = run_fight(
             data,
             11,
             [],
@@ -431,11 +829,40 @@ class TestTimedCadence:
                 one_rotation=False,
                 duration=5.0,
                 uptime=1.0,
-                cast_order=list(DEFAULT_CAST_ORDER),
+                cast_order=["W", "Q", "E", "R"],
             ),
         )
-        assert combo["breakdown"]["E"]["casts"] > default["breakdown"]["E"]["casts"]
+        assert combo["breakdown"]["E"]["casts"] > late_e["breakdown"]["E"]["casts"]
         assert combo["rotation"]["order"][0] == "W"
+
+    def test_zeds_declaration_refuses_an_order_that_skips_the_shadow(
+        self, champion_by_name
+    ) -> None:
+        """The fixed default order is no longer a legal request for Zed.
+
+        D-86 at a champion the phase's criteria never name: a declared
+        prerequisite states impossibility, so ``Q, W, E, R`` — the control
+        the test above used to run — comes back as a refusal quoting the
+        Shadow-placement mechanic rather than as a fight priced against a
+        kit Zed cannot cast.
+        """
+        with pytest.raises(CustomOrderViolatesDependencyError) as caught:
+            run_fight(
+                champion_by_name["Zed"],
+                11,
+                [],
+                _params(
+                    one_rotation=False,
+                    duration=5.0,
+                    uptime=1.0,
+                    cast_order=FIXED_ORDER,
+                ),
+            )
+        assert (caught.value.dependency.slot, caught.value.dependency.requires) == (
+            "Q",
+            "W",
+        )
+        assert caught.value.dependency.source in str(caught.value)
 
     def test_receipt_fallback_documents_the_default_order(self) -> None:
         receipt = build_rotation_receipt(

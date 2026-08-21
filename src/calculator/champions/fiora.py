@@ -5,9 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _vital(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -45,6 +49,9 @@ def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
         "hits": 1,
         "triggers": ("on_hit",),
     }
+    # One stab on one target, no sourced travel phase — the certification
+    # that carries Lunge's hit into the event ledger MODULE_CC is read from.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = "Lunge's stab applies one full-effectiveness on-hit package."
     return entry
 
@@ -78,7 +85,7 @@ def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("e_attacks", 2)), 1), 2)
+    attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,
         name=ability.get("name", "Bladework"),
@@ -108,7 +115,19 @@ SLOTS = {
     "E": _bladework,
     "R": _grand_challenge,
 }
-parse_abilities = build_parser(SLOTS, "Fiora")
+# Q only dashes and stabs.  W's shock: "the enemy champion struck is also
+# slowed and crippled by 25% for 2 seconds" — the slow is the kind the cast
+# lands on the target it damages (its stun branch needs Riposte to negate
+# an immobilizing effect, which this module does not model).  R authors no
+# damage part, and P's vitals are an effect-phase proc row whose event list
+# the module builds itself, so a marker there would never reach the ledger.
+#
+# Bladework empowers two attacks and "the first attack slows the target
+# by 30% for 1 second"; the row's damage is those swings, so the slow
+# rides the events the engine reattributes to it.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -171,45 +190,10 @@ ASSUMPTIONS = [
     "event in the window.",
 ]
 
-SOURCES = [
-    source_row(
-        "Fiora parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Fiora",
-        3892617,
-        "2025-05-02T11:24:34Z",
-    ),
-    source_row(
-        "Fiora Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/Q",
-        2863939,
-        "2019-11-03T19:56:56Z",
-    ),
-    source_row(
-        "Fiora W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/W",
-        2864234,
-        "2019-11-03T20:09:43Z",
-    ),
-    source_row(
-        "Fiora E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/E",
-        2864380,
-        "2019-11-03T20:12:13Z",
-    ),
-    source_row(
-        "Fiora R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Fiora/R",
-        2864526,
-        "2019-11-03T20:15:38Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Fiora")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -220,7 +204,7 @@ def derive_self_healing(
 ):
     """Resolve Fiora self-healing events from its authored packet."""
     healing = []
-    p_level = int(champion_stats.get("level", 0) or 0)
+    p_level = int(champion_stat(champion_stats, "level"))
     p_heal = _healing.extract_named(
         _healing._ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
     )
@@ -230,9 +214,5 @@ def derive_self_healing(
         _healing._heal_from_damage(healing, event, p_heal, "Duelist's Dance")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Fiora", derive_self_healing)

@@ -1,0 +1,101 @@
+{
+  "receipt": "oracle-C6-leaf38",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[4]/source",
+  "old_value": "E",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_0_scenario_decoding": "The trailing 120 is Syndra's Splinters of Wrath cap. data/champions.json P 'Transcendent': 'Syndra collects Splinters of Wrath ... stacking up to 120 times' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' data/champion-audit/batch-6.json independently confirms the module's option domain: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'. So the scenario runs every Transcendent tier active, and 'custom_order' means the fight uses a caller-supplied cast order rather than the engine default (data/worklists/f2-task.md: 'src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R)... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events').",
+
+    "step_1_events_per_slot_at_120_splinters": {
+      "Q (Dark Sphere)": "1 magic instance. 'deals magic damage to nearby enemies', leveling row Magic Damage [90/125/160/195/230 (+70% AP)].",
+      "Q2 (second charge)": "1 further magic instance, and it EXISTS at 120 splinters: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' The audit's module_slots list is ['P','Q','Q2','W','E','R'] with 'synthetic Q2 (2nd charge)'.",
+      "W (Force of Will)": "TWO instances, both W-sourced: (a) magic, 'dealing magic damage to them and nearby enemies once they land', row Magic Damage [70/100/130/160/190 (+65% AP)]; (b) TRUE, 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage', row Bonus True Damage [8.4/12/15.6/19.2/22.8 (+9.2..11.6% AP) (+1.14% AP quadratic)]. Magic and true mitigate differently, so they cannot be one event.",
+      "E (Scatter the Weak)": "exactly ONE instance vs a single target. Cone: 'deals magic damage to enemies hit', row Magic Damage [60/95/130/165/200 (+60% AP)]. The knocked-sphere hit is the SAME damage, not a second one: 'dealt Scatter the Weak's damage if they were not damaged by the initial cast.' The 80-splinter Transcendent bonus is CC-only ('increased scatter angle and slow enemies hit by 70%') — no extra damage event.",
+      "R (Unleashed Power)": "one magic instance per sphere ('each dealing magic damage upon hit'), count = the module's r_spheres option.",
+      "P": "no damage — a +15% AP buff."
+    },
+
+    "step_2_arithmetic_check_that_W_is_two_events": {
+      "claim": "The wiki's 'Bonus True Damage' row is 12% of W's own magic damage, i.e. a second component of the same W cast — not a separate ability's row.",
+      "check_base": "0.12 x [70,100,130,160,190] = [8.4, 12.0, 15.6, 19.2, 22.8] == cached Bonus True Damage base values (exact, all 5 ranks).",
+      "check_ap": "0.12 x 65%AP + (0.02 per 100 AP) x base = [9.2, 9.8, 10.4, 11.0, 11.6]%AP == cached Bonus True Damage %AP row (exact, all 5 ranks).",
+      "check_total": "cached 'Total Mixed Damage' rank 5 = 212.8 (+76.6% AP) = 190 + 22.8 and 65 + 11.6. Consistent: one W cast = magic component + true component."
+    },
+
+    "step_3_index_reconstruction": {
+      "structure": "At splinters=120 the damage_events stream for a one-target fight is the cast order expanded with multiplicities Q=1, Q2=1, W=2, E=1, R=k.",
+      "order_giving_old_value": "Q,W,E,R -> [0]=Q, [1]=Q2, [2]=W(magic), [3]=W(true), [4]=E. Index 4 = E requires precisely the engine's DEFAULT_CAST_ORDER (Q,W,E,R).",
+      "order_giving_new_value": "Q,E,W,R -> [0]=Q, [1]=Q2, [2]=E, [3]=W(magic), [4]=W(true). Index 4 = W, i.e. a non-default (custom) order.",
+      "orders_excluded_by_the_wiki": "Any order casting W before Q is not a valid Syndra rotation against a lone champion: W 'telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units' — in a 1v1 manual-target fight there are no minions/monsters, so W has nothing to throw until Q has placed a Dark Sphere. This eliminates W-first permutations (e.g. W,Q,E,R) which would otherwise also land E at index 4. Among Q-first orders, index 4 = E happens only for Q,W,E,R.",
+      "conclusion": "The old value is reachable only if the fight ignored the scenario's custom order and expanded the engine's default Q,W,E,R — which is exactly the failure a scenario named 'custom_order' exists to catch. The new value is the signature of a genuinely custom order (E resolved before W) with the Transcendent W true-damage component correctly attributed to W. Index 4 under the new value is W's 60-splinter bonus TRUE damage, and the wiki attributes that damage unambiguously to Force of Will ('enhances Force of Will to deal ... bonus true damage'), never to Scatter the Weak — E's own Transcendent tier grants no damage at all."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] Transcendent Bonus",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] active + recast",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0] Transcendent Bonus + leveling rows",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. | Magic Damage [70,100,130,160,190] (+65% AP); Bonus True Damage [8.4,12,15.6,19.2,22.8] (+9.2..11.6% AP); Total Mixed Damage [78.4,112,145.6,179.2,212.8] (+74.2..76.6% AP)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] descriptions",
+      "quote": "Active: Syndra propels a wave of force in a cone ... that deals magic damage to enemies hit ... | Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast. | Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots / gap_summary",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1, lines 59-67",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.2, item 1",
+      "quote": "A part with h identical hits is mitigated per hit and summed ... the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance"
+    }
+  ],
+
+  "residual_uncertainty": "The scenario's literal cast-order input lives outside the permitted evidence tree (scripts/, tests/), so the order itself was reconstructed, not read. What is settled from the cached wiki alone: at 120 splinters W emits exactly two damage instances (magic + Transcendent true), E emits exactly one, Q2 exists, and the bonus true damage belongs to Force of Will and to no other slot. Given those multiplicities, index 4 = E is reachable only from the engine's default Q,W,E,R expansion, while index 4 = W is the second (true-damage) W event under a custom, non-default order that still respects the wiki's Q-before-W requirement (W has no Dark Sphere to throw in a minionless 1v1 until Q lands). A scenario named 'custom_order' whose stream reproduces DEFAULT_CAST_ORDER exactly would pin nothing; the new value is the self-consistent one.",
+
+  "verdict_restated": "new_value_correct"
+}

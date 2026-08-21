@@ -3,6 +3,7 @@
 Option key consumed by the shared parser: "form".
 """
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -24,10 +25,8 @@ def _reaping_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     value = extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
     if form == "darkin":
         per_hit = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-        max_hp = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-        health_part = max_hp * (
-            0.06 + 0.035 * ctx.stats.get("bonus_attack_damage", 0.0) / 100.0
-        )
+        max_hp = float(ctx.target_stat("target_max_health") or 0.0)
+        health_part = max_hp * (0.06 + 0.035 * ctx.stat("bonus_attack_damage") / 100.0)
         value = per_hit * hits + health_part * hits
         parts = (
             DamagePart(
@@ -60,6 +59,27 @@ def _reaping_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _blades_reach(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: one sweep, whose control is the form's, so it rides the part.
+
+    Blade's Reach "deal[s] physical damage to enemies hit and slow[s]
+    them by 90% decaying over 1.5 seconds", but the "Darkin Slayer Bonus:
+    Blade's Reach knocks up enemies hit for 1 second".  Two kinds for one
+    slot, selected by the ``form`` option, is exactly what ``MODULE_CC``
+    cannot say, so the reviewed kind is authored per part here instead.
+    """
+    entry = simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    )(ctx)
+    if entry is None:
+        return None
+    kind = "knockup" if str(ctx.options.get("form", "base")) == "darkin" else "slow"
+    entry["parts"] = tuple(replace(part, cc_kind=kind) for part in entry["parts"])
+    return entry
+
+
 def _umbral_trespass(ctx: SlotCtx) -> dict[str, Any] | None:
     result = typed_damage(ctx, "Physical Damage", "physical", time_offset=0.75)
     if result:
@@ -80,7 +100,7 @@ SLOTS = {
         ),
     ),
     "Q": _reaping_slash,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    "W": _blades_reach,
     "E": lambda ctx: no_damage(
         ctx,
         name="Shadow Step",
@@ -103,9 +123,16 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kayn")
-parse_abilities = build_parser(SLOTS, "Kayn")
+# Reviewed crowd control, read from the cached kit.  Q (Reaping Slash)
+# dashes and swings "dealing physical damage to enemies he passes
+# through" with no control clause, and R (Umbral Trespass) "deals
+# physical damage to the target and dashes out from their body" with
+# none either.  W's answer depends on the form and is authored on its
+# part (see ``_blades_reach``).  P and E author no damage part.
+MODULE_CC = {"Q": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kayn", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "R"} else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

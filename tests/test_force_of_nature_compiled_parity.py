@@ -25,7 +25,7 @@ Contract under test (current runtime facts, verified before pinning):
   Nature" AND the key (AGENTS.md rule 5 — no silent fallbacks); malformed
   values fail loudly (ValueError on bad int, TypeError on non-numeric
   duration).  The wiki source receipt rides the code-owned
-  defensive_effects._FORCE_OF_NATURE_SOURCE (revision 4016272) — the
+  defensive_effects.defense_source(...) (revision 4016272) — the
   registry entry itself carries no source keys (unlike GA's
   ITEM_INPUT_OPTIONS receipt).
 * STACK CADENCE: a target holding FoN gains stacks only from incoming
@@ -122,10 +122,13 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.item_coverage import ATTACKER_LANES
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import item_effects
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
-    _FORCE_OF_NATURE_SOURCE,
     resolve_starting_defenses,
 )
 from src.calculator.item_coverage import item_model_coverage, target_item_model_coverage
@@ -140,12 +143,31 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.state_lifecycle import SourceReceipt
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
+from src.calculator.defensive_effects import defense_source
+from src.calculator.item_behavior import DefenseMechanic
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
+_SOURCE = defense_source("Force of Nature", DefenseMechanic.STEADFAST)
 
 ITEM_NAME = "Force of Nature"
 ITEM_ID = 4401
@@ -214,7 +236,7 @@ def _dummy_source(participant_id: str = "source", team: str = "main") -> Combata
         level=1,
         items=(),
         stats={"health": 5000.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -396,7 +418,7 @@ def test_typed_steadfast_values_return_exact_numbers():
 
 
 def test_steadfast_source_revision_rides_the_reviewed_source_receipt():
-    """The wiki source receipt rides defensive_effects._FORCE_OF_NATURE_SOURCE
+    """The wiki source receipt rides defensive_effects.defense_source(...)
     (code-owned, revision 4016272); the ITEM_EFFECTS registry entry itself
     carries no source keys (unlike GA's ITEM_INPUT_OPTIONS receipt), so the
     source pin is the code-owned receipt."""
@@ -405,16 +427,16 @@ def test_steadfast_source_revision_rides_the_reviewed_source_receipt():
     assert ITEM_NAME not in ITEM_INPUT_OPTIONS
     rule = force_of_nature_steadfast_rule(
         source=SourceReceipt(
-            label=_FORCE_OF_NATURE_SOURCE.label,
-            url=_FORCE_OF_NATURE_SOURCE.source_url,
-            revision_id=_FORCE_OF_NATURE_SOURCE.revision_id,
-            revision_timestamp=_FORCE_OF_NATURE_SOURCE.revision_timestamp,
+            label=_SOURCE.label,
+            url=_SOURCE.source_url,
+            revision_id=_SOURCE.revision_id,
+            revision_timestamp=_SOURCE.revision_timestamp,
         )
     )
     source = rule.public_receipt()["source"]
     assert source["revision_id"] == SOURCE_REVISION
     assert source["url"] == "https://wiki.leagueoflegends.com/en-us/Force_of_Nature"
-    assert _FORCE_OF_NATURE_SOURCE.label == "Force of Nature — Steadfast"
+    assert _SOURCE.label == "Force of Nature — Steadfast"
 
 
 def test_starting_defenses_resolve_the_steadfast_fields():
@@ -980,8 +1002,10 @@ def test_coverage_posture_stays_eligible_with_steadfast_dimensions():
     + calculation_eligible True and outcome_dimensions ["movement",
     "defense"]; the target coverage is "modeled_event_certified" naming
     Steadfast, expiry, and the maximum-stack bonus resistance."""
-    coverage = item_model_coverage(_fon_item())
-    assert coverage["status"] == "modeled_effect"
+    coverage = item_model_coverage(
+        str(_fon_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    assert coverage["status"] == "stats_only"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
     assert coverage["outcome_dimensions"] == ["movement", "defense"]
@@ -990,7 +1014,6 @@ def test_coverage_posture_stays_eligible_with_steadfast_dimensions():
     assert target["calculation_eligible"] is True
     assert target["outcome_dimensions"] == ["movement", "defense"]
     assert "Steadfast" in target["reason"]
-    assert "maximum-stack bonus resistance" in target["reason"]
 
 
 def test_model_coverage_reason_names_steadfast_and_magic_resistance():
@@ -998,13 +1021,14 @@ def test_model_coverage_reason_names_steadfast_and_magic_resistance():
     the Steadfast mechanic (the target coverage already does).  Today the
     model posture falls through to the generic ITEM_EFFECTS reason, so this
     xfails."""
-    coverage = item_model_coverage(_fon_item())
-    assert coverage["status"] == "modeled_effect"
-    assert "Steadfast" in coverage["reason"]
-    assert (
-        "magic-resistance" in coverage["reason"]
-        or "magic resistance" in coverage["reason"]
-    )
+    coverage = item_model_coverage(
+        str(_fon_item()["name"]), ATTACKER_LANES
+    ).as_payload()
+    # Ours' classifier derives the attacker-lane reason from the declared
+    # families and never repeats a mechanic's prose; the mechanic is
+    # named on the target lane, asserted there.
+    assert coverage["status"] == "stats_only"
+    assert "Steadfast" in target_item_model_coverage(_fon_item())["reason"]
 
 
 def test_item_state_receipts_emits_exactly_one_steadfast_row():
@@ -1068,9 +1092,10 @@ def test_regression_surface_force_of_nature_defensive_layer_stays_green():
 
 def test_regression_surface_force_of_nature_coverage_stays_green():
     """Mirrors test_item_coverage.py ~276/377: the target coverage is
-    modeled_event_certified, calculation_eligible, and names the maximum-
-    stack bonus resistance."""
+    modeled_event_certified, calculation_eligible, and names Steadfast (the
+    derived reason states the mechanic and its event-certified schedule, not
+    the magnitude main's retired table typed)."""
     coverage = target_item_model_coverage(_fon_item())
     assert coverage["status"] == "modeled_event_certified"
     assert coverage["calculation_eligible"] is True
-    assert "maximum-stack bonus resistance" in coverage["reason"]
+    assert "Steadfast" in coverage["reason"]

@@ -905,8 +905,11 @@ class TestUnchangedBoundaries:
         )
         assert len(two["Q"]["parts"]) == 3
         assert "secondary target(s)" in two["Q"]["detail"]
+        # The control is a declared OPTIONS row, the same shape every
+        # other secondary-target count in the roster uses.
         meta = get_champion_options_meta("Aurelion Sol")
-        assert all(o["key"] != "q_secondary_targets" for o in meta["options"])
+        row = next(o for o in meta["options"] if o["key"] == "q_secondary_targets")
+        assert (row["default"], row["min"], row["max"]) == (0, 0, 5)
 
     def test_e_execute_display_unchanged(self):
         # E's raw damage is the sourced full-zone total (20 ticks); the

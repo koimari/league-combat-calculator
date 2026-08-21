@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -38,6 +39,17 @@ import pytest
 
 import scripts.patch_regression as patch_regression
 import scripts.weekly_ingest as weekly_ingest
+from src.calculator.champions import registered_champion_names
+
+# ``weekly_ingest`` validates every fetched file with ``jq empty`` and fails
+# closed when the binary is absent -- which is the behaviour
+# ``test_missing_jq_binary_fails_closed_with_actionable_message`` pins.  On a
+# machine without jq the rest of the fetch surface cannot be exercised at
+# all, so it skips rather than reporting the missing tool as a defect.  CI
+# installs jq, where these run.
+requires_jq = pytest.mark.skipif(
+    shutil.which("jq") is None, reason="jq is not installed on this machine"
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -121,10 +133,34 @@ def _never_called(*_args, **_kwargs):
     raise AssertionError("network path reached in a test that must not fetch")
 
 
-def _write_champions(tmp_path: Path, names=("Fixture", "Other")) -> Path:
+# MERGE: the champion catalogue now fails closed when a validated module has
+# no cached row -- a module whose row vanished would leave the engine's own
+# attacker out of the picker.  ``run_bis`` builds that catalogue, so a fixture
+# cache has to be a cache the roster agrees with: every registered champion
+# gets a bare row, and the named fixtures are what the test is about.
+_REGISTERED = tuple(registered_champion_names())
+
+
+def _roster_rows(names) -> dict:
+    rows = {name.lower(): {"name": name, "abilities": {}} for name in _REGISTERED}
+    rows.update({name.lower(): {"name": name, "abilities": {}} for name in names})
+    return rows
+
+
+def _write_champions(tmp_path: Path, names=("Fixture", "Other"), *, roster=False):
+    """A fixture champion cache.
+
+    ``roster=True`` adds a bare row for every registered champion, which the
+    catalogue build below requires; the callers that read the key set back
+    leave it off.
+    """
     path = tmp_path / "champions.json"
-    payload = {name.lower(): {"name": name, "abilities": {}} for name in names}
-    path.write_text(json.dumps(payload), encoding="utf-8")
+    rows = (
+        _roster_rows(names)
+        if roster
+        else {name.lower(): {"name": name, "abilities": {}} for name in names}
+    )
+    path.write_text(json.dumps(rows), encoding="utf-8")
     return path
 
 
@@ -154,19 +190,22 @@ def _write_champions_with_q_ability(tmp_path: Path, names=("Fixture",)) -> Path:
     """A champion cache with an empty-packet Q slot -- the merge target the
     Axword auxiliary fixture (_write_axword) fills in."""
     path = tmp_path / "champions-with-q.json"
-    payload = {
-        name.lower(): {
-            "name": name,
-            "abilities": {
-                "P": [],
-                "Q": [{"name": "Test Q", "effects": []}],
-                "W": [],
-                "E": [],
-                "R": [],
-            },
+    payload = _roster_rows(())
+    payload.update(
+        {
+            name.lower(): {
+                "name": name,
+                "abilities": {
+                    "P": [],
+                    "Q": [{"name": "Test Q", "effects": []}],
+                    "W": [],
+                    "E": [],
+                    "R": [],
+                },
+            }
+            for name in names
         }
-        for name in names
-    }
+    )
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path
 
@@ -477,6 +516,7 @@ class TestRunDetect:
 # ---------------------------------------------------------------------------
 
 
+@requires_jq
 class TestJqValidate:
     def test_valid_json_passes(self, tmp_path):
         path = tmp_path / "ok.json"
@@ -496,6 +536,7 @@ class TestJqValidate:
             weekly_ingest.jq_validate(path, jq_bin="definitely-not-a-real-binary-xyz")
 
 
+@requires_jq
 class TestRefreshAuthorityFiles:
     def test_fetches_all_three_files_and_reports_sha256(self, tmp_path):
         payloads = {
@@ -589,6 +630,7 @@ class TestRefreshAuthorityFiles:
 # ---------------------------------------------------------------------------
 
 
+@requires_jq
 class TestAuthorityDirtyGuard:
     def test_no_paths_is_clean(self):
         assert weekly_ingest._git_dirty_paths([]) == []
@@ -698,6 +740,7 @@ class TestChampionNames:
             weekly_ingest._champion_names(tmp_path / "absent.json")
 
 
+@requires_jq
 class TestRefreshGamefiles:
     def test_delegates_to_the_injected_downloader_and_reports_changes(self, tmp_path):
         champions = _write_champions(tmp_path, ("Ahri", "Zed"))
@@ -773,6 +816,7 @@ class TestRefreshGamefiles:
         )
 
 
+@requires_jq
 class TestRunFetch:
     def test_hard_failure_in_gamefiles_returns_exit_2(self, tmp_path):
         report, code = weekly_ingest.run_fetch(
@@ -846,7 +890,7 @@ class TestRunBis:
 
     def test_zero_merged_packets_fails_closed(self, tmp_path):
         """An axword source with no matching champion supplies zero packets."""
-        champions = _write_champions(tmp_path, ("Unrelated",))
+        champions = _write_champions(tmp_path, ("Unrelated",), roster=True)
         axword = _write_axword(tmp_path)  # only knows "Fixture"
         with pytest.raises(RuntimeError, match="zero Meraki damage packets"):
             weekly_ingest.run_bis(
@@ -889,7 +933,7 @@ class TestRunBis:
         assert output.is_file()
         assert result["merged_damage_packets"] > 0
         written = json.loads(output.read_text(encoding="utf-8"))
-        assert written["champion_count"] == 1
+        assert written["champion_count"] == len(_REGISTERED) + 1
 
 
 # ---------------------------------------------------------------------------
@@ -1079,6 +1123,7 @@ class TestRunPackets:
 # ---------------------------------------------------------------------------
 
 
+@requires_jq
 class TestRunAll:
     def test_current_patch_skips_everything(self, tmp_path):
         staleness = _write_staleness(tmp_path, "16.15")

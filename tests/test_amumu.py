@@ -2,10 +2,12 @@
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
+from tests.ability_math import parts_raw_total
 
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import amumu
+from tests import cc_review
 
 # Default target stats used when W's %maxHP damage needs resolving.
 _TARGET = {"target_max_health": 2000.0}
@@ -321,3 +323,65 @@ class TestFightEngineIntegration:
         )
         p_entry = result["breakdown"].get("P", {})
         assert p_entry.get("total_damage", 0.0) == 0.0
+
+
+class TestReviewedCrowdControl:
+    """Amumu's whole kit is reviewed, across the Cursed Touch amp.
+
+    Q and R are unambiguous stuns, W and E control nothing, and the
+    AMP-phase amplifier appends a true-damage part to every damaging
+    entry — so every row is two parts of one landing, which is what
+    ``single_hit`` certification now spans.
+    """
+
+    def test_the_kit_declares_every_damaging_slot(self):
+        assert amumu.MODULE_CC == {
+            "Q": "stun",
+            "W": "none",
+            "E": "none",
+            "R": "stun",
+        }
+        assert amumu.parse_abilities.cc_kinds == amumu.MODULE_CC
+
+    def test_the_cached_kit_states_the_kinds_this_module_declares(self):
+        data = cc_review.kit("Amumu")
+        assert "stunning them for 1 second" in cc_review.slot_text(data, "Q")
+        assert "stunning them for 1.5 seconds" in cc_review.slot_text(data, "R")
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_the_curse_amps_true_part_carries_the_same_review(self):
+        """The declaration is stamped after the AMP phase, so the part the
+        amplifier appended is reviewed too — an unreviewed true part would
+        be an unreviewed ability event on every slot in the kit."""
+        parsed = _parsed_at_18()
+        assert [
+            (part.damage_type, part.cc_kind, part.time_offset)
+            for part in parsed["Q"]["parts"]
+        ] == [("magic", "stun", 0.0), ("true", "stun", 0.0)]
+        assert parsed["Q"]["event_order_certified"] == "single_hit"
+
+    def test_despair_is_reviewed_without_claiming_to_be_one_landing(self):
+        """The toggle's window is an aggregate placed at the cast, not a
+        hit: it authors that placement instead of certifying."""
+        parsed = _parsed_at_18()
+        assert "event_order_certified" not in parsed["W"]
+        assert [part.time_offset for part in parsed["W"]["parts"]] == [0.0, 0.0]
+        assert {part.cc_kind for part in parsed["W"]["parts"]} == {"none"}
+
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Amumu") == []
+        coverage = cc_review.fimbulwinter_coverage("Amumu")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+def _parsed_at_18():
+    """The kit as the pipeline parses it, amp phase included."""
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.stats import calculate_total_stats
+
+    data = cc_review.kit("Amumu")
+    return parse_champion_abilities(
+        data, 18, 100.0, champion_stats=calculate_total_stats(data, 18, [])
+    )

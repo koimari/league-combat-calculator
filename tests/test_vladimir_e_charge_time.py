@@ -199,6 +199,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
@@ -539,7 +540,13 @@ class TestSourceEvidence:
             "E": "modeled",
             "R": "modeled",
         }
-        assert vlad.REVIEW_STATUS == "reviewed_module"
+        # MERGE: the review status has ONE home — the validated module
+        # contract; a module restating it is refused at import.
+        from src.calculator.champions import get_champion_module_contract
+
+        assert (
+            get_champion_module_contract("Vladimir").review_status == "reviewed_module"
+        )
         assert set(vlad.SLOTS) == {"Q", "W", "E", "R", "P", "hemoplague"}
         assert _E_CHARGE_RAMP_SECONDS == 1.0
         assert _E_CHANNEL_SECONDS == 1.5
@@ -815,12 +822,14 @@ class TestSlow:
         assert _ability_atom("ability.slow")["values"] == [float(v) for v in _SLOW_ROW]
         assert _ability_atom("timing.control_duration")["values"] == [0.5]
 
-    def test_no_slow_surface_today(self):
-        # Live guard: the E part carries no cc, the fight emits no
-        # control events, and the module ASSUMPTION names the slow
-        # "utility" (unmodeled).
+    def test_the_slow_is_reviewed_on_the_part_but_still_unpriced(self):
+        # MERGE: the E part now carries its REVIEWED kind -- ``MODULE_CC``
+        # declares E "slow", which is what certifies the row for the
+        # control-armed holder shield.  Declaring the kind is not pricing
+        # the slow: no control event is emitted (no sourced duration rides
+        # the row), and the module ASSUMPTION still names it "utility".
         entry = _parse({"e_charge_fraction": 1.0, "r_hemoplague_debuff": False})["E"]
-        assert all(getattr(part, "cc_kind", None) is None for part in entry["parts"])
+        assert [getattr(part, "cc_kind", None) for part in entry["parts"]] == ["slow"]
         result = _fight({"e_charge_fraction": 1.0, "r_hemoplague_debuff": False})
         assert result["control_events"] == []
         meta = get_champion_options_meta("Vladimir")
@@ -892,14 +901,14 @@ class TestFailClosed:
         assert charge["max"] == 1.0
         assert charge["default"] == 1.0
         assert charge["type"] == "float"
-        # The option is consumed by the module source (the parser reads
-        # ctx.options["e_charge_fraction"]).
+        # The option is consumed by the module source: the parser reads it
+        # through the slot context's typed accessor, ``ctx.option(...)``.
         import inspect
 
         from src.calculator.champions import vladimir as vladimir_module
 
         source = inspect.getsource(vladimir_module)
-        assert 'ctx.options.get("e_charge_fraction"' in source
+        assert 'ctx.option("e_charge_fraction")' in source
 
 
 # ---------------------------------------------------------------------------
@@ -933,7 +942,7 @@ class TestSourceAndAtomReceipts:
             assert domains[domain]["sha256"] == hash_domain_file(
                 Path(f"data/atoms/{domain}.json")
             )
-        actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
+        actual = sha256_as_committed("data/champions.json")
         assert domains["champions"]["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"
         )
@@ -1137,21 +1146,28 @@ class TestRegressionSurface:
             for path in test_dir.glob("test_*.py")
             if "vladimir" in path.read_text(encoding="utf-8", errors="ignore").lower()
         )
+        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
+        # ``test_full_entry_packets.py`` (ours, 108872c8); this branch also
+        # carries a named ``test_vladimir.py`` plus the packet-module,
+        # scanner-scope and zero-policy suites that cite the kit.
         assert hits == [
             # ci-evidence scanner cites this file as a docstring-citation fixture
             "test_ci_evidence_parity.py",
-            "test_cp10_batch_09.py",
             "test_e2_dot_3.py",
             "test_e9_corpus.py",
             "test_f2_rotation.py",
-            "test_f3_rotation_all.py",
+            "test_full_entry_packets.py",
             "test_heal_ledger_phase2.py",
             "test_issue_143.py",
             "test_mechanics_packets.py",
             "test_p1_review_3.py",
+            "test_packet_module.py",
             "test_participant_timeline.py",
+            "test_vladimir.py",
             "test_vladimir_e_charge_time.py",
             "test_vladimir_healing.py",
+            "test_w3_scanner_scope.py",
+            "test_zero_policy.py",
         ]
 
     def test_module_meta_pins_unchanged(self):

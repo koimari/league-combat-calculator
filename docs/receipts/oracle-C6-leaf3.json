@@ -1,0 +1,78 @@
+{
+  "receipt": "oracle-C6-leaf3",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/target_ending_health",
+  "old_value": 4527.5,
+  "new_value": 3814.5,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "%LOCALAPPDATA%/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracleC6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/ (siblings)", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies.",
+      "leveling": "Magic Damage = [90, 125, 160, 195, 230] (+ 70% AP at every rank)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0], [2] (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[3], E[2], R[3] (other Transcendent thresholds, for elimination)",
+      "quote": "W @60: 'deal 12% (+ 2% per 100 AP) bonus true damage'; E @80: 'increased scatter angle and slow enemies hit by 70%'; R @100: 'execute the target if it would damage them to below 15% of their maximum health'"
+    },
+    {
+      "source": "docs/math-foundations.md Section 2.1 (The 100/(100+R) identity)",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md Section 5, stat-rounding row",
+      "quote": "Stat rounding (calculate_total_stats) | display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra (corroboration only; describes the modelled slot set, no numbers used)",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF."
+    }
+  ],
+
+  "independent_computation": {
+    "observed_delta": "4527.5 - 3814.5 = 713.0 additional post-mitigation damage delivered to the manual target under the new value.",
+    "method": "The golden scenario's input tuple (Syndra level/build, target stats, the custom cast order) is NOT present anywhere in the permitted evidence tree - data/ carries no golden scenario definitions (checked: no 'custom_order', 'manual_target', 'ending_health', or scenario id hit under data/). So the leaf was attacked by inverting the delta against every damage row Syndra's cached wiki text can produce, solving each for the ability power that reproduces 713.0 exactly.",
+    "inversion": {
+      "identity": "row_damage = base_at_rank + ap_ratio * AP, mitigated by m(R) = 100/(100+R); at R = 0 (or fully-penetrated MR) m = 1, so an integer post-mitigation delta implies an integer raw row.",
+      "solutions": [
+        {"row": "Q Dark Sphere rank 5 = 230 + 70% AP", "AP_required": 690.0, "pre_buff_AP_if_x1.15": 600.0, "clean": true},
+        {"row": "W Force of Will rank 5 = 190 + 65% AP", "AP_required": 804.6154, "pre_buff_AP_if_x1.15": 699.6656, "clean": false},
+        {"row": "E Scatter the Weak rank 5 = 200 + 60% AP", "AP_required": 855.0, "pre_buff_AP_if_x1.15": 743.4783, "clean": false},
+        {"row": "R Unleashed Power per sphere rank 3 = 160 + 20% AP", "AP_required": 2765.0, "pre_buff_AP_if_x1.15": 2404.3478, "clean": false}
+      ],
+      "unique_fit": "Only the Dark Sphere row lands on an integer AP (690) whose pre-Transcendence value is also exact: 690 / 1.15 = 600 AP. W is rejected outright (804.6154 AP is non-integral, and 0.65 * AP cannot yield the integer 523 for any integer AP). E requires 855 AP whose pre-buff value 743.4783 is not a realizable rounded stat, and the engine rounds AP to an integer before damage (math-foundations Section 5), so an 855 effective AP would have to be an unbuffed stat - which contradicts the scenario being at 120 splinters, where the +15% capstone is unconditionally active. R per-sphere requires an absurd 2765 AP.",
+      "check": "230 + 0.70 * 690 = 230 + 483 = 713.0  ==  4527.5 - 3814.5"
+    },
+    "conclusion": "The change adds exactly one additional rank-5 Dark Sphere cast, priced at the already-Transcendence-buffed ability power (600 base AP x 1.15 = 690 AP) against an effectively 0-magic-resist target (m(0) = 1, so raw == post-mitigation, which is what makes the delta a clean integer). It is NOT a re-pricing of the +15% AP buff itself: a buff that switched on would have scaled every AP-scaling row at once, giving a delta of 0.15 * 600 * (sum of AP ratios over the whole cast list) = 90 * Sigma. Sigma would have to be exactly 7.9222 to land on 713.0, which no combination of Syndra's ratios (Q 0.70, W 0.65, E 0.60, R 0.20/sphere) produces on a plausible cast list, and the buff is evidently already present in the OLD value since 690 - not 600 - is the AP that prices the delta.",
+    "ruling_on_game_correctness": "One extra Dark Sphere is exactly what the cached wiki text says a 120-splinter Syndra has available: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' At 120 splinters that threshold (and every other one: 60 W true damage, 80 E slow, 100 R execute, 120 +15% AP) is met, so a fight authored at 120 splinters must be able to spend two Dark Sphere charges. A model that priced only one Dark Sphere at 120 splinters was under-counting a sourced Transcendent bonus; the new value restores it. The old value 4527.5 corresponds to a 120-splinter Syndra denied her 40-splinter second charge - a state the wiki does not permit."
+  },
+
+  "confidence_and_limits": {
+    "strength": "The delta inverts to a single, doubly-clean solution (integer effective AP 690 AND exact pre-buff AP 600) on the one ability in Syndra's kit that has a splinter-gated extra-cast mechanic. The three competing rows are arithmetically excluded.",
+    "residual_uncertainty": "Because the scenario's input tuple is outside the permitted evidence tree, I cannot confirm the scenario's custom cast order literally requested two Dark Spheres. If the custom order enumerated a strict four-cast list and the engine now injects an unrequested fifth cast, the extra sphere would be game-legal but scenario-illegal. Nothing in data/ or docs/math-foundations.md lets me settle that; the verdict is rendered on game-rule correctness, which is what the cached wiki text can adjudicate.",
+    "also_checked_and_excluded": [
+      "R 100-splinter execute: would drive ending health to 0, not 3814.5.",
+      "R sphere-count change (r_spheres): one sphere at 690 AP is 160 + 0.20*690 = 298.0; no integer multiple gives 713.",
+      "W 60-splinter true damage: at 690 AP the whole true-damage row is (0.12 + 0.02*6.90) * (190 + 0.65*690) = 0.258 * 638.5 = 164.73, far short of 713 and non-integral.",
+      "Penetration/mitigation re-ordering: docs/math-foundations.md Section 2.2 fixes the composition as max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f); no reordering of a fixed cast list yields an integer 713.0 shift on a single row."
+    ]
+  }
+}

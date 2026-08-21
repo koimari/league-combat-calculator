@@ -5,10 +5,9 @@ treated Rend as a one-stack constant.  This module keeps those states
 explicit, while every numeric value still comes from the pinned champion
 cache and its full-entry Wiki receipt.
 
-Roadmap session 3 (2026-08-20): P and R are reclassified from
-out_of_scope to no_damage. Both now emit an explicit, user-visible
-zero-damage row (``module_helpers.no_damage``) instead of staying
-silently absent from the parse output.
+Coverage: P and R are ``no_damage``, not ``out_of_scope``.  Both emit an
+explicit, user-visible zero-damage row (``module_helpers.no_damage``)
+rather than staying silently absent from the parse output.
 
   - P (Martial Poise): all four cached effect rows carry empty leveling
     (``data/champions.json`` Kalista P effects[0..3]) — the innate
@@ -33,7 +32,10 @@ silently absent from the parse output.
     R's spell records carry a ``mSpellCalculations`` table — no damage
     formula exists for R to price. R's effects land entirely on the
     Oathsworn ally (retrieval, cleanse, invulnerability) or on enemies
-    as pure CC (knockback + airborne), never as a priced hit.
+    as pure CC (knockback + airborne), never as a priced hit.  That
+    airborne is real control, but the row prices no damage part, so
+    ``MODULE_CC`` leaves R unreviewed rather than declaring a kind no
+    event could carry.
 """
 
 from typing import Any
@@ -42,6 +44,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -89,7 +92,7 @@ def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("E")
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("rend_stacks", 1)), 1), 254)
+    stacks = min(max(int(ctx.option("rend_stacks")), 1), 254)
     first = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     additional = extract_named(
         ability, "Bonus Damage per Additional Stack", rank, ctx.stats, ctx.target
@@ -169,7 +172,14 @@ SLOTS = {
     "R": _fates_call,
 }
 
-parse_abilities = build_parser(SLOTS, "Kalista")
+# Pierce's spear and the Soul-Mark consumption only damage; Rend rips the
+# spears out "to deal physical damage and slow them for 2 seconds".  P and
+# R are absent — unreviewed rather than reviewed-no-CC: R's knockback and
+# airborne are real control, but its row prices no damage part for an
+# event to carry the kind, and P applies none at all.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -212,17 +222,9 @@ ASSUMPTIONS = [
     "rather than staying silently absent.",
 ]
 
-SOURCES = [
-    {
-        "label": "Kalista — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Kalista",
-        "revision_id": 4002537,
-        "revision_timestamp": "2026-03-26T01:14:44Z",
-    }
-]
+SOURCES = load_champion_sources("Kalista")
 
-
-# Authoritative review metadata (issue #161).
+# P and R emit a row but price no damage, which is not what SLOTS derives.
 MODULE_COVERAGE = {
     "P": "no_damage",
     "Q": "modeled",
@@ -230,4 +232,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "no_damage",
 }
-REVIEW_STATUS = "reviewed_module"

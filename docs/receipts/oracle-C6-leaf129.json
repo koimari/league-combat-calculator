@@ -1,0 +1,87 @@
+{
+  "receipt_id": "oracle-C6-leaf129",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/order[3]",
+  "old_value": "R",
+  "new_value": "E",
+  "verdict": "new_value_correct",
+  "confidence": "moderate-high",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/*.json", "data/practice-corpus/scenarios.json", "data/worklists/*", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "step_0_what_the_leaf_is": "The leaf is the 4th entry (0-indexed 3) of the ability cast order the engine resolved for the manual-target fight. It is an ordering fact, not a damage number, so the computation is a scheduling/ordering derivation, not arithmetic.",
+    "step_1_timing_is_not_the_discriminator": {
+      "sourced_inputs_from_data/champions.json_Syndra": {
+        "Q Dark Sphere": {"castTime": "none (0 s)", "cooldown": "7 at every rank (affectedByCdr false)", "rechargeRate": [7, 7, 7, 7, 7]},
+        "W Force of Will": {"castTime": "none (0 s)", "cooldown": [12, 11, 10, 9, 8]},
+        "E Scatter the Weak": {"castTime": "0.25 s", "cooldown": [15, 15, 15, 15, 15]},
+        "R Unleashed Power": {"castTime": "0.25 s", "cooldown": [120, 100, 80]}
+      },
+      "shared_timeline_schedule": "docs/math-foundations.md 1.1: 'each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window'. All four Syndra abilities are off cooldown at t=0, and the total cast time of the opener is 0 + 0 + 0.25 + 0.25 = 0.5 s. So every one of Q/W/E/R starts inside the first 0.5 s regardless of ordering, and no cooldown (7 / 8 / 15 / 80 s at max rank) can interleave a second cast of anything before the opener finishes.",
+      "conclusion": "Cooldown/cast-time math cannot move index 3. The 4th slot is decided purely by the cast-order the engine applies -- which is exactly what the same doc says: 'the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.'"
+    },
+    "step_2_old_value_is_the_canonical_default": "R at index 3 is precisely the position R occupies in the trivial slot order Q, W, E, R (index 0=Q, 1=W, 2=E, 3=R). For a scenario whose entire identity is 'custom_order', an output that coincides with the un-customized canonical slot order is the signature of a custom order being ignored / normalized back to slot order, not of a custom order being honored. That a `cast_order` option exists and legitimately carries non-canonical sequences is confirmed by the cached audit evidence for Vladimir ('cast_order R,Q,W,E'), i.e. an order whose 4th entry is E, not R.",
+    "step_3_wiki_mechanics_independently_endorse_R_before_E": {
+      "R grabs live spheres": "R effect text: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.' R's damage therefore scales with how many live spheres are still grabbable at cast time (3 up to 7).",
+      "E strips spheres from R": "R notes: 'Spheres that are being pushed by Scatter the Weak ... will not get picked up for Unleashed Power.' E effect text: 'Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra'. Casting E before R displaces/denies spheres that R would otherwise have collected; E creates no spheres of its own.",
+      "R feeds E": "R effect text: 'The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds', and E effect text: a knocked sphere stuns for 1.25 s and deals 'Scatter the Weak's damage if they were not damaged by the initial cast'. R cast before E therefore leaves up to 7 spheres beside the target for E's sphere branch.",
+      "Q feeds R": "R notes: 'A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown' -- Q (and W's thrown sphere) belong ahead of R.",
+      "derived_order": "Q -> W -> R -> E. Index 3 of that order is E."
+    },
+    "step_4_scenario_tag_60": "The '_60' in the scenario name matches Syndra's P (Transcendent) Splinter-of-Wrath thresholds quoted in data/champions.json: 40 (Dark Sphere charges, up to 2), 60 (Force of Will bonus true damage 12% + 2% per 100 AP), 80 (E), 100 (R execute), 120 (+15% AP). At 60 Splinters the 40-threshold is also passed, so Q holds up to 2 charges and a repeated Q inside one rotation is legal -- the natural thing for a 'custom order' scenario to exercise, and a repeated entry is exactly what an order-normalizing/deduplicating bug would silently collapse back to Q, W, E, R.",
+    "result": "index 3 of the correct resolved order is E."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > R (Unleashed Power) > effects",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. / The Dark Spheres will then remain on the ground next to the target's current location for 6 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > R (Unleashed Power) > notes",
+      "quote": "A sphere summoned very shortly before Unleashed Power will be used as one of the spheres that get thrown. ... Spheres that are being pushed by Scatter the Weak (normally ones that were made late during the push) will not get picked up for Unleashed Power."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > E (Scatter the Weak) > effects",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units, though not through terrain. Targets hit are also stunned for 1.25 seconds, during which they are also revealed, and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > P (Transcendent) / Q / W / E / R Transcendent Bonus lines",
+      "quote": "Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2. / Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. / Collecting 80 ... Scatter the Weak ... / Collecting 100 ... Unleashed Power ... execute ... / At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra > abilities > castTime / cooldown / rechargeRate fields",
+      "quote": "Q castTime 'none', cooldown [7,7,7,7,7] (affectedByCdr false), rechargeRate [7,7,7,7,7]; W castTime 'none', cooldown [12,11,10,9,8]; E castTime '0.25', cooldown [15,15,15,15,15]; R castTime '0.25', cooldown [120,100,80]."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.1, Renewal theory for cast + auto timing schedules",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Exactness table, ability haste / ability rotation casts rows",
+      "quote": "R casts exactly once per timed fight (model constraint, documented) ... Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT"
+    },
+    {
+      "file": "data/champion-audit/batch-p1-3.json",
+      "locator": "Vladimir gap_summary",
+      "quote": "Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E; debuff-off probe; W keeps 4 ticks."
+    }
+  ],
+  "limitations_and_residual_risk": {
+    "evidence_boundary": "The scenario definition for 'syndra_custom_order_60' lives in tests/ or scripts/, which runbook R-18/R-19 forbids me to read; data/ and docs/math-foundations.md contain no scenario table (grep for 'custom_order', 'rotation_order', 'manual_target' over the whole export returns nothing). So I cannot read back the literal custom order the scenario requests; the verdict is derived from (a) which value the cached wiki mechanics endorse and (b) which value is the fingerprint of the un-customized default.",
+    "alternative_that_would_flip_the_verdict": "If the scenario's requested order were the double-Q optimal sequence Q, Q, W, R, E (legal at 60 Splinters because Q holds 2 charges), then index 3 would legitimately be R and the new value E would be a regression. I discount this because it requires the old baseline to have been correct while coinciding exactly with the canonical slot order Q, W, E, R, and requires a scenario named 'custom_order' to have shown no ordering defect at all before the change -- in which case its order leaf would not have moved.",
+    "what_would_settle_it": "Reading the scenario's cast_order option (tests/scripts) or the rotation's per-cast timestamps alongside order[3]; both are outside this oracle's permitted tree."
+  },
+  "committed": false
+}

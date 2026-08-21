@@ -20,16 +20,12 @@ Why each slot is non-generic:
 - Q (Rupture) and W (Feral Scream) are clean single-attribute reads,
   kept explicit ("Magic damage", lowercase d — and W's classifier pick
   must never drift onto the "Silence Duration" entry).
-- P (Carnivore) heals for 18-96 and restores mana on an enemy KILL only
-  — no combat-damage interaction. Roadmap session 4 batch B
-  (2026-08-21): closes the single out_of_scope slot with an explicit
-  ``no_damage`` row via ``module_helpers.no_damage`` (same pattern as
-  Cassiopeia's P) rather than leaving MODULE_COVERAGE reading
-  "out_of_scope" for a kill-triggered passive this calculator's 1v1
-  model has no kill receipt for (tests/test_e1_healing_b3.py documents
-  this exact boundary: "the 1v1 model has no minion kills and no kill
-  receipt"). Cho'Gath is not in ``rotation_resolver.COMBO_TABLE``, so no
-  combo table edit is implicated.
+- P (Carnivore) "heals for 18 : 52 (based on level)" whenever Cho'Gath
+  kills an enemy — no damage, so its slot is a zero-damage receipt that
+  carries the user's declared kill count to the self-heal rule. A duel
+  simulates no wave, so the count is the ``p_carnivore_kills`` option
+  (default 0) and the receipt is emitted only when it is set. The mana
+  restore in the same sentence has no channel a champion can author.
 """
 
 import re
@@ -37,7 +33,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .healing_contract import declare_healing_rule
+from .module_helpers import delayed_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -48,6 +45,8 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
 # attribute of its own; the JSON's "Total Magic Damage" entry is exactly
@@ -64,6 +63,16 @@ _FEAST_STACK_RIDER = re.compile(
 
 # Default Feast stacks: the minion / non-epic-monster stack cap.
 _DEFAULT_FEAST_STACKS = 6
+
+# Rupture erupts on its own delay: "Cho'Gath ruptures the target location
+# after a 0.627 seconds delay ... dealing magic damage to enemies within
+# and knocking them up for 1 second", with the cached note "The delay
+# before the rupture does not include the cast time."  ``time_offset`` is
+# measured from the cast start, so the cached castTime (0.5) is added to
+# the cached delay; both numbers come from the same Q entry.
+_Q_CAST_TIME_S = 0.5
+_Q_RUPTURE_DELAY_S = 0.627
+_Q_RUPTURE_FROM_CAST_START_S = _Q_CAST_TIME_S + _Q_RUPTURE_DELAY_S
 
 
 def _feast_stacks(ctx: SlotCtx) -> int:
@@ -99,7 +108,7 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
         if match is None:
             return None
         percent = value + float(match.group(1)) * stacks
-        return percent / 100.0 * ctx.target.get("target_max_health", 0.0)
+        return percent / 100.0 * ctx.target_stat("target_max_health")
 
     per_hit = sum_modifiers(
         leveling, rank, ctx.stats, ctx.target, modifier_override=_stack_rider
@@ -112,6 +121,38 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": per_hit * SPIKES_ATTACKS_PER_CAST,
         "parts": (DamagePart("magic", per_hit, count=SPIKES_ATTACKS_PER_CAST),),
         "empowers_next_auto": {"hits": SPIKES_ATTACKS_PER_CAST},
+    }
+
+
+def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the on-kill heal receipt the self-heal rule places.
+
+    "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
+    level)" — a level row, not a rank one, and no damage of its own. The
+    kills are player state the duel does not simulate, so the receipt only
+    exists once the user declares some.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    kills = max(0, int(ctx.option("p_carnivore_kills")))
+    if kills <= 0:
+        return None
+    heal = extract_value(ability, "Heal", ctx.level, level=ctx.level)
+    if heal <= 0.0:
+        return None
+    return {
+        "name": ability.get("name", "Carnivore"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_heal_state": {"kills": kills, "amount": heal},
+        "detail": (
+            f"{kills} kill(s): {heal:g} health each (18 : 52 based on "
+            "level); the mana restore has no champion-authored channel"
+        ),
     }
 
 
@@ -133,8 +174,8 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
     stack_health = _feast_stacks(ctx) * extract_value(
         ability, "Bonus Health Per Stack", rank
     )
-    ctx.stats["bonus_health"] = ctx.stats.get("bonus_health", 0.0) + stack_health
-    ctx.stats["health"] = ctx.stats.get("health", 0.0) + stack_health
+    ctx.stats["bonus_health"] = ctx.stat("bonus_health") + stack_health
+    ctx.stats["health"] = ctx.stat("health") + stack_health
 
     total = extract_named(ability, "Champion True Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -143,6 +184,8 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "true",
+        # One bite on the target it eats, no travel or tick phase.
+        event_order_certified="single_hit",
     )
     entry["stat_buff"] = {"bonus_health": stack_health}
     return entry
@@ -160,13 +203,31 @@ OPTIONS: list[dict[str, Any]] = [
         "min": 0,
         "max": 15,
     },
+    {
+        "key": "p_carnivore_kills",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "label": "Enemies Cho'Gath kills during the fight (P Carnivore)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Carnivore pays on a kill, which no cast orders; the "
+                "count is player state, not a rotation edge."
+            ),
+        },
+    },
 ]
 
 ASSUMPTIONS = [
-    "P (Carnivore) heals 18-96 (based on level) and restores 4.72-9.48 "
-    "mana ONLY on an enemy kill; the 1v1 model has no minion kills and "
-    "no kill receipt, so it emits a sourced zero-damage row "
-    "(MODULE_COVERAGE: no_damage, not out_of_scope)",
+    "P (Carnivore) heals 18 : 52 (based on level) per kill — the cached P "
+    "'Heal' level row. A duel simulates no wave, so p_carnivore_kills "
+    "(default 0) supplies the count and the heals ride Cho'Gath's first "
+    "damaging hits; the 4.72 : 9.48 mana restore in the same sentence is "
+    "not modeled",
     "Feast stacks default to 6 (the minion/non-epic-monster cap); "
     "stacks from champions and epic monsters are uncapped — raise the "
     "option to match",
@@ -182,38 +243,81 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "P": lambda ctx: no_damage(
-        ctx,
-        name="Carnivore",
-        reason=(
-            "Heals 18-96 and restores mana ONLY on an enemy kill; the 1v1 "
-            "model has no minion kills and no kill receipt to trigger it."
-        ),
-    ),
+    "P": _carnivore,
     "R": _feast,
-    "Q": simple_damage(attr="Magic damage", dmg_type="magic"),
+    "Q": delayed_damage(
+        delay=_Q_RUPTURE_FROM_CAST_START_S,
+        attr="Magic damage",
+        dmg_type="magic",
+    ),
+    # One roar in a cone, landing at the cast, carrying the sourced silence.
     "W": with_control(
-        simple_damage(attr="Magic damage", dmg_type="magic"),
+        simple_damage(
+            attr="Magic damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
         kind="silence",
         duration_attr="Silence Duration",
     ),
     "E": _vorpal_spikes,
 }
 
-parse_abilities = build_parser(SLOTS, "Cho'Gath")
+# Cached kit review.  Q's rupture deals its magic damage while "knocking
+# them up for 1 second" on the same delayed eruption, which the slot now
+# authors; the 60% slow that follows rides the same airborne.  W's only
+# debuff is a silence — real control, but neither an immobilizing effect
+# nor a slow — and R "deal[s] them true damage" and nothing else.
+#
+# E's spikes ride the three basic attacks it empowers: "Enemies struck
+# are dealt magic damage and slowed by an amount that decays over 1.5
+# seconds" — one event per consumed swing, authored by the engine's
+# empowered-swing reattribution.  P is a heal on a kill and touches no
+# enemy at all.
+MODULE_CC = {"P": "none", "Q": "knockup", "W": "silence", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
+
+# No MODULE_COVERAGE: every slot is in SLOTS and every slot prices a row
+# the engine consumes — P's is the Carnivore heal the self-heal rule
+# places — which is exactly what the contract derives.
+
+SOURCES = load_champion_sources("Cho'Gath")
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Cho%27Gath",
-        "revision_id": 3892600,
-        "revision_timestamp": "2025-05-02T11:23:54Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Price Carnivore: one heal per kill Cho'Gath's user declares.
+
+    "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
+    level)" — P reads the level row and carries the user's declared kill
+    count on its receipt.  A takedown-paid heal has neither a cast nor a
+    damage row of its own, so each kill rides one of the fight's first
+    damaging hits.
+    """
+    healing: list[dict[str, Any]] = []
+    carnivore = ability_damages.get("passive", {}).get("self_heal_state")
+    if isinstance(carnivore, dict):
+        amount = float(carnivore.get("amount", 0.0) or 0.0)
+        for payment in _healing._takedown_payments(
+            int(carnivore.get("kills", 0) or 0), damage_events
+        ):
+            healing.append(
+                {
+                    "time": float(payment.event.get("time", 0.0)),
+                    "amount": amount,
+                    "source": "Carnivore",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                    **_healing._trigger_fields(payment.event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Cho'Gath", derive_self_healing)

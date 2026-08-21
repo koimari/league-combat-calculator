@@ -1,12 +1,19 @@
 """Fail-closed item-mechanic coverage for BIS search."""
 
+import dataclasses
+from typing import get_args
+
 import pytest
+
+from src.calculator import item_coverage
+from src.calculator.item_behavior_catalog import (
+    behavior_rules,
+    undeclared_owners,
+)
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
-    _PARTIAL_BLOCKED_REASONS,
-    _TARGET_BLOCKED_REASONS,
-    _UTILITY_DIMENSIONS,
+    gated_state_reason,
     item_model_coverage,
     optimizer_candidate_coverage,
     require_calculation_item_coverage,
@@ -15,9 +22,28 @@ from src.calculator.item_coverage import (
     target_build_coverage,
     target_item_model_coverage,
 )
+from src.calculator.interpreters.threshold_defense import (
+    threshold_health_coverage_source,
+)
+from src.calculator.item_behavior import AllyPacketRule, UtilityDimension
+from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_effects import ITEM_EFFECTS
+from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_source import is_ordinary_sr_item
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+def _attacker_coverage(item):
+    """The attacker-lane public payload for one cached item record.
+
+    ``item_model_coverage`` takes a name and the lanes the caller needs
+    answered (3.8), and these tests all ask the picker's question, so they all
+    ask for the attacker lane.
+    """
+    return item_model_coverage(str(item.get("name", "")), ATTACKER_LANES).as_payload()
+
+
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
@@ -27,7 +53,7 @@ from src.calculator.optimizer import (
 
 def test_every_current_optimizer_candidate_has_an_explicit_classification():
     candidates = get_eligible_legendaries() + get_eligible_boots(tier=None)
-    classifications = [item_model_coverage(item) for item in candidates]
+    classifications = [_attacker_coverage(item) for item in candidates]
 
     assert classifications
     assert not [
@@ -43,12 +69,12 @@ def test_cached_ordinary_items_never_remain_review_pending():
         if item.get("name") and is_ordinary_sr_item(item)
     ]
     assert ordinary
-    classifications = [item_model_coverage(item) for item in ordinary]
+    classifications = [_attacker_coverage(item) for item in ordinary]
     assert not [
         entry for entry in classifications if entry["status"] == "review_pending"
     ]
     assert all(
-        entry["optimizer_eligible"] or entry["status"] in {"blocked", "stats_only"}
+        entry["optimizer_eligible"] or entry["status"] in {"withheld", "stats_only"}
         for entry in classifications
     )
 
@@ -62,8 +88,8 @@ def test_cached_ordinary_items_have_named_fail_closed_reasons():
     ]
     generic = [
         item["name"]
-        for item in (item_model_coverage(item) for item in ordinary)
-        if item["status"] == "blocked"
+        for item in (_attacker_coverage(item) for item in ordinary)
+        if item["status"] == "withheld"
         and item["reason"]
         == "This cached passive or active has not been reviewed for outgoing "
         "damage or state effects; calculation is withheld."
@@ -73,7 +99,7 @@ def test_cached_ordinary_items_have_named_fail_closed_reasons():
 
 def test_endless_hunger_blocker_is_feast_state_only():
     """Famine and the bounded Feast state are receipt-backed."""
-    coverage = item_model_coverage(get_item_by_name("Endless Hunger"))
+    coverage = _attacker_coverage(get_item_by_name("Endless Hunger"))
 
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
@@ -92,8 +118,8 @@ def test_unmodeled_splash_packets_are_always_withheld():
         if item_name == "Runaan's Hurricane":
             # Wind's Fury is now allocated by the shared roster ledger.
             continue
-        coverage = item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
+        coverage = _attacker_coverage(get_item_by_name(item_name))
+        assert coverage["status"] == "withheld", item_name
         assert coverage["optimizer_eligible"] is False
 
 
@@ -127,8 +153,8 @@ def test_secondary_packet_ratios_cannot_be_scored_without_multi_target_ledger():
             # Breaking Shockwave is now allocated through the same roster
             # ledger and its slow/movement siblings have utility receipts.
             continue
-        coverage = item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
+        coverage = _attacker_coverage(get_item_by_name(item_name))
+        assert coverage["status"] == "withheld", item_name
         assert coverage["optimizer_eligible"] is False
 
 
@@ -139,12 +165,12 @@ def test_phantom_hit_items_have_explicit_duplicate_on_hit_coverage():
     ]
     assert phantom_items
     for item_name in phantom_items:
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         if item_name == "Guinsoo's Rageblade":
             assert coverage["status"] == "modeled_effect", item_name
             assert coverage["optimizer_eligible"] is True
         else:
-            assert coverage["status"] == "blocked", item_name
+            assert coverage["status"] == "withheld", item_name
             assert coverage["optimizer_eligible"] is False
 
 
@@ -157,7 +183,7 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ]
     assert stateful_items
     for item_name in stateful_items:
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         assert coverage["status"] == "modeled_effect", item_name
         assert coverage["optimizer_eligible"] is True
 
@@ -166,20 +192,20 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ("item_name", "expected_status"),
     [
         ("Runaan's Hurricane", "modeled_effect"),
-        ("Zeke's Convergence", "modeled_effect"),
+        ("Zeke's Convergence", "modeled_state"),
         ("Immortal Path", "modeled_state"),
         ("Mejai's Soulstealer", "modeled_state"),
-        ("Rabadon's Deathcap", "modeled_effect"),
+        ("Rabadon's Deathcap", "modeled_state"),
         ("Serpent's Fang", "modeled_effect"),
         ("Kaenic Rookern", "stats_only"),
         ("Void Staff", "stats_only"),
-        ("Riftmaker", "modeled_effect"),
+        ("Riftmaker", "modeled_state"),
         ("Archangel's Staff", "modeled_state"),
         ("Guinsoo's Rageblade", "modeled_effect"),
         ("Actualizer", "modeled_state"),
         ("Overlord's Bloodmail", "modeled_state"),
-        ("Yun Tal Wildarrows", "modeled_effect"),
-        ("Swiftmarch", "modeled_effect"),
+        ("Yun Tal Wildarrows", "modeled_state"),
+        ("Swiftmarch", "modeled_state"),
         ("Lich Bane", "modeled_effect"),
         ("Essence Reaver", "modeled_effect"),
         ("Dusk and Dawn", "modeled_effect"),
@@ -191,11 +217,11 @@ def test_temporary_lethality_state_accepts_the_sourced_ability_cast_trigger():
     ],
 )
 def test_representative_item_classifications(item_name, expected_status):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
 
     assert coverage["status"] == expected_status
     assert coverage["optimizer_eligible"] is (
-        expected_status not in {"blocked", "review_pending"}
+        expected_status not in {"withheld", "review_pending"}
     )
 
 
@@ -206,12 +232,18 @@ def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
     item classifies as a modeled effect; Noxian Gait remains documented as
     out of scope and the stats stay optimizer-eligible.
     """
-    coverage = item_model_coverage(get_item_by_name("Gunmetal Greaves"))
+    coverage = _attacker_coverage(get_item_by_name("Gunmetal Greaves"))
 
-    assert coverage["status"] == "modeled_effect"
+    # The boot declares its life-steal sustain, so the ladder answers from the
+    # declaration.  Noxian Gait's Riot-only movement branch is still out of
+    # scope and is still not a refusal: what changed is that the sentence
+    # saying so is gone, because a modelled item no longer carries prose.
+    # ``modeled_state`` and not ``modeled_effect``: the boot joined
+    # ITEM_INPUT_OPTIONS as the citation carrier for the Noxian Gait named
+    # boundary, and membership in that registry is what the rung reads.
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
-    assert "Noxian Gait" in coverage["reason"]
-    assert "out of scope" in coverage["reason"]
+    assert coverage["review_issue_refs"] == []
 
 
 def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
@@ -223,12 +255,12 @@ def test_multitool_is_not_a_summoners_rift_optimizer_candidate():
 def test_candidate_receipt_is_complete_after_item_umbrella_reconciliation():
     candidates = get_eligible_legendaries() + get_eligible_boots(tier=2)
     receipt = optimizer_candidate_coverage(candidates)
-    excluded_names = {entry["name"] for entry in receipt["excluded"]}
+    excluded_names = {entry["name"] for entry in receipt["withheld"]}
 
-    assert receipt["complete"] is False
+    assert receipt["complete"] is True
     assert receipt["eligible_candidates"] == len(candidates)
-    assert receipt["scored_candidates"] + receipt["excluded_count"] == len(candidates)
-    assert excluded_names == {"Fimbulwinter"}
+    assert receipt["scored_candidates"] + receipt["withheld_count"] == len(candidates)
+    assert excluded_names == set()
     assert "Rod of Ages" not in excluded_names
     assert "Runaan's Hurricane" not in excluded_names
 
@@ -241,12 +273,15 @@ def test_optimizer_reports_exhaustive_legal_candidates_after_item_reconciliation
         locked_boots="Sorcerer's Shoes",
     )
     excluded_names = {
-        entry["name"] for entry in result["candidate_coverage"]["excluded"]
+        entry["name"] for entry in result["candidate_coverage"]["withheld"]
     }
 
     assert result["items"]
     assert not (set(result["items"]) & excluded_names)
-    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
+    # "legal" and not "modeled": every legal candidate is fully modelled, so
+    # ``candidate_coverage`` is complete and the guarantee is the stronger of
+    # the optimizer's two exhaustive answers (the name of this test).
+    assert result["search_guarantee"] == "exhaustive_legal_candidates"
     assert result["is_certified_best"] is False
 
 
@@ -277,7 +312,10 @@ def test_optimizer_accepts_runaan_with_roster_bolt_model():
         ("Jak'Sho, The Protean", "modeled_event_certified"),
         ("Zhonya's Hourglass", "modeled"),
         ("Seeker's Armguard", "modeled"),
-        ("Spectre's Cowl", "modeled"),
+        # 3.8's flip: Incorporeal was removed in V14.6 and what is left is a
+        # base health-regeneration stat, which `stats` sources and the
+        # durability ladder does not price.
+        ("Spectre's Cowl", "not_target_relevant"),
         ("Immortal Shieldbow", "modeled_event_certified"),
         ("Hexdrinker", "modeled_event_certified"),
         ("Maw of Malmortius", "modeled_event_certified"),
@@ -292,7 +330,7 @@ def test_target_item_coverage_is_mechanic_specific(item_name, status):
     coverage = target_item_model_coverage(get_item_by_name(item_name))
 
     assert coverage["status"] == status
-    assert coverage["calculation_eligible"] is (status != "blocked")
+    assert coverage["calculation_eligible"] is (status != "withheld")
 
 
 @pytest.mark.parametrize(
@@ -328,6 +366,27 @@ def test_certified_timeline_guard_withholds_uncertified_lifeline_fights():
         )
 
 
+def test_certified_timeline_guard_still_withholds_an_uncertified_protoplasm():
+    """The emptied check, still armed on a synthetic uncertified coverage.
+
+    Nothing in the pipeline produces this dict any more — the target-side
+    heal authors its cadence, so the fight certifies — but the guard is what
+    would catch the next coarse target-side source, and a check nobody can
+    fire is a check nobody can trust.
+    """
+    with pytest.raises(
+        ValueError,
+        match=r"Protoplasm Harness.*target_Protoplasm Harness is not event-certified",
+    ):
+        require_certified_target_timeline(
+            [get_item_by_name("Protoplasm Harness")],
+            {
+                "complete": False,
+                "coarse_sources": [threshold_health_coverage_source()],
+            },
+        )
+
+
 def test_certified_timeline_guard_ignores_targets_without_lifeline_items():
     require_certified_target_timeline(
         [get_item_by_name("Kaenic Rookern")],
@@ -351,7 +410,7 @@ def test_target_build_coverage_and_guard_name_the_omitted_defense():
     coverage = target_build_coverage(items)
 
     assert coverage["complete"] is True
-    assert coverage["blocked"] == []
+    assert coverage["withheld"] == []
     require_target_item_coverage(items)
 
 
@@ -380,7 +439,8 @@ def test_force_of_nature_target_defense_is_event_certified():
 
     assert coverage["status"] == "modeled_event_certified"
     assert coverage["calculation_eligible"] is True
-    assert "maximum-stack bonus resistance" in coverage["reason"]
+    assert "Steadfast" in coverage["reason"]
+    assert "exactly-timed damage ledger" in coverage["reason"]
     require_target_item_coverage([item])
 
 
@@ -399,36 +459,50 @@ def test_force_of_nature_target_defense_is_event_certified():
     ],
 )
 def test_issue_42_components_are_modeled_attacker_candidates(item_name):
-    """Every issue-42 component left review_pending for an explicit model."""
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    """Every issue-42 component left review_pending for an explicit model.
 
-    assert coverage["status"] == "modeled_effect"
+    ``Bramble Vest`` declares nothing but ``reactive``, a defence, so the
+    attacker lane's honest answer is stats-only: the mechanic changes what the
+    holder takes, not what it deals.  It is still eligible, which is what this
+    test is about.
+    """
+    coverage = _attacker_coverage(get_item_by_name(item_name))
+
+    assert coverage["status"] == (
+        "stats_only" if item_name == "Bramble Vest" else "modeled_effect"
+    )
     assert coverage["optimizer_eligible"] is True
 
 
 def test_bandlepipes_ally_buff_uses_the_shared_typed_support_ledger():
     """Fanfare's authored CC trigger is fully represented for ranking."""
-    coverage = item_model_coverage(get_item_by_name("Bandlepipes"))
+    coverage = _attacker_coverage(get_item_by_name("Bandlepipes"))
 
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
-    assert "shared participant support ledger" in coverage["reason"]
+    assert "shared participant ledger" in coverage["reason"]
 
 
 @pytest.mark.parametrize("item_name", ["Ardent Censer", "Imperial Mandate"])
 def test_typed_enchanter_packets_are_optimizer_eligible(item_name):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
 
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
-    assert "shared participant support ledger" in coverage["reason"]
+    assert "shared participant ledger" in coverage["reason"]
 
 
 def test_warmog_is_not_hidden_by_an_unreachable_blocked_reason():
-    """Warmog's registered health conversion remains explicitly modeled."""
-    coverage = item_model_coverage(get_item_by_name("Warmog's Armor"))
+    """Warmog's registered health conversion remains explicitly modeled.
 
-    assert coverage["status"] == "modeled_effect"
+    ``stat_derivation`` is a state family: the Heart's conversion is a
+    progression the shared ledger schedules, so the declared answer is
+    ``modeled_state``.  The property this test guards is that no refusal
+    hides it.
+    """
+    coverage = _attacker_coverage(get_item_by_name("Warmog's Armor"))
+
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
 
 
@@ -443,8 +517,10 @@ def test_bramble_vest_is_an_explicitly_modeled_target_item():
 
 def test_thornmail_is_modeled_as_a_typed_target_reactive_item():
     """Armor-scaled Thorns now participate in target coverage."""
-    attacker = item_model_coverage(get_item_by_name("Thornmail"))
-    assert attacker["status"] == "modeled_effect"
+    attacker = _attacker_coverage(get_item_by_name("Thornmail"))
+    # Thorns is a reactive defence and nothing else, so the attacker lane says
+    # stats-only; the target lane is where it is priced.
+    assert attacker["status"] == "stats_only"
     assert attacker["optimizer_eligible"] is True
     assert target_item_model_coverage(get_item_by_name("Thornmail"))["status"] == (
         "modeled"
@@ -454,7 +530,8 @@ def test_thornmail_is_modeled_as_a_typed_target_reactive_item():
 def test_sundered_sky_is_modeled_as_a_target_heal_with_temporary_health():
     coverage = target_item_model_coverage(get_item_by_name("Sundered Sky"))
     assert coverage["status"] == "modeled"
-    assert "temporary health" in coverage["reason"]
+    assert "Forced Crit" in coverage["reason"]
+    assert "changes what this actor survives" in coverage["reason"]
 
 
 @pytest.mark.parametrize(
@@ -485,38 +562,34 @@ def test_target_self_healing_items_have_explicit_modeled_coverage(item_name):
 def test_utility_coverage_exposes_outcome_dimensions_without_claiming_support(
     item_name, dimension
 ):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
 
     assert dimension in coverage["outcome_dimensions"]
-    if coverage["status"] == "blocked":
+    if coverage["status"] == "withheld":
         assert coverage["optimizer_eligible"] is False
 
 
 def test_every_utility_dimension_item_has_explicit_non_pending_coverage():
     """#50 utility labels cannot silently drift into unreviewed coverage."""
-    assert _UTILITY_DIMENSIONS
-    for item_name, dimensions in _UTILITY_DIMENSIONS.items():
-        coverage = item_model_coverage(get_item_by_name(item_name))
+    assert UTILITY_OUTCOMES
+    for item_name, dimensions in UTILITY_OUTCOMES.items():
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         assert coverage["status"] != "review_pending", item_name
-        assert coverage["outcome_dimensions"] == list(dimensions), item_name
-
-
-def test_no_stale_partial_state_items_remain_after_shared_ledger_reconciliation():
-    """Only the named Fimbulwinter authority gap remains withheld."""
-    assert set(_PARTIAL_BLOCKED_REASONS) == {"Fimbulwinter"}
-    assert "mana gate" in _PARTIAL_BLOCKED_REASONS["Fimbulwinter"]
+        assert coverage["outcome_dimensions"] == [
+            dimension.value for dimension in dimensions
+        ], item_name
 
 
 def test_sustain_dimension_never_claims_outgoing_model_support():
     """Healing/ally sustain remains descriptive until recipient accounting is exact."""
     sustain_items = [
         name
-        for name, dimensions in _UTILITY_DIMENSIONS.items()
-        if "sustain" in dimensions
+        for name, dimensions in UTILITY_OUTCOMES.items()
+        if UtilityDimension.SUSTAIN in dimensions
     ]
     assert sustain_items
     for item_name in sustain_items:
-        coverage = item_model_coverage(get_item_by_name(item_name))
+        coverage = _attacker_coverage(get_item_by_name(item_name))
         if item_name == "Ravenous Hydra":
             # Crescent and Cleave self-healing receipts are modeled directly.
             assert coverage["status"] == "modeled_effect"
@@ -526,7 +599,7 @@ def test_sustain_dimension_never_claims_outgoing_model_support():
 
 def test_dusk_and_dawn_self_heal_is_calculation_eligible():
     """Spellblade self-heal has timestamped ledger events and is now modeled."""
-    coverage = item_model_coverage(get_item_by_name("Dusk and Dawn"))
+    coverage = _attacker_coverage(get_item_by_name("Dusk and Dawn"))
 
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
@@ -534,7 +607,7 @@ def test_dusk_and_dawn_self_heal_is_calculation_eligible():
 
 def test_cull_progression_receipt_is_calculation_and_optimizer_eligible():
     """Reap's health and quest receipts share one modeled state ledger."""
-    coverage = item_model_coverage(get_item_by_name("Cull"))
+    coverage = _attacker_coverage(get_item_by_name("Cull"))
 
     assert coverage["calculation_eligible"] is True
     assert coverage["optimizer_eligible"] is True
@@ -545,15 +618,24 @@ def test_cull_progression_receipt_is_calculation_and_optimizer_eligible():
 
 def test_opening_defense_items_with_blocked_target_state_never_claim_target_support():
     """Spell shields, stasis, revives, and unmodeled shields stay target-blocked."""
-    defense_dimensions = {"spell_protection", "stasis", "revive", "shield"}
-    for item_name, dimensions in _UTILITY_DIMENSIONS.items():
+    defense_dimensions = {
+        UtilityDimension.SPELL_PROTECTION,
+        UtilityDimension.STASIS,
+        UtilityDimension.REVIVE,
+        UtilityDimension.SHIELD,
+    }
+    # The population used to be a hand table of withheld target mechanics.
+    # It is now the target ladder's own refusal set, so the assertion is that
+    # a defensive-dimension item the ladder refuses refuses for both gates —
+    # never that one of the two quietly stayed eligible.
+    for item_name, dimensions in UTILITY_OUTCOMES.items():
         if not defense_dimensions.intersection(dimensions):
             continue
-        if item_name not in _TARGET_BLOCKED_REASONS:
-            continue
         coverage = target_item_model_coverage(get_item_by_name(item_name))
-        assert coverage["status"] == "blocked", item_name
-        assert coverage["calculation_eligible"] is False
+        if coverage["status"] != "withheld":
+            continue
+        assert coverage["calculation_eligible"] is False, item_name
+        assert coverage["review_issue_refs"], item_name
 
 
 @pytest.mark.parametrize(
@@ -573,12 +655,81 @@ def test_defensive_state_coverage_names_the_authored_scenario_boundary(
     assert reason_fragment in coverage["reason"]
 
 
-def test_guardians_horn_target_coverage_uses_typed_flat_reduction():
-    coverage = target_item_model_coverage(get_item_by_name("Guardian's Horn"))
+# ── rung 2's gated-state receipt ──────────────────────────────────────────
+#
+# The oracle pass over 3.8's coupled diffs returned ``old_value_correct`` on
+# every Zhonya's Hourglass leaf: the flip had replaced a receipt naming the
+# scenario input that arms Time Stop with a family census claiming the
+# mechanic "changes durability, not outgoing TDD" — which is false of an
+# active that suppresses its own holder's attacks and casts for its duration.
+# These four tests pin the corrected rung from both sides, so neither the
+# specific receipt nor the census can quietly swallow the other again.
 
-    assert coverage["status"] == "modeled"
-    assert coverage["calculation_eligible"] is True
-    assert "3.75" in coverage["reason"]
+
+@pytest.mark.parametrize("item_name", ["Zhonya's Hourglass", "Seeker's Armguard"])
+def test_a_defence_gated_by_a_bounded_option_publishes_that_gate(item_name):
+    """The receipt names the input that arms the state, not the family census."""
+    coverage = item_model_coverage(item_name, ATTACKER_LANES)
+    assert coverage.status == "stats_only"
+    assert coverage.reason == (
+        "Time Stop is priced only from the explicit bounded active-seconds "
+        "scenario input; item presence alone never assumes stasis."
+    )
+
+
+@pytest.mark.parametrize(
+    ("item_name", "why_the_gate_does_not_apply"),
+    [
+        ("Banshee's Veil", "declares no bounded option at all"),
+        ("Bloodthirster", "declares an option but no exclusive state"),
+    ],
+)
+def test_a_defence_without_both_halves_of_the_gate_keeps_the_family_census(
+    item_name, why_the_gate_does_not_apply
+):
+    """Both ways the sub-question declines, so the discriminator is pinned."""
+    coverage = item_model_coverage(item_name, ATTACKER_LANES)
+    assert coverage.status == "stats_only", why_the_gate_does_not_apply
+    # The census names the mechanic it is about; what the gate decides is
+    # whether the sentence beside the label is the gate's or the census's,
+    # which is what these two items discriminate.
+    assert coverage.reason.endswith(
+        " is a defence: the represented mechanic changes durability, "
+        "not outgoing TDD."
+    )
+    assert "priced only from the explicit bounded" not in coverage.reason
+
+
+def test_the_gated_receipt_population_is_exactly_the_two_stasis_items():
+    """The population, pinned as a set: a third entrant is a real event.
+
+    Enumerated over every cached item rather than asserted of the two, so an
+    item that starts declaring an option-armed exclusive state changes this
+    set rather than changing a published reason unnoticed.
+    """
+    gated = {
+        name
+        for name in {
+            str(record.get("name", ""))
+            for record in fetch_item_data().values()
+            if isinstance(record, dict) and record.get("name")
+        }
+        if gated_state_reason(name) is not None
+    }
+    assert gated == {"Zhonya's Hourglass", "Seeker's Armguard"}
+
+
+def test_the_family_census_is_not_claimed_of_an_item_whose_active_stops_it():
+    """Why the census had to lose: it is the false sentence for this item.
+
+    The declaration's own zero policy says the state is never assumed by item
+    presence.  An item coverage answer that instead asserts the mechanic
+    cannot touch outgoing damage contradicts a rule the catalog declares, and
+    that contradiction is what the oracle pass caught.
+    """
+    coverage = item_model_coverage("Zhonya's Hourglass", ATTACKER_LANES)
+    assert "changes durability, not outgoing TDD" not in coverage.reason
+    assert "item presence alone never assumes" in coverage.reason
 
 
 @pytest.mark.parametrize(
@@ -590,26 +741,57 @@ def test_ally_item_packets_are_coupled_and_never_assume_target_cast_timing(item_
     coverage = target_item_model_coverage(get_item_by_name(item_name))
     assert coverage["status"] == "modeled"
     assert coverage["calculation_eligible"] is True
-    assert "explicit" in coverage["reason"]
+    # The receipt names the declared producer rather than the cast: an ally
+    # packet is priced from an explicit active_seconds input, and the passive
+    # target model never invents one.
+    assert coverage["reason"].split()[0].isalpha()
+    assert "changes what this actor survives" in coverage["reason"]
 
 
 @pytest.mark.parametrize("item_name", ["Stridebreaker"])
 def test_stridebreaker_utility_scope_is_explicitly_modelled(item_name):
     """Breaking Shockwave exposes its typed slow and movement siblings."""
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
     assert "multi_target" in coverage["outcome_dimensions"]
     assert {"slow", "movement"} <= set(coverage["outcome_dimensions"])
-    assert coverage["status"] == "modeled_effect"
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
 
 
-def test_fimbulwinter_is_event_certified_and_optimizer_blocked():
-    coverage = item_model_coverage(get_item_by_name("Fimbulwinter"))
-    assert coverage["status"] == "blocked"
-    assert coverage["optimizer_eligible"] is False
+def test_guardians_horn_target_coverage_uses_typed_flat_reduction():
+    """Undaunted is a declared defence, and the declaration is what pays it.
+
+    Main's version of this test asserted the magnitude appeared in the
+    coverage *prose*; ours derives that prose from the declaration and never
+    puts numbers in it, so the number is asserted where it now lives — the
+    resolved defensive state the survival plumbing reads.
+    """
+    coverage = target_item_model_coverage(get_item_by_name("Guardian's Horn"))
+
+    assert coverage["status"] == "modeled"
     assert coverage["calculation_eligible"] is True
-    assert "mana_gate_authority_unavailable" in coverage["reason"]
+    assert "Undaunted" in coverage["reason"]
+
+    resolved = resolve_starting_defenses(
+        "Ahri",
+        18,
+        {"health": 2000.0},
+        [{"name": "Guardian's Horn"}],
+        {},
+    )
+    assert resolved.champion_damage_flat_reduction == pytest.approx(15.0)
+    assert resolved.champion_dot_damage_flat_reduction == pytest.approx(3.75)
+    assert resolved.champion_damage_flat_source == "Guardian's Horn — Undaunted"
+
+
+def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
+    """The 20%-maximum-mana gate is sourced (rev 3984419, campaign U11a), so
+    the ``*_gate_status`` refusal does not fire here and the item stays a
+    modelled, rankable candidate."""
+    coverage = _attacker_coverage(get_item_by_name("Fimbulwinter"))
+    assert coverage["status"] == "modeled_state"
+    assert coverage["optimizer_eligible"] is True
     target = target_item_model_coverage(get_item_by_name("Fimbulwinter"))
     assert target["status"] == "modeled_event_certified"
     assert target["calculation_eligible"] is True
@@ -617,7 +799,7 @@ def test_fimbulwinter_is_event_certified_and_optimizer_blocked():
 
 
 def test_world_atlas_support_quest_receipt_is_reconciled():
-    coverage = item_model_coverage(get_item_by_name("World Atlas"))
+    coverage = _attacker_coverage(get_item_by_name("World Atlas"))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
@@ -625,7 +807,7 @@ def test_world_atlas_support_quest_receipt_is_reconciled():
 
 def test_ravenous_hydra_active_scope_is_modelled_with_lifesteal():
     """Ravenous active and secondary packets are now fully represented."""
-    coverage = item_model_coverage(get_item_by_name("Ravenous Hydra"))
+    coverage = _attacker_coverage(get_item_by_name("Ravenous Hydra"))
 
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
@@ -634,7 +816,7 @@ def test_ravenous_hydra_active_scope_is_modelled_with_lifesteal():
 
 def test_bloodmail_retribution_is_explicit_starting_state():
     """Bloodmail exposes its bounded starting missing-health state."""
-    coverage = item_model_coverage(get_item_by_name("Overlord's Bloodmail"))
+    coverage = _attacker_coverage(get_item_by_name("Overlord's Bloodmail"))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert "scenario" in coverage["reason"]
@@ -649,13 +831,13 @@ def test_bloodmail_retribution_is_explicit_starting_state():
 )
 def test_long_lived_stack_items_name_missing_state_input(item_name, required_state):
     """Only items without a supplied authored state remain blocked."""
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
     if item_name in {"Heartsteel", "Rod of Ages"}:
         assert coverage["status"] == "modeled_state"
         assert coverage["optimizer_eligible"] is True
         assert "scenario control" in coverage["reason"]
         return
-    assert coverage["status"] == "blocked"
+    assert coverage["status"] == "withheld"
     assert coverage["optimizer_eligible"] is False
     assert required_state in coverage["reason"]
 
@@ -672,7 +854,7 @@ def test_long_lived_stack_items_name_missing_state_input(item_name, required_sta
     ],
 )
 def test_remaining_cp20_items_are_explicitly_modeled(item_name):
-    coverage = item_model_coverage(get_item_by_name(item_name))
+    coverage = _attacker_coverage(get_item_by_name(item_name))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
@@ -680,7 +862,7 @@ def test_remaining_cp20_items_are_explicitly_modeled(item_name):
 
 def test_dusk_and_dawn_self_heal_receipt_promotes_attacker_coverage():
     """An exact proc receipt and ledger mutation make the item scoreable."""
-    coverage = item_model_coverage(get_item_by_name("Dusk and Dawn"))
+    coverage = _attacker_coverage(get_item_by_name("Dusk and Dawn"))
     assert coverage["status"] == "modeled_effect"
     assert coverage["optimizer_eligible"] is True
 
@@ -698,3 +880,302 @@ def test_calculation_item_coverage_accepts_runaan_secondary_bolt_model():
     require_calculation_item_coverage(
         [get_item_by_name("Runaan's Hurricane")], participant="Attacker"
     )
+
+
+# ── the target lane's derivation, beside the three tables ─────────────────
+#
+# 3.8's second half replaced ``_TARGET_MODELED_REASONS``,
+# ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS`` with a
+# status computed from declarations.  The derivation landed beside them with
+# its delta asserted item by item (runbook R-31), the ladder flipped onto it,
+# and the tables are gone; what stands here now is the population each rung
+# answers for and the two rename guards on the clauses that read a field name
+# or a registry key.
+
+
+def _cached_names():
+    """Every cached item name, read through the caching layer."""
+    return sorted(
+        str(record.get("name", ""))
+        for record in fetch_item_data().values()
+        if record.get("name")
+    )
+
+
+def test_the_derived_target_populations_are_the_ones_the_flip_landed() -> None:
+    """The three populations the flip produced, pinned as sets.
+
+    The tables the derivation replaced are gone, so the delta assertion that
+    stood here through the flip has nothing left to compare against.  What
+    survives it is the fact the delta established: which cached items each
+    rung answers for.  Sets and never counts — a count agrees with itself
+    after a swap, and the point of the pin is that a swap is visible.
+    """
+    statuses = {
+        name: target_item_model_coverage(get_item_by_name(name))["status"]
+        for name in _cached_names()
+    }
+    certified = {name for name, status in statuses.items() if status == "modeled"}
+    assert {
+        name for name, status in statuses.items() if status == "modeled_event_certified"
+    } == {
+        "Fimbulwinter",
+        "Force of Nature",
+        "Hexdrinker",
+        "Immortal Shieldbow",
+        "Jak'Sho, The Protean",
+        "Maw of Malmortius",
+        "Protoplasm Harness",
+        "Seraph's Embrace",
+        "Sterak's Gage",
+    }
+    assert certified == set(item_coverage._TARGET_MODELED_IMPLS)
+    assert {name for name, status in statuses.items() if status == "withheld"} == {
+        name
+        for name in _cached_names()
+        if item_model_coverage(name, item_coverage.TARGET_LANES).status
+        in ("withheld", "review_pending")
+    }
+
+
+def test_every_holder_survival_field_is_a_field_of_a_declared_payload() -> None:
+    """The rename guard on the one clause that reads payload field names.
+
+    A field this set names and no payload declares would silently stop
+    matching, which is exactly the shape of failure the campaign exists to
+    remove: the clause would go on returning ``False`` and the item would go
+    on publishing ``not_target_relevant``.
+    """
+    declared = {
+        field.name
+        for name in _cached_names()
+        for rule in behavior_rules(name)
+        for field in dataclasses.fields(rule.payload)
+    }
+
+    assert item_coverage._HOLDER_SURVIVAL_FIELDS <= declared
+
+
+def test_the_state_gated_payloads_are_the_ones_declaring_both_fields() -> None:
+    """The named tuple is the shape, so a third such payload is not silent.
+
+    ``gated_state_reason`` used to ask every payload for an ``exclusivity``
+    and an ``option`` and read an absence as "no gate"; it now selects the
+    payloads that declare both, and this pins the set to the declarations.
+    """
+    both = {
+        type(rule.payload)
+        for name in _cached_names()
+        for rule in behavior_rules(name)
+        if {"exclusivity", "option"}
+        <= {field.name for field in dataclasses.fields(rule.payload)}
+    }
+
+    assert both == set(item_coverage._STATE_GATED_PAYLOADS)
+
+
+def test_only_the_ally_packet_rule_declares_packets_or_a_redirect() -> None:
+    """The durability clause reads the one payload that carries them."""
+    carriers = {
+        type(rule.payload)
+        for name in _cached_names()
+        for rule in behavior_rules(name)
+        for field in dataclasses.fields(rule.payload)
+        if field.name in {"packets", "redirects_incoming_damage"}
+    }
+
+    assert carriers == {AllyPacketRule}
+
+
+def test_a_declared_defence_agrees_with_the_identifier_it_is_read_from() -> None:
+    """``declared_defence`` reads the identifier; the payload is the check.
+
+    Wherever a payload carries its own ``mechanic``, the two spellings must be
+    the same mechanic — otherwise the identifier is a second vocabulary and
+    the target lane would be reading a different defence than the resolver
+    builds.
+    """
+    checked = 0
+    for name in _cached_names():
+        for rule in behavior_rules(name):
+            declared = getattr(rule.payload, "mechanic", None)
+            if declared is None:
+                continue
+            checked += 1
+            assert item_coverage.declared_defence(rule) is declared, rule.mechanic_id
+
+    assert checked
+
+
+def test_an_owner_the_migration_has_not_reached_still_publishes_as_modelled() -> None:
+    """``undeclared_owners``' own sentence, as a check rather than as prose.
+
+    The difference between *unmigrated* and *uninterpreted* is the whole
+    reason counter 3's population and ``review_pending`` are two sets: an
+    entry whose family no slice has declared is behaviour the engines still
+    run, and publishing it as unmodelled would be a refusal the migration
+    invented.  That sentence lived in a docstring, carrying a member count
+    that a later slice falsified — so it is asserted here, over whatever the
+    population happens to be, and it retires with the population.
+    """
+    for owner in sorted(undeclared_owners()):
+        status = item_model_coverage(owner, ATTACKER_LANES).status
+        if item_coverage.reviewed_as_inert(owner) is not None:
+            # A review that read the whole entry and found no outgoing
+            # mechanic is an answer, not a refusal the migration invented:
+            # ``stats_only`` stays optimizer- and calculation-eligible.
+            assert status == "stats_only", owner
+            continue
+        assert status in {"modeled", "modeled_state", "modeled_effect"}, owner
+
+
+def test_the_target_flip_refuses_only_records_no_ordinary_build_can_hold() -> None:
+    """The blast radius of the target lane's new refusal, pinned as a set.
+
+    The flip passes the attacker ladder's refusal through, so a cached record
+    whose described passive nothing declares now stops a target build instead
+    of being called irrelevant.  That is a real refusal and it is bounded
+    here: every record it reaches is one `item_source` already withholds from
+    an ordinary Summoner's Rift build, so no build a request can express loses
+    a calculation.  An ordinary item arriving in this set is a stop.
+    """
+    refused = {
+        name
+        for name, record in (
+            (str(r.get("name", "")), r)
+            for r in fetch_item_data().values()
+            if r.get("name")
+        )
+        if not target_item_model_coverage(record)["calculation_eligible"]
+    }
+    ordinary = {
+        str(record.get("name", ""))
+        for record in fetch_item_data().values()
+        if record.get("name") and is_ordinary_sr_item(record)
+    }
+
+    assert refused
+    assert refused & ordinary == set()
+
+
+def test_the_flip_moved_no_ordinary_item_in_or_out_of_attacker_eligibility() -> None:
+    """The other half of the same bound: the attacker lane's gates are unmoved.
+
+    Both booleans on the attacker payload are functions of the status, and the
+    statuses the flip moved there are all inside the modelled family, so no
+    build gained or lost a candidate.  Asserted over every cached record
+    rather than over the ones the receipt happens to name.
+    """
+    for record in fetch_item_data().values():
+        if not record.get("name"):
+            continue
+        coverage = item_model_coverage(str(record["name"]), ATTACKER_LANES)
+        assert coverage.optimizer_eligible == coverage.calculation_eligible
+        if is_ordinary_sr_item(record):
+            # No cached ordinary item declares an unauthorized gate today, so
+            # the ``authority_gap_reason`` rung refuses none of them.
+            assert not item_coverage.authority_gap_reason(str(record["name"]))
+            assert coverage.optimizer_eligible, record["name"]
+
+
+def test_no_cached_item_has_an_unserved_lane_on_any_public_lane_set() -> None:
+    """The three lane constants ask three questions and agree on every item.
+
+    `ATTACKER_LANES` is what the shop payload publishes, `SCORING_LANES` what
+    BIS eligibility asks and `TARGET_LANES` what the passive-target model
+    needs, and the first is a subset of the second: the day a family loses its
+    defence-resolver interpreter, an item reads `modeled_*` in the shop payload
+    and is `withheld` from the optimizer in the same request.  That is the
+    honest pair of answers to two different questions, and it is latent only
+    while no declared family lacks an interpreter anywhere — which the comment
+    above those constants claims and this asserts, because a claim about a
+    divergence being latent is worth exactly the check behind it.
+    """
+    for name in _cached_names():
+        for lanes in (
+            item_coverage.ATTACKER_LANES,
+            item_coverage.SCORING_LANES,
+            item_coverage.TARGET_LANES,
+        ):
+            assert item_coverage.unserved_lanes(name, lanes) == (), (name, lanes)
+    assert item_coverage.ATTACKER_LANES < item_coverage.SCORING_LANES
+
+
+# ── eligibility, and the two whitelists that decide it ────────────────────
+#
+# Both eligibility gates are positive whitelists over their lane's statuses.
+# They were negative for the length of 3.8's flip — ``status not in
+# _REFUSAL_STATUSES`` — which is the same answer for every status that exists
+# and the opposite one for a status that does not exist yet.  These three tests
+# are the guard that makes the positive form checkable rather than stylistic.
+
+
+def test_the_five_statuses_partition_into_eligible_and_refusal() -> None:
+    """The closed vocabulary, split exactly two ways with nothing left over.
+
+    A status that is in neither set is the failure this partition exists to
+    make impossible: it would read as a real classification everywhere the
+    payload is displayed while being ineligible everywhere it is gated, and
+    nothing would say which of the two was intended.
+    """
+    declared = set(get_args(item_coverage.ItemCoverageStatus))
+
+    assert (
+        item_coverage._ELIGIBLE_STATUSES | item_coverage._REFUSAL_STATUSES == declared
+    )
+    assert not item_coverage._ELIGIBLE_STATUSES & item_coverage._REFUSAL_STATUSES
+
+
+def test_a_status_nobody_classified_is_ineligible_on_both_lanes() -> None:
+    """Fail closed, demonstrated rather than described (R-05).
+
+    The fixture is a status outside both whitelists — what a sixth member
+    would be on the commit that adds it and before anyone rules on what it
+    means.  Under the negative form both gates answered ``True`` for it; under
+    the positive form both answer ``False``, and a reviewer is required to say
+    otherwise.
+    """
+    real = item_model_coverage("Infinity Edge", ATTACKER_LANES)
+    unclassified = dataclasses.replace(real, status="modeled_someday")
+
+    assert real.optimizer_eligible is True
+    assert unclassified.optimizer_eligible is False
+    assert unclassified.calculation_eligible is False
+    assert item_coverage.target_calculation_eligible("modeled_someday") is False
+    assert item_coverage.target_calculation_eligible("modeled") is True
+
+
+def test_the_two_attacker_eligibility_gates_agree_for_every_cached_item() -> None:
+    """One answer, two questions — the collapse pinned rather than assumed.
+
+    ``calculation_eligible`` used to carry an escape term
+    ``optimizer_eligible`` never had: a named set of blocked items an explicit
+    request could still compute.  The set was empty, so the flip's deletion of
+    it moved no answer and the two gates became the same expression.  That is a
+    real reduction in what this module can express, and it is asserted here so
+    that a future divergence between "BIS may build with it" and "a request
+    naming it may be computed" has to be written deliberately, in both
+    properties, rather than appearing as a silent inequality nobody expected.
+    """
+    for name in _cached_names():
+        coverage = item_model_coverage(name, ATTACKER_LANES)
+        assert coverage.optimizer_eligible == coverage.calculation_eligible, name
+
+
+def test_every_target_status_the_cache_produces_is_in_the_target_vocabulary() -> None:
+    """The target lane has no ``Literal``; its population is the check.
+
+    ``_TARGET_ELIGIBLE_STATUSES`` is a whitelist over a vocabulary no type
+    closes, so the guard that keeps it total is the observed one: every status
+    the ladder produces over the whole cache is either eligible or a refusal
+    passed through from the attacker lane.
+    """
+    observed = {
+        target_item_model_coverage(get_item_by_name(name))["status"]
+        for name in _cached_names()
+    }
+
+    assert observed <= (
+        item_coverage._TARGET_ELIGIBLE_STATUSES | item_coverage._REFUSAL_STATUSES
+    )
+    assert observed & item_coverage._TARGET_ELIGIBLE_STATUSES

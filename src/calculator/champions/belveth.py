@@ -33,6 +33,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .module_helpers import missing_hp_fraction
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -44,6 +45,7 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
@@ -54,15 +56,15 @@ Q_DIRECTION_COOLDOWNS = (16.0, 15.0, 14.0, 13.0, 12.0)  # per-direction dash CD
 Q_ON_HIT_EFFECTIVENESS = 1.0  # 26.15 removed the 75% Q on-hit reduction
 E_BASE_SLASHES = 6  # base slash count
 E_BONUS_AS_PER_EXTRA_SLASH = 40.0  # +1 slash per 40% bonus attack speed
+# The frenzy's own length, which is also the slashes' schedule: "Bel'Veth
+# enters a frenzy for 1.5 seconds" and "she rapidly slashes at the nearest
+# enemy ... up to 6 (+ 1 per 40% bonus attack speed) times over the
+# duration" (data/champions.json Bel'Veth E).  A count over a duration is a
+# whole schedule, so the slashes are spaced across it evenly.
+E_DURATION_SECONDS = 1.5
 E_ON_HIT_MIN_EFFECTIVENESS = 0.12  # per-slash on-hits at 0% missing HP
 E_ON_HIT_MAX_EFFECTIVENESS = 0.24  # per-slash on-hits at 100% missing HP
 R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
-
-
-def _missing_hp_fraction(ctx: SlotCtx) -> float:
-    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.options.get("target_missing_hp_pct", 50))
-    return min(max(pct, 0.0), 100.0) / 100.0
 
 
 def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> float:
@@ -97,15 +99,13 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
 
     temp_as = PASSIVE_TEMP_BONUS_AS
     per_stack = _per_level_scaling(ability, 0, ctx.level)
-    stacks = max(0, int(ctx.options.get("lavender_stacks", 0)))
+    stacks = max(0, int(ctx.option("lavender_stacks")))
     bonus_as = temp_as + per_stack * stacks
 
     # Parse-time context: E's slash count reads bonus_attack_speed.
-    ctx.stats["bonus_attack_speed"] = (
-        ctx.stats.get("bonus_attack_speed", 0.0) + bonus_as
-    )
-    ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + ctx.stats.get(
-        "attack_speed_ratio", 0.0
+    ctx.stats["bonus_attack_speed"] = ctx.stat("bonus_attack_speed") + bonus_as
+    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + ctx.stat(
+        "attack_speed_ratio"
     ) * (bonus_as / 100.0)
 
     entry = damage_entry(
@@ -136,7 +136,7 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_dash = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    casts = min(max(int(ctx.options.get("q_casts", 4)), 1), 4)
+    casts = min(max(int(ctx.option("q_casts")), 1), 4)
     cooldown = Q_DIRECTION_COOLDOWNS[min(rank - 1, len(Q_DIRECTION_COOLDOWNS) - 1)]
 
     return {
@@ -180,7 +180,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    missing = _missing_hp_fraction(ctx)
+    missing = missing_hp_fraction(ctx)
     min_hit = extract_named(
         ability, "Minimum Physical Damage per hit", rank, ctx.stats, ctx.target
     )
@@ -191,7 +191,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
 
     # Final bonus AS: items + passive (P is BUFF phase, already applied).
     # True Form's total-AS multiplier is NOT bonus AS and never counts.
-    bonus_as = ctx.stats.get("bonus_attack_speed", 0.0)
+    bonus_as = ctx.stat("bonus_attack_speed")
     slashes = E_BASE_SLASHES + math.floor(bonus_as / E_BONUS_AS_PER_EXTRA_SLASH + 1e-9)
 
     return {
@@ -201,14 +201,19 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": per_slash * slashes,
         "parts": (
-            # Royal Maelstrom's slash sequence is ordered but the cached
-            # entry has no independent travel-time field.  Keep each slash
-            # on the authored cast boundary rather than inventing spacing.
+            # The slash count and the frenzy's duration are both cached, so
+            # the slashes spread evenly across it: the first on the cast
+            # boundary, the rest one share of the duration apart.  Royal
+            # Maelstrom only slashes — nothing in the cached text controls
+            # what it damages.
             DamagePart(
                 "physical",
                 per_slash,
                 count=slashes,
                 crit_effectiveness=1.0,
+                time_offset=0.0,
+                hit_interval=E_DURATION_SECONDS / slashes,
+                cc_kind="none",
             ),
         ),
         # Each slash applies item on-hits at 12-24%, interpolated by the
@@ -238,8 +243,8 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    missing = _missing_hp_fraction(ctx)
-    max_hp = (ctx.target or {}).get("target_max_health", 0.0)
+    missing = missing_hp_fraction(ctx)
+    max_hp = ctx.target_stat("target_max_health")
 
     def missing_health_override(unit: str, value: float) -> float | None:
         # The JSON's missing-health modifier resolves against the shared
@@ -261,6 +266,10 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "true",
+        # One explosion at the Coral ("creates an explosion at the location
+        # to deal true damage to enemies within") — one part, one hit,
+        # which carries R's reviewed slow into the event ledger.
+        event_order_certified="single_hit",
     )
     if bool(ctx.options.get("true_form", False)):
         bonus_health = extract_named(ability, "Bonus Health", rank, ctx.stats)
@@ -390,50 +399,19 @@ ASSUMPTIONS = [
     "extend past level 18); a shorter array would clamp at its last entry",
 ]
 
-SOURCES = [
-    {
-        "label": "Bel'Veth — patch history (26.15 rework)",
-        "url": "https://wiki.leagueoflegends.com/en-us/Bel%27Veth/Patch_history",
-        "revision_id": 4047656,
-        "revision_timestamp": "2026-07-30T08:49:41Z",
-    },
-    {
-        "label": "Bel'Veth — Death in Lavender",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Death_in_Lavender",
-        "revision_id": 4047658,
-        "revision_timestamp": "2026-07-30T08:50:50Z",
-    },
-    {
-        "label": "Bel'Veth — Void Surge",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Void_Surge",
-        "revision_id": 4046597,
-        "revision_timestamp": "2026-07-28T20:14:01Z",
-    },
-    {
-        "label": "Bel'Veth — Above and Below",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Above_and_Below",
-        "revision_id": 4046855,
-        "revision_timestamp": "2026-07-28T22:27:32Z",
-    },
-    {
-        "label": "Bel'Veth — Royal Maelstrom",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Royal_Maelstrom",
-        "revision_id": 4046605,
-        "revision_timestamp": "2026-07-28T20:21:57Z",
-    },
-    {
-        "label": "Bel'Veth — Endless Banquet",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Bel%27Veth/Endless_Banquet",
-        "revision_id": 4047545,
-        "revision_timestamp": "2026-07-29T20:25:46Z",
-    },
-]
+SOURCES = load_champion_sources("Bel'Veth")
 
 SLOTS = {
     "P": _death_in_lavender,
     "Q": _void_surge,
+    # One tail slam on one target, so one part and one hit — the
+    # certification that carries W's reviewed knockup into the ledger,
+    # with the interval read off the cached "Knock Up Duration" row
+    # (0.6-1.0s) rather than left unsourced.
     "W": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
         kind="knockup",
         duration_attr="Knock Up Duration",
     ),
@@ -442,11 +420,23 @@ SLOTS = {
     "R_onhit": _endless_banquet_onhit,
 }
 
-parse_abilities = build_parser(SLOTS, "Bel'Veth")
+# Reviewed crowd control, read from the cached kit.  W (Above and Below)
+# "deals magic damage to enemies hit, knocks them up for a duration, and
+# slows them by 30% for 2 seconds" — the immobilize is the narrower answer
+# of the two.  R (Endless Banquet) consumes the Coral "slowing nearby
+# enemies by 25% : 96% (based on seconds elapsed) for the duration" before
+# its explosion.
+#
+# E's slashes are control-free ("Royal Maelstrom" only slashes) and now
+# ride the cached schedule their own row states — a count "over the
+# duration" of a 1.5-second frenzy — so that review is authored on the part
+# in ``_royal_maelstrom``.
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.  It
+# too is control-free in the cache — Void Surge "deal[s] physical damage to
+# enemies she passes through" — but its row is the four cardinal dashes in
+# one part and the cache spaces them with nothing but "incurs a cooldown
+# between casts", a cooldown it never names.
+MODULE_CC = {"W": "knockup", "R": "slow"}
 
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+parse_abilities = build_parser(SLOTS, "Bel'Veth", cc_kinds=MODULE_CC)

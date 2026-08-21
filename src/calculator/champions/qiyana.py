@@ -12,6 +12,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -27,15 +28,26 @@ def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
 _royal_privilege.phase = ONHIT
 
 
+# Q's control is a property of the element, so it is authored per cast
+# rather than in MODULE_CC.  The unelemented slash "deal[s] physical damage
+# to enemies in a line" and the terrain blast only "deals 60% increased
+# damage against enemies below 50%" — neither applies control.  Index 1 is
+# the option's grouped "brush/river" element, and those two disagree
+# (brush grants Qiyana invisibility; river "roots enemies hit for 0.5
+# seconds, then slows them by 20%"), so that index is left unreviewed
+# rather than answered with a kind only one of its two elements applies.
+_Q_CC_BY_VARIANT = ("none", None, "none")
+
+
 def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability_index = 1 if int(ctx.options.get("q_variant", 0)) > 0 else 0
+    ability_index = 1 if int(ctx.option("q_variant")) > 0 else 0
     ability = ctx.ability("Q", ability_index)
     if ability is None:
         return None
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    variant = min(max(int(ctx.options.get("q_variant", 0)), 0), 2)
+    variant = min(max(int(ctx.option("q_variant")), 0), 2)
     low_health = bool(ctx.options.get("q_target_below_half", False))
     attr = "Increased Damage" if variant == 2 and low_health else "Physical Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -46,7 +58,15 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
+    entry["parts"] = (
+        (
+            DamagePart(
+                "physical", total, time_offset=0.0, cc_kind=_Q_CC_BY_VARIANT[variant]
+            )
+            if _Q_CC_BY_VARIANT[variant] is not None
+            else DamagePart("physical", total, time_offset=0.0)
+        ),
+    )
     entry["detail"] = (
         "Terrain element, target below 50% HP"
         if variant == 2 and low_health
@@ -103,11 +123,26 @@ SLOTS = {
     "P": _royal_privilege,
     "Q": _edge_of_ixtal,
     "W": _terrashape,
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # Audacity's dash lands one hit on arrival with no sourced sub-cast
+    # phase, so it certifies the cast boundary its reviewed answer rides on.
+    "E": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "R": _supreme_display,
 }
 
-parse_abilities = build_parser(SLOTS, "Qiyana")
+# Cached kit review.  E's dash "deals physical damage" and nothing else.
+# R's windblast knocks back but damages nobody; the damage row this module
+# prices is the cascading shockwave, which is "dealing physical damage to
+# enemies hit, stunning them for 0.5 : 1 (based on proximity) seconds", so
+# the stun is what the damaging part applies.  Q answers per cast instead
+# of here because its control belongs to the element (``_edge_of_ixtal``).
+# P and W are absent: both are on-hit riders on the auto stream.
+MODULE_CC = {"E": "none", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Qiyana", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -132,18 +167,4 @@ ASSUMPTIONS = [
     "Element control and per-target passive cooldowns remain explicit scenario state.",
 ]
 
-SOURCES = [
-    {
-        "label": "Qiyana — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Qiyana",
-        "revision_id": 4007961,
-        "revision_timestamp": "2026-04-12T23:59:09Z",
-    }
-]
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Qiyana")

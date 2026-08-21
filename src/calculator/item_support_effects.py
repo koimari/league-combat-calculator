@@ -8,10 +8,65 @@ assumes an active or a trigger that is absent from the authored event stream.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Iterator, Mapping
+from dataclasses import replace
+from functools import lru_cache
 import math
+from types import MappingProxyType
 from typing import Any
 
+from .ability_spec import (
+    AttackClass,
+    Authority,
+    DamageClass,
+)
+
+# The typed bus: one home for "what does this raw row mean?" and one for
+# "which streams does this holder read?".  Both used to be answered here, by
+# four scanners and five hand-maintained name sets that could drift from the
+# branches they gated (D-30, D-32).  ``trigger_stream``'s only intra-package
+# import is ``ability_spec``, so this edge adds no cycle.
+from .trigger_stream import (
+    CAPABILITIES,
+    RAW_STREAMS,
+    CcClass,
+    Trigger,
+    TriggerKind,
+    authored_triggers,
+    cross_participant_packet_source,
+    streams_for,
+    tuple_incapable_items,
+)
+from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
+
+# Phase 3's declarations, and the interpreter that resolves them.  A producer
+# is reached through the rule its registry entry declares — "does this holder
+# declare Everlasting?" — rather than by spelling the item that has it, and
+# every number comes back through the rule's own references, so a key no
+# declaration carries is a stop instead of a silent registry read.
+from .item_behavior import AllyProducer, LevelSubject, PacketKind, Resistance
+from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
+from .interpreters.resistance_shred import ShredSlot, walk_slot as _shred_walk_slot
+
+# Phase 4's routing layer.  A crowd-control mark's subject is a decision the
+# ability's ``CcScope`` makes and ``resolve_route`` delivers, never the roster
+# position a pair scan happened to stamp.  ``program`` imports nothing from
+# here, so the edge is one-way.
+from .program import route as program_route
+from .program.identity import PIdx
+from .program.scope import Unreviewed, reviewed_scope, scope_policy
+
+# The item layer's one edge into the survival kernel: packet authors declare
+# when their packet arms, in the walk's vocabulary, so there is no second
+# ordering language to keep in sync.  Note the reach — importing
+# ``.survival.actions`` executes ``survival/__init__.py``, so the whole
+# kernel package loads with this module.  Acyclic: nothing under
+# ``survival/`` imports ``item_support_effects``.
+from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
+
+# The closed support-scope vocabulary and the kernel's typed trigger,
+# cooldown and cadence rules an item packet arms under.
+from .capabilities import SUPPORT_TARGET_SCOPES
 from .state_lifecycle import (
     CcTriggerRule,
     CooldownRule,
@@ -19,18 +74,20 @@ from .state_lifecycle import (
     InstanceCadence,
     SourceReceipt,
 )
-
-from .capabilities import SUPPORT_TARGET_SCOPES
 from .item_effects import (
-    ALLY_ITEM_EFFECTS,
-    ITEM_INPUT_OPTIONS,
-    ally_item_effect_value,
-    ally_item_level_value,
+    AUTHORIZED_MANA_GATE_STATUSES,
     fimbulwinter_mana_gate_authority,
     fimbulwinter_nearby_enemy_range_authority,
     required_effect_value,
 )
 
+# The one packet kind that changes how much damage some *other* participant
+# deals or takes, and therefore the kind ``_packet`` runs its authority and
+# damage-class checks on.  See *Cross-participant producers* below.
+_DAMAGE_MODIFIER_KIND = "damage_modifier"
+
+# The sentinel that separates "the caller supplied no value" from a real
+# zero; a mana read that is absent is a named denial, never a 0.0.
 _MISSING = object()
 
 
@@ -70,14 +127,91 @@ def _option(attacker: Any, item_name: str, key: str, default: float = 0.0) -> fl
     return parsed
 
 
-def _active_seconds(attacker: Any, item_name: str) -> float:
-    """One validated active-seconds read for an ally-support item.
+def _producer(
+    slots: Mapping[AllyProducer, tuple[AllyPacketSlot, ...]], producer: AllyProducer
+) -> AllyPacketSlot | None:
+    """This build's one holder of *producer*, or ``None``.
+
+    ``None`` is an answer, not a zero: the build declares the mechanic
+    nowhere, so no packet is owed.  Two holders is a stop — every producer but
+    the support quest is carried by exactly one registry record, and a second
+    one would be two ledgers nothing says how to combine.
+    """
+    found = slots.get(producer, ())
+    if len(found) > 1:
+        raise ValueError(
+            f"{[slot.owner for slot in found]} all declare the "
+            f"{producer.value} producer and no rule says how two of them "
+            "combine"
+        )
+    return found[0] if found else None
+
+
+def _shred_ramp(
+    attacker: Any, names: Collection[str], resistance: Resistance, producer: str
+) -> ShredSlot:
+    """This holder's declared shred of *resistance*, on the receipt-walk lane.
+
+    The walk's cross-participant emitter used to read the ramp off the
+    *ally-packet* declaration's own copy of the two numbers, which made the
+    shred a mechanic with two declarations — the shape Serpent's Fang's venom
+    had before ``damage_routing`` retired, and the shape a score and a receipt
+    come to disagree about.  Since ``resistance_shred`` retired off the pair
+    engine (2026-08-16) both sides read the family's own declaration, through
+    the interpreter registered in the lane the family declares.
+
+    A holder of the cross-participant half whose build declares no shred is a
+    **stop**: the packet would otherwise be emitted with no ramp behind it,
+    which is a modifier nobody declared rather than a modifier measuring zero.
+
+    Two of the four :class:`~.item_behavior.BuildContext` facts are stated
+    rather than passed through, and stating them is the point of the
+    defaultless keywords: no ``resistance_shred`` declaration reads a fight
+    duration or a target's bonus health — a shred is a per-stack fraction and
+    a stack cap, both plain registry references — so this is a fact about the
+    family and not a defaulted zero flattening a ramp nobody looked at, the
+    same way ``participant_timeline._routing_build`` states it for
+    ``damage_routing``.
+    """
+    slot = _shred_walk_slot(
+        sorted(frozenset(names)),
+        resistance,
+        level=int(attacker.stats.get("level", 1) or 1),
+        fight_duration_seconds=0.0,
+        target_bonus_health=0.0,
+        holder_is_melee=bool(attacker.stats.get("is_melee", False)),
+    )
+    if slot is None:
+        raise ValueError(
+            f"{attacker.participant_id} declares the {producer} producer and no "
+            f"{resistance.value} resistance_shred rule; the walk would stage a "
+            "reduction packet whose ramp no declaration states"
+        )
+    return slot
+
+
+def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
+    """When the scenario cast *slot*'s active, or ``0.0`` if it never did.
+
+    An explicit non-zero timestamp is the whole trigger contract for an
+    item-active: the packet is never emitted at ``t = 0`` by default.  The
+    option is read under the declaration's owner, so a build that declares no
+    active reads nothing — the option's own type checking lives at the request
+    boundary (``scenario.py`` -> ``item_effects.validate_item_input_options``)
+    and covers every named item whether the build holds it or not.
+    """
+    if slot is None:
+        return 0.0
+    return _active_seconds_for(attacker, slot.owner)
+
+
+def _active_seconds_for(attacker: Any, item_name: str) -> float:
+    """One validated active-seconds read for *item_name*.
 
     Delegates to the typed ``input_option_float_value`` accessor so the
-    emission layer re-checks the schema bounds AND step multiple (P3
-    package 3F/3G): a direct timeline caller cannot author an out-of-domain
-    activation (e.g. 31.0 or 0.3) even though the request layer already
-    validates.  Missing/absent input reads 0.0 (no cast).
+    emission layer re-checks the schema bounds AND step multiple: a direct
+    timeline caller cannot author an out-of-domain activation even though
+    the request layer already validates.  Absent input reads 0.0 (no cast).
     """
     from .item_effects import input_option_float_value
 
@@ -99,7 +233,7 @@ def _event_time(event: Mapping[str, Any]) -> float:
     return parsed
 
 
-def _packet(
+def _packet(  # pylint: disable=too-many-arguments
     *,
     attacker: Any,
     target: Any,
@@ -109,8 +243,49 @@ def _packet(
     amount: float = 0.0,
     duration: float = 0.0,
     target_scope: str = "one_teammate",
+    rank: TransitionRank | None = None,
+    authority: Authority | None = None,
+    damage_classes: frozenset[DamageClass] | None = None,
+    attack_classes: frozenset[AttackClass] | None = None,
     **fields: Any,
 ) -> dict[str, Any]:
+    """Build one sourced packet.
+
+    Keyword-only, and the argument-count check is disabled for the reason
+    ``trigger_stream``'s own builder disables it: every parameter is a
+    declared packet axis a call site names by keyword, and folding them into
+    one dict is the untyped bag the typed packet replaced.
+
+    ``rank`` is how a packet declares *when* it arms, for the packets whose
+    kind does not decide it (a barrier the triggering damage placed, say).
+    It is the only way to override the walk's ladder: an author names a
+    :class:`TransitionRank`, never a number.
+
+    ``authority`` is how a ``damage_modifier`` packet declares which engine
+    owns its mechanic.  It is required of those packets and meaningless on
+    the rest, it is checked here — the one construction site all six
+    cross-participant producers pass through — and it is deliberately *not*
+    written into the returned dict: the declaration's homes are this call
+    site and the mechanic's ``trigger_stream`` capability, and a packet
+    payload that grew a key would move receipts inside a semantic commit
+    (R-17).
+
+    ``damage_classes`` and ``attack_classes`` are how a ``damage_modifier``
+    packet says *what it applies to* — the two axes of D-04, both required
+    of those packets, both banned from being empty, and both checked here.
+    Unlike ``authority`` they are written into the returned dict, because
+    the walk reads them per packet; they reach no receipt, because the
+    published support-event payload is an explicit key list
+    (``participant_timeline``'s ``support_events`` block) and neither key is
+    on it.
+
+    ``rank`` also sits earlier in the returned dict than the open ordering
+    float it replaced did: that arrived through ``**fields``, after every
+    explicit key, and the rank is injected before them.  Inert — the
+    published receipt is assembled from an explicit key list, not from this
+    dict's order — but it is a payload-shape change beyond the key's name
+    and type, and a fixture comparing serialized packet order would see it.
+    """
     if not math.isfinite(float(amount)) or float(amount) < 0.0:
         raise ValueError(f"{source} packet amount must be finite and non-negative")
     if not math.isfinite(float(duration)) or float(duration) < 0.0:
@@ -129,6 +304,15 @@ def _packet(
         or not target_id.strip()
     ):
         raise ValueError(f"{source} applied packet requires participant identity")
+    if kind == _DAMAGE_MODIFIER_KIND:
+        _check_cross_participant_authority(source, authority, fields.get("owner"))
+        _check_declared_classes(source, damage_classes, attack_classes)
+        _check_aura_arming(source, fields.get("persistent"), rank)
+        fields = {
+            "damage_classes": damage_classes,
+            "attack_classes": attack_classes,
+            **fields,
+        }
     return {
         "time": float(time),
         "kind": kind,
@@ -142,8 +326,42 @@ def _packet(
         "target_policy": "explicit_selected_roster_target",
         "target_selection_key": fields.get("target_selection_key", f"{kind}:{source}"),
         "_item_support": True,
+        **({SUPPORT_RANK_KEY: rank} if rank is not None else {}),
         **fields,
     }
+
+
+# Which declared packet a chained enchanter effect emits, keyed by the kind
+# of the packet that triggered it, and which sourced fraction that packet
+# carries.  Two tables rather than one runtime-computed kind (D-50): the kind
+# a producer emits has to be readable from the declaration, and the fraction
+# it uses has to be readable from the kind.
+_CHAIN_KINDS: Mapping[str, PacketKind] = MappingProxyType(
+    {"heal": PacketKind.HEAL, "shield": PacketKind.SHIELD}
+)
+
+_CHAIN_FRACTION_KEYS: Mapping[PacketKind, str] = MappingProxyType(
+    {
+        PacketKind.HEAL: "heal_chain_fraction",
+        PacketKind.SHIELD: "shield_chain_fraction",
+    }
+)
+
+
+def _ramp_value(
+    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any
+) -> float:
+    """One declared level ramp, read at the level its declaration names.
+
+    Every call site used to pass the recipient's level, which is right for
+    the three actives the Wiki qualifies ``type=target's level`` and wrong
+    for the four it qualifies ``type=your level`` — Soul Siphon's charge cap
+    tracked whoever got healed instead of the holder who stored the charges.
+    The subject is declared beside the ramp, so no emitter chooses again.
+    """
+    subject = slot.level_subject(key)
+    level = holder.level if subject is LevelSubject.HOLDER else recipient.level
+    return slot.level_value(key, level)
 
 
 def _support_triggers(
@@ -204,15 +422,6 @@ def _cc_event_stream(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     return out
 
 
-def _cc_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return CC packets that can carry an authored CC trigger."""
-    return [
-        event
-        for event in _cc_event_stream(result)
-        if _FIMBULWINTER_TRIGGER_RULE.is_candidate(event)
-    ]
-
-
 def _mana_input(
     raw: object,
     *,
@@ -231,6 +440,21 @@ def _mana_input(
     if not math.isfinite(value) or value < 0.0:
         return None, invalid_reason
     return value, None
+
+
+def _stack_triggers(triggers: Iterable[Trigger]) -> Iterator[Trigger]:
+    """Non-reactive champion damage that landed on a named target.
+
+    The bus emits a damage trigger for every authored row, because its
+    consumers disagree about which damage matters and one that pre-filtered
+    would have to pick a side.  This is the stack ledgers' own side — "a hit
+    that stacked" — stated where the ledgers read it instead of inside the
+    transport.
+    """
+    for trigger in triggers:
+        if trigger.damage <= 0.0 or trigger.reactive or not trigger.target_id:
+            continue
+        yield trigger
 
 
 def _current_mana_at(
@@ -271,42 +495,82 @@ def _current_mana_at(
     return current, initial_reason
 
 
-def _takedown_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return only explicit takedown receipts; never infer a kill from damage."""
-    return [
-        event
-        for event in result.get("takedown_events", [])
-        if isinstance(event, Mapping)
-        and event.get("time") is not None
-        and str(event.get("target", ""))
-    ]
-
-
-def _damage_triggers(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """Return authored non-reactive champion damage packets for item stacks."""
-    return [
-        event
-        for event in result.get("damage_events", [])
-        if isinstance(event, Mapping)
-        and float(event.get("damage", 0.0) or 0.0) > 0.0
-        and not event.get("_reactive")
-        and str(event.get("target", ""))
-    ]
-
-
 def _target_by_id(all_actors: Iterable[Any], participant_id: str) -> Any | None:
     return next(
         (actor for actor in all_actors if actor.participant_id == participant_id), None
     )
 
 
-def _selected_teammate(attacker: Any, teammates: list[Any]) -> Any | None:
+def _cc_ability_label(cc: Trigger, all_actors: Iterable[Any]) -> str:
+    """The ability an unreviewed crowd-control scope belongs to, named.
+
+    "Syndra E", not "E": the disclosure exists so a reader can go and take
+    the wiki reading H2 is waiting on, and a bare slot letter names no cast.
+    The caster is the control row's own ``attacker_id`` — never the packet
+    holder, who may be a different participant entirely.
+    """
+    caster = _target_by_id(all_actors, cc.attacker_id)
+    champion = str(
+        (getattr(caster, "champion_data", None) or {}).get("name", "")
+    ).strip()
+    slot = (
+        cc.source_key or cc.cc_kind or cc.ability_instance or "an unnamed cast"
+    ).strip()
+    return f"{champion} {slot}".strip() if champion else slot
+
+
+def _cc_mark_subjects(
+    attacker: Any, cc: Trigger, all_actors: list[Any], scope: Any
+) -> tuple[Any, ...]:
+    """Who a crowd-control mark reaches — routed, never scanned.
+
+    Two resolutions, in the order the decision is actually made.  The
+    ability's reviewed :mod:`program.scope` says how wide the control is and
+    therefore *who the trigger reached*; the mark then rides that trigger
+    through :class:`program.route.TriggerTarget`, which is what makes a mark
+    that hit one enemy route to one and a mark that hit two route to two,
+    instead of both routing to roster slot zero.
+
+    An empty tuple is the one data condition: the control row named a
+    participant this roster does not hold, so there is nobody to mark.
+    Everything else is a programming error and :func:`resolve_route` raises.
+    """
+    slots = {
+        actor.participant_id: PIdx(index) for index, actor in enumerate(all_actors)
+    }
+    defender = slots.get(cc.target_id)
+    author = slots.get(attacker.participant_id)
+    if defender is None or author is None:
+        return ()
+    context = program_route.RouteContext(
+        author=author,
+        holder=author,
+        pair_defender=defender,
+        opponents=tuple(
+            slots[actor.participant_id]
+            for actor in all_actors
+            if actor.team != attacker.team
+        ),
+    )
+    reached = program_route.resolve_route(
+        scope_policy(scope), context, roster_size=len(all_actors)
+    )
+    marked = program_route.resolve_route(
+        program_route.TriggerTarget(),
+        replace(context, trigger_subjects=reached),
+        roster_size=len(all_actors),
+    )
+    return tuple(all_actors[int(subject)] for subject in marked)
+
+
+def _selected_teammate(attacker: Any, teammates: list[Any], owner: str) -> Any | None:
+    """The teammate the holder's scenario tethered, under *owner*'s options."""
     if not teammates:
         return None
-    raw_index = _option(attacker, "Knight's Vow", "worthy_target_index", -1.0)
+    raw_index = _option(attacker, owner, "worthy_target_index", -1.0)
     if float(raw_index) < 0.0:
         # Pledge is unit-targeted: a MISSING authored index means no
-        # designation — fail closed instead of inventing the first
+        # designation - fail closed instead of inventing the first
         # teammate as Worthy (P3 package 3S).
         return None
     index = max(0, min(len(teammates) - 1, int(raw_index)))
@@ -319,116 +583,180 @@ def resolve_knights_vow_tether(
     """Resolve one Knight's Vow holder's Worthy tether.
 
     Returns the authored target, the option gates, and the typed Sacrifice
-    values, or ``None`` when the holder carries no Knight's Vow, has no
-    eligible teammate, or the authored Worthy index is the no-selection
-    sentinel (P3 package 3S).  Both the receipt scheduler and the compiled
-    score staging consume this single resolution so the walks cannot
-    disagree about the tether.
+    values, or ``None`` when the holder declares no Sacrifice producer, has
+    no eligible teammate, or the authored Worthy index is the no-selection
+    sentinel.  Both the receipt scheduler and the compiled score staging
+    consume this one resolution so the walks cannot disagree about the
+    tether; every number comes back through the declaration's own
+    references, so the item is never spelled here.
     """
-    if "Knight's Vow" not in _item_names(holder):
+    sacrifice = _producer(resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE)
+    if sacrifice is None:
         return None
-    teammates = _teammates(holder, list(all_actors))
-    target = _selected_teammate(holder, teammates)
+    sacrifice.declared(PacketKind.HEAL)
+    target = _selected_teammate(
+        holder, _teammates(holder, list(all_actors)), sacrifice.owner
+    )
     if target is None:
         return None
     return {
         "holder": holder,
         "target": target,
-        "redirect_fraction": ally_item_effect_value(
-            "Knight's Vow", "redirect_fraction"
-        ),
-        "heal_fraction": ally_item_effect_value("Knight's Vow", "holder_heal_fraction"),
-        "within_range": _option(holder, "Knight's Vow", "worthy_within_range", 1.0),
+        "redirect_fraction": sacrifice.value("redirect_fraction"),
+        "heal_fraction": sacrifice.value("holder_heal_fraction"),
+        "within_range": _option(holder, sacrifice.owner, "worthy_within_range", 1.0),
         "holder_health_ready": _option(
-            holder, "Knight's Vow", "holder_above_30_percent", 1.0
+            holder, sacrifice.owner, "holder_above_30_percent", 1.0
         ),
-        "range_units": ally_item_effect_value("Knight's Vow", "worthy_range_units"),
-        "threshold": ally_item_effect_value(
-            "Knight's Vow", "holder_health_threshold_ratio"
-        ),
-        "source_revision_id": int(
-            ally_item_effect_value("Knight's Vow", "source_revision_id")
-        ),
+        "range_units": sacrifice.value("worthy_range_units"),
+        "threshold": sacrifice.value("holder_health_threshold_ratio"),
+        "source_revision_id": int(sacrifice.value("source_revision_id")),
     }
 
 
-# Items whose cross-participant packets are derived by scanning the
-# holder's damage/takedown event stream below (Phage's Rage autos, Black
-# Cleaver Carve stacks, Bloodletter's Curse, Bloodsong's Expose Weakness,
-# Cryptbloom's takedown nova).  The optimizer's score-only tuple ledger
-# carries positional rows the scan cannot read, so the pipeline's tuple
-# predicate consults this set and keeps dict rows for these holders
-# (issue #169).  Every new branch below that reads ``damage_events`` or
-# ``takedown_events`` must add its item here, or a score-only fight will
-# silently starve its scan.
-EVENT_SCAN_SUPPORT_ITEMS = frozenset(
-    {
-        "Black Cleaver",
-        "Bloodletter's Curse",
-        "Bloodsong",
-        "Cryptbloom",
-        "Phage",
-        # CC-trigger holders (Fimbulwinter Everlasting, Bandlepipes,
-        # Solstice Sleigh, Imperial Mandate) scan the CC-adjacent event
-        # stream; a score-only tuple-ledger fight must keep dict rows or
-        # the scan silently starves (P3 package 3B hardening).
-        "Fimbulwinter",
-        "Bandlepipes",
-        "Solstice Sleigh",
-        "Imperial Mandate",
-        # Knight's Vow's Sacrifice staging reads the per-event redirect
-        # view (P3 package 3S): a score-only tuple-ledger fight must keep
-        # dict rows or the compiled staging silently starves.
-        "Knight's Vow",
-    }
-)
+def _starved_streams(names: Collection[str]) -> list[tuple[str, str]]:
+    """Each held holder that reads a raw stream, paired with that stream.
 
-
-def has_event_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any held item derives support packets from the event stream."""
-    return any(str(item.get("name", "")) in EVENT_SCAN_SUPPORT_ITEMS for item in items)
-
-
-# The subset whose trigger is the takedown stream: the receipt composition
-# synthesizes ``takedown_events`` from the pair fight's one-pair shield
-# outcome (``target_ending_health``), so a score-only fight for these
-# holders must keep that outcome instead of skipping it (issue #169).
-TAKEDOWN_SCAN_SUPPORT_ITEMS = frozenset({"Cryptbloom"})
-
-
-def has_takedown_scan_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any held item derives support packets from takedowns."""
-    return any(
-        str(item.get("name", "")) in TAKEDOWN_SCAN_SUPPORT_ITEMS for item in items
+    The holder-to-stream fact has exactly one home — every mechanic's
+    declared ``reads`` in ``trigger_stream.CAPABILITIES`` — so this is a
+    projection of the registry and not the second name list it replaced.
+    The label is the raw ledger key the stream is parsed off, derived from
+    the stream's own value rather than tabulated beside it.
+    """
+    return sorted(
+        (item, f"{stream.value}_events")
+        for item in frozenset(names) & tuple_incapable_items()
+        for stream in streams_for(frozenset({item})) & RAW_STREAMS
     )
 
 
-# The holders that consume each pre-scanned trigger stream below.  The
-# streams are built lazily from these sets: every consumer branch in
-# ``derive_item_support_effects`` is gated on its item name, so a holder
-# with none of a stream's items can skip that scan entirely.  A new branch
-# that reads ``cc_events``/``damage_events`` must add its item here, or
-# its stream will arrive empty.
-CC_TRIGGER_ITEMS = frozenset(
-    {"Fimbulwinter", "Bandlepipes", "Solstice Sleigh", "Imperial Mandate"}
-)
-DAMAGE_TRIGGER_ITEMS = frozenset({"Bloodsong", "Black Cleaver", "Bloodletter's Curse"})
+class EventViewStarvationError(ValueError):
+    """A declared event-view holder was handed the light tuple ledger.
 
-# Every holder whose scan reads the per-event view at all (``target`` /
-# ``_event_id`` enrichment, the takedown synthesis, or a raw damage sum).
-# The optimizer's compiled path builds that enriched per-event view only
-# for these holders; everyone else scans the plain engine result.
-EVENT_VIEW_SUPPORT_ITEMS = (
-    EVENT_SCAN_SUPPORT_ITEMS
-    | TAKEDOWN_SCAN_SUPPORT_ITEMS
-    | CC_TRIGGER_ITEMS
-    | frozenset({"Echoes of Helia"})
-)
+    The tuple rows are positional, so every scan below reads them as an
+    empty stream and prices the item at zero without failing.  That is a
+    projection a consumer cannot answer from — a programming error, not a
+    data condition — so it is raised rather than absorbed.
+    """
 
 
-def has_event_view_support_items(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any held item scans the per-event damage/takedown view."""
-    return any(str(item.get("name", "")) in EVENT_VIEW_SUPPORT_ITEMS for item in items)
+def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> None:
+    """Raise when a declared event-view holder is handed tuple rows.
+
+    The score-only tuple ledger (``damage_events_tuple``) carries positional
+    rows that no scan below can read.  After the pipeline's tuple gate
+    consults ``tuple_incapable_items()`` no public request can reach this
+    state, so the raise is a programming-error tripwire rather than a
+    user-facing outcome.
+    """
+    if not result.get("damage_events_tuple"):
+        return
+    starved = _starved_streams(names)
+    if not starved:
+        return
+    read = "; ".join(f"{item} reads {stream}" for item, stream in starved)
+    raise EventViewStarvationError(
+        "STARVED: the score-only tuple ledger cannot answer the item support "
+        f"scan — {read}.  The pipeline's tuple gate must keep dict rows for "
+        "every event-view holder."
+    )
+
+
+def _bus_streams(
+    result: Mapping[str, Any], names: Collection[str]
+) -> tuple[list[Trigger], list[Trigger], list[Trigger]]:
+    """One engine result as the control, damage and takedown views of it.
+
+    The compiler reads each stream once and the bus builds only the streams
+    the held holders declare, so a holder reading none pays nothing — that
+    laziness is the whole reason the migration is performance-neutral
+    (D-30).  ``tuple_incapable_items()`` is exactly the set of holders that
+    read a raw stream, so intersecting first also bounds the projection's
+    cache key to those names rather than to every build the optimizer
+    explores.
+    """
+    scanning = frozenset(names) & tuple_incapable_items()
+    by_kind: dict[TriggerKind, list[Trigger]] = {kind: [] for kind in TriggerKind}
+    for trigger in authored_triggers(
+        result, streams=streams_for(scanning), holder=", ".join(sorted(scanning))
+    ):
+        by_kind[trigger.kind].append(trigger)
+    return (
+        by_kind[TriggerKind.CC],
+        by_kind[TriggerKind.DAMAGE],
+        by_kind[TriggerKind.TAKEDOWN],
+    )
+
+
+def _support_quest_packets(
+    attacker: Any, shared_riches: AllyPacketSlot, ward: AllyPacketSlot
+) -> list[dict[str, Any]]:
+    """One support-quest item's authored economy and vision outcomes.
+
+    World Atlas and Runic Compass carry the same quest, and the two outcomes
+    — the gold and the ward — are two declared producers on the one record,
+    because Phase 2 declares a capability and a packet source for each.  The
+    item is whichever transformed stage the build equipped, read off the
+    declarations rather than spelled: ``validate_resolved_loadout`` already
+    refuses a build carrying two support quest items, and ``_producer``'s
+    two-holder stop is that same rule restated where the packets are built.
+    """
+    packets: list[dict[str, Any]] = []
+    quest_item = shared_riches.owner
+    source_meta = ITEM_INPUT_OPTIONS[quest_item]
+    gold = max(0.0, _option(attacker, quest_item, "shared_riches_gold"))
+    gold_cap = shared_riches.value("support_quest_threshold")
+    if gold > 0.0:
+        packets.append(
+            _packet(
+                attacker=attacker,
+                target=attacker,
+                time=0.0,
+                kind="economy",
+                source=f"{quest_item} — Shared Riches",
+                amount=min(gold, gold_cap),
+                target_scope="self",
+                gold_amount=min(gold, gold_cap),
+                quest_threshold=gold_cap,
+                quest_complete=gold >= gold_cap,
+                shared_riches_interval=required_effect_value(
+                    quest_item, "shared_riches_interval"
+                ),
+                shared_riches_gold_minion=required_effect_value(
+                    quest_item, "shared_riches_gold_minion"
+                ),
+                shared_riches_gold_melee=required_effect_value(
+                    quest_item, "shared_riches_gold_melee"
+                ),
+                shared_riches_gold_ranged=required_effect_value(
+                    quest_item, "shared_riches_gold_ranged"
+                ),
+                source_url=source_meta["source_url"],
+                source_revision_id=source_meta["source_revision_id"],
+            )
+        )
+    ward_uses = max(
+        0.0,
+        min(_option(attacker, quest_item, "ward_uses"), ward.value("ward_charges")),
+    )
+    if ward_uses > 0.0:
+        packets.append(
+            _packet(
+                attacker=attacker,
+                target=attacker,
+                time=0.0,
+                kind="vision",
+                source=f"{quest_item} — Ward",
+                amount=ward_uses,
+                target_scope="self",
+                ward_uses=ward_uses,
+                ward_charges=ward.value("ward_charges"),
+                quest_threshold=gold_cap,
+                source_url=source_meta["source_url"],
+                source_revision_id=source_meta["source_revision_id"],
+            )
+        )
+    return packets
 
 
 def _cleanse_active_packet(
@@ -452,12 +780,34 @@ def _cleanse_active_packet(
     )
 
 
+def _cleanse_movement_entry(item: str) -> dict[str, Any] | None:
+    """*item*'s atom-backed movement entry, or ``None`` when it grants none."""
+    from .cleanse_eligibility import item_declaration, movement_entry
+
+    return movement_entry(item_declaration(item))
+
+
+def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
+    """The build's cleanse actives that target their own holder.
+
+    Declaration order rather than build order, so the emitted packet sequence
+    is a property of the registry every reader can see and not of whatever
+    order a request happened to list its items in.
+    """
+    from .cleanse_eligibility import ITEM_CLEANSE_DECLARATIONS
+
+    held = frozenset(names)
+    return tuple(
+        item
+        for item, declaration in ITEM_CLEANSE_DECLARATIONS.items()
+        if declaration["target_scope"] == "self" and item in held
+    )
+
+
 def _cleanse_movement_declaration(item: str) -> dict[str, Any]:
     """The atom-backed movement entry of a cleanse active item (ONE kernel
     builder — the walk consumes the same shape)."""
-    from .cleanse_eligibility import item_declaration, movement_entry
-
-    movement = movement_entry(item_declaration(item))
+    movement = _cleanse_movement_entry(item)
     if movement is None:
         raise KeyError(f"cleanse declaration for {item!r} has no movement entry")
     return movement
@@ -475,30 +825,44 @@ def derive_item_support_effects(
     ):
         return []
     names = _item_names(attacker)
+    require_event_view(result, names)
     teammates = _teammates(attacker, all_actors)
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
-    # Each stream scans the full event ledger, so it is built only when a
-    # held item consumes it (the registries above own that knowledge).
-    cc_events = _cc_triggers(result) if names & CC_TRIGGER_ITEMS else []
-    takedown_events = (
-        _takedown_triggers(result) if names & TAKEDOWN_SCAN_SUPPORT_ITEMS else []
-    )
-    damage_events = _damage_triggers(result) if names & DAMAGE_TRIGGER_ITEMS else []
+    cc_events, damage_events, takedown_events = _bus_streams(result, names)
+    # The build's declared cross-participant producers, resolved once.  Every
+    # migrated branch below asks this map whether the holder declares its
+    # mechanic; the branches still spelling an item name are the producers
+    # the remaining commits of 3.6 migrate.
+    slots = resolve_slots(names)
+    starlit_grace = _producer(slots, AllyProducer.STARLIT_GRACE)
+    soul_siphon = _producer(slots, AllyProducer.SOUL_SIPHON)
+    consonance = _producer(slots, AllyProducer.CONSONANCE)
+    going_sledding = _producer(slots, AllyProducer.GOING_SLEDDING)
+    sanctify = _producer(slots, AllyProducer.SANCTIFY)
+    rapids = _producer(slots, AllyProducer.RAPIDS)
+    fanfare = _producer(slots, AllyProducer.FANFARE)
+    command = _producer(slots, AllyProducer.COMMAND)
+    carve = _producer(slots, AllyProducer.CARVE)
+    vile_decay = _producer(slots, AllyProducer.VILE_DECAY)
+    blue_bubble = _producer(slots, AllyProducer.BLUE_BUBBLE)
+    purple_bubble = _producer(slots, AllyProducer.PURPLE_BUBBLE)
 
     # Reap is a progression/economy branch, not a guessed combat bonus.  The
     # authored minion-kill count is bounded by its sourced 100-kill quest and
     # produces one inspectable gold receipt only after the caller supplies it.
-    if "Cull" in names:
-        minion_kills = max(0.0, _option(attacker, "Cull", "reap_minion_kills"))
-        cap = required_effect_value("Cull", "reap_max_gold")
-        per_minion = required_effect_value("Cull", "reap_gold_per_minion")
-        completion_gold = required_effect_value("Cull", "reap_completion_gold")
+    reap = _producer(slots, AllyProducer.REAP)
+    if reap is not None:
+        reap.declared(PacketKind.ECONOMY)
+        minion_kills = max(0.0, _option(attacker, reap.owner, "reap_minion_kills"))
+        cap = reap.value("reap_max_gold")
+        per_minion = reap.value("reap_gold_per_minion")
+        completion_gold = reap.value("reap_completion_gold")
         earned = min(minion_kills, cap) * per_minion
         if minion_kills >= cap:
             earned += completion_gold
         if earned > 0.0:
-            source_meta = ITEM_INPUT_OPTIONS["Cull"]
+            source_meta = ITEM_INPUT_OPTIONS[reap.owner]
             packets.append(
                 _packet(
                     attacker=attacker,
@@ -519,28 +883,26 @@ def derive_item_support_effects(
     # Rage is emitted from the same authored auto stream used by the damage
     # ledger.  No movement state is invented when the stream is absent or
     # coarse; each qualifying basic attack gets its own timestamped packet.
-    if "Phage" in names:
+    rage = _producer(slots, AllyProducer.RAGE)
+    if rage is not None:
+        rage.declared(PacketKind.MOVEMENT)
         is_melee = bool(attacker.stats.get("is_melee", False))
         speed_key = (
             "rage_bonus_move_speed_melee"
             if is_melee
             else "rage_bonus_move_speed_ranged"
         )
-        bonus_speed = required_effect_value("Phage", speed_key)
-        duration = required_effect_value("Phage", "rage_duration")
-        source_meta = ITEM_INPUT_OPTIONS["Phage"]
-        for event in result.get("damage_events", ()):
-            if not isinstance(event, Mapping):
-                continue
-            if str(event.get("source_key", "")) != "auto_attacks" and not bool(
-                event.get("basic_attack")
-            ):
+        bonus_speed = rage.value(speed_key)
+        duration = rage.value("rage_duration")
+        source_meta = ITEM_INPUT_OPTIONS[rage.owner]
+        for event in damage_events:
+            if event.source_key != "auto_attacks" and not event.basic_attack:
                 continue
             packets.append(
                 _packet(
                     attacker=attacker,
                     target=attacker,
-                    time=_event_time(event),
+                    time=event.time,
                     kind="movement",
                     source="Phage — Rage",
                     amount=bonus_speed,
@@ -556,63 +918,12 @@ def derive_item_support_effects(
     # Support Quest is represented as explicit economy and vision outcomes.
     # The role-quest contract decides which transformed item is equipped; this
     # packet layer records only the authored progress/ward state for that item.
-    # The sourced Shared Riches cadence and per-minion-type gold values ride
-    # the economy receipt so the parser-backed numbers are visible beside the
-    # authored progress instead of living only in the stat metadata.
-    for quest_item in ("World Atlas", "Runic Compass"):
-        if quest_item not in names:
-            continue
-        source_meta = ITEM_INPUT_OPTIONS[quest_item]
-        gold = max(0.0, _option(attacker, quest_item, "shared_riches_gold"))
-        gold_cap = required_effect_value(quest_item, "support_quest_threshold")
-        ward_cap = required_effect_value(quest_item, "ward_charges")
-        if gold > 0.0:
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=attacker,
-                    time=0.0,
-                    kind="economy",
-                    source=f"{quest_item} — Shared Riches",
-                    amount=min(gold, gold_cap),
-                    target_scope="self",
-                    gold_amount=min(gold, gold_cap),
-                    quest_threshold=gold_cap,
-                    quest_complete=gold >= gold_cap,
-                    shared_riches_interval=required_effect_value(
-                        quest_item, "shared_riches_interval"
-                    ),
-                    shared_riches_gold_minion=required_effect_value(
-                        quest_item, "shared_riches_gold_minion"
-                    ),
-                    shared_riches_gold_melee=required_effect_value(
-                        quest_item, "shared_riches_gold_melee"
-                    ),
-                    shared_riches_gold_ranged=required_effect_value(
-                        quest_item, "shared_riches_gold_ranged"
-                    ),
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
-                )
-            )
-        ward_uses = max(0.0, min(_option(attacker, quest_item, "ward_uses"), ward_cap))
-        if ward_uses > 0.0:
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=attacker,
-                    time=0.0,
-                    kind="vision",
-                    source=f"{quest_item} — Ward",
-                    amount=ward_uses,
-                    target_scope="self",
-                    ward_uses=ward_uses,
-                    ward_charges=ward_cap,
-                    quest_threshold=gold_cap,
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
-                )
-            )
+    shared_riches = _producer(slots, AllyProducer.SHARED_RICHES)
+    ward = _producer(slots, AllyProducer.WARD)
+    if shared_riches is not None and ward is not None:
+        shared_riches.declared(PacketKind.ECONOMY)
+        ward.declared(PacketKind.VISION)
+        packets.extend(_support_quest_packets(attacker, shared_riches, ward))
 
     # Tear of the Goddess — Manaflow packets are a PROJECTION of the typed
     # mana resource ledger (P3 slice 1): the fight engine admits casts
@@ -622,91 +933,89 @@ def derive_item_support_effects(
     # account.  This layer only shapes the accepted hit receipts into the
     # public kind="resource" packet schema — it never recomputes cadence,
     # charges, or caps (the retired duplicate state).  A fight result
-    # without a ledger section has no Manaflow activity by construction.
-    if "Tear of the Goddess" in names:
-        ledger_section = result.get("resource_ledger")
-        tear = (
-            ledger_section.get("tear") if isinstance(ledger_section, Mapping) else None
+    # without a ledger section has no Manaflow activity by construction, and
+    # that section IS the guard: damage._tear_manaflow_for builds one for no
+    # other holder, so this branch asks the typed ledger whether Manaflow ran
+    # instead of asking the build for an item name (A3).
+    ledger_section = result.get("resource_ledger")
+    tear = ledger_section.get("tear") if isinstance(ledger_section, Mapping) else None
+    if isinstance(tear, Mapping):
+        interval = required_effect_value(
+            "Tear of the Goddess", "manaflow_charge_interval"
         )
-        if isinstance(tear, Mapping):
-            interval = required_effect_value(
-                "Tear of the Goddess", "manaflow_charge_interval"
-            )
-            max_charges = max(
-                1,
-                int(
-                    required_effect_value("Tear of the Goddess", "manaflow_max_charges")
-                ),
-            )
-            per_trigger = required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
-            )
-            per_champion = required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
-            )
-            mana_cap = required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_max"
-            )
-            source_meta = ITEM_INPUT_OPTIONS["Tear of the Goddess"]
-            authored_mana = max(
-                0.0, _option(attacker, "Tear of the Goddess", "manaflow_bonus_mana")
-            )
-            for hit in (
-                tear.get("hits", ()) if isinstance(tear.get("hits"), Iterable) else ()
-            ):
-                if not isinstance(hit, Mapping):
-                    continue
-                if not hit.get("accepted"):
-                    # Denial receipts (missing identity, no charge, cap)
-                    # are public ledger rows, not support packets.
-                    continue
-                try:
-                    hit_time = float(hit.get("time", 0.0) or 0.0)
-                except (TypeError, ValueError):
-                    continue
-                if not math.isfinite(hit_time) or hit_time < 0.0:
-                    continue
-                try:
-                    grant = float(hit.get("bonus_delta", 0.0) or 0.0)
-                except (TypeError, ValueError):
-                    continue
-                if grant <= 0.0:
-                    continue
-                try:
-                    use_count = max(1, int(hit.get("use_count", 1) or 1))
-                except (TypeError, ValueError):
-                    use_count = 1
-                # The packet's public bonus_mana_total keeps the historic
-                # in-fight accrual semantics (authored progress is a separate
-                # field), while the ledger receipt tracks the full total.
-                authored_capped = min(authored_mana, mana_cap)
-                try:
-                    ledger_total = float(hit.get("bonus_total", grant) or grant)
-                except (TypeError, ValueError):
-                    ledger_total = grant
-                packets.append(
-                    _packet(
-                        attacker=attacker,
-                        target=attacker,
-                        time=hit_time,
-                        kind="resource",
-                        source="Tear of the Goddess — Manaflow",
-                        amount=grant,
-                        target_scope="self",
-                        bonus_mana_total=max(0.0, ledger_total - authored_capped),
-                        bonus_mana_cap=float(hit.get("cap", mana_cap) or mana_cap),
-                        authored_bonus_mana=authored_capped,
-                        manaflow_charge_interval=interval,
-                        manaflow_max_charges=max_charges,
-                        manaflow_bonus_mana_per_trigger=per_trigger,
-                        manaflow_bonus_mana_per_champion=per_champion,
-                        trigger_kind="ability_cast_vs_champion",
-                        charge_accrued_at=(use_count - 1) * interval,
-                        _priority=-1.0,
-                        source_url=source_meta["source_url"],
-                        source_revision_id=source_meta["source_revision_id"],
-                    )
+        max_charges = max(
+            1,
+            int(required_effect_value("Tear of the Goddess", "manaflow_max_charges")),
+        )
+        per_trigger = required_effect_value(
+            "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
+        )
+        per_champion = required_effect_value(
+            "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
+        )
+        mana_cap = required_effect_value(
+            "Tear of the Goddess", "manaflow_bonus_mana_max"
+        )
+        source_meta = ITEM_INPUT_OPTIONS["Tear of the Goddess"]
+        authored_mana = max(
+            0.0, _option(attacker, "Tear of the Goddess", "manaflow_bonus_mana")
+        )
+        for hit in (
+            tear.get("hits", ()) if isinstance(tear.get("hits"), Iterable) else ()
+        ):
+            if not isinstance(hit, Mapping):
+                continue
+            if not hit.get("accepted"):
+                # Denial receipts (missing identity, no charge, cap)
+                # are public ledger rows, not support packets.
+                continue
+            try:
+                hit_time = float(hit.get("time", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if not math.isfinite(hit_time) or hit_time < 0.0:
+                continue
+            try:
+                grant = float(hit.get("bonus_delta", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if grant <= 0.0:
+                continue
+            try:
+                use_count = max(1, int(hit.get("use_count", 1) or 1))
+            except (TypeError, ValueError):
+                use_count = 1
+            # The packet's public bonus_mana_total keeps the historic
+            # in-fight accrual semantics (authored progress is a separate
+            # field), while the ledger receipt tracks the full total.
+            authored_capped = min(authored_mana, mana_cap)
+            try:
+                ledger_total = float(hit.get("bonus_total", grant) or grant)
+            except (TypeError, ValueError):
+                ledger_total = grant
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=hit_time,
+                    kind="resource",
+                    source="Tear of the Goddess — Manaflow",
+                    amount=grant,
+                    target_scope="self",
+                    bonus_mana_total=max(0.0, ledger_total - authored_capped),
+                    bonus_mana_cap=float(hit.get("cap", mana_cap) or mana_cap),
+                    authored_bonus_mana=authored_capped,
+                    manaflow_charge_interval=interval,
+                    manaflow_max_charges=max_charges,
+                    manaflow_bonus_mana_per_trigger=per_trigger,
+                    manaflow_bonus_mana_per_champion=per_champion,
+                    trigger_kind="ability_cast_vs_champion",
+                    charge_accrued_at=(use_count - 1) * interval,
+                    rank=TransitionRank.BARRIER_GRANT,
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
                 )
+            )
 
     # Umbral Glaive — Blackout is the ward-denial vision state: the sourced
     # one-second unseen gate arms Nightstalker, whose sourced true damage
@@ -769,7 +1078,25 @@ def derive_item_support_effects(
     # mana_gate, cooldown, duplicate_instance, missing_instance_identity,
     # untyped_cc, unknown_cc_kind) so a silent skip can never hide an
     # unreviewed or ambiguous trigger.
-    if "Fimbulwinter" in names:
+    everlasting = _producer(slots, AllyProducer.EVERLASTING)
+    if everlasting is not None:
+        everlasting.declared(PacketKind.SHIELD)
+        # The kernel's trigger rule reads the raw event rows, not the bus's
+        # typed ``Trigger`` view: a denial receipt names the row's own
+        # ``_event_id``, ``cc_kind`` and cast instance, and the bus does not
+        # carry the unclassified rows a denial exists to report.
+        # Candidacy is the MECHANIC's question, so its own kernel rule answers
+        # it: SURVIVAL-API D-08 rules that "applies crowd control" (the bus's
+        # ``applies_control``, the wider sibling used by Cheap Shot and
+        # friends) and "blocks actions" (this trigger) are two different
+        # questions, and they disagree on ``polymorph`` and ``silence``.
+        # Filtering on the bus predicate would drop rows Everlasting's own
+        # declaration accepts.
+        everlasting_events = [
+            event
+            for event in _cc_event_stream(result)
+            if _FIMBULWINTER_TRIGGER_RULE.is_candidate(event)
+        ]
         is_melee = bool(attacker.stats.get("is_melee", False))
         champion_stats = result.get("champion_stats", attacker.stats)
         if not isinstance(champion_stats, Mapping):
@@ -786,7 +1113,7 @@ def derive_item_support_effects(
         mana_gate = fimbulwinter_mana_gate_authority()
         range_authority = fimbulwinter_nearby_enemy_range_authority()
         holder_identity = getattr(attacker, "participant_id", None)
-        source_meta = ITEM_INPUT_OPTIONS["Fimbulwinter"]
+        source_meta = ITEM_INPUT_OPTIONS[everlasting.owner]
 
         def _denial(
             event: Mapping[str, Any], reason: str, **details: Any
@@ -818,15 +1145,15 @@ def derive_item_support_effects(
                 range_input_status=range_authority["spatial_input_status"],
                 source_url=source_meta["source_url"],
                 source_revision_id=source_meta["source_revision_id"],
-                _priority=0.0,
+                rank=TransitionRank.DAMAGE,
                 **details,
             )
 
         if not isinstance(holder_identity, str) or not holder_identity.strip():
-            for event in cc_events:
+            for event in everlasting_events:
                 if _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee):
                     packets.append(_denial(event, "missing_holder_identity"))
-            cc_events = []
+            everlasting_events = []
 
         # Ambiguous / unknown / ranged-slow metadata: every CC-adjacent
         # event (damage-attached or control-only) that cannot match a branch
@@ -839,9 +1166,7 @@ def derive_item_support_effects(
 
         cooldown_rule = CooldownRule(
             name="Fimbulwinter — Everlasting",
-            cooldown_seconds=float(
-                required_effect_value("Fimbulwinter", "everlasting_cooldown")
-            ),
+            cooldown_seconds=float(everlasting.value("everlasting_cooldown")),
             per_target=False,
             source=SourceReceipt.from_mapping(source_meta),
         )
@@ -849,7 +1174,7 @@ def derive_item_support_effects(
         # One shield per cast instance: a multi-part cast that carries
         # several CC-marked events still arms Everlasting once.
         cast_cadence = InstanceCadence(once_only=True)
-        for event in cc_events:
+        for event in everlasting_events:
             trigger_kind = _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
             if not trigger_kind:
                 # The CC-adjacent scan above already receipted this event
@@ -889,7 +1214,7 @@ def derive_item_support_effects(
                     )
                 )
                 continue
-            if mana_gate["status"] != "script_authorized":
+            if mana_gate["status"] not in AUTHORIZED_MANA_GATE_STATUSES:
                 raise ValueError(
                     "Fimbulwinter Everlasting mana gate has an unsupported "
                     f"authority status: {mana_gate['status']!r}"
@@ -962,11 +1287,8 @@ def derive_item_support_effects(
                     else 1.0
                 )
             amount = (
-                required_effect_value("Fimbulwinter", "everlasting_base_shield")
-                + current_mana
-                * required_effect_value(
-                    "Fimbulwinter", "everlasting_current_mana_ratio"
-                )
+                everlasting.value("everlasting_base_shield")
+                + current_mana * everlasting.value("everlasting_current_mana_ratio")
             ) * multiplier
             cooldown_state.start(time, sequence=0)
             packets.append(
@@ -980,11 +1302,13 @@ def derive_item_support_effects(
                         f"{attacker.participant_id}:fimbulwinter:{cast_identity}"
                     ),
                     amount=amount,
-                    duration=required_effect_value(
-                        "Fimbulwinter", "everlasting_duration"
-                    ),
+                    duration=everlasting.value("everlasting_duration"),
                     target_scope="self",
                     trigger=trigger_kind,
+                    # ``None`` when the producer did not enrich: the survival
+                    # compiler's fail-closed ``support_trigger_link`` branch
+                    # keys on ``is not None``, so an unenriched shield must
+                    # carry an absent link and not an empty one (D-03).
                     _trigger_event_id=event.get("_event_id"),
                     trigger_kind=trigger_kind,
                     current_mana=current_mana,
@@ -1005,7 +1329,7 @@ def derive_item_support_effects(
                     trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
                     source_url=source_meta["source_url"],
                     source_revision_id=source_meta["source_revision_id"],
-                    _priority=0.5,
+                    rank=TransitionRank.LATE_BARRIER,
                 )
             )
 
@@ -1014,7 +1338,10 @@ def derive_item_support_effects(
     # Bloodletter, Bloodsong, and Abyssal branches; the ordered participant
     # walk consumes these packets for every other eligible source without
     # double-counting the originating holder.
-    if "Abyssal Mask" in names:
+    unmake = _producer(slots, AllyProducer.UNMAKE)
+    if unmake is not None:
+        unmake.declared(PacketKind.DAMAGE_MODIFIER)
+        curse = unmake.value("magic_damage_amp")
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):
@@ -1025,151 +1352,199 @@ def derive_item_support_effects(
                     time=0.0,
                     kind="damage_modifier",
                     source="Abyssal Mask — Unmake",
-                    amount=ally_item_effect_value("Abyssal Mask", "magic_damage_amp"),
-                    multiplier=1.0
-                    + ally_item_effect_value("Abyssal Mask", "magic_damage_amp"),
+                    amount=curse,
+                    multiplier=1.0 + curse,
                     all_sources=True,
                     persistent=True,
+                    # Unmake is an aura, not a triggered debuff: an enemy
+                    # inside the radius is cursed from the first frame, so
+                    # the curse must be in force for the damage that lands
+                    # at the packet's own timestamp.  The kind ladder's
+                    # ``DEBUFF_ARM`` armed it *after* that damage, which
+                    # made the opening exchange the one exchange Unmake did
+                    # not price (C4).
+                    rank=TransitionRank.AURA_ARM,
                     range_assumption="within_700_units",
+                    # "receive 12% increased *magic* damage from all
+                    # sources": one damage class, every attack class.  The
+                    # walk applied it to physical and true damage too until
+                    # this declaration existed to say otherwise.
+                    damage_classes=frozenset({DamageClass.MAGIC}),
+                    attack_classes=frozenset(AttackClass),
+                    authority=Authority.SPLIT,
+                    # The holder's own Unmake is priced pair-side, as the
+                    # ``magic_amp`` term of the damage engine's build
+                    # projection.  Without this handshake the walk amps the
+                    # holder a second time and the holder's magic arrives at
+                    # 1.12 squared.
+                    owner=attacker.participant_id,
                 )
             )
 
-    if "Bloodsong" in names:
+    expose_weakness = _producer(slots, AllyProducer.EXPOSE_WEAKNESS)
+    if expose_weakness is not None:
+        expose_weakness.declared(PacketKind.DAMAGE_MODIFIER)
         expose_key = (
             "expose_weakness_melee"
             if bool(attacker.stats.get("is_melee", False))
             else "expose_weakness_ranged"
         )
-        for event in damage_events:
-            if str(event.get("source_key", "")) != "spellblade_Bloodsong":
+        # The spellblade breakdown key is built from the item's own name
+        # (``item_effects``), so the row this producer answers to is derived
+        # from the declaration's owner rather than spelled a second time.
+        spellblade_key = f"spellblade_{expose_weakness.owner}"
+        for event in _stack_triggers(damage_events):
+            if event.source_key != spellblade_key:
                 continue
-            target = _target_by_id(all_actors, str(event.get("target", "")))
+            target = _target_by_id(all_actors, event.target_id)
             if target is None:
                 continue
-            rate = ally_item_effect_value("Bloodsong", expose_key)
+            rate = expose_weakness.value(expose_key)
             packets.append(
                 _packet(
                     attacker=attacker,
                     target=target,
-                    time=_event_time(event),
+                    time=event.time,
                     kind="damage_modifier",
                     source="Bloodsong — Expose Weakness",
                     amount=rate,
-                    duration=ally_item_effect_value(
-                        "Bloodsong", "expose_weakness_duration"
-                    ),
+                    duration=expose_weakness.value("expose_weakness_duration"),
                     multiplier=1.0 + rate,
                     all_sources=True,
-                    cooldown=ally_item_effect_value(
-                        "Bloodsong", "expose_weakness_cooldown"
-                    ),
-                    owner=attacker.participant_id,
-                    trigger_event_id=event.get("_event_id"),
+                    cooldown=expose_weakness.value("expose_weakness_cooldown"),
+                    # "take 8% increased damage from all sources" — no class
+                    # is named, so every member of both vocabularies is
+                    # declared explicitly rather than left to an empty set.
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
+                    # Phase 4 S7 settled which engine owns this: the walk.
+                    # The amplified pool is every roster attacker's damage
+                    # inside a live window, which is a roster input, so there
+                    # is no pair-local half for the walk to skip and this
+                    # packet carries no ``owner`` — the holder's own damage is
+                    # amplified here like everyone else's.  The pair engine's
+                    # coarse row survives as a declared THEORETICAL preview,
+                    # published in the pair fight's own receipt and kept out
+                    # of every roster total.
+                    authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
+                    trigger_event_id=event.event_id or None,
                 )
             )
 
     reduction_stacks: dict[tuple[str, str], int] = {}
-    for event in damage_events:
-        target = _target_by_id(all_actors, str(event.get("target", "")))
-        if target is None:
-            continue
-        damage_type = str(event.get("damage_type", ""))
-        source_id = str(event.get("_event_id", ""))
-        if "Black Cleaver" in names and damage_type == "physical":
-            key = (target.participant_id, "armor")
-            stacks = min(
-                int(
-                    ally_item_effect_value(
-                        "Black Cleaver", "armor_reduction_max_stacks"
-                    )
-                ),
-                reduction_stacks.get(key, 0) + 1,
-            )
-            reduction_stacks[key] = stacks
-            percent = stacks * ally_item_effect_value(
-                "Black Cleaver", "armor_reduction_per_stack"
-            )
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=_event_time(event),
-                    kind="damage_modifier",
-                    source="Black Cleaver — Carve",
-                    amount=percent,
-                    duration=ally_item_effect_value(
-                        "Black Cleaver", "armor_reduction_duration"
-                    ),
-                    armor_reduction_percent=percent,
-                    resistance_type="armor",
-                    owner=attacker.participant_id,
-                    trigger_event_id=event.get("_event_id", source_id),
-                    stack_count=stacks,
-                )
-            )
-        if (
-            "Bloodletter's Curse" in names
-            and damage_type == "magic"
-            and bool(event.get("is_ability"))
-        ):
-            key = (target.participant_id, "mr")
-            stacks = min(
-                int(
-                    ally_item_effect_value(
-                        "Bloodletter's Curse", "mr_reduction_max_stacks"
-                    )
-                ),
-                reduction_stacks.get(key, 0) + 1,
-            )
-            reduction_stacks[key] = stacks
-            percent = stacks * ally_item_effect_value(
-                "Bloodletter's Curse", "mr_reduction_per_stack"
-            )
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=_event_time(event),
-                    kind="damage_modifier",
-                    source="Bloodletter's Curse — Vile Decay",
-                    amount=percent,
-                    duration=ally_item_effect_value(
-                        "Bloodletter's Curse", "mr_reduction_duration"
-                    ),
-                    mr_reduction_percent=percent,
-                    resistance_type="magic_resistance",
-                    owner=attacker.participant_id,
-                    trigger_event_id=event.get("_event_id", source_id),
-                    stack_count=stacks,
-                )
-            )
-
-    for takedown in takedown_events:
-        if "Cryptbloom" not in names:
-            break
-        amount = ally_item_effect_value("Cryptbloom", "life_from_death_base_heal") + (
-            float(attacker.stats.get("ability_power", 0.0) or 0.0)
-            * ally_item_effect_value("Cryptbloom", "life_from_death_ap_ratio")
+    # Both ledgers walk one stream; the guard is hoisted so a holder of
+    # neither never walks it at all, which is what the hand-maintained
+    # damage-trigger name set bought before the registry existed.
+    if carve is not None or vile_decay is not None:
+        # The ramp both branches multiply and cap by, read once through the
+        # family's own receipt-walk interpreter rather than off each ally
+        # packet's second copy of it (``resistance_shred`` retired 2026-08-16).
+        armor_shred = (
+            None
+            if carve is None
+            else _shred_ramp(attacker, names, Resistance.ARMOR, "carve")
         )
-        for recipient in (attacker, *teammates):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=recipient,
-                    time=_event_time(takedown),
-                    kind="heal",
-                    source="Cryptbloom — Life From Death",
-                    amount=amount,
-                    duration=ally_item_effect_value(
-                        "Cryptbloom", "life_from_death_nova_duration"
-                    ),
-                    target_scope="nova_allied_champions",
-                    trigger="explicit_takedown_within_damage_window",
-                    cooldown=ally_item_effect_value(
-                        "Cryptbloom", "life_from_death_cooldown"
-                    ),
+        mr_shred = (
+            None
+            if vile_decay is None
+            else _shred_ramp(attacker, names, Resistance.MAGIC_RESIST, "vile_decay")
+        )
+        for event in _stack_triggers(damage_events):
+            target = _target_by_id(all_actors, event.target_id)
+            if target is None:
+                continue
+            damage_type = event.damage_type
+            source_id = event.event_id
+            if armor_shred is not None and damage_type == "physical":
+                key = (target.participant_id, "armor")
+                stacks = min(
+                    armor_shred.max_stacks,
+                    reduction_stacks.get(key, 0) + 1,
                 )
+                reduction_stacks[key] = stacks
+                percent = stacks * armor_shred.per_stack
+                packets.append(
+                    _packet(
+                        attacker=attacker,
+                        target=target,
+                        time=event.time,
+                        kind="damage_modifier",
+                        source="Black Cleaver — Carve",
+                        amount=percent,
+                        duration=carve.value("armor_reduction_duration"),
+                        armor_reduction_percent=percent,
+                        resistance_type="armor",
+                        # "6% armor reduction": armour mitigates physical
+                        # damage, so that is the class the reduction reaches.
+                        damage_classes=frozenset({DamageClass.PHYSICAL}),
+                        attack_classes=frozenset(AttackClass),
+                        # The stack ledger is a roster fact and Carve's move to
+                        # coupled-authoritative is H1's to rule; until it is
+                        # ruled the pair engine keeps its own Cesàro
+                        # approximation and the walk skips the holder.
+                        authority=Authority.SPLIT,
+                        owner=attacker.participant_id,
+                        trigger_event_id=source_id,
+                        stack_count=stacks,
+                    )
+                )
+            if mr_shred is not None and damage_type == "magic" and event.is_ability:
+                key = (target.participant_id, "mr")
+                stacks = min(
+                    mr_shred.max_stacks,
+                    reduction_stacks.get(key, 0) + 1,
+                )
+                reduction_stacks[key] = stacks
+                percent = stacks * mr_shred.per_stack
+                packets.append(
+                    _packet(
+                        attacker=attacker,
+                        target=target,
+                        time=event.time,
+                        kind="damage_modifier",
+                        source="Bloodletter's Curse — Vile Decay",
+                        amount=percent,
+                        duration=vile_decay.value("mr_reduction_duration"),
+                        mr_reduction_percent=percent,
+                        resistance_type="magic_resistance",
+                        # "magic resistance reduction": the mirror of Carve.
+                        damage_classes=frozenset({DamageClass.MAGIC}),
+                        attack_classes=frozenset(AttackClass),
+                        # Vile Decay is Carve's shape, magic- and ability-gated,
+                        # and is H1-blocked with it.
+                        authority=Authority.SPLIT,
+                        owner=attacker.participant_id,
+                        trigger_event_id=source_id,
+                        stack_count=stacks,
+                    )
+                )
+
+    # The holder guard sat *inside* the loop as a ``break``, which reads as a
+    # loop condition and is really a name guard — the one shape the capability
+    # projections cannot see.  Same packets, same order.
+    nova = _producer(slots, AllyProducer.LIFE_FROM_DEATH)
+    if nova is not None:
+        nova.declared(PacketKind.HEAL)
+        for takedown in takedown_events:
+            amount = nova.value("life_from_death_base_heal") + (
+                float(attacker.stats.get("ability_power", 0.0) or 0.0)
+                * nova.value("life_from_death_ap_ratio")
             )
+            for recipient in (attacker, *teammates):
+                packets.append(
+                    _packet(
+                        attacker=attacker,
+                        target=recipient,
+                        time=takedown.time,
+                        kind="heal",
+                        source="Cryptbloom — Life From Death",
+                        amount=amount,
+                        duration=nova.value("life_from_death_nova_duration"),
+                        target_scope="nova_allied_champions",
+                        trigger="explicit_takedown_within_damage_window",
+                        cooldown=nova.value("life_from_death_cooldown"),
+                    )
+                )
 
     # Triggered enchanter passives.  The target is carried by the authored
     # champion packet; no cursor or radius is guessed.
@@ -1178,7 +1553,7 @@ def derive_item_support_effects(
         if target is None:
             continue
         time = _event_time(trigger)
-        if "Ardent Censer" in names:
+        if sanctify is not None:
             packets.extend(
                 (
                     _packet(
@@ -1187,24 +1562,18 @@ def derive_item_support_effects(
                         time=time,
                         kind="stat_buff",
                         source="Ardent Censer — Sanctify",
-                        amount=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_bonus_attack_speed"
+                        amount=sanctify.value("sanctify_bonus_attack_speed"),
+                        duration=sanctify.value("sanctify_duration"),
+                        bonus_attack_speed_percent=sanctify.value(
+                            "sanctify_bonus_attack_speed"
                         ),
-                        duration=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_duration"
-                        ),
-                        bonus_attack_speed_percent=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_bonus_attack_speed"
-                        ),
-                        on_hit_magic_damage=ally_item_effect_value(
-                            "Ardent Censer", "sanctify_on_hit_magic"
-                        ),
+                        on_hit_magic_damage=sanctify.value("sanctify_on_hit_magic"),
                         recipient_role="holder_and_healed_ally",
                     )
                     for recipient in (attacker, target)
                 )
             )
-        if "Staff of Flowing Water" in names:
+        if rapids is not None:
             packets.extend(
                 (
                     _packet(
@@ -1213,52 +1582,46 @@ def derive_item_support_effects(
                         time=time,
                         kind="stat_buff",
                         source="Staff of Flowing Water — Rapids",
-                        amount=ally_item_effect_value(
-                            "Staff of Flowing Water", "bonus_ability_power"
-                        ),
-                        duration=ally_item_effect_value(
-                            "Staff of Flowing Water", "duration"
-                        ),
-                        ability_power=ally_item_effect_value(
-                            "Staff of Flowing Water", "bonus_ability_power"
-                        ),
-                        ability_haste=ally_item_effect_value(
-                            "Staff of Flowing Water", "bonus_ability_haste"
-                        ),
+                        amount=rapids.value("bonus_ability_power"),
+                        duration=rapids.value("duration"),
+                        ability_power=rapids.value("bonus_ability_power"),
+                        ability_haste=rapids.value("bonus_ability_haste"),
                         recipient_role="holder_and_healed_ally",
                     )
                     for recipient in (attacker, target)
                 )
             )
-        if "Moonstone Renewer" in names:
+        if starlit_grace is not None:
             candidates = [
                 actor
                 for actor in teammates
                 if actor.participant_id != target.participant_id
             ]
             chain_target = candidates[0] if candidates else target
-            fraction_key = (
-                "heal_chain_fraction"
-                if str(trigger.get("kind")) == "heal"
-                else "shield_chain_fraction"
-            )
+            # D-50: the chained packet's kind used to be computed from the
+            # trigger at runtime, which no static reader could resolve — not
+            # Phase 1's ``PacketSource``, not a family assignment.  Starlit
+            # Grace declares *two* packets instead, one per kind it chains,
+            # and the trigger selects between them.  A third kind is a stop
+            # rather than a packet nothing declared; ``_support_triggers``
+            # admits only heal and shield, so no live trigger can reach it.
+            chained = _CHAIN_KINDS[str(trigger.get("kind", "shield"))]
+            starlit_grace.declared(chained)
+            fraction = starlit_grace.value(_CHAIN_FRACTION_KEYS[chained])
             packets.append(
                 _packet(
                     attacker=attacker,
                     target=chain_target,
                     time=time,
-                    kind=str(trigger.get("kind", "shield")),
+                    kind=chained.value,
                     source="Moonstone Renewer — Starlit Grace",
-                    amount=float(trigger.get("amount", 0.0))
-                    * ally_item_effect_value("Moonstone Renewer", fraction_key),
+                    amount=float(trigger.get("amount", 0.0)) * fraction,
                     duration=float(trigger.get("duration", 0.0) or 0.0),
                     target_scope="other_nearest_wounded_ally",
-                    chain_fraction=ally_item_effect_value(
-                        "Moonstone Renewer", fraction_key
-                    ),
+                    chain_fraction=fraction,
                 )
             )
-        if "Dream Maker" in names:
+        if blue_bubble is not None and purple_bubble is not None:
             packets.extend(
                 (
                     _packet(
@@ -1267,17 +1630,32 @@ def derive_item_support_effects(
                         time=time,
                         kind="damage_modifier",
                         source="Dream Maker — Blue Dream Bubble",
-                        amount=ally_item_level_value(
-                            "Dream Maker",
+                        amount=_ramp_value(
+                            blue_bubble,
                             "blue_reduction_min",
-                            "blue_reduction_max",
-                            target.level,
+                            holder=attacker,
+                            recipient=target,
                         ),
-                        duration=ally_item_effect_value(
-                            "Dream Maker", "dream_duration"
-                        ),
+                        duration=blue_bubble.value("dream_duration"),
                         damage_reduction=True,
                         next_event_only=True,
+                        # "reduces the damage of the next *attack or spell*
+                        # they receive": every damage class, but only two
+                        # attack classes.  This is the one producer whose
+                        # own text matches the walk's delivery gate — the
+                        # gate is this restriction, generalised to five
+                        # mechanics that never claimed it.
+                        damage_classes=frozenset(DamageClass),
+                        attack_classes=frozenset(
+                            {AttackClass.BASIC_ATTACK, AttackClass.ABILITY}
+                        ),
+                        # No pair engine prices Blue Dream Bubble: it shields
+                        # an *ally* against the next hit from anyone, which is
+                        # a roster fact with no pair-local restriction, and
+                        # ``item_coverage`` already records that the item is
+                        # outside the holder's own TDD.  So there is no
+                        # pair-side half to skip and no owner to declare.
+                        authority=Authority.COUPLED_ONLY,
                     ),
                     _packet(
                         attacker=attacker,
@@ -1285,35 +1663,32 @@ def derive_item_support_effects(
                         time=time,
                         kind="on_hit_magic",
                         source="Dream Maker — Purple Dream Bubble",
-                        amount=ally_item_level_value(
-                            "Dream Maker",
+                        amount=_ramp_value(
+                            purple_bubble,
                             "purple_magic_min",
-                            "purple_magic_max",
-                            target.level,
+                            holder=attacker,
+                            recipient=target,
                         ),
-                        duration=ally_item_effect_value(
-                            "Dream Maker", "dream_duration"
-                        ),
+                        duration=purple_bubble.value("dream_duration"),
                         next_event_only=True,
                     ),
                 )
             )
-        if "Echoes of Helia" in names:
+        if soul_siphon is not None:
+            # Soul Charges read every authored row's raw number, so this
+            # branch reads the damage stream whole rather than the stack
+            # ledgers' filtered view — and reads it off the bus, where a row
+            # that is not a Mapping cannot reach a ``.get`` at all.  That
+            # missing guard is what made a tuple ledger an AttributeError
+            # here and a silent zero everywhere else.
+            soul_siphon.declared(PacketKind.HEAL)
             raw_damage = sum(
-                max(
-                    0.0,
-                    float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
-                )
-                for event in result.get("damage_events", [])
+                event.raw_damage or event.damage for event in damage_events
             )
-            cap = ally_item_level_value(
-                "Echoes of Helia", "charge_cap_min", "charge_cap_max", target.level
+            cap = _ramp_value(
+                soul_siphon, "charge_cap_min", holder=attacker, recipient=target
             )
-            charges = min(
-                cap,
-                raw_damage
-                * ally_item_effect_value("Echoes of Helia", "charge_damage_ratio"),
-            )
+            charges = min(cap, raw_damage * soul_siphon.value("charge_damage_ratio"))
             if charges > 0.0:
                 packets.append(
                     _packet(
@@ -1331,7 +1706,8 @@ def derive_item_support_effects(
                 # shield; subsequent triggers in this authored window do not
                 # duplicate the same stored pool.
                 break
-        if "Diadem of Songs" in names:
+        if consonance is not None:
+            consonance.declared(PacketKind.HEAL)
             wounded = target
             packets.append(
                 _packet(
@@ -1341,13 +1717,9 @@ def derive_item_support_effects(
                     kind="heal",
                     source="Diadem of Songs — Consonance",
                     amount=float(attacker.stats.get("mana", 0.0))
-                    * ally_item_effect_value(
-                        "Diadem of Songs", "consonance_max_mana_ratio"
-                    ),
+                    * consonance.value("consonance_max_mana_ratio"),
                     target_scope="nearest_most_wounded_ally",
-                    cooldown=ally_item_effect_value(
-                        "Diadem of Songs", "consonance_cooldown"
-                    ),
+                    cooldown=consonance.value("consonance_cooldown"),
                 )
             )
 
@@ -1355,8 +1727,8 @@ def derive_item_support_effects(
     # champion module does not emit one, the effect is intentionally absent;
     # callers must not turn an arbitrary cast boundary into a slow/root.
     for cc in cc_events:
-        time = _event_time(cc)
-        if "Bandlepipes" in names:
+        time = cc.time
+        if fanfare is not None:
             is_melee = bool(attacker.stats.get("is_melee", False))
             duration_key = (
                 "fanfare_duration_melee" if is_melee else "fanfare_duration_ranged"
@@ -1373,13 +1745,9 @@ def derive_item_support_effects(
                     time=time,
                     kind="movement",
                     source="Bandlepipes — Fanfare",
-                    amount=ally_item_effect_value(
-                        "Bandlepipes", "fanfare_bonus_move_speed"
-                    ),
-                    duration=ally_item_effect_value("Bandlepipes", duration_key),
-                    bonus_move_speed_percent=ally_item_effect_value(
-                        "Bandlepipes", "fanfare_bonus_move_speed"
-                    ),
+                    amount=fanfare.value("fanfare_bonus_move_speed"),
+                    duration=fanfare.value(duration_key),
+                    bonus_move_speed_percent=fanfare.value("fanfare_bonus_move_speed"),
                     target_scope="self",
                     trigger="authored_immobilize_or_slow",
                 )
@@ -1392,15 +1760,14 @@ def derive_item_support_effects(
                         time=time,
                         kind="stat_buff",
                         source="Bandlepipes — Fanfare",
-                        amount=ally_item_effect_value("Bandlepipes", as_key),
-                        duration=ally_item_effect_value("Bandlepipes", duration_key),
-                        bonus_attack_speed_percent=ally_item_effect_value(
-                            "Bandlepipes", as_key
-                        ),
+                        amount=fanfare.value(as_key),
+                        duration=fanfare.value(duration_key),
+                        bonus_attack_speed_percent=fanfare.value(as_key),
                         trigger="authored_immobilize_or_slow",
                     )
                 )
-        if "Solstice Sleigh" in names and teammates:
+        if going_sledding is not None and teammates:
+            going_sledding.declared(PacketKind.TEMPORARY_HEALTH)
             target = teammates[0]
             for recipient in (attacker, target):
                 packets.append(
@@ -1410,25 +1777,35 @@ def derive_item_support_effects(
                         time=time,
                         kind="temporary_health",
                         source="Solstice Sleigh — Going Sledding",
-                        amount=ally_item_level_value(
-                            "Solstice Sleigh",
+                        amount=_ramp_value(
+                            going_sledding,
                             "temporary_health_min",
-                            "temporary_health_max",
-                            recipient.level,
+                            holder=attacker,
+                            recipient=recipient,
                         ),
-                        duration=ally_item_effect_value("Solstice Sleigh", "duration"),
-                        bonus_move_speed_percent=ally_item_effect_value(
-                            "Solstice Sleigh", "bonus_move_speed_percent"
+                        duration=going_sledding.value("duration"),
+                        bonus_move_speed_percent=going_sledding.value(
+                            "bonus_move_speed_percent"
                         ),
-                        cooldown=ally_item_effect_value("Solstice Sleigh", "cooldown"),
+                        cooldown=going_sledding.value("cooldown"),
                         target_scope=(
                             "self" if recipient is attacker else "most_wounded_ally"
                         ),
                     )
                 )
-        if "Imperial Mandate" in names:
-            target = _target_by_id(all_actors, str(cc.get("target", "")))
-            if target is not None:
+        if command is not None and cc.cc is CcClass.IMMOBILIZE:
+            # H2's recorded ruling, *deferred, default shipped*: no ability
+            # declares a reviewed crowd-control scope yet, so every mark takes
+            # the shipped default -- ``SingleTarget`` on the pair defender --
+            # and publishes the disclosure that names the ability it was
+            # assumed for.  Which enemy is marked stops being a roster
+            # position and becomes a routed answer; what that answer *is*
+            # does not move, which is the whole content of "default shipped".
+            scope, disclosures = reviewed_scope(
+                Unreviewed(ability=_cc_ability_label(cc, all_actors))
+            )
+            amp = command.value("command_damage_amp")
+            for target in _cc_mark_subjects(attacker, cc, all_actors, scope):
                 packets.append(
                     _packet(
                         attacker=attacker,
@@ -1436,24 +1813,38 @@ def derive_item_support_effects(
                         time=time,
                         kind="damage_modifier",
                         source="Imperial Mandate — Command",
-                        amount=ally_item_effect_value(
-                            "Imperial Mandate", "command_damage_amp"
-                        ),
-                        duration=ally_item_effect_value(
-                            "Imperial Mandate", "command_duration"
-                        ),
-                        multiplier=1.0
-                        + ally_item_effect_value(
-                            "Imperial Mandate", "command_damage_amp"
-                        ),
+                        amount=amp,
+                        duration=command.value("command_duration"),
+                        multiplier=1.0 + amp,
                         all_sources=True,
+                        # "increasing the damage they take from all sources
+                        # by 7%": every class on both axes.
+                        damage_classes=frozenset(DamageClass),
+                        attack_classes=frozenset(AttackClass),
+                        # The holder's pair engine prices its own amp
+                        # (damage._apply_command_amp); the walk applies
+                        # this packet to every other participant only.
+                        # Command's authority move to
+                        # coupled-authoritative-with-preview is what H2 still
+                        # blocks; the umbrella's recorded default is SPLIT and
+                        # this phase does not move it.
+                        authority=Authority.SPLIT,
+                        owner=attacker.participant_id,
+                        cc_scope=type(scope).__name__,
+                        **(
+                            {"cc_scope_disclosure": disclosures[0].reason}
+                            if disclosures
+                            else {}
+                        ),
                     )
                 )
 
     # Explicit item-actives.  A non-zero timestamp is the complete trigger
     # contract; the packet is not emitted at t=0 by default.
-    active_time = _active_seconds(attacker, "Locket of the Iron Solari")
-    if "Locket of the Iron Solari" in names and active_time > 0.0:
+    devotion = _producer(slots, AllyProducer.DEVOTION)
+    active_time = _active_seconds(attacker, devotion)
+    if devotion is not None and active_time > 0.0:
+        devotion.declared(PacketKind.SHIELD)
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
@@ -1462,20 +1853,17 @@ def derive_item_support_effects(
                     time=active_time,
                     kind="shield",
                     source="Locket of the Iron Solari — Devotion",
-                    amount=ally_item_level_value(
-                        "Locket of the Iron Solari",
-                        "shield_min",
-                        "shield_max",
-                        target.level,
+                    amount=_ramp_value(
+                        devotion, "shield_min", holder=attacker, recipient=target
                     ),
-                    duration=ally_item_effect_value(
-                        "Locket of the Iron Solari", "shield_duration"
-                    ),
+                    duration=devotion.value("shield_duration"),
                     target_scope="all_selected_teammates",
                 )
             )
-    active_time = _active_seconds(attacker, "Mikael's Blessing")
-    if "Mikael's Blessing" in names and active_time > 0.0 and teammates:
+    purify = _producer(slots, AllyProducer.PURIFY)
+    active_time = _active_seconds(attacker, purify)
+    if purify is not None and active_time > 0.0 and teammates:
+        purify.declared(PacketKind.HEAL)
         target = teammates[0]
         packets.append(
             _packet(
@@ -1484,32 +1872,35 @@ def derive_item_support_effects(
                 time=active_time,
                 kind="heal",
                 source="Mikael's Blessing — Purify",
-                amount=ally_item_level_value(
-                    "Mikael's Blessing", "heal_min", "heal_max", target.level
+                amount=_ramp_value(
+                    purify, "heal_min", holder=attacker, recipient=target
                 ),
                 target_scope="explicit_selected_ally",
                 cleanse=True,
                 cleanse_item="Mikael's Blessing",
             )
         )
-    # Quicksilver Sash / Mercurial Scimitar — Quicksilver (P2 Slice 4):
-    # self-only cleanse actives.  An explicit active_seconds input emits
-    # the sourced self-cast cleanse packet; Mercurial additionally grants
-    # its SEPARATE movement utility (amount/duration sourced from the
-    # atom-backed cleanse declaration — never a call-site literal).
-    active_time = _active_seconds(attacker, "Quicksilver Sash")
-    if "Quicksilver Sash" in names and active_time > 0.0:
+    # Quicksilver — the self-cast cleanse actives, driven by the cleanse
+    # registry rather than by a pair of item names.  cleanse_eligibility is
+    # the one home of every cleanse fact (exclusions, cooldown gap, the
+    # atom-backed movement entry), so "which items cleanse their own holder"
+    # is a question that registry already answers.  An AllyProducer could
+    # not: ALLY_ENTRY_SHAPES identifies a producer by its ITEM_EFFECTS value
+    # keys, and Quicksilver Sash carries no such record at all because its
+    # active has no numbers.  An explicit active_seconds input emits the
+    # sourced cleanse packet; a declaration carrying a movement entry
+    # (Mercurial's) grants that SEPARATE utility from the same atom-backed
+    # source — never a call-site literal.
+    for cleanse_item in _self_cleanse_items(names):
+        active_time = _active_seconds_for(attacker, cleanse_item)
+        if active_time <= 0.0:
+            continue
         packets.append(
-            _cleanse_active_packet(attacker, attacker, active_time, "Quicksilver Sash")
+            _cleanse_active_packet(attacker, attacker, active_time, cleanse_item)
         )
-    active_time = _active_seconds(attacker, "Mercurial Scimitar")
-    if "Mercurial Scimitar" in names and active_time > 0.0:
-        packets.append(
-            _cleanse_active_packet(
-                attacker, attacker, active_time, "Mercurial Scimitar"
-            )
-        )
-        movement = _cleanse_movement_declaration("Mercurial Scimitar")
+        movement = _cleanse_movement_entry(cleanse_item)
+        if movement is None:
+            continue
         packets.append(
             _packet(
                 attacker=attacker,
@@ -1521,15 +1912,17 @@ def derive_item_support_effects(
                 duration=movement["duration"],
                 bonus_move_speed_percent=movement["amount"],
                 target_scope="self",
-                cleanse_item="Mercurial Scimitar",
-                source_key="Mercurial Scimitar",
+                cleanse_item=cleanse_item,
+                source_key=cleanse_item,
                 utility_kind="movement",
             )
         )
-    active_time = _active_seconds(attacker, "Redemption")
-    if "Redemption" in names and active_time > 0.0:
-        beam_delay = ally_item_effect_value("Redemption", "beam_delay")
-        range_units = ally_item_effect_value("Redemption", "target_area_range_units")
+    intervention = _producer(slots, AllyProducer.INTERVENTION)
+    active_time = _active_seconds(attacker, intervention)
+    if intervention is not None and active_time > 0.0:
+        intervention.declared(PacketKind.HEAL)
+        beam_delay = intervention.value("beam_delay")
+        range_units = intervention.value("target_area_range_units")
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
@@ -1538,8 +1931,8 @@ def derive_item_support_effects(
                     time=active_time + beam_delay,
                     kind="heal",
                     source="Redemption — Intervention",
-                    amount=ally_item_level_value(
-                        "Redemption", "heal_min", "heal_max", target.level
+                    amount=_ramp_value(
+                        intervention, "heal_min", holder=attacker, recipient=target
                     ),
                     target_scope="redemption_allies_in_radius",
                     beam_delay=beam_delay,
@@ -1552,9 +1945,13 @@ def derive_item_support_effects(
         # is invented.  The packet enters the normal phase-0 damage walk so
         # shields, death cutoffs, and attribution remain shared with all other
         # damage events.
-        true_damage_ratio = ally_item_effect_value(
-            "Redemption", "enemy_max_health_true_damage_ratio"
-        )
+        #
+        # D-50: one active, one ``source=`` literal, two packets landing on two
+        # different roster classes.  ``secondary_target`` is what says the
+        # second half exists — a reader of the declaration alone could
+        # otherwise not tell that Intervention damages anybody.
+        intervention.declared(PacketKind.DAMAGE)
+        true_damage_ratio = intervention.value("enemy_max_health_true_damage_ratio")
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):
@@ -1575,7 +1972,7 @@ def derive_item_support_effects(
                     target_scope="enemy_champions_in_radius",
                     range_assumption=f"within_{range_units:g}_units",
                     beam_delay=beam_delay,
-                    _priority=0.0,
+                    rank=TransitionRank.DAMAGE,
                     sequence=0,
                 )
             )
@@ -1604,8 +2001,10 @@ def derive_item_support_effects(
                     beam_delay=beam_delay,
                 )
             )
-    active_time = _active_seconds(attacker, "Shurelya's Battlesong")
-    if "Shurelya's Battlesong" in names and active_time > 0.0:
+    inspiring_speech = _producer(slots, AllyProducer.INSPIRING_SPEECH)
+    active_time = _active_seconds(attacker, inspiring_speech)
+    if inspiring_speech is not None and active_time > 0.0:
+        inspiring_speech.declared(PacketKind.MOVEMENT)
         for target in (attacker, *teammates):
             packets.append(
                 _packet(
@@ -1614,30 +2013,25 @@ def derive_item_support_effects(
                     time=active_time,
                     kind="movement",
                     source="Shurelya's Battlesong — Inspiring Speech",
-                    amount=ally_item_effect_value(
-                        "Shurelya's Battlesong", "bonus_move_speed_percent"
-                    ),
-                    duration=ally_item_effect_value(
-                        "Shurelya's Battlesong", "duration"
-                    ),
-                    bonus_move_speed_percent=ally_item_effect_value(
-                        "Shurelya's Battlesong", "bonus_move_speed_percent"
+                    amount=inspiring_speech.value("bonus_move_speed_percent"),
+                    duration=inspiring_speech.value("duration"),
+                    bonus_move_speed_percent=inspiring_speech.value(
+                        "bonus_move_speed_percent"
                     ),
                     target_scope="all_selected_teammates",
                 )
             )
-    active_time = _active_seconds(attacker, "Stridebreaker")
-    if "Stridebreaker" in names and active_time > 0.0:
-        slow_percent = float(required_effect_value("Stridebreaker", "slow_percent"))
-        slow_duration = float(required_effect_value("Stridebreaker", "slow_duration"))
-        move_speed_percent = float(
-            required_effect_value("Stridebreaker", "bonus_move_speed_percent")
-        )
-        move_speed_duration = float(
-            required_effect_value("Stridebreaker", "bonus_move_speed_duration")
-        )
-        area_radius = float(required_effect_value("Stridebreaker", "area_radius"))
-        front_offset = float(required_effect_value("Stridebreaker", "front_offset"))
+    shockwave = _producer(slots, AllyProducer.BREAKING_SHOCKWAVE)
+    active_time = _active_seconds(attacker, shockwave)
+    if shockwave is not None and active_time > 0.0:
+        shockwave.declared(PacketKind.SLOW)
+        shockwave.declared(PacketKind.MOVEMENT)
+        slow_percent = shockwave.value("slow_percent")
+        slow_duration = shockwave.value("slow_duration")
+        move_speed_percent = shockwave.value("bonus_move_speed_percent")
+        move_speed_duration = shockwave.value("bonus_move_speed_duration")
+        area_radius = shockwave.value("area_radius")
+        front_offset = shockwave.value("front_offset")
         for target in (
             actor for actor in all_actors if not _same_side(attacker, actor)
         ):
@@ -1685,6 +2079,16 @@ def schedule_knights_vow(
 ) -> None:
     """Attach one deterministic Worthy tether and redirect/heal receipts."""
     for holder in all_actors:
+        # The declaration guard, stated here rather than left to the shared
+        # resolver: this is the impl a Knight's Vow capability names, and
+        # ``resolve_knights_vow_tether`` answers ``None`` for three different
+        # reasons — no producer, no eligible teammate, no authored selection
+        # — so folding them would hide which one a build tripped.
+        if (
+            _producer(resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE)
+            is None
+        ):
+            continue
         tether = resolve_knights_vow_tether(holder, all_actors)
         if tether is None:
             continue
@@ -1725,15 +2129,9 @@ def schedule_knights_vow(
             event["redirect_target"] = holder.participant_id
             event["redirect_source"] = "Knight's Vow — Sacrifice"
             event["redirect_pre_mitigation_required"] = True
-            event["redirect_holder_health_ratio"] = ally_item_effect_value(
-                "Knight's Vow", "holder_health_threshold_ratio"
-            )
-            event["redirect_range_units"] = ally_item_effect_value(
-                "Knight's Vow", "worthy_range_units"
-            )
-            event["redirect_source_revision_id"] = int(
-                ally_item_effect_value("Knight's Vow", "source_revision_id")
-            )
+            event["redirect_holder_health_ratio"] = tether["threshold"]
+            event["redirect_range_units"] = tether["range_units"]
+            event["redirect_source_revision_id"] = tether["source_revision_id"]
         for event in outgoing.get(target.participant_id, []):
             if str(event.get("damage_type", "")) not in {"physical", "magic", "true"}:
                 continue
@@ -1750,15 +2148,9 @@ def schedule_knights_vow(
                     amount=amount * heal_fraction,
                     target_scope="holder_from_worthy_damage",
                     healing_category="knights_vow",
-                    requires_holder_health_ratio=ally_item_effect_value(
-                        "Knight's Vow", "holder_health_threshold_ratio"
-                    ),
-                    range_units=ally_item_effect_value(
-                        "Knight's Vow", "worthy_range_units"
-                    ),
-                    source_revision_id=int(
-                        ally_item_effect_value("Knight's Vow", "source_revision_id")
-                    ),
+                    requires_holder_health_ratio=tether["threshold"],
+                    range_units=tether["range_units"],
+                    source_revision_id=tether["source_revision_id"],
                 )
             )
 
@@ -1768,8 +2160,172 @@ def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
     return any(str(item.get("name", "")) in ALLY_ITEM_EFFECTS for item in items)
 
 
+# ---------------------------------------------------------------------------
+# Cross-participant producers
+# ---------------------------------------------------------------------------
+#
+# A ``damage_modifier`` packet changes how much damage some *other*
+# participant deals or takes, so the question "which engine owns this
+# mechanic" has to be answered for every one of them.  The answer is an
+# ``ability_spec.Authority`` member, declared in 0A and carried by the
+# packets themselves from C2.  It is also what the coupled golden baseline
+# reads to prove its scenario set covers every producer (runbook R-12).
+#
+# There is exactly one authority table in the repo and it is
+# ``trigger_stream.CAPABILITIES``.  This module used to derive a second one
+# by reading its own ``_packet(...)`` call sites with ``ast``; two tables
+# that agree today are two tables that can disagree tomorrow, which is the
+# whole thesis of the campaign, so the derivation below reads the registry
+# and the call sites are bound to it by the check underneath.  A seventh
+# producer therefore fails to resolve — loudly, on its first packet — until
+# it is declared, and the same registry is what the coupled golden baseline
+# reads to prove its scenario set covers every producer (runbook R-12).
+
+
+@lru_cache(maxsize=1)
+def _declared_authorities() -> Mapping[str, Authority]:
+    """Every declared cross-participant packet source and its owning engine.
+
+    The key is the walk packet's ``source`` literal and the value the
+    ``Authority`` that capability declares.  Which halves qualify is
+    ``trigger_stream.cross_participant_packet_source``'s answer and not this
+    module's: D-07's semantic is *every packet modifying another
+    participant's damage*, and a half that delivers a rider onto its own
+    holder's event modifies nobody else's (Amendment C).  Naming the
+    condition in one place is what stops the baseline instrument and this
+    table disagreeing about who the producers are.
+
+    Cached because ``_packet`` consults it on every cross-participant packet
+    it builds and the stack-ledger producers build one per damage event.
+    """
+    return MappingProxyType(
+        {
+            source: capability.authority
+            for capability in sorted(
+                CAPABILITIES.values(), key=lambda cap: cap.mechanic
+            )
+            if (source := cross_participant_packet_source(capability)) is not None
+        }
+    )
+
+
+def _check_cross_participant_authority(
+    source: str, authority: Authority | None, owner: Any
+) -> None:
+    """Every ``damage_modifier`` packet names its engine, and only ``SPLIT`` owns.
+
+    The rule keys on the declared :class:`Authority`, never on a flag: three
+    of the six producers set no ``all_sources``, so an ``all_sources``-keyed
+    check passes Dream Maker, Black Cleaver and Bloodletter's Curse by
+    construction (D-07).  ``owner`` is the walk's skip handshake — the
+    holder's own contribution is priced pair-side — so it is meaningful
+    exactly when the two halves are disjoint, which is what ``SPLIT`` says.
+
+    This is also where a call site is bound to the registry: the packet is
+    built with an ``authority=`` argument and it must be the one
+    ``CAPABILITIES`` declares for that ``packet_source``, so the declaration
+    and the construction cannot drift without a raise naming both.
+    """
+    declared = _declared_authorities().get(source)
+    if declared is None:
+        raise ValueError(
+            f"{source} modifies another participant's damage but names no "
+            "Authority; every damage_modifier packet declares one (D-07)"
+        )
+    if authority is not declared:
+        raise ValueError(
+            f"{source} was built with authority={authority} but its packet "
+            f"declares {declared.value}"
+        )
+    if owner is not None and declared is not Authority.SPLIT:
+        raise ValueError(
+            f"{source} declares {declared.value} and carries owner={owner!r}; "
+            "only SPLIT has a pair-side half for the walk to skip"
+        )
+    if owner is None and declared is Authority.SPLIT:
+        raise ValueError(
+            f"{source} declares SPLIT and carries no owner; the pair-local "
+            "half is unreachable to the walk's skip and the holder is priced "
+            "twice"
+        )
+
+
+def _check_declared_classes(
+    source: str,
+    damage_classes: frozenset[DamageClass] | None,
+    attack_classes: frozenset[AttackClass] | None,
+) -> None:
+    """Every ``damage_modifier`` packet says which damage it applies to (D-04).
+
+    Both axes are required with no default and neither may be empty:
+    "empty means all" is a silent default, and the walk that consumed these
+    packets untyped amplified a magic-only curse onto physical and true
+    damage alike.  ``attack_classes`` is the axis on which "from all
+    sources" becomes something a packet can *state* rather than something a
+    reader infers from a missing restriction.
+    """
+    for name, declared, vocabulary in (
+        ("damage_classes", damage_classes, DamageClass),
+        ("attack_classes", attack_classes, AttackClass),
+    ):
+        if not declared:
+            raise ValueError(
+                f"{source} modifies another participant's damage and declares "
+                f"no {name}; a non-empty frozenset of "
+                f"{vocabulary.__name__} is required and empty-means-all is "
+                "banned (D-04)"
+            )
+        if not all(isinstance(member, vocabulary) for member in declared):
+            raise ValueError(
+                f"{source} declares {name} holding something other than "
+                f"{vocabulary.__name__} members"
+            )
+
+
+def _check_aura_arming(
+    source: str, persistent: Any, rank: TransitionRank | None
+) -> None:
+    """A persistent cross-participant modifier is an aura, and arms as one.
+
+    A ``damage_modifier`` some trigger armed is a debuff: it resolves after
+    the damage at its own timestamp, because the packet that triggered it
+    landed first.  A *persistent* one was already in force when the fight
+    opened, so the same ordering makes the opening exchange the one
+    exchange the aura does not price — Abyssal Mask's Unmake curses an
+    enemy from t = 0 and priced nothing at t = 0 (C4).
+
+    The kind cannot tell the two apart, so the aura declares
+    ``AURA_ARM`` on its packet and this refuses a persistent modifier that
+    does not.  Fail closed rather than classify on ``persistent`` in the
+    walk's kind ladder: a declared rank is greppable, is enumerated by the
+    ladder's own source audit, and cannot silently re-order a packet whose
+    author never considered the question.
+    """
+    if not persistent:
+        return
+    if rank is not TransitionRank.AURA_ARM:
+        raise ValueError(
+            f"{source} is a persistent damage_modifier and declares "
+            f"rank={rank}; a persistent modifier is an aura already in "
+            "force and must declare TransitionRank.AURA_ARM, or it prices "
+            "nothing at its own timestamp (C4)"
+        )
+
+
+def producer_item(source: str) -> str:
+    """The item name a producer's ``source`` literal names.
+
+    Every packet source is spelled ``"<item> — <effect>"``, so the item a
+    scenario must equip to reach a producer is derivable from the producer
+    itself rather than tabulated beside it.
+    """
+    return source.split(" — ", 1)[0].strip()
+
+
 __all__ = [
     "derive_item_support_effects",
     "has_ordered_item_team_effects",
+    "producer_item",
+    "require_event_view",
     "schedule_knights_vow",
 ]

@@ -20,11 +20,16 @@ import copy
 
 import pytest
 
-from src.calculator.ability_spec import parts_raw_total
-from src.calculator.champions import get_champion_module_meta, get_champion_options_meta
+from tests.ability_math import parts_raw_total
+from src.calculator.champions import (
+    get_champion_module_contract,
+    get_champion_options_meta,
+)
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions import aurelion_sol
+from tests import cc_review, coverage_truth, row_review
 
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 TARGET_1000 = {"target_max_health": 1000.0}
@@ -240,8 +245,7 @@ class TestWAstralFlight:
 
     def test_w_is_explicit_zero_damage_row(self, aurelion_sol_data, parse_at) -> None:
         """W carries no damage attribute of its own — documented zero-damage
-        row (module_helpers.no_damage), not a silent absence (roadmap
-        session 3)."""
+        row (module_helpers.no_damage), not a silent absence."""
         _, abilities = parse_at(aurelion_sol_data, 18)
         entry = abilities["W"]
         assert entry["name"] == "Astral Flight"
@@ -412,7 +416,7 @@ class TestPassiveCosmicCreator:
     ) -> None:
         """P feeds Q/E's Stardust math but prices nothing itself —
         documented zero-damage row (module_helpers.no_damage), not a
-        silent absence (roadmap session 3)."""
+        silent absence."""
         _, abilities = parse_at(aurelion_sol_data, 18)
         entry = abilities["passive"]
         assert entry["name"] == "Cosmic Creator"
@@ -428,35 +432,32 @@ class TestPassiveCosmicCreator:
 
 
 class TestOptionsMeta:
-    """The module declares its three options and its modeling assumptions."""
+    """The module declares its four options and its modeling assumptions."""
 
     def test_declared_options(self) -> None:
         meta = get_champion_options_meta("Aurelion Sol")
         keys = {opt["key"]: opt for opt in meta["options"]}
-        assert set(keys) == {"stardust_stacks", "w_active", "r_empowered"}
+        # Breath of Light's secondary-beam target count is a declared row:
+        # the formula reads it, so it belongs among the rows the frontend
+        # renders rather than being a parse-only key with a call-site
+        # default (D-24).
+        assert set(keys) == {
+            "stardust_stacks",
+            "w_active",
+            "r_empowered",
+            "q_secondary_targets",
+        }
         assert keys["stardust_stacks"]["default"] == 0
         assert keys["stardust_stacks"]["max"] == 999
         assert keys["w_active"]["default"] is False
         assert keys["r_empowered"]["default"] is False
+        assert keys["q_secondary_targets"]["default"] == 0
+        assert keys["q_secondary_targets"]["max"] == 5
 
     def test_assumptions_present(self) -> None:
         meta = get_champion_options_meta("Aurelion Sol")
         assert any("3.25" in text for text in meta["assumptions"])
         assert any("continuous" in text.lower() for text in meta["assumptions"])
-
-
-class TestModuleCoverage:
-    """Roadmap session 3: P and W close from out_of_scope to no_damage."""
-
-    def test_module_coverage_reflects_p_w_no_damage(self) -> None:
-        coverage = get_champion_module_meta("Aurelion Sol")["coverage"]
-        assert coverage == {
-            "P": "no_damage",
-            "Q": "modeled",
-            "W": "no_damage",
-            "E": "modeled",
-            "R": "modeled",
-        }
 
 
 # ---------------------------------------------------------------------------
@@ -523,3 +524,92 @@ class TestFightIntegration:
         )
         result = run_fight(aurelion_sol_data, 18, [], params)
         assert result["breakdown"]["Q"]["total_damage"] == pytest.approx(2360.0)
+
+
+class TestReviewedCrowdControl:
+    """Aurelion Sol's crowd-control review, per branch where it differs.
+
+    R lands on a sourced delay in both branches and applies a different
+    kind in each (Falling Star's 1.25 s stun, The Skies Descend's 2 s
+    knock-up), so the answer is authored per part rather than per slot.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Aurelion Sol")
+        assert aurelion_sol.MODULE_CC == {"Q": "none", "E": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+
+    def test_each_r_branch_authors_its_own_delay_and_kind(
+        self, aurelion_sol_data, parse_at
+    ):
+        """R is absent from MODULE_CC because its two branches disagree."""
+        assert "R" not in aurelion_sol.MODULE_CC
+        entries = aurelion_sol_data["abilities"]["R"]
+        assert "strikes the target location after 1.25 seconds" in (
+            entries[0]["effects"][0]["description"]
+        )
+        assert "stunning them for 1 second" in entries[0]["effects"][0]["description"]
+        assert "strikes the target location after 2 seconds" in (
+            entries[1]["effects"][0]["description"]
+        )
+        assert "knocking up enemies hit for 1 second" in (
+            entries[1]["effects"][0]["description"]
+        )
+        for empowered, delay, kind in ((False, 1.25, "stun"), (True, 2.0, "knockup")):
+            _, abilities = parse_at(
+                aurelion_sol_data,
+                18,
+                ap=100.0,
+                ability_ranks=MAX_RANKS,
+                champion_options={"r_empowered": empowered},
+            )
+            (part,) = abilities["R"]["parts"]
+            assert (part.time_offset, part.cc_kind) == (delay, kind)
+
+    def test_the_reviewed_kit_clears_the_control_armed_scan(self):
+        assert cc_review.unreviewed_ability_slots("Aurelion Sol") == []
+        coverage = cc_review.fimbulwinter_coverage("Aurelion Sol")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """P and W read ``no_damage``, and neither is a damage gap.
+
+    The frontier page flagged W because the cached entry carries a
+    leveling row with "Damage" in its name.  That row is
+    "Breath of Light Flat Damage Modifier" — a 108-112% multiplier on Q,
+    priced through ``w_active`` — and Cosmic Creator is the same story:
+    every Stardust effect the cache states augments another slot.  Both
+    slots emit an explicit zero-damage row, so the map says ``no_damage``
+    rather than hiding them as ``out_of_scope``.
+    """
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Aurelion Sol").coverage == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert coverage_truth.emitted("Aurelion Sol") == {
+            "P": coverage_truth.ZERO,
+            "Q": coverage_truth.PRICED,
+            "W": coverage_truth.ZERO,
+            "E": coverage_truth.PRICED,
+            "R": coverage_truth.PRICED,
+        }
+
+    def test_the_flagged_w_row_is_a_q_multiplier_not_w_damage(self):
+        rows = {
+            level["attribute"]
+            for ability in cc_review.kit("Aurelion Sol")["abilities"]["W"]
+            for effect in ability["effects"]
+            for level in effect["leveling"] or []
+        }
+        assert rows == {"Breath of Light Flat Damage Modifier"}
+        off = row_review.priced("Aurelion Sol", "Q", w_active=False)
+        on = row_review.priced("Aurelion Sol", "Q", w_active=True)
+        assert on > off

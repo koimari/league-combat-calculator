@@ -1,0 +1,111 @@
+{
+  "receipt": "oracle-P5-retire-leaf3",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/cast_order[4]",
+  "old_value": "R",
+  "new_value": "<absent> (cast_order has only 4 entries, indices 0..3)",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra)",
+      "data/champion-audit/batch-6.json (Syndra), data/champion-audit/batch-e9-1.json (Syndra)",
+      "data/worklists/f2-task.md, data/worklists/f3-task.md (definition of the derived cast_order / rotation receipt)",
+      "docs/math-foundations.md sections 1.1 and 5"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_castable_slot_count": {
+      "claim": "Syndra has exactly four castable abilities: Q Dark Sphere, W Force of Will, E Scatter the Weak, R Unleashed Power. P Transcendent is a passive stat/stack system, not a cast.",
+      "source": "data/champions.json -> Syndra.abilities keys P,Q,W,E,R; P Transcendent is 'Innate:' with targeting 'Passive', affects 'Self', and its only stat effect is 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+      "consequence": "A one-rotation derived cast order over Syndra's castable slots is a 4-element list -> valid indices 0..3. Index 4 must not exist."
+    },
+    "step_2_is_a_fifth_cast_ever_supported": {
+      "candidate_A_second_Dark_Sphere_charge": {
+        "text": "Q 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' (data/champions.json, Syndra Q, effect 2)",
+        "assessment": "A second Q cast exists only in an opt-in stack state (>=40 Splinters; the audit records it as the synthetic 'Q2' slot gated on a splinters option, data/champion-audit/batch-6.json: 'splinters option (0-120) gates Q2 second charge'). Even where it applies, it produces a repeated Q, never a second R.",
+        "verdict_for_this_leaf": "cannot put 'R' at index 4"
+      },
+      "candidate_B_R_recast_in_a_timed_window": {
+        "cooldowns": "R base cooldown 120/100/80 s, affectedByCdr true (data/champions.json Syndra R). Ability haste identity cd' = cd*100/(100+AH) (CLAUDE.md domain rule; docs/math-foundations.md sec.5 row 'Ability haste (effective_cooldown)').",
+        "arithmetic": "Even at an extreme 100 AH: 80*100/200 = 40.0 s (rank 3), 100*100/200 = 50.0 s, 120*100/200 = 60.0 s -- far longer than any corpus fight window.",
+        "documented_constraint": "docs/math-foundations.md sec.5: 'R casts exactly once per timed fight (model constraint, documented)' and, on the rotation row, 'R single-cast'; the audit conclusion repeats 'R single-cast' as one of the documented approximations.",
+        "verdict_for_this_leaf": "R can appear at most once, so index 4 cannot be a second R"
+      },
+      "candidate_C_R_as_the_single_cast_scheduled_fifth": {
+        "scheduler": "docs/math-foundations.md sec.1.1: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts)' -- 'the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.'",
+        "arithmetic": "For R to sit at index 4, four casts must start before it. Syndra's cast times are Q 'none', W 'none', E 0.25 s, R 0.25 s, so the first three casts occupy well under ~1 s. The shortest recastable ability is Q at 7 s, and Q is explicitly affectedByCdr:false in the cache (only R's passive 10/20/30 ability haste touches it): 7*100/(100+30) = 5.38 s at R rank 3, 7*100/(100+50) = 4.67 s. No ability's cooldown can elapse inside the first ~1 s, so no repeat cast can be interposed ahead of R under the greedy shared-timeline rule.",
+        "verdict_for_this_leaf": "a 5th-position R would require the scheduler to idle R for ~5 s while it was off cooldown -- contradicting the documented greedy 'recast when off cooldown and no other cast is in progress' semantics"
+      }
+    },
+    "step_3_what_the_order_should_be": "Both fight modes agree that index 4 must be absent-or-not-R: (a) one_rotation -> exactly one cast per castable ability = 4 entries [Q, W, E, R] in some derivation-dependent permutation, so index 4 does not exist; (b) a timed window -> the first four entries are the four abilities cast greedily at t~0, and the earliest possible 5th entry is a repeat of Q (5.38 s at R rank 3, sooner with items) or W (8-12 s base, CDR-affected), never R. In neither reading does 'R' belong at index 4.",
+    "step_4_conclusion": "The retirement of cast_order[4] is consistent with the sources: Syndra's derived rotation is a four-cast list. The one invariant that must survive the change is that R still appears exactly once (at index 3 under the four-cast reading); the documented 'R single-cast' rule is satisfied by a single R inside a 4-entry order and violated only if R disappeared from the list entirely.",
+    "residual_uncertainty": "The oracle tree contains no scenario definition for 'syndra_derived_order_39' (grep for 'syndra_derived_order' / 'coupled_scenarios' across data/ and docs/math-foundations.md returns nothing), so the scenario's level, ranks, splinters option and fight window could not be read. The verdict rests on the invariants above, which hold for every level/rank/option combination Syndra admits. It would flip to 'both_wrong' only if the new 4-entry order contains no 'R' at all, which no sourced rule supports."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0] (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "used_for": "P is a passive stack/stat system, not a cast slot -> the castable set is {Q,W,E,R}"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (Dark Sphere)",
+      "quote": "cooldown: values [7,7,7,7,7], affectedByCdr: false; castTime: 'none'; 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "used_for": "the only source-supported 5th cast is a repeated Q under an opt-in 40-splinter state, never an R"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] / E[0]",
+      "quote": "W cooldown 12/11/10/9/8 (affectedByCdr true), castTime 'none'; E cooldown 15 at all ranks (affectedByCdr true), castTime 0.25",
+      "used_for": "no non-Q ability can recur inside the first seconds of a fight"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0] (Unleashed Power)",
+      "quote": "cooldown: values [120,100,80], affectedByCdr: true; castTime 0.25; 'Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.'",
+      "used_for": "effective R cooldown >= 40 s even at 100 AH -> at most one R cast per fight"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Ability haste row)",
+      "quote": "R casts exactly once per timed fight (model constraint, documented)",
+      "used_for": "R appears exactly once in a cast order"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 5 formula-audit table (Ability rotation casts row) and audit conclusion",
+      "quote": "shared-timeline renewal schedule; cast starts within window ... R single-cast",
+      "used_for": "same, plus the window-membership rule for counting casts"
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1",
+      "quote": "each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "used_for": "no repeat cast can be interposed before R's single cast, so R cannot legitimately land at index 4"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'; gap_summary: 'splinters option (0-120) gates Q2 second charge'",
+      "used_for": "identifies the two non-cast pseudo-slots (P buff, synthetic Q2) that could inflate a derived order past four entries"
+    },
+    {
+      "source": "data/worklists/f3-task.md (and f2-task.md)",
+      "quote": "a rotation resolver ... that computes the fight's cast_order from the champion's atomized data + the combo table ... The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: ...}",
+      "used_for": "confirms cast_order is a derived list of ability-slot casts (repeats allowed only where cooldowns permit)"
+    },
+    {
+      "source": "CLAUDE.md domain rule (quoted in docs/math-foundations.md sec.5 as effective_cooldown)",
+      "quote": "effective_cd = base_cd x 100 / (100 + ability_haste)",
+      "used_for": "the R and Q cooldown arithmetic above"
+    }
+  ],
+
+  "arithmetic_worked": {
+    "R_effective_cd_at_100_AH": ["120*100/200 = 60.0 s", "100*100/200 = 50.0 s", "80*100/200 = 40.0 s"],
+    "Q_effective_cd": ["AH 0: 7*100/100 = 7.00 s", "R-rank-3 passive 30 AH: 7*100/130 = 5.38 s", "AH 50: 7*100/150 = 4.67 s"],
+    "first_three_casts_elapsed_time": "Q (castTime none) + W (castTime none) + E (0.25 s) < 1 s -> nothing is off cooldown yet",
+    "implication": "index 4 of a Syndra cast order is either non-existent (one_rotation, 4 casts) or a repeated Q/W (timed) -- never R"
+  },
+
+  "committed": false
+}

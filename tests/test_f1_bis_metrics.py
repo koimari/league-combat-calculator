@@ -219,11 +219,11 @@ def test_bis_batch_applies_each_winner_before_the_next_slot(monkeypatch):
     import src.calculator.bis as bis_module
 
     seen_items = []
-    seen_contexts = []
+    seen_caches = []
 
     def fake_bis(data, *, pair_result_cache=None, search_context=None):
         seen_items.append(tuple(data.get("items", [])))
-        seen_contexts.append(search_context)
+        seen_caches.append(pair_result_cache)
         slot_index = int(data["slot_index"])
         winner = "Rabadon's Deathcap" if slot_index == 0 else "Void Staff"
         return {
@@ -250,8 +250,11 @@ def test_bis_batch_applies_each_winner_before_the_next_slot(monkeypatch):
         {"slot_index": 1, "slot_kind": "item", "name": "Void Staff"},
     ]
     assert seen_items[1][0] == "Rabadon's Deathcap"
-    assert seen_contexts[0] is not None
-    assert seen_contexts[0] is seen_contexts[1]
+    # Every slot is ranked on the receipt's objective block, which the
+    # compiled score projection does not carry, so the batch shares the
+    # pair-result cache across slots rather than a coupled search context.
+    assert seen_caches[0] is not None
+    assert seen_caches[0] is seen_caches[1]
 
 
 # ---------------------------------------------------------------------------
@@ -370,7 +373,8 @@ def test_frontend_renders_a_bis_trigger_on_every_slot():
     # Attacker build A/B slots and quest boots carry the trigger on the duel
     # canvas; enemy and ally roster slots carry the same compact trigger.
     assert "${row}${bisTrigger(path, true)}" in source
-    assert 'fetch("/api/compare"' in source
+    # Two builds ride one request; every JSON POST goes through postJson.
+    assert 'postJson("/api/compare"' in source
     assert "${bisTrigger(path, true)}</div>" in source
     assert ".duel-slot > .bis-trigger" in css
     assert 'data-bis-path="${path}"' in source
@@ -386,7 +390,10 @@ def test_frontend_bis_trigger_disables_with_context_tooltip():
     assert '${ready ? "" : "disabled"}' in source
     assert "const ready = bisReadyForPath(path);" in source
     assert "function requestBisBatch(path, slots)" in source
-    assert 'fetch("/api/bis/batch"' in source
+    # Through the one JSON POST helper, like every other backend write:
+    # tests/test_p5_ux.py::test_app_js_posts_json_through_one_helper owns
+    # that rule and this endpoint is inside it.
+    assert 'postJson("/api/bis/batch"' in source
 
 
 # ---------------------------------------------------------------------------

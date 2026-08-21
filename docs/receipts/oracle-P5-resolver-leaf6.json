@@ -1,0 +1,97 @@
+{
+  "receipt_id": "oracle-P5-resolver-leaf6",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "score_event_view_holder",
+  "leaf_path": "/coupled_scenarios/score_event_view_holder/fights/0:Aatrox/rotation/dependencies",
+  "old_value": "<absent> (the rotation node emitted no `dependencies` key)",
+  "new_value": "seven empty ledgers (one per rotation entry, each recording no dependency)",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-tree",
+    "read": ["data/champions.json", "data/champion-audit/batch-e9-1.json", "data/practice-corpus/scenarios.json", "data/atoms/aatrox.atoms.json", "data/README.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "data/worklists/p5-ux-task.md (task spec = plan, deliberately skipped)", "git history", "the diff"]
+  },
+
+  "computation": {
+    "problem_statement": "The leaf carries no number: an empty ledger asserts 'this rotation entry has no dependency to resolve'. Two things are therefore checkable from cached wiki text: (a) the cardinality — does Aatrox's priced rotation have exactly seven entries? and (b) the content — is each entry's damage a self-contained function of its own cached leveling row plus attacker/target stats, with no input taken from another entry's output?",
+
+    "step_0_calibration": {
+      "why": "Before judging the rotation's shape I reproduced the engine's Aatrox numbers from cached wiki text alone, to prove my model of the rotation is the engine's model.",
+      "stat_growth": "base + growth x (L-1) x (0.7025 + 0.0175 x (L-1))  [docs/math-foundations.md formula-audit table, 'Stat growth (growth_stat)' row, verdict EXACT]",
+      "aatrox_AD_18": "60 + 5 x 17 x (0.7025 + 0.0175 x 17) = 60 + 85 x 1.0 = 145.0",
+      "R_rank3_buff": "World Ender effect 2, 'Bonus Attack Damage' leveling row = 20 / 30 / 40 % AD -> rank 3 = +40% of total AD -> 145.0 x 1.40 = 203.0",
+      "ahri_armor_18": "21 + 4.2 x 17 x 1.0 = 92.4, rounded to 92 by the documented display-level integer rounding ('Stat rounding (calculate_total_stats)', APPROX row)",
+      "mitigation": "m(R) = 100/(100+R) = 100/192 = 0.5208333  [docs/math-foundations.md, 'Resistance mitigation (apply_resistance)', EXACT]",
+      "Q_row": "cached Q effect 5 leveling 'Maximum Non-Minion Sweetspot Damage' rank 5 = 459.375 + 590.625% AD -> raw 459.375 + 5.90625 x 203.0 = 1658.34 -> post-mitigation 1658.34 x 0.5208333 = 863.72",
+      "W_row": "cached W effect 2 leveling 'Total Damage' rank 5 = 140 + 80% AD -> raw 140 + 0.80 x 203.0 = 302.40 -> post-mitigation 302.40 x 0.5208333 = 157.50",
+      "E_heal_crosscheck": "16% of post-mitigation ability damage, x2.0 under R rank 3 (+100% increased healing): 863.72 x 0.32 = 276.39 and 157.50 x 0.32 = 50.40",
+      "corpus_match": "data/practice-corpus/scenarios.json scenario 'e9-e1-aatrox-umbral-dash-heal' (tier local) expects exactly 276.4 (Q-triggered) and 50.4 (W-triggered), self_healing 326.8. My independent reconstruction hits 276.39 / 50.40 / 326.79. The model is the engine's model."
+    },
+
+    "step_a_cardinality": {
+      "claim": "Seven is the correct number of rotation entries for Aatrox.",
+      "derivation": "data/champion-audit/batch-e9-1.json, Aatrox, verdict 'ok', enumerates exactly the modeled families: 'R World Ender modeled as %total-AD stat buff; Q 3-cast, W two-hit, P %maxHP on-hit all sourced from the JSON', with slots P=modeled, Q=modeled, W=modeled, E=out_of_scope, R=modeled. Counting priced rows: Q 3-cast = 3, W two-hit = 2, P empowered auto = 1, R stat buff = 1, E excluded (heal passive only, no enemy-damage row) => 3+2+1+1 = 7.",
+      "wiki_backing": {
+        "Q_three_casts": "'Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts.' (data/champions.json Aatrox Q effect 0) — and the cache carries three separate leveling rows, First / Second / Third Cast Damage, so each cast is its own priced row.",
+        "W_two_hits": "'deals physical damage to the first enemy hit' (W effect 0) and 'If the tether is not broken by the end of its duration, the target is dealt the same physical damage again' (W effect 2) — two damage instances, and the cache's 'Total Damage' row (140 + 80% AD at rank 5) is exactly 2x the single-hit row (70 + 40% AD).",
+        "P_one_row": "'empowers his next basic attack to ... deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health' (P effect 0) — one on-hit row.",
+        "R_one_row": "'During World Ender, Aatrox gains bonus attack damage' with leveling row 20/30/40 % AD (R effect 2) — one self stat-buff row.",
+        "E_excluded": "E Umbral Dash is a self-heal passive plus a dash; it authors no enemy-damage row, matching slots.E = out_of_scope."
+      }
+    },
+
+    "step_b_content": {
+      "claim": "Every one of the seven ledgers is correctly EMPTY.",
+      "derivation": "A dependency ledger is non-empty only if an entry's value must be resolved from another entry's output. In step 0 I priced Aatrox's whole rotation to the corpus's 0.1-precision numbers using, for each row, only (i) that row's own cached leveling row and (ii) attacker/target stat totals. No row consumed another row's output: Q reads the cached 3-cast sweetspot total, W reads the cached two-hit total, P reads the target's max health, R writes the attacker's own AD before rows are priced. There is nothing for a resolver to record, so an empty ledger on each of the seven is the correct content, and the old <absent> merely omitted the field rather than asserting a different value.",
+      "boundary_noted_honestly": "Aatrox's kit does contain sequencing preconditions (Q2 requires Q1 within the 4s recast window; W's second hit requires the tether to survive 1.5s; P's cooldown is cut 2s per ability/auto hit, 4s on a Sweetspot). If 'dependencies' were a kit-prerequisite graph rather than a value-resolution ledger, those ledgers would be non-empty. It is a value-resolution ledger under a resolver, and the numeric evidence above shows no value in the priced rotation is resolved from another entry — so empty is right. Likewise R's +40% total AD is applied as a stat-phase buff (it is already inside the 203.0 AD that reproduces 863.7 and 157.5), not as a rotation-entry input, so it does not populate Q's or W's ledger."
+    }
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Aatrox.abilities.Q[0].effects[0].description",
+      "quote": "Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. If Aatrox does not recast the ability within 4 seconds of the previous cast, it goes on cooldown."
+    },
+    {
+      "source": "data/champions.json -> Aatrox.abilities.Q[0].effects[5].leveling 'Maximum Non-Minion Sweetspot Damage'",
+      "quote": "values [65.625, 164.0625, 262.5, 360.9375, 459.375] plus [393.75, 442.96875, 492.1875, 541.40625, 590.625] % AD"
+    },
+    {
+      "source": "data/champions.json -> Aatrox.abilities.W[0].effects[2]",
+      "quote": "If the tether is not broken by the end of its duration, the target is dealt the same physical damage again and pulled to the center of the area. — Total Damage [60, 80, 100, 120, 140] + 80% AD"
+    },
+    {
+      "source": "data/champions.json -> Aatrox.abilities.P[0].effects[0].description",
+      "quote": "Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health"
+    },
+    {
+      "source": "data/champions.json -> Aatrox.abilities.R[0].effects[2].leveling 'Bonus Attack Damage'",
+      "quote": "[20, 30, 40] % AD"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Aatrox.gap_summary",
+      "quote": "R World Ender modeled as %total-AD stat buff; Q 3-cast, W two-hit, P %maxHP on-hit all sourced from the JSON. ... No remaining gap. (slots: P modeled, Q modeled, W modeled, E out_of_scope, R modeled)"
+    },
+    {
+      "source": "data/practice-corpus/scenarios.json -> e9-e1-aatrox-umbral-dash-heal.expected.formula",
+      "quote": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active: Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4"
+    },
+    {
+      "source": "docs/math-foundations.md section 5, 'Stat growth (growth_stat)' row",
+      "quote": "base + growth\u00b7(L\u22121)\u00b7(0.7025 + 0.0175\u00b7(L\u22121)) | EXACT"
+    },
+    {
+      "source": "docs/math-foundations.md section 5, 'Resistance mitigation (apply_resistance)' row",
+      "quote": "m(R)=100/(100+R); EHP round-trip raw = post\u00b7(1+R/100) | EXACT"
+    },
+    {
+      "source": "docs/math-foundations.md section 5, 'Stat rounding (calculate_total_stats)' row",
+      "quote": "display-level integer rounding of health/AD/AP/armor/MR before damage | APPROX ... corpus-wide convention, pinned by golden"
+    }
+  ],
+
+  "confidence": "high on content (empty is right), high on cardinality (7 = Q3 + W2 + P1 + R1, with E out_of_scope), grounded by an exact reproduction of the corpus's 863.7 / 157.5 / 276.4 / 50.4."
+}

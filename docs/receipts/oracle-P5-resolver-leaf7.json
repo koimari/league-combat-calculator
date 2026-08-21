@@ -1,0 +1,144 @@
+{
+  "receipt_id": "oracle-P5-resolver-leaf7",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "investigator": "fresh oracle subagent (no knowledge of the change under test)",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle7",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "leaf_path": "/coupled_scenarios/score_plain_tuple/fights/0:Aatrox/rotation/dependencies",
+  "scenario": "score_plain_tuple",
+  "old_value": "<absent> (no `dependencies` key under rotation)",
+  "new_value": "seven empty dependency ledgers",
+
+  "independent_computation": {
+    "step_0_what_kind_of_leaf_this_is": "The leaf carries no game quantity. An empty ledger asserts no damage, no timing, and no scaling value. The oracle therefore has two checkable claims and no third: (a) is the CARDINALITY seven right for Aatrox, and (b) is EMPTY the correct content for every one of those seven, i.e. does any Aatrox rotation row need to read another row's resolved value in order to be computed?",
+
+    "step_1_cardinality": {
+      "question": "Does Aatrox's modeled rotation have exactly seven entries?",
+      "sourced_rows_from_data_champions_json_Aatrox_abilities": [
+        "Q The Darkin Blade - First Cast Damage (10/25/40/55/70 + 60/67.5/75/82.5/90% AD)",
+        "Q The Darkin Blade - Second Cast Damage (12.5/31.25/50/68.75/87.5 + 75/84.375/93.75/103.125/112.5% AD)",
+        "Q The Darkin Blade - Third Cast Damage (15/37.5/60/82.5/105 + 90/101.25/112.5/123.75/135% AD)",
+        "W Infernal Chains - Physical Damage (30/40/50/60/70 + 40% AD)",
+        "W Infernal Chains - Total Damage, tether pull second instance (60/80/100/120/140 + 80% AD)",
+        "P Deathbringer Stance - Max Health Damage (4%:10% by level, monster cap 100:320)",
+        "R World Ender - Bonus Attack Damage (20/30/40% AD) [+ Increased Healing 50/75/100%]"
+      ],
+      "count": 7,
+      "cross_check": "data/champion-audit/batch-e9-1.json records aatrox.py slots as P: modeled, Q: modeled, W: modeled, R: modeled, E: out_of_scope; data/champion-audit/batch-0.json lists the notable atoms as 'Q 3-cast sweep, W two-hit chains, P %maxHP on-hit' plus 'stat buff (R %total-AD, BUFF phase)'. Q 3-cast (3) + W two-hit (2) + P on-hit (1) + R buff (1) = 7 modeled rotation entries. E is explicitly out of scope ('a dash with healing amp only - no damage'), so it contributes no ledger. Seven is the count the cached sources support; it is neither inflated nor truncated.",
+      "verdict": "cardinality CONSISTENT with the cache"
+    },
+
+    "step_2_is_empty_correct": {
+      "question": "Does any of the seven rows require another row's resolved value (which would force a non-empty ledger)?",
+      "test": "A row needs a dependency edge only if the cache does NOT publish its value standalone. Check each candidate coupling the wiki prose implies, against the wiki's own numeric rows.",
+      "checks": [
+        {
+          "coupling_claimed_by_prose": "Q: 'Each subsequent cast gains 25% more damage.'",
+          "would_imply": "cast 2 and cast 3 resolve from cast 1",
+          "arithmetic": "12.5/10 = 1.25, 15/10 = 1.50; 75/60 = 1.25, 90/60 = 1.50 - the +25%/+50% ladder is already baked into the published per-cast rows",
+          "conclusion": "no dependency edge needed; each cast row is standalone-sourced"
+        },
+        {
+          "coupling_claimed_by_prose": "Q Sweetspot: 'Enemies hit within a Sweetspot take 75% bonus damage.'",
+          "arithmetic": "17.5/10 = 105/60 = 21.875/12.5 = 131.25/75 = 26.25/15 = 157.5/90 = 1.75 exactly, for all three casts",
+          "conclusion": "sweetspot rows are published standalone; no edge needed"
+        },
+        {
+          "coupling_claimed_by_prose": "W: 'the target is dealt the same physical damage again' (tether pull)",
+          "arithmetic": "Total Damage 60/80/100/120/140 = 2 x Physical Damage 30/40/50/60/70; 80% AD = 2 x 40% AD",
+          "conclusion": "the doubled instance is published as its own row; no edge needed"
+        },
+        {
+          "coupling_claimed_by_prose": "Q aggregate rows ('Maximum Non-Minion ... Damage')",
+          "arithmetic": "10 + 12.5 + 15 = 37.5 (matches); 60 + 75 + 90 = 225% AD (matches); x1.75 = 65.625 and 393.75 (both match)",
+          "conclusion": "the cache's own aggregate is the plain sum of the three standalone cast rows - confirming the per-cast rows are the atomic sourced quantities, not derived ones"
+        }
+      ],
+      "conclusion": "Every one of the seven Aatrox rotation entries resolves from its own leveling row in data/champions.json. None reads another entry's resolved value. A correct dependency ledger for this scenario is therefore EMPTY for all seven."
+    },
+
+    "step_3_formula_side_check": {
+      "source": "docs/math-foundations.md",
+      "finding": "The rotation family is defined at Sec. 1.1 and pinned in the Sec. 5 audit table as: 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT'. The documented identity has NO dependency term of any kind: cast epochs are 0, c_i, 2c_i, ... under mutual exclusion. Neither the word 'dependencies' nor any dependency ledger appears anywhere in the document (grep: 0 hits). The rotation number itself is therefore untouched by this leaf.",
+      "consequence": "The change is numerically inert: no damage, heal, cast-count or timing quantity moves. Empty ledgers cannot contradict, and do not restate, any wiki-sourced number."
+    },
+
+    "step_4_which_encoding_is_correct": "Both encodings express the same combat semantics ('no dependency content'), so neither is numerically wrong. They differ in what the golden gate can see. The absent key silently conflates 'the resolver tracked nothing' with 'the resolver was never asked'; seven explicit empty ledgers pin the resolver's per-entry dependency state at exactly the cardinality the cache supports, so a future spurious or missing edge surfaces as a golden diff instead of hiding in an omitted key. Making a correct-and-empty state observable is the stronger of two non-contradictory encodings, and it matches the codebase's fail-closed posture (CLAUDE.md rules 5-7: missing evidence must be visible and raise, never be silently absent)."
+  },
+
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.Q[0].effects[1].description",
+      "quote": "Aatrox performs a strike with his greatsword for each of the three casts, dealing physical damage to enemies hit within an area. Enemies hit within a Sweetspot of the area take 75% bonus damage and are also knocked up for 0.25 seconds. Each subsequent cast gains 25% more damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.Q[0].effects[2..4].leveling",
+      "quote": "First Cast Damage [10,25,40,55,70] + [60,67.5,75,82.5,90]% AD; Second Cast Damage [12.5,31.25,50,68.75,87.5] + [75,84.375,93.75,103.125,112.5]% AD; Third Cast Damage [15,37.5,60,82.5,105] + [90,101.25,112.5,123.75,135]% AD (each with its own Sweetspot row)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.Q[0].effects[0].description",
+      "quote": "Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. If Aatrox does not recast the ability within 4 seconds of the previous cast, it goes on cooldown."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.W[0].effects[0].leveling and effects[2]",
+      "quote": "Physical Damage [30,40,50,60,70] + 40% AD; 'If the tether is not broken by the end of its duration, the target is dealt the same physical damage again' -> Total Damage [60,80,100,120,140] + 80% AD"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.P[0].effects[0]",
+      "quote": "Periodically, Aatrox empowers his next basic attack to ... deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health, capped at 100 : 320 (based on level) against monsters."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.R[0].effects[2].leveling",
+      "quote": "Bonus Attack Damage [20,30,40]% AD; Increased Healing [50,75,100]%"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.E[0].effects[1..2]",
+      "quote": "Active: Aatrox dashes in the target direction. Umbral Dash resets Aatrox's basic attack timer and can be cast during his other abilities without cancelling them and vice versa."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Aatrox",
+      "quote": "slots: {P: modeled, Q: modeled, W: modeled, E: out_of_scope, R: modeled} ... R World Ender modeled as %total-AD stat buff; Q 3-cast, W two-hit, P %maxHP on-hit all sourced from the JSON."
+    },
+    {
+      "file": "data/champion-audit/batch-0.json",
+      "path": "Aatrox.notable_atoms",
+      "quote": "damage (Q 3-cast sweep, W two-hit chains, P %maxHP on-hit), stat buff (R %total-AD, BUFF phase)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Sec. 5 formula-audit table, rotation row (also Sec. 1.1)",
+      "quote": "Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread; R single-cast"
+    }
+  ],
+
+  "verdict": "new_value_correct",
+
+  "verdict_rationale": [
+    "Numerically inert: no damage, heal, cast-count or timing quantity changes, so the new value cannot contradict any wiki-sourced number or the documented rotation identity (math-foundations Sec. 1.1 / Sec. 5, which contains no dependency term).",
+    "Cardinality checks out: seven equals the seven sourced Aatrox rotation entries the cache supports - Q first/second/third cast, W initial + tether instance, P max-health on-hit, R stat buff - with E correctly contributing none (out_of_scope, no damage).",
+    "Empty is the right content: every one of the seven resolves from its own leveling row in data/champions.json (verified arithmetically - the +25% cast ladder, the 1.75x sweetspot factor and the W doubling are all already baked into standalone published rows, and the wiki's aggregate row is their plain sum), so no entry reads another's resolved value and a correct ledger is empty.",
+    "Better of two non-contradictory encodings: explicit empty ledgers make the resolver's per-entry state observable to the golden gate, where an absent key hides the difference between 'tracked nothing' and 'never asked'."
+  ],
+
+  "residual_uncertainty": [
+    "The exact semantics of a 'dependency ledger' are defined in src/, which this oracle is barred from reading. The verdict is conditioned on the ledger recording value-resolution edges between rotation entries; under that reading the cache proves empty is correct.",
+    "One coupling exists in the game that a future non-empty ledger could legitimately record: R World Ender's +20/30/40% total AD (data/champions.json Aatrox.R effects[2]) feeds the AD scalings of Q, W and the auto stream while active. If the ledger is ever extended to stat-buff -> damage-row edges, the R-active case would stop being empty. Whether R is active in scenario 'score_plain_tuple' is not determinable from data/ alone. This does not change the verdict for the leaf as observed (all seven empty), but it is the one place a later non-empty value would also be correct rather than a regression.",
+    "Aatrox's Q chain gate (1 s static inter-cast cooldown, 4 s recast window) and E's 'can be cast during his other abilities' exemption from the shared-timeline mutual exclusion are scheduling facts, not value-resolution facts; they belong to _schedule_shared_casts, not to a value-dependency ledger, and their absence from the ledger is expected."
+  ],
+
+  "committed": false
+}

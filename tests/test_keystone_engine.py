@@ -1,5 +1,10 @@
-"""Fight-engine tests for keystone runes (Electrocute, First Strike, PTA,
-Arcane Comet, Summon Aery, Dark Harvest, Aftershock, Grasp).
+"""Fight-engine tests for all seventeen keystone runes.
+
+Each keystone declares which of the fight's event streams it watches and
+what it books; the engine owns the streams. The five that book damage on a
+stream are asserted here against the numbers the cache states, and the
+eight that book none are asserted to leave the total bit-identical while
+publishing the receipt that says why.
 
 Electrocute: the engine counts damage instances on the real fight
 timeline — one per accepted ability cast plus one per simulated auto
@@ -959,6 +964,56 @@ class TestArcaneCometProcs:
     def test_assumed_flight_distance_is_disclosed(self, fight, attacker_stats):
         result = fight(attacker_stats(), _spell("Q"), keystone="Arcane Comet")
         assert any("Arcane Comet" in note and "375" in note for note in result["notes"])
+
+
+def _row(result, keystone):
+    return result["breakdown"].get(f"keystone_{keystone}")
+
+
+def _notes(result, keystone):
+    return [note for note in result["notes"] if note.startswith(keystone)]
+
+
+def _autos(fight, attacker_stats, keystone, seconds=10.0, **overrides):
+    """A pure auto-attack fight: swings at t = 0, 1, 2, ... at 1.0 AS."""
+    return fight(
+        attacker_stats(**overrides.pop("stats", {})),
+        overrides.pop("abilities", {}),
+        keystone=keystone,
+        one_rotation=False,
+        fight_duration_seconds=seconds,
+        auto_attack_uptime=1.0,
+        auto_attacks_only=not overrides.pop("with_abilities", False),
+        **overrides,
+    )
+
+
+class TestTheOneKeystoneThatBooksNoDamage:
+    """Unsealed Spellbook contributes nothing and says so in its own words.
+
+    Every other keystone is modeled now, so this is the whole of the
+    no-damage roster — and it is compiled and selectable rather than a
+    refusal, which is what makes the receipt reachable at all.
+    """
+
+    def test_the_total_is_unmoved_and_the_receipt_is_published(
+        self, fight, attacker_stats
+    ):
+        keystone = "Unsealed Spellbook"
+        baseline = _autos(fight, attacker_stats, "")
+        result = _autos(fight, attacker_stats, keystone)
+        assert result["total_damage"] == pytest.approx(baseline["total_damage"])
+        assert not [key for key in result["breakdown"] if key.startswith("keystone")]
+        assert any(
+            "deals no damage in any fight" in note for note in _notes(result, keystone)
+        )
+
+
+def test_a_keystone_that_never_procs_says_so(fight, attacker_stats):
+    """Electrocute's silent zero is closed with the rest of them."""
+    result = _autos(fight, attacker_stats, "Electrocute", stats={"attack_speed": 0.5})
+    assert _keystone_row(result) is None
+    assert any("never procced" in note for note in _notes(result, "Electrocute"))
 
 
 class TestSummonAeryProcs:

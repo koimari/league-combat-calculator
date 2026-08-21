@@ -11,12 +11,7 @@ from dataclasses import dataclass, field as dataclass_field, replace
 from typing import Any
 
 from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
-from .champion_coverage import attacker_availability
-from .champions import (
-    get_champion_options_meta,
-    registered_engine_champion_names,
-    reviewed_champion_names,
-)
+from .champions import get_champion_options_meta
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .item_coverage import (
@@ -27,7 +22,7 @@ from .item_coverage import (
 from .interaction_effects import target_physical_damage_reduction_params
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
-from .pipeline import FightParams
+from .pipeline import FightParams, validate_cast_order_shape
 from .practice_dummy import (
     PRACTICE_DUMMY_KIND,
     PRACTICE_DUMMY_LEVEL,
@@ -37,6 +32,7 @@ from .practice_dummy import (
     practice_dummy_data,
 )
 from .role_quests import require_level_within_cap, validate_role
+from .rune_effects import RunePage, validate_rune_page
 from .request_parsing import (
     request_index_map,
     request_int as _request_int,
@@ -143,6 +139,28 @@ def _validate_champion_options(
     return parsed
 
 
+def _requested_rune_page(
+    value: Mapping[str, Any], *, field: str, is_practice_dummy: bool
+) -> RunePage | None:
+    """Validate one loadout's rune page, or ``None`` when it selects nothing.
+
+    The same four request fields the fight boundary reads, validated by the
+    same rules — a loadout's stat card and the fight it feeds must not
+    disagree about what the page is. A page that names nothing resolves to
+    ``None``: the stat matrix then takes the no-rune path exactly as it did
+    before the page existed.
+    """
+    keys = ("keystone", "minor_runes", "stat_shards", "rune_options")
+    if is_practice_dummy:
+        if any(value.get(key) for key in keys):
+            raise ValueError(f"{field} practice dummies have no runes")
+        return None
+    page = validate_rune_page(*(value.get(key) for key in keys))
+    if not page.keystone and not page.minor_runes and not any(page.stat_shards):
+        return None
+    return page
+
+
 @dataclass(frozen=True, slots=True)
 class ChampionLoadout:
     """One champion, their level, and the items that contribute stats."""
@@ -161,6 +179,10 @@ class ChampionLoadout:
     support_target_selections: dict[str, int] = dataclass_field(default_factory=dict)
     cast_order: list[str] | None = None
     target_stats: dict[str, float] = dataclass_field(default_factory=dict)
+    # A page that selects nothing stays ``None`` rather than an empty
+    # ``RunePage``, so a loadout with no runes takes the same code path
+    # through ``calculate_total_stats`` it took before runes existed.
+    rune_page: RunePage | None = None
     #: Optional starting health for this participant.  ``None`` means the
     #: participant starts the fight at full health; a number starts them at
     #: exactly that many health, bounded by their resolved maximum health.
@@ -286,17 +308,10 @@ class ChampionLoadout:
         cast_order = value.get("cast_order")
         if is_practice_dummy and cast_order is not None:
             raise ValueError(f"{field} practice dummies have no cast order")
-        if cast_order is not None:
-            if not isinstance(cast_order, list) or any(
-                not isinstance(slot, str) for slot in cast_order
-            ):
-                raise ValueError(
-                    f"{field}.cast_order must be a permutation of Q, W, E, R"
-                )
-            if sorted(cast_order) != ["E", "Q", "R", "W"]:
-                raise ValueError(
-                    f"{field}.cast_order must be a permutation of Q, W, E, R"
-                )
+        # Champion-agnostic shape only, exactly as the main attacker's path
+        # checks it; which slots this roster member may be told to cast is
+        # decided against its parsed kit in ``validate_for_champion`` (D-11).
+        validate_cast_order_shape(cast_order, field=f"{field}.cast_order")
 
         raw_current_health = value.get("current_health")
         if raw_current_health is None:
@@ -316,6 +331,10 @@ class ChampionLoadout:
         if len(set(equipped_names)) != len(equipped_names):
             raise ValueError(f"{field} must not contain duplicate items")
 
+        rune_page = _requested_rune_page(
+            value, field=field, is_practice_dummy=is_practice_dummy
+        )
+
         return cls(
             champion=champion,
             level=level,
@@ -331,6 +350,7 @@ class ChampionLoadout:
             support_target_selections=support_target_selections,
             cast_order=list(cast_order) if cast_order is not None else None,
             target_stats=target_stats,
+            rune_page=rune_page,
             current_health=current_health,
         )
 
@@ -364,6 +384,7 @@ class ChampionLoadout:
             item_options=self.item_options,
             role=self.role,
             role_quest_complete=self.role_quest_complete,
+            rune_page=self.rune_page,
         )
         if self.is_practice_dummy:
             stats = apply_stat_overrides(stats, self.target_stats)
@@ -517,21 +538,13 @@ def parse_roster(
 # messages (ValueError -> 400, LookupError -> 404) and run the same item
 # coverage gates.  See tests/test_endpoint_parity.py.
 
-ENGINE_CHAMPIONS = frozenset(registered_engine_champion_names())
-VERIFIED_CHAMPIONS = frozenset(reviewed_champion_names())
-
 
 def load_public_champion(name: str) -> dict[str, Any]:
-    """Load one champion that the public UI and engine both support."""
+    """Load one cached champion, translating a data miss into a public 404."""
     try:
-        champion = get_champion(name)
+        return get_champion(name)
     except KeyError as exc:
         raise LookupError(f"Champion '{name}' not found") from exc
-    if champion["name"] not in ENGINE_CHAMPIONS:
-        availability = attacker_availability(champion, VERIFIED_CHAMPIONS)
-        reason = availability["blockers"][0]["label"]
-        raise ValueError(f"Champion '{champion['name']}' is not verified: {reason}")
-    return champion
 
 
 def resolve_named_item(name: str, *, kind: str = "Item") -> dict[str, Any]:

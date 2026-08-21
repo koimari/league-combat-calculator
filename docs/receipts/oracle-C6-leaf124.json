@@ -1,0 +1,82 @@
+{
+  "receipt_id": "oracle-C6-leaf124",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/cast_order[2]",
+  "old_value": "E",
+  "new_value": "W",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope": "data/** and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never read"
+  },
+  "independent_computation": {
+    "question": "In a Syndra rotation over a 60 s manual-target fight, is the third cast W (Force of Will) or E (Scatter the Weak)?",
+    "step_1_model": "docs/math-foundations.md 1.1 fixes the scheduling model: casts live on one shared timeline, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, a cast counts when it STARTS inside the window, and simultaneous candidates are 'resolved greedily by cast order'. data/worklists/f2-task.md fixes the ordering rule the cast order itself is built from: rank damaging abilities by (a) DPS contribution, (b) setup/consume relationships, (c) cooldown gating, with the fixed DEFAULT_CAST_ORDER (Q,W,E,R) only as the fallback 'for champions with no combo signal'.",
+    "step_2_sourced_cooldowns": {
+      "Q Dark Sphere": "7/7/7/7/7, affectedByCdr=false; R passive grants Q 10/20/30 ability haste",
+      "W Force of Will": "12/11/10/9/8, affectedByCdr=true",
+      "E Scatter the Weak": "15/15/15/15/15, affectedByCdr=true",
+      "R Unleashed Power": "120/100/80, affectedByCdr=true"
+    },
+    "step_3_cast_schedule_60s": {
+      "assumptions": "level 18, max ranks (Q5/W5/E5/R3), no items so 0 external ability haste; R3 passive gives Q 30 AH -> Q cd = 7 x 100/130 = 5.3846 s",
+      "Q_casts": "12 at t = 0, 5.385, 10.769, 16.154, 21.538, 26.923, 32.308, 37.692, 43.077, 48.462, 53.846, 59.231",
+      "W_casts": "8 at t = 0, 8, 16, 24, 32, 40, 48, 56",
+      "E_casts": "4 at t = 0, 15, 30, 45",
+      "R_casts": "1 at t = 0",
+      "conclusion": "W fires exactly twice as often as E inside the window (8 vs 4). The realized time-ordered sequence therefore carries strictly more W entries than E entries, and W's second cast (t=8) lands before E's second cast (t=15). Early positions in the sequence are W-weighted."
+    },
+    "step_4_priority_W_over_E": {
+      "per_cast_damage_rank5_0AP": "W = 190 magic + 12% bonus true (60-splinter Transcendent bonus) = 190 + 22.8 = 212.8; E = 200. Wiki's own 'Bonus True Damage' row confirms 22.8 at rank 5.",
+      "damage_per_cooldown_second_rank5": "W = 212.8 / 8 = 26.60 /s; E = 200 / 15 = 13.33 /s; W = 1.995x E",
+      "all_ranks_W_vs_E_dmg_per_cd_sec": [
+        "rank 1: W 78.4/12 = 6.53  vs E 60/15 = 4.00",
+        "rank 2: W 112.0/11 = 10.18 vs E 95/15 = 6.33",
+        "rank 3: W 145.6/10 = 14.56 vs E 130/15 = 8.67",
+        "rank 4: W 179.2/9 = 19.91  vs E 165/15 = 11.00",
+        "rank 5: W 212.8/8 = 26.60  vs E 200/15 = 13.33"
+      ],
+      "60s_raw_totals_0AP": "W: 8 casts x 212.8 = 1702.4; E: 4 casts x 200 = 800.0 (W > 2x E)",
+      "conclusion": "W strictly dominates E on per-cast damage AND on damage per cooldown-second at every rank. Under the documented DPS-contribution ranking, E can never be scheduled ahead of an available W, and W must occupy earlier/more of the sequence."
+    },
+    "step_5_setup_consume": "The cached wiki text makes Q the setup and W the damage consumer: Q 'conjures a Dark Sphere at the target location ... The Dark Sphere then remains on the ground for 6 seconds'; W 'grabs the nearest Dark Sphere ... Recast: Syndra throws the grabbed target ... dealing magic damage'. E's sphere interaction is crowd control, not extra damage: spheres knocked by E stun for 1.25 s and are 'dealt Scatter the Weak's damage if they were not damaged by the initial cast' (no double-dip). data/champion-audit/batch-6.json classifies exactly this as utility: out_of_scope 'E/W CC (stun, knockback, slow - utility only)'. So the damage-optimal opener is Q -> W, with E later; Syndra has a strong combo signal and must NOT fall back to the fixed default order.",
+    "step_6_why_the_old_value_is_the_bug_signature": "'E' at index 2 is exactly what the legacy fixed DEFAULT_CAST_ORDER (Q,W,E,R, quoted verbatim in data/worklists/f2-task.md) emits at position 2. A scenario whose id declares a custom (non-default) order reproducing the default order's index-2 value is the signature of the custom/combo order being ignored. The new value (W at index 2) is what an honored non-default order looks like, and it is consistent with every sourced ordering criterion above: either a second Dark Sphere charge occupies index 1 (Transcendent stocks up to 2 Q charges from 40 splinters, and the scenario's 60 clears that threshold, giving Q,Q,W,...) or W's grab-then-throw pair occupies indices 1-2 (the wiki treats them as two presses: 'Force of Will can be recast while the target is being held'). Both readings put W at index 2; none of them puts E there.",
+    "residual_uncertainty": "The scenario's own input tuple (the literal custom order list, the level/ranks/splinter option) is not present anywhere under data/ and was deliberately not read from scripts/ or tests/. The verdict is therefore built from the sourced ability numbers, the documented scheduling model and the documented ordering rule, not from an echo of the scenario input. Every one of those independent lines favours W at index 2; none supports E."
+  },
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "source": "docs/math-foundations.md, coverage table",
+      "quote": "Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | cooldown values [7,7,7,7,7], affectedByCdr false | Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere ... Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land. | Magic Damage [70,100,130,160,190] (+65% AP) | cooldown [12,11,10,9,8], affectedByCdr true | Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. | Bonus True Damage [8.4,12,15.6,19.2,22.8]"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "quote": "Active: Syndra propels a wave of force in a cone ... Magic Damage [60,95,130,165,200] (+60% AP) | cooldown [15,15,15,15,15], affectedByCdr true | Dark Spheres can be knocked back ... Targets hit are also stunned for 1.25 seconds ... and dealt Scatter the Weak's damage if they were not damaged by the initial cast."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste [10,20,30] | cooldown [120,100,80]"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "module_slots.modeled = [P,Q,Q2,W,E,R]; out_of_scope = [\"E/W CC (stun, knockback, slow - utility only)\", ...]; note: \"synthetic Q2 (2nd charge)\"; verdict ok"
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... rank its damaging abilities by (a) DPS contribution per rank at the fight's stats, (b) setup/consume relationships ... (c) cooldown gating (cast order must respect cooldowns) ... with a documented fallback (default Q,W,E,R order) for champions with no combo signal ... It must respect per-rank cooldowns in time-based mode (recast when off CD ...)"
+    }
+  ],
+  "committed": false
+}

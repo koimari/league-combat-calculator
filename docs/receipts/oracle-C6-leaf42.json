@@ -1,0 +1,120 @@
+{
+  "receipt": "oracle-C6-leaf42",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[6]/damage",
+  "old_value": 713.0,
+  "new_value": 894.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "read": [
+      "data/champions.json (Syndra entry: stats + abilities)",
+      "data/champion-audit/batch-6.json (Syndra module_slots / atom coverage)",
+      "data/champion-audit/batch-e9-1.json (Syndra slot coverage)",
+      "data/practice-corpus/scenarios.json (no syndra_custom_order_120 entry present)",
+      "data/worklists/f2-task.md (cast_order / damage_events semantics)",
+      "docs/math-foundations.md (mitigation identity)"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "note": "The scenario's cast order and stat block are defined outside data/ (scripts/tests), which R-18/R-19 forbids reading. The build stats and the event's ability identity were therefore recovered by inverting the wiki formulas against the two candidate values; see `derivation`."
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] — attribute 'Magic Damage'",
+      "quote": "values [90, 125, 160, 195, 230] (flat, per rank) + values [70,70,70,70,70] units '% AP'"
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[1] — attribute 'Magic Damage per Sphere'",
+      "quote": "values [80, 120, 160] (flat, per rank) + values [20,20,20] units '% AP'  |  'Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... each dealing magic damage upon hit.'"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[1] — attribute 'Minimum Magic Damage'",
+      "quote": "values [240, 360, 480] (flat, per rank) + values [60,60,60] units '% AP'   (i.e. exactly 3 x the per-sphere row)"
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[3] / W[2] — 'Magic Damage' and 'Transcendent Bonus'",
+      "quote": "Recast magic damage [70,100,130,160,190] + 65% AP; 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'"
+    },
+    {
+      "id": "S6",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0] — attribute 'Magic Damage'",
+      "quote": "values [60, 95, 130, 165, 200] + 60% AP"
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.'; gap_summary: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads \"Magic Damage per Sphere\" x user-set sphere count.'"
+    },
+    {
+      "id": "S8",
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.1, line 235",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S9",
+      "file": "data/worklists/f2-task.md",
+      "path": "line 7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    }
+  ],
+
+  "derivation": {
+    "step_1_recover_the_build_AP": {
+      "method": "Both candidate values must be Syndra ability damages at one common AP and one common mitigation multiplier m (S8). Solving the only pair of wiki rows that admits an exact simultaneous solution: 713 = m*(230 + 0.70*AP)  [Q rank 5, S2] and 894 = m*(480 + 0.60*AP)  [R rank 3 minimum / 3 spheres, S3+S4].",
+      "solve": "713*(480 + 0.6A) = 894*(230 + 0.7A)  ->  342240 + 427.8A = 205620 + 625.8A  ->  198A = 136620  ->  A = 690.0, and then m = 713/713 = 1.0 (target at 0 effective MR, consistent with a 'manual_target' dummy).",
+      "cross_check": "690 = 600 x 1.15 exactly — i.e. 600 AP amplified by the 120-Splinter Transcendence buff (S1, S7), which is exactly what the scenario id '...custom_order_120' denotes. A brute-force sweep over every Syndra damage row (Q/W/E ranks 1-5, R ranks 1-3 x 1-7 spheres) found only two AP values making BOTH numbers exact: A=690 with (Q rank5, R rank3 x3) and A=890 with (Q rank1, R rank2 x3). The second requires a level-18 Syndra at Q rank 1 / R rank 2 and an AP of 890 with no relation to the 1.15 buff; the first is the maxed rank set (Q5/W5/E5/R3) and reproduces the 15% capstone exactly. A=690 is adopted."
+    },
+    "step_2_value_of_every_event_at_AP_690": {
+      "Q (rank 5)": "230 + 0.70*690 = 230 + 483 = 713.0",
+      "Q2 (synthetic 2nd charge, S7)": "713.0 (same row)",
+      "W magic (rank 5)": "190 + 0.65*690 = 638.5",
+      "W true (60-splinter bonus, S5)": "(0.12 + 0.02*690/100) * 638.5 = 0.258 * 638.5 = 164.7",
+      "E (rank 5)": "200 + 0.60*690 = 614.0",
+      "R per sphere (rank 3)": "160 + 0.20*690 = 298.0",
+      "R, 3 spheres (default sphere count)": "3 * 298.0 = 894.0  ==  480 + 0.60*690 = 894.0 (the wiki 'Minimum Magic Damage' row, S4) — two independent rows agree"
+    },
+    "step_3_identify_the_leaf": {
+      "finding": "The diff is not a re-computation of one ability's damage — it is a change of WHICH slot occupies index 6. 713.0 is exactly a Dark Sphere (Q or the synthetic Q2 charge); 894.0 is exactly Unleashed Power at 3 spheres. No sphere count n satisfies n*298 = 713, and no rank/AP combination makes 894 a Dark Sphere at this build, so each number belongs to one and only one slot.",
+      "event_layout": "At 120 splinters the modelled damaging slots are Q, Q2, W(magic) , W(true), E, R (S7) = 6 ability events; a 7-element damage_events list (index 6 = last) therefore has exactly one non-ability event (an auto) alongside them. Old list ended on a Dark Sphere (713) with R earlier; the new list ends on R (894).",
+      "ruling": "For a Syndra burst rotation the ultimate is the terminal cast: both Dark Sphere charges (Q, Q2) are spent before Unleashed Power — R consumes/needs spheres on the field and is the finisher (S3: 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'). An ordering that fires a Dark Sphere charge AFTER the ultimate is the un-physical one; the per-cast damage of Q is unchanged either way, so the only thing at stake at this leaf is the ordering, and R-last is the correct ordering (S9: event order comes from the fight's cast_order)."
+    },
+    "conclusion": "damage_events[6] should be the Unleashed Power event: 3 spheres x (160 + 20% x 690 AP) = 3 x 298 = 894.0 magic damage, taken at face value against the 0-effective-MR manual target (m = 100/(100+0) = 1, S8). The new value reproduces this exactly."
+  },
+
+  "independent_computation": {
+    "total_AP": 690.0,
+    "AP_derivation": "600 base x 1.15 Transcendence (120 Splinters of Wrath)",
+    "formula": "R (rank 3) = spheres x (160 + 20% AP), spheres = 3 (minimum barrage)",
+    "raw": 894.0,
+    "mitigation_multiplier": 1.0,
+    "final": 894.0
+  },
+
+  "confidence": "high on the arithmetic (AP = 690 is the unique simultaneous solution, and 894.0 is reproduced by two independent wiki rows); medium-high on the slot attribution, since the scenario's literal cast_order lives outside data/ and could not be read under the runbook. If a future reader can see the cast order and it deliberately places a Dark Sphere charge after R at index 6, this verdict should be revisited — but 894.0 would still be the correct value for the R event wherever it lands, and 713.0 would still be the correct value for a Dark Sphere event.",
+
+  "caveats": [
+    "Both 713.0 and 894.0 are individually valid Syndra damage numbers at this build; neither is arithmetically wrong. The verdict turns on event ordering, not on a mis-scaled formula.",
+    "The R execute at 100 splinters is documented as not modelled (S7) and does not affect this leaf.",
+    "No files were committed; this receipt is the only artifact written."
+  ]
+}

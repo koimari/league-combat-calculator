@@ -1,60 +1,200 @@
 """Xin Zhao — CP10.10 full-entry-reviewed packet module.
 
-Roadmap session 5 slot 14 (2026-08-21): P (Determination) was audited for
-the same stale-label MODULE_COVERAGE fix applied to the other nine
-champions in this batch, and it is a DIFFERENT case — a genuine,
-unresolved gap, not a stale label. Its cached prose (data/champions.json
-P, effect index 1) states the third stack "consumes them all to deal
-15% / 30% / 45% / 60% (based on level) AD (+ 5% / 10% / 15% / 20% (based
-on level) AP) bonus physical damage" to the struck enemy AND heals Xin
-Zhao — a real enemy-damage proc, not a self-only buff. Both P effects'
-``leveling`` arrays are empty (the wiki parser never captured these
-percentages as structured rows; they exist only as prose), so the
-pinned reviewed packet's generic ``kind: "no_damage"`` / "contains no
-enemy-damage formula" declaration is the packet-generation pipeline's
-catch-all for "no structured leveling row found," not a reviewed claim
-that the ability deals no damage — unlike Xerath's Mana Surge, Zaahen's
-Cultivation of War, or the other seven no_damage reclassifications in
-this batch, all confirmed self-only/state mechanics with no enemy-damage
-prose at all. Relabeling P "no_damage" here would misrepresent a real,
-unsourced-formula gap as "confirmed non-damaging" (fail-closed
-violation). P therefore STAYS "out_of_scope" (the Wukong W / Dr. Mundo P
-/ Rengar R precedent: discovered-but-unresolved formula stays open,
-receipted, not mislabeled) pending a hand-authored parser that reads the
-prose-sourced per-level AD/AP percentages as HARDCODED, verified
-constants.
+Row-selection fix.  The generated packet picked, for both Q and W, a
+single-instance row where the cached entry also carries the Total the
+wiki computes for one cast, so this module reads the Total instead:
+
+- Q (Three Talon Strike) "empowers his next three basic attacks ... to
+  each have an uncancellable windup, deal bonus physical damage".  The
+  packet priced "Bonus Physical Damage" (15/30/45/60/75 + 40% bonus AD),
+  one of the three; the cache's "Total Bonus Physical Damage" row is
+  45/90/135/180/225 + 120% bonus AD — exactly three of them.
+- W (Wind Becomes Lightning) "unleashes 4 slashes ... each dealing
+  physical damage ... he then thrusts his spear in a line ... dealing
+  physical damage".  The packet priced "Physical Damage per Slash"
+  (7.5/10/12.5/15/17.5 + 7.5% AD), one slash of four and no thrust; the
+  cache's "Total Physical Damage" row is 80/125/170/215/260 + 120% AD
+  + 65% AP == "Slash Total Physical Damage" + "Thrust Physical Damage".
+
+Each row is now several hits, so neither certifies a cast-boundary single
+hit.  W declares its one aggregate hit at the cast so its reviewed slow
+still reaches the event ledger; the slashes' sourced cadence ("over the
+first 0.15 seconds of the cast time") and the thrust's offset behind the
+remaining cast time are left for the timing wave.
+
+Coverage-frontier rider: P (Determination) is the every-third-attack
+bonus — "Xin Zhao's basic attacks on-hit ... generate a stack of
+Determination, stacking up to 3 times.  The third stack consumes them
+all to deal 15% / 30% / 45% / 60% (based on level) AD (+ 5% / 10% / 15%
+/ 20% (based on level) AP) bonus physical damage and heal Xin Zhao for
+2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% / 70%
+(based on level) AP)."  The cached P entry carries no leveling row at
+all, so the bands are module constants.  W's first slash and thrust also
+generate a stack; the engine's ability-hit counter is kit-wide (it would
+count E and R too), so the stack counter here runs on the auto stream
+alone and the two W stacks are unpriced.  The heal is paid by the Xin
+Zhao healing rule off the same on-hit events.
 """
 
+from typing import Any
+
+from .. import healing_helpers as _healing
+from .inputs import champion_stat
+from .engine import ONHIT, SlotCtx
+from .healing_contract import declare_healing_rule
+from .module_helpers import typed_damage
 from .packet_module import build_packet_module
+from .slotlib import ability_on_hit_entry, simple_damage
 
 PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf64"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Xin Zhao", PACKET_SHA256, single_hit_slots=frozenset({"R"})
+# HARDCODED: verify on patch updates — the cached Determination entry
+# has no leveling rows; every number is wiki prose, and the level
+# breakpoints come from Template:Data Xin Zhao/Determination
+# ("15 to 60 for 4|1 to 16" and "5 to 20 for 4|1;6;11;16" — levels
+# 1/6/11/16 for both damage terms).  The heal's bands live in the
+# healing rule that pays it (this module's ``derive_self_healing``).
+DETERMINATION_STACKS = 3
+_DAMAGE_BANDS: tuple[tuple[int, float, float], ...] = (
+    (16, 0.60, 0.20),
+    (11, 0.45, 0.15),
+    (6, 0.30, 0.10),
+    (1, 0.15, 0.05),
 )
-PACKET_SPEC = SLOTS.packet_spec
-ASSUMPTIONS = list(ASSUMPTIONS) + [
-    "P (Determination) is NOT modeled and MODULE_COVERAGE correctly "
-    "reads out_of_scope (not no_damage): the third on-hit stack deals "
-    "real bonus physical damage to the struck enemy (15/30/45/60% AD + "
-    "5/10/15/20% AP, based on level) per the cached prose, but both P "
-    "leveling rows are empty arrays — the percentages exist only as "
-    "text, never captured as sourced structured data. The pinned "
-    "reviewed packet's kind='no_damage' declaration for P is the "
-    "generic 'no structured leveling row' catch-all, not a reviewed "
-    "non-damage claim; genuine unresolved gap, receipted rather than "
-    "silently relabeled.",
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+def _determination_ratios(level: int) -> tuple[float, float]:
+    """The third-stack AD and AP ratios at a champion level."""
+    for min_level, ad_ratio, ap_ratio in _DAMAGE_BANDS:
+        if level >= min_level:
+            return ad_ratio, ap_ratio
+    return _DAMAGE_BANDS[-1][1], _DAMAGE_BANDS[-1][2]
+
+
+def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the third-stack bonus, as a per-attack share of the proc."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    ad_ratio, ap_ratio = _determination_ratios(ctx.level)
+    per_proc = ad_ratio * ctx.stat("attack_damage") + ap_ratio * ctx.stat(
+        "ability_power"
+    )
+    if per_proc <= 0:
+        return None
+
+    name = ability.get("name", "Determination")
+    entry = ability_on_hit_entry(
+        name,
+        ctx.level,
+        "physical",
+        {
+            "name": name,
+            # The engine multiplies the per-hit share by every attack and
+            # displays procs, so partial stacks are priced smoothly (the
+            # Vayne W / Aurora P shape).
+            "damage_per_hit": per_proc / DETERMINATION_STACKS,
+            "damage_type": "physical",
+            "stacks_required": DETERMINATION_STACKS,
+        },
+    )
+    entry["detail"] = (
+        f"every {DETERMINATION_STACKS}rd basic attack consumes the stacks "
+        f"for {per_proc:.2f} bonus physical damage ({ad_ratio:.0%} AD + "
+        f"{ap_ratio:.0%} AP at level {ctx.level}) and the sourced "
+        "maximum-health heal; Wind Becomes Lightning's two stacks are not "
+        "counted"
+    )
+    return entry
+
+
+_determination.phase = ONHIT
+
+
+def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the whole cast — four slashes plus the thrust — at the cast."""
+    return typed_damage(ctx, "Total Physical Damage", "physical", time_offset=0.0)
+
+
+# Wind Becomes Lightning ends in a thrust "dealing physical damage to
+# enemies hit ... and slowing them by 50%" — the cast slows the target it
+# damages, and now that W prices the whole cast (four slashes plus that
+# thrust) the reviewed kind covers every hit the row contains.  Audacious
+# Charge "slow[s] all targets hit by 30% for 0.5 seconds".  Crescent
+# Guard's knockback and stun reach only "targets hit that are not
+# Challenged", and its own passive marks the duel target — "Xin Zhao's
+# basic attacks and Audacious Charge apply the Challenged mark to enemy
+# champions hit" — so the one enemy this module prices is never displaced
+# by it.
+#
+# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Its row is now all three empowered attacks, but only "the third attack
+# knocks up the target" — one of three, and no slot-wide answer covers a
+# row whose hits differ (the Annie Pyromania rule).
+MODULE_CC = {"W": "slow", "E": "slow", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Xin Zhao",
+    PACKET_SHA256,
+    # E's arrival and R's sweep are one hit each at the cast.  W is no
+    # longer among them: its row is four slashes plus a thrust, declared
+    # at the cast boundary by ``_wind_becomes_lightning``.
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "P": _determination,
+        "Q": simple_damage(
+            attr="Total Bonus Physical Damage",
+            dmg_type="physical",
+        ),
+        "W": _wind_becomes_lightning,
+    },
+    assumption_overrides=(
+        "Q (Three Talon Strike) prices all three empowered attacks — the "
+        "cached Total Bonus Physical Damage row (45/90/135/180/225 + 120% "
+        "bonus AD), three times the per-attack Bonus Physical Damage row "
+        "the generated packet selected.  Their spacing across the "
+        "5-second window is not authored.",
+        "W (Wind Becomes Lightning) prices the whole cast — the cached "
+        "Total Physical Damage row (80/125/170/215/260 + 120% AD + 65% "
+        "AP), which is the four slashes plus the thrust.  The generated "
+        "packet priced Physical Damage per Slash, one slash of four with "
+        "no thrust.  The row is declared as one aggregate hit at the cast "
+        "boundary; the thrust's crit-chance increase (0% : 33.3%) and the "
+        "slash cadence remain unpriced.",
+        "P (Determination) prices the third-stack bonus at the wiki's "
+        "15% / 30% / 45% / 60% (based on level) AD + 5% / 10% / 15% / "
+        "20% AP (level breakpoints 1/6/11/16) — module constants, "
+        "because the cached P entry carries no leveling row.  Stacks "
+        "come from basic attacks only: Wind Becomes Lightning's first "
+        "slash and thrust also generate one each, but the engine's "
+        "ability-hit stack counter is kit-wide and would also count E "
+        "and R, which generate none.  The Challenged mark is state.",
+    ),
+    cc_kinds=MODULE_CC,
+)
+
+
+# HARDCODED: verify on patch updates — Determination's heal is cached
+# PROSE, not a leveling row: the third stack "heal[s] Xin Zhao for
+# 2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% /
+# 70% (based on level) AP)".  The level breakpoints 1/6/11 are the wiki
+# template's.
+_HEAL_BANDS: tuple[tuple[int, float, float], ...] = (
+    (11, 0.05, 0.70),
+    (6, 0.035, 0.50),
+    (1, 0.02, 0.40),
+)
+
+
+def _determination_heal_ratios(level: int) -> tuple[float, float]:
+    """The third-stack maximum-health and AP heal ratios at a level."""
+    for min_level, health_share, ap_ratio in _HEAL_BANDS:
+        if level >= min_level:
+            return health_share, ap_ratio
+    return _HEAL_BANDS[-1][1], _HEAL_BANDS[-1][2]
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -65,7 +205,7 @@ def derive_self_healing(
 ):
     """Resolve Xin Zhao self-healing events from its authored packet."""
     healing = []
-    lifesteal = float(champion_stats.get("lifesteal_percent", 0.0) or 0.0)
+    lifesteal = champion_stat(champion_stats, "lifesteal_percent")
     if lifesteal > 0.0:
         for event in _healing._attributed_events(
             damage_events, lambda source, _event: source == "W"
@@ -74,11 +214,29 @@ def derive_self_healing(
                 0.333 * max(0.0, float(event.get("damage", 0.0))) * lifesteal / 100.0
             )
             _healing._heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
+    # Determination (P): the third stack "consume[s] them all to deal ...
+    # bonus physical damage and heal Xin Zhao for 2% / 3.5% / 5% (based on
+    # level) of his maximum health (+ 40% / 50% / 70% (based on level) AP)".
+    # ``_determination`` prices the proc as a per-attack share (partial
+    # stacks included), so the heal pays the same share on the same on-hit
+    # events — three of them are one proc's heal.
+    determination = (ability_damages.get("passive") or {}).get("on_hit") or {}
+    if determination:
+        xin_level = max(1, int(champion_stat(champion_stats, "level")))
+        health_share, heal_ap_ratio = _determination_heal_ratios(xin_level)
+        per_proc_heal = health_share * float(
+            champion_stat(champion_stats, "health")
+        ) + heal_ap_ratio * champion_stat(champion_stats, "ability_power")
+        # The module declares the cadence; dividing by it here is what keeps
+        # the heal and the damage on one grouping.
+        stacks = max(1, int(determination.get("stacks_required") or 1))
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "on_hit_ability_passive"
+        ):
+            _healing._heal_from_damage(
+                healing, event, per_proc_heal / stacks, "Determination"
+            )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Xin Zhao", derive_self_healing)

@@ -594,21 +594,19 @@ class TestFailClosedMetadata:
         assert row["reason"] == "untyped_cc"
         assert row["time"] == pytest.approx(1.0)
 
-    def test_unknown_cc_kind_never_fires(self):
-        packets = _run([_cc_event(1.0, cc_kind="petrify", event_id="e1")])
-        assert _shields(packets) == []
+    def test_unknown_cc_kind_is_refused_at_the_bus_not_priced(self):
+        """An unrecognised ``cc_kind`` is refused before any item sees it.
 
-    def test_unknown_cc_kind_denial_receipt_is_named(self):
-        # P3-3B contract: an unrecognized cc_kind is not in the sourced
-        # vocabulary and must be receipted as "unknown_cc_kind".
-        packets = _run([_cc_event(1.0, cc_kind="petrify", event_id="e1")])
-        rows = _denials(packets, reason="unknown_cc_kind")
-        assert len(rows) == 1
-        row = rows[0]
-        assert row["kind"] == "item_denial"
-        assert row["source"] == EVERLASTING
-        assert row["reason"] == "unknown_cc_kind"
-        assert row["time"] == pytest.approx(1.0)
+        The merged tree closed the control vocabulary in
+        ``trigger_stream.CC_KIND_VOCABULARY``, and a champion module that
+        authors a kind outside it is a programming error rather than a data
+        condition — so the bus raises, naming the kind, instead of letting
+        each holder receipt it separately.  That is strictly stronger than
+        the per-item ``unknown_cc_kind`` receipt it replaces: the row cannot
+        reach any consumer at all, and one refusal covers every holder.
+        """
+        with pytest.raises(ValueError, match="petrify.*CC_KIND_VOCABULARY"):
+            _run([_cc_event(1.0, cc_kind="petrify", event_id="e1")])
 
     def test_event_with_no_marker_is_not_a_candidate(self):
         # No CC metadata at all: not a candidate, so no shield AND no denial
@@ -713,14 +711,17 @@ class TestTimelineCertification:
         assert all(event.get("cc_kind") == "immobilize" for event in e_events)
         assert all(event.get("cc_reviewed") is True for event in e_events)
 
-    def test_unreviewed_ability_keeps_current_coarse_behavior(self):
-        # P3-3B contract target: certifying REVIEWED packets is the 3B goal.
-        # Today's observable (pinned, not changed): an unreviewed ability
-        # (Ahri Q carries no cc metadata) keeps the CC dimension coarse.
+    def test_a_reviewed_no_cc_ability_certifies_instead_of_staying_coarse(self):
+        # The observable moved, and the move is the point: every slot of a
+        # named champion module now declares its control kind, and "none" is
+        # a REVIEW rather than an absence.  Ahri Q carries no crowd control
+        # and says so, so Everlasting has nothing to be coarse about and the
+        # timeline certifies.
         result = _certification_fight(["Q"])
-        assert result["timeline_coverage"]["complete"] is False
+        assert result["timeline_coverage"]["complete"] is True
         assert (
-            "fimbulwinter_everlasting" in result["timeline_coverage"]["coarse_sources"]
+            "fimbulwinter_everlasting"
+            not in result["timeline_coverage"]["coarse_sources"]
         )
 
     def test_reviewed_charm_fight_attaches_shield_and_certifies_end_to_end(self):

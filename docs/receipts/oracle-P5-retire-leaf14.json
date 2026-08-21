@@ -1,0 +1,98 @@
+{
+  "receipt_id": "oracle-P5-retire-leaf14",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/setup[1]",
+  "old_value": null,
+  "old_value_note": "<absent> — the setup list had no index 1 (setup phase laid a single Dark Sphere)",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "method": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/champions.json (Syndra P/Q/W/E/R)",
+      "data/champion-audit/batch-6.json (Syndra module coverage)",
+      "data/champion-audit/batch-e9-1.json (Syndra slots)",
+      "data/wiki-atoms/stack-transform-summon-resource.json (ammo atom)",
+      "data/worklists/f2-task.md, data/worklists/f3-task.md (derived-order setup/consume contract)",
+      "docs/math-foundations.md"
+    ],
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history",
+      "the diff",
+      "the plan"
+    ]
+  },
+  "independent_computation": {
+    "step_1_what_the_leaf_means": "The rotation receipt is {order, setup, rationale} (data/worklists/f2-task.md deliverable 4; f3-task.md 1a defines 'setup/consume edges'). '/fights/manual_target/rotation/setup' is therefore the ordered setup-phase cast list — the applier casts that must precede their consumers. setup[1] is the second setup cast.",
+    "step_2_who_is_the_setup_ability": "From the cached wiki text, Dark Sphere (Q) is Syndra's only applier: 'Syndra conjures a Dark Sphere at the target location ... The Dark Sphere then remains on the ground for 6 seconds.' All three of her other actives consume a live sphere: W 'telekinetically grabs the nearest Dark Sphere ... Grabbing prioritizes Dark Spheres'; E 'Dark Spheres can be knocked back ... Targets hit are also stunned'; R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'. So every setup entry for Syndra must be Q, and at least one is required.",
+    "step_3_how_many_setup_casts_are_sourced_at_120_splinters": "The scenario pins the splinters option at 120 (data/champion-audit/batch-6.json: 'splinters option (0-120)'; data/champions.json P: stacks 'up to 120 times'). At 120 splinters every Transcendent threshold is met, including Q's: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' Two stocked charges = exactly two back-to-back Dark Sphere casts available in the setup phase, hence setup = [Q, Q] and setup[1] = 'Q'.",
+    "step_4_why_not_three_or_more": "The charge cap is explicitly 'a maximum of 2'. A third sphere requires waiting a full recharge: Q cooldown/rechargeRate = 7 s at every rank with affectedByCdr = false; only R's passive reduces it ('Dark Sphere's cooldown is reduced equivalent to an amount of ability haste', 10/20/30 by R rank), giving 7 x 100/(100+AH) = 6.364 / 5.833 / 5.385 s. That exceeds any burst setup window (Q castTime 'none', E castTime 0.25 s, R castTime 0.25 s), so 2 is both the ceiling and the value at 120 splinters.",
+    "step_5_why_the_second_sphere_is_strictly_optimal": "R's per-sphere row is 80/120/160 (+20% AP) and the min/max rows are internally consistent with a strictly additive sphere count: 3 x per-sphere = 240/360/480 (+60% AP) = the 'Minimum Magic Damage' row (0 live spheres, 3 conjured); 7 x per-sphere = 560/840/1120 (+140% AP) = the 'Maximum Magic Damage' row (3 conjured + 4 grabbed). Verified arithmetic at all three ranks. Each pre-laid live sphere is therefore worth exactly per-sphere damage with no diminishing term up to 4, so the optimal setup lays every sphere the charge system allows. Going from one setup Q (4 spheres in R) to two (5 spheres) adds 160 + 20% AP raw magic damage at R rank 3.",
+    "conclusion": "A setup list of length 2 whose second element is the Dark Sphere cast 'Q' is the value the cached source data supports at splinters = 120. The old state — setup index 1 absent, i.e. a single sphere laid — ignores the sourced 40-splinter second charge and under-fills R (4 spheres instead of 5, a 160 + 20% AP shortfall at R3)."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cooldown / rechargeRate",
+      "quote": "cooldown values [7,7,7,7,7], affectedByCdr: false; rechargeRate [7,7,7,7,7]; castTime: 'none'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description + leveling",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. — Magic Damage per Sphere 80/120/160 (+20% AP); Minimum 240/360/480 (+60% AP); Maximum 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0].description",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. — Ability Haste 10/20/30"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[0].description and notes",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster ... She prioritizes grabbing the nearest unit, then Dark Spheres. / notes: Grabbing prioritizes Dark Spheres."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0].effects[1].description",
+      "quote": "Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra based on proximity, knocking back enemies they hit over 70 units ... Targets hit are also stunned for 1.25 seconds."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... synthetic Q2 (2nd charge) ... splinters option (0-120) gates Q2 second charge ... R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "data/wiki-atoms/stack-transform-summon-resource.json -> stack-transform-summon-resource.ammo",
+      "quote": "stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "source": "data/worklists/f2-task.md (deliverable 4) and f3-task.md (deliverable 1a)",
+      "quote": "the /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: \"Q poisons, E consumes\"} ... DETECT setup/consume edges automatically ... an ability whose row names indicate application ... must precede abilities that consume"
+    },
+    {
+      "source": "docs/math-foundations.md (Section 1.1, shared-timeline casts)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress"
+    }
+  ],
+  "caveats": [
+    "The oracle worked only from data/ and docs/math-foundations.md; the scenario definition and the rotation resolver source were deliberately not read, so the label used for the second charge is judged on the source data alone. If the engine elsewhere addresses the second charge by the synthetic slot key 'Q2', a golden label of 'Q' is a naming question, not a value error — the sourced fact (a second Dark Sphere cast is available and optimal in the setup phase at 120 splinters) holds either way.",
+    "R's 100-splinter execute is documented as not modeled (data/champion-audit/batch-6.json); it does not bear on the setup list."
+  ]
+}

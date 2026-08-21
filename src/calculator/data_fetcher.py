@@ -6,15 +6,13 @@ only reads from the local cache in the ``data/`` directory.
 """
 
 import json
-import time
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+from .rune_parser import RESERVED_CACHE_KEYS
 
-# Cache is considered stale after 24 hours
-CACHE_MAX_AGE_SECONDS = 24 * 60 * 60
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 
 @lru_cache(maxsize=8)
@@ -27,55 +25,6 @@ def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
     """
     with open(data_path, "r", encoding="utf-8") as data_file:
         return json.load(data_file)
-
-
-def _get_cache_metadata_path(data_directory: Path, filename: str) -> Path:
-    """Return the path to the cache metadata file for a given data file."""
-    return data_directory / f".{filename}.meta"
-
-
-def _is_cache_valid(
-    data_directory: Path,
-    filename: str,
-    max_age_seconds: int = CACHE_MAX_AGE_SECONDS,
-) -> bool:
-    """Check whether the cached file exists and is not stale."""
-    data_path = data_directory / filename
-    meta_path = _get_cache_metadata_path(data_directory, filename)
-
-    if not data_path.exists() or not meta_path.exists():
-        return False
-
-    try:
-        with open(meta_path, "r", encoding="utf-8") as meta_file:
-            metadata = json.load(meta_file)
-        fetched_at = metadata.get("fetched_at", 0)
-        return (time.time() - fetched_at) < max_age_seconds
-    except (json.JSONDecodeError, OSError):
-        return False
-
-
-def _write_cache(data_directory: Path, filename: str, data: dict[str, Any]) -> None:
-    """Write data and metadata to the cache directory (deprecated).
-
-    Tracked runtime caches delegate to the atomic registry write; any other
-    filename keeps the historical general behavior (tests, scratch).  New
-    callers should use ``data_registry.write_runtime_cache`` directly.
-    """
-    from .data_registry import CACHE_FILES, write_runtime_cache
-
-    if filename in CACHE_FILES:
-        write_runtime_cache(data_directory, filename, data)
-        return
-    data_directory.mkdir(parents=True, exist_ok=True)
-    data_path = data_directory / filename
-    meta_path = _get_cache_metadata_path(data_directory, filename)
-    with open(data_path, "w", encoding="utf-8") as data_file:
-        json.dump(data, data_file, indent=2)
-    _read_json_version.cache_clear()
-    metadata = {"fetched_at": time.time(), "filename": filename}
-    with open(meta_path, "w", encoding="utf-8") as meta_file:
-        json.dump(metadata, meta_file, indent=2)
 
 
 def _read_cache(data_directory: Path, filename: str) -> dict[str, Any]:
@@ -189,7 +138,9 @@ def fetch_rune_data(
         data_directory: Directory where cached data is stored.
 
     Returns:
-        Dictionary of rune payloads keyed by rune name.
+        Dictionary of rune payloads keyed by rune name, plus the page-level
+        blocks named by ``rune_parser.RESERVED_CACHE_KEYS`` (the stat-shard
+        table and the adaptive-force conversion), which are not runes.
 
     Raises:
         FileNotFoundError: If no cached data exists.  Run the updater first.
@@ -205,8 +156,10 @@ def fetch_rune_data(
     data = _read_cache(data_directory, filename)
     if not isinstance(data, dict) or not data:
         raise ValueError("Rune data must be a non-empty dictionary")
-    sample = next(iter(data.values()))
-    if "name" not in sample:
+    runes = [entry for name, entry in data.items() if name not in RESERVED_CACHE_KEYS]
+    if not runes:
+        raise ValueError("Rune data holds no runes")
+    if "name" not in runes[0]:
         raise ValueError("Rune data missing required field: 'name'")
     return data
 

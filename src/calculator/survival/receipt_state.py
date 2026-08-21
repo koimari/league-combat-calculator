@@ -10,99 +10,232 @@ public timeline serializes and schedules walk-authored recovery packets.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-from .actions import SurvivalAction, action_key, survival_action_from_event
+from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
+from .outcome_state import OutcomeLedger
 from .transitions import participant_pools
-from ..item_effects import sustain_effect_value
+from ..data_registry import data_version
 from ..interaction_effects import (
     defense_composition,
     defense_eligibility,
-    public_defense,
-    public_physical_damage_reduction,
     resolve_physical_damage_reduction,
     resolve_projectile_defense,
     resolve_spell_shield,
 )
-from ..delivery_eligibility import (
-    delivery_declarations_receipt,
-    initial_full_block_uses,
-    spell_shield_rules_receipt,
-)
+from ..delivery_eligibility import initial_full_block_uses
 
 # The optimizer rebuilds every participant's state once per candidate
-# evaluation, but the construction below derives only from the combatant's
-# fixed defenses/stats/items.  The prototype memo is identity-keyed with a
-# strong reference (the same recycling guard as the item-stats memo) and
-# bounded because candidate combatants churn per evaluation.  Container
-# keys are derived from the prototype itself, so a new mutable field can
-# never be silently shared between clones.
-_STATE_PROTO_MEMO: dict[int, tuple[Any, dict[str, Any], list[str]]] = {}
+# evaluation, but the construction below derives from exactly seven values:
+# the cache generation (D-49), the combatant's ``defenses`` record, the four
+# resistance stats read at the bottom of the prototype, and the compiled
+# below-half healing bonus.  Those seven **are** the key (Phase 4's cache
+# rule, migration frontier counter 7): the memo used to key on
+# ``id(combatant)`` with a strong-reference recycling guard, which is safe
+# and is not a value — an address says nothing about the state it stands
+# for, so a combatant mutated in place kept its entry, and two candidates
+# whose defenses were identical each paid for their own construction.
+#
+# The key is a value, so no re-verification is needed on a hit and no entry
+# holds a combatant alive.  The memo stays bounded because the population is
+# now defence records rather than roster slots and a long search meets many.
+_STATE_PROTO_MEMO: dict[tuple[Any, ...], tuple[dict[str, Any], list[str]]] = {}
 _STATE_PROTO_MEMO_LIMIT = 512
 
+#: The stat fields the prototype reads, in key order.  Named once: a field
+#: the construction starts reading without joining this tuple is a value the
+#: key cannot see, which is the one way a value key goes wrong.
+_STATE_KEY_STATS = (
+    "armor",
+    "magic_resistance",
+    "bonus_armor",
+    "bonus_magic_resistance",
+)
 
-def build_state(combatant: Any) -> dict[str, Any]:
+#: The two state fields :func:`build_state` writes per call instead of
+#: cloning, because both derive from the combatant's **health** and health is
+#: not in the key.  The prototype carries the slots — so a built state's field
+#: order is the construction's — and never a health-derived value in them.
+#:
+#: Why this is a declaration and not a detail: two combatants whose defence
+#: record and four resistances match now share one prototype, and one of them
+#: may have 1000 health and the other 2500.  Sharing is correct **only**
+#: because these two are overwritten on every call, and until S10 that was a
+#: property of the write order rather than of the prototype — the health read
+#: was inside the memoized construction, reached through
+#: ``transitions.participant_pools`` rather than through ``combatant.stats``,
+#: where the guard that checks the key covers every stat the prototype reads
+#: structurally cannot see it.  Now the prototype does not read health at
+#: all, so the key really is every input it has.
+#:
+#: The ten defence-contract fields joined for the same reason, and they are
+#: this merge's own finding: the resolvers behind them read the combatant's
+#: ``champion_data``, ``level``, ``request.champion_options`` and ``items``
+#: — four inputs the value key structurally cannot see — so resolving them
+#: inside the memoized construction would hand two combatants with one
+#: defence record and four matching resistances the same Braum window, the
+#: same Annul contract and the same Amumu reduction.  They are resolved per
+#: call instead, beside the pools.
+_PER_CALL_FIELDS = (
+    "pools",
+    "starting_shield",
+    "projectile_defense",
+    "projectile_defense_eligibility",
+    "projectile_defense_composition",
+    "projectile_defense_uses_remaining",
+    "physical_damage_reduction",
+    "spell_shield_eligibility",
+    "spell_shield_composition",
+    "spell_shield_uses_remaining",
+    "spell_shield_cooldown_seconds",
+    "spell_shield_cooldown_atom",
+)
+
+
+def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
+    """The ten :data:`_PER_CALL_FIELDS` a defence resolver decides.
+
+    One home for the resolution, so the prototype declares the slots and
+    this fills them.  ``None`` throughout is "this combatant holds no such
+    contract", which is what every reader of these fields already tests for.
+    """
+    projectile_defense = resolve_projectile_defense(combatant)
+    composition = defense_composition(projectile_defense)
+    spell_shield = resolve_spell_shield(combatant)
+    return {
+        "projectile_defense": projectile_defense,
+        "projectile_defense_eligibility": defense_eligibility(projectile_defense),
+        "projectile_defense_composition": composition,
+        "projectile_defense_uses_remaining": (
+            initial_full_block_uses(composition) if composition is not None else None
+        ),
+        "physical_damage_reduction": resolve_physical_damage_reduction(combatant),
+        "spell_shield_eligibility": (
+            spell_shield.eligibility if spell_shield is not None else None
+        ),
+        "spell_shield_composition": (
+            spell_shield.composition if spell_shield is not None else None
+        ),
+        "spell_shield_uses_remaining": (1 if spell_shield is not None else None),
+        "spell_shield_cooldown_seconds": (
+            spell_shield.cooldown_seconds if spell_shield is not None else None
+        ),
+        "spell_shield_cooldown_atom": (
+            dict(spell_shield.cooldown_atom)
+            if spell_shield is not None and spell_shield.cooldown_atom is not None
+            else None
+        ),
+    }
+
+
+def _state_proto_key(
+    combatant: Any, below_half_healing_bonus: float
+) -> tuple[Any, ...]:
+    """The prototype's value key.
+
+    ``defenses`` carries the key's weight and enters it whole, which is legal
+    because it is a frozen ``StartingDefenses`` — ``Combatant`` admits nothing
+    else — and those hash and compare by field, which is what makes an object
+    a value rather than an address.
+
+    **What that costs, stated rather than discovered.**  ``id(combatant)``
+    was one machine word; this key hashes a frozen ``StartingDefenses`` —
+    fifty-five fields — plus four stats, once per participant per
+    evaluation.  It buys a hit rate the address key could not have (two
+    combatants with identical defences now share an entry, and a mutated
+    record moves its key instead of keeping it), and it is paid for on the
+    bench, but "it hits more" is only half the trade and the other half
+    belongs in the docstring rather than in a profile.
+    """
+    stats = combatant.stats
+    return (
+        data_version(),
+        combatant.defenses,
+        below_half_healing_bonus,
+        *(stats.get(field) for field in _STATE_KEY_STATS),
+    )
+
+
+def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, Any]:
     """One participant's canonical survival state (issue #137).
 
-    Clones the memoized prototype for this combatant: fresh shield pools,
-    fresh containers, shared scalars — field-for-field identical to an
-    uncached construction (issue #171).
+    Clones the memoized prototype for this combatant's defence record:
+    fresh shield pools, fresh containers, shared scalars — field-for-field
+    identical to an uncached construction (issue #171).
+
+    ``below_half_healing_bonus`` is the compiled form of this participant's
+    declared below-half healing bonus, and it is a **parameter** rather than
+    a read: ``survival`` may not reach a declaration — the dependency runs
+    ``interpreters -> survival`` and never back — so the boundary that builds
+    the walk compiles it and hands it over, the same device the regeneration
+    windows arrive by.  ``0.0`` means no holder declares one; the walk gates
+    on the bonus being positive, so an absent bonus and a declared zero are
+    the same number and the same answer.
     """
-    memo = _STATE_PROTO_MEMO.get(id(combatant))
-    if memo is None or memo[0] is not combatant:
-        proto = _build_state_uncached(combatant)
+    memo_key = _state_proto_key(combatant, below_half_healing_bonus)
+    memo = _STATE_PROTO_MEMO.get(memo_key)
+    if memo is None:
+        proto = _build_state_uncached(combatant, below_half_healing_bonus)
         container_keys = [
             key for key, value in proto.items() if value.__class__ in (list, set, dict)
         ]
         if len(_STATE_PROTO_MEMO) > _STATE_PROTO_MEMO_LIMIT:
             _STATE_PROTO_MEMO.clear()
-        _STATE_PROTO_MEMO[id(combatant)] = (combatant, proto, container_keys)
+        _STATE_PROTO_MEMO[memo_key] = (proto, container_keys)
     else:
-        proto, container_keys = memo[1], memo[2]
+        proto, container_keys = memo
     # The prototype itself is never handed out: the walk mutates its state,
-    # so every caller gets a clone with its own pools and containers.
+    # so every caller gets a clone with its own pools and containers.  The
+    # :data:`_PER_CALL_FIELDS` are filled here and nowhere else — this
+    # combatant's health, and the defence contracts resolved from inputs the
+    # memo key cannot see, neither of which the shared prototype may hold.
     pools = participant_pools(combatant)
     state = dict(proto)
     state["pools"] = pools
     state["starting_shield"] = sum(
         (pools.magic_shield, pools.physical_shield, pools.general_shield)
     )
+    state.update(_resolved_defence_contracts(combatant))
     for key in container_keys:
         state[key] = proto[key].copy()
     return state
 
 
-def _build_state_uncached(combatant: Any) -> dict[str, Any]:
+def _build_state_uncached(
+    combatant: Any, below_half_healing_bonus: float
+) -> dict[str, Any]:
     """The canonical state construction the prototype memo clones.
 
-    Ported verbatim from the former authoritative walk's state
-    initialisation; the score adapter arms the same shape so both adapters
+    Every stat it reads is named in :data:`_STATE_KEY_STATS`; a read added
+    here without joining that tuple is an input the key cannot see.  That
+    sentence is why the two :data:`_PER_CALL_FIELDS` below are left empty
+    rather than built: they derive from health, health is not in the key,
+    and a memoized construction that read it would be filed under inputs
+    that do not determine it — legal only because :func:`build_state`
+    happens to overwrite both, which is a fact about the caller and not
+    about the prototype.
+
+    Ported from the former authoritative walk's state initialisation, less
+    those two fields; the score adapter arms the same shape so both adapters
     share one kernel.  Every combat-state field is inert unless an authored
     packet or armed defense field supplies its trigger/timing — the
     simulator never guesses an item's trigger from a name alone.
     """
     defenses = combatant.defenses
-    starting_stasis_duration = max(
-        0.0, float(getattr(defenses, "starting_stasis_duration", 0.0) or 0.0)
-    )
+    starting_stasis_duration = max(0.0, float(defenses.starting_stasis_duration))
     base_armor = max(0.0, float(combatant.stats.get("armor", 0.0) or 0.0))
     base_magic_resistance = max(
         0.0, float(combatant.stats.get("magic_resistance", 0.0) or 0.0)
     )
-    pools = participant_pools(combatant)
-    projectile_defense = resolve_projectile_defense(combatant)
-    eligibility = defense_eligibility(projectile_defense)
-    composition = defense_composition(projectile_defense)
-    spell_shield_contract = resolve_spell_shield(combatant)
-    physical_damage_reduction = resolve_physical_damage_reduction(combatant)
     return {
         # Every shield and health transition rides shield_ledger; this is the
         # one place this participant's absorbing state lives (issue #159).
-        "pools": pools,
-        "starting_shield": sum(
-            (pools.magic_shield, pools.physical_shield, pools.general_shield)
-        ),
+        # Both are :data:`_PER_CALL_FIELDS`: the slots are declared here so a
+        # built state's field order is this construction's, and the values
+        # are the caller's because they are derived from health.
+        "pools": None,
+        "starting_shield": 0.0,
         # Combat regeneration is gated against the last sourced damage
         # timestamp.  The fight starts in combat, so a Warmog packet at
         # t=0 cannot immediately claim an unknown pre-fight idle window.
@@ -119,7 +252,6 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "support_buffs": [],
         "active_damage_modifiers": [],
         "active_on_hit_magic": [],
-        "utility_effects": [],
         "timed_shields": [],
         "temporary_health_received": 0.0,
         "temporary_health_amount": 0.0,
@@ -182,15 +314,13 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         # an item's trigger or timing from a name alone.
         "stasis_until": starting_stasis_duration,
         "stasis_started_at": 0.0 if starting_stasis_duration > 0.0 else None,
-        "stasis_source": str(getattr(defenses, "starting_stasis_source", "") or ""),
+        "stasis_source": str(defenses.starting_stasis_source),
         "invulnerable_until": 0.0,
         "untargetable_until": 0.0,
         "spell_shield_until": (
-            float("inf")
-            if bool(getattr(defenses, "spell_shield_ready", False))
-            else 0.0
+            float("inf") if bool(defenses.spell_shield_ready) else 0.0
         ),
-        "spell_shield_source": str(getattr(defenses, "spell_shield_source", "") or ""),
+        "spell_shield_source": str(defenses.spell_shield_source),
         "spell_shield_used": False,
         "spell_shield_blocked_cast": None,
         "spell_shield_heal_amount": 0.0,
@@ -199,67 +329,39 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "spell_shield_heal_triggered": False,
         "spell_shield_heal_time": None,
         # The kernel spell-shield contract (P2 Slice 2).  Annul shields
-        # resolve here from the starting defenses; Sivir's timed shield is
-        # armed later by the walk's SPELL_SHIELD action.
-        "spell_shield_eligibility": (
-            spell_shield_contract.eligibility
-            if spell_shield_contract is not None
-            else None
-        ),
-        "spell_shield_composition": (
-            spell_shield_contract.composition
-            if spell_shield_contract is not None
-            else None
-        ),
-        "spell_shield_uses_remaining": (
-            1 if spell_shield_contract is not None else None
-        ),
+        # resolve from the starting defenses and the held item; Sivir's timed
+        # shield is armed later by the walk's SPELL_SHIELD action.  These
+        # five and the four projectile-defence slots below are
+        # :data:`_PER_CALL_FIELDS` — declared here, filled by
+        # :func:`_resolved_defence_contracts`.
+        "spell_shield_eligibility": None,
+        "spell_shield_composition": None,
+        "spell_shield_uses_remaining": None,
         "spell_shield_blocked_packets": [],
         "spell_shield_decisions": [],
-        "spell_shield_cooldown_seconds": (
-            spell_shield_contract.cooldown_seconds
-            if spell_shield_contract is not None
-            else None
-        ),
-        "spell_shield_cooldown_atom": (
-            dict(spell_shield_contract.cooldown_atom)
-            if spell_shield_contract is not None
-            and spell_shield_contract.cooldown_atom is not None
-            else None
-        ),
-        "projectile_defense": projectile_defense,
-        "projectile_defense_eligibility": eligibility,
-        "projectile_defense_composition": composition,
-        "projectile_defense_uses_remaining": (
-            initial_full_block_uses(composition) if composition is not None else None
-        ),
+        "spell_shield_cooldown_seconds": None,
+        "spell_shield_cooldown_atom": None,
+        "projectile_defense": None,
+        "projectile_defense_eligibility": None,
+        "projectile_defense_composition": None,
+        "projectile_defense_uses_remaining": None,
         "projectile_defense_full_block_events": set(),
         "projectile_defense_blocked": [],
         "projectile_defense_event_id_matches": set(),
-        "physical_damage_reduction": physical_damage_reduction,
+        "physical_damage_reduction": None,
         "ichorshield_cap": max(
             0.0,
-            float(getattr(defenses, "bloodthirster_shield_cap", 0.0) or 0.0),
+            float(defenses.bloodthirster_shield_cap),
         ),
         "ichorshield_current": max(
             0.0,
-            float(getattr(defenses, "bloodthirster_starting_shield", 0.0) or 0.0),
+            float(defenses.bloodthirster_starting_shield),
         ),
-        "reactive_shield_amount": max(
-            0.0, float(getattr(defenses, "reactive_shield_amount", 0.0) or 0.0)
-        ),
-        "reactive_shield_damage_type": str(
-            getattr(defenses, "reactive_shield_damage_type", "") or ""
-        ),
-        "reactive_shield_duration": max(
-            0.0, float(getattr(defenses, "reactive_shield_duration", 0.0) or 0.0)
-        ),
-        "reactive_shield_cooldown": max(
-            0.0, float(getattr(defenses, "reactive_shield_cooldown", 0.0) or 0.0)
-        ),
-        "reactive_shield_source": str(
-            getattr(defenses, "reactive_shield_source", "") or ""
-        ),
+        "reactive_shield_amount": max(0.0, float(defenses.reactive_shield_amount)),
+        "reactive_shield_damage_type": str(defenses.reactive_shield_damage_type),
+        "reactive_shield_duration": max(0.0, float(defenses.reactive_shield_duration)),
+        "reactive_shield_cooldown": max(0.0, float(defenses.reactive_shield_cooldown)),
+        "reactive_shield_source": str(defenses.reactive_shield_source),
         "reactive_shield_cooldown_until": 0.0,
         # Guardian is an owner-side threshold ledger.  The holder keeps the
         # damage window and the paired shield activation so either protected
@@ -275,41 +377,25 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
         "aftershock_until": 0.0,
         "aftershock_trigger_events": [],
         "incoming_damage_multiplier": max(
-            0.0, float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0)
+            0.0, float(defenses.incoming_damage_multiplier)
         ),
-        "incoming_damage_linger": max(
-            0.0, float(getattr(defenses, "incoming_damage_linger", 0.0) or 0.0)
-        ),
-        "incoming_damage_cooldown": max(
-            0.0, float(getattr(defenses, "incoming_damage_cooldown", 0.0) or 0.0)
-        ),
-        "incoming_damage_source": str(
-            getattr(defenses, "incoming_damage_source", "") or ""
-        ),
+        "incoming_damage_linger": max(0.0, float(defenses.incoming_damage_linger)),
+        "incoming_damage_cooldown": max(0.0, float(defenses.incoming_damage_cooldown)),
+        "incoming_damage_source": str(defenses.incoming_damage_source),
         "incoming_damage_until": (
-            float("inf")
-            if float(getattr(defenses, "incoming_damage_multiplier", 1.0) or 1.0) < 1.0
-            else 0.0
+            float("inf") if float(defenses.incoming_damage_multiplier) < 1.0 else 0.0
         ),
         "incoming_damage_cooldown_until": 0.0,
         "healing_received_multiplier": max(
             1.0,
-            float(getattr(defenses, "healing_received_multiplier", 1.0) or 1.0),
+            float(defenses.healing_received_multiplier),
         ),
         "maw_lifeline_omnivamp_percent": max(
             0.0,
-            float(getattr(defenses, "maw_lifeline_omnivamp_percent", 0.0) or 0.0),
+            float(defenses.maw_lifeline_omnivamp_percent),
         ),
         "maw_lifeline_omnivamp_active": False,
-        "immortal_path_below_half_healing_multiplier": (
-            sustain_effect_value(
-                "Immortal Path", "health_state_healing_multiplier_below_half"
-            )
-            if any(
-                str(item.get("name", "")) == "Immortal Path" for item in combatant.items
-            )
-            else 0.0
-        ),
+        "below_half_healing_bonus": below_half_healing_bonus,
         "first_death_time": None,
         "revive_time": None,
         "revive_source": "",
@@ -375,9 +461,28 @@ def _build_state_uncached(combatant: Any) -> dict[str, Any]:
     }
 
 
-def build_states(combatants: Sequence[Any]) -> list[dict[str, Any]]:
-    """Index-aligned canonical state list for a participant roster."""
-    return [build_state(combatant) for combatant in combatants]
+def build_states(
+    combatants: Sequence[Any], below_half_healing_bonuses: Sequence[float]
+) -> list[dict[str, Any]]:
+    """Index-aligned canonical state list for a participant roster.
+
+    ``below_half_healing_bonuses`` is participant-index-aligned and required
+    with no default, for the reason the regeneration windows are: a default
+    would make a caller that forgot to compile the declarations
+    indistinguishable from a roster declaring none, and a length mismatch
+    would hand somebody else's bonus to the wrong subject.
+    """
+    if len(below_half_healing_bonuses) != len(combatants):
+        raise ValueError(
+            f"{len(below_half_healing_bonuses)} compiled below-half healing "
+            f"bonuses for {len(combatants)} participants; the sequence is "
+            "participant-index-aligned, so a short one would give somebody "
+            "else's bonus to the wrong subject"
+        )
+    return [
+        build_state(combatant, bonus)
+        for combatant, bonus in zip(combatants, below_half_healing_bonuses)
+    ]
 
 
 class ReceiptLedger:
@@ -394,6 +499,9 @@ class ReceiptLedger:
         "expanded_healing",
         "healing",
         "annotations_written",
+        "compile_event",
+        "outcomes",
+        "next_aidx",
     )
 
     # Event writes always persist on this adapter; annotations only when
@@ -406,27 +514,75 @@ class ReceiptLedger:
         *,
         actions: list[SurvivalAction],
         index_of: Mapping[str, int],
+        compile_event: Callable[..., SurvivalAction],
         annotating: bool = True,
         expanded_healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
         healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
     ) -> None:
+        """The ledger, plus the builder it may not reach for itself.
+
+        ``compile_event`` is required with no default, and the reason is the
+        phase's one-way dependency: the one ``SurvivalAction`` constructor
+        lives in ``program/compile.py`` and ``survival/`` may not import
+        ``program/``, so the boundary that builds the walk hands the builder
+        over -- the same device ``build_state``'s below-half healing bonus
+        and ``TransitionContext``'s regeneration windows arrive by.  A
+        default would let a caller that forgot it schedule nothing and look
+        like a fight in which no trigger authored a heal.
+
+        ``outcomes`` is the write-once companion (D-62, D-64).  Every
+        observation this adapter makes onto an event dict is made a second
+        time onto :class:`~survival.outcome_state.OutcomeLedger`, which
+        answers a question the event dict structurally cannot: an event dict
+        takes the *last* write, so a field two rules answer differently
+        serializes as whichever ran second and neither rule is wrong at any
+        single line.  The companion refuses the second write and names both
+        values, and its ``applied`` claim refuses a second contribution for
+        one ``(mechanic, subject, event_id)``.  It is built here rather than
+        by the composition because this is the object every write already
+        passes through: a ledger a caller has to remember to attach is one a
+        caller can forget, and the rule would then hold over the walks
+        somebody wired and not over the walks somebody adds.
+        """
+        self.compile_event = compile_event
         self.annotating = annotating
         self.records_annotations = annotating
-        self.damage_event_status: dict[str, str] = {}
+        self.damage_event_status: dict[int, str] = {}
         self.actions = actions
         self.current_index = -1
         self.index_of = index_of
         self.expanded_healing = expanded_healing
         self.healing = healing
+        self.outcomes = OutcomeLedger(annotating=annotating)
+        # Walk-authored recovery is compiled after the composition allocated
+        # its slots, so the counter continues where the composition stopped.
+        # Derived rather than passed: a slot number handed in beside the list
+        # it indexes is two facts that can disagree.
+        self.next_aidx = len(actions)
 
     # -- observation -------------------------------------------------------
     def write(self, action: SurvivalAction, **fields: Any) -> None:
         """Unconditional packet writes the authoritative walk always makes."""
+        self.outcomes.write(action, **fields)
+        if action.event is not None:
+            action.event.update(fields)
+
+    def restore(self, action: SurvivalAction, **fields: Any) -> None:
+        """Put an input back on a packet a later transition will price.
+
+        The event dict takes it, because that is the packet the walk reads.
+        The outcome ledger does not, because it is not an outcome: the
+        transition that prices this packet writes the number it produced a
+        few frames later, and recording both would make one question have
+        two answers — which is precisely what the write-once ledger exists
+        to refuse, so it must not be handed a false positive to refuse.
+        """
         if action.event is not None:
             action.event.update(fields)
 
     def annotate(self, action: SurvivalAction, **fields: Any) -> None:
         """Annotate-gated diagnostics only the serialized receipt reads."""
+        self.outcomes.annotate(action, **fields)
         if action.event is not None and self.annotating:
             action.event.update(fields)
 
@@ -443,7 +599,18 @@ class ReceiptLedger:
         ``preserve_reason`` keeps an earlier ``skipped_reason`` (the
         Knight's Vow gate stamps ``holder_health_gate`` on the cancelled
         child before its own skip).
+
+        The refusal reaches the companion ledger before the early return,
+        because an action with no event dict is still an action the walk
+        refused: the receipt has nowhere to put that fact and the outcome
+        ledger does.
         """
+        self.outcomes.skip(
+            action,
+            reason,
+            damage_phase=damage_phase,
+            preserve_reason=preserve_reason,
+        )
         if action.event is None:
             return
         if damage_phase:
@@ -464,36 +631,43 @@ class ReceiptLedger:
     def trigger_applied(self, action: SurvivalAction) -> bool:
         """Whether the action's trigger packet was applied (no trigger
         passes; a skipped trigger fails closed, never silently applies)."""
-        if action.trigger_event_id is None:
+        if action.trigger_slot == NO_SLOT:
             return True
-        return self.damage_event_status.get(action.trigger_event_id) == "applied"
+        return self.damage_event_status.get(action.trigger_slot) == "applied"
 
     def mark_applied(self, action: SurvivalAction) -> None:
-        if action.event_id is not None:
-            self.damage_event_status[action.event_id] = "applied"
+        """Mark this action's event applied, so its dependants may fire."""
+        if action.event_slot != NO_SLOT:
+            self.damage_event_status[action.event_slot] = "applied"
 
     def mark_blocked(self, action: SurvivalAction) -> None:
-        if action.event_id is not None:
-            self.damage_event_status[action.event_id] = "blocked"
+        """Mark this action's event blocked, so its dependants fail closed."""
+        if action.event_slot != NO_SLOT:
+            self.damage_event_status[action.event_slot] = "blocked"
 
     # -- walk-authored scheduling -------------------------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:
         """Insert a recovery packet authored by a just-applied trigger
         beside the current action (receipt adapter observation)."""
         heal_event["_sk"] = action_key(
-            float(heal_event.get("time", 0.0)), 1.0, recipient_id, heal_event
+            float(heal_event.get("time", 0.0)),
+            TransitionRank.RECOVERY,
+            recipient_id,
+            heal_event,
         )
         if self.expanded_healing is not None:
             self.expanded_healing.setdefault(recipient_id, []).append(heal_event)
             if self.healing is not None:
                 self.healing[recipient_id] = self.expanded_healing[recipient_id]
-        action = survival_action_from_event(
+        action = self.compile_event(
             heal_event,
-            1.0,
+            TransitionRank.RECOVERY,
             self.index_of[recipient_id],
             self.index_of,
             subject_id=recipient_id,
+            aidx=self.next_aidx,
         )
+        self.next_aidx += 1
         insertion = max(self.current_index + 1, 0)
         while (
             insertion < len(self.actions)
@@ -503,470 +677,8 @@ class ReceiptLedger:
         self.actions.insert(insertion, action)
 
 
-def assemble_survival_rows(
-    states: Sequence[dict[str, Any]], combatants: Sequence[Any]
-) -> dict[str, dict[str, Any]]:
-    """Assemble the receipt survival rows from canonical state.
-
-    Shared row shape for both adapters: the score adapter builds the same
-    rows from the same state and adds the per-event ``recipient`` prefix
-    itself (the receipt adapter's rows carry it here).
-    """
-    result: dict[str, dict[str, Any]] = {}
-    for index, state in enumerate(states):
-        participant_id = combatants[index].participant_id
-        pools = state["pools"]
-        remaining_shields = sum(
-            (pools.magic_shield, pools.physical_shield, pools.general_shield)
-        )
-        threshold_shield = pools.threshold_shield
-        threshold_health = pools.threshold_health
-        row = {
-            "max_health": round(pools.max_health, 1),
-            "ending_health": round(pools.health, 1),
-            "ending_health_ratio": round(
-                (pools.health / pools.max_health if pools.max_health > 0.0 else 0.0),
-                6,
-            ),
-            "damage_taken": round(pools.damage_taken, 1),
-            "overkill": round(pools.overkill, 1),
-            "health_damage": round(pools.health_damage, 1),
-            "shield_absorbed": round(pools.shield_absorbed, 1),
-            "healing_received": round(state["healing_received"], 1),
-            "overhealing": round(state["overhealing"], 1),
-            "healing_reduced": round(state["healing_reduced"], 1),
-            "support_shield_received": round(state["support_shield_received"], 1),
-            "support_shield_expired": round(pools.shield_expired, 1),
-            "temporary_health_received": round(state["temporary_health_received"], 1),
-            "temporary_health_until": round(state["temporary_health_until"], 3),
-            "temporary_health_expired_at": state["temporary_health_expired_at"],
-            "temporary_health_source": state["temporary_health_source"],
-            "permanent_bonus_health_received": round(
-                state["permanent_bonus_health_received"], 1
-            ),
-            "permanent_bonus_health_events": [
-                {"recipient": participant_id, **event}
-                for event in state["permanent_bonus_health_events"]
-            ],
-            "effective_health": round(
-                pools.max_health
-                + state["starting_shield"]
-                + state["support_shield_received"]
-                - pools.shield_expired
-                + state["healing_received"],
-                1,
-            ),
-            "remaining_shield": round(remaining_shields, 1),
-            "starting_shield": round(state["starting_shield"], 1),
-            "healing_reduction_until": round(state["healing_reduction_until"], 3),
-            "healing_reduction_sources": sorted(state["healing_reduction_sources"]),
-            "healing_reduction_events": [
-                {"recipient": participant_id, **event}
-                for event in state["healing_reduction_events"]
-            ],
-            "venom_until": round(state["venom_until"], 3),
-            "venom_factor": round(pools.venom_factor, 6),
-            "venom_events": [
-                {"recipient": participant_id, **event}
-                for event in state["venom_events"]
-            ],
-            "survived_window": state["death_time"] is None,
-            "death_time": (
-                round(state["death_time"], 3)
-                if state["death_time"] is not None
-                else None
-            ),
-            "first_death_time": (
-                round(state["first_death_time"], 3)
-                if state["first_death_time"] is not None
-                else None
-            ),
-            "revived": bool(state["revived"]),
-            "revive_time": (
-                round(state["revive_time"], 3)
-                if state["revive_time"] is not None
-                else None
-            ),
-            "revive_health_restored": round(state["revive_health_restored"], 1),
-            "revive_source": state["revive_source"],
-            # P3-3P: the explicit resurrection-stasis lifecycle.  One entry
-            # per lethal packet that actually armed a Rebirth window
-            # (start / end / sourced duration / source / sourced cooldown /
-            # whether the restore resolved and when the re-arm opens).  The
-            # key is emitted ONLY when a window was armed, so every row that
-            # never entered stasis keeps its pinned shape byte-for-byte.
-            # Fail-closed convention (same as ``crowd_control_immunity``
-            # below): a conditionally-emitted key must be read with a
-            # membership check (``"revive_stasis" in row``) or indexed
-            # directly so a missing key raises ``KeyError`` — never
-            # ``row.get("revive_stasis", [])``, which would silently treat
-            # "never armed" the same as "armed with zero windows".
-            **(
-                {"revive_stasis": [dict(row) for row in state["revive_stasis_windows"]]}
-                if state["revive_stasis_windows"]
-                else {}
-            ),
-            "terminal_phase": state["terminal_phase"],
-            "execute_time": (
-                round(state["execute_time"], 3)
-                if state["execute_time"] is not None
-                else None
-            ),
-            "execute_source": state["execute_source"],
-            "stasis_until": round(state["stasis_until"], 3),
-            "stasis_started_at": state["stasis_started_at"],
-            "stasis_source": state["stasis_source"],
-            "crowd_control_until": round(state["crowd_control_until"], 3),
-            "crowd_control_immunity_until": round(
-                state["crowd_control_immunity_until"], 3
-            ),
-            "crowd_control_immunity_source": state["crowd_control_immunity_source"],
-            **(
-                {
-                    "crowd_control_immunity": _public_crowd_control_immunity_row(
-                        state, participant_id
-                    )
-                }
-                if state.get("crowd_control_immunity_grants")
-                else {}
-            ),
-            "crowd_control_intervals": [
-                {"recipient": participant_id, **event}
-                for event in state["crowd_control_intervals"]
-            ],
-            **(
-                {"cleanse": _public_cleanse_receipt(state)}
-                if state.get("cleanse") is not None
-                else {}
-            ),
-            **(
-                {"cleanse_use": dict(state["cleanse_use"])}
-                if state.get("cleanse_use") is not None
-                else {}
-            ),
-            **(
-                {"cleanse_denied": [dict(entry) for entry in state["cleanse_denied"]]}
-                if state.get("cleanse_denied")
-                else {}
-            ),
-            # P2 Slice 8 (Dr. Mundo Goes Where He Pleases): the passive
-            # immunity receipts — the resist decision, the 4%-current
-            # health cost, the canister drop, the named-unsupported
-            # pickup, the receipted cooldown and the armed state.
-            **(
-                {
-                    "crowd_control_resisted": [
-                        dict(e) for e in state["crowd_control_resisted"]
-                    ]
-                }
-                if state.get("crowd_control_resisted")
-                else {}
-            ),
-            **(
-                {"passive_cost": dict(state["passive_cost"])}
-                if state.get("passive_cost") is not None
-                else {}
-            ),
-            **(
-                {"canister": dict(state["canister"])}
-                if state.get("canister") is not None
-                else {}
-            ),
-            **(
-                {"pickup": dict(state["pickup"])}
-                if state.get("pickup") is not None
-                else {}
-            ),
-            **(
-                {"passive_cooldown": dict(state["passive_cooldown"])}
-                if state.get("passive_cooldown") is not None
-                else {}
-            ),
-            **(
-                {"passive_state": dict(state["passive_state"])}
-                if state.get("passive_state") is not None
-                else {}
-            ),
-            # P2 Slice 9 (Olaf Ragnarok): the 3s immunity window row.
-            **(
-                {"ragnarok_immunity": dict(state["ragnarok_immunity"])}
-                if state.get("ragnarok_immunity") is not None
-                else {}
-            ),
-            "action_downtime": round(
-                _merged_interval_duration(state["action_downtime_intervals"]),
-                3,
-            ),
-            "action_downtime_intervals": [
-                {"recipient": participant_id, **event}
-                for event in state["action_downtime_intervals"]
-            ],
-            "projectile_defense": _public_defense_row(state),
-            "projectile_defense_blocked": list(state["projectile_defense_blocked"]),
-            "invulnerable_until": round(state["invulnerable_until"], 3),
-            "untargetable_until": round(state["untargetable_until"], 3),
-            "spell_shield_used": bool(state["spell_shield_used"]),
-            "spell_shield_source": state["spell_shield_source"],
-            "spell_shield_heal_triggered": bool(state["spell_shield_heal_triggered"]),
-            "spell_shield_until": (
-                None
-                if state["spell_shield_until"] == float("inf")
-                else round(state["spell_shield_until"], 3)
-            ),
-            **(
-                {"spell_shield": _public_spell_shield_row(state)}
-                if state.get("spell_shield_eligibility") is not None
-                else {}
-            ),
-            "guardian": {
-                "cooldown_until": round(state["guardian_cooldown_until"], 3),
-                "trigger_events": list(state["guardian_trigger_events"]),
-            },
-            "aftershock": {
-                "until": round(state["aftershock_until"], 3),
-                "bonus_armor": round(float(state["aftershock_bonus_armor"]), 3),
-                "bonus_magic_resistance": round(
-                    float(state["aftershock_bonus_magic_resistance"]), 3
-                ),
-                "trigger_events": list(state["aftershock_trigger_events"]),
-            },
-            "force_of_nature": {
-                "stacks": int(state["force_stacks"]),
-                "stacks_until": round(state["force_stacks_until"], 3),
-                "events": list(state["force_stack_events"]),
-                "dynamic_bonus_magic_resistance": round(
-                    float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
-                    3,
-                ),
-            },
-            "jaksho": {
-                "stacks": int(state["jaksho_stacks"]),
-                "events": list(state["jaksho_stack_events"]),
-                "dynamic_bonus_armor": round(
-                    float(state.get("dynamic_bonus_armor", 0.0) or 0.0), 3
-                ),
-                "dynamic_bonus_magic_resistance": round(
-                    float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
-                    3,
-                ),
-            },
-            "threshold_shield_triggered": bool(
-                threshold_shield is not None and threshold_shield.triggered
-            ),
-            "threshold_shield_expired_at": (
-                threshold_shield.expired_at if threshold_shield is not None else None
-            ),
-            "threshold_health_triggered": bool(
-                threshold_health is not None and threshold_health.triggered
-            ),
-            "damage_deferral_fraction": round(
-                float(
-                    getattr(
-                        combatants[index].defenses,
-                        "damage_deferral_fraction",
-                        0.0,
-                    )
-                    or 0.0
-                ),
-                3,
-            ),
-            "damage_deferral_pending": round(state["damage_deferral_pending"], 1),
-            "damage_deferral_cleared": round(state["damage_deferral_cleared"], 1),
-            "defy_triggered": bool(state["defy_triggered"]),
-            "defy_trigger_time": (
-                round(state["defy_trigger_time"], 3)
-                if state["defy_trigger_time"] is not None
-                else None
-            ),
-            "defy_heal_received": round(state["defy_heal_received"], 1),
-        }
-        physical_damage_reduction = state.get("physical_damage_reduction")
-        if physical_damage_reduction is not None:
-            row["physical_damage_reduction"] = public_physical_damage_reduction(
-                physical_damage_reduction
-            )
-        result[participant_id] = row
-    return result
-
-
-def _public_cleanse_receipt(state: dict[str, Any]) -> dict[str, Any]:
-    """One recipient survival row's public cleanse receipt.
-
-    The decision fields (removed/rejected controls, downtime before) are
-    frozen at activation; ``intervals_after`` and ``downtime_after`` are
-    re-derived from the FINAL interval ledger at assembly time, so a
-    control landing after the activation (untouched — a cleanse creates no
-    immunity) is visible in the receipt (the matrix's R11 parity pin).
-    """
-    receipt = dict(state["cleanse"])
-    # The walk-level intervals mirror the survival row's interval shape
-    # (kind/start/end/source + recipient) — the assembly-time refresh keeps
-    # them identical to ``crowd_control_intervals`` by construction.
-    receipt["intervals_after"] = [
-        {"recipient": state.get("participant_id", ""), **event}
-        for event in state["crowd_control_intervals"]
-    ]
-    receipt["downtime_after"] = round(
-        _merged_interval_duration(state["crowd_control_intervals"]), 6
-    )
-    return receipt
-
-
-def _public_crowd_control_immunity_row(
-    state: dict[str, Any], participant_id: str
-) -> dict[str, Any]:
-    """One recipient survival row's public crowd-control immunity receipt.
-
-    Shows the selected recipient, the holder source, the shield source
-    atoms, the shield lifetime window (start inclusive, end exclusive),
-    the active-until time, the reason immunity ended ("expired" /
-    "drained" / "fight_end"), the eligibility declaration, every
-    blocked control (with shield amounts before/after), and every
-    per-packet decision — the named fail-closed record for denied
-    controls (outside window / holder gone / unknown kind).
-    """
-    grants = state.get("crowd_control_immunity_grants", ())
-    if not grants:
-        return {
-            "recipient": participant_id,
-            "shield_source": "",
-            "source_atoms": [],
-            "window": None,
-            "active_until": 0.0,
-            "reason_immunity_ended": None,
-            "eligibility": None,
-            "blocked": [],
-            "decisions": [],
-        }
-    latest = grants[-1]
-    eligibility = state.get("crowd_control_immunity_eligibility")
-    return {
-        "recipient": participant_id,
-        "shield_source": latest["source"],
-        "source_atoms": [dict(atom) for atom in latest.get("source_atoms", ())],
-        "window": (
-            eligibility.window.public_receipt() if eligibility is not None else None
-        ),
-        "active_until": round(float(latest["expires_at"]), 3),
-        "reason_immunity_ended": latest.get("ended_reason"),
-        "eligibility": (
-            eligibility.public_receipt() if eligibility is not None else None
-        ),
-        "blocked": [
-            dict(entry) for entry in state.get("crowd_control_immunity_blocked", [])
-        ],
-        "decisions": [
-            dict(entry) for entry in state.get("crowd_control_immunity_decisions", [])
-        ],
-    }
-
-
-def _public_spell_shield_row(state: dict[str, Any]) -> dict[str, Any] | None:
-    """One survival row's public spell-shield receipt.
-
-    Extends the kernel declaration with the walk-observed lifecycle:
-    the sourced window (an infinite Annul window maps ``until`` to
-    None), the acceptance and block rule, the selected cast identity,
-    the one-use budget before/after, the blocked packets (stable event
-    keys), every eligibility decision, the triggered heal, the declared
-    categorical rules, and the receipted cooldown.  The legacy flat
-    fields (``spell_shield_used`` / ``source`` / ``heal_triggered`` /
-    ``until``) stay untouched above.
-    """
-    eligibility = state.get("spell_shield_eligibility")
-    if eligibility is None:
-        return None
-    window = eligibility.window.public_receipt()
-    if window["until"] == float("inf"):
-        window["until"] = None
-    blocked_cast = state["spell_shield_blocked_cast"]
-    row: dict[str, Any] = {
-        "source": state["spell_shield_source"],
-        "window": window,
-        "acceptance": eligibility.acceptance.public_receipt(),
-        "block_rule": eligibility.block_rule,
-        "rules": spell_shield_rules_receipt(),
-        "uses_before": 1,
-        "uses_after": state.get("spell_shield_uses_remaining"),
-        "selected_cast_identity": (str(blocked_cast[-1]) if blocked_cast else None),
-        "blocked_packets": [
-            dict(entry) for entry in state.get("spell_shield_blocked_packets", [])
-        ],
-        "decisions": [dict(entry) for entry in state.get("spell_shield_decisions", [])],
-        "triggered_heal": (
-            {
-                "time": round(float(state["spell_shield_heal_time"]), 3),
-                "amount": round(float(state["spell_shield_heal_amount"]), 6),
-                "delay": round(float(state["spell_shield_heal_delay"]), 6),
-                "source": state["spell_shield_heal_source"],
-            }
-            if state.get("spell_shield_heal_time") is not None
-            else None
-        ),
-        "cooldown_seconds": state.get("spell_shield_cooldown_seconds"),
-        "cooldown_atom": (
-            dict(state["spell_shield_cooldown_atom"])
-            if state.get("spell_shield_cooldown_atom") is not None
-            else None
-        ),
-    }
-    return row
-
-
-def _public_defense_row(state: dict[str, Any]) -> dict[str, Any] | None:
-    """One survival row's public projectile-defense receipt.
-
-    Extends the static declaration (:func:`public_defense`) with the
-    walk-observed state: the remaining full-block uses, the six typed
-    delivery declarations, and (for event-id selections) the selected
-    event ids that never matched an incoming event — the named
-    fail-closed receipt for a positional selection that cannot be
-    validated at option-parse time.
-    """
-    base = public_defense(state["projectile_defense"])
-    if base is None:
-        return None
-    base["remaining_uses"] = state.get("projectile_defense_uses_remaining")
-    base["delivery_declarations"] = delivery_declarations_receipt()
-    eligibility = state.get("projectile_defense_eligibility")
-    if eligibility is not None and eligibility.selection.blocked_event_ids:
-        matched = state.get("projectile_defense_event_id_matches", set())
-        base["blocked_event_ids_unmatched"] = [
-            event_id
-            for event_id in eligibility.selection.blocked_event_ids
-            if event_id not in matched
-        ]
-    return base
-
-
-def _merged_interval_duration(intervals: list[Mapping[str, Any]]) -> float:
-    """Return the union length of authored inactive intervals."""
-    ordered: list[tuple[float, float]] = []
-    for interval in intervals:
-        try:
-            start = float(interval.get("start", 0.0))
-            end = float(interval.get("end", 0.0))
-        except (TypeError, ValueError):
-            continue
-        if end > start:
-            ordered.append((start, end))
-    ordered.sort()
-    total = 0.0
-    current_start = current_end = 0.0
-    for start, end in ordered:
-        if start > current_end:
-            total += current_end - current_start
-            current_start, current_end = start, end
-        else:
-            current_end = max(current_end, end)
-    if ordered:
-        total += current_end - current_start
-    return max(0.0, total)
-
-
 __all__ = [
     "ReceiptLedger",
-    "assemble_survival_rows",
     "build_state",
     "build_states",
 ]

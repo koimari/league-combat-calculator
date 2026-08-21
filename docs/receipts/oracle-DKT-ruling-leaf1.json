@@ -1,0 +1,92 @@
+{
+  "receipt": "oracle-DKT-ruling-leaf1",
+  "runbook": "R-18/R-19 (with recorded amendments)",
+  "date": "2026-08-15",
+  "investigator": "independent oracle subagent (fresh context)",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-dkt",
+    "isolation_note": "Only data/ and docs/math-foundations.md from the export were read. src/, tests/, scripts/, docs/plans/, docs/receipts/ and git history were not consulted."
+  },
+  "scenario": "syndra_derived_order_60",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_60/fights/manual_target/cast_timeline[1]/resource_cost",
+  "old_value": 0.0,
+  "new_value": 60.0,
+  "verdict": "new_value_correct",
+  "independent_computation": {
+    "step_1_identify_castable_slots": {
+      "reasoning": "data/champion-audit/batch-6.json records Syndra's module slots as P, Q, Q2, W, E, R, where 'Q2' is a synthetic slot for the second Dark Sphere charge ('modeled = SLOTS keys incl. synthetic Q2 (2nd charge)') and P is a passive (cost: null in data/champions.json). The castable slots that can appear on a cast timeline are therefore Q, Q2, W, E, R.",
+      "conclusion": "cast_timeline[1] is the second cast of the derived slot order; with the passive excluded, the derived order begins Q, Q2, ..."
+    },
+    "step_2_scenario_suffix": {
+      "reasoning": "The '_60' suffix matches Syndra's splinter option value, which is the only 60-valued knob in her kit documentation: batch-6.json gap_summary states 'splinters option (0-120) gates Q2 second charge [40+], W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'. At splinters = 60 the Q2 stocked-charge slot is unlocked (threshold 40) and the W true-damage bonus is active (threshold 60), but the 120 AP capstone is not.",
+      "conclusion": "At splinters = 60 the timeline legitimately contains the Q2 (second Dark Sphere charge) cast."
+    },
+    "step_3_cost_table": {
+      "source": "data/champions.json -> Syndra.abilities",
+      "costs_by_rank_mana": {
+        "P Transcendent": null,
+        "Q Dark Sphere": [40, 45, 50, 55, 60],
+        "W Force of Will": [60, 70, 80, 90, 100],
+        "E Scatter the Weak": [50, 50, 50, 50, 50],
+        "R Unleashed Power": [100, 100, 100]
+      },
+      "resource": "MANA for Q, W, E, R (Syndra.resource = MANA); no Syndra ability in the cache has a zero or waived cost."
+    },
+    "step_4_charge_cost_semantics": {
+      "wiki_text_quoted": "Q Dark Sphere, Transcendent Bonus: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'",
+      "reasoning": "The cached effect text grants a stocked charge only - it says nothing about waiving the ability's resource cost, and Dark Sphere's cost block is a per-cast MANA cost (40/45/50/55/60). A stocked charge is an ammo mechanic (data/wiki-atoms/stack-transform-summon-resource.json, atom 'stack-transform-summon-resource.ammo': 'stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)'); ammo gates availability, it does not replace the mana cost, so each stocked Dark Sphere activation pays Dark Sphere's listed mana cost. Corroborating design evidence in the same cache: the passive exists to fund those extra casts - 'Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana.' A free second Q would make that mana-restore clause purposeless.",
+      "conclusion": "resource_cost(Q2) = resource_cost(Q at the scenario's Q rank)."
+    },
+    "step_5_value": {
+      "computation": "Q rank 5 mana cost = 60 (cost.modifiers[0].values[4] = 60). Hence Q2 at max Q rank costs 60.0 mana.",
+      "robustness_check": "The scenario's exact rank/level config is not visible from data/ alone, so I checked every candidate for cast_timeline[1] against the cached cost table: Q2 (or Q) at rank 5 = 60; W at rank 1 = 60; W at rank 5 = 100; E = 50 at all ranks; R = 100 at all ranks. 60.0 is exactly the value produced by the two plausible index-1 casts under the standard max-Q configuration (Q, then the Q2 stocked charge) or under an all-rank-1 configuration (Q, then W). No Syndra castable slot in the cache has cost 0, and no cached text waives a cost, so 0.0 is not reachable from source data.",
+      "free_recast_ruled_out": "The only genuinely free Syndra activation is Force of Will's recast ('Force of Will can be recast while the target is being held. Recast: Syndra throws the grabbed target ...'), which shares the single W activation and its one 60/70/80/90/100 mana charge. The module carries no separate W-recast slot (batch-6.json slot list has W once, and a synthetic slot exists only for Q2), so no zero-cost W-throw entry can occupy cast_timeline[1]."
+    },
+    "result": 60.0
+  },
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].cost.modifiers[0].values",
+      "quote": "[40, 45, 50, 55, 60]  (resource: MANA)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[1].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P.effects[1].description",
+      "quote": "Collecting a Splinter of Wrath from an enemy restores 20 : 255 (based on level) mana. Splinters of Wrath are brought to Syndra from enemies over 0.6 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cost / effects",
+      "quote": "cost [60, 70, 80, 90, 100]; 'Force of Will can be recast while the target is being held.' ; 'Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].cost / Syndra.abilities.R[0].cost",
+      "quote": "E: [50, 50, 50, 50, 50] mana; R: [100, 100, 100] mana"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots / Syndra.gap_summary",
+      "quote": "modeled: [P, Q, Q2, W, E, R]; note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'; gap_summary: 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'"
+    },
+    {
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "path": "atom stack-transform-summon-resource.ammo",
+      "quote": "A resource (internal index 12) consumed by specific actions ... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "section 1.1 (lines 59-67)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time ... and a cast counts when it starts within the window (`_schedule_shared_casts`).",
+      "relevance": "Confirms cast_timeline entries are individual scheduled casts; math-foundations contains no resource/mana formula, so the mana value must come from the cached cost table."
+    }
+  ],
+  "residual_uncertainty": "The scenario's rank/level/option configuration lives in code that this investigation is forbidden to read, so the identity of cast_timeline[1] was inferred from the module slot order recorded in data/champion-audit/batch-6.json plus the '_60' splinter reading. That inference does not change the ruling: 0.0 is unreachable for any Syndra castable slot from cached source data, while 60.0 is exactly the cached Dark Sphere rank-5 mana cost (and equally the cached Force of Will rank-1 cost)."
+}

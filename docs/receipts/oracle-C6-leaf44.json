@@ -1,0 +1,92 @@
+{
+  "receipt": "oracle-C6-leaf44",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[6]/time",
+  "old_value": 5.0,
+  "new_value": 0.25,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle44",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/champion-audit/batch-p1-3.json", "data/worklists/f2-task.md", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "where": "data/champions.json -> Syndra.abilities.R[0].castTime",
+      "quote": "0.25",
+      "note": "Syndra R Unleashed Power sourced cast time."
+    },
+    {
+      "id": "S2",
+      "where": "data/champions.json -> Syndra.abilities.E[0].castTime",
+      "quote": "0.25",
+      "note": "Syndra E Scatter the Weak sourced cast time."
+    },
+    {
+      "id": "S3",
+      "where": "data/champions.json -> Syndra.abilities.Q[0].castTime / W[0].castTime",
+      "quote": "none",
+      "note": "Q Dark Sphere and W Force of Will carry no sourced cast time (instant); the only non-zero Syndra cast times in the cache are E and R at 0.25 s."
+    },
+    {
+      "id": "S4",
+      "where": "data/champions.json -> Syndra.abilities.R[0].notes (first line)",
+      "quote": "Unleashed Power's effect takes place at the start of the cast time.",
+      "note": "R's spheres resolve at the cast start, not after an added windup, so R's damage events carry the cast's own 0.25 s stamp rather than 0.25 s + anything."
+    },
+    {
+      "id": "S5",
+      "where": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "note": "R authors one damage event per sphere, up to 7 (3 conjured + up to 4 grabbed) -- so a Syndra event ledger reaches index 6 inside the R block for every plausible slot layout."
+    },
+    {
+      "id": "S6",
+      "where": "data/champions.json -> Syndra.abilities.W[0].effects[0].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds.",
+      "note": "The ONLY 5.0 anywhere in Syndra's cached data is W's maximum hold duration -- a utility window, not a damage time."
+    },
+    {
+      "id": "S7",
+      "where": "data/champions.json -> Syndra.abilities.W[0].notes",
+      "quote": "If the ability is not recast within the duration, Syndra will release the unit or Dark Sphere that she is holding.",
+      "note": "Letting the 5 s hold expire deals NO damage -- damage only exists on the recast throw. So 5.0 cannot be the correct timestamp of any Syndra damage event."
+    },
+    {
+      "id": "S8",
+      "where": "docs/math-foundations.md section 1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`).",
+      "note": "Event timestamps are cast-schedule times built from SOURCED cast times; there is no mechanism that would stamp a Syndra event at a hold duration."
+    },
+    {
+      "id": "S9",
+      "where": "data/champion-audit/batch-p1-3.json -> Zac gap_summary",
+      "quote": "with the empowered basic-attack replacement landing at its sourced 0.25s cast time",
+      "note": "Independent precedent in the cached audit record: damage events are stamped at the ability's sourced cast time."
+    },
+    {
+      "id": "S10",
+      "where": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count",
+      "note": "Fixes the scenario's '_120' suffix as splinters = 120 (max, Transcendent) and enumerates Syndra's modeled damage-authoring slots: Q, Q2, W magic + W true, E, R x r_spheres."
+    },
+    {
+      "id": "S11",
+      "where": "data/worklists/f2-task.md line 7",
+      "quote": "The event order shown in the UI comes from the fight's cast_order + breakdown damage_events.",
+      "note": "Confirms 'custom order' = a user-supplied cast_order driving the damage_events ledger."
+    }
+  ],
+  "independent_computation": {
+    "step_1_what_the_leaf_means": "damage_events[i]/time is the timestamp of the i-th authored damage packet in the manual_target fight's ledger, and per S8/S9 timestamps come from the shared cast schedule built out of sourced cast times.",
+    "step_2_syndra_cast_times": "Cached cast times (S1-S3): Q = none (instant), W = none (instant), E = 0.25 s, R = 0.25 s. The set of legal non-zero cast stamps for a Syndra opening is therefore {0, 0.25}.",
+    "step_3_which_event_is_index_6": "With splinters = 120 (S10) Syndra's damage-authoring slots are Q (1 event), Q2 (1), W magic + W true (2, the 60-splinter true-damage row is live at 120), E (1), and R (one event per sphere, up to 7 by S5). Any ordering of those slots places index 6 inside the R sphere block: e.g. Q,Q2,Wmag,Wtrue,E,R1..R7 -> index 6 = R sphere #2; E,Q,Q2,Wmag,Wtrue,R1..R7 -> index 6 = R sphere #2. Index 6 is an R sphere hit.",
+    "step_4_time_of_an_R_sphere": "R's effect resolves at the START of its 0.25 s cast (S4). Two conventions both land on 0.25: (a) each cast's packets stamped at that cast's own sourced cast time -> R = 0.25; (b) cumulative shared timeline with instant Q/W (0 s) and E consuming 0.25 s before R -> R starts at 0.25 and its spheres, resolving at cast start, are stamped 0.25. Either way t = 0.25 s.",
+    "step_5_can_5_0_be_derived": "No. 5.0 does not appear anywhere in Syndra's cached timing data as a damage stamp: Q's sphere delay is 0.6 s, E's stun 1.25 s, W's slow 1.5 s, sphere ground life 6 s, passive collection 0.6 s, on-target CD 8 s. The single 5.0 in the cache is W's maximum hold duration (S6), and expiring that hold explicitly deals no damage (S7) -- Syndra just drops what she is holding. Nor is 5.0 a cooldown epoch: Q is affectedByCdr=false with rechargeRate 7 s, reduced only by R's 10/20/30 sourced ability haste, giving 7*100/130 = 5.385 s at R rank 3 (and 5.833 / 6.364 at ranks 2 / 1) -- never 5.0.",
+    "conclusion": "The correct value of fights/manual_target/damage_events[6]/time is 0.25 s. The new value matches; the old 5.0 matches only Syndra's non-damaging W hold duration and is unreachable from the cast schedule."
+  },
+  "residual_uncertainty": "The scenario's exact cast_order and r_spheres value live in scripts/ (out of bounds for this runbook), so the identification of index 6 as an R sphere is inferred from the slot inventory in S10 rather than read. That inference does not change the verdict: every Syndra damage-authoring slot must be stamped 0 or 0.25 s in an opening rotation (S1-S3), so 5.0 is wrong for index 6 whichever slot it is, while 0.25 is the sourced stamp for the 0.25 s-cast abilities E and R."
+}

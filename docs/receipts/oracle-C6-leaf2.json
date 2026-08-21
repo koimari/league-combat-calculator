@@ -1,0 +1,137 @@
+{
+  "receipt_id": "oracle-C6-leaf2",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/health_damage",
+  "old_value": 5472.5,
+  "new_value": 6185.5,
+  "delta": {
+    "absolute": 713.0,
+    "relative": 0.1302878026496117
+  },
+  "verdict": "new_value_correct",
+  "verdict_confidence": "consistency-verdict, not an exact recomputation - see limitations",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.P[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S2",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.Q[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S3",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.W[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S4",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.R[3].description",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "id": "S5",
+      "path": "data/champions.json",
+      "locator": "Syndra damage rows (leveling)",
+      "quote": "Q Dark Sphere Magic Damage 90/125/160/195/230 (+70% AP); W Force of Will Magic Damage 70/100/130/160/190 (+65% AP); E Scatter the Weak Magic Damage 60/95/130/165/200 (+60% AP); R Unleashed Power Magic Damage per Sphere 80/120/160 (+20% AP), Minimum 240/360/480 (+60% AP) [3 spheres], Maximum 560/840/1120 (+140% AP) [7 spheres]"
+    },
+    {
+      "id": "S6",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.W[3].leveling['Bonus True Damage']",
+      "quote": "values 8.4/12/15.6/19.2/22.8 flat; 9.2/9.8/10.4/11/11.6 % AP; 1.14 % AP (quadratic term)"
+    },
+    {
+      "id": "S7",
+      "path": "data/champion-audit/batch-6.json",
+      "locator": "Syndra",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters, kills below 15% max HP) is explicitly documented as not modeled ('the fight target never dies')."
+    },
+    {
+      "id": "S8",
+      "path": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "id": "S9",
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "id": "S10",
+      "path": "docs/math-foundations.md",
+      "locator": "Section 2.2",
+      "quote": "R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f)"
+    },
+    {
+      "id": "S11",
+      "path": "docs/math-foundations.md",
+      "locator": "Section 1.2 / 1.3",
+      "quote": "the mitigation operator x -> x*100/(100+R) is *linear in raw damage* for a fixed resistance ... The engine prices the threshold as a display row and does *not* add execute damage to totals - the kill boundary is documented, not double-counted."
+    }
+  ],
+
+  "independent_computation": {
+    "step_0_source_reconstruction": {
+      "claim": "The cached W 'Bonus True Damage' leveling row is exactly the algebraic expansion of the description formula, so the wiki text is self-consistent and usable.",
+      "work": "bonus_true(rank r) = (0.12 + 0.02*AP/100) * (W_flat[r] + 0.65*AP) = 0.12*W_flat[r] + (0.078 + 0.0002*W_flat[r])*AP + 0.00013*AP^2. Evaluating: flat = 8.4/12/15.6/19.2/22.8 (matches S6 exactly); linear = 9.2/9.8/10.4/11.0/11.6 % AP (matches S6 exactly); quadratic = 1.3 % AP per 100 AP (S6 caches 1.14 - a wiki-template rounding/rank artifact on the quadratic term only, flagged below).",
+      "conclusion": "W bonus true damage = (12% + 2% per 100 AP) x W magic damage, confirmed from two independent renderings of the same cached wiki entry."
+    },
+    "step_1_what_120_splinters_means": {
+      "work": "At splinters = 120 every Transcendent threshold is met: 40 (Q second charge, S2), 60 (W bonus true damage, S3), 80 (E slow - utility, no damage), 100 (R execute, S4), 120 (+15% ability power, S1). Four of the five thresholds are damage-affecting and every one of them is damage-INCREASING. Per S11 the R execute is priced as a boundary and not added to totals, so it cannot account for either value.",
+      "conclusion": "A correct splinters=120 fight total must be >= the same fight with any of these bonuses missing. The leaf moved UP by 713.0 (+13.03%), i.e. in the direction of MORE sourced kit being applied."
+    },
+    "step_2_eliminate_the_capstone_alone_(pure_magic_form)": {
+      "work": "If only the +15% AP capstone (S1) toggled and the damage were pure magic, then delta/D_old = 0.15*phi where phi = AP-scaled share of raw damage = 1/(1 + (F/C)/AP), F = sum of flat bases, C = sum of AP ratios. Over Syndra's rows the most AP-weighted is W with F/C = 190/0.65 = 292.3, so phi <= AP/(AP+292.3). Observed delta/D_old = 713.0/5472.5 = 0.1302878 requires phi = 0.86859, hence AP >= 1932.",
+      "conclusion": "AP ~1932 is out of range for any Summoner's Rift Syndra build (a maxed AP build with the 15% buff tops out near 1200-1300), so the delta is NOT the capstone acting on magic damage alone. (Once the capstone's effect on the quadratic W true-damage term is included the capstone-only hypothesis becomes feasible again at AP ~850-1250 with 3+ W casts - so this step eliminates only the pure-magic form, not the capstone as such.)"
+    },
+    "step_3_delta_is_one_sourced_damage_instance": {
+      "hypothesis_A_Q2_second_charge": {
+        "formula": "delta = m * (230 + 0.70 * 1.15*AP),  m = 100/(100+R_eff),  R_eff = max(0, MR*(1-pct_pen) - flat_pen)   [S5, S1, S9, S10]",
+        "worked_example": "Target MR 60 vs Void Staff (40%) + Sorcerer's Shoes (18 flat): R_eff = max(0, 60*0.6 - 18) = 18 -> m = 100/118 = 0.847458. AP 760 -> AP_eff = 1.15*760 = 874 -> Q raw = 230 + 0.70*874 = 841.80 -> post-mitigation = 713.39.",
+        "inverse": "the delta is met exactly at AP_eff = 873.34 (base AP 759.4) for the same mitigation",
+        "assessment": "matches the observed +713.0 to within 0.4 at an entirely ordinary Syndra stat line"
+      },
+      "hypothesis_B_W_bonus_true_damage": {
+        "formula": "delta = n_W * (0.12 + 0.02*AP_eff/100) * (190 + 0.65*AP_eff)   [S3, S5, S6] - true damage, unmitigated (CLAUDE.md domain rule; S11)",
+        "worked_example": "AP_eff = 874 -> per cast = (0.12 + 0.1748) * (190 + 568.1) = 0.2948 * 758.1 = 223.49; 713.0 / 223.49 = 3.19 casts",
+        "inverse": "n_W = 3 -> AP_eff = 914.7; n_W = 4 -> AP_eff = 734.9",
+        "assessment": "matches at 3-4 Force of Will casts over the fight window at ordinary AP"
+      },
+      "conclusion": "The delta is the size of exactly one sourced 120-splinter damage instance - either the 40-splinter second Dark Sphere charge or the 60-splinter W bonus true damage row (or the capstone acting through both magic and the true-damage term). Every fitting decomposition is a bonus that the cached wiki text says IS active at 120 Splinters."
+    },
+    "step_4_rule_out_over_application": {
+      "work": "Over-application signatures were checked against the same rows: a doubled +15% AP capstone (1.15^2 = 1.3225 on the AP-scaled share) yields +19% to +21% on a Syndra rotation; a duplicated rotation roughly doubles the total; a duplicated R barrage at 7 spheres (1120 + 140% AP) is >= 1500 post-mitigation at any realistic AP. None of these lands near +713.0 / +13.03%.",
+      "conclusion": "the magnitude is one sourced instance, not a duplication artifact"
+    }
+  },
+
+  "limitations": [
+    "The scenario input tuple for 'syndra_custom_order_120' (level, ability ranks, item/AP line, r_spheres, cast order, fight window, manual target stats) lives in scripts/, which runbook R-18/R-19 forbids reading. It is not present anywhere in data/ (checked: practice-corpus/scenarios.json, worklists/, champion-audit/, atoms/, wiki/, wiki-atoms/, staleness.json) nor in docs/math-foundations.md.",
+    "Consequently the leaf could not be recomputed as an absolute number. The inverse problem (recover AP, target MR and cast multiset from two totals) is underdetermined: a grid search over the wiki-sourced Syndra rows found hundreds of (AP, MR, cast-multiset) tuples reproducing 5472.5 -> 6185.5.",
+    "What IS determinate and is the basis of the verdict: every decomposition of the +713.0 delta that fits the sourced rows corresponds to a 120-splinter Transcendent bonus that data/champions.json says is active, and no sourced 120-splinter mechanic reduces damage.",
+    "Residual risk not excludable from data/ alone: a change that adds a cast the scenario's custom order should not contain would produce the same delta shape as one that restores a cast it should. Nothing in the cached sources indicates that, but it cannot be positively excluded without the scenario tuple."
+  ],
+
+  "asides": [
+    "data/champions.json Syndra W 'Bonus True Damage' leveling row caches the quadratic term as 1.14 % AP per 100 AP; the description formula (12% + 2% per 100 AP of a 190 +65% AP payload) gives 1.30 (= 0.02 * 0.65). The flat and linear terms match exactly, so only the quadratic term is off - it is consistent with a 57% AP ratio (0.02 * 57 = 1.14), i.e. a stale wiki template term. Any code reading that row directly rather than the description formula would understate W's true damage by ~12% of its AP-squared component. The row's units are also garbled ('  2'), a known-degraded parse.",
+    "data/staleness.json records for Syndra: \"W[0] Bonus True Damage matched SlowDuration\" - a false-positive game-file mapping for that same row; the row is effectively unverified against game files."
+  ]
+}

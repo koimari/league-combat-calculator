@@ -15,48 +15,25 @@ minimum at every rank, so the Q is modeled as the minimum row times
 between.  The test fights (no items) sit at 0% crit and price exactly
 the minimum row.
 
-Roadmap session (2026-08-21): closes both of Nilah's out_of_scope slots
-(P, W).  Neither is a damage gap — both were mislabeled, exactly like
-the Singed P/W / Mordekaiser W/R stale-label bug: the pinned packet
-(``static/reviewed-packets.json``, PACKET_SHA256 below) already
-declares P and W ``kind: "no_damage"``, so ``build_packet_module`` was
-already emitting proper zero-damage rows for both slots while
-``MODULE_COVERAGE`` still read "out_of_scope".  Both reclassified to
-``no_damage`` on the pinned-packet declaration, with no behavior change
-(the parser output, including each row's ``detail`` text, is
-byte-identical):
-
-  - P (Joy Unending): the passive's excess-heal-to-shield conversion
-    (documented above and in ASSUMPTIONS) has no enemy-damage clause of
-    its own — the packet's P slot carries no formula, matching the
-    passive's own wiki description (a heal-to-shield converter, not a
-    damage source).
-  - W (Jubilant Veil): a self/ally mist that grants ghosting, bonus
-    movement speed (the only leveling row — "Bonus Movement Speed"),
-    25% incoming-magic-damage reduction, and basic-attack dodge; the
-    cached ability data carries no damage, heal, or shield leveling row
-    of any kind — the packet's W slot likewise carries no formula.
+Coverage: P (Joy Unending) amplifies nearby allied heals and shields and
+converts self-heal excess into a shield; W (Jubilant Veil) is ghosting,
+bonus movement speed, 25% magic-damage reduction and a basic-attack
+dodge.  Neither carries an enemy-damage clause — the pinned packet
+declares both ``kind: "no_damage"`` — so both slots are ``no_damage``,
+not ``out_of_scope``.  The ally heal/shield amplifier and the
+damage-taken reduction remain axes the engine does not have, documented
+in ASSUMPTIONS.
 """
 
+from .inputs import champion_stat
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Nilah",
-    PACKET_SHA256,
-    packet_tick_fixes={
-        "Apotheosis": {
-            "count": 4,
-            "first_tick": 0.25,
-            "tick_interval": 0.25,
-            "dot_duration": 1.0,
-        }
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # Q's damage "increased by 0% : 70% (+ 0% : 21%) (based on critical
 # strike chance)": the Maximum row is the Minimum row x 1.91
@@ -91,9 +68,7 @@ def _formless_blade(ctx: SlotCtx):
     min_damage = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )
-    crit_chance = min(
-        max(float(ctx.stats.get("critical_strike_chance", 0.0)) / 100.0, 0.0), 1.0
-    )
+    crit_chance = min(max(float(ctx.stat("critical_strike_chance")) / 100.0, 0.0), 1.0)
     multiplier = 1.0 + (_Q_CRIT_MULTIPLIER_AT_MAX - 1.0) * crit_chance
     total = min_damage * multiplier
     entry = damage_entry(
@@ -102,6 +77,10 @@ def _formless_blade(ctx: SlotCtx):
         extract_cooldown(ability, rank),
         total,
         "physical",
+        # One crack of the whip-blade in a line — one hit at the cast
+        # boundary, which is what carries MODULE_CC's answer for Q into
+        # the event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "Minimum Physical Damage row (0% crit) scaled by "
@@ -110,9 +89,36 @@ def _formless_blade(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _formless_blade
-parse_abilities = build_parser(SLOTS, "Nilah")
+# Cached kit review.  Q's whip-blade and E's dash only "deal physical
+# damage".  R is the kit's one control cast and the module prices its whirl
+# ticks (Physical Damage per Tick x4 == Total Physical Damage): "each hit
+# also slows targets by 10% for 3 seconds", so the priced hits apply a
+# slow.  The pull belongs to the unpriced Burst Physical Damage row, so it
+# is not what any emitted part applies.  P and W are absent — the
+# heal/shield innate and the mist damage nothing.
+MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Nilah",
+    PACKET_SHA256,
+    packet_tick_fixes={
+        "Apotheosis": {
+            "count": 4,
+            "first_tick": 0.25,
+            "tick_interval": 0.25,
+            "dot_duration": 1.0,
+        }
+    },
+    # Slipstream damages once, on the dash it passes through — the boundary
+    # claim that carries MODULE_CC's reviewed answer for E into the event
+    # ledger.  R already authors its own four-tick timing above, and Q
+    # certifies its own hit in ``_formless_blade``.
+    single_hit_slots=frozenset({"E"}),
+    slot_parsers={
+        "Q": _formless_blade,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Joy Unending) converts self-heal excess beyond maximum health "
@@ -159,12 +165,9 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -173,18 +176,30 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Nilah self-healing events from its authored packet."""
+    """Resolve Nilah self-healing events from its authored packet.
+
+    Q passive: basic attacks and Formless Blade heal her for 0%-20%
+    (based on critical strike chance) of the post-mitigation damage dealt
+    to champions.  Apotheosis (R): 20%-50% on the same basis.  Both are a
+    share of "the post-mitigation damage dealt to champions", so both pay
+    per hit that dealt some.
+    """
     healing = []
     crit = max(
         0.0,
         min(
             100.0,
-            float(champion_stats.get("critical_strike_chance", 0.0) or 0.0),
+            champion_stat(champion_stats, "critical_strike_chance"),
         ),
     )
     q_ratio = 0.20 * crit / 100.0
     r_ratio = 0.20 + 0.30 * crit / 100.0
-    for event in damage_events:
+    for payment in _healing._payments(
+        _healing.HealAnchor.DAMAGING_HIT,
+        lambda source: source in {"Q", "auto_attacks", "R"},
+        damage_events,
+    ):
+        event = payment.event
         source = _healing._event_source(event)
         if source in ("Q", "auto_attacks") and q_ratio > 0.0:
             _healing._heal_from_damage(
@@ -202,9 +217,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Nilah", derive_self_healing)

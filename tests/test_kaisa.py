@@ -1,18 +1,26 @@
-"""Reference, event-order, and fail-closed tests for Kai'Sa."""
+"""Reference, event-order, and timed-mode tests for Kai'Sa."""
+
+import math
+import re
 
 import pytest
 
 from src import app as app_module
+from src.calculator.calculate import calculate_payload
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions import (
     get_champion_cast_order,
+    get_champion_module_contract,
     get_champion_module_meta,
     get_champion_options_meta,
+    get_comparison_curve_unavailable_reason,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.optimizer import _evaluate_build
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import DEFAULT_AUTO_ATTACK_UPTIME, FightParams, run_fight
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -256,20 +264,173 @@ def test_rotation_is_event_order_certified_and_resource_legal(kaisa_data):
     )
 
 
-def test_timed_and_auto_only_requests_fail_closed():
-    client = app_module.app.test_client()
-    for fight_mode in ("time_based", "auto_only"):
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Kai'Sa", "level": 12, "fight_mode": fight_mode},
-        )
-        assert response.status_code == 400
-        assert (
-            "Time-based Kai'Sa calculations are withheld"
-            in response.get_json()["error"]
-        )
+def _timed_payload(duration, *, champion_options=None, include_autos=True):
+    """The criterion-3 probe shape: timed calculate_payload, no items."""
+    request = {
+        "champion": "Kai'Sa",
+        "level": 18,
+        "items": [],
+        "fight_mode": "timed",
+        "include_auto_attacks": include_autos,
+        "fight_duration": duration,
+    }
+    if champion_options:
+        request["champion_options"] = champion_options
+    return calculate_payload(request)
 
-    reordered = client.post(
+
+def _plasma_counts(payload):
+    """(applications, ruptures) quoted from the plasma row's engine detail."""
+    detail = payload["breakdown"]["passive_plasma"]["detail"]
+    match = re.search(r"(\d+) stack applications, (\d+) ruptures", detail)
+    assert match is not None, detail
+    return int(match.group(1)), int(match.group(2))
+
+
+def test_timed_plasma_ruptures_recur_across_the_window():
+    short = _timed_payload(6)
+    long = _timed_payload(20)
+
+    _, short_ruptures = _plasma_counts(short)
+    long_applications, long_ruptures = _plasma_counts(long)
+
+    assert short_ruptures >= 1
+    assert long_ruptures > short_ruptures
+    for payload in (short, long):
+        coverage = payload["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []
+        assert coverage["certification"] == "event_order_certified"
+
+    plasma = long["breakdown"]["passive_plasma"]
+    plasma_events = [
+        event for event in long["damage_events"] if event["source"] == "passive_plasma"
+    ]
+    assert plasma["total_damage"] > 0
+    assert len(plasma_events) == long_applications + long_ruptures
+    assert sum(event["damage"] for event in plasma_events) == pytest.approx(
+        plasma["total_damage"], rel=1e-3
+    )
+
+
+@pytest.mark.parametrize(
+    "items",
+    ([], ["Kraken Slayer"], ["Nashor's Tooth", "Rabadon's Deathcap"]),
+)
+def test_timed_plasma_stream_reconciles_with_the_engine_timeline(items):
+    """The module's walked application stream is the engine's own cadence:
+    one stack per real swing plus 2 (3 evolved) per real Void Seeker cast."""
+    payload = calculate_payload(
+        {
+            "champion": "Kai'Sa",
+            "level": 18,
+            "items": items,
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": 20,
+        }
+    )
+    applications, _ = _plasma_counts(payload)
+    per_w_hit = 3 if payload["champion_stats"]["evolution_ability_power"] >= 100 else 2
+    assert applications == (
+        payload["breakdown"]["auto_attacks"]["count"]
+        + payload["breakdown"]["W"]["casts"] * per_w_hit
+    )
+
+
+def test_timed_plasma_stacks_expire_without_an_auto_stream():
+    """Void Seeker alone cannot rupture: its recast outlasts the sourced 4s
+    stack window, so the walk expires the chain instead of banking stacks."""
+    applications, ruptures = _plasma_counts(_timed_payload(20, include_autos=False))
+
+    assert applications > 0
+    assert ruptures == 0
+
+
+def test_timed_plasma_seeded_stacks_rupture_sooner():
+    unseeded = _timed_payload(6)
+    seeded = _timed_payload(6, champion_options={"plasma_starting_stacks": 4})
+
+    assert _plasma_counts(seeded)[1] > _plasma_counts(unseeded)[1]
+    assert (
+        seeded["breakdown"]["passive_plasma"]["total_damage"]
+        > unseeded["breakdown"]["passive_plasma"]["total_damage"]
+    )
+
+
+def test_supercharge_window_raises_timed_attack_speed_and_auto_cadence():
+    timed = _timed_payload(20)
+    rotation = calculate_payload({"champion": "Kai'Sa", "level": 18, "items": []})
+
+    timed_as = timed["champion_stats"]["attack_speed"]
+    assert timed_as > rotation["champion_stats"]["attack_speed"]
+    assert (
+        timed["champion_stats"]["bonus_attack_speed"]
+        > rotation["champion_stats"]["bonus_attack_speed"]
+    )
+
+    autos = timed["breakdown"]["auto_attacks"]
+    expected_swings = math.floor(timed_as * 20.0 * DEFAULT_AUTO_ATTACK_UPTIME)
+    assert autos["count"] == expected_swings
+    swing_events = [
+        event for event in timed["damage_events"] if event["source"] == "auto_attacks"
+    ]
+    assert len(swing_events) == expected_swings
+
+
+def test_timed_mode_drops_the_one_rotation_travel_wait():
+    """The certified W -> Q wait is a one-rotation artifact; timed casts run
+    on the real shared timeline (W occupies its 0.4s cast, Q volleys while
+    Void Seeker is still in flight, R anchors the Plasma ledger once)."""
+    payload = _timed_payload(20)
+
+    q_first = min(
+        event["time"] for event in payload["damage_events"] if event["source"] == "Q"
+    )
+    w_first = min(
+        event["time"] for event in payload["damage_events"] if event["source"] == "W"
+    )
+    assert q_first < w_first
+
+    timeline = payload["cast_timeline"]
+    assert [event["slot"] for event in timeline[:2]] == ["W", "Q"]
+    assert timeline[0]["time"] == pytest.approx(0.0)
+    assert [event["slot"] for event in timeline].count("R") == 1
+
+
+def test_evolved_void_seeker_refunds_its_timed_cooldown():
+    base = _timed_payload(20, champion_options={"w_evolved": "base"})
+    evolved = _timed_payload(20, champion_options={"w_evolved": "evolved"})
+
+    assert evolved["breakdown"]["W"]["casts"] > base["breakdown"]["W"]["casts"]
+
+
+def test_timed_and_auto_only_requests_now_compute():
+    client = app_module.app.test_client()
+
+    timed = client.post(
+        "/api/calculate",
+        json={"champion": "Kai'Sa", "level": 12, "fight_mode": "time_based"},
+    )
+    assert timed.status_code == 200
+    assert timed.get_json()["total_damage"] > 0
+
+    auto_only = client.post(
+        "/api/calculate",
+        json={
+            "champion": "Kai'Sa",
+            "level": 12,
+            "fight_mode": "auto_only",
+            "auto_attacks_only": True,
+            "include_auto_attacks": True,
+        },
+    )
+    assert auto_only.status_code == 200
+    assert auto_only.get_json()["breakdown"]["auto_attacks"]["total_damage"] > 0
+
+
+def test_custom_cast_orders_stay_refused():
+    reordered = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Kai'Sa",
@@ -283,51 +444,36 @@ def test_timed_and_auto_only_requests_fail_closed():
 
 
 # ---------------------------------------------------------------------------
-# P/E/R disposition (roadmap session 2, 2026-08-20)
+# E/R disposition.  Both slots used to be unwired: E a stock zero-damage
+# receipt and R absent from SLOTS entirely.  Both are wired now — E prices
+# its sourced attack-speed window and R anchors the timed Plasma ledger —
+# and both still deal nothing, which is the pair of facts pinned here.  The
+# coverage dict itself is pinned by ``TestCoverageMap``.
 # ---------------------------------------------------------------------------
 
 
-def test_e_supercharge_is_explicit_zero_damage_row(kaisa_data):
-    """E carries no damage/heal/shield attribute; it is a documented
-    zero-damage state row (module_helpers.no_damage), not a silent absence."""
-    _, abilities = _abilities(kaisa_data)
-    entry = abilities["E"]
+def test_e_and_r_are_wired_timed_only_zero_damage_rows(kaisa_data):
+    assert set(get_champion_module_meta("Kai'Sa")["slots"]) >= {"E", "R"}
 
-    assert entry["name"] == "Supercharge"
-    assert entry["total_raw"] == 0.0
-    assert entry["parts"] == ()
-    assert "no damage" in entry["detail"].lower()
-    assert "attack speed" in entry["detail"].lower()
+    # One rotation prices neither: E's window and R's ledger are both
+    # statements about a fight with a duration.
+    _, one_rotation = _abilities(kaisa_data)
+    assert "E" not in one_rotation
+    assert "R" not in one_rotation
 
-
-def test_module_coverage_reflects_p_e_r_dispositions():
-    """P (Plasma rides W/basic attacks) and Q/W are modeled; E is an
-    atoms-confirmed zero-damage state row; R's sourced shield is not yet
-    wired into CAST_ORDER/the resource ledger and stays out_of_scope."""
-    coverage = get_champion_module_meta("Kai'Sa")["coverage"]
-
-    assert coverage == {
-        "P": "modeled",
-        "Q": "modeled",
-        "W": "modeled",
-        "E": "no_damage",
-        "R": "out_of_scope",
-    }
+    payload = _timed_payload(12)
+    assert payload["breakdown"]["R"]["total_damage"] == 0.0
+    assert "E" not in payload["breakdown"]
 
 
-def test_r_killer_instinct_remains_absent_from_parsed_abilities(kaisa_data):
-    """R stays unwired: no top-level SLOTS entry, so no parsed row."""
-    _, abilities = _abilities(kaisa_data)
-
-    assert "R" not in abilities
-    assert "R" not in get_champion_module_meta("Kai'Sa")["slots"]
-
-
-def test_sources_options_and_mode_are_public_revision_receipts():
+def test_sources_options_and_unrestricted_modes_are_public_receipts():
     meta = get_champion_options_meta("Kai'Sa")
 
     assert len(meta["options"]) == 4
-    assert meta["supported_fight_modes"] == ["one_rotation"]
+    assert "supported_fight_modes" not in meta
+    assert get_supported_fight_modes("Kai'Sa") is None
+    assert get_unsupported_fight_mode_reason("Kai'Sa") is None
+    assert get_comparison_curve_unavailable_reason("Kai'Sa") is None
     assert {row["revision_id"] for row in meta["sources"]} == {
         4046579,
         4038389,
@@ -339,3 +485,148 @@ def test_sources_options_and_mode_are_public_revision_receipts():
         row["url"].startswith("https://wiki.leagueoflegends.com/")
         for row in meta["sources"]
     )
+
+
+# ---------------------------------------------------------------------------
+# Reviewed crowd control (MODULE_CC, wave 4B)
+# ---------------------------------------------------------------------------
+
+# The Wiki's crowd-control vocabulary, as this module's review read it:
+# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
+_CC_CONTROL_WORDS = (
+    "airborne",
+    "charm",
+    "fear",
+    "flee",
+    "immobiliz",
+    "knock",
+    "pull",
+    "root",
+    "sleep",
+    "slow",
+    "snare",
+    "stasis",
+    "stun",
+    "suppress",
+    "taunt",
+)
+_CC_CHAMPION = "Kai'Sa"
+_CC_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+
+
+def _cc_slot_text(slot):
+    """Every cached description of one slot, lowercased."""
+    from src.calculator.data_fetcher import get_champion
+
+    return " ".join(
+        effect.get("description") or ""
+        for ability in get_champion(_CC_CHAMPION)["abilities"].get(slot, [])
+        for effect in ability.get("effects", [])
+    ).lower()
+
+
+def _cc_control_hits(slot):
+    """The control vocabulary one slot's cached text actually uses."""
+    text = _cc_slot_text(slot)
+    return [word for word in _CC_CONTROL_WORDS if word in text]
+
+
+def _cc_kinds(**options):
+    """Result key -> the reviewed kinds the slot's parts actually carry."""
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.data_fetcher import get_champion
+
+    parsed = parse_champion_abilities(
+        get_champion(_CC_CHAMPION),
+        18,
+        100.0,
+        _CC_RANKS,
+        champion_options=options or None,
+    )
+    carried = {
+        key: sorted({part.cc_kind for part in entry.get("parts") or () if part.cc_kind})
+        for key, entry in parsed.items()
+    }
+    return {key: kinds for key, kinds in carried.items() if kinds}
+
+
+def _cc_timeline_coverage():
+    """The campaign's control-token probe, through the public entry."""
+    from src.calculator.calculate import calculate_payload
+
+    return calculate_payload(
+        {
+            "champion": _CC_CHAMPION,
+            "level": 18,
+            "items": ["Fimbulwinter"],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+        }
+    )["timeline_coverage"]
+
+
+class TestReviewedCrowdControl:
+    """Kai'Sa's casts apply no control; her passive only reads other people's.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) reads the
+    reviewed ``cc_kind`` off authored damage events; an unreviewed ability
+    packet makes the whole timed fight fall back to coarse ordering, so the
+    probe below is the reason these declarations exist.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        from src.calculator.champions import kaisa
+
+        assert kaisa.MODULE_CC == {"Q": "none", "W": "none"}
+        assert kaisa.parse_abilities.cc_kinds == kaisa.MODULE_CC
+
+    def test_control_free_slots_name_every_word_their_text_contains(self):
+        for slot, expected in [["Q", []], ["W", []]]:
+            assert _cc_control_hits(slot) == list(expected), slot
+
+    def test_every_reviewed_part_carries_its_kind(self):
+        assert _cc_kinds() == {"Q": ["none"], "W": ["none"]}
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = _cc_timeline_coverage()
+
+        assert coverage["complete"] is True
+        assert coverage["certification"] == "event_order_certified"
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestCoverageMap:
+    """E and R price nothing; P prices Plasma through a coverage channel.
+
+    Second Skin's Plasma is a real, published damage row — the breakdown
+    key ``passive_plasma`` — riding W's (one-rotation) or R's (timed)
+    ``post_hit_proc`` instead of a ``SLOTS`` entry of its own, so the map
+    names the ``post_hit_proc`` channel and the contract's channel test
+    checks the row pays under the passive's name.
+    """
+
+    _PROBE = {
+        "champion": "Kai'Sa",
+        "level": 18,
+        "items": ["Infinity Edge"],
+        "fight_mode": "timed",
+        "include_auto_attacks": False,
+    }
+
+    def test_the_map_is_the_rows_the_module_prices(self):
+        assert get_champion_module_contract("Kai'Sa").coverage == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "no_damage",
+            "R": "no_damage",
+        }
+
+    def test_the_passive_publishes_a_priced_row_of_its_own(self):
+        breakdown = calculate_payload(dict(self._PROBE))["breakdown"]
+        plasma = breakdown["passive_plasma"]
+        assert plasma["name"] == "Second Skin (Plasma)"
+        assert plasma["total_damage"] > 0.0
+        # The two slots that carry it deal no damage themselves.
+        assert breakdown["R"]["total_damage"] == 0.0
+        assert "E" not in breakdown

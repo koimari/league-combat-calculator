@@ -25,8 +25,11 @@ AD ratio from its description text); nothing is hardcoded.
 """
 
 import re
+from dataclasses import replace
 from typing import Any
 
+from .healing_contract import declare_healing_rule
+from .inputs import champion_stat
 from .engine import SlotCtx, SlotParser, build_parser
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
@@ -38,6 +41,8 @@ from .slotlib import (
     stat_buff,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # HARDCODED: verify on patch updates — Repudiation's shield duration (1.5s)
 # is prose in the cached ability description ("shields herself ... for 1.5
@@ -153,7 +158,7 @@ def _parse_passive_damage(
         ad_match = re.search(r"\(\+\s*(\d+(?:\.\d+)?)%\s+bonus\s+AD\)", desc)
         if ad_match:
             ratio = float(ad_match.group(1)) / 100.0
-            return damage + ratio * stats_context.get("bonus_attack_damage", 0.0)
+            return damage + ratio * champion_stat(stats_context, "bonus_attack_damage")
 
     return damage
 
@@ -161,7 +166,7 @@ def _parse_passive_damage(
 def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """Resolve one Drakehound's Step proc from structured data/prose."""
     return _parse_passive_damage(
-        ability, ctx.level, ctx.stats, ctx.stats.get("ability_power", 0.0)
+        ability, ctx.level, ctx.stats, ctx.stat("ability_power")
     )
 
 
@@ -170,10 +175,17 @@ def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = proc_damage(_drakehounds_step_damage, "physical")(ctx)
     if entry is None:
         return None
-    # Medarda Maxim is consumed by empowered basic attacks; its proc count
+    # Medarda's Maxim is consumed by empowered basic attacks; its proc count
     # must be coupled to the authored auto timeline rather than treated as a
-    # free fixed-count damage package.
+    # free fixed-count damage package.  The coupling flag is what clamps
+    # procs to real swings in one-rotation mode; the ``auto_stack_proc``
+    # certification (each proc consumed by exactly one attack) additionally
+    # places each timed proc event on the fight's real swing schedule
+    # instead of a synthetic cadence, so no item or config combination can
+    # surface the row coarse.
     entry["requires_auto_timeline_coupling"] = True
+    entry["event_order_certified"] = "auto_stack_proc"
+    entry["auto_stack_every"] = 1
     # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
     # ingested champion JSON carries the three values in the passive prose.
     description = " ".join(
@@ -204,12 +216,14 @@ def _q_cast(index: int) -> SlotParser:
                 dmg_type="physical",
                 source=("Q", index),
                 cooldown_from=("Q", 0),
+                event_order_certified="single_hit",
             ),
             False: simple_damage(
                 attr="Physical Damage",
                 dmg_type="physical",
                 source=("Q", index),
                 cooldown_from=("Q", 0),
+                event_order_certified="single_hit",
             ),
         },
         default=True,
@@ -251,12 +265,42 @@ ASSUMPTIONS = [
     "Q2 (Sundering Slam) shown separately from Q1 (Cunning Sweep)",
 ]
 
+# Public Execution's damage is the landing, and the landing is on the far
+# side of the suppression: Ambessa "blinks behind the farthest enemy
+# champion within the area and seizes them ... and suppresses them for 0.75
+# seconds.  While the target is suppressed, they are revealed and Ambessa
+# picks them up off the ground before crashing them back down, afterwards
+# dealing physical damage and stunning them for 0.4 seconds" (data/
+# champions.json Ambessa R).  The seize happens at the end of the cast
+# ("Ambessa is displacement immune and unable to act during the cast time
+# and while the target is suppressed" names the two as consecutive), so the
+# offset from cast start is the cached castTime plus the cached suppression.
+_R_CAST_TIME_S = 0.7
+_R_SUPPRESSION_S = 0.75
+_R_IMPACT_FROM_CAST_START_S = _R_CAST_TIME_S + _R_SUPPRESSION_S
+
+
+def _public_execution(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the stat-buff row, with its strike timed to the cached landing."""
+    entry = _r_stat_buff(ctx)
+    if entry is None:
+        return None
+    entry["parts"] = tuple(
+        replace(part, time_offset=_R_IMPACT_FROM_CAST_START_S)
+        for part in entry.get("parts", ())
+    )
+    return entry
+
+
+_r_stat_buff = stat_buff(
+    "Armor Penetration",
+    "armor_penetration_percent",
+    damage_attr="Physical Damage",
+)
+_public_execution.phase = getattr(_r_stat_buff, "phase", None)
+
 SLOTS = {
-    "R": stat_buff(
-        "Armor Penetration",
-        "armor_penetration_percent",
-        damage_attr="Physical Damage",
-    ),
+    "R": _public_execution,
     "Q": _q_cast(0),
     "Q2": _sundering_slam,
     "W": simple_damage(attr="Increased Physical Damage", dmg_type="physical"),
@@ -267,7 +311,22 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _repudiation
-parse_abilities = build_parser(SLOTS, "Ambessa")
+# Cached kit review.  Q ("slashes ... in a cone"), Q2 ("slams ... in a
+# line") and W ("smashes the ground beneath her") each deal damage and
+# apply nothing else — the outer-edge and first-enemy clauses only double
+# the damage.  R's strike lands "afterwards" — after the cached 0.75-second
+# suppression — "dealing physical damage and stunning them for 0.4
+# seconds", so the stun is what the damaged target is taking as the damage
+# arrives, and that landing is now authored (see ``_public_execution``).
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan: its
+# row is the cached "Total Physical Damage" of both spins, each of which
+# "slow[s] them by 99% decaying over 1 second", and the cache times the
+# second spin only as "at the end of the dash" — a dash whose length it
+# never gives.  P is an empowered-auto rider with no boundary of its own.
+MODULE_CC = {"Q": "none", "Q2": "none", "W": "none", "R": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Ambessa", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Repudiation) also shields Ambessa at the cast for the level-indexed "
@@ -276,24 +335,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ambessa",
-        "revision_id": 4043663,
-        "revision_timestamp": "2026-07-15T17:40:27Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Ambessa")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -308,12 +353,15 @@ def derive_self_healing(
     ratio = _healing._leveling_value(
         _healing._ability(champion_data, "R"), "Healing Percentage", r_rank
     )
-    # Public Execution heals from post-mitigation active ability damage.
+    # Public Execution heals from post-mitigation active ability damage: a
+    # share of each hit's own damage, so one payment per hit that dealt some.
     if ratio > 0:
-        for event in damage_events:
-            source = _healing._event_source(event)
-            if source not in {"Q", "Q2", "W", "E", "R"}:
-                continue
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT,
+            lambda source: source in {"Q", "Q2", "W", "E", "R"},
+            damage_events,
+        ):
+            event = payment.event
             amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0
             if amount > 0:
                 healing.append(
@@ -327,9 +375,5 @@ def derive_self_healing(
                 )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Ambessa", derive_self_healing)

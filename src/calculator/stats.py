@@ -12,22 +12,15 @@ from .item_effects import (
     override_item_stat,
     resolve_stat_effects,
 )
+from .data_registry import data_version, store_for_generation
+from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
+from .rune_effects import RunePage, RuneStatGrants, rune_page_stat_grants
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
 # slider (via the index template) both read this constant.
 MAX_LEVEL = 20
-
-# Percent armor penetration that applies ONLY to BONUS armor (wiki
-# Armor_penetration section 4.1; the cache's stats panel displays these as
-# normal total pen — see the K'Sante R footnote "incorrectly displayed as
-# normal percentage armor penetration on the stats panel HUD").  The Last
-# Whisper family is the only item source; Serylda's Grudge / Perplexity are
-# TOTAL penetration and stay on the regular channel (autoresearch pass 30).
-BONUS_ARMOR_PEN_ITEM_NAMES = frozenset(
-    {"Last Whisper", "Mortal Reminder", "Lord Dominik's Regards"}
-)
 
 
 def growth_multiplier(level: int) -> float:
@@ -58,6 +51,39 @@ def growth_stat(base: float, growth: float, level: int) -> float:
         The stat value at the given level (not rounded).
     """
     return base + growth * (level - 1) * growth_multiplier(level)
+
+
+# Where two of the engine's item-stat keys name ONE stat in game.  What
+# "a unique stat type gained from items" counts is the game's stat types
+# (Jack Of All Trades' whole stack rule), and the engine splits three of
+# them for its own arithmetic — so a build wearing boots earns one stack for
+# movement speed rather than two.  Every other key is its own type.
+_ONE_ITEM_STAT_TYPE: dict[str, str] = {
+    "move_speed_flat": "move_speed",
+    "move_speed_percent": "move_speed",
+    "health_regen_flat": "health_regen",
+    "health_regen_percent": "health_regen",
+    "armor_penetration_percent": "armor_penetration",
+    "armor_penetration_bonus_percent": "armor_penetration",
+}
+
+
+def item_stat_type_count(total_item_stats: Mapping[str, float]) -> int:
+    """How many distinct stat types this build's items grant.
+
+    Counted off the build's own item stat totals rather than from a list of
+    stat names, so an item that stops granting a stat stops being counted
+    without anything here being edited.  Only the stat *blocks* are in
+    those totals: a stat an item passive grants conditionally is not a stat
+    "currently gained from items" for a build the fight has not started.
+    """
+    return len(
+        {
+            _ONE_ITEM_STAT_TYPE.get(key, key)
+            for key, value in total_item_stats.items()
+            if value
+        }
+    )
 
 
 # The game clamps a unit's TOTAL attack speed to 3.003 (one basic attack
@@ -154,17 +180,71 @@ def get_champion_base_stats(
 
 
 # The optimizer recomputes candidate stats thousands of times over the same
-# cached item dicts, so the pure extraction below is memoized by item-data
-# identity.  Each entry keeps a strong reference to its source dict and is
-# re-verified on every hit, so a data refresh that rebuilds the item cache
-# can never serve stale stats through a recycled ``id()``.
-_ITEM_STATS_MEMO: dict[int, tuple[dict[str, Any], dict[str, float]]] = {}
-# Cached item records are immutable for the lifetime of one calculation/data
-# snapshot. Keep the validated item and its nested stats map alive so coupled
-# optimizer searches do not walk the same schema thousands of times. A data
-# refresh creates new item/stat dictionaries and therefore cannot reuse this
-# entry; synthetic sparse fixtures continue to bypass the cache below.
-_ITEM_STATS_VALIDATION_MEMO: dict[int, tuple[dict[str, Any], Mapping[str, Any]]] = {}
+# cached item dicts, so the pure extraction below is memoized by
+# ``(data_version(), item_id)`` — a value derived from the record the cache
+# serves, never the record's address (Phase 4's cache rule, migration
+# frontier counter 7).  The pair is a value key because the data layer owns
+# the corpus: within one generation an item id names exactly one cached
+# record, every refresh goes through ``data_updater`` and moves the version
+# (D-49), and nothing may mutate a cached record in place (CLAUDE.md rule 2).
+# Each entry still keeps a strong reference to the record it was derived from
+# and re-checks it on the way out, so two records that somehow shared an id
+# would recompute rather than serve each other's stats.
+#
+# A record that declares no id is not memoized at all: sparse unit fixtures
+# are exactly those records, and a key derived from nothing is one entry
+# every fixture in the suite would share.
+#
+# The write goes through ``store_for_generation`` because this memo has no
+# size bound: prefixing the key made a superseded entry unreachable but not
+# collected, so the first write of a new generation drops the old one.  The
+# read stays a bare key lookup — a hit has already matched the live
+# generation, and this is one of the optimizer's inner loops.
+_ITEM_STATS_MEMO: dict[tuple[int, int], tuple[dict[str, Any], dict[str, float]]] = {}
+# The schema verdict on the same record, keyed the same way.  Keep the
+# validated item and its nested stats map alive so coupled optimizer searches
+# do not walk the same schema thousands of times.
+_ITEM_STATS_VALIDATION_MEMO: dict[
+    tuple[int, int], tuple[dict[str, Any], Mapping[str, Any]]
+] = {}
+
+
+def _record_key(item_data: Mapping[str, Any]) -> tuple[int, int] | None:
+    """One cached item record's value key, or ``None`` when it has none.
+
+    ``None`` is a refusal to cache rather than a shared bucket: a synthetic
+    fixture declares no id, and filing every such fixture under one key would
+    serve one test's stats to another.
+
+    **Three records are refused, not two.**  A missing id and a non-integer
+    id are the obvious pair; a ``bool`` id is the third, and it is excluded
+    explicitly because ``True == 1`` and ``hash(True) == hash(1)``, so a
+    fixture spelling one would not get its own entry — it would silently
+    share the entry of the item whose id is 1.  No row in
+    ``data/items.json`` has a bool id, so this refusal has never fired; it
+    is named here because an unnamed third case in a two-case docstring is
+    the drift this campaign is about, at the smallest scale it occurs.
+
+    Two costs the value key trades for correctness, named here because they
+    are the kind a benchmark notices and a reader does not.
+
+    * **A refusal is total.**  ``None`` skips *both* memos this key gates —
+      the extracted stats and the schema verdict — so a record declaring no
+      id re-walks its whole stat map on every call rather than hitting
+      ``_ITEM_STATS_VALIDATION_MEMO``.  Under the retired ``id()`` key it hit
+      both.  Every such record is a fixture: ``data/items.json``'s 324 rows
+      all carry an int id.
+    * **Two records sharing one id thrash.**  Identity-keying gave each its
+      own entry; a value key gives them one, and the ``memo[0] is item_data``
+      guard makes every call a miss whose write overwrites the other's entry
+      — so the pair loses caching entirely rather than merely serving each
+      other stale stats.  Correct, and worse than the address key was, for a
+      shape ``data/`` cannot produce and a fixture can.
+    """
+    item_id = item_data.get("id")
+    if not isinstance(item_id, int) or isinstance(item_id, bool):
+        return None
+    return (data_version(), item_id)
 
 
 def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
@@ -180,7 +260,8 @@ def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
         return
     item_name = str(item_data.get("name") or "unknown item")
     raw_stats = item_data.get("stats")
-    memo = _ITEM_STATS_VALIDATION_MEMO.get(id(item_data))
+    memo_key = _record_key(item_data)
+    memo = None if memo_key is None else _ITEM_STATS_VALIDATION_MEMO.get(memo_key)
     if memo is not None and memo[0] is item_data and memo[1] is raw_stats:
         return
     if not isinstance(raw_stats, Mapping):
@@ -216,7 +297,10 @@ def _validate_cached_item_stats(item_data: dict[str, Any]) -> None:
                     f"Cached item {item_name} stat {stat_name}.{component} "
                     "must be finite"
                 )
-    _ITEM_STATS_VALIDATION_MEMO[id(item_data)] = (item_data, raw_stats)
+    if memo_key is not None:
+        store_for_generation(
+            _ITEM_STATS_VALIDATION_MEMO, memo_key, (item_data, raw_stats)
+        )
 
 
 def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
@@ -231,7 +315,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         same cached item.
     """
     _validate_cached_item_stats(item_data)
-    memo = _ITEM_STATS_MEMO.get(id(item_data))
+    memo_key = _record_key(item_data)
+    memo = None if memo_key is None else _ITEM_STATS_MEMO.get(memo_key)
     if memo is not None and memo[0] is item_data:
         return memo[1]
     stats = item_data.get("stats", {})
@@ -248,6 +333,9 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
             return stat.get("percent", 0.0)
         return 0.0
 
+    total_armor_pen_percent, bonus_armor_pen_percent = armor_penetration_split(
+        str(item_data.get("name", "")), get_percent("armorPenetration")
+    )
     extracted = {
         "health": get_flat("health"),
         "attack_damage": get_flat("attackDamage"),
@@ -259,16 +347,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "magic_penetration_percent": get_percent("magicPenetration"),
         "ability_power_percent": 0.0,
         "lethality": get_flat("lethality"),
-        "armor_penetration_percent": (
-            0.0
-            if str(item_data.get("name", "")) in BONUS_ARMOR_PEN_ITEM_NAMES
-            else get_percent("armorPenetration")
-        ),
-        "armor_penetration_bonus_percent": (
-            get_percent("armorPenetration")
-            if str(item_data.get("name", "")) in BONUS_ARMOR_PEN_ITEM_NAMES
-            else 0.0
-        ),
+        "armor_penetration_percent": total_armor_pen_percent,
+        "armor_penetration_bonus_percent": bonus_armor_pen_percent,
         "critical_strike_chance": (
             get_flat("criticalStrikeChance") + get_percent("criticalStrikeChance")
         ),
@@ -297,7 +377,8 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         "omnivamp_percent",
         extracted["omnivamp_percent"],
     )
-    _ITEM_STATS_MEMO[id(item_data)] = (item_data, extracted)
+    if memo_key is not None:
+        store_for_generation(_ITEM_STATS_MEMO, memo_key, (item_data, extracted))
     return extracted
 
 
@@ -309,6 +390,7 @@ def calculate_total_stats(
     role: str = "",
     role_quest_complete: bool = False,
     external_stat_bonuses: Mapping[str, float] | None = None,
+    rune_page: RunePage | None = None,
 ) -> dict[str, float]:
     """Calculate total champion stats with items applied.
 
@@ -316,6 +398,9 @@ def calculate_total_stats(
         champion_data: Champion data dictionary from the CDN.
         level: Champion level (1-20).
         items: List of item data dictionaries.
+        rune_page: The validated rune page whose stat runes grant into this
+            build. ``None`` grants nothing, which is the answer for every
+            participant but the attacker.
 
     Returns:
         Dictionary with final stat values.
@@ -429,15 +514,50 @@ def calculate_total_stats(
         adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
+    quest_ap_multiplier = (
+        MID_QUEST_AP_PERCENT / 100.0 if role == "mid" and role_quest_complete else 0.0
+    )
+    quest_bonus_ad_multiplier = (
+        1.0 + MID_QUEST_BONUS_AD_PERCENT / 100.0
+        if role == "mid" and role_quest_complete
+        else 1.0
+    )
+
+    # Rune stat grants resolve here, after the item passives, because every
+    # adaptive grant asks which of the build's bonus attack damage and
+    # ability power is larger — and neither is complete until the
+    # conversions (Muramana → AD, Awe → AP), the %AP multiplier and the role
+    # quest have been applied. The grants themselves are excluded from that
+    # comparison, as in game, and are kept out of ``total_item_stats``: each
+    # is added below where that stat belongs, because a rune's adaptive
+    # force is not an item stat (Kai'Sa's evolutions exclude it) even though
+    # it lands in the same total.
+    runes = (
+        rune_page_stat_grants(
+            rune_page,
+            level=level,
+            is_melee=is_melee,
+            bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
+            * quest_bonus_ad_multiplier,
+            ability_power=(
+                base_stats["ability_power"]
+                + total_item_stats["ability_power"]
+                + bonuses.bonus_ap
+            )
+            * (bonuses.ap_multiplier + quest_ap_multiplier),
+            item_stat_types=item_stat_type_count(total_item_stats),
+        )
+        if rune_page is not None
+        else RuneStatGrants()
+    )
+
     # Ability power: base + items + converted AP, then the additive %AP
     # multiplier (Rabadon's, Blackfire Torch).
     raw_ability_power = (
         base_stats["ability_power"]
         + total_item_stats["ability_power"]
         + bonuses.bonus_ap
-    )
-    quest_ap_multiplier = (
-        MID_QUEST_AP_PERCENT / 100.0 if role == "mid" and role_quest_complete else 0.0
+        + runes.ability_power
     )
     # Total AP modifiers stack additively with Rabadon's/Blackfire.
     final_ability_power = raw_ability_power * (
@@ -454,18 +574,16 @@ def calculate_total_stats(
         level_as_bonus
         + total_item_stats["attack_speed_percent"]
         + bonuses.attack_speed_percent
+        + runes.attack_speed_percent
     )
     final_attack_speed = calculate_attack_speed(base_as, as_ratio, total_as_bonus)
 
     # Lethality is 1:1 flat armor penetration (no level scaling since V14.1)
-    lethality = total_item_stats["lethality"]
+    lethality = total_item_stats["lethality"] + runes.lethality
     flat_armor_pen = lethality
 
-    raw_bonus_ad = total_item_stats["attack_damage"] + bonuses.bonus_ad
-    quest_bonus_ad_multiplier = (
-        1.0 + MID_QUEST_BONUS_AD_PERCENT / 100.0
-        if role == "mid" and role_quest_complete
-        else 1.0
+    raw_bonus_ad = (
+        total_item_stats["attack_damage"] + bonuses.bonus_ad + runes.bonus_attack_damage
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
@@ -498,7 +616,7 @@ def calculate_total_stats(
     )
     effective_bonus_health = (
         total_item_stats["health"] + bonuses.bonus_health
-    ) * bonuses.item_bonus_health_multiplier
+    ) * bonuses.item_bonus_health_multiplier + runes.bonus_health
     total_health = base_stats["health"] + effective_bonus_health
 
     # Terminus max-stack display assumption: bonus resists to both armor
@@ -522,7 +640,11 @@ def calculate_total_stats(
         base_stats["move_speed"] + total_item_stats["move_speed_flat"]
     ) * (
         1
-        + (total_item_stats["move_speed_percent"] + bonuses.bonus_move_speed_percent)
+        + (
+            total_item_stats["move_speed_percent"]
+            + bonuses.bonus_move_speed_percent
+            + runes.move_speed_percent
+        )
         / 100.0
     )
     final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
@@ -539,7 +661,9 @@ def calculate_total_stats(
         # champion mechanics that scale with bonus AS (Bel'Veth E's slash
         # count) read this; ability AS steroids add to it at fight time.
         "bonus_attack_speed": total_as_bonus,
-        "magic_penetration_flat": total_item_stats["magic_penetration_flat"],
+        "magic_penetration_flat": (
+            total_item_stats["magic_penetration_flat"] + runes.magic_penetration_flat
+        ),
         "magic_penetration_percent": final_magic_pen_percent,
         "base_attack_damage": round(base_stats["attack_damage"]),
         "bonus_attack_damage": round(final_bonus_ad),
@@ -572,7 +696,8 @@ def calculate_total_stats(
         "base_health_regen_per_five": base_health_regen_per_five,
         "health_regen_per_five": health_regen_per_five,
         "health_regen_per_second": health_regen_per_second,
-        "lifesteal_percent": grouped_sustain_stat_percent(items, "lifesteal_percent"),
+        "lifesteal_percent": grouped_sustain_stat_percent(items, "lifesteal_percent")
+        + runes.lifesteal_percent,
         "omnivamp_percent": total_item_stats["omnivamp_percent"]
         + bonuses.bonus_omnivamp,
         "heal_and_shield_power_percent": total_item_stats[
@@ -585,9 +710,13 @@ def calculate_total_stats(
         "critical_strike_damage_percent": total_item_stats[
             "critical_strike_damage_percent"
         ],
-        "ability_haste": total_item_stats["ability_haste"] + bonuses.ability_haste,
-        "basic_ability_haste": bonuses.basic_ability_haste,
-        "ultimate_haste": bonuses.ultimate_haste,
+        "ability_haste": (
+            total_item_stats["ability_haste"]
+            + bonuses.ability_haste
+            + runes.ability_haste
+        ),
+        "basic_ability_haste": bonuses.basic_ability_haste + runes.basic_ability_haste,
+        "ultimate_haste": bonuses.ultimate_haste + runes.ultimate_haste,
         "level": level,
         "is_melee": is_melee,
         "move_speed": final_move_speed,

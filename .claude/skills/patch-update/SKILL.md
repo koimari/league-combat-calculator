@@ -15,10 +15,12 @@ python scripts/patch_update.py detail NAME...  # full leaf diff vs HEAD for ANY 
 ```
 
 `run` clears lolstaticdata's page caches (stale caches silently "re-pull"
-the old patch), fetches the new data, diffs it against the last committed
-patch (git HEAD — `data/` is tracked), rebuilds the static catalogues the web
-UI fetches, runs pytest and the golden compare, and re-captures the baseline
-**only if pytest is green**.
+the old patch), fetches the new data, refreshes `data/economics-sourced.json`
+from DDragon for the release the new cache pins (`economy.py` prices every
+purchase plan from it), diffs the data against the last committed patch (git
+HEAD — `data/` is tracked), rebuilds the static catalogues the web UI fetches,
+runs the patch-day gates, pytest and the golden compare, and re-captures the
+baseline **only if pytest is green**.
 
 The rebuild covers `static/ability-catalog.json` and `static/effect-catalog.json`.
 It deliberately skips `static/bis-profiles.json`, which merges an Axword Meraki
@@ -51,12 +53,12 @@ the champion AFTER the last `Processed` line).
 - Passive/active *text* diffs feed the parser: verify the item's values in
   the golden item sweep still look right; a broken parse raises by design.
 - `NOTE: code-owned values [...]` — those keys live in
-  `item_effects._OFFLINE_ITEM_EFFECTS` and the wiki does NOT update them.
+  `item_effects._REFERENCE_ITEM_EFFECTS` and the wiki does NOT update them.
   Read the new wiki text for that item and update by hand if they moved.
 
 **Shop delta:**
 - Removed item that is IMPLEMENTED → remove it from `_ITEM_PARSE_CONFIG`,
-  `_OFFLINE_ITEM_EFFECTS`, and its tests.
+  `_REFERENCE_ITEM_EFFECTS`, and its tests.
 - New item → stats already flow automatically; if it has a damage/on-hit/
   stat-conversion passive worth modeling, use `/add-item-effect`.
 
@@ -64,6 +66,13 @@ the champion AFTER the last `Processed` line).
 tested module and full-entry evidence exist — run `/add-champion`.
 `build_receipts.py` likewise refuses a cached champion without a registered
 module, so the roster addition and its module must land together.
+
+**Item economics:** `BLOCKING` means the DDragon refresh did not land for the
+cache's release, an ordinary item has no sourced sell row, or a shop total
+disagrees with the cache. Re-run `python scripts/refresh_economics_data.py`;
+for a disagreement, review it against the wiki page and record it in that
+script's `ACKNOWLEDGED_TOTAL_DIVERGENCES` (a row that stops reproducing is
+reported too).
 
 ## Packet-evidence re-pin (issue #161)
 
@@ -98,12 +107,14 @@ as the re-review triage list.
   affected named modules. Also verify surprising *absences*
   (e.g. a buff that didn't move the baseline because the snapshot has 0 AP,
   0% crit, or the ability sits at rank 1 at the snapshot level).
-- If `src/` changed, the E9 practice-corpus gate (`tests/test_e9_corpus.py`)
-  fails until each non-legacy scenario `sha` in
-  `data/practice-corpus/scenarios.json` is re-pinned to the new engine
-  commit. Re-pin in a data-only follow-up commit; the fresh pin activates
-  the receipt assertions, so run the corpus test locally to prove the
-  receipts still reproduce before pushing.
+- The E9 practice-corpus gate (`tests/test_e9_corpus.py`) is anchored at the
+  `src/` tree of the merge base with `main`, so an in-branch `src/` change
+  leaves every scenario *executed* and a broken receipt fails on its numbers.
+  A patch that legitimately moves a receipt is re-pinned with
+  `python scripts/repin_corpus.py` in a data-only follow-up commit — it
+  re-probes `/api/calculate` first and refuses to stamp a receipt that no
+  longer reproduces — and `python scripts/repin_corpus.py --check` is the
+  gate that the pins and the executed selection are both intact.
 - Commit `data/`, `scripts/golden_baseline.json`, and any code changes
   together, with every baseline diff explained in the commit message
   (see commit f7e8aad for the format).
@@ -116,7 +127,13 @@ golden baseline when any of these are missing/stale:
   the Meraki axword kit; rebuild with `build_reviewed_modules.py` and commit
   the asset with its source receipts),
 - the full-entry audit tool (`--query-tool`/`LCC_WIKI_QUERY`/PATH/vendor),
-- the patch-regression staleness check (`CDTB_BIN` or `--patch`).
+- the patch-regression staleness check (`CDTB_BIN` or `--patch`),
+- the item economics refresh (DDragon must have published the release the
+  new cache pins) and its audit section,
+- the coverage census (`scripts/coverage_census.py run --output
+  docs/coverage-census.json`, ~10 min): a frontier entry no
+  `docs/coverage-residue.json` row acknowledges, or a row that no longer
+  reproduces, aborts. Commit the refreshed receipt with the data.
 
 Environment: set `LCC_WIKI_DB` (wiki sqlite), `LCC_AXWORD_SOURCE` (Meraki
 kit in the `lol-strength-analysis` sibling repo), `LCC_WIKI_QUERY` (the query

@@ -6,18 +6,19 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 """
 
 import math
+import re
 from dataclasses import dataclass, replace
 from collections.abc import Mapping
 from typing import Any
 
 from .champions import (
     RESERVED_OPTION_KEYS,
+    get_champion_cast_dependencies,
     get_champion_cast_order,
     get_custom_cast_order_unavailable_reason,
     get_supported_fight_modes,
     get_unsupported_fight_mode_reason,
     parse_champion_abilities,
-    parse_synthetic_champion_abilities,
 )
 from .rotation_resolver import (
     build_rotation_receipt,
@@ -32,9 +33,17 @@ from .damage import (
     split_by_damage_type,
 )
 from . import item_effects
+from . import resource_ledger
+from .interpreters import sustain
+from .interpreters.sustain import declared_sustain
+from .item_behavior import (
+    PostMitigationHealRule,
+    ResourceDrainRule,
+    SustainStat,
+)
 from .item_effects import resolve_damage_effects, validate_item_input_options
-from .healing import HEALING_RULE_CHAMPIONS, derive_self_healing
-from .item_support_effects import has_event_scan_support_items
+from .healing import derive_self_healing, self_heal_rule_owner
+from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
 from .support_effects import derive_self_state_effects
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
@@ -54,11 +63,23 @@ from .request_parsing import (
 from .rune_effects import (
     KeystoneConquerorEffect,
     KeystoneFleetEffect,
-    resolve_keystone,
+    RuneHealEffect,
+    RuneHealTrigger,
+    RunePage,
+    resolve_rune,
+    resolve_rune_page,
     validate_keystone_options,
-    validate_keystone_request,
+    validate_rune_page,
 )
 from .stats import calculate_total_stats, get_item_stats
+from .trigger_stream import applies_control
+from .data_registry import data_version
+from .cast_dependency import (
+    BASE_CAST_SLOTS,
+    check_order_satisfies_dependencies,
+    expand_user_order,
+    orderable_slots,
+)
 
 DEFAULT_TARGET: dict[str, float] = {
     "health": 1000.0,
@@ -112,7 +133,7 @@ def _item_self_healing_events(
     healing while the damage breakdown still records the source row.
     """
     events: list[dict[str, Any]] = []
-    item_names = {str(item.get("name", "")) for item in (items or ())}
+    item_names = sorted({str(item.get("name", "")) for item in (items or ())})
     stats = result.get("champion_stats")
     stats = stats if isinstance(stats, Mapping) else {}
     damage_events = result.get("damage_events")
@@ -136,16 +157,14 @@ def _item_self_healing_events(
             )
     duration = max(0.0, float(duration or 0.0))
 
-    # Life Draining is a direct post-mitigation heal, not the old Doran's
-    # Blade omnivamp stat.  Unknown ability scope is conservatively priced at
-    # the sourced area/pet effectiveness rather than being promoted as full.
-    if "Doran's Blade" in item_names:
-        ratio = item_effects.sustain_effect_value(
-            "Doran's Blade", "direct_heal_post_mitigation_ratio"
-        )
-        reduced = item_effects.sustain_effect_value(
-            "Doran's Blade", "direct_heal_aoe_effectiveness"
-        )
+    # A post-mitigation heal is a *shape*, not an item: a declared share of
+    # damage this build already dealt, paid straight back.  Unknown ability
+    # scope is conservatively priced at the declared area/pet effectiveness
+    # rather than being promoted as full.
+    post_mitigation = declared_sustain(item_names, PostMitigationHealRule)
+    if post_mitigation is not None:
+        ratio = post_mitigation.value("ratio")
+        reduced = post_mitigation.value("area_effectiveness")
         heal_events: list[dict[str, Any]] = []
         for event in damage_events:
             if not isinstance(event, Mapping):
@@ -175,7 +194,7 @@ def _item_self_healing_events(
                 {
                     "time": event["time"],
                     "amount": event["amount"],
-                    "source": "Doran's Blade (Life Draining)",
+                    "source": f"{post_mitigation.owner} (Life Draining)",
                     "kind": "item_proc",
                     "healing_modifier": True,
                     "_trigger_source": event["trigger_source"],
@@ -191,26 +210,17 @@ def _item_self_healing_events(
     # mana.  The result carries the end-of-window resource receipt, so a
     # manaless/full-resource actor is the only state for which a health heal
     # can be certified without inventing a starting-mana assumption.
-    if "Doran's Ring" in item_names:
+    drain = declared_sustain(item_names, ResourceDrainRule)
+    if drain is not None:
         max_mana = float(stats.get("max_mana", 0.0) or 0.0)
         remaining = float(result.get("resource_remaining", 0.0) or 0.0)
         can_only_heal = max_mana <= 0.0 or remaining >= max_mana - 1e-9
         if can_only_heal and duration > 0.0:
-            base_rate = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_restoration_per_second"
-            )
-            combat_rate = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_combat_restoration_per_second"
-            )
-            combat_window = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_combat_duration"
-            )
-            conversion = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_health_conversion"
-            )
-            tick = item_effects.sustain_effect_value(
-                "Doran's Ring", "drain_tick_interval"
-            )
+            base_rate = drain.value("restoration_per_second")
+            combat_rate = drain.value("combat_restoration_per_second")
+            combat_window = drain.value("combat_window")
+            conversion = drain.value("health_conversion")
+            tick = drain.value("tick_interval")
             champion_hits: list[float] = []
             for event in damage_events:
                 if not isinstance(event, Mapping):
@@ -233,7 +243,7 @@ def _item_self_healing_events(
                     {
                         "time": round(time, 6),
                         "amount": rate * conversion,
-                        "source": "Doran's Ring (Drain)",
+                        "source": f"{drain.owner} (Drain)",
                         "kind": "item_proc",
                         "actor_wide": True,
                         "_trigger_sequence": sequence,
@@ -254,7 +264,36 @@ def _item_self_healing_events(
     # an aggregate resource total is never converted into a guessed heal.
     if "Catalyst of Aeons" in item_names:
         ledger_section = result.get("resource_ledger")
-        if isinstance(ledger_section, Mapping):
+        # A catalyst section is only ever built on a mana account, so its
+        # presence answers the question even when the ledger row carries no
+        # ``kind`` (a unit-level ledger built without the fight's identity).
+        mana_account = isinstance(ledger_section, Mapping) and (
+            str(ledger_section.get("kind", "")) == resource_ledger.RESOURCE_KIND_MANA
+            or isinstance(ledger_section.get("catalyst"), Mapping)
+        )
+        if not mana_account:
+            # A holder who spends no mana has no Eternity to price.  The
+            # fight publishes a resource ledger either way -- Rengar's is a
+            # Ferocity account -- so "no catalyst section" means two
+            # different things, and only one of them is a defect: a MANA
+            # account without one is the ledger failing to build the heal,
+            # while any other kind is the mechanic being structurally
+            # absent.  Certifying the difference here is what keeps a
+            # manaless holder from failing a window it simply does not have.
+            notes = result.get("notes")
+            if isinstance(notes, list):
+                kind = (
+                    str(ledger_section.get("kind", ""))
+                    if isinstance(ledger_section, Mapping)
+                    else ""
+                )
+                notes.append(
+                    "Catalyst of Aeons (Eternity): the holder spends no mana"
+                    + (f" ({kind} resource)" if kind else "")
+                    + "; the mana-spent heal is structurally zero, not "
+                    "withheld."
+                )
+        else:
             catalyst_section = ledger_section.get("catalyst")
             if not isinstance(catalyst_section, Mapping):
                 raise ValueError(
@@ -292,15 +331,6 @@ def _item_self_healing_events(
                         "_trigger_time": event_time,
                         "_trigger_sequence": int(heal.get("ordinal", 1) or 1) - 1,
                     }
-                )
-        else:
-            notes = result.get("notes")
-            if isinstance(notes, list):
-                notes.append(
-                    "Catalyst of Aeons (Eternity): no typed mana resource "
-                    "ledger in this fight (energy or manaless resource, or "
-                    "resource limits disabled); the mana-spent heal is not "
-                    "emitted."
                 )
 
     # Item-provided health regeneration is a timestamped stat contribution.
@@ -478,52 +508,104 @@ def _item_self_healing_events(
     return events
 
 
-def _has_item_self_healing(
-    effects: Any, items: list[Mapping[str, Any]] | None = None
-) -> bool:
-    """Whether an item build can emit timestamped self-heal packets.
+def _timestamped_damage_events(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    """The fight's damage rows that carry a usable time and amount."""
+    usable: list[Mapping[str, Any]] = []
+    for row in result.get("damage_events") or ():
+        if not isinstance(row, Mapping):
+            continue
+        try:
+            time = float(row.get("time", 0.0))
+            damage = float(row.get("damage", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if damage > 0.0 and math.isfinite(time):
+            usable.append(row)
+    return sorted(usable, key=lambda row: float(row.get("time", 0.0)))
 
-    The score-only tuple ledger is safe only when both the champion and the
-    item build are heal-free.  In particular, Dusk and Dawn's Spellblade heal
-    and Unending Despair's periodic Anguish heal are item-owned packets that
-    must remain in the full result even when the champion has no healing rule.
+
+def _rune_heal_times(result: Mapping[str, Any], effect: RuneHealEffect) -> list[float]:
+    """When one healing rune is paid, from the stream it declares.
+
+    The rune names the stream and the engine owns what is in it — the same
+    division the damage-side trigger streams keep. Neither stream invents an
+    event: a fight that lands no damage pays no Taste of Blood, and a fight
+    the target survives pays no Triumph.
     """
-    spellblade = effects.spellblade
-    if spellblade is not None and (
-        spellblade.self_heal_ap_ratio > 0.0
-        or spellblade.self_heal_bonus_health_ratio > 0.0
-    ):
-        return True
-    return (
-        any(
-            periodic.self_heal_post_mitigation_multiplier > 0.0
-            for periodic in effects.periodic
-        )
-        or bool(effects.on_hit_heals)
-        or (
-            effects.first_auto_crit is not None
-            and (
-                effects.first_auto_crit.heal_base_ad_ratio > 0.0
-                or effects.first_auto_crit.heal_missing_health_ratio > 0.0
-            )
-        )
-        or any(
-            str(item.get("name", "")) in {"Catalyst of Aeons"} for item in (items or ())
-        )
+    rows = _timestamped_damage_events(result)
+    if effect.trigger is RuneHealTrigger.IMPAIRING_INSTANCES:
+        # Whether a row applies control is the bus's answer, never a
+        # ``cc_kind`` compared against a string here — the same predicate
+        # the damage side's impaired stream asks.
+        rows = [row for row in rows if applies_control(row)]
+    if not rows:
+        return []
+    if effect.trigger is RuneHealTrigger.TAKEDOWNS:
+        # The fight scored a takedown exactly when the target ended at or
+        # below zero health, dated at the window's last damage instance —
+        # the rule the coupled walk's own takedown synthesis reads. That is
+        # at or after the instance that crossed zero, so a heal placed there
+        # arrives no earlier than it should.
+        if float(result.get("target_ending_health", 1.0) or 0.0) > 0.0:
+            return []
+        return [float(rows[-1].get("time", 0.0)) + effect.delay_seconds]
+    times: list[float] = []
+    ready_at = 0.0
+    for row in rows:
+        time = float(row.get("time", 0.0))
+        if time < ready_at:
+            continue
+        times.append(time + effect.delay_seconds)
+        ready_at = time + effect.cooldown_seconds
+    return times
+
+
+def _rune_self_healing_events(
+    result: Mapping[str, Any], rune_page: RunePage | None
+) -> list[dict[str, Any]]:
+    """Materialize the heal packets the page's healing runes earned.
+
+    The sibling of :func:`_item_self_healing_events`, in the same shape and
+    folded into the same ledger: a rune heal is not a different kind of
+    heal, only a different owner.  Each rune declares the stream it is paid
+    on and the fight supplies the timestamps, so no number here is the
+    engine's and no timestamp there is the rune's.
+    """
+    if rune_page is None:
+        return []
+    effects = [
+        effect
+        for effect in resolve_rune_page(rune_page)
+        if isinstance(effect, RuneHealEffect)
+    ]
+    if not effects:
+        return []
+    stats = result.get("champion_stats")
+    stats = stats if isinstance(stats, Mapping) else {}
+    inputs = item_effects.DamageInputs(
+        champion_stats=stats,
+        level=int(stats.get("level", 1) or 1),
+        is_melee=bool(stats.get("is_melee", True)),
+        target_max_health=float(result.get("target_effective_max_health", 0.0) or 0.0),
+        target_current_health=float(result.get("target_ending_health", 0.0) or 0.0),
     )
-
-
-def _has_keystone_self_healing(params: "FightParams") -> bool:
-    """Return whether the selected keystone can emit a self-heal packet."""
-    if params.keystone == "Conqueror":
-        return True
-    if params.keystone != "Fleet Footwork":
-        return False
-    effect = resolve_keystone(params.keystone)
-    if not isinstance(effect, KeystoneFleetEffect):
-        return False
-    options = params.keystone_options or {}
-    return int(options.get("starting_charges", 0) or 0) >= effect.charge_cap
+    events: list[dict[str, Any]] = []
+    for effect in effects:
+        amount = effect.amount(inputs)
+        if not math.isfinite(amount) or amount <= 0.0:
+            continue
+        for sequence, time in enumerate(_rune_heal_times(result, effect)):
+            events.append(
+                {
+                    "time": time,
+                    "amount": amount,
+                    "source": effect.source,
+                    "kind": "rune_proc",
+                    "_trigger_time": time,
+                    "_trigger_sequence": sequence,
+                }
+            )
+    return events
 
 
 def _keystone_self_healing_events(
@@ -540,7 +622,7 @@ def _keystone_self_healing_events(
         if params.keystone == "Fleet Footwork"
         else "Conqueror · max-stack heal"
     )
-    effect = resolve_keystone(params.keystone)
+    effect = resolve_rune(params.keystone)
     if params.keystone == "Fleet Footwork" and not isinstance(
         effect, KeystoneFleetEffect
     ):
@@ -549,6 +631,7 @@ def _keystone_self_healing_events(
         effect, KeystoneConquerorEffect
     ):
         return []
+    slug = "fleet-footwork" if params.keystone == "Fleet Footwork" else "conqueror"
     events: list[dict[str, Any]] = []
     for index, event in enumerate(row["heal_events"]):
         if not isinstance(event, Mapping):
@@ -562,85 +645,142 @@ def _keystone_self_healing_events(
                 "actor_wide": True,
                 "_event_id": event.get(
                     "_event_id",
-                    f"main:{'fleet-footwork' if params.keystone == 'Fleet Footwork' else 'conqueror'}:heal:{index}",
+                    f"main:{slug}:heal:{index}",
                 ),
             }
         )
     return events
 
 
-def _has_item_health_regen(stats: Mapping[str, Any]) -> bool:
-    """Whether items contribute health regeneration to this build.
-
-    Item flat/percent regen authors timestamped ``Health regeneration``
-    ticks in ``_item_self_healing_events``; the score-only tuple ledger
-    would silently drop them (issue #169).  Champion base regeneration
-    alone authors nothing, so equality means the tuple ledger stays safe.
-    """
-    try:
-        total = float(stats.get("health_regen_per_five", 0.0) or 0.0)
-        base = float(stats.get("base_health_regen_per_five", 0.0) or 0.0)
-    except (TypeError, ValueError):
-        return True
-    return math.isfinite(total) and math.isfinite(base) and total > base
-
-
-def _has_lifesteal_stat(stats: Mapping[str, Any]) -> bool:
-    """Return whether the fight needs the full ledger for life-steal events."""
-    value = stats.get("lifesteal_percent", 0.0)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return False
-    return math.isfinite(float(value)) and float(value) > 0.0
-
-
-def _has_omnivamp_stat(stats: Mapping[str, Any]) -> bool:
-    """Return whether the fight needs explicit omnivamp event receipts."""
-    value = stats.get("omnivamp_percent", 0.0)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return False
-    return math.isfinite(float(value)) and float(value) > 0.0
-
-
-def _has_riftmaker_max_stack_omnivamp(
+def _saturated_omnivamp_percent(
     items: list[dict[str, Any]],
     fight_duration_seconds: float,
     *,
     is_melee: bool = True,
-) -> bool:
-    """Return whether the fight reaches Riftmaker's conditional heal state."""
-    if not any(item.get("name") == "Riftmaker" for item in items):
-        return False
-    return (
-        item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=fight_duration_seconds,
-            is_melee=is_melee,
-        )
-        > 0.0
+) -> float:
+    """The omnivamp this fight's length arms that the stat block does not hold.
+
+    A ramp-armed grant is a fight state rather than a stat, so it decides two
+    things this module owns: whether the light tuple ledger is adequate, and
+    what the published effective stats say.  Both read the declaration, so a
+    second such item is answered here instead of needing a second predicate.
+    """
+    return sustain.saturating_stat_percent(
+        [str(item.get("name", "")) for item in items],
+        SustainStat.OMNIVAMP_PERCENT,
+        fight_duration_seconds=fight_duration_seconds,
+        holder_is_melee=is_melee,
     )
 
 
-def _has_ordered_interaction_metadata(ability_damages: Mapping[str, Any]) -> bool:
-    """Keep full event rows when a target interaction needs metadata."""
-    for entry in ability_damages.values():
-        if not isinstance(entry, Mapping):
-            continue
-        if entry.get("skillshot"):
-            return True
-        if entry.get("control_events"):
-            return True
-        if float(entry.get("execute_threshold_ratio", 0.0) or 0.0) > 0:
-            return True
-        for part in entry.get("parts", ()):
-            if getattr(part, "cc_duration", 0.0) > 0.0 or getattr(
-                part, "skillshot", False
-            ):
-                return True
-        for event in entry.get("damage_events", ()):
-            if isinstance(event, Mapping) and (
-                event.get("cc_duration", 0.0) or event.get("skillshot")
-            ):
-                return True
-    return False
+def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    params: "FightParams",
+    champion_data: dict[str, Any],
+    items: list[dict[str, Any]],
+    item_damage_effects: Any,
+    fight_stats: Mapping[str, Any],
+    ability_damages: Mapping[str, Any],
+) -> LedgerInputs:
+    """One fight's facts, as the ledger projection's readers are decided by.
+
+    The one place ``run_fight``'s locals become the projection's declared
+    inputs, so the derivation's fixtures and the engine's live call build the
+    same record from the same fields.
+    """
+    return LedgerInputs(
+        self_heal_rule=self_heal_rule_owner(str(champion_data.get("name", ""))),
+        item_names=tuple(str(item.get("name", "")) for item in items),
+        stats=fight_stats,
+        damage_effects=item_damage_effects,
+        ability_damages=ability_damages,
+        rune_page=params.rune_page,
+        fight_duration_seconds=params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+        target_threshold_health_heal=params.target_threshold_health_heal,
+    )
+
+
+def _attach_engine_receipts(
+    result: dict[str, Any],
+    params: "FightParams",
+    items: list[dict[str, Any]],
+    fight_stats: Mapping[str, Any],
+    auto_attack_policy: Mapping[str, Any],
+) -> None:
+    """Decorate a finished engine result with the receipts this module owns.
+
+    Everything here is descriptive metadata over values the engine already
+    computed — the auto-attack policy and schedule, the stateful-item receipt,
+    and the effective stat block a ramp-armed grant republishes.  Kept beside
+    ``run_fight`` rather than inside it so the entry point reads as its own
+    pipeline: stats, abilities, engine, receipts.
+    """
+    result["auto_attack_policy"] = auto_attack_policy
+    # Every stateful item shares one typed, inspectable receipt.  The receipt
+    # is descriptive metadata over the same accessors the engine consumed;
+    # it is returned on manual, optimizer, and roster paths so a caller can
+    # distinguish authored state from an implicit always-on assumption.
+    result["item_state_receipts"] = item_effects.item_state_receipts(
+        items,
+        params.item_options,
+        fight_duration_seconds=params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+        bonus_health=float(fight_stats.get("bonus_health", 0.0) or 0.0),
+        bonus_mana=float(fight_stats.get("bonus_mana", 0.0) or 0.0),
+        max_mana=float(fight_stats.get("max_mana", 0.0) or 0.0),
+        total_attack_damage=float(fight_stats.get("attack_damage", 0.0) or 0.0),
+        total_move_speed=float(fight_stats.get("move_speed", 0.0) or 0.0),
+        lethality=float(fight_stats.get("lethality", 0.0) or 0.0),
+    )
+    auto_row = result.get("breakdown", {}).get("auto_attacks", {})
+    auto_total = (
+        int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
+    )
+    rotation_count = max(1, int(params.rotation_count))
+    result["auto_attack_schedule"] = {
+        "status": (
+            "known" if auto_attack_policy.get("status") != "unknown" else "unknown"
+        ),
+        "rotation_count": rotation_count,
+        "expected_autos_per_rotation": round(auto_total / rotation_count, 6),
+        "expected_autos_total": auto_total,
+        "window_seconds": round(params.fight_duration_seconds, 3),
+        "semantics": (
+            "sequential timed window; cooldowns, resources, cast lockouts, and "
+            "item events follow the engine ledger"
+        ),
+    }
+    if auto_attack_policy.get("status") == "unknown":
+        result.setdefault("notes", []).append(
+            "Auto attacks withheld: calculated uptime is unavailable for one or "
+            "more cast-time sources."
+        )
+    saturated_omnivamp = _saturated_omnivamp_percent(
+        items,
+        params.fight_duration_seconds,
+        is_melee=bool(fight_stats.get("is_melee", True)),
+    )
+    if saturated_omnivamp:
+        result["champion_stats"] = dict(fight_stats)
+        result["champion_stats"]["omnivamp_percent"] = (
+            result["champion_stats"].get("omnivamp_percent", 0.0) + saturated_omnivamp
+        )
+
+
+def _attach_display_splits(result: dict[str, Any]) -> None:
+    """The totals only a full result carries — self-heal, auto/ability, type.
+
+    Score-only callers return before this: every field here is a display
+    split of numbers already present, and computing them for a candidate
+    nobody renders is work the optimizer pays per fight.
+    """
+    result["self_healing"] = sum(
+        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
+    )
+    auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
+    result["auto_attack_damage"] = auto_damage
+    result["ability_damage"] = ability_damage
+    result["damage_by_type"] = split_by_damage_type(result["breakdown"])
 
 
 def _annotate_deathfire_categories(
@@ -681,6 +821,91 @@ def _bounded_request_float(
         return None
     minimum, maximum = PUBLIC_INPUT_LIMITS[key]
     return request_number(data, key, default, minimum, maximum)
+
+
+def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
+    """Reject a requested cast order no champion could satisfy.
+
+    Champion-agnostic on purpose: a cast order is a non-empty list of
+    distinct ability slots.  *Which* slots the champion actually offers is
+    a property of its parsed kit and is checked once, against
+    ``cast_dependency.orderable_slots``, in
+    :meth:`FightParams.validate_for_champion` (D-11).  Before that split
+    both request paths hard-coded ``sorted(order) == ["E","Q","R","W"]``,
+    which is why a Syndra order could never name the kit it actually has.
+
+    Args:
+        cast_order: The requested value, straight off the request.
+        field: How the caller's message names the field.
+
+    Raises:
+        ValueError: The value is not a list, holds a non-string, is empty,
+            or repeats a slot.
+    """
+    if cast_order is None:
+        return
+    if not isinstance(cast_order, list) or any(
+        not isinstance(slot, str) for slot in cast_order
+    ):
+        raise ValueError(f"{field} must be a list of ability slots")
+    if not cast_order:
+        raise ValueError(f"{field} must name at least one ability slot")
+    if len(set(cast_order)) != len(cast_order):
+        raise ValueError(f"{field} must not repeat an ability slot")
+
+
+# How the cast vocabulary spells a castable slot: a base slot letter, plus an
+# optional charge index for a second or third cast of the same ability.  The
+# letters come from BASE_CAST_SLOTS rather than a second hand list, and "P" is
+# excluded because the passive is not castable and has its own spellings.
+CAST_SLOT_SPELLING = re.compile(
+    "^[" + "".join(slot for slot in BASE_CAST_SLOTS if slot != "P") + "][0-9]*$"
+)
+
+
+def cast_slot_surface(
+    ability_damages: Mapping[str, Any],
+) -> dict[str, Mapping[str, Any]]:
+    """The parsed rows a cast order schedules, keyed as the cast vocabulary spells them.
+
+    Two adjustments separate the parse from ``cast_dependency``'s slot
+    vocabulary, and both are stated here rather than guessed at the call
+    site:
+
+    * The parse publishes the passive under ``"passive"``
+      (``champions/engine.py``'s ``_result_key``) while the cast vocabulary
+      spells it ``"P"``; both spellings occur across the roster because a
+      few modules build their results dict by hand.
+    * The parse also carries **rider rows** — Briar's Frenzy swing, Bel'Veth's
+      R on-hit, Annie's Tibbers attacks — which no cast order names and no
+      cast order drops, because the engine attributes them through their own
+      atoms.  They are not cast slots and are not offered to the request.
+
+    The two are told apart by **spelling, never by the ``recast_of`` stamp**:
+    a cast slot is a base slot letter optionally carrying a charge index
+    (``Q``, ``Q2``, ``R2``), and a rider row carries a descriptive suffix
+    (``W_frenzy``, ``R_onhit``, ``tibbers_attacks``).  Reading the stamp here
+    would make this function answer the very question
+    ``cast_dependency.orderable_slots`` exists to fail closed on: an
+    unstamped ``Q2`` would be filtered out as a rider and silently dropped
+    from a requested order, which is the defect shape D-11 kills, not one it
+    may reproduce one call earlier.  The stamp is read once, downstream.
+
+    Args:
+        ability_damages: The parsed ability package for this fight.
+
+    Returns:
+        Parsed entries by cast-vocabulary slot name.
+    """
+    surface: dict[str, Mapping[str, Any]] = {}
+    for slot, entry in ability_damages.items():
+        if not isinstance(entry, Mapping):
+            continue
+        if slot in ("P", "passive"):
+            surface["P"] = entry
+        elif CAST_SLOT_SPELLING.match(slot):
+            surface[slot] = entry
+    return surface
 
 
 def _request_target_class(data: Mapping[str, Any]) -> str:
@@ -738,7 +963,13 @@ class FightParams(FightConfig):
                 "fight_mode must be one_rotation, time_based, timed, or auto_only"
             )
         one_rotation = fight_mode == "one_rotation"
-        auto_attacks_only = _request_bool(data, "auto_attacks_only", False)
+        # ``auto_only`` is a public fight mode and says exactly what the flag
+        # says, so it sets it.  Validating the name and then dropping it served
+        # a full rotation — abilities, summons and all — to anyone who asked
+        # for autos alone, and made the mode indistinguishable from time_based.
+        auto_attacks_only = (
+            _request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
+        )
         requested_duration = _bounded_request_float(
             data, "fight_duration", DEFAULT_FIGHT_DURATION
         )
@@ -789,10 +1020,40 @@ class FightParams(FightConfig):
             field="support_target_selections",
             maximum_index=3,
         )
-        keystone = validate_keystone_request(data.get("keystone"))
-        keystone_options = validate_keystone_options(
-            data.get("keystone_options"), keystone
+        # One page validates the whole rune selection — keystone, minors,
+        # shards and every rune's options — so a keystone-only validator is
+        # not a second home for the same question.
+        rune_page = validate_rune_page(
+            data.get("keystone"),
+            data.get("minor_runes"),
+            data.get("stat_shards"),
+            data.get("rune_options"),
         )
+        # ``keystone_options`` is the older spelling of the keystone's own
+        # entry in ``rune_options``.  It is validated against the page's
+        # keystone and folded into the page, so every reader downstream asks
+        # the page and a request may use either spelling without two homes
+        # answering differently.
+        requested_keystone_options = data.get("keystone_options")
+        keystone_options = validate_keystone_options(
+            requested_keystone_options, rune_page.keystone
+        )
+        if (
+            isinstance(requested_keystone_options, Mapping)
+            and requested_keystone_options
+        ):
+            rune_page = replace(
+                rune_page,
+                options={
+                    **rune_page.options,
+                    rune_page.keystone: {
+                        **rune_page.options.get(rune_page.keystone, {}),
+                        **{
+                            key: float(value) for key, value in keystone_options.items()
+                        },
+                    },
+                },
+            )
         role = validate_role(data.get("role", ""))
         role_quest_complete = _request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
@@ -828,7 +1089,10 @@ class FightParams(FightConfig):
             ),
             item_options=item_options or None,
             support_target_selections=support_target_selections or None,
-            keystone=keystone,
+            keystone=rune_page.keystone,
+            minor_runes=rune_page.minor_runes,
+            stat_shards=rune_page.stat_shards,
+            rune_options=dict(rune_page.options) or None,
             keystone_options=keystone_options,
             target_class=_request_target_class(data),
             role=role,
@@ -840,14 +1104,14 @@ class FightParams(FightConfig):
         return params
 
     def _validate_request_values(self) -> None:
-        """Reject malformed cast orders and ability ranks for every consumer."""
-        if self.cast_order is not None:
-            if not isinstance(self.cast_order, list) or any(
-                not isinstance(key, str) for key in self.cast_order
-            ):
-                raise ValueError("Cast order must be a permutation of Q, W, E, R")
-            if sorted(self.cast_order) != ["E", "Q", "R", "W"]:
-                raise ValueError("Cast order must be a permutation of Q, W, E, R")
+        """Reject malformed cast orders and ability ranks for every consumer.
+
+        The cast-order check here is deliberately champion-agnostic: a
+        request is a non-empty list of distinct ability slots, and *which*
+        slots a given champion may be told to cast is decided against its
+        parsed kit in :meth:`validate_for_champion` (D-11).
+        """
+        validate_cast_order_shape(self.cast_order, field="Cast order")
 
         if not self.ability_ranks:
             return
@@ -878,13 +1142,27 @@ class FightParams(FightConfig):
             "roster_target_count": float(self.roster_target_count),
         }
 
-    def validate_for_champion(self, champion_name: str, level: int) -> None:
-        """Reject a rank allocation that cannot exist at ``level``.
+    def validate_for_champion(
+        self,
+        champion_name: str,
+        level: int,
+        *,
+        kit: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Reject a rank allocation or a cast order this champion cannot run.
 
         Rank-free requests use the champion's sourced default order. Manual
         allocations are accepted only for the standard five-rank basic and
         three-rank ultimate layout. Transformation and auto-levelled kits fail
         closed until their individual allocation rules are represented.
+
+        ``kit`` is the parsed ability package.  Which slots a request may
+        name is a property of the parsed kit, not of the champion's name, so
+        every caller that validates *before* the parse passes none, and the
+        one caller that has a parse — ``run_fight``'s post-parse call site —
+        asks :meth:`validate_cast_order_for_kit` directly instead of running
+        this whole validator a second time.  Passing ``kit`` here is for a
+        caller that wants both halves in one call.
         """
         if level > max_champion_level(self.role, self.role_quest_complete):
             raise ValueError(f"Level {level} requires the completed top role quest")
@@ -893,6 +1171,8 @@ class FightParams(FightConfig):
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
         if self.cast_order is not None and custom_order_reason is not None:
             raise ValueError(custom_order_reason)
+        if kit is not None:
+            self.validate_cast_order_for_kit(champion_name, kit)
 
         if self.ability_ranks is None:
             return
@@ -927,6 +1207,48 @@ class FightParams(FightConfig):
                 "Ability ranks spend more skill points than the champion level allows"
             )
 
+    def validate_cast_order_for_kit(
+        self, champion_name: str, kit: Mapping[str, Any]
+    ) -> None:
+        """Every requested slot is one this champion's parse offers to a request.
+
+        The one question a *parse* answers, on its own, so the post-parse
+        call site can ask it without re-running the level, fight-mode and
+        rank checks its caller already ran — or, for a caller that passed
+        ``validated=True``, deliberately skipped.  A request with no cast
+        order has nothing to check and returns.
+
+        Recast slots are absent from the orderable set by construction: they
+        ride their parent's casts, so naming one would schedule it twice.
+        They are folded back in by ``expand_user_order`` instead of being
+        silently dropped, which is the defect this check's other half fixes.
+
+        Raises:
+            ValueError: A requested slot is not orderable for this kit.
+            cast_dependency.UnknownSlotError: The parse holds a cast slot
+                that is neither a base slot nor stamped ``recast_of``, so
+                nothing can say whether a request may name it (D-11).
+        """
+        if self.cast_order is None:
+            return
+        surface = cast_slot_surface(kit)
+        orderable = orderable_slots(surface)
+        # A base slot whose parse produced no damage row — Aatrox's dash E,
+        # Aphelios's weapon-swap E — is still a slot the champion has, and
+        # naming it stays legal and casts nothing, exactly as before. What
+        # is refused is a slot the parse DOES hold and ``orderable_slots``
+        # did not return: the passive, or a declared recast that rides its
+        # parent instead of being scheduled on its own.
+        unparsed_base = {slot for slot in BASE_CAST_SLOTS if slot != "P"} - set(surface)
+        legal = set(orderable) | unparsed_base
+        refused = [slot for slot in self.cast_order or () if slot not in legal]
+        if refused:
+            raise ValueError(
+                f"Cast order names {', '.join(refused)}, which "
+                f"{champion_name} cannot be told to cast; "
+                f"orderable slots are {', '.join(orderable)}"
+            )
+
 
 def require_fight_mode_support(params: "FightParams", champion_name: str) -> None:
     """Reject a fight mode the champion's certified module cannot run.
@@ -952,10 +1274,11 @@ def require_fight_mode_support(params: "FightParams", champion_name: str) -> Non
 # candidate fights, and the resolved cast order for one champion is almost
 # always identical across candidates.  Memoize the derived params by
 # (params identity, order): frozen instances are safe to share, the strong
-# reference guards ``id()`` recycling, and the bound keeps candidate churn
-# from growing the memo without limit.
+# reference guards ``id()`` recycling, the leading ``data_version()``
+# retires every entry derived from a replaced cache (D-49), and the bound
+# keeps candidate churn from growing the memo without limit.
 _CAST_ORDER_PARAMS_MEMO: dict[
-    tuple[int, tuple[str, ...]], tuple["FightParams", "FightParams"]
+    tuple[int, int, tuple[str, ...]], tuple["FightParams", "FightParams"]
 ] = {}
 _CAST_ORDER_PARAMS_MEMO_LIMIT = 512
 
@@ -964,7 +1287,7 @@ def _params_with_cast_order(
     params: "FightParams", declared_order: list[str]
 ) -> "FightParams":
     """``replace(params, cast_order=declared_order)`` with an identity memo."""
-    key = (id(params), tuple(declared_order))
+    key = (data_version(), id(params), tuple(declared_order))
     memo = _CAST_ORDER_PARAMS_MEMO.get(key)
     if memo is not None and memo[0] is params:
         return memo[1]
@@ -983,7 +1306,6 @@ def run_fight(
     precomputed_stats: dict[str, float] | None = None,
     validated: bool = False,
     score_only: bool = False,
-    synthetic: bool = False,
 ) -> dict[str, Any]:
     """Run stats, champion ability parsing, and fight damage as one pipeline.
 
@@ -1005,9 +1327,6 @@ def run_fight(
     returned ``damage_events`` are the engine's light ledger rows
     (``damage_events_tuple`` is set) — same events, same order, no dict
     per event; only the scoring fast path consumes that shape.
-
-    ``synthetic=True`` is reserved for explicit engine/development fixtures.
-    Production callers omit it and must resolve a validated named module.
     """
     if not validated:
         params.validate_for_champion(champion_data.get("name", ""), level)
@@ -1022,20 +1341,25 @@ def run_fight(
             role=params.role,
             role_quest_complete=params.role_quest_complete,
             external_stat_bonuses=params.ally_stat_bonuses,
+            rune_page=params.rune_page,
         )
     )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
-    # sent, then hand timed fights the fight window and auto uptime so
-    # duration/timeline-driven champion mechanics (Aurelion Sol's
-    # continuous Q channel, Braum's passive stack cycle) can scale with
-    # them. One-rotation mode keeps the per-cast ability models.
+    # sent, then hand timed fights the fight window, the auto uptime and
+    # whether the engine casts anything at all, so duration/timeline-driven
+    # champion mechanics (Aurelion Sol's continuous Q channel, Braum's
+    # passive stack cycle) scale with the same fight the engine runs — an
+    # autos-only window schedules zero casts, so a walk module that merges
+    # ability hits into its stream has to be told. One-rotation mode keeps
+    # the per-cast ability models.
     champion_options = dict(params.champion_options or {})
     for reserved_key in RESERVED_OPTION_KEYS:
         champion_options.pop(reserved_key, None)
     if not params.one_rotation:
         champion_options["fight_duration_seconds"] = params.fight_duration_seconds
         champion_options["auto_attack_uptime"] = params.auto_attack_uptime
+        champion_options["auto_attacks_only"] = params.auto_attacks_only
 
     # Champion mechanics priced in crit at parse time (Caitlyn's Headshot
     # rider) need the build's bonus crit damage above the 2.0 base
@@ -1047,10 +1371,7 @@ def run_fight(
     item_damage_effects = resolve_damage_effects(items)
     parse_stats["crit_damage_bonus"] = item_damage_effects.crit_damage_bonus
 
-    parse_kit = (
-        parse_synthetic_champion_abilities if synthetic else parse_champion_abilities
-    )
-    ability_damages = parse_kit(
+    ability_damages = parse_champion_abilities(
         champion_data,
         level,
         champion_stats["ability_power"],
@@ -1080,7 +1401,7 @@ def run_fight(
         # F3: the algorithmic resolver derives the order for EVERY champion
         # from the atomized ability data (setup/consume edges + per-rank DPS),
         # falling back to the champion module's certified CAST_ORDER or the
-        # engine default when the data shows a flat kit.  The ten F2 seeds
+        # engine default when the data shows a flat kit.  The hand-verified seeds
         # remain documented overrides inside the resolver.
         declared_order, combo_rule = resolve_cast_order(
             champion_data.get("name", ""),
@@ -1097,7 +1418,31 @@ def run_fight(
             else None
         )
     else:
+        # The post-parse cast-order call site: the requested order is checked
+        # against the slots this parse actually offers, then every live recast
+        # slot is folded back in after its parent.  Before this, a requested
+        # order was passed to the engine verbatim and every recast row it did
+        # not name — Syndra's second Dark Sphere charge — silently vanished
+        # from the damage breakdown (D-11).
         resolved_user_order = list(params.cast_order)
+        params.validate_cast_order_for_kit(
+            champion_data.get("name", ""), ability_damages
+        )
+        # A declared ordering prerequisite states impossibility, not
+        # preference (D-86): casting Syndra's E before her Q would have the
+        # engine author a stun that cannot happen, and an amplifier price
+        # off it.  The order checked is the EXPANDED one, because that is
+        # what the engine casts — a recast folded in after its parent can
+        # satisfy a dependency the request never named, and could equally
+        # invert one.  A champion that declares nothing gets an empty tuple
+        # and reaches no new failure mode (D-85).
+        expanded_order = expand_user_order(resolved_user_order, ability_damages)
+        check_order_satisfies_dependencies(
+            expanded_order,
+            get_champion_cast_dependencies(champion_data.get("name", "")),
+            ability_damages,
+        )
+        params = _params_with_cast_order(params, expanded_order)
     resolved_uptime, auto_attack_policy = resolve_auto_attack_policy(
         champion_data,
         ability_damages,
@@ -1115,7 +1460,7 @@ def run_fight(
             # the pre-resolution placeholder zero.
             champion_options["fight_duration_seconds"] = params.fight_duration_seconds
             champion_options["auto_attack_uptime"] = resolved_uptime
-            ability_damages = parse_kit(
+            ability_damages = parse_champion_abilities(
                 champion_data,
                 level,
                 champion_stats["ability_power"],
@@ -1126,56 +1471,21 @@ def run_fight(
             )
             if params.keystone == "Deathfire Touch":
                 _annotate_deathfire_categories(ability_damages, champion_data)
-    tuple_ledger = (
-        score_only
-        and params.target_threshold_health_heal <= 0
-        and champion_data.get("name", "") not in HEALING_RULE_CHAMPIONS
-        and not _has_item_self_healing(item_damage_effects, items)
-        and not _has_item_health_regen(fight_stats)
-        and not _has_lifesteal_stat(fight_stats)
-        and not _has_omnivamp_stat(fight_stats)
-        and not _has_riftmaker_max_stack_omnivamp(
-            items,
-            params.fight_duration_seconds,
-            is_melee=bool(fight_stats.get("is_melee", True)),
+    # ``score_only`` is the request for a narrowed result; whether the light
+    # tuple ledger can serve it is projection satisfaction over the declared
+    # adequacy conditions, not a conjunction kept here (D-38, criterion 15).
+    tuple_ledger = score_only and (
+        ledger_projection(
+            ledger_inputs(
+                params,
+                champion_data,
+                items,
+                item_damage_effects,
+                fight_stats,
+                ability_damages,
+            )
         )
-        and not _has_keystone_self_healing(params)
-        # Forced/empowered basic attacks are authored on ability rows. Keep
-        # the dict ledger so reactive defenders (Bramble/Thornmail) retain
-        # the basic-attack marker instead of losing it in the light tuple
-        # schema.
-        and not any(
-            ability.get("empowers_next_auto")
-            for ability in ability_damages.values()
-            if isinstance(ability, dict)
-        )
-        # Items that derive support packets by scanning the damage/takedown
-        # stream (Black Cleaver Carve, Phage Rage, ...) cannot read the
-        # positional tuple rows; keep dict rows so their scan sees the same
-        # events the receipt path enriches (issue #169).
-        and not has_event_scan_support_items(items)
-        # The Collector's execute rides per-event threshold stamps that the
-        # tuple schema cannot carry; the engine stays fail-closed for the
-        # item by keeping dict rows, whose stamps the compiled walk then
-        # rejects with a named receipt (issue #169).
-        and item_damage_effects.execute is None
-        and not _has_ordered_interaction_metadata(ability_damages)
-        # Eclipse's stack-gated proc attaches its self shield to the damage
-        # events; light tuple rows cannot carry ``self_shield``, so an
-        # Eclipse holder keeps dict rows or a future score-only consumer
-        # silently loses the shield (P3 package 3C hardening; the compiled
-        # walk already fails closed for Eclipse today).
-        and not any(
-            proc.source.item_name == "Eclipse"
-            for proc in item_damage_effects.cooldown_procs
-        )
-        # Champion executes use the same per-event threshold receipt. Keep
-        # dict rows so the participant walk can apply the terminal state.
-        and not any(
-            float(ability.get("execute_threshold_ratio", 0.0) or 0.0) > 0
-            for ability in ability_damages.values()
-            if isinstance(ability, Mapping)
-        )
+        is ResultProjection.LIGHT_TUPLE_LEDGER
     )
     result = calculate_fight_damage(
         fight_stats,
@@ -1221,58 +1531,7 @@ def run_fight(
         ),
         user_order=resolved_user_order,
     )
-    result["auto_attack_policy"] = auto_attack_policy
-    # Every stateful item shares one typed, inspectable receipt.  The receipt
-    # is descriptive metadata over the same accessors the engine consumed;
-    # it is returned on manual, optimizer, and roster paths so a caller can
-    # distinguish authored state from an implicit always-on assumption.
-    result["item_state_receipts"] = item_effects.item_state_receipts(
-        items,
-        params.item_options,
-        fight_duration_seconds=params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
-        bonus_health=float(fight_stats.get("bonus_health", 0.0) or 0.0),
-        bonus_mana=float(fight_stats.get("bonus_mana", 0.0) or 0.0),
-        max_mana=float(fight_stats.get("max_mana", 0.0) or 0.0),
-        total_attack_damage=float(fight_stats.get("attack_damage", 0.0) or 0.0),
-        total_move_speed=float(fight_stats.get("move_speed", 0.0) or 0.0),
-        lethality=float(fight_stats.get("lethality", 0.0) or 0.0),
-    )
-    auto_row = result.get("breakdown", {}).get("auto_attacks", {})
-    auto_total = (
-        int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
-    )
-    rotation_count = max(1, int(params.rotation_count))
-    result["auto_attack_schedule"] = {
-        "status": (
-            "known" if auto_attack_policy.get("status") != "unknown" else "unknown"
-        ),
-        "rotation_count": rotation_count,
-        "expected_autos_per_rotation": round(auto_total / rotation_count, 6),
-        "expected_autos_total": auto_total,
-        "window_seconds": round(params.fight_duration_seconds, 3),
-        "semantics": (
-            "sequential timed window; cooldowns, resources, cast lockouts, and "
-            "item events follow the engine ledger"
-        ),
-    }
-    if auto_attack_policy.get("status") == "unknown":
-        result.setdefault("notes", []).append(
-            "Auto attacks withheld: calculated uptime is unavailable for one or "
-            "more cast-time sources."
-        )
-    if _has_riftmaker_max_stack_omnivamp(
-        items,
-        params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
-    ):
-        result["champion_stats"] = dict(fight_stats)
-        result["champion_stats"]["omnivamp_percent"] = result["champion_stats"].get(
-            "omnivamp_percent", 0.0
-        ) + item_effects.riftmaker_max_stack_omnivamp(
-            fight_duration_seconds=params.fight_duration_seconds,
-            is_melee=bool(fight_stats.get("is_melee", True)),
-        )
+    _attach_engine_receipts(result, params, items, fight_stats, auto_attack_policy)
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so
         # the empty list is the exact value the call would return.
@@ -1290,7 +1549,8 @@ def run_fight(
     result["self_healing_events"] = sorted(
         champion_healing
         + _keystone_self_healing_events(result, params)
-        + _item_self_healing_events(result, items, params.fight_duration_seconds),
+        + _item_self_healing_events(result, items, params.fight_duration_seconds)
+        + _rune_self_healing_events(result, params.rune_page),
         key=lambda event: (
             float(event.get("time", 0.0)),
             str(event.get("kind", "")),
@@ -1300,11 +1560,5 @@ def run_fight(
     )
     if score_only:
         return result
-    result["self_healing"] = sum(
-        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
-    )
-    auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
-    result["auto_attack_damage"] = auto_damage
-    result["ability_damage"] = ability_damage
-    result["damage_by_type"] = split_by_damage_type(result["breakdown"])
+    _attach_display_splits(result)
     return result

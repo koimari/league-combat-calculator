@@ -29,7 +29,7 @@ max-HP damage, 2 stacks within 2s, 6s per-target cooldown, shield
   boundary -> ``event_precision`` "exact"; authored hit time -> "hit");
   two casts at t=0 -> one pair at t=0; the self shield rides the proc
   event at the same time (participant timeline ``support_events`` shield
-  with ``_priority`` 0.5 and ``_trigger_event_id`` linking to the proc
+  declaring ``LATE_BARRIER`` and ``_trigger_event_id`` linking to the proc
   event).
 * PER-TARGET COOLDOWN: pair at t=0 completes; a next qualifying pair
   before t=6 is denied (kernel ``trigger_skipped`` reason
@@ -46,7 +46,7 @@ max-HP damage, 2 stacks within 2s, 6s per-target cooldown, shield
   produce the same proc count/times/damage; ``proc_Eclipse`` is in
   ``EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES`` with the pure-source
   exclusion receipt (no mixed rescue); the compiled score walk fails
-  closed for Eclipse holders (``COMPILED_WALK_UNREPRESENTABLE_ITEMS``)
+  closed for Eclipse holders (the declared ``ReceiptOnly`` compilability)
   with the named ``item_mechanic=Eclipse`` receipt.
 * FAIL-CLOSED METADATA: a malformed proc receipt (non-finite hit time /
   missing slot) withholds event precision — the row keeps a duration-scaled
@@ -69,10 +69,15 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import _load_public_champion
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.ability_spec import DamagePart
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.interpreters import cast_proc
+from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.item_effects import (
     eclipse_shield_amount,
     eclipse_trigger_gate,
@@ -82,20 +87,33 @@ from src.calculator.item_effects import (
 import src.calculator.participant_timeline as participant_timeline
 from src.calculator.participant_timeline import (
     Combatant,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.compile import (
-    COMPILED_WALK_UNREPRESENTABLE_ITEMS,
+from src.calculator.interpreters import (
+    compilability_for,
     uncompilable_item_receipt,
 )
+from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
 from src.calculator.timeline_coverage import (
     EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES,
     applicability_exclusion_sources,
 )
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -158,11 +176,29 @@ def _fight(
     )
 
 
+def _eclipse_proc():
+    """Eclipse's cast-triggered proc, resolved through its own rule.
+
+    MERGE: the proc families left ``BuildDamageEffects`` -- a projection
+    field that defaulted to an empty tuple would price a whole family at
+    zero with nothing saying so -- so they come off their interpreter.
+    """
+    return next(
+        proc
+        for proc in cast_proc.resolve_slots(
+            ("Eclipse",),
+            level=11,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ).cooldown_procs
+        if proc.source.item_name == "Eclipse"
+    )
+
+
 def _eclipse_gate():
     """The typed, source-backed Eclipse pair gate (parser-owned values)."""
-    effect = resolve_damage_effects([{"name": "Eclipse"}])
-    proc = next(p for p in effect.cooldown_procs if p.source.item_name == "Eclipse")
-    return eclipse_trigger_gate(proc)
+    return eclipse_trigger_gate(_eclipse_proc())
 
 
 def _ziggs_params(*, duration: float = 4.0, ranks: dict | None = None) -> FightParams:
@@ -216,7 +252,7 @@ def _proc_event_id(result: dict) -> str:
 def _dummy_combatant(
     participant_id: str, team: str, health: float = 1000.0
 ) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -247,7 +283,7 @@ def _eclipse_support_event(
         "source": "Eclipse (Ever Rising Moon)",
         "_event_id": "proc:shield",
         "_trigger_event_id": "proc",
-        "_priority": 0.5,
+        SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
     }
 
 
@@ -372,6 +408,9 @@ class TestStackGain:
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
+                # The retired family's declaration rides its own packet:
+                # (mechanic_id, pre-mitigation magnitude, attack class).
+                "declared": ("eclipse.proc", 100.0, "other", None, None, None),
             }
         ]
 
@@ -420,6 +459,9 @@ class TestStackGain:
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
+                # The retired family's declaration rides its own packet:
+                # (mechanic_id, pre-mitigation magnitude, attack class).
+                "declared": ("eclipse.proc", 100.0, "other", None, None, None),
             }
         ]
 
@@ -703,7 +745,10 @@ class TestShieldPacket:
         assert len(shield) == 1
         shield = shield[0]
         proc_id = _proc_event_id(result)
-        assert shield["_priority"] == 0.5
+        # MERGE: the retired float priority 0.5 is the declared
+        # ``LATE_BARRIER`` rank - a barrier placed AFTER the damage that
+        # triggered it, which is the same statement the number made.
+        assert shield[SUPPORT_RANK_KEY] is TransitionRank.LATE_BARRIER
         assert shield["_trigger_event_id"] == proc_id
         assert shield["_event_id"] == f"{proc_id}:shield"
         assert shield["target_scope"] == "self"
@@ -743,8 +788,8 @@ class TestShieldPacket:
         assert state["health_damage"] == pytest.approx(80.0)
         assert state["support_shield_expired"] == pytest.approx(50.0)
         # A hit at the shield's own timestamp resolves BEFORE the shield
-        # arms: the explicit ``_priority`` 0.5 sorts after the damage
-        # phase 0.0 at the same time.  Pinned observable — the proc damage
+        # arms: the declared ``LATE_BARRIER`` sorts after ``DAMAGE`` at
+        # the same time.  Pinned observable — the proc damage
         # and its shield are same-time but the shield does not intercept
         # the proc's own damage.
         state = _survival([_hit(1.0, 80.0)])
@@ -805,7 +850,10 @@ class TestParityAndOptimizer:
         assert applicability_exclusion_sources({"coarse_sources": []}) == []
 
     def test_compiled_score_walk_fails_closed_with_named_receipt(self) -> None:
-        assert "Eclipse" in COMPILED_WALK_UNREPRESENTABLE_ITEMS
+        assert isinstance(
+            compilability_for("Eclipse", ReceiptScope.SURVIVAL_LEDGER_TRANSITION),
+            ReceiptOnly,
+        )
         assert uncompilable_item_receipt([{"name": "Eclipse"}]) == (
             "item_mechanic=Eclipse"
         )

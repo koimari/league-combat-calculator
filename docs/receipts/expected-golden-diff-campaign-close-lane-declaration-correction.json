@@ -1,0 +1,87 @@
+{
+  "slice": "campaign-close-lane-declaration-correction",
+  "decisions": [
+    "R-01",
+    "R-05",
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-92",
+    "D-93",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment O, Ruling 1",
+    "umbrella Amendment O, Ruling 2",
+    "umbrella Amendment Q"
+  ],
+  "what_this_slice_group_does": "One ruled act and no retirement. Umbrella Amendment Q rules that a family whose walk-side need is satisfied THROUGH its declared serving lane does not need -- and must not declare -- a RECEIPT_WALK interpreter lane, because one producer is what the one-engine thesis demands. RECEIPT_WALK therefore leaves interpreters._FAMILY_LANES for exactly the three measured families the defence resolver feeds -- combat_state, opening_defense and threshold_defense -- in umbrella Amendment O, Ruling 1's shape but on a different ground, and their three (family, receipt_walk) deferral rows close as LANE-DECLARATION CORRECTIONs rather than as retirements. The ground is measured before the table moves and stays measured, in both directions: the walk-side sites that consume each declaration's resolved defensive state are derived from the tree by source assertion, and deleting a family's resolver interpreter is run on every check and asserted to flip its items to withheld with a receipt naming (family, defense_resolver) rather than to a silent zero.",
+  "expected_qualifying_occurrences": 0,
+  "expected_qualifying_occurrences_line": "Expected qualifying occurrences: 0 -- bounded by the enumerated population of 11845 committed roster values across 12 covering coupled scenario(s): cleaver_bloodsong_roster 1828, crit_onhit_carry_roster 3498, immolate_active_bruiser_roster 1790, liandry_reprice_mage_roster 904, mandate_abyssal_curse_roster 876, score_event_scan_holder 301, syndra_custom_order_120 443, syndra_custom_order_39 429, syndra_custom_order_60 443, syndra_derived_order_120 449, syndra_derived_order_39 435, syndra_derived_order_60 449.",
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": []
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97. Every commit of this group lands against the committed baselines with an empty claim set, and the receipt names the baselines anyway: a reader checking that the zero reported below is a zero on the surfaces the campaign gates could not otherwise tell which surfaces those were."
+  },
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half. The population is enumerated from committed artifacts -- the committed docs/receipts/receipt-walk-retirement-schedule.json at 35cf787 and scripts/golden_coupled_baseline.json's scenario subtrees -- before this group's first src/ edit, and this receipt is the commit that files it. The count cannot be read off the pre-change tree by inspection because a lane-declaration correction changes which (family, lane) pairs counter 4 declares, and counter 4's own receipt is a committed artifact whose derived rows a reader would otherwise have to take on trust.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of ANY still-deferred receipt-walk family on a participant. The eight families and their owners are read live from the behaviour catalog over rule_owners(), joined to the frontier's own (family, receipt_walk) deferral rows -- the same join golden_snapshot.receipt_walk_families() makes for the coverage guard -- and the covering predicate is golden_snapshot.covering_scenarios, which is the one home of what covering means.",
+    "why_the_population_is_every_family_and_not_only_the_three_that_close": "The correction edits the lane table counter 4 derives its declared pairs from, and the schedule's own check re-runs the pair engine over every covering scenario of every remaining row on the same commit. Narrowing the population to the three closing families' nine covering rosters would be a guess that the other five families' scenarios cannot move, which is exactly the guess R-20's second half replaces with an enumeration.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline.",
+    "population_by_scenario": {
+      "cleaver_bloodsong_roster": 1828,
+      "crit_onhit_carry_roster": 3498,
+      "immolate_active_bruiser_roster": 1790,
+      "liandry_reprice_mage_roster": 904,
+      "mandate_abyssal_curse_roster": 876,
+      "score_event_scan_holder": 301,
+      "syndra_custom_order_120": 443,
+      "syndra_custom_order_39": 429,
+      "syndra_custom_order_60": 443,
+      "syndra_derived_order_120": 449,
+      "syndra_derived_order_39": 435,
+      "syndra_derived_order_60": 449
+    },
+    "population_total": 11845,
+    "covering_scenario_count": 12,
+    "the_three_closing_rows_inside_that_population": {
+      "combat_state": "2648 leaves across 6 covering rosters, all six syndra orders",
+      "opening_defense": "1790 leaves across 1 covering roster, immolate_active_bruiser_roster",
+      "threshold_defense": "4402 leaves across 2 covering rosters, crit_onhit_carry_roster and liandry_reprice_mage_roster"
+    },
+    "occurrences_outside_the_population": 0
+  },
+  "why_zero_is_predicted_rather_than_hoped": "The correction's whole src/ reach is the declaration table interpreters._FAMILY_LANES and the unserved-lane rows beside it. Neither is on a pricing path: EngineLane.RECEIPT_WALK is absent from item_coverage.ATTACKER_LANES, SCORING_LANES and TARGET_LANES, so no coverage rung, no optimizer eligibility answer and no payload reads it; lanes_for's other two readers are counter 4's own declared-pair set and DEFENSE_FAMILIES, which is derived from the DEFENSE_RESOLVER membership this group does not touch. No interpreter is registered or removed, no mechanic is declared, no row is stamped and no packet is priced -- the three families keep resolving through exactly the interpreters they resolved through before. A leaf that moved here would therefore be an occurrence outside the predicted zero and would stop the slice, which is what makes stating the zero a gate rather than a hope.",
+  "the_two_machine_checks_the_ruling_requires": {
+    "direction_one_the_walk_consumes_what_the_resolver_built": "Source-asserted, per declaration and never per family: the resolved fields each declaration writes are derived by running the family's own resolver interpreter over the catalog, and the sites that consume them are derived by walking every module of src/calculator outside the resolver for a read of that field off a resolved defences value. A declaration none of whose fields is consumed anywhere is the walk NOT being fed through the resolver, and it fails the gate by name. Where a declaration's MechanicCapability names a walk-side impl -- force_of_nature.steadfast names survival.transitions.update_combat_state -- that named module is asserted to be among the derived consuming modules, which is what binds the published string to the predicate that produces it rather than to a reader's memory.",
+    "direction_two_the_resolver_is_the_one_producer_and_fails_closed": "Run on every check rather than reasoned about: the family's (family, defense_resolver) interpreter is removed from the registry the coverage ladder reads, and every declaring owner is asserted to answer withheld on the lanes that need the resolver, with a reason naming the missing (family, defense_resolver) pair. An owner that answered anything else would be a family whose numbers survive the loss of the producer this correction says is its only one -- which is the silent zero the whole campaign is about -- and it goes red naming the owner.",
+    "the_r05_negatives": "Both directions ship with a red they can reproduce on demand, through seams the check itself takes: a declaration's consuming sites emptied makes the gate fail naming that declaration, and the withheld answer forced back to a modelled one makes it fail naming that owner.",
+    "the_reopening_condition": "If a mechanic of one of these families ever authors a walk-priced row not fed by the resolver, the lane re-enters and the row reopens. It is measured on every run by the same ablation the triage uses -- the family's authored priced pair rows over its covering population and over a per-owner probe -- and by direction one above, so the reopening is the tree's act rather than a reader's."
+  },
+  "what_this_slice_group_does_not_do": "It retires nothing: no interpreter is registered, no walk begins pricing anything it did not price, and the five rows that remain after the correction stand overdue and gated with the machine still refusing a sixth. It reads Amendment F's fourteen as no smaller: three rows leave as mis-declared and say so in their own words, which is a correction to a declaration and not a discount on a debt. It moves no triage class letter -- all three stay class (c), measured from the pair rows they author, which is none. And it does not reclassify these families PAIR_ONLY: Amendment O, Ruling 1 measured them out of that class in its own paragraph, and this ground is the other one -- their delivery is performed in the lane they declare.",
+  "measured_after": {
+    "dated": "2026-08-16",
+    "qualifying_occurrences": 0,
+    "occurrences_outside_the_population": 0,
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical.",
+    "bench_row_8_and_row_11": "python scripts/bench_coupled_optimizer.py --fixed-work --isolate --json and the same run with --no-compiled: identical winner and score on all four scenarios -- cassiopeia_3champ 4003.1, cassiopeia_5champ 5010.8, mundo_3champ 3305.0, syndra_mandate_3champ 4642.3. Recorded because row 8 is the row that catches a routing change golden cannot see, and a declaration correction that moved the lane table without moving a leaf is exactly the shape that row exists to check independently.",
+    "what_moved_instead_of_leaves": "interpreters.declared_pairs() 52 -> 49, counter 4's receipt-walk deferral set 8 -> 5, and three unserved-lane rows replaced by three compiled-lane-only rows carrying a reason of their own instead of one opening 'the walks stage what the defence resolver already built'. All of them are counters and receipts rather than numbers a fight publishes, which is why the enumerated 11845 could not move and did not.",
+    "the_ground_as_measured_rather_than_as_ruled": "20 declarations across the three families, every one of them consuming its resolved fields outside the resolver, at sites in four modules -- survival.transitions, survival.receipt_state, participant_timeline and roster_composition. One resolved field is consumed nowhere and is published rather than dropped: force_of_nature.steadfast's move-speed bonus, which no engine in this model reads. force_of_nature.steadfast's capability names survival.transitions.update_combat_state and that module is a measured consumer. With the resolver interpreter removed, 20 of 20 declaring owners answer withheld naming their own (family, defense_resolver) pair -- including the owners that declare a second family as well.",
+    "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15); zero of the enumerated 11845 leaves moved, and both baselines read 'snapshot identical' on every commit of this group."
+  }
+}

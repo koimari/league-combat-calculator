@@ -1,0 +1,63 @@
+{
+  "artifact": "escalated_defects",
+  "slice": "P5-retire",
+  "escalated_in": "28576fb",
+  "why_this_file_exists": "The P5-retire oracle pass surfaced two defects that predate this phase. The seed-retirement slice correctly refused to fix them inside itself — both move committed baseline leaves and each owes its own R-20 population and its own oracle receipts — but the escalation lived only as commit-body prose. Prose in a commit body is exactly what the phase-boundary re-capture absorbs: the moved leaves enter the new baseline, the compare goes quiet, and nothing anywhere says a defect is still shipping. This is that escalation as a dated, gated artifact, in the idiom of the audit's acknowledged-gap list. It is closed by deleting the entry, which the gate forces the moment the defect stops reproducing.",
+  "gate": "tests/test_p5_oracle_receipts.py::TestTheEscalatedDefectsAreStillTracked",
+  "defects": [
+    {
+      "id": "cc_setup_citation_prints_the_field_name",
+      "dated": "2026-08-10",
+      "origin": "8e8d939, pre-campaign",
+      "raised_by": [
+        {"receipt": "oracle-P5-retire-leaf29.json", "verdict": "both_wrong"},
+        {"receipt": "oracle-P5-retire-leaf37.json", "verdict": "both_wrong"}
+      ],
+      "site": {
+        "file": "src/calculator/rotation_resolver.py",
+        "fragment": "applies cc_kind crowd control — setup before"
+      },
+      "defect": "The cc_setup fan-out interpolates the field NAME where the authored value belongs. The published citation reads 'E applies cc_kind crowd control — setup before R'; the module authored cc_kind='stun' and the resolver holds it as the atom 'cc_kind=stun'. The sibling shred and buff fan-outs interpolate their atom; this branch alone does not, so a receipt that exists to name the marker driving the edge names the field instead of the marker.",
+      "live_signature": {
+        "champion": "Syndra",
+        "setup_slot": "E",
+        "authored_cc_kind": "stun",
+        "published_sentence_contains": "E applies cc_kind crowd control — setup before",
+        "published_sentence_omits": "stun"
+      },
+      "reaches_the_committed_coupled_baseline": true,
+      "not_fixed_here_because": "The line is pre-campaign and the string already ships in the committed coupled baseline for champions this phase never touches, so correcting it moves committed leaves as well as new ones. That is a semantic slice owing its own R-20 population, enumerated before its first src/ edit, and an oracle receipt per qualifying occurrence (R-19, R-20). Reverting the seed retirement removes neither the line nor those leaves.",
+      "resolution": "A named follow-on slice: interpolate the cc_kind atom the branch already tested for, so the sentence reads 'E applies cc_kind=stun — setup before R'; enumerate the qualifying population from the committed baselines before the edit; carry an oracle receipt per occurrence."
+    },
+    {
+      "id": "recast_citation_says_one_thing_twice",
+      "dated": "2026-08-10",
+      "origin": "8e8d939 (the wrapper) and d0a94f3 (Phase 0B's C6 cite)",
+      "raised_by": [
+        {"receipt": "oracle-P5-retire-leaf27.json", "verdict": "old_value_correct"},
+        {"receipt": "oracle-P5-retire-leaf35.json", "verdict": "old_value_correct"},
+        {"receipt": "oracle-P5-retire-leaf43.json", "verdict": "old_value_correct"}
+      ],
+      "site": [
+        {
+          "file": "src/calculator/rotation_resolver.py",
+          "fragment": "is the recast of"
+        },
+        {
+          "file": "src/calculator/rotation_resolver.py",
+          "fragment": "recast (recast_of atom)"
+        }
+      ],
+      "defect": "_Edge.sentence() wraps a recast citation that already says the same thing, so the published sentence is 'Q2 is the recast of Q — Q2 is Q's recast (recast_of atom)': one claim twice, and neither half carries the precondition. The seed's prose said the recast exists only at forty splinters; the derived sentence says nothing about when Q2 is castable, so a reader of the receipt cannot tell that the edge is conditional at all.",
+      "live_signature": {
+        "champion": "Syndra",
+        "edge": ["Q", "Q2", "recast"],
+        "published_sentence": "Q2 is the recast of Q — Q2 is Q's recast (recast_of atom)",
+        "published_sentence_omits": "40"
+      },
+      "reaches_the_committed_coupled_baseline": false,
+      "not_fixed_here_because": "The wrapper and the cite are both older than this slice, and the three leaves carrying the sentence are already allowlisted with oracle verdicts — rewriting a value three oracles have judged owes three fresh receipts.",
+      "resolution": "A named follow-on slice: the wrapper stops restating the cite, and the recast citation names the condition that makes the recast live (Syndra's forty-splinter charge), sourced the way a declaration is. Three fresh oracle receipts for the three leaves whose value moves."
+    }
+  ]
+}

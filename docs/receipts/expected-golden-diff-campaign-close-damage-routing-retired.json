@@ -1,0 +1,72 @@
+{
+  "slice": "campaign-close-damage-routing-retired",
+  "decisions": [
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-97",
+    "umbrella Amendment C",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment M, Ruling 3",
+    "umbrella Amendment N, Ruling 2",
+    "umbrella Amendment O, Ruling 2",
+    "umbrella Amendment P"
+  ],
+  "what_this_is": "The R-20 population of damage_routing/receipt_walk, the fifth of the fourteen to retire, enumerated from committed artifacts BEFORE this slice's first src/ edit, together with what a declaration of this family has to carry -- written down in advance so a short total is a stop rather than a discovery.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97: the code lands against the committed baselines plus this allowlist, and no baseline moves inside the semantic commit."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half. What can move is a property of which participants hold a declaring owner of the damage_routing family, which is a fact about the committed scenario set rather than about the diff, so the population is enumerated from committed artifacts -- docs/receipts/receipt-walk-retirement-schedule.json at 6af6689 and scripts/golden_coupled_baseline.json's scenario subtrees -- before the first src/ edit. Any occurrence outside it stops the slice exactly as an over-count would.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the damage_routing family on a participant. The three owners are read live from the behaviour catalog over rule_owners() -- Death's Dance, Serpent's Fang, The Collector -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline.",
+    "population_by_scenario": {
+      "immolate_active_bruiser_roster": 1790
+    },
+    "population_total": 1790,
+    "pair_engine_population": {
+      "total": 0,
+      "why": "This slice authors no pair-engine row and stamps none: the triage measured this family authoring no priced pair row at all, so there is nothing for damage.py to mark as a preview. The one pair-side field it touches is the execute ratio the pair engine stamps onto its own events, which scripts/golden_baseline.json does not record. A declared 0, for the same reason the four families before it declared one."
+    },
+    "which_owners_the_population_can_actually_see": "ONE of the three. immolate_active_bruiser_roster puts Death's Dance on the Darius; no committed coupled scenario holds Serpent's Fang or The Collector. This is recorded BEFORE the edit rather than discovered after it, because a green zero over a population that cannot contain the defect is precisely the shape that stopped the active_cast retirement (umbrella Amendment N). It is also why umbrella Amendment P requires EQUIVALENCE FIXTURES PER OWNER for this family in place of the coverage act Amendment N's Ruling 3 ordered for the re-pricing windows: three owners deliver through three different mechanisms, and a fixture set arming one proves nothing about the two that can still fail."
+  },
+  "what_a_declaration_of_this_family_has_to_carry": {
+    "rule": "Enumerated in advance, in the idiom the charged_strike slice used: writing down what the walk will have to read is what makes a wrong number a stop instead of a discovery.",
+    "there_is_no_price": "None of the three effects is priced, so this slice adds NO term to survival.pricing and touches no DeclaredPacket. Umbrella Amendment P says so in terms -- a deferral moves damage in time, an execute ends a fight, and a venom resizes a barrier -- so the interpreter's output is a rider or a state adjustment and never an amount.",
+    "deaths_dance.ignore_pain": "A DamageDeferralRule, delivered as the kernel's Defer rider. Three numbers: the deferred fraction, chosen from the declaration's melee/ranged split by the HOLDER's own range class because the deferral's subject is its holder; the deferral duration; and the tick count, which is a count and is resolved as an int. The walk already stages every part of this -- program.events.Defer, SurvivalAction.deferred, SurvivalAction.deferred_batch_slot and the batch arithmetic in survival/transitions.py that pays it down.",
+    "the_collector.execute": "An ExecuteRule, delivered as the kernel's Execute rider. One number, the threshold ratio, and one string, the declaring owner's own name -- SurvivalAction.execute_threshold_ratio and SurvivalAction.execute_source, both already read where the kernel decides an execution. The ratio is level-independent and the source is the declaring item, never a plausible name: an execution whose source the packet did not carry is an unstamped packet.",
+    "serpents_fang.shield_bypass": "A ShieldBypassRule, delivered as the kernel's barrier-state adjustment. Two numbers, and the first of them is a COMPLEMENT: the walk's shield ledger holds the surviving share of a granted shield (shield_ledger.ShieldPools.venom_factor), so the declaration's cut fraction is delivered as one-minus-it and a fixture that let those two swap would be off by the whole effect. The share is chosen from the declaration's melee/ranged split by the ATTACKER's range class, because this venom is attacker-owned and rides whoever is dealing the damage.",
+    "the_range_split_is_read_from_two_different_participants": "Two of the three declarations carry a melee/ranged split and they resolve it against different people -- the deferral against its holder, who is the defender paying it, and the venom against its holder, who is the attacker applying it. Recorded before the edit because one BuildContext field, holder_is_melee, serves both and a single wrong participant would move every shield in the fight by the difference between 0.5 and 0.65."
+  },
+  "why_the_family_is_startable_now": {
+    "the_named_delivery": "umbrella Amendment P (2026-08-16) names this family's walk-side delivery as the program rider system and the kernel state paths ALREADY IN THE TREE, one per declared payload family, and re-points its own stop clause at the one thing that could still stop the slice: an owner whose effect has no existing rider or state path the kernel can express. Measured on this commit by scripts/receipt_walk_schedule.py --check, which resolves every named mechanism against the kernel's own declarations: all three resolve, no owner is left over, and the schedule's triage_rows_stopping_the_next_retirement_round is empty.",
+    "the_standing_precondition": "umbrella Amendment N, Ruling 2's source-derived term census is green -- python scripts/term_census.py --check reports 29 post-authoring packet-mutation sites, 0 uncovered, 3 static holder amps, 0 unfolded -- which is the standing precondition on any further family retiring.",
+    "the_stamping_half_is_an_enumerated_emptiness": "Amendment L, Ruling 1's first half names the family's pair rows stamped pair_preview_of and declared ViewTag.THEORETICAL. The committed triage measures this family authoring none, so that half is discharged as an enumerated emptiness exactly as delta_amp's was and never as a step skipped. Its three mechanics are therefore declared as APPLIED walk halves rather than as previews of rows that do not exist -- the same distinction the charged_strike slice drew for its two swing schedules, from the other side."
+  },
+  "measured_after": {
+    "dated": "2026-08-16",
+    "commit": "928332c",
+    "qualifying_occurrences": 0,
+    "occurrences_outside_the_population": 0,
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical. The declared pair-engine population of 0 held.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical. Zero of the 1790 enumerated leaves moved.",
+    "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15) and there were none, in a population enumerated in advance and non-empty.",
+    "what_the_walk_actually_stages": "A zero on a baseline is evidence a family's numbers did not move; it is not evidence the walk read anything. Read off the walk-lane interpreter itself: the Defer rider for the covering scenario's Darius, a melee Death's Dance holder, resolves to fraction 0.3, duration 3.0 and 3 ticks -- and 0.1 for a ranged holder, which is the melee/ranged split resolved against the participant paying it. The Execute rider resolves to 0.05 for The Collector at every level, and the barrier-state adjustment to a surviving share of 0.5 melee and 0.65 ranged over a 3.0-second window. Each is equal to the number the producer it replaced returned for the same build, asserted per owner rather than inferred from a green baseline.",
+    "the_gate_the_population_could_not_bound": "The covering scenario arms one owner of three, which the pre-edit receipt recorded rather than discovered, so the per-owner fixtures are what carry the other two. The strongest of them is a mutation rather than an equality: tests/test_participant_timeline.py::test_the_walk_executes_off_the_declaration_and_not_off_the_pair_stamp replays the same packet carrying the same pair-engine execute stamp against an attacker whose build declares no execution, and the target survives on the four health the sibling case executes it out of. Before this slice the walk executed it. That is the property the retirement bought, stated as a number, on the one owner no baseline can see. R-01 row 8 is green with and without the compiled walk on all four bench scenarios with every winner and score unchanged.",
+    "the_named_delivery_outlives_the_row": "docs/receipts/receipt-walk-retirement-schedule.json gains a standing named_delivery_resolution block: Amendment P's mechanisms are resolved against the kernel's own declarations on every run whether or not the row is still open, covers_every_declaration is true over all three declarations, and the R-05 negative -- injecting the loss of shield_ledger.ShieldPools.venom_factor -- still turns the gate red and names serpents_fang.shield_bypass. A delivery term that stopped being checked the moment its row retired would be one recorded rather than resolved."
+  }
+}

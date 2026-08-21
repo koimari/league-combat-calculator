@@ -35,6 +35,7 @@ from .slotlib import (
     fixed_count_pet_row,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.
 # Tibbers pet numbers come from the LoL Wiki "Annie#Pets" entry:
@@ -99,7 +100,12 @@ def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
     then the 1.6s base-AS interval) truncated to the fight window; the
     ``tibbers_attacks`` option overrides it — the player steers Tibbers,
     so positioning/leash uptime is a player choice.
+
+    An ``auto_attacks_only`` window casts no R, and R's Active is what
+    summons Tibbers, so there is no pet to steer.
     """
+    if ctx.option("auto_attacks_only"):
+        return None
     window = float(ctx.options.get("fight_duration_seconds", _TIBBERS_DEFAULT_WINDOW))
     requested = ctx.options.get("tibbers_attacks")
     if requested is None:
@@ -145,14 +151,14 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
     # via stat_buff for the fight engine.
     magic_pen = extract_value(ability, "Magic Penetration", rank)
     ctx.stats["magic_penetration_percent"] = (
-        ctx.stats.get("magic_penetration_percent", 0.0) + magic_pen
+        ctx.stat("magic_penetration_percent") + magic_pen
     )
 
     burst = extract_named(ability, "Initial Magic Damage", rank, ctx.stats)
     cooldown = extract_cooldown(ability, rank)
 
     # Tibbers aura damage (not in JSON — wiki constants above).
-    aura_seconds = float(ctx.options.get("tibbers_aura_seconds", 5.0))
+    aura_seconds = float(ctx.option("tibbers_aura_seconds"))
     aura_base = _TIBBERS_AURA_BASE_PER_TICK[
         min(rank - 1, len(_TIBBERS_AURA_BASE_PER_TICK) - 1)
     ]
@@ -256,6 +262,11 @@ ASSUMPTIONS = [
     "attacks from the summon, then the 0.625 base AS) truncated to the "
     "fight window; positioning/leash uptime is a player choice via the "
     "tibbers_attacks option",
+    "An autos-only fight has no Tibbers at all (the pipeline states this "
+    "with the auto_attacks_only reserved option): the cached R text "
+    "sources him to 'Active: Annie summons Tibbers to the target "
+    "location', which no basic attack performs. R's magic-penetration "
+    "passive is innate and still applies",
     "Tibbers aura defaults to 5 seconds of damage",
     "E retaliation damage is not modeled (requires enemies to hit Annie)",
 ]
@@ -271,16 +282,4 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Annie")
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Annie",
-        "revision_id": 4033194,
-        "revision_timestamp": "2026-06-21T14:58:24Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Annie")

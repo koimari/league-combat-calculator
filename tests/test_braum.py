@@ -19,6 +19,8 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import braum
+from tests import cc_review
 
 
 def _parse(braum_data, level, *, stats=None, options=None, ap=0.0):
@@ -242,6 +244,38 @@ class TestConcussiveBlows:
         )
         assert "passive" not in abilities
 
+    def test_autos_only_window_drops_the_q_applications(self, braum_data):
+        """`auto_attacks_only` casts nothing, so only autos stack.
+
+        Level 12, 1 AS, 12s: autos at t=0..11 alone. Stacks at 0/1/2 and
+        the 4th at t=3 procs (136), immunity to t=7 empowers 4/5/6; the
+        t=7 auto restarts and t=10 procs again, empowering t=11 —
+        2 procs + 4 empowered autos, versus the merged stream's
+        2 + 6 (``test_two_full_cycles``) when Q also applies stacks.
+        """
+        options = {
+            "fight_duration_seconds": 12.0,
+            "auto_attack_uptime": 1.0,
+            "auto_attacks_only": True,
+        }
+        passive = _parse(braum_data, 12, options=options)["passive"]
+        trigger_part, bonus_part = passive["parts"]
+        assert trigger_part.count == 2
+        assert bonus_part.count == 4
+        assert passive["total_raw"] == pytest.approx(2 * 136.0 + 4 * 54.4)
+
+    def test_autos_only_without_autos_never_procs(self, braum_data):
+        """No autos and no casts: nothing applies a stack at all."""
+        assert "passive" not in _parse(
+            braum_data,
+            18,
+            options={
+                "fight_duration_seconds": 20.0,
+                "auto_attack_uptime": 0.0,
+                "auto_attacks_only": True,
+            },
+        )
+
     def test_json_bonus_array_matches_hardcoded_formula(self, braum_data):
         """JSON's 40%-bonus leveling array == 0.4 x (16 + 10 x level)."""
         passive_json = braum_data["abilities"]["P"][0]
@@ -300,6 +334,32 @@ class TestFightIntegration:
         assert row["total_damage"] == pytest.approx(abilities["passive"]["total_raw"])
         assert "proc(s)" in row["detail"]
 
+    def test_auto_only_passive_counts_swings_without_q(self, braum_data):
+        """auto_only casts no Q, so the passive must not price Q's stacks.
+
+        Same 18s window and uptime as the timed fight; the only
+        difference is that the engine casts nothing. Engine output at
+        level 18, no items, MR 0: timed 1215.2 (3 procs + 8 empowered
+        autos), auto_only 1019.2 (2 procs + 8) — Q's applications are
+        exactly the third proc.
+        """
+        shared = {
+            "target_magic_resistance": 0.0,
+            "fight_duration_seconds": 18.0,
+            "auto_attack_uptime": 1.0,
+            "one_rotation": False,
+        }
+        timed = run_fight(braum_data, 18, [], _fight_params(**shared))
+        autos = run_fight(
+            braum_data, 18, [], _fight_params(**shared, auto_attacks_only=True)
+        )
+        assert autos["breakdown"]["Q"]["casts"] == 0
+        timed_row = timed["breakdown"]["passive"]
+        autos_row = autos["breakdown"]["passive"]
+        assert timed_row["total_damage"] == pytest.approx(1215.2)
+        assert autos_row["total_damage"] == pytest.approx(1019.2)
+        assert autos_row["detail"] == "2 proc(s) + 8 empowered auto(s) over 18s"
+
     def test_passive_absent_in_one_rotation_fight(self, braum_data):
         """One-rotation strips the reserved keys even if the caller
         smuggles them in — the passive stays per-cast (absent)."""
@@ -311,3 +371,33 @@ class TestFightIntegration:
         )
         result = run_fight(braum_data, 11, [], params)
         assert "passive" not in result["breakdown"]
+
+
+class TestReviewedCrowdControl:
+    """Braum's damaging casts both control: Winter's Bite slows, R knocks up.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    """
+
+    def test_module_cc_is_the_declaration_the_parser_wired(self):
+        assert braum.MODULE_CC == {"Q": "slow", "R": "knockup"}
+        assert braum.parse_abilities.cc_kinds == braum.MODULE_CC
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Braum")
+        assert "slowing them by 70% decaying over 2 seconds" in (
+            cc_review.slot_text(data, "Q")
+        )
+        assert "all other enemies hit are knocked up for 0.6 seconds" in (
+            cc_review.slot_text(data, "R")
+        )
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Braum") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Braum")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

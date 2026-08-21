@@ -5,15 +5,15 @@
  * (Yes / No / Off by X%) control plus a combat-log paste importer into the
  * results area, and posts game-receipts to POST /api/receipts.
  *
- * The widget never depends on app.js internals.  It prefers a page-level
- * hook when the P5 app exposes one:
+ * The scenario comes from the page-level hook app.js publishes:
  *
- *     window.scryglass = { getCurrentLoadout: () => ({...calculate payload}) }
+ *     window.scryglass.getCurrentLoadout()
  *
- * and otherwise captures the visible scenario from the DOM (champion,
- * level, role, build A items, ability ranks, champion options, fight
- * window, keystone).  It must never break when the results area is absent,
- * so every DOM lookup is null-safe and the mount point is optional.
+ * the exact /api/calculate payload behind the displayed result, or null
+ * while nothing is displayed — so a receipt's prediction is always the
+ * total the user saw.  app.js fires "scryglass:result" when that payload
+ * changes.  The widget never breaks when the results area is absent: every
+ * DOM lookup is null-safe and the mount point is optional.
  */
 (function () {
   "use strict";
@@ -24,7 +24,6 @@
     action: null,
     loadout: null,
     champion: null,
-    level: null,
     busy: false,
   };
 
@@ -34,10 +33,6 @@
 
   function one(selector, root) {
     return (root || document).querySelector(selector);
-  }
-
-  function textOf(node) {
-    return node ? String(node.textContent || "").trim() : "";
   }
 
   function numberValue(node) {
@@ -59,140 +54,21 @@
    * Loadout capture
    * ------------------------------------------------------------------ */
 
-  function hookLoadout() {
-    if (
-      window.scryglass &&
-      typeof window.scryglass.getCurrentLoadout === "function"
-    ) {
-      try {
-        var captured = window.scryglass.getCurrentLoadout();
-        if (captured && typeof captured === "object") return captured;
-      } catch {
-        // Fall through to DOM capture; never let the hook break the widget.
-      }
-    }
-    return null;
-  }
-
-  function captureFromDom() {
-    var championNode = byId("championName");
-    var champion = textOf(championNode);
-    if (!champion || champion === "Choose a champion") return null;
-
-    var level = numberValue(byId("levelInput"));
-    if (level == null) level = numberValue(byId("levelOutput"));
-    var roleSelect = byId("roleSelect");
-    var role = roleSelect ? String(roleSelect.value || "") : "";
-
-    // Build A is edited on the duel canvas: one .duel-row per slot, the item
-    // name on the icon's alt text and the slot path on the row itself.
-    var items = [];
-    var boots = "";
-    var slots = byId("duelA");
-    if (slots) {
-      var slotButtons = slots.querySelectorAll("button.duel-row:not(.is-empty):not(.is-keystone)");
-      Array.prototype.forEach.call(slotButtons, function (button) {
-        var image = one("img", button);
-        var name = image ? String(image.getAttribute("alt") || "").trim() : "";
-        if (!name) return;
-        if (String(button.getAttribute("data-path") || "").indexOf("questBoot") !== -1) {
-          boots = name;
-        } else if (items.indexOf(name) === -1) {
-          items.push(name);
-        }
-      });
-    }
-
-    var abilityRanks = {};
-    var abilityRow = byId("abilityRow");
-    if (abilityRow) {
-      var rankButtons = abilityRow.querySelectorAll("[data-ability-rank]");
-      Array.prototype.forEach.call(rankButtons, function (button) {
-        var slot = String(button.getAttribute("data-ability-rank") || "").trim();
-        if (!slot) return;
-        var output = button.parentElement ? one("output", button.parentElement) : null;
-        var rank = numberValue(output);
-        if (rank != null) abilityRanks[slot] = Math.max(0, Math.floor(rank));
-      });
-    }
-
-    var championOptions = {};
-    var optionRow = byId("championOptionsRow");
-    if (optionRow) {
-      var optionControls = optionRow.querySelectorAll("[data-champion-option]");
-      Array.prototype.forEach.call(optionControls, function (control) {
-        var key = String(control.getAttribute("data-champion-option") || "").trim();
-        if (!key) return;
-        var optionType = String(control.getAttribute("data-option-type") || "");
-        if (control.type === "checkbox") {
-          championOptions[key] = control.checked;
-        } else if (optionType === "select" || control.tagName === "SELECT") {
-          championOptions[key] = control.value;
-        } else {
-          var numeric = Number(control.value);
-          if (Number.isFinite(numeric)) championOptions[key] = numeric;
-        }
-      });
-    }
-
-    var rotations = numberValue(byId("rotationRange"));
-    if (rotations == null) rotations = 1;
-    var duration = numberValue(byId("durationRange"));
-    if (duration == null) duration = 10;
-    var uptimeModeToggle = byId("uptimeModeToggle");
-    var explicitUptime = uptimeModeToggle
-      ? String(uptimeModeToggle.getAttribute("aria-pressed")) === "true"
-      : false;
-    var uptime = numberValue(byId("uptimeRange"));
-    if (uptime == null) uptime = 0;
-    uptime = explicitUptime ? uptime / 100 : 0;
-
-    var keystone = "";
-    var keystoneSlot = one("#duelA .duel-row.is-keystone:not(.is-empty)");
-    if (keystoneSlot) {
-      var keystoneName = textOf(one("strong", keystoneSlot));
-      if (keystoneName && keystoneName !== "Add keystone") keystone = keystoneName;
-    }
-
-    var enemyCount = numberValue(byId("enemyCount")) || 0;
-    var fightMode = rotations > 1 || uptime > 0 ? "time_based" : "one_rotation";
-    return {
-      champion: champion,
-      level: Math.max(1, Math.min(18, Math.floor(level || 1))),
-      role: role,
-      items: items,
-      boots: boots,
-      ability_ranks: abilityRanks,
-      champion_options: championOptions,
-      keystone: keystone,
-      rotations: Math.max(1, Math.min(6, Math.floor(rotations))),
-      fight_mode: fightMode,
-      fight_duration: duration,
-      include_auto_attacks: uptime > 0,
-      auto_attack_uptime: uptime,
-      auto_attack_uptime_mode: explicitUptime ? "explicit" : "calculated",
-      enemies: [],
-      allies: [],
-      _snapshot: {
-        itemCount: items.length,
-        rankCount: Object.keys(abilityRanks).length,
-        optionCount: Object.keys(championOptions).length,
-        enemyCount: enemyCount,
-      },
-    };
+  // app.js owns the one JSON POST; the widget never hand-rolls a second.
+  function postReceiptJson(body) {
+    return window.scryglass.postJson("/api/receipts", body);
   }
 
   function captureLoadout() {
-    var loadout = hookLoadout() || captureFromDom();
+    var hook = window.scryglass && window.scryglass.getCurrentLoadout;
+    var loadout = typeof hook === "function" ? hook() : null;
     if (!loadout) {
-      // No capturable scenario: clear the stale identity so the widget can
-      // fall silent again instead of validating a champion that left.
+      // Nothing displayed: clear the stale identity so the widget falls
+      // silent instead of validating a number that left the screen.
       STATE.champion = null;
-      STATE.level = null;
       return null;
     }
     STATE.champion = loadout.champion;
-    STATE.level = loadout.level;
     return loadout;
   }
 
@@ -203,20 +79,22 @@
   // The widget's look lives in static/css/style.css with the rest of the
   // design language; this module owns behaviour only.
 
+  function count(n, singular, plural) {
+    return n + " " + (n === 1 ? singular : plural);
+  }
+
   function contextHtml() {
-    var snapshot = (STATE.loadout && STATE.loadout._snapshot) || {};
+    var loadout = STATE.loadout;
     var parts = [
-      "Lv " + (STATE.level || "—"),
-      (snapshot.itemCount != null ? snapshot.itemCount : (STATE.loadout && STATE.loadout.items ? STATE.loadout.items.length : 0)) + " items",
-      "loadout snapshot",
+      "Lv " + loadout.level,
+      count(loadout.items.length, "item", "items"),
+      count(loadout.enemies.length, "enemy", "enemies"),
     ];
-    if (snapshot.enemyCount > 0) {
-      parts.push("multi-target roster — receipt uses the solo default target");
-    }
-    return "Recording validation for <b>" + escapeHtml(STATE.champion) + "</b> (" + parts.join(" · ") + ")";
+    return "Recording validation for <b>" + escapeHtml(loadout.champion) + "</b> (" + parts.join(" · ") + ")";
   }
 
   function statusMarkup() {
+    var loadout = STATE.loadout;
     return (
       '<details class="feedback-disclosure">' +
       "<summary>Validate against a real game</summary>" +
@@ -229,7 +107,10 @@
       '<button type="button" data-fb-action="off">Off by %</button>' +
       "</div>" +
       '<div class="feedback-fields" hidden>' +
-      '<label>Damage you saw in game <input type="number" id="fbObserved" min="0" step="any" placeholder="e.g. 1234" /></label>' +
+      // The receipt predicts one participant's row, never the team's, so
+      // the field names whose damage it wants: with allies selected the
+      // Damage tile above shows the main team's total instead.
+      '<label>Damage <b>' + escapeHtml(loadout.champion) + '</b> dealt in game <input type="number" id="fbObserved" min="0" step="any" placeholder="e.g. 1234" /></label>' +
       '<label id="fbOffRow" hidden>Off by <input type="number" id="fbOffPct" min="0" max="1000" step="any" /> % ' +
       '<select id="fbOffDir"><option value="higher">higher</option><option value="lower">lower</option></select></label>' +
       '<span><button type="button" data-fb-submit>Submit</button> ' +
@@ -325,11 +206,7 @@
     var payload = { champion: loadout.champion, loadout: loadout, source: "manual" };
     if (observed !== undefined) payload.observed = observed;
     setBusy(true);
-    fetch("/api/receipts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    postReceiptJson(payload)
       .then(function (response) {
         return response.json().then(function (body) {
           return { ok: response.ok, body: body };
@@ -427,15 +304,11 @@
         return;
       }
       setBusy(true);
-      fetch("/api/receipts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          champion: loadout2.champion,
-          loadout: loadout2,
-          observed: text,
-          source: "combat_log",
-        }),
+      postReceiptJson({
+        champion: loadout2.champion,
+        loadout: loadout2,
+        observed: text,
+        source: "combat_log",
       })
         .then(function (response) {
           return response.json().then(function (body) {
@@ -471,6 +344,8 @@
     var mount = byId(MOUNT_ID);
     if (!mount && !one(RESULT_AREA_SELECTOR)) return; // no results area — never break
     render();
+    // A new result landed: the displayed payload changed with it.
+    document.addEventListener("scryglass:result", refreshContext);
     document.addEventListener("click", function (event) {
       onDocumentClick(event);
       // The scenario may have changed with any click (champion picked,

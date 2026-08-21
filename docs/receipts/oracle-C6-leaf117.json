@@ -1,0 +1,98 @@
+{
+  "receipt": "oracle-C6-leaf117",
+  "runbook": "R-18 / R-19 (fresh independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[8]/damage",
+  "old_value": 139.2,
+  "new_value": 580.0,
+  "verdict": "new_value_correct",
+
+  "identification": {
+    "champion": "Syndra",
+    "ability": "W - Force of Will (recast / throw)",
+    "inferred_scenario_stats": {
+      "ability_power": 600.0,
+      "w_rank": 5,
+      "splinters_of_wrath": ">= 60 (Transcendent W bonus active; < 120, since no 1.15x AP capstone is present in either number)",
+      "effective_target_magic_resist_at_this_event": 0,
+      "note_on_MR": "A magic event resolving to exactly 580.0 requires post-penetration MR = 0 (floored by the build's magic pen, per the max(0, ...) floor). True damage is unmitigated by construction, so 139.2 is MR-independent."
+    },
+    "how_the_stats_were_recovered": "AP and rank were not given; they were solved for. Requiring 139.2 to equal Syndra's sourced W Transcendent true-damage expression (0.12 + 0.0002*AP) * (base_W + 0.65*AP) has the unique in-range solution AP = 600 at W rank 5. That same AP makes the W magic row land on exactly 580.0, and makes the wiki's own independent 'Total Mixed Damage' row land on exactly 719.2 = 580.0 + 139.2. Three separately-parsed wiki rows closing on the same (AP=600, rank 5) point is the identification."
+  },
+
+  "independent_computation": {
+    "step_1_w_magic_damage": {
+      "formula": "W magic = base(rank) + 65% AP",
+      "wiki_row": "Force of Will, effect 'Recast', leveling attribute 'Magic Damage': values [70, 100, 130, 160, 190], units ['', ...]; second modifier values [65,65,65,65,65], units ['% AP', ...]",
+      "substitution": "190 + 0.65 * 600",
+      "result": 580.0
+    },
+    "step_2_transcendent_true_bonus": {
+      "formula": "bonus true = (12% + 2% per 100 AP) * (W magic damage)",
+      "wiki_text": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "substitution": "(0.12 + 0.02 * 600/100) * 580.0 = 0.24 * 580.0",
+      "result": 139.2
+    },
+    "step_3_cross_check_against_parsed_bonus_true_row": {
+      "wiki_row": "Force of Will, attribute 'Bonus True Damage', rank 5: 22.8 (+ 11.6% AP) (+ 1.14 quadratic-AP term)",
+      "expansion": "22.8 = 0.12 * 190; 11.6% AP = 0.12*65% + 0.0002*190; quadratic = 0.65 * 0.0002 * AP^2",
+      "substitution": "22.8 + 0.116*600 + 0.00013*600^2 = 22.8 + 69.6 + 46.8",
+      "result": 139.2,
+      "agrees_with_step_2": true
+    },
+    "step_4_cross_check_against_parsed_total_mixed_row": {
+      "wiki_row": "Force of Will, attribute 'Total Mixed Damage', rank 5: 212.8 (+ 76.6% AP) (+ quadratic-AP term)",
+      "expansion": "212.8 = 1.12 * 190; 76.6% AP = 1.12*65% + 0.0002*190; quadratic = 0.65 * 0.0002 * AP^2",
+      "substitution": "212.8 + 0.766*600 + 0.00013*600^2 = 212.8 + 459.6 + 46.8",
+      "result": 719.2,
+      "identity": "719.2 = 580.0 (magic) + 139.2 (bonus true) -- the wiki's own total confirms the split exactly"
+    },
+    "step_5_mitigation": {
+      "formula_quoted_from_docs": "m(R) = 100 / (100 + R); post = raw * m(R); penetration floors at 0 (max(0, R*(1-p) - f))",
+      "application": "Magic: 580.0 * 100/(100+0) = 580.0 (post-pen MR floored to 0). True: 139.2, unmitigated by rule ('True damage ignores all resistances entirely')."
+    },
+    "conclusion": "Both 580.0 and 139.2 are exactly-sourced numbers of the SAME Force of Will cast at AP = 600, rank 5: 580.0 is the ability's magic damage (the primary damage event), 139.2 is its Transcendent bonus true damage (24% of it). The ratio 580.0/139.2 = 4.16666... = 1/0.24 is exactly 1/(12% + 2%*6), which is the fingerprint of the bonus-vs-base pair, not of an arithmetic error. The leaf therefore did not change because a formula changed value; index [8] now carries the cast's magic-damage event where it previously carried the smaller bonus-true sub-event (the pair shifted one slot later, i.e. one damage event was inserted earlier in the ledger). The value that belongs on a Force of Will magic-damage event at these stats is 580.0."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2] (Recast), leveling attribute 'Magic Damage'",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land. | modifiers: values [70,100,130,160,190] (flat) and [65,65,65,65,65] units '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3] (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3], leveling attribute 'Bonus True Damage'",
+      "quote": "values [8.4, 12, 15.6, 19.2, 22.8]; [9.2, 9.8, 10.4, 11, 11.6] '% AP'; [1.14 x5] (quadratic AP term)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[3], leveling attribute 'Total Mixed Damage'",
+      "quote": "values [78.4, 112, 145.6, 179.2, 212.8]; [74.2, 74.8, 75.4, 76, 76.6] '% AP'; [1.14 x5] -- i.e. exactly 1.12x the magic row plus the AP-scaled true term"
+    },
+    {
+      "source": "docs/math-foundations.md sec. 2.1 / 2.2 and formula-audit table",
+      "quote": "m(R) = 100 / (100 + R) (apply_resistance) ... R_final = max(0, (R - r_flat)*(1 - r_pct/100)*(1 - p) - f) ... Penetration cannot reduce resistance below 0"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (as restated in docs/math-foundations.md sec. 2.1)",
+      "quote": "True damage ignores all resistances entirely; actual_damage = raw * 100 / (100 + resistance)"
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    }
+  ],
+
+  "residual_uncertainty": {
+    "what_could_not_be_checked": "The oracle tree excludes src/, tests/, scripts/ and the scenario definition, so the identity of ledger slot [8] itself (which event occupies it) is inferred, not read. Both 139.2 and 580.0 are wiki-exact numbers for the same cast.",
+    "why_the_verdict_still_resolves": "580.0 is the ability's own magic-damage row; 139.2 is a 24% bonus computed FROM it and cannot exist without it. Under every consistent reading of the shift (an event inserted earlier, moving the magic/true pair one slot later), slot [8] in the new tree is the Force of Will magic event, whose sourced value is exactly 580.0. The only reading that would favour the old value requires the engine to have started pricing the bonus-true event at 100% instead of the sourced 12% + 2%/100AP -- which is excluded by the fact that 580.0 equals the magic row exactly (190 + 65%*600) rather than any inflation of the true row.",
+    "confidence": "high on the arithmetic (three independent wiki rows close to the same AP=600 rank-5 point); medium-high on the slot attribution"
+  },
+
+  "verdict_detail": {
+    "verdict": "new_value_correct",
+    "one_line": "580.0 = 190 + 65% x 600 AP is Force of Will's sourced magic damage at rank 5; the old 139.2 was only its Transcendent bonus true damage (24% x 580.0), the smaller derived half of the same cast."
+  }
+}

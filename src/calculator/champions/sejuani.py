@@ -15,7 +15,7 @@ health total at every rank.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -25,11 +25,6 @@ from .slotlib import (
 )
 
 PACKET_SHA256 = "ea21bda8a36a602ed96aad725ac6f585d0e3db982035f7c61a78ebc50db90152"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Sejuani", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -50,7 +45,7 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
 
     def sejuani_max_health(unit: str, value: float) -> float | None:
         if unit == "% of her maximum health":
-            return value / 100.0 * float(ctx.stats.get("health", 0.0) or 0.0)
+            return value / 100.0 * float(ctx.stat("health") or 0.0)
         return None
 
     first = find_named_leveling(ability, "Physical Damage", 0)
@@ -72,9 +67,14 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
         swing_one + swing_two,
         "physical",
     )
+    # The two swings apply different control, so each says so itself
+    # instead of MODULE_CC answering for both: the cone "knocks back
+    # minions and monsters hit" and therefore nothing to a champion, while
+    # the lash that follows is "dealing physical damage to enemies hit and
+    # slowing them by 75% for 0.25 seconds".
     entry["parts"] = (
-        DamagePart("physical", swing_one, time_offset=0.0),
-        DamagePart("physical", swing_two, time_offset=0.0),
+        DamagePart("physical", swing_one, time_offset=0.0, cc_kind="none"),
+        DamagePart("physical", swing_two, time_offset=0.0, cc_kind="slow"),
     )
     entry["detail"] = (
         "both flail swings priced (first 5-45 + 30% AP + 4% max HP; second "
@@ -84,9 +84,31 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["W"] = _winters_wrath
-parse_abilities = build_parser(SLOTS, "Sejuani")
+# Cached kit review.  Q's dash deals magic damage while "knocking them up
+# for 0.5 seconds".  E's trap "deals magic damage, displaces slightly, and
+# stuns them for 1 second" — two immobilize kinds from one cast, which is
+# what the un-narrowed "immobilize" states.  R's bola deals magic damage
+# "and stun[s] them for 1 second"; its frost storm slows the enemies around
+# the detonation, and the cached text says outright that "the enemy hit by
+# the bola is unaffected by the storm's effects", so the stun is the whole
+# answer for the target this row prices.  W answers per swing
+# (``_winters_wrath``).  P is absent: Icebreaker's bonus rides Sejuani's
+# next attack or ability rather than emitting an ability event of its own.
+MODULE_CC = {"Q": "knockup", "E": "immobilize", "R": "stun"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sejuani",
+    PACKET_SHA256,
+    # Bristle's dash damages what it passes through once, Permafrost's
+    # trap hits its one marked target and the ice bola stops on the first
+    # champion — the boundary claim that carries MODULE_CC's reviewed
+    # answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "E", "R"}),
+    slot_parsers={
+        "W": _winters_wrath,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Winter's Wrath) prices both flail swings: the first and second "
@@ -97,8 +119,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The second swing's exact in-cast delay is not cached; both swings "
     "are priced at the cast boundary.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

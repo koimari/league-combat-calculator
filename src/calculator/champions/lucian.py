@@ -42,7 +42,7 @@ fallback text.
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 
@@ -110,6 +110,13 @@ def _relentless_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "3fe0c536a453a203c13c7bb713274cbc217785ea29e4723c090c474b7607b9e6"
 
+
+# Cached kit review: nothing Lucian casts applies crowd control.  Q is a
+# laser, W marks its targets and grants HIM movement speed, E is a dash,
+# and R is 22 shots.  (Vigilance reads an ally's immobilize; it applies
+# none of its own.)
+MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Lucian",
     PACKET_SHA256,
@@ -121,11 +128,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 3.0,
         }
     },
+    # Piercing Light's laser and Ardent Blaze's explosion each deal their
+    # packet once, at the cast — the boundary claim that carries
+    # MODULE_CC's reviewed answers into the event ledger.
+    single_hit_slots=frozenset({"Q", "W"}),
+    slot_parsers={
+        "P": _lightslinger,
+        "E": _relentless_pursuit,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["P"] = _lightslinger
-SLOTS["E"] = _relentless_pursuit
-parse_abilities = build_parser(SLOTS, "Lucian")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "R (The Culling) prices all 22 sourced shots of the 3-second "
@@ -157,4 +169,3 @@ MODULE_COVERAGE = {
     "E": "no_damage",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

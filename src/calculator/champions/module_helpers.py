@@ -9,14 +9,16 @@ champion membership or champion-specific formulas.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, Callable
 
 from ..ability_spec import DamagePart
-from .engine import DAMAGE, SlotCtx
+from .engine import DAMAGE, SlotCtx, SlotParser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    simple_damage,
 )
 
 REVIEWED_MODULE_ASSUMPTIONS = (
@@ -71,6 +73,40 @@ def typed_damage(
     return entry
 
 
+def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
+    """A :func:`slotlib.simple_damage` slot whose hit lands after a delay.
+
+    ``DamagePart.time_offset`` is seconds from the *cast start*, so an
+    ability the cache places on a post-cast delay ("strikes the target
+    location after 1.221 seconds") authors that number here instead of
+    certifying a cast-boundary hit it does not have.  Authoring it is also
+    what puts the row in the event ledger at all, which is where a
+    reviewed ``cc_kind`` becomes visible to control-armed item passives.
+
+    Where the cached entry says the delay excludes the cast time, the
+    caller adds the cached ``castTime`` and passes the sum — the offset's
+    origin is one fixed instant, so the champion module resolves the
+    source's convention rather than this helper guessing it.
+
+    Every keyword of ``simple_damage`` passes through unchanged (the
+    damage read, cooldown, and any per-part ``cc_kind``), so the delayed
+    slot and the plain one price identically.
+    """
+    base = simple_damage(**simple_damage_kwargs)
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = base(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, time_offset=delay) for part in entry.get("parts", ())
+        )
+        return entry
+
+    parse.phase = base.phase
+    return parse
+
+
 def mixed_damage(
     _ctx: SlotCtx,
     name: str,
@@ -99,6 +135,37 @@ def rank(ctx: SlotCtx) -> int:
     """Return the selected skill rank, or zero when the slot is unlearned."""
 
     return ctx.rank_for() if ctx.slot != "P" else ctx.level
+
+
+def clamp(value: float, lower: float, upper: float) -> float:
+    """Clamp *value* into ``[lower, upper]``."""
+
+    return min(upper, max(lower, value))
+
+
+def missing_hp_fraction(ctx: SlotCtx) -> float:
+    """The shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
+
+    return clamp(float(ctx.option("target_missing_hp_pct")), 0.0, 100.0) / 100.0
+
+
+def buff_window_share(ctx: SlotCtx, duration: float) -> float:
+    """Share of the fight window a self-buff lasting *duration* covers.
+
+    A ``stat_buff`` is one scalar for the whole fight, but the steroids
+    champions cast expire.  Blitzcrank's Overdrive set the rule this
+    states once: a buff shorter than the window contributes its own
+    duration's share of the bonus (a 5-second steroid in a 10-second
+    fight is half of it), and a buff at least as long as the window
+    contributes all of it.  The reserved ``fight_duration_seconds``
+    option is zero in one-rotation mode and in a direct parse call —
+    no window, so the per-cast model applies and the whole bonus lands.
+    """
+
+    window = float(ctx.option("fight_duration_seconds"))
+    if window <= duration:
+        return 1.0
+    return duration / window
 
 
 def no_damage(
@@ -158,6 +225,26 @@ def no_damage_parser(
             "parts": (),
             "detail": reason,
         }
+
+    parse.phase = "damage"
+    return parse
+
+
+def rank_gated_no_damage_parser(
+    slot: str, reason: str = "No enemy damage is listed for this ability."
+):
+    """A :func:`no_damage_parser` row that is ABSENT while unlearned.
+
+    The engine rotates every slot at every rank, so a heal/cleanse-only
+    ultimate (Milio R, Olaf R) would otherwise book a cast at rank 0 and
+    let its heal rule fire off the clamped last row.
+    """
+    inner = no_damage_parser(slot, reason=reason)
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        if ctx.rank_for() < 1:
+            return None
+        return inner(ctx)
 
     parse.phase = "damage"
     return parse

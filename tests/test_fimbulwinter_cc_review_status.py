@@ -15,7 +15,7 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions import ezreal, karma, morgana
 from src.calculator.damage import (
     FightConfig,
-    _fimbulwinter_event_coverage,
+    _control_armed_event_coverage,
     calculate_fight_damage,
 )
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -92,11 +92,18 @@ def _actor(
 
 
 class TestModuleReviewDeclaration:
-    """A module can opt in only after every ability entry is reviewed."""
+    """A module can opt in only after every ability entry is reviewed.
+
+    The declaration is ``MODULE_CC``: one kind per slot, with ``"none"``
+    meaning "reviewed, and this slot applies no control".  There is no
+    separate module-level review flag to fall out of step with it.
+    """
 
     def test_mixed_modules_do_not_claim_blanket_no_cc_review(self):
-        assert getattr(morgana, "CC_REVIEW_STATUS", None) != "reviewed_no_cc"
-        assert getattr(karma, "CC_REVIEW_STATUS", None) != "reviewed_no_cc"
+        assert set(morgana.MODULE_CC.values()) != {"none"}
+        assert set(karma.MODULE_CC.values()) != {"none"}
+        assert not hasattr(morgana, "CC_REVIEW_STATUS")
+        assert not hasattr(karma, "CC_REVIEW_STATUS")
 
     def test_ezreal_has_local_source_authority_for_no_cc_review(self):
         assert ezreal.SOURCES == [
@@ -109,7 +116,8 @@ class TestModuleReviewDeclaration:
         ]
 
     def test_ezreal_explicitly_opts_in_as_reviewed_no_cc(self):
-        assert ezreal.CC_REVIEW_STATUS == "reviewed_no_cc"
+        assert ezreal.MODULE_CC
+        assert set(ezreal.MODULE_CC.values()) == {"none"}
 
     def test_ezreal_no_cc_event_is_reviewed_and_certified(self):
         result = _fight(
@@ -120,7 +128,9 @@ class TestModuleReviewDeclaration:
         events = _ability_events(result, "Q")
         assert events
         assert all(event.get("cc_reviewed") is True for event in events)
-        assert all("cc_kind" not in event for event in events)
+        # ``"none"`` is the reviewed-no-control marker: it certifies the row
+        # and is never a live control kind.
+        assert all(event.get("cc_kind") == "none" for event in events)
         assert result["timeline_coverage"]["complete"] is True
         assert (
             "fimbulwinter_everlasting"
@@ -159,7 +169,7 @@ class TestMixedAbilityReviewStamps:
         events = _ability_events(result, "W")
         assert len(events) == 2
         assert events[0].get("cc_reviewed") is True
-        assert "cc_kind" not in events[0]
+        assert events[0].get("cc_kind") == "none"
         assert events[1].get("cc_reviewed") is True
         assert events[1].get("cc_kind") == "root"
         assert result["timeline_coverage"]["complete"] is True
@@ -178,7 +188,7 @@ class TestMixedAbilityReviewStamps:
         events = _ability_events(result, "W")
         assert len(events) == 1
         assert events[0].get("cc_reviewed") is True
-        assert "cc_kind" not in events[0]
+        assert events[0].get("cc_kind") == "none"
         assert result["timeline_coverage"]["complete"] is True
 
 
@@ -198,14 +208,45 @@ class TestFailClosedReviewState:
         ],
     )
     def test_unknown_or_degraded_ability_event_stays_coarse(self, event):
-        complete, source = _fimbulwinter_event_coverage(
+        complete, source, note = _control_armed_event_coverage(
             [get_item_by_name(FIMBULWINTER)],
             [event],
         )
         assert complete is False
         assert source == "fimbulwinter_everlasting"
+        assert "Fimbulwinter" in note and "Everlasting" in note
 
-    def test_unknown_cc_kind_emits_denial_and_never_shield(self):
+    def test_unknown_cc_kind_is_refused_and_never_shields(self):
+        """An unspellable kind is refused outright, not read as no control.
+
+        Main published a ``"unclassified_control"`` marker and answered it
+        with an ``unknown_cc_kind`` denial row.  The merged vocabulary is
+        closed (``trigger_stream.CC_KIND_VOCABULARY``) and the classifier
+        raises on anything outside it, which is the same refusal one step
+        earlier: a misspelled kind can never reach a shield decision at all.
+        """
+        holder = _actor("main:Ezreal", "main", (FIMBULWINTER,))
+        enemy = _actor("enemy:Aatrox", "enemy")
+        with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+            derive_item_support_effects(
+                holder,
+                {
+                    "damage_events": [
+                        {
+                            "time": 1.0,
+                            "source_key": "Q",
+                            "target": enemy.participant_id,
+                            "ability_instance": "Q:1",
+                            "cc_kind": "unclassified_control",
+                        }
+                    ],
+                    "cast_timeline": [{"time": 1.0, "resource_after": 900.0}],
+                },
+                [holder, enemy],
+            )
+
+    def test_an_unmarked_ability_hit_never_shields(self):
+        """The case main's denial row really guarded: no marker at all."""
         holder = _actor("main:Ezreal", "main", (FIMBULWINTER,))
         enemy = _actor("enemy:Aatrox", "enemy")
         packets = derive_item_support_effects(
@@ -217,25 +258,19 @@ class TestFailClosedReviewState:
                         "source_key": "Q",
                         "target": enemy.participant_id,
                         "ability_instance": "Q:1",
-                        "cc_kind": "unclassified_control",
+                        "damage": 100.0,
+                        "is_ability": True,
                     }
                 ],
                 "cast_timeline": [{"time": 1.0, "resource_after": 900.0}],
             },
             [holder, enemy],
         )
-        denials = [
-            packet
-            for packet in packets
-            if packet.get("source") == EVERLASTING
-            and packet.get("kind") == "item_denial"
-        ]
         shields = [
             packet
             for packet in packets
             if packet.get("source") == EVERLASTING and packet.get("kind") == "shield"
         ]
-        assert [row["reason"] for row in denials] == ["unknown_cc_kind"]
         assert shields == []
 
 

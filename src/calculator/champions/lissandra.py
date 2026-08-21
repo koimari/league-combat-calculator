@@ -6,8 +6,8 @@ herself or an enemy.
 
 P (Iceborn Subjugation) spawns a Frozen Thrall from a NEARBY ENEMY
 CHAMPION'S corpse when it dies; the thrall chases for 4 seconds, then
-shatters for the cached "Per-Level Scaling" magic damage (120-1180 by
-champion level) + 50% AP (prose-only rider, not a structured modifier).
+shatters for the cached "Per-Level Scaling" magic damage (120 : 520 over
+levels 1-18) + 50% AP (prose-only rider, not a structured modifier).
 Roadmap session 4 batch C (2026-08-21): closes the single out_of_scope
 slot with an explicit zero-damage boundary receipt (the Karthus P
 "Death Defied" / Kog'Maw P "Icathian Surprise" pattern) rather than
@@ -15,13 +15,18 @@ leaving MODULE_COVERAGE reading "out_of_scope" for a kill-triggered
 effect this calculator's deterministic 1v1 fight cannot enter (the
 target never dies in the model). The sourced would-be magnitude is
 computed and reported in the row's detail text for traceability, but
-priced at zero damage since the trigger never fires here.
+priced at zero damage since the trigger never fires here — the thrall
+is also a summoned pet on its own timeline, an axis the engine does
+not have, so nothing but the boundary receipt could be priced anyway.
 """
 
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .. import healing_helpers as _healing
+from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_named, simple_damage, with_control
+from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -31,8 +36,8 @@ def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
 
     Iceborn Subjugation spawns a Frozen Thrall whenever a nearby ENEMY
     CHAMPION dies; the thrall chases for 4 seconds then shatters for
-    the cached "Per-Level Scaling" magic damage (120-1180 by champion
-    level) plus a prose-only "+50% AP" rider (not a structured
+    the cached "Per-Level Scaling" magic damage (120 : 520 over levels
+    1-18) plus a prose-only "+50% AP" rider (not a structured
     modifier, so not read here). The deterministic single-target fight
     never kills its target, so the passive contributes zero damage
     here; this receipt documents the boundary — with the sourced
@@ -68,7 +73,7 @@ def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
 ASSUMPTIONS = [
     "Iceborn Subjugation (P) is a kill-only trigger: it fires when a "
     "nearby ENEMY CHAMPION dies, spawning a Frozen Thrall that shatters "
-    "for the sourced 120-1180 (by champion level) magic damage + 50% AP "
+    "for the sourced 120 : 520 (by champion level) magic damage + 50% AP "
     "(prose-only rider, not modeled). The deterministic 1v1 fight's "
     "target never dies, so this boundary is priced at zero damage "
     "(MODULE_COVERAGE: modeled, not out_of_scope) — the would-be "
@@ -77,58 +82,45 @@ ASSUMPTIONS = [
     "Frozen Tomb counts one ice-field hit, whether cast on Lissandra or an enemy.",
 ]
 
-SOURCES = [
-    {
-        "label": "Ice Shard",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Ice_Shard",
-        "revision_id": 4007664,
-        "revision_timestamp": "2026-04-12T10:26:56Z",
-    },
-    {
-        "label": "Ring of Frost",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Ring_of_Frost",
-        "revision_id": 3936419,
-        "revision_timestamp": "2025-07-24T17:33:52Z",
-    },
-    {
-        "label": "Glacial Path",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Glacial_Path",
-        "revision_id": 4007666,
-        "revision_timestamp": "2026-04-12T10:34:41Z",
-    },
-    {
-        "label": "Frozen Tomb",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Lissandra/Frozen_Tomb",
-        "revision_id": 4017996,
-        "revision_timestamp": "2026-05-14T13:55:57Z",
-    },
-]
+SOURCES = load_champion_sources("Lissandra")
 
+# Each slot deals its one sourced instance at the cast (the module
+# docstring's own claim), so each certifies that boundary — which is what
+# carries MODULE_CC's reviewed kinds into the event ledger.
 SLOTS = {
     "P": _iceborn_subjugation,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # Ring of Frost carries its sourced root duration onto the hit.
     "W": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
         kind="root",
         duration_attr="Root Duration",
     ),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
-    "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "R": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Lissandra")
+# Cached kit review: Q "slows enemies hit for 1.5 seconds", W deals damage
+# "and root[s] them for a duration", E's claw only decelerates itself, and
+# the R instance this module prices is the ice field, which deals damage
+# "and slow[s] them for 0.5 seconds" on either cast — the enemy cast's
+# 1.5-second stun is not the hit the module counts (ASSUMPTIONS above).
+# P's kill-boundary row prices nothing and authors no part, so it
+# declares no kind.
+MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-
-
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -147,14 +139,14 @@ def derive_self_healing(
     max_tick = _healing.extract_named(
         r, "Maximum Heal per Tick", r_rank, champion_stats
     )
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "R"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST_SCHEDULE, "R", damage_events, cast_timeline
     ):
-        trigger = _healing._trigger_fields(event)
+        trigger = _healing._trigger_fields(payment.event)
         for index in range(1, 11):
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)) + index * 0.25,
+                    "time": payment.cast_time + index * 0.25,
                     "amount": 0.0,
                     "amount_formula": _healing._missing_health_scaled_heal(
                         min_tick, max_tick
@@ -166,9 +158,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Lissandra", derive_self_healing)

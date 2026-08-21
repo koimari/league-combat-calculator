@@ -24,15 +24,17 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
+from .module_helpers import delayed_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     pct_health_per_hit,
     simple_damage,
-    with_control,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the Ablaze DoT is prose-only in
 # the JSON (P effect[1] has no leveling entry): each stack deals 2% of
@@ -44,10 +46,19 @@ _ABLAZE_DURATION_S = 4.0  # every tick is ability damage: refreshes item burns
 _ABLAZE_MAX_STACKS = 3
 _R_MAX_BOUNCES = 3
 
+# Pillar of Flame erupts on its own delay, and the cached note fixes the
+# offset's origin for us: "After a 0.627 seconds delay, Brand erupts a
+# pillar of flame at the target location that deals magic damage to
+# enemies hit", with "The delay before the eruption does not include the
+# cast time. The delay would be a total of 0.891 seconds if it included
+# the cast time."  ``time_offset`` is measured from the cast start, so the
+# sourced total is the number to author.
+_W_ERUPTION_FROM_CAST_START_S = 0.891
 
-def _r_bounces(options: dict[str, Any]) -> int:
+
+def _r_bounces(ctx: SlotCtx) -> int:
     """Pyroclasm bounces hitting the target, clamped to the in-game 1-3."""
-    return max(1, min(_R_MAX_BOUNCES, int(options.get("r_bounces", 3))))
+    return max(1, min(_R_MAX_BOUNCES, int(ctx.option("r_bounces"))))
 
 
 def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -59,7 +70,7 @@ def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    total = per_bounce * _r_bounces(ctx.options)
+    total = per_bounce * _r_bounces(ctx)
     entry = damage_entry(
         ability.get("name", "Pyroclasm"),
         rank,
@@ -74,7 +85,7 @@ def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart(
             "magic",
             per_bounce,
-            count=_r_bounces(ctx.options),
+            count=_r_bounces(ctx),
             time_offset=0.0,
             hit_interval=0.15,
         ),
@@ -98,11 +109,11 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
 
     applications = sum(1 for slot in ("Q", "W", "E") if slot in ctx.results)
     if "R" in ctx.results:
-        applications += _r_bounces(ctx.options)
+        applications += _r_bounces(ctx)
     if applications < 1:
         return None
 
-    max_hp = ctx.target.get("target_max_health", 0.0)
+    max_hp = ctx.target_stat("target_max_health")
     stacks = min(applications, _ABLAZE_MAX_STACKS)
     dot_per_stack = _ABLAZE_DOT_PCT_MAX_HP * max_hp
     parts = [DamagePart("magic", dot_per_stack, count=stacks)]
@@ -115,7 +126,7 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
             "Max Health Damage",
             ctx.level,
             ctx.target,
-            ap=ctx.stats.get("ability_power", 0.0),
+            ap=ctx.stat("ability_power"),
             ap_ratio_per_100=True,
         )
         if detonation is None:
@@ -167,36 +178,75 @@ ASSUMPTIONS = [
     "Ablaze ticks count as ability damage, keeping item burns "
     "(Liandry's Torment, Blackfire Torch) refreshed for the full 4s "
     "after Brand's last cast",
-    "Q's sourced 1.75-second stun counts as target action downtime; E's "
-    "spread doubling and R's slow remain utility-only",
+    "Q's 1.75-second stun is sourced but conditional — it is Blaze's "
+    "'Ablaze Bonus' branch, so the rotation's opening Q (the applier) "
+    "stuns nothing.  One kind per slot cannot say both, so Q stays "
+    "unreviewed and its stun is not counted as target action downtime; "
+    "E's spread doubling and R's slow remain utility-only",
 ]
 
+# Cached kit review.  E "creates a blast that deals magic damage" and its
+# Ablaze Bonus only doubles the spread range; W's eruption "deals magic
+# damage to enemies hit" and its Ablaze Bonus is "The target takes 25%
+# increased damage" — no control on either, either way.
+#
+# Q and R stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan, and the reason is not timing: Q's stun and R's slow are both
+# "Ablaze Bonus" branches, so whether a cast controls depends on the
+# target's stack state at that cast, not on the slot.  The rotation's
+# opening Q is the applier and stuns nothing; every later one does.  One
+# kind per slot cannot say both, and Q additionally authors no event
+# (its fireball has no sourced travel time).  P is the Ablaze burn row.
+MODULE_CC = {"E": "none", "W": "none"}
+
 SLOTS = {
-    "Q": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
-        kind="stun",
-        duration_attr="Stun Duration",
-        effect_index=1,
+    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": delayed_damage(
+        delay=_W_ERUPTION_FROM_CAST_START_S,
+        attr="Increased Damage",
+        dmg_type="magic",
     ),
-    "W": simple_damage(attr="Increased Damage", dmg_type="magic"),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One blast on the target Brand sets aflame, landing at the cast.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _pyroclasm,
     "P": _blaze,  # after the damage slots: reads their emissions
 }
 
-parse_abilities = build_parser(SLOTS, "Brand")
+# The revision this declaration was read from, in the shape
+# scripts/cast_dependency_audit.py will resolve against the committed
+# wiki audit once this phase's audit slice lands -- that script is not
+# in the tree yet, so today this string is shape-checked and pinned
+# equal to SOURCES by test, nothing more. It is the same parent entry
+# SOURCES publishes below.
+_WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
+
+# Head only (D-89). Q opening is the mechanic below; the rest of the seed
+# order — R and E between Q and W — is a stack-count and DPS preference,
+# so the resolver's hand seed keeps it. One edge, not three: R and E apply
+# Ablaze too, so this is the minimal declaration that keeps W's priced
+# row true in every derived order, and naming the other appliers as well
+# would constrain more than the mechanic does.
+CAST_DEPENDENCIES = (
+    CastDependency(
+        slot="W",
+        requires="Q",
+        kind="damage_enabler",
+        reason=(
+            "W is priced at its Ablaze-empowered row: this module reads "
+            "'Increased Damage', which is Blaze's 'Ablaze Bonus: the "
+            "target takes 25% increased damage' and exists only against a "
+            "target already afflicted. Q is the rotation's opener and "
+            "applies the stack ('Brand's abilities apply a stack of "
+            "Ablaze to enemies hit'), so an order that casts W first "
+            "prices a bonus nothing set up."
+        ),
+        source=_WIKI_SOURCE,
+    ),
+)
+
+parse_abilities = build_parser(SLOTS, "Brand", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Brand",
-        "revision_id": 4023911,
-        "revision_timestamp": "2026-05-30T00:40:25Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Brand")

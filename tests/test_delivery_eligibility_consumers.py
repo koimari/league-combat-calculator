@@ -545,38 +545,16 @@ class TestOrderingAndUses:
 class TestKernelStateWiring:
     def test_state_builds_typed_kernel_contracts(self):
         from src.calculator.data_fetcher import get_champion
+        from src.calculator.defensive_effects import StartingDefenses
         from src.calculator.survival.receipt_state import build_state
 
-        class Defenses:
-            starting_stasis_duration = 0.0
-            starting_stasis_source = ""
-            spell_shield_ready = False
-            spell_shield_source = ""
-            bloodthirster_shield_cap = 0.0
-            bloodthirster_starting_shield = 0.0
-            reactive_shield_amount = 0.0
-            reactive_shield_damage_type = ""
-            reactive_shield_duration = 0.0
-            reactive_shield_cooldown = 0.0
-            reactive_shield_source = ""
-            incoming_damage_multiplier = 1.0
-            incoming_damage_linger = 0.0
-            incoming_damage_cooldown = 0.0
-            incoming_damage_source = ""
-            healing_received_multiplier = 1.0
-            maw_lifeline_omnivamp_percent = 0.0
-            revive_health_amount = 0.0
-            revive_delay = 0.0
-            revive_source = ""
-            damage_deferral_fraction = 0.0
-            magic_shield = 0.0
-            physical_shield = 0.0
-            general_shield = 0.0
-            threshold_shield = 0.0
-            threshold_health = 0.0
-            max_health = 2000.0
-            health = 2000.0
-            venom_factor = 1.0
+        # The defence record is the real dataclass, not a shadow of it:
+        # the hand-listed stub this replaced went stale the moment the
+        # merged kernel read a field it had not been taught to carry
+        # (``threshold_shield_amount``).  Defaults are the neutral
+        # loadout, which is what this test wants -- it is about Braum's E,
+        # not about any item.
+        neutral_defenses = StartingDefenses()
 
         class Combatant:
             participant_id = "enemy:Braum"
@@ -588,7 +566,7 @@ class TestKernelStateWiring:
                 "bonus_magic_resistance": 0.0,
             }
             items = []
-            defenses = Defenses()
+            defenses = neutral_defenses
 
             def __init__(self) -> None:
                 self.champion_data = get_champion("Braum")
@@ -605,7 +583,11 @@ class TestKernelStateWiring:
                     },
                 )()
 
-        state = build_state(Combatant())
+        # ``below_half_healing_bonus`` is required with no default: the walk's
+        # boundary compiles the declaration and hands it over, because
+        # ``survival`` may not reach a declaration itself.  This fixture holds
+        # no item that declares one, so the compiled value is 0.0.
+        state = build_state(Combatant(), 0.0)
         eligibility = state["projectile_defense_eligibility"]
         assert isinstance(eligibility, DefenseEligibility)
         assert eligibility.window.start == 0.0

@@ -1,0 +1,92 @@
+{
+  "receipt_id": "oracle-C6-leaf35",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[3]/damage_type",
+  "old_value": "true",
+  "new_value": "magic",
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/staleness.json", "data/worklists/f2-task.md", "data/worklists/f3-task.md", "data/worklists/e3-stacks.json", "data/practice-corpus/scenarios.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] ('Force of Will'), damageType",
+      "quote": "\"damageType\": \"MAGIC_DAMAGE\""
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].description (Recast)",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[2].leveling 'Magic Damage'",
+      "quote": "values [70, 100, 130, 160, 190]; [65,65,65,65,65] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[4].description (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[4].leveling rows",
+      "quote": "'Bonus True Damage' [8.4, 12, 15.6, 19.2, 22.8] + [9.2, 9.8, 10.4, 11, 11.6] '% AP' (+ quadratic term); 'Total Mixed Damage' [78.4, 112, 145.6, 179.2, 212.8] + [74.2, 74.8, 75.4, 76, 76.6] '% AP'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q/E/R damageType and rows",
+      "quote": "Q 'Dark Sphere' damageType MAGIC_DAMAGE, 'Magic Damage' [90,125,160,195,230] + 70% AP; E 'Scatter the Weak' damageType MAGIC_DAMAGE, 'Magic Damage' [60,95,130,165,200] + 60% AP; R 'Unleashed Power' damageType MAGIC_DAMAGE, 'Magic Damage per Sphere' [80,120,160] + 20% AP"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P (Transcendent)",
+      "quote": "stacking up to 120 times ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%. | Q: Collecting 40 Splinters ... stock a Dark Sphere charge, up to a maximum of 2. | R: Collecting 100 Splinters ... execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters ...) is explicitly documented as not modeled."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "data/staleness.json -> Syndra",
+      "quote": "stale: false ... W[0] Magic Damage matched BaseDamage; W[0] Bonus True Damage matched SlowDuration (game-file cross-check: the magic base is confirmed against the game files; the true row's mapping is a known mis-pairing of the audit, not a wiki disagreement)"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_true_damage_sources": "Scanning every Syndra ability row in the cached wiki (data/champions.json): Q, E and R are all damageType MAGIC_DAMAGE with 'Magic Damage' rows only; W is damageType MAGIC_DAMAGE with a 'Magic Damage' row PLUS one 'Bonus True Damage' row that unlocks at 60 Splinters. At the scenario's 120 Splinters every Transcendent threshold (40 Q-charge, 60 W-true, 80 E-scatter, 100 R-execute, 120 +15% AP) is active, so the kit contains EXACTLY ONE true-damage instance: the W Force of Will Transcendent bonus. Everything else Syndra can deal in this fight is magic.",
+    "step_2_w_is_two_parts_not_a_retype": {
+      "claim": "The Transcendent bonus is an ADDITIVE second part on top of the magic damage, not a re-typing of W's damage to true. Verified by reconstructing the cached leveling rows from the prose formula.",
+      "formula_from_wiki_prose": "bonus_true(rank, AP) = (0.12 + 0.02 * AP/100) * (base_W(rank) + 0.65 * AP), with base_W = [70, 100, 130, 160, 190]",
+      "expansion": "= 0.12*base_W  +  (0.12*0.65 + 0.0002*base_W)*AP  +  (0.02*0.65/100)*AP^2",
+      "checks": [
+        {"rank": 1, "computed_const": 8.4, "wiki_const": 8.4, "computed_pct_AP": 9.2, "wiki_pct_AP": 9.2, "computed_total_mixed_const": 78.4, "wiki": 78.4, "computed_total_mixed_pct_AP": 74.2, "wiki_pct": 74.2},
+        {"rank": 2, "computed_const": 12.0, "wiki_const": 12.0, "computed_pct_AP": 9.8, "wiki_pct_AP": 9.8, "computed_total_mixed_const": 112.0, "wiki": 112.0, "computed_total_mixed_pct_AP": 74.8, "wiki_pct": 74.8},
+        {"rank": 3, "computed_const": 15.6, "wiki_const": 15.6, "computed_pct_AP": 10.4, "wiki_pct_AP": 10.4, "computed_total_mixed_const": 145.6, "wiki": 145.6, "computed_total_mixed_pct_AP": 75.4, "wiki_pct": 75.4},
+        {"rank": 4, "computed_const": 19.2, "wiki_const": 19.2, "computed_pct_AP": 11.0, "wiki_pct_AP": 11.0, "computed_total_mixed_const": 179.2, "wiki": 179.2, "computed_total_mixed_pct_AP": 76.0, "wiki_pct": 76.0},
+        {"rank": 5, "computed_const": 22.8, "wiki_const": 22.8, "computed_pct_AP": 11.6, "wiki_pct_AP": 11.6, "computed_total_mixed_const": 212.8, "wiki": 212.8, "computed_total_mixed_pct_AP": 76.6, "wiki_pct": 76.6}
+      ],
+      "conclusion": "All five ranks reproduce both the 'Bonus True Damage' and the 'Total Mixed Damage' rows exactly (Total Mixed = Magic + Bonus True, e.g. rank 5: 212.8 = 190 + 22.8 and 76.6% AP = 65% + 11.6%). Therefore a correct W cast at >=60 Splinters authors TWO adjacent damage events: [W magic, W true] - one true event, immediately preceded by its magic event."
+    },
+    "step_3_event_census_at_120_splinters": "Modeled damaging slots at 120 Splinters (batch-6/batch-e9-1): Q, Q2 (the 40+ second charge, a separate synthetic slot), W (2 parts), E, R (one aggregated 'per sphere' x r_spheres event). P is a pure +15% AP buff and R's 100-splinter execute is explicitly not modeled. That is 6 damage events, of which exactly 1 is true (index of W's second part) and 5 are magic. Base rate alone puts 5:1 odds on any given index being magic.",
+    "step_4_which_index_is_the_true_event": {
+      "identity": "damage_events[3] is 'true' if and only if W's magic part sits at index 2, i.e. exactly two events precede the W cast.",
+      "reasoning": "Q emits two events at 120 Splinters (Q and Q2). So 'exactly two events precede W' means W is cast immediately after Q - i.e. the Q,(Q2),W,E,R order, which is precisely the engine's DEFAULT_CAST_ORDER (Q,W,E,R with the Q2 charge folded in; data/worklists/f2-task.md). The scenario is named custom_order, i.e. its cast order is explicitly NOT the default. Every other Q-first order puts a magic event at index 3: Q,Q2,E,W,R -> W magic; Q,Q2,E,R,W -> R magic; Q,Q2,R,E,W -> E magic; Q,Q2,R,W,E -> W magic. Q-first is forced by Syndra's own setup/consume structure - E knocks back a Dark Sphere, W 'grabs the nearest Dark Sphere', and R 'grabs up to 4 nearby live ones', so all three consumers require Q's spheres first. Of the six Q-first permutations only the two in which W immediately follows Q (i.e. the default order) place the true event at index 3.",
+      "result": "Under the scenario's stated custom (non-default) order, damage_events[3] is a magic event; 'true' at index 3 is the signature of the default Q,W,E,R adjacency."
+    },
+    "step_5_cross_check_on_the_alternative": "The competing story - that the true event was correct at index 3 and the change dropped Syndra's Transcendent true typing - is not supported by the data: nothing in the wiki cache re-types W to magic at any splinter count, and such a regression would have to delete a damage event (shortening the list and shifting every later index), not merely re-label one. A single type flip at one index with the W magic/true pair still adjacent is the signature of a reordering (or of the true tag having leaked onto W's base magic part and being corrected), both of which land 'magic' at index 3."
+  },
+
+  "correct_value": "magic",
+  "caveat": "The oracle could not read the scenario definition (it lives outside data/ and docs/math-foundations.md), so the exact custom cast order is inferred, not observed. The damage-TYPE facts are certain: at 120 Splinters exactly one Syndra damage event is true (W's Transcendent bonus, additive on top of W's magic part) and all others are magic. The verdict rests on the scenario's own name asserting a non-default order, under which index 3 cannot be the W true part unless W directly follows Q. If the diff shows the W magic/true pair no longer adjacent, or the true event missing from the list entirely, this verdict flips to old_value_correct.",
+  "committed": false
+}

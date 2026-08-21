@@ -82,7 +82,6 @@ import pytest
 
 from src.calculator.ability_spec import DamagePart
 from src.calculator.bis import (
-    BIS_CERTIFIED_DEFENSIVE_EFFECTS,
     BIS_UNMODELED_DEFENSIVE_EFFECTS,
     bis_defensive_effect_receipt,
 )
@@ -94,6 +93,7 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_effects import (
     DamageInputs,
     ITEM_EFFECTS,
@@ -115,6 +115,22 @@ ON_HIT_ROW = "on_hit_Muramana"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _per_hits():
+    """Muramana's on-hit strikes, resolved through their own rule.
+
+    MERGE: the strike families left ``BuildDamageEffects`` -- a projection
+    field that defaulted to an empty tuple would price a whole family at
+    zero with nothing saying so -- so they come off their interpreter.
+    """
+    return on_hit_strike.per_hit_effects(
+        (MURAMANA,),
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=False,
+    )
 
 
 def _stats(*, is_melee: bool = False, max_mana: float = 1500.0) -> dict:
@@ -252,7 +268,7 @@ class TestTypedContract:
         assert effect.damage_type == "physical"
 
     def test_compiled_effect_contract_on_hit_branch_superseded(self) -> None:
-        per_hits = resolve_damage_effects([{"name": MURAMANA}]).per_hits
+        per_hits = _per_hits()
         assert len(per_hits) == 1
         effect = per_hits[0]
         assert effect.source.item_name == MURAMANA
@@ -262,7 +278,7 @@ class TestTypedContract:
     def test_compiled_formulas_ride_the_typed_accessors(self) -> None:
         effect = resolve_damage_effects([{"name": MURAMANA}])
         ability = effect.per_ability_hits[0]
-        on_hit = effect.per_hits[0].source
+        on_hit = _per_hits()[0].source
         inputs = DamageInputs(_stats(), 18, False, 2000.0, 2000.0)
         melee = DamageInputs(_stats(is_melee=True), 18, True, 2000.0, 2000.0)
         assert ability.raw_damage(melee) == pytest.approx(0.04 * 1500.0)
@@ -963,7 +979,11 @@ class TestOptimizerExclusion:
     def test_bis_has_no_stale_muramana_defensive_entry(self) -> None:
         # Muramana is a damage item: it must never appear as a certified
         # or unmodeled defensive effect, and the BIS receipt says so.
-        assert MURAMANA not in BIS_CERTIFIED_DEFENSIVE_EFFECTS
+        # The per-item BIS table retired; the certified half is read from
+        # the declarations now.
+        from src.calculator.interpreters import survival_ledger_certifications
+
+        assert MURAMANA not in survival_ledger_certifications()
         assert MURAMANA not in BIS_UNMODELED_DEFENSIVE_EFFECTS
         assert bis_defensive_effect_receipt(MURAMANA, {}) == {
             "status": "no_special_defensive_effect",

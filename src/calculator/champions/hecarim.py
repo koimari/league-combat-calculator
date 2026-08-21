@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import source_row
+from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -15,14 +17,12 @@ def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     percent = extract_value(ability, "Per-Level Scaling", ctx.level)
-    bonus_ms = float(ctx.options.get("bonus_movement_speed", 0.0))
+    bonus_ms = float(ctx.option("bonus_movement_speed"))
     if bonus_ms <= 0.0:
-        bonus_ms = max(0.0, float(ctx.stats.get("move_speed", 325.0)) - 325.0)
+        bonus_ms = max(0.0, float(ctx.stat("move_speed")) - 325.0)
     bonus_ad = percent * bonus_ms / 100.0
-    ctx.stats["bonus_attack_damage"] = (
-        ctx.stats.get("bonus_attack_damage", 0.0) + bonus_ad
-    )
-    ctx.stats["attack_damage"] = ctx.stats.get("attack_damage", 0.0) + bonus_ad
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
         ability.get("name", "Warpath"), ctx.level, 0.0, 0.0, "physical"
     )
@@ -43,11 +43,9 @@ def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    stacks = min(max(int(ctx.options.get("q_stacks", 0)), 0), 3)
+    stacks = min(max(int(ctx.option("q_stacks")), 0), 3)
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    multiplier = 1.0 + stacks * (
-        0.03 + 0.03 * ctx.stats.get("bonus_attack_damage", 0.0) / 100.0
-    )
+    multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
     value = base * multiplier
     return {
         "name": ability.get("name", "Rampage"),
@@ -101,7 +99,7 @@ def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    distance = min(max(float(ctx.options.get("e_charge", 1.0)), 0.0), 1.0)
+    distance = min(max(float(ctx.option("e_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
@@ -151,10 +149,18 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         extract_named(ability, "Magic damage", rank, ctx.stats, ctx.target),
         "magic",
+        event_order_certified="single_hit",
     )
 
 
-parse_abilities = build_parser(SLOTS, "Hecarim")
+# Q's cleave and W's aura only damage.  E's charge "knocks them back ...
+# stuns them for 0.25 seconds" — the first-listed immobilize is the
+# knockback.  R's riders damage on the way through and Hecarim then "fears
+# nearby enemies" on arrival.  P is the bonus-AD conversion row and applies
+# nothing.
+MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear"}
+
+parse_abilities = build_parser(SLOTS, "Hecarim", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "bonus_movement_speed",
@@ -195,45 +201,18 @@ ASSUMPTIONS = [
     "Rampage stacks and Spirit of Dread ticks are explicit ordered state; ally healing, fear and displacement are utility.",
     "Devastating Charge is one empowered basic attack and therefore shares the item/on-hit timeline.",
 ]
-SOURCES = [
-    source_row(
-        "Hecarim parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Hecarim",
-        3957268,
-        "2025-10-04T15:12:42Z",
-    ),
-    source_row(
-        "Hecarim Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/Q",
-        2863947,
-        "2019-11-03T19:57:04Z",
-    ),
-    source_row(
-        "Hecarim W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/W",
-        2864242,
-        "2019-11-03T20:09:51Z",
-    ),
-    source_row(
-        "Hecarim E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/E",
-        2864388,
-        "2019-11-03T20:12:22Z",
-    ),
-    source_row(
-        "Hecarim R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Hecarim/R",
-        2864534,
-        "2019-11-03T20:15:46Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Hecarim")
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+# HARDCODED: verify on patch updates — Spirit of Dread heals Hecarim for
+# 25% of the post-mitigation damage dealt to enemies in the area from all
+# sources, for the 4 seconds a cast is active (cached W effect[1]).  The
+# sourced cap applies only to minions and monsters, so a champion duel
+# uses the uncapped share.
+_SPIRIT_OF_DREAD_SHARE = 0.25
+_SPIRIT_OF_DREAD_WINDOW_SECONDS = 4.0
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -242,27 +221,31 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Hecarim self-healing events from its authored packet."""
-    healing = []
+    """Resolve Hecarim self-healing events from its authored packet.
+
+    Window membership comes from the engine's own cast timeline, and every
+    damaging event inside a W window (the W ticks included) is a trigger.
+    """
+    healing: list[dict[str, Any]] = []
     w_casts = [
         float(cast.get("time", 0.0))
         for cast in (cast_timeline or [])
         if cast.get("slot") == "W"
     ]
     if w_casts:
-        for event in damage_events:
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+        ):
+            event = payment.event
             event_time = float(event.get("time", 0.0))
             if not any(
-                cast_time <= event_time <= cast_time + 4.0 for cast_time in w_casts
+                cast_time <= event_time <= cast_time + _SPIRIT_OF_DREAD_WINDOW_SECONDS
+                for cast_time in w_casts
             ):
                 continue
-            amount = 0.25 * max(0.0, float(event.get("damage", 0.0)))
+            amount = _SPIRIT_OF_DREAD_SHARE * max(0.0, float(event.get("damage", 0.0)))
             _healing._heal_from_damage(healing, event, amount, "Spirit of Dread")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Hecarim", derive_self_healing)

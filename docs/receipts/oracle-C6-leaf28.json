@@ -1,0 +1,88 @@
+{
+  "receipt_id": "oracle-C6-leaf28",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/ordinal",
+  "old_value": 3,
+  "new_value": 2,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "cooldown: {modifiers: [{values: [7,7,7,7,7]}], affectedByCdr: false}; rechargeRate: [7,7,7,7,7]",
+      "use": "Dark Sphere is a recharge (charge-stocking) ability with a 7 s recharge period."
+    },
+    {
+      "id": "S2",
+      "source": "data/champions.json -> Syndra.abilities.Q effects[1].description (wiki text)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "use": "At >= 40 splinters Q holds TWO charges. The scenario's trailing '120' is the splinters option (see S6), so 120 >= 40 and the second charge is active."
+    },
+    {
+      "id": "S3",
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "cooldown: {modifiers: [{values: [12,11,10,9,8]}], affectedByCdr: true}",
+      "use": "W effective cooldown 8 s at rank 5 (12 s at rank 1), scaled by ability haste."
+    },
+    {
+      "id": "S4",
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak) and R (Unleashed Power)",
+      "quote": "E cooldown [15,15,15,15,15], castTime 0.25; R cooldown [120,100,80], castTime 0.25; R passive: 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' [10,20,30]",
+      "use": "E = 15 s; R is long-cooldown; R's passive grants Q 10/20/30 ability haste."
+    },
+    {
+      "id": "S5",
+      "source": "docs/math-foundations.md, Section 1.1 (and Section 5 audit table rows 'Ability rotation casts', 'Ability haste')",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order. ... `cd' = cd*100/(100+AH)` ... R casts exactly once per timed fight (model constraint, documented).",
+      "use": "Defines the scheduling law I reimplemented independently: greedy superposition over a shared timeline, priority = cast order, R single-cast per timed fight."
+    },
+    {
+      "id": "S6",
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.",
+      "use": "Identifies the scenario suffix '120' as the splinters option at its maximum, which is exactly the gate that enables the Q second charge (Q2 slot)."
+    },
+    {
+      "id": "S7",
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.",
+      "use": "Confirms the second Dark Sphere charge is a first-class cast slot (Q2), i.e. it occupies a cast on the shared timeline."
+    }
+  ],
+
+  "independent_computation": {
+    "interpretation_of_leaf": "cast_timeline is the ordered list of ability casts on the shared timeline (S5); index 6 is the 7th cast of the fight, and 'ordinal' is that cast's per-ability cast number (1-based) -- the only reading under which small integers like 2/3 can appear at index 6 (a global ordinal would be 7).",
+    "inputs_from_sources": {
+      "Q_recharge_s": 7.0,
+      "Q_charges_at_120_splinters": 2,
+      "W_cd_s_rank5": 8.0,
+      "E_cd_s": 15.0,
+      "R": "single cast per timed fight (S5); 80 s at rank 3 otherwise",
+      "cast_time_s": "0.25 sourced for E and R; Q/W castTime absent in cache, swept over {0.0, 0.25}",
+      "ability_haste": "swept over {0, 10, 20, 25, 30, 40}; Q additionally receives R's passive 10/20/30 AH (S4)"
+    },
+    "method": "Reimplemented the shared-timeline greedy schedule of S5 from scratch: at each step take the ability with the earliest availability time (ties broken by position in the cast order), append the cast, decrement its charge, and queue the charge's refill sequentially at max(cast_time_now, pending_refill) + effective_cooldown. Ran it for all 24 permutations of the cast order (the scenario is a *custom* order, so the order itself is unknown and must be swept) crossed with the haste/cast-time sweeps above -- 576 configurations per charge model.",
+    "worked_example_order_QWER_AH0": [
+      "t=0.00  Q #1  (charge 1 of 2 spent; refill at 7.00)",
+      "t=0.25  Q #2  (charge 2 spent; sequential refill at 14.00)",
+      "t=0.50  W #1  (ready again at 8.50)",
+      "t=0.75  E #1  (ready again at 15.75)",
+      "t=1.00  R #1  (single cast per fight, S5)",
+      "t=7.00  Q #3  (first charge back)",
+      "t=8.50  W #2  <-- cast_timeline[6], ordinal = 2"
+    ],
+    "sweep_result_two_charge_model": "index 6 = W, ordinal 2 in 576/576 configurations (all 24 cast orders x all haste/cast-time variants in the realistic 0-40 AH band).",
+    "sweep_result_one_charge_model": "index 6 = Q, ordinal 3 in 576/576 configurations -- i.e. the old value 3 is exactly what the schedule produces if Dark Sphere is given only ONE charge.",
+    "conclusion": "The old value 3 reproduces only under a Q-with-one-charge schedule. The cached wiki text (S2) states the second Dark Sphere charge is stocked at 40+ Splinters of Wrath, and this scenario pins splinters at its maximum of 120 (S6, S7), so the second charge must occupy a cast slot on the shared timeline. Consuming both charges early displaces one Q cast forward, which makes the 7th cast Force of Will's second cast -- ordinal 2. The result is invariant to the unknown custom cast order and to ability haste in the plausible range, so the conclusion does not depend on guessing the scenario's exact configuration.",
+    "residual_uncertainty": "The scenario's literal cast order, level, items and haste were not readable from the evidence tree (they live outside data/). The sweep was used precisely to make the answer order- and haste-invariant; the only assumption that could overturn it is a different meaning of 'ordinal' than per-ability cast number, and no other reading yields values in {2,3} at index 6."
+  }
+}

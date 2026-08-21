@@ -17,34 +17,6 @@ row.  One fully-sprung box prices ``w_box_attacks`` x Increased Damage.
 Boundary: box HP/stealth, arm time, trigger radius, targeting AI and
 leash range are state outside the damage model.
 
-Roadmap session 4 batch G (2026-08-21) — P (Backstab), the on-hit rider:
-unlike this batch's other four label-fix reclassifications (Ryze P, Senna
-E, Swain P, Tahm Kench E, all out_of_scope -> no_damage on a verified
-zero-formula basis), Shaco P's pinned reviewed packet mislabels a real,
-sourced formula as "no_damage." The cached P effect (data/champions.json)
-reads "Shaco's basic attacks are empowered to deal 20 : 31.18 (based on
-level) (+ 20% bonus AD) bonus physical damage when hitting an enemy from
-behind. This damage is affected by critical strike modifiers," with a
-20-value (level 1-20) "Per-Level Scaling" leveling row and
-``affects: "Enemies"`` / ``damageType: "PHYSICAL_DAMAGE"``. The game file
-(shaco.bin.json ``Characters/Shaco/Spells/ShacoPassiveAbility/
-ShacoPassive``) corroborates the AD-ratio term exactly:
-``mSpellCalculations.BasicAttackDamage`` sums a ``ByCharLevelInterpolation``
-flat term with ``StatByNamedDataValue(mStat=2, mStatFormula=2,
-AttackBonusADRatio=0.2)`` — 0.2 matching the wiki's "20% bonus AD" prose
-1:1 (mStat 2/mStatFormula 2 is this repo's pinned bonus-AD stat code, the
-same convention Senna's Q uses). The positional "from behind" condition
-has no representation in this engine's stateless single-target duel model
-(no facing/positioning state exists anywhere in the combatant layer), so
-the bonus is priced through an explicit option (``p_backstab``, default
-False — the deterministic default assumes the attacker is not positioned
-behind, matching Shaco's own ``e_execute``/``r_clone_attacks`` convention
-for caller-supplied state this engine cannot derive). The bonus rides
-every basic-attack on-hit (per-level flat + 20% bonus AD) at the flat
-per-hit amount, crit-conservative (no crit roll applied to it — the
-Riven P/Runic Blade precedent, E5-2 fix): exact at 0% crit chance,
-conservative above it.
-
 P1-2 fixes:
 - E (Two-Shiv Poison): the wiki's execute branch — "increased by 50% if
   they are below 30% of their maximum health" — is now selectable via
@@ -55,6 +27,16 @@ P1-2 fixes:
   ``r_clone_attacks`` (default 0) prices that many clone basic attacks
   (75% of Shaco's total AD physical damage each, wiki Pets prose); the
   death-explosion Magic Damage row remains the R packet's cast damage.
+
+Coverage-frontier rider: P (Backstab) is the positional auto modifier —
+"Shaco's basic attacks are empowered to deal 20 : 31.18 (based on level)
+(+ 20% bonus AD) bonus physical damage when hitting an enemy from
+behind".  Position is not something a request states, so ``p_procs`` is
+the number of attacks that land from behind; it defaults to the one
+Deceive blinks him into, and the target's facing is otherwise the
+player's problem, not the model's.  Backstab modifies the attack
+(``spelleffects = basic``) rather than applying on-hit, so item on-hit
+effects do not proc from it.
 """
 
 from __future__ import annotations
@@ -62,7 +44,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -84,45 +66,36 @@ _BOX_MAX_ATTACKS = int(_BOX_SPRUNG_SECONDS / _BOX_ATTACK_INTERVAL)  # 10
 # Hallucination; the cached R JSON carries no leveling row for it).
 _CLONE_ATTACK_AD_RATIO = 0.75
 
-# HARDCODED: verify on patch updates — Backstab's AD ratio is sourced by
-# both the wiki prose ("+ 20% bonus AD") and the game file
-# (shaco.bin.json ShacoPassive.mSpell.DataValues AttackBonusADRatio =
-# 0.2, consumed by mSpellCalculations.BasicAttackDamage's
-# StatByNamedDataValue term, mStat=2/mStatFormula=2 = bonus AD) —
-# cross-authority match on the ratio.
+# HARDCODED: verify on patch updates — the cached Backstab row carries
+# only the per-level flat term (20 : 31.18); the wiki sentence's
+# "(+ 20% bonus AD)" has no modifier in the cache at all.  The game file
+# corroborates the ratio: shaco.bin.json ShacoPassive's
+# mSpellCalculations.BasicAttackDamage sums the ByCharLevelInterpolation
+# flat term with StatByNamedDataValue(mStat=2, mStatFormula=2,
+# AttackBonusADRatio=0.2) — bonus AD, 0.2, matching the prose 1:1.
 _BACKSTAB_BONUS_AD_RATIO = 0.20
 
 
 def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: Backstab — bonus physical damage on basic attacks from behind.
-
-    "From behind" is a positional condition this engine's stateless
-    single-target duel has no facing/positioning state to derive, so the
-    bonus is priced only when the caller opts in via ``p_backstab``
-    (default False — the same convention as ``e_execute``/
-    ``r_clone_attacks`` for state this module cannot infer). When armed,
-    every basic-attack on-hit carries the sourced per-level flat term
-    (level-indexed "Per-Level Scaling", not ability rank — the passive has
-    no ranks) plus 20% of bonus AD, priced at the flat per-hit amount
-    (crit-conservative — see module docstring; exact at 0% crit).
-    """
+    """P: the from-behind bonus on however many attacks land there."""
     ability = ctx.ability()
     if ability is None:
         return None
-    armed = bool(ctx.options.get("p_backstab", False))
-    per_level = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
+    flat = extract_named(
+        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target, level=ctx.level
     )
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0) or 0.0)
-    per_hit = (per_level + _BACKSTAB_BONUS_AD_RATIO * bonus_ad) if armed else 0.0
+    per_hit = flat + _BACKSTAB_BONUS_AD_RATIO * ctx.stat("bonus_attack_damage")
+    if per_hit <= 0:
+        return None
+
+    attacks = max(0, int(ctx.option("p_procs")))
     entry = on_hit_entry(ability.get("name", "Backstab"), per_hit, "physical")
+    entry["on_hit"]["max_procs"] = attacks
     entry["detail"] = (
-        f"{per_level:g} (level {ctx.level}) + "
-        f"{_BACKSTAB_BONUS_AD_RATIO:.0%} bonus AD bonus physical damage per "
-        "basic attack from behind (crit-conservative flat amount)"
-        if armed
-        else "p_backstab is False: attacks are not landing from behind "
-        "(no bonus priced)"
+        f"{attacks} attack(s) from behind for {per_hit:.2f} bonus physical "
+        f"({flat:.2f} at level {ctx.level} + "
+        f"{_BACKSTAB_BONUS_AD_RATIO:.0%} bonus AD); the wiki's critical "
+        "strike modifier on this damage is not priced"
     )
     return entry
 
@@ -194,6 +167,10 @@ def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", raw),)
+    # One thrown dagger, one hit ("Shaco throws a dagger at the target
+    # enemy that deals magic damage ... and slows them"), so the single
+    # part is a hit the ledger can time and the slow reaches its readers.
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "increased-by-50% damage against a target below 30% of its maximum "
         "health (sourced Increased Damage row)"
@@ -212,8 +189,8 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    clone_attacks = min(max(int(ctx.options.get("r_clone_attacks", 0)), 0), 30)
-    ad = float(ctx.stats.get("attack_damage", 0.0))
+    clone_attacks = min(max(int(ctx.option("r_clone_attacks")), 0), 30)
+    ad = float(ctx.stat("attack_damage"))
     per_clone_hit = _CLONE_ATTACK_AD_RATIO * ad
     parts: list[DamagePart] = [DamagePart("magic", explosion)]
     if clone_attacks > 0:
@@ -223,7 +200,7 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
                 per_clone_hit,
                 count=clone_attacks,
                 time_offset=0.0,
-                hit_interval=1.0 / max(0.1, float(ctx.stats.get("attack_speed", 1.0))),
+                hit_interval=1.0 / max(0.1, float(ctx.stat("attack_speed"))),
             )
         )
     entry = damage_entry(
@@ -246,24 +223,34 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "3a7a57f56c3c5d06404558fb69b2bdac0244775181a3b338c6cf369b8f328ffa"
 
+
+# Reviewed crowd control, read from the cached kit.  Q (Deceive) is a
+# stealth blink and one empowered attack with no control clause.  W (Jack
+# in the Box) springs "fearing nearby enemies for a duration ... and
+# rooting them for a duration" before its volley — two immobilize kinds
+# on the same target, so the reviewed answer is the un-narrowed one, and
+# ``_jack_in_the_box`` authors the sourced fear duration as its own
+# control event beside it.  E
+# (Two-Shiv Poison) "slows them for 3 seconds".  R is deliberately
+# absent: with r_clone_attacks set its entry carries a second, separately
+# timed part, so the death-explosion part is not a hit the ledger can
+# time in every configuration.
+MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Shaco", PACKET_SHA256
+    "Shaco",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"Q"}),
+    slot_parsers={
+        "P": _backstab,
+        "W": _jack_in_the_box,
+        "E": _two_shiv_poison,
+        "R": _hallucinate,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-SLOTS["P"] = _backstab
-SLOTS["W"] = _jack_in_the_box
-SLOTS["E"] = _two_shiv_poison
-SLOTS["R"] = _hallucinate
-parse_abilities = build_parser(SLOTS, "Shaco")
 ASSUMPTIONS.extend(
     [
-        "P (Backstab) rides every basic-attack on-hit with a sourced "
-        "level-indexed flat term plus 20% bonus AD, but only when "
-        "p_backstab=True (default False, an attacker not positioned "
-        "behind the target); the engine has no facing/positioning state "
-        "to derive this on its own. Priced at the flat per-hit amount "
-        "(crit-conservative, no crit roll applied — exact at 0% crit "
-        "chance, conservative above it).",
         "W (Jack in the Box) is a summoned trap: the sprung box fires "
         "every 0.5s for its 5-second lifetime (10 shots max); "
         "w_box_attacks is the player-controlled uptime and defaults to "
@@ -284,15 +271,24 @@ ASSUMPTIONS.extend(
         "(default 0 = the player does not command the clone to attack), "
         "each dealing 75% of Shaco's total AD physical damage (wiki Pets "
         "prose, module constant).",
+        "P (Backstab) adds 20 : 31.18 (based on level) + 20% bonus AD "
+        "physical damage to a basic attack that lands from behind.  "
+        "Position is not a request input, so p_procs is the number of "
+        "attacks that land there and defaults to 1 — the attack Deceive "
+        "blinks Shaco behind the target for.  The bonus modifies the "
+        "attack rather than applying on-hit (spelleffects = basic), so "
+        "item on-hit effects do not proc from it, and the wiki's "
+        "critical-strike modifier on the bonus is not priced.",
     ]
 )
 OPTIONS.append(
     {
-        "key": "p_backstab",
-        "type": "bool",
-        "default": False,
-        "label": "P Backstab: basic attacks land from behind (bonus "
-        "physical damage)",
+        "key": "p_procs",
+        "type": "int",
+        "default": 1,
+        "min": 0,
+        "max": 20,
+        "label": "Backstab attacks (basic attacks landing from behind)",
     }
 )
 OPTIONS.append(
@@ -323,8 +319,3 @@ OPTIONS.append(
         "label": "R clone basic attacks commanded",
     }
 )
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"

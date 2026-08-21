@@ -55,15 +55,12 @@ def public_engine_mode(champion_name: str) -> str:
     return "unregistered"
 
 
-def public_loadout_summary(loadout, verified_champions: frozenset[str]) -> dict:
+def public_loadout_summary(loadout) -> dict:
     """Sanitize one resolved loadout for the stable browser response."""
     summary = loadout.public_summary()
     summary["icon"] = https_icon(summary["icon"])
     summary["item_icons"] = [https_icon(icon) for icon in summary["item_icons"]]
-    summary["verified_attacker"] = summary["champion"] in verified_champions
-    registration = engine_registration_kind(summary["champion"])
-    summary["engine_registered"] = registration is not None
-    summary["engine_registration"] = registration
+    summary["engine_registration"] = engine_registration_kind(summary["champion"])
     return summary
 
 

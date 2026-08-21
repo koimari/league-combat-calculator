@@ -34,6 +34,7 @@ from .slotlib import (
     proc_damage,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores
 # Short Fuse's per-level base but drops its AP modifier entirely.
@@ -63,7 +64,7 @@ def _short_fuse_refund_seconds(ability: dict[str, Any], level: int) -> float:
 def _short_fuse_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One Short Fuse proc: per-level JSON base + hardcoded 50% AP."""
     base = extract_value(ability, "Per-Level Scaling", ctx.level)
-    return base + SHORT_FUSE_AP_RATIO * ctx.stats.get("ability_power", 0.0)
+    return base + SHORT_FUSE_AP_RATIO * ctx.stat("ability_power")
 
 
 _short_fuse_packet = proc_damage(
@@ -105,7 +106,7 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    mines = max(1, int(ctx.options.get("mines_hit", 4)))
+    mines = max(1, int(ctx.option("mines_hit")))
     full = extract_named(ability, "Magic Damage per Mine", rank, ctx.stats, ctx.target)
     reduced = extract_named(
         ability, "Reduced Damage per Mine", rank, ctx.stats, ctx.target
@@ -123,19 +124,6 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["event_order_certified"] = "single_hit"
     return entry
-
-
-def _single_hit_certified(parser: Any) -> Any:
-    """Attach the reviewed one-hit boundary to a slot parser result."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    parse.phase = getattr(parser, "phase", "damage")
-    return parse
 
 
 OPTIONS = [
@@ -181,35 +169,40 @@ SLOTS = {
     # passives (Eclipse/Muramana/Bastionbreaker): it is not a guessed
     # multi-tick schedule, and E's mine count remains a single aggregate
     # packet under the selected ``mines_hit`` option.
-    "Q": _single_hit_certified(simple_damage(attr="Magic Damage", dmg_type="magic")),
-    "W": _single_hit_certified(simple_damage(attr="Magic Damage", dmg_type="magic")),
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "E": _hexplosive_minefield,
-    "R": _single_hit_certified(
-        by_option(
-            "r_sweet_spot",
-            {
-                True: simple_damage(attr="Epicenter Magic Damage", dmg_type="magic"),
-                False: simple_damage(attr="Reduced Damage", dmg_type="magic"),
-            },
-            default=True,
-        )
+    "R": by_option(
+        "r_sweet_spot",
+        {
+            True: simple_damage(
+                attr="Epicenter Magic Damage",
+                dmg_type="magic",
+                event_order_certified="single_hit",
+            ),
+            False: simple_damage(
+                attr="Reduced Damage",
+                dmg_type="magic",
+                event_order_certified="single_hit",
+            ),
+        },
+        default=True,
     ),
     "P": _short_fuse,
 }
 
-parse_abilities = build_parser(SLOTS, "Ziggs")
+# Satchel Charge's detonation "deal[s] magic damage to nearby enemies and
+# knock[s] them back over 0.5 seconds"; each Hexplosive Minefield mine
+# explodes "dealing magic damage and slowing them for 1.5 seconds".
+# Bouncing Bomb and Mega Inferno Bomb only explode.  P is the Short Fuse
+# empowered basic attack, not an ability event.
+MODULE_CC = {"Q": "none", "W": "knockback", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Ziggs", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ziggs",
-        "revision_id": 3960732,
-        "revision_timestamp": "2025-10-22T22:15:37Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Ziggs")

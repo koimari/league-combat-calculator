@@ -1,0 +1,84 @@
+{
+  "receipt_id": "oracle-C6-leaf46",
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh oracle subagent; evidence tree built ONLY from `git archive --format=tar HEAD data docs/math-foundations.md`; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, the diff and the plan were never read",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[7]/source",
+  "old_value": "W",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+  "confidence": 0.6,
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0] (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P (Transcendent, capstone row)",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Dark Sphere)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. | leveling: Magic Damage 90/125/160/195/230 (+70% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q (Transcendent Bonus row)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q.notes",
+      "quote": "After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Force of Will)",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location, and holds the target near her for 5 seconds. ... Recast: Syndra throws the grabbed target towards the target location, ... dealing magic damage to them and nearby enemies once they land. | leveling: Magic Damage 70/100/130/160/190 (+65% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W (Transcendent Bonus row)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. | leveling rows: 'Bonus True Damage' and 'Total Mixed Damage'"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E (Scatter the Weak)",
+      "quote": "Active: Syndra propels a wave of force in a cone ... that deals magic damage to enemies hit ... | leveling: Magic Damage 60/95/130/165/200 (+60% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R (Unleashed Power)",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. | leveling: Magic Damage per Sphere 80/120/160 (+20% AP); Minimum Magic Damage 240/360/480 (+60% AP); Maximum Magic Damage 560/840/1120 (+140% AP)"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events."
+    },
+    {
+      "source": "docs/math-foundations.md (Section 1.1 and Section 4)",
+      "quote": "Ability recasts are scheduled on one shared timeline ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order. | Model error: unmodeled mechanics (champions without named modules, coarse event ordering, ...) fail closed or are disclosed."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_decode_scenario_name": "'120' is pinned by the cached wiki text as the Splinters of Wrath cap and the Transcendence threshold (P: 'stacking up to 120 times'; 'At 120 Splinters of Wrath ... increasing her ability power by 15%'). At splinters = 120 every Transcendent gate is open: >=40 (Q stocks a second Dark Sphere charge), >=60 (W gains bonus true damage), >=80 (E scatter/slow, utility only), >=100 (R execute, documented not modeled), 120 (+15% AP). 'custom_order' means the fight's cast_order is user-supplied and overrides the DEFAULT_CAST_ORDER Q,W,E,R (data/worklists/f2-task.md).",
+    "step_2_enumerate_damage_instances_at_120_splinters": {
+      "Q (Dark Sphere conjure)": "1 magic instance, 90/125/160/195/230 (+70% AP)",
+      "Q second charge (synthetic Q2 slot)": "1 further magic instance - unlocked at >=40 splinters, therefore present at 120",
+      "W (Force of Will throw)": "2 instances at >=60 splinters: the magic throw 70/100/130/160/190 (+65% AP) PLUS the 12% (+2% per 100 AP) bonus TRUE damage. The initial grab deals no damage.",
+      "E (Scatter the Weak)": "1 magic instance, 60/95/130/165/200 (+60% AP)",
+      "R (Unleashed Power)": "one magic instance per sphere; sphere count is between 3 and 7"
+    },
+    "step_3_verify_R_sphere_bounds_from_the_wiki_rows": "Minimum Magic Damage 240/360/480 (+60% AP) / per-sphere 80/120/160 (+20% AP) = 3 spheres exactly (240/80 = 360/120 = 480/160 = 3; 60/20 = 3). Maximum Magic Damage 560/840/1120 (+140% AP) / per-sphere = 7 spheres exactly (560/80 = 840/120 = 1120/160 = 7; 140/20 = 7). This confirms the prose '3 conjured + up to 4 grabbed' => 3..7 damage events from R.",
+    "step_4_event_count_arithmetic": "Total ability damage events in one Syndra rotation at splinters = 120 = 1 (Q) + 1 (Q2) + 2 (W: magic + true) + 1 (E) + N (R spheres) = 5 + N. With N at the wiki minimum of 3 this is exactly 8 events, i.e. indices 0..7 - so damage_events[7] is the TERMINAL event of the list, produced by the last slot in the custom cast order. (With N = 7 the list is 12 long and index 7 falls inside R for any order that opens with R.)",
+    "step_5_attribution_rule": "The wiki makes Q and W non-interchangeable labels for the same physical event. Force of Will has its OWN damage row for the thrown object ('dealing magic damage to them and nearby enemies once they land', 70..190 + 65% AP); the Dark Sphere it throws does NOT re-deal Dark Sphere's conjure damage. Symmetrically, Q's damage is only the conjure ('conjures a Dark Sphere ... dealing magic damage to nearby enemies'). Therefore a W->Q flip at a fixed index cannot be a relabeling of one event - it is necessarily a re-ordering / re-enumeration of the event list.",
+    "step_6_adjudication": "At splinters = 120 the event list must contain exactly TWO Q-sourced conjure events (the base cast plus the charge stocked by the >=40-splinter Transcendent Bonus) and exactly TWO W-sourced events (throw magic + >=60-splinter true). The 120-splinter configuration is precisely what ADDS the second Q conjure; a list carrying only one Q-sourced event under-counts the Transcendent Q charge. The new value places a Q-sourced conjure at the terminal index of the 8-event minimum-sphere rotation, which is consistent with the second stocked Dark Sphere charge being the last cast of the user-supplied order. The old value requires Force of Will to be the terminal cast and its bonus-true-damage instance to occupy the terminal index. Both are mechanically legal in isolation, so the wiki does not by itself exclude the old value; the tie is broken in favour of the new value by the fact that the second Q conjure is the one instance the 120-splinter setting is there to exercise, and by the absence of any wiki constraint that would put Force of Will last (its grab requires a live Dark Sphere within 500 units, so W is a consumer of spheres and reads naturally BEFORE, not after, a trailing Q charge)."
+  },
+
+  "limitations": {
+    "not_in_evidence_tree": "The decisive input - the scenario's user-supplied cast_order, its ability ranks, its r_spheres value, and the engine's per-slot event-emission convention - lives in scripts/ and src/, which runbook R-18/R-19 forbids this oracle from reading. data/ and docs/math-foundations.md contain no golden scenario definitions (grep for 'syndra_custom_order', 'custom_order', 'manual_target' and 'damage_events' over the whole export returns nothing).",
+    "what_the_evidence_does_fix": "The damage-instance inventory at splinters = 120, the 3..7 bound on R sphere events, the 8-event total at the minimum sphere count (making index 7 the terminal event), and the rule that Q and W are never two labels for the same physical event.",
+    "what_it_does_not_fix": "Which slot the custom order places last. docs/math-foundations.md explicitly lists 'coarse event ordering' as a disclosed model-error class, not a certified-exact quantity, so no quoted formula adjudicates event position.",
+    "falsifier": "If the scenario's cast_order ends on W (Force of Will), or if r_spheres is set above 3 with an R-first order such that index 7 falls inside the R barrage, this verdict is wrong. Anyone holding the scenario definition can settle it in one look: read the last entry of the custom cast_order and the r_spheres option. If the order ends on W, flip this receipt to old_value_correct; if index 7 lands inside R, flip it to both_wrong."
+  }
+}

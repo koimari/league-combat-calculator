@@ -7,15 +7,14 @@ from pathlib import Path
 from src.calculator import healing
 from src.calculator.champions import _CHAMPION_MODULES
 from src.calculator.participant_timeline import build_participant_timeline
-from src.calculator.timeline_optimizer import (
-    CoupledSearchContext,
-    _score_with_search_context,
-)
-from src.calculator.timeline_receipts import assemble_public_receipt
 
 
 def test_each_healing_declaration_calls_a_resolver_in_its_champion_module():
-    assert len(healing.HEALING_RULE_CHAMPIONS) == 59
+    # 59 on main plus Cho'Gath, Mordekaiser and Rek'Sai, whose rules the
+    # sustain slice added.  The set is derived from the declarations, so it
+    # has no hand-list to drift from -- main's retired frozenset had already
+    # fallen two names behind its own modules.
+    assert len(healing.HEALING_RULE_CHAMPIONS) == 62
 
     for champion_name in sorted(healing.HEALING_RULE_CHAMPIONS):
         module_name = _CHAMPION_MODULES[champion_name]
@@ -27,20 +26,32 @@ def test_each_healing_declaration_calls_a_resolver_in_its_champion_module():
         assert declaration.resolver.__module__ == module.__name__
 
 
-def test_retired_healing_dispatcher_has_no_champion_name_formula_chain():
-    source = Path("src/calculator/healing_legacy.py").read_text()
+def test_no_global_dispatcher_survives_the_champion_owned_migration():
+    """The retired dispatcher is gone, module and all.
 
+    A champion-name formula chain is exactly what module ownership
+    replaced, so neither the retired file nor a name chain inside the
+    entrypoint may come back.
+    """
+    assert not Path("src/calculator/healing_legacy.py").exists()
+    assert not Path("src/calculator/champions/healing_rules.py").exists()
+
+    source = Path("src/calculator/healing.py").read_text(encoding="utf-8")
     assert "if name ==" not in source
     assert "elif name ==" not in source
-    assert "_legacy_derive_self_healing" in source
 
 
 def test_optimizer_and_public_receipt_assembly_have_named_owners():
-    assert CoupledSearchContext.__module__ == "src.calculator.timeline_optimizer"
-    assert _score_with_search_context.__module__ == "src.calculator.timeline_optimizer"
-    assert assemble_public_receipt.__module__ == "src.calculator.timeline_receipts"
+    """The compiled score path and receipt assembly live in ``program/``.
+
+    Main's split of ``participant_timeline`` into ``timeline_optimizer`` /
+    ``timeline_receipts`` was a second copy of that path (it broke the
+    one-walk-call-site gate in ``test_program_structure``); neither file
+    may come back.
+    """
+    assert not Path("src/calculator/timeline_optimizer.py").exists()
+    assert not Path("src/calculator/timeline_receipts.py").exists()
 
     composer_source = inspect.getsource(build_participant_timeline)
-    assert "return assemble_public_receipt(" in composer_source
     assert '"events": [' not in composer_source
     assert '"support_events": [' not in composer_source

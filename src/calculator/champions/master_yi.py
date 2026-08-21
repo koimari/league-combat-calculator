@@ -19,31 +19,41 @@ Maximum Heal Per Tick rows by the fighter's live missing health.  W's
 damage-reduction window is a defensive state the damage model does not
 stage.
 
-R (Highlander) is a self-buff (unbounded movement speed, bonus attack
-speed, ability haste, tenacity while active) with no enemy-damage
-formula anywhere in the cached packet — the pinned packet already
-declares it ``kind: "no_damage"`` (a sourced zero-damage cast row), so
-it was never an enemy-damage gap; MODULE_COVERAGE was simply stale,
-still reading "out_of_scope" for a slot that already casts its state
-row (it is in ``DEFAULT_CAST_ORDER`` and already appears in the fight
-breakdown at zero damage). Roadmap session 4 batch D (2026-08-21)
-reclassifies R to "no_damage" (the Cassiopeia/Cho'Gath/Jarvan
-precedent) — a documentation-only fix with zero fight-computation
-change.
+R (Highlander) is the attack-speed steroid: the cached "Bonus Attack
+Speed" row (25/45/65%) over the sourced 7-second window, emitted as a
+BUFF-phase ``stat_buff`` so the fight engine's auto count scales with
+it.  R's movement speed, its slow/cripple immunity and its takedown
+cooldown refund have no channel and stay named.
 """
 
 from typing import Any
 
-from .engine import ONHIT, SlotCtx, build_parser
+from .. import healing_helpers as _healing
+from .engine import BUFF, ONHIT, SlotCtx
+from .healing_contract import declare_healing_rule
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import ability_on_hit_entry, damage_entry, extract_cooldown
+from .slotlib import (
+    STEROID_ZERO,
+    ability_on_hit_entry,
+    damage_entry,
+    extract_cooldown,
+    extract_value,
+)
 
 PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb76783164"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Master Yi", PACKET_SHA256)
-)
-PACKET_SPEC = _packet_slots.packet_spec
+# Alpha Strike's priced hit is its primary damage, and the cached entry
+# puts that after the whole vanish: Master Yi "reappears ... and then
+# becomes able to act again[ after 0.165 seconds. ][ 1.087 seconds total
+# after the start of the cast with 4 bounces. ]" with the note "Alpha
+# Strike's primary damage applies after Master Yi reappears."  The cached
+# number is already measured from the cast start, which is where
+# ``time_offset`` starts.  The lesser marks that "detonate instantly upon
+# application to deal 25% damage" are a multi-target branch this
+# single-target packet does not price.
+_Q_REAPPEAR_SECONDS = 1.087
+
 
 # HARDCODED: verify on patch updates — Double Strike's 3-hit cadence and
 # the second strike's 50% AD are wiki prose; the JSON carries no
@@ -51,13 +61,18 @@ PACKET_SPEC = _packet_slots.packet_spec
 _DOUBLE_STRIKE_STACKS = 3
 _SECOND_STRIKE_AD_RATIO = 0.5
 
+# HARDCODED: verify on patch updates — Highlander's window is cached R
+# prose ("For the next 7 seconds, he gains ghosting, bonus attack speed,
+# ..."); the percentage is the JSON's "Bonus Attack Speed" row.
+_R_DURATION_SECONDS = 7.0
+
 
 def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: every 3rd auto strikes twice — second strike 50% AD physical."""
     ability = ctx.ability()
     if ability is None:
         return None
-    ad = ctx.stats.get("attack_damage", 0.0)
+    ad = ctx.stat("attack_damage")
     per_proc = _SECOND_STRIKE_AD_RATIO * ad
     return ability_on_hit_entry(
         ability.get("name", "Double Strike"),
@@ -100,13 +115,66 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _double_strike
-SLOTS["W"] = _meditate
-parse_abilities = build_parser(SLOTS, "Master Yi")
+def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the 25/45/65% attack-speed steroid, priced onto the auto count."""
+    ability = ctx.ability("R")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("R")
+    if rank < 1:
+        return None
 
-OPTIONS = list(_packet_options)
-ASSUMPTIONS = list(_packet_assumptions) + [
+    granted = extract_value(ability, "Bonus Attack Speed", rank)
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    bonus_as = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
+    entry = damage_entry(
+        ability.get("name", "Highlander"),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"+{granted:g}% bonus attack speed for {_R_DURATION_SECONDS:g}s "
+        f"({bonus_as:g}% over the fight window); the row's "
+        f"+{movement:g}% movement speed, the crowd-control immunities and "
+        "the takedown cooldown refund have no channel"
+    )
+    return entry
+
+
+_highlander.phase = BUFF
+
+
+# Reviewed crowd control, read from the cached kit.  Alpha Strike marks
+# and detonates for damage and on-hit effects only — nothing in the entry
+# controls the enemies it strikes (Master Yi is the one made unable to
+# act).  P is an on-hit rider, W a self-channel, R a self-buff.
+#
+# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan,
+# and the reason is not timing: Wuju Style "empowers his basic attacks
+# within the next 5 seconds to deal bonus true damage on-hit", but the
+# reviewed packet prices it as one direct hit on the E row.  Certifying
+# that hit at the cast boundary would state an instant the ability does
+# not have — the rider lands on a later basic attack — so the row needs
+# to move onto the on-hit stream before it can carry any marker.
+MODULE_CC = {"Q": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Master Yi",
+    PACKET_SHA256,
+    packet_part_timings={"Q": {"time_offset": _Q_REAPPEAR_SECONDS}},
+    slot_parsers={
+        "P": _double_strike,
+        "W": _meditate,
+        "R": _highlander,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Double Strike procs on every 3rd basic attack; the second strike "
     "deals 50% AD physical damage — wiki prose (module constants)",
     "Only basic attacks generate stacks (Alpha Strike explicitly does "
@@ -119,22 +187,25 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "Maximum Heal Per Tick by the fighter's live missing health "
     "(healing.py 'Master Yi' rule); the channel's damage reduction is "
     "a defensive state not staged by the damage model.",
-    "R (Highlander) is a self-buff (unbounded move speed, attack speed, "
-    "ability haste, tenacity) with no enemy-damage formula; it emits "
-    "the packet's sourced zero-damage row (MODULE_COVERAGE: no_damage, "
-    "not out_of_scope). R is in DEFAULT_CAST_ORDER and already casts.",
+    "R (Highlander) grants the cached Bonus Attack Speed row "
+    "(25/45/65%) for the sourced 7 seconds; the fight engine applies it "
+    "to the auto count, time-weighted by the share of the fight window "
+    "the buff covers.  R's bonus movement speed, slow/cripple immunity "
+    "and takedown cooldown refund are named rather than priced.",
 ]
-SOURCES = list(_packet_sources)
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "no_damage")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+# No MODULE_COVERAGE: all five slots carry a priced row now — W's is the
+# healing rule's self-heal ledger, R's the attack-speed stat_buff — which
+# is exactly what the contract derives from SLOTS.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# Meditate channels for up to 4 seconds, healing Master Yi every 0.5
+# seconds, increased by 0% : 100% (based on missing health) between the
+# sourced Minimum Heal Per Tick and Maximum Heal Per Tick rows (8 ticks;
+# Minimum/Maximum Total Heal == 8 x per-tick at every rank).  W deals no
+# enemy damage, so the W cast timeline is the sourced trigger — the heal
+# is paid on the channel's own tick schedule, not inferred from hits.
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -171,9 +242,5 @@ def derive_self_healing(
                 )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Master Yi", derive_self_healing)

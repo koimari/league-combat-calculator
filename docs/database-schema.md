@@ -76,29 +76,20 @@ app is not in `TESTING` (Redis holds the entries when `REDIS_URL` is set).
 | `actual` | JSON | |
 | `source` | varchar(20) | `manual` \| `combat_log` \| `practice_tool` |
 | `matched` | boolean | |
-| `delta` | float null | signed observed-minus-predicted total damage; NULL for manual P6-style rows without an engine prediction, always populated by the P7 receipt endpoints |
+| `delta` | float null | signed observed-minus-predicted total damage; `POST /api/receipts` (the only writer) always populates it, NULL only on legacy rows that predate the receipt endpoint |
 | `note` | text null | |
 | `created_at` | timestamp | |
 
-P7 receipt rows store the engine prediction in `expected` (`{"tdd": …,
+Receipt rows store the engine prediction in `expected` (`{"tdd": …,
 "sources": {…}}`) and the user's observation in `actual` (same shape), so
 `delta` can be re-derived and the signed percentage bias
 (`delta / expected.tdd * 100`, see `db.validation_summary`) aggregated per
 champion.
 
-### `staleness_state` — per-patch staleness bookkeeping
-
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | integer PK | |
-| `patch` | varchar(20) | **unique** |
-| `payload` | JSON | |
-| `checked_at` | timestamp | |
-
 ### `cache_counters` — shared cache hit/miss counters
 
 Single row (`id = 1`) updated atomically (`INSERT … ON CONFLICT DO UPDATE`)
-so every gunicorn worker reports the same totals for `/api/cache-status`.
+so every gunicorn worker reports the same totals for `/api/health/deep`.
 
 | Column | Type |
 | --- | --- |
@@ -109,14 +100,14 @@ so every gunicorn worker reports the same totals for `/api/cache-status`.
 
 ### `metrics_events` — anonymous product events (P1b beta metrics)
 
-Funnel events recorded by `POST /api/metrics/event`.  No PII: `session_id`
+Anonymous product events recorded by `POST /api/metrics/event`.  No PII: `session_id`
 is a random first-party cookie id, never an account identifier.  See
 `docs/beta-metrics.md` for the metric definitions.
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | integer PK | |
-| `event` | varchar(50) | indexed; whitelisted (`quick_complete`, `page_view`) |
+| `event` | varchar(50) | indexed; whitelisted in `src/db.py::METRIC_EVENT_NAMES` (currently `page_view`) |
 | `session_id` | varchar(100) null | indexed; the `scryglass_anon` cookie value |
 | `took_ms` | integer null | wall-clock duration of the instrumented flow |
 | `payload` | JSON | optional bounded extras |
@@ -135,9 +126,7 @@ step.
 | Endpoint | Behavior |
 | --- | --- |
 | `POST /api/builds` | save a build → `{"build_id": …}` (201) |
-| `GET /api/builds/<id>` | build payload or 404 |
 | `POST /api/share` | `{"build_id": …, "slug": …}` → `{"token": …, "url": "/api/share/<token>"}` (201) |
 | `GET /api/share/<token>` | build payload + `share` block; increments `views` |
-| `POST /api/feedback` | record validation feedback → `{"feedback_id": …}` (201) |
-| `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (limit ≤ 200, default 50) |
-| `GET /api/cache-status` | `{hits, misses, cached_entries, cache_enabled, cache_backend, database_configured, database}` |
+| `POST /api/receipts` | record one game-receipt observation; the engine computes `expected`/`matched`/`delta` itself → `{"feedback_id": …, …}` (201) |
+| `GET /api/feedback?champion=&source=&limit=` | recent feedback, newest first (`limit` 1–200, default 50; anything else is a 400) |

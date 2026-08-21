@@ -27,25 +27,29 @@ wiki's Malzahar pets entry and the ability JSON:
   Voidling 0.5s later (the ability description); voidlings attack the
   target from their summon time.
 
-P (Void Shift) periodically grants brief spell-untargetability — pure
-defensive state, no enemy damage. The pinned packet already declares it
-``kind: "no_damage"`` (a sourced zero-damage row), so it was never a
-gap in enemy-damage coverage; MODULE_COVERAGE was simply stale, still
-reading "out_of_scope" for a slot that already emits its state row.
-Roadmap session 4 batch D (2026-08-21) reclassifies P to "no_damage"
-(the Cassiopeia/Cho'Gath/Jarvan precedent) rather than leaving an
-already-covered passive misreported as a gap. P is not a cast slot
-(``rotation_resolver`` only schedules Q/Q2/W/E/R), so this is a
-documentation-only fix with zero fight-computation change.
+P (Void Shift) is a periodic 90% damage reduction with crowd-control
+immunity until it breaks — pure defensive self-state, no enemy damage.
+The pinned packet already declares it ``kind: "no_damage"`` (a sourced
+zero-damage row), so it was never a gap in enemy-damage coverage;
+MODULE_COVERAGE was simply stale, still reading "out_of_scope" for a
+slot that already emits its state row. Roadmap session 4 batch D
+(2026-08-21) reclassifies P to "no_damage" (the Cassiopeia/Cho'Gath/
+Jarvan precedent) rather than leaving an already-covered passive
+misreported as a gap. P is not a cast slot (``rotation_resolver`` only
+schedules Q/Q2/W/E/R), so this is a documentation-only fix with zero
+fight-computation change.  (Damage *taken* remains an axis the engine
+does not have.)
 """
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
-from .engine import SlotCtx, build_parser
+from .inputs import champion_stat
+from .engine import SlotCtx
 from .module_helpers import rank
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -118,8 +122,8 @@ def _voidling_attack_damage(
     return (
         flat_level
         + flat_rank
-        + bad_ratio / 100.0 * stats.get("bonus_attack_damage", 0.0)
-        + ap_ratio / 100.0 * stats.get("ability_power", 0.0)
+        + bad_ratio / 100.0 * champion_stat(stats, "bonus_attack_damage")
+        + ap_ratio / 100.0 * champion_stat(stats, "ability_power")
     )
 
 
@@ -133,6 +137,10 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     default is the sourced cadence truncated to the fight window.  The
     proc row is fixed-count — re-casting W refreshes the swarm in-game,
     which the option models instead of multiplying by W casts.
+
+    An ``auto_attacks_only`` window casts nothing, so there is no swarm:
+    the Zz'Rot stacks come from casting another ability and the Voidlings
+    from W's Active, neither of which a basic attack does.
     """
     ability = ctx.ability()
     if ability is None:
@@ -140,8 +148,10 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     w_rank = ctx.rank_for()
     if w_rank < 1:
         return None
+    if ctx.option("auto_attacks_only"):
+        return None
 
-    count = min(max(int(ctx.options.get("voidling_count", 3)), 2), 4)
+    count = min(max(int(ctx.option("voidling_count")), 2), 4)
     per_attack = _voidling_attack_damage(ability, ctx.level, w_rank, ctx.stats)
     interval = 1.0 / _voidling_attack_speed(ctx.level)
     window = float(ctx.options.get("fight_duration_seconds", _VOIDLING_DEFAULT_WINDOW))
@@ -253,25 +263,43 @@ def _nether_grasp(ctx: SlotCtx) -> dict[str, Any] | None:
 
 PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8f"
 
+# Call of the Void lands on its own delay: Malzahar "opens two portals to
+# the void centered at the target location ... After 0.4 seconds, enemies
+# between the portals are dealt magic damage and silenced for a duration"
+# (data/champions.json Malzahar Q).  The cached entry attaches no
+# cast-time qualifier to the number, so it is read from the cast start as
+# written.
+_Q_PORTAL_SECONDS = 0.4
+
+
+# Reviewed crowd control, read from the cached kit.  Call of the Void's
+# delayed hit leaves the enemies it damages "silenced for a duration".
+# Malefic Visions only deals "magic damage every 0.25 seconds over 4
+# seconds" and spreads on death.  Nether Grasp's channel is
+# "suppressing and revealing the target and dealing them magic damage
+# every 0.25 seconds" — the suppression is what the damaged target takes.
+# W's cast authors no damage part (the swarm rides its own pet row, which
+# is not an ability event) and P is a self-buff.
+MODULE_CC = {"Q": "silence", "E": "none", "R": "suppression"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Malzahar", PACKET_SHA256
+    "Malzahar",
+    PACKET_SHA256,
+    packet_part_timings={"Q": {"time_offset": _Q_PORTAL_SECONDS}},
+    # Override the packet DoT rows with the full-total tick pricing above,
+    # and the packet's single-attack W with the sourced voidling swarm.
+    slot_parsers={
+        "W": _void_swarm,
+        "E": _malefic_visions,
+        "R": _nether_grasp,
+    },
+    # The portals' sourced Silence Duration row carries MODULE_CC's reviewed
+    # kind and its control atom onto the packet's Q entry.
+    slot_wrappers={
+        "Q": partial(with_control, kind="silence", duration_attr="Silence Duration"),
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-# Override the packet DoT rows with the full-total tick pricing above and
-# the packet's single-attack W with the sourced voidling swarm, then
-# rebuild the parser so the module's parse_abilities sees them.
-SLOTS = {
-    **SLOTS,
-    "Q": with_control(
-        SLOTS["Q"],
-        kind="silence",
-        duration_attr="Silence Duration",
-    ),
-    "W": _void_swarm,
-    "E": _malefic_visions,
-    "R": _nether_grasp,
-}
-parse_abilities = build_parser(SLOTS, "Malzahar")
 OPTIONS = [
     *OPTIONS,
     {
@@ -311,9 +339,14 @@ ASSUMPTIONS = [
     "One summon wave per fight window; re-casting W refreshes the swarm "
     "in-game, modeled by the voidling_count option (up to 4) instead of "
     "multiplying the proc row by W casts",
-    "P (Void Shift) grants brief periodic spell-untargetability; it is "
-    "pure defensive state with no enemy damage, so it emits the packet's "
-    "sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
+    "An autos-only fight summons no swarm at all (the pipeline states "
+    "this with the auto_attacks_only reserved option): the cached W text "
+    "sources the Zz'Rot stacks to 'when he casts another ability' and the "
+    "Voidlings to 'Active: Malzahar consumes all Zz'Rot Swarm stacks "
+    "and... summons a Voidling', so a basic attack produces neither",
+    "P (Void Shift) is periodic defensive self-state (damage reduction "
+    "with crowd-control immunity) with no enemy damage, so it emits the "
+    "packet's sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
     "out_of_scope). P is not a cast slot in this engine's rotation.",
 ]
 
@@ -321,4 +354,3 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

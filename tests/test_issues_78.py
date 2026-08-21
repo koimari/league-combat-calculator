@@ -8,7 +8,7 @@ that pin the contract to the actual frontend:
   data-capability-field / control attribute that ``static/js/app.js`` or
   ``templates/index.html`` mounts maps to a declared capability token;
 * every declared supported token is actually referenced by the frontend;
-* the API responses that feed controls (``/api/config``, ``/api/abilities``,
+* the API responses that feed controls (``/api/config``, ``/api/champions``,
   ``champion_options_meta``, ``item_input_options_meta``) expose exactly the
   capability-declared fields.
 
@@ -37,11 +37,13 @@ FRONTEND = f"{APP_JS}\n{TEMPLATE}"
 
 # data-picker values and the participant fields they mount.  ``data-picker``
 # is the shared mount point for the champion, item (build slots and quest
-# boots), and keystone pickers.
+# boots), and rune-page pickers.
 DATA_PICKER_VALUES = {
     "champion": [("main", "champion"), ("enemy", "champion"), ("ally", "champion")],
     "item": [("main", "items"), ("enemy", "items"), ("ally", "items")],
     "keystone": [("main", "keystone")],
+    "minor-rune": [("main", "minor_runes")],
+    "stat-shard": [("main", "stat_shards")],
 }
 
 # Literal data-path templates the frontend renders.  Values resolve to the
@@ -50,13 +52,14 @@ DATA_PICKER_VALUES = {
 DATA_PATH_VALUES = {
     "attacker.champion": [("main", "champion")],
     "attacker.keystone${side}": [("main", "keystone")],
+    "attacker.minorRunes${side}.${index}": [("main", "minor_runes")],
+    "attacker.statShards${side}.${index}": [("main", "stat_shards")],
     "${root}.${index}.champion": [("enemy", "champion"), ("ally", "champion")],
     "${path}": [("main", "items"), ("enemy", "items"), ("ally", "items")],
 }
 
 # data-proto-range values (the fight-window range controls).
 DATA_PROTO_RANGE_VALUES = {
-    "rotations": ("scenario", "rotations"),
     "duration": ("scenario", "window"),
     "aaUptime": ("scenario", "auto_attack_uptime"),
 }
@@ -67,13 +70,19 @@ DATA_PROTO_RANGE_VALUES = {
 CONTROL_ATTRIBUTES = {
     # main loadout
     "data-ability-rank": [("main", "ability_ranks")],
-    "data-ability-casts": [("main", "ability_casts")],
-    "data-ability-hits": [("main", "ability_hits")],
     "data-ability-variant": [("main", "ability_variants")],
     "data-role": [("main", "role")],
     "data-role-quest": [("main", "role_quest_complete")],
     "data-include-boots": [("main", "include_boots")],
     "data-champion-option": [("main", "champion_options")],
+    "data-rune-option": [("main", "rune_options")],
+    # The rune page dialog: one pick control for keystone, minor and shard
+    # rows; the duel rune rows (data-picker) open it at their section.
+    "data-rune-pick": [
+        ("main", "keystone"),
+        ("main", "minor_runes"),
+        ("main", "stat_shards"),
+    ],
     "data-keystone-option": [("main", "keystone")],
     "data-keystone-option-key": [("main", "keystone")],
     "data-copy": [("main", "items")],
@@ -96,6 +105,9 @@ CONTROL_ATTRIBUTES = {
     # shared participant controls
     "data-level-path": [("main", "level"), ("enemy", "level"), ("ally", "level")],
     "data-level-delta": [("main", "level"), ("enemy", "level"), ("ally", "level")],
+    "data-level-range": [("main", "level"), ("enemy", "level"), ("ally", "level")],
+    "data-level-set": [("main", "level"), ("enemy", "level"), ("ally", "level")],
+    "data-roster-level-all": [("enemy", "level"), ("ally", "level")],
     "data-stack-path": [
         ("main", "item_options"),
         ("enemy", "item_options"),
@@ -108,9 +120,8 @@ CONTROL_ATTRIBUTES = {
     ],
     "data-dummy-stat": [("enemy", "target_stats")],
     "data-reset-dummy-stats": [("enemy", "target_stats")],
-    # scenario controls (legacy fight controls keep the same descriptors)
-    "data-fight": [("scenario", "rotations"), ("scenario", "window")],
-    "data-fight-range": [("scenario", "window"), ("scenario", "auto_attack_uptime")],
+    # scenario controls
+    "data-fight-mode": [("scenario", "actions")],
     # feature controls
     "data-bis-path": [("controls", "best_in_slot")],
     "data-bis-objective": [("controls", "best_in_slot")],
@@ -147,6 +158,11 @@ EXCLUDED_ATTRIBUTES = {
     "data-option-type",
     "data-item-option-id",
     "data-item-option-key",
+    "data-rune-name",
+    "data-rune-side",
+    "data-rune-row",
+    # The rune page section a duel row scrolls to; display only.
+    "data-rune-focus",
     "data-build",
     "data-theme",
     "data-review-action",
@@ -155,6 +171,8 @@ EXCLUDED_ATTRIBUTES = {
     # #155: a read-only key tying an event-ledger timeline lane to its table
     # row. It carries no input and drives no payload field.
     "data-event-index",
+    # The ability card's slot key, for styling and tests; it carries no input.
+    "data-ability-slot",
     # Removed quick mode (2026-08-06): the data-quick-* attrs survive only in
     # dead JS retained for rollback safety; no quick control is mounted.
     "data-quick-pick",
@@ -178,12 +196,13 @@ CONTROL_IDS = {
     "championPicker": ("main", "champion"),
     "roleSelect": ("main", "role"),
     "levelInput": ("main", "level"),
+    "levelRange": ("main", "level"),
+    "rosterLevelMain": ("enemy", "level"),
     "questToggle": ("main", "role_quest_complete"),
     "bootsToggle": ("main", "include_boots"),
     "bisButton": ("controls", "best_in_slot"),
     "addEnemy": ("controls", "roster_membership"),
     "addAlly": ("controls", "roster_membership"),
-    "rotationRange": ("scenario", "rotations"),
     "durationRange": ("scenario", "window"),
     "uptimeRange": ("scenario", "auto_attack_uptime"),
     "uptimeModeToggle": ("scenario", "auto_attack_uptime_mode"),
@@ -201,6 +220,8 @@ CONTROL_IDS = {
     "pickerSearch": ("controls", "picker"),
     "bis": ("controls", "best_in_slot"),
     "bisClose": ("controls", "best_in_slot"),
+    "runePage": ("main", "keystone"),
+    "runePageClose": ("main", "keystone"),
     "addPracticeEnemy": ("controls", "roster_membership"),
     # #152: the shortcut out of the blocked Best-in-slot state; it delegates
     # to #addEnemy, so it belongs to the same capability.
@@ -397,11 +418,11 @@ def test_api_responses_expose_exactly_the_capability_declared_fields():
     config = client.get("/api/config").get_json()
     contract = config["capabilities"]
 
-    # Scenario limits and rotations are served verbatim to the range controls.
+    # Scenario limits are served verbatim to the range controls; the engine's
+    # rotation count is not a public control.
     assert config["input_limits"] == contract["scenario"]["limits"]
-    range_max = re.search(r'id="rotationRange"[^>]*max="(\d+)"', TEMPLATE)
-    assert range_max is not None
-    assert contract["scenario"]["rotations"]["max"] == int(range_max.group(1))
+    assert "rotations" not in contract["scenario"]["fields"]
+    assert "rotationRange" not in TEMPLATE
 
     # champion_options_meta feeds the champion-option controls.
     catalog = contract["catalogs"]["champion_options"]
@@ -426,9 +447,10 @@ def test_api_responses_expose_exactly_the_capability_declared_fields():
     assert isinstance(config["keystones"], list)
     assert config["keystones"]
 
-    # /api/abilities exposes exactly the declared slots and entry keys, which
+    # /api/champions exposes exactly the declared slots and entry keys, which
     # feed the ability-rank and per-ability option controls.
-    abilities = client.get("/api/abilities/Ahri").get_json()
+    champions = client.get("/api/champions").get_json()
+    abilities = next(c for c in champions if c["name"] == "Ahri")["abilities"]
     catalog = contract["catalogs"]["abilities"]
     assert list(abilities) == list(catalog["slots"])
     for entry in abilities.values():

@@ -19,6 +19,8 @@ from src.calculator.champions import (
 )
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import bard
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -196,9 +198,10 @@ class TestQCosmicBinding:
 
 class TestNonDamageSlots:
     """W (ally heal), E (portal), R (stasis) deal no enemy damage but each
-    emits an explicit, user-visible zero-damage row (module_helpers.no_damage)
-    instead of staying silently absent — same pattern used across dozens of
-    other champion modules (e.g. janna.py, milio.py) for utility slots."""
+    emits an explicit, user-visible zero-damage row instead of staying
+    silently absent — W through ``slotlib.support_cast`` (so the rotation
+    casts it and the ally-support scanner prices the sourced heal), E and R
+    through ``module_helpers.no_damage``."""
 
     @pytest.mark.parametrize("slot", ["W", "E", "R"])
     def test_slot_present_zero_damage(self, bard_data, slot) -> None:
@@ -221,6 +224,20 @@ class TestNonDamageSlots:
         entry = _parse(bard_data)["R"]
         assert entry["name"] == "Tempered Fate"
         assert "0" in entry["detail"] and "true damage" in entry["detail"]
+
+    def test_w_is_a_zero_damage_cast_the_support_scanner_prices(
+        self, bard_data
+    ) -> None:
+        """Caretaker's Shrine: heal 200.0 to an ally at rank 5, 0 AP.
+
+        The row is the cached "Maximum Heal" (50/87.5/125/162.5/200 + 70% AP)
+        — the fully-charged shrine; the slot exists only so the rotation
+        casts it (see tests/test_e8_support.py for the coupled probe).
+        """
+        shrine = _parse(bard_data)["W"]
+
+        assert shrine["total_raw"] == 0.0
+        assert shrine["parts"] == ()
 
 
 # ---------------------------------------------------------------------------
@@ -313,3 +330,30 @@ class TestFightEngineIntegration:
         meeps = result["breakdown"]["on_hit_ability_passive"]
         assert meeps["count"] == 2
         assert meeps["total_damage"] == pytest.approx(2 * 42.0, abs=0.1)
+
+
+class TestReviewedCrowdControl:
+    """Bard's reviewed crowd control, and what declaring it clears.
+
+    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+    whether an ability event was a control event; an ability packet that
+    never says makes the whole timed fight fall back to coarse ordering.
+    ``MODULE_CC`` is where this kit answers, read from the cached text, and
+    the probe below is the reason it exists.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Bard")
+        assert bard.MODULE_CC == {"Q": "slow"}
+        assert "slows them by 60%" in " ".join(cc_review.slot_text(data, "Q").split())
+        # Q's stun needs the bolt to carry on into "terrain or a second
+        # enemy", which a single-target fight never supplies.
+        assert "stun" in cc_review.slot_text(data, "Q")
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Bard") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Bard")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

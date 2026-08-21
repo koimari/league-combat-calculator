@@ -1,0 +1,72 @@
+{
+  "receipt": "oracle-C6-leaf7",
+  "runbook": "R-18 / R-19 (independent oracle, isolated evidence tree)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[1]/slot",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-C6",
+    "read_only_from": ["data/", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "step_1_scenario_parameter": {
+      "claim": "The trailing '120' in the scenario id is Syndra's Splinters-of-Wrath stack count, set to the maximum.",
+      "why": "Syndra's innate caps at exactly 120 Splinters, and 120 is the Transcendence threshold. The repo's own audit records the modelled knob with that exact range and value: 'splinters option (0-120)' and 'splinters option: 120 -> 1.15x AP buff'.",
+      "sources": ["data/champions.json Syndra.abilities.P[0].effects[0/2]", "data/champion-audit/batch-6.json Syndra", "data/champion-audit/batch-e9-1.json Syndra"]
+    },
+    "step_2_charge_gate": {
+      "quoted_wiki_text": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description (Dark Sphere)",
+      "arithmetic": "splinters = 120 >= 40  =>  gate OPEN  =>  Dark Sphere charges = 2",
+      "consequence": "At 120 splinters Syndra may cast Dark Sphere twice back-to-back; the second cast is paid for out of the stocked charge, NOT gated by Dark Sphere's 7 s cooldown."
+    },
+    "step_3_slot_vocabulary": {
+      "claim": "The repo names that stocked second Dark Sphere cast with the synthetic slot 'Q2', and it exists only when the 40-splinter gate is open.",
+      "quoted_sources": [
+        "data/champion-audit/batch-e9-1.json Syndra.gap_summary: 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)'",
+        "data/champion-audit/batch-6.json Syndra.module_slots.modeled: ['P','Q','Q2','W','E','R']",
+        "data/champion-audit/batch-6.json Syndra.module_slots.note: 'modeled = SLOTS keys incl. synthetic Q2 (2nd charge)'",
+        "data/champion-audit/batch-6.json Syndra.gap_summary: 'splinters option (0-120) gates Q2 second charge'",
+        "data/champion-audit/batch-6.json Syndra.notable_atoms: 'ammo (Q 2nd charge at 40 splinters)'",
+        "data/wiki-atoms/stack-transform-summon-resource.json[34].description: '... stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere) ...'"
+      ]
+    },
+    "step_4_timing_check": {
+      "numbers_from_cache": {
+        "Q_cooldown_s": [7, 7, 7, 7, 7],
+        "Q_rechargeRate_s": [7, 7, 7, 7, 7],
+        "Q_affectedByCdr_flag_in_cache": false,
+        "W_cooldown_s": [12, 11, 10, 9, 8],
+        "W_affectedByCdr": true,
+        "W_rechargeRate": null,
+        "R_passive_text": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste."
+      },
+      "reasoning": "W is a plain cooldown ability with no ammo/recharge track. Dark Sphere is the only Syndra slot with a stocked-charge track (rechargeRate 7 s, max 2 charges once splinters >= 40). Therefore the ONLY mechanism by which a second Dark Sphere can occupy the second position of a cast timeline, ahead of W, is the charge - and at splinters = 120 that mechanism is fully available with both charges banked at fight start. Under the shared-timeline rule quoted below, the old scheduling (second Dark Sphere pushed past W because Dark Sphere's 7 s cooldown had not elapsed) is exactly the artefact you get if the charge is NOT modelled.",
+      "quoted_formula_source": "docs/math-foundations.md lines 59-67: 'Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). With c_i the effective cooldown of ability i, the cast epochs of a solo ability are 0, c_i, 2c_i, ... - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.'"
+    },
+    "conclusion": "For a Syndra custom cast order evaluated at 120 Splinters of Wrath, the second entry of the cast timeline being the stocked second Dark Sphere - slot 'Q2' - is game-faithful: 120 >= 40 opens the charge gate, max charges = 2, so the second Dark Sphere fires immediately rather than waiting out the 7 s cooldown behind W. The old value 'W' is the no-charge-model ordering and contradicts the quoted Transcendent Bonus text."
+  },
+
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.P[0].effects[0].description ('... stacking up to 120 times ...')",
+    "data/champions.json -> Syndra.abilities.P[0].effects[2].description ('At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.')",
+    "data/champions.json -> Syndra.abilities.Q[0].effects[1].description ('Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.')",
+    "data/champions.json -> Syndra.abilities.Q[0].cooldown / rechargeRate (7 s), W[0].cooldown (12/11/10/9/8, affectedByCdr true, rechargeRate null), R[0].effects[0] (Dark Sphere cooldown reduced by ability haste)",
+    "data/worklists/e3-stacks.json[167] (same 40-splinter charge text captured as a stack mechanic worklist item)",
+    "data/wiki-atoms/stack-transform-summon-resource.json[34] (Syndra's Dark Sphere listed as a stocked-ability-cast resource)",
+    "data/champion-audit/batch-6.json -> Syndra (module_slots.modeled includes 'Q2'; 'splinters option (0-120) gates Q2 second charge'; ammo atom 'Q 2nd charge at 40 splinters')",
+    "data/champion-audit/batch-e9-1.json -> Syndra ('40+ Q charges via Q2 slot')",
+    "docs/math-foundations.md lines 59-67 (shared cast timeline / greedy mutual-exclusion scheduling rule)"
+  ],
+
+  "limitations": [
+    "The scenario definition for 'syndra_custom_order_120' lives outside the permitted evidence tree (scripts/tests), so the declared custom cast order itself was not read. The verdict rests on (a) the wiki-sourced fact that at 120 splinters a second stocked Dark Sphere is available and castable without waiting the 7 s cooldown, and (b) the cached audit records establishing 'Q2' as precisely the repo's name for that second charge, gated at 40+ splinters. Both make 'Q2' at timeline index 1 the game-faithful value and 'W' the value you get only if the charge is unmodelled.",
+    "data/champions.json marks Dark Sphere's cooldown affectedByCdr=false, which conflicts with R's passive ('Dark Sphere's cooldown is reduced equivalent to an amount of ability haste'). This is a wiki-cache quirk noted in passing; it does not change the slot identity at index 1, since the second Dark Sphere here comes from the charge track, not from the cooldown elapsing."
+  ]
+}

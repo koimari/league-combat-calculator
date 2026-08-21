@@ -1,0 +1,110 @@
+{
+  "receipt_id": "oracle-C6-leaf130",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/rotation/order[4]",
+  "old_value": "Q",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read_only_from": ["data/champions.json", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/f3-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "independent_computation": {
+    "step_0_what_the_leaf_is": "Per data/worklists/f2-task.md, the /api/calculate 'rotation' receipt is {order: [Q,E,E,E,...], rationale: ...} — order is the fight's cast sequence on one shared timeline, so order[4] is the 5th cast of the fight.",
+    "step_1_castable_slot_count": {
+      "claim": "Syndra has exactly 5 castable slots in this scenario, so the opening cycle is 5 casts long and order[4] is the LAST slot of that cycle.",
+      "sources": [
+        "data/champion-audit/batch-6.json: Syndra module_slots.modeled = [P, Q, Q2, W, E, R]; 'synthetic Q2 (2nd charge)'; 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage'",
+        "data/champions.json Syndra Q: 'Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.'"
+      ],
+      "arithmetic": "Scenario suffix 60 = 60 splinters (the W true-damage threshold). 60 >= 40, so the 2nd Dark Sphere charge is stocked. Castable = Q, Q(2nd charge), W, E, R = 5. P is passive."
+    },
+    "step_2_no_recast_can_occupy_index_4": {
+      "model": "docs/math-foundations.md §1.1: 'Ability recasts are scheduled on one shared timeline ... each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress ... resolved greedily by cast order.'",
+      "cast_times_from_data": {"Q": "none (0 s)", "W": "none (0 s)", "E": 0.25, "R": 0.25},
+      "opening_window": "0 + 0 + 0 + 0.25 + 0.25 = 0.50 s to fire all five slots at t=0.",
+      "shortest_recast_interval": "Q rechargeRate 7 s; R's passive grants 10/20/30 ability haste to Q, so effective Q recharge = 7*100/(100+AH) = 6.364 / 5.833 / 5.385 s (CLAUDE.md haste rule: effective_cd = base_cd*100/(100+AH)).",
+      "conclusion": "0.50 s << 5.385 s, so no ability comes off cooldown inside the opening. The first five entries of order are exactly the five distinct slots in priority order, and order[4] is whichever slot is LAST in priority."
+    },
+    "step_3_R_is_last_in_priority": {
+      "wiki_mechanic": "data/champions.json Syndra R Unleashed Power: 'Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.'",
+      "leveling_rows": {
+        "Magic Damage per Sphere": "[80, 120, 160] (+20% AP)",
+        "Minimum Magic Damage": "[240, 360, 480] (+60% AP)",
+        "Maximum Magic Damage": "[560, 840, 1120] (+140% AP)"
+      },
+      "linearity_check": "3 x per-sphere = (240,60%) / (360,60%) / (480,60%) = the wiki Minimum row exactly; 7 x per-sphere = (560,140%) / (840,140%) / (1120,140%) = the wiki Maximum row exactly. So R_damage = n_spheres x (per-sphere), n in [3,7], strictly increasing in the number of LIVE spheres available when R is cast.",
+      "cost_of_firing_R_early": "Each live sphere forfeited by casting R before an available Q charge costs exactly 80 / 120 / 160 (+20% AP) magic damage at R ranks 1/2/3. Casting R with 0 live spheres instead of 4 forfeits 320/480/640 (+80% AP).",
+      "other_abilities_do_not_scale_with_spheres": "Q Dark Sphere 90/125/160/195/230 (+70% AP) — pure sphere GENERATOR (sphere lives 6 s). W Force of Will 70/100/130/160/190 (+65% AP) flat, plus the 60-splinter 12% (+2% per 100 AP) bonus true damage — flat in sphere count. E Scatter the Weak 60/95/130/165/200 (+60% AP) — flat in sphere count. Only R's damage is a function of live-sphere count.",
+      "sphere_survival_of_W_and_E": "W notes: 'Grabbing a Dark Sphere will cause the duration on it to refresh, but only on the first cast, not when it is thrown' — the sphere persists after the throw (the note would be vacuous otherwise); E 'Dark Spheres can be knocked back...' likewise relocates rather than destroys. So W/E placed before R do not reduce R's grab count, and R-last is weakly dominant over every other position.",
+      "derivation_rule_it_satisfies": "data/worklists/f2-task.md deliverable 1(b) 'setup/consume relationships' and f3-task.md 1(a) 'an ability whose row names indicate application ... must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack)'. Q applies (spheres); R consumes them ('grabs up to 4 nearby live ones', per-sphere damage row). Therefore Q — and its 2nd charge — must precede R, and R, having no downstream consumer, is terminal."
+    },
+    "step_4_result": "Opening cycle = [Q, Q(2nd charge), W, E, R] (W/E interchangeable between themselves — both flat in sphere count and both before the terminal consumer). order[4] = R.",
+    "step_5_why_old_value_was_wrong": "'Q' at index 4 is the signature of a 4-slot cycle [Q, W, E, R] followed by a Q recast — i.e. R fired at index 3, BEFORE the second Dark Sphere charge was spent. Under the R damage law verified above that forfeits one grabbed sphere = 80/120/160 (+20% AP), so the old ordering is strictly dominated and inconsistent with the setup-before-consume rule."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[1].leveling",
+      "quote": "Magic Damage per Sphere [80,120,160] + 20% AP; Minimum Magic Damage [240,360,480] + 60% AP; Maximum Magic Damage [560,840,1120] + 140% AP"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0].leveling",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste [10,20,30]"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0] (cooldown/rechargeRate/castTime), W[0], E[0], R[0]",
+      "quote": "Q cd 7/7/7/7/7 rechargeRate 7 castTime none; W cd 12/11/10/9/8 castTime none; E cd 15 castTime 0.25; R cd 120/100/80 castTime 0.25"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].notes",
+      "quote": "Grabbing a Dark Sphere will cause the duration on it to refresh, but only on the first cast, not when it is thrown."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3]",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge)"
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "deliverable 4",
+      "quote": "The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: \"Q poisons, E consumes\"}"
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "path": "deliverable 1(a)",
+      "quote": "an ability whose row names indicate application ... must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing)"
+    }
+  ],
+  "caveats": [
+    "The scenario definition itself lives outside the permitted evidence tree (scripts/ is off-limits to this oracle), so the fight's level, ranks, items and any explicitly supplied 'custom order' list were not inspected. The verdict rests on (a) the 5-castable-slot count at 60 splinters, (b) the shared-timeline result that the opening 0.50 s of cast time cannot admit a recast before the 5.385 s minimum Q recharge, and (c) the wiki-verified monotonicity of R in live-sphere count, which forces R terminal. All three are independent of the unread scenario parameters, except that the argument assumes R is ranked (available at t=0), which the presence of an R in the order at all confirms.",
+    "W vs E ordering at indices 2/3 is not determined by this analysis (both are flat in sphere count); only the terminal position of R is, which is the leaf under test."
+  ],
+  "generated_utc": "2026-08-09"
+}

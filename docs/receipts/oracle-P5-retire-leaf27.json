@@ -1,0 +1,62 @@
+{
+  "runbook": "R-18 / R-19 independent oracle",
+  "investigator": "fresh oracle subagent (no access to src/, tests/, scripts/, docs/plans/, docs/receipts/, git history, diff, or plan)",
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-p5",
+    "note": "Only data/ and docs/math-foundations.md were read. The scenario id 'syndra_derived_order_39' and the token 'recast_of' do not appear anywhere in the exported evidence tree, so the leaf was adjudicated purely against cached wiki text plus docs/math-foundations.md."
+  },
+  "scenario": "syndra_derived_order_39",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_39/fights/manual_target/rotation/sources[2]",
+  "old_value": "Q2 recast_of Q (40+ splinter second charge)",
+  "new_value": "Q2 is the recast of Q - Q2 is Q's recast (recast_of atom)",
+  "independent_computation": {
+    "question": "Within a Syndra rotation, what is the correct sourced justification for a second Q ('Q2') entry?",
+    "steps": [
+      "Step 1 - enumerate Syndra's abilities from the cached wiki parse (data/champions.json -> Syndra.abilities). Names: P Transcendent, Q Dark Sphere, W Force of Will, E Scatter the Weak, R Unleashed Power.",
+      "Step 2 - search each ability's effect text for the word 'recast'. Exactly one ability contains it: W Force of Will ('Force of Will can be recast while the target is being held.' and a dedicated 'Recast:' effect). Q, E, R and the passive contain no recast text. Therefore Syndra's Q has no recast mechanic; the recast in her kit belongs to W.",
+      "Step 3 - determine what actually produces a second Q. Q Dark Sphere effect[1] is a Transcendent Bonus: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' Q also carries rechargeRate = [7,7,7,7,7] (a charge/ammo recharge field), and its cooldown block is 7s flat with affectedByCdr = false. This is an ammo/charge system gated at 40 Splinters of Wrath with a cap of 2 charges - not a recast of a single cast instance.",
+      "Step 4 - check the passive's stack economy for the gate's plausibility. P Transcendent: Splinters of Wrath stack up to 120, with per-ability thresholds. Observed thresholds in the cached text: Q at 40 (second Dark Sphere charge), W at 60 (bonus true damage), E at 80 (scatter angle + 70% slow), R at 100 (execute below 15% max HP), and 120 for Transcendence (+15% AP). The 40 figure in the old value matches the Q threshold exactly.",
+      "Step 5 - check the repo's own vocabulary for 'recast'. docs/math-foundations.md Section 1.1 uses 'recast' in the scheduling sense: 'Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress'. Under that in-repo meaning, 'Q2 recast_of Q' reads as 'Q2 is a second cast of Q on the shared timeline', which is true for a charge-stocked second Q. Under the game-mechanics meaning asserted by the new value ('Q2 is Q's recast'), the claim is false - Syndra's Q is not a recastable ability.",
+      "Step 6 - compare the two candidate strings as *source* citations. The old value cites a verifiable, correct mechanism ('40+ splinter second charge') that both explains why a second Q exists and records its precondition (>= 40 Splinters of Wrath). The new value is circular ('Q2 is the recast of Q - Q2 is Q's recast'), cites no cached evidence, drops the 40-Splinter precondition (so a Q2 would be admissible at 0 Splinters, which the wiki forbids), and asserts a recast relation that the cached wiki text contradicts."
+    ],
+    "computed_correct_value": "Q2 is Syndra's second stocked Dark Sphere charge, unlocked by the Q Transcendent Bonus at 40 Splinters of Wrath (charge cap 2, 7s recharge) - i.e. a second cast of Q from charges, NOT a recast of Q. Syndra's only recastable ability is W Force of Will. The old leaf text captures this ('40+ splinter second charge'); the new leaf text does not.",
+    "arithmetic": "No numeric computation is required for this leaf; it is a provenance/justification string. The only quantities involved are read verbatim from cached wiki text: Splinter threshold = 40, Dark Sphere charge cap = 2, Q recharge = 7s at all ranks, Q base damage 90/125/160/195/230 (+70% AP) - none of which the new value contradicts or preserves."
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description (cached wiki, Dark Sphere)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] fields",
+      "quote": "rechargeRate: [7, 7, 7, 7, 7]; cooldown.modifiers[0].values: [7, 7, 7, 7, 7]; cooldown.affectedByCdr: false"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds. (no recast clause anywhere in Q)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects[1] and effects[2] (Force of Will)",
+      "quote": "Force of Will can be recast while the target is being held. / Recast: Syndra throws the grabbed target towards the target location..."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects[0].description (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "source": "docs/math-foundations.md, Section 1.1 (lines 59-63)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts)."
+    },
+    {
+      "source": "data/staleness.json -> Syndra; data/champions.json -> Syndra.patchLastChanged",
+      "quote": "\"Syndra\": {\"stale\": false, \"stat_drift\": {}, \"stats_checked\": 19, \"ability_rows_checked\": 15, \"ability_rows_stale\": 0 ...}; patchLastChanged: 26.12 (cached Syndra data is current, so the wiki text above is authoritative for this adjudication)"
+    }
+  ],
+  "reasoning_summary": "Syndra's Q Dark Sphere has no recast; the only recast in her kit is W Force of Will. A second Q in a rotation exists because the Q Transcendent Bonus stocks a Dark Sphere charge (cap 2) once 40 Splinters of Wrath are collected. The old leaf states exactly that mechanism and its 40-Splinter precondition, and its 'recast_of' term is consistent with the repo's own scheduling vocabulary in docs/math-foundations.md ('an ability recasts when its effective cooldown has elapsed'). The new leaf is circular, cites no cached evidence, discards the 40-Splinter precondition, and re-reads 'recast_of' in the game-mechanics sense, producing a claim ('Q2 is Q's recast') that the cached wiki text directly contradicts.",
+  "verdict": "old_value_correct",
+  "caveats": [
+    "The 'recast_of atom' vocabulary referenced by the new value does not exist anywhere in the exported evidence tree (data/atoms/atoms.schema.json enumerates families damage/heal/shield/crowd_control/stack/transform/summon/execute/resource/movement/vision/buff/debuff/interaction/economy; data/wiki-atoms/atom-relations.json contains no recast relation). If 'recast_of' is a code-side relation whose defined meaning is strictly 'second cast of the same ability on the shared timeline', then the relation label itself is defensible in both strings - but the new value's added gloss 'Q2 is Q's recast' is still false for Syndra, and the loss of the 40-Splinter precondition is a real loss of sourced information.",
+    "Adjudication is on the sourcing/semantics of a provenance string, not on a damage number; no golden numeric value is implicated by this leaf."
+  ]
+}

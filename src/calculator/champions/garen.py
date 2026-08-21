@@ -4,10 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _perseverance(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -35,6 +39,7 @@ def _decisive_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", value, basic_damage=True),)
+    entry["event_order_certified"] = "single_hit"
     entry["empowers_next_auto"] = True
     entry["detail"] = (
         "One uncancellable, silencing empowered basic attack; slow cleanse/movement speed are state-only."
@@ -61,7 +66,7 @@ def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     nearest = bool(ctx.options.get("e_nearest_target", True))
-    spins = 7 + int(max(0.0, ctx.stats.get("bonus_attack_speed", 0.0)) // 25.0)
+    spins = 7 + int(max(0.0, ctx.stat("bonus_attack_speed")) // 25.0)
     spins = min(max(spins, 7), 15)
     attr = "Increased Damage Per Spin" if nearest else "Physical Damage Per Spin"
     per_spin = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -119,7 +124,14 @@ SLOTS = {
     "E": _judgment,
     "R": _demacian_justice,
 }
-parse_abilities = build_parser(SLOTS, "Garen")
+# Garen's damaging casts apply no immobilize and no slow: Q's empowered
+# attack silences (a silence is neither, and the vocabulary has no kind for
+# it), E only spins and shreds armor, R deals true damage and reveals.  Q's
+# own text cleanses slows *from Garen* rather than applying one.  P and W
+# author no damage part.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Garen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -136,45 +148,10 @@ ASSUMPTIONS = [
     "Perseverance and Courage are defensive/self-state rows and do not enter TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Garen parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Garen",
-        3892614,
-        "2025-05-02T11:24:26Z",
-    ),
-    source_row(
-        "Garen Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/Q",
-        2863943,
-        "2019-11-03T19:57:00Z",
-    ),
-    source_row(
-        "Garen W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/W",
-        2864238,
-        "2019-11-03T20:09:47Z",
-    ),
-    source_row(
-        "Garen E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/E",
-        2864384,
-        "2019-11-03T20:12:17Z",
-    ),
-    source_row(
-        "Garen R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Garen/R",
-        2864530,
-        "2019-11-03T20:15:42Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Garen")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -186,7 +163,7 @@ def derive_self_healing(
     """Resolve Garen self-healing events from its authored packet."""
     healing = []
     p = _healing._ability(champion_data, "P")
-    p_level = int(champion_stats.get("level", 0) or 0)
+    p_level = int(champion_stat(champion_stats, "level"))
     per_tick = 0.0
     for effect in p.get("effects", []):
         for leveling in effect.get("leveling", []):
@@ -224,9 +201,5 @@ def derive_self_healing(
             tick += 0.5
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Garen", derive_self_healing)

@@ -11,10 +11,13 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import app
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import (
     Combatant,
     _WalkCompiler,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.survival.actions import ActionKind
 from src.calculator.survival.compile import (
@@ -22,13 +25,25 @@ from src.calculator.survival.compile import (
     unrepresentable_template_receipt,
 )
 
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
 MIKAELS_SOURCE = "Mikael's Blessing — Purify"
 QUICKSILVER_SOURCE = "Quicksilver Sash — Quicksilver"
 MERCURIAL_SOURCE = "Mercurial Scimitar — Quicksilver"
 
 
 def _combatant(participant_id: str, team: str, health: float = 3000.0) -> Combatant:
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -312,9 +327,10 @@ def test_mercurial_cleanse_and_movement_are_separate_effects():
     assert result["target"]["action_downtime"] == pytest.approx(0.5)
 
 
-def test_unknown_control_kind_fails_closed_at_the_walk():
+def test_a_control_with_no_cleanse_declaration_fails_closed_at_the_walk():
+    """``pull`` is a real control kind the cleanse table does not carry."""
     result = _run(
-        [_control(1.0, "dance", 2.0)],
+        [_control(1.0, "pull", 2.0)],
         [_cleanse(1.5)],
     )
     receipt = result["target"]["cleanse"]
@@ -322,6 +338,17 @@ def test_unknown_control_kind_fails_closed_at_the_walk():
     assert receipt["removed_controls"] == []
     assert result["target"]["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
     assert result["target"]["cleanse_use"]["uses_after"] == 1  # not consumed
+
+
+def test_a_kind_outside_the_vocabulary_never_reaches_the_walk():
+    """``cc_kind`` is closed: a misspelling is a raise, not a denial row.
+
+    The two refusals sit at different depths — this one fires before any
+    cleanse decision exists — and both must stay live, because a kind
+    nobody declared must never author a no-op stun.
+    """
+    with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
+        _run([_control(1.0, "dance", 2.0)], [_cleanse(1.5)])
 
 
 # ---------------------------------------------------------------------------

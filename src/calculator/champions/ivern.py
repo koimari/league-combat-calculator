@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -15,6 +15,7 @@ from .slotlib import (
     simple_damage,
     with_control,
 )
+from .source_receipts import load_champion_sources
 
 
 def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -94,7 +95,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    attacks = min(max(int(ctx.options.get("daisy_attacks", 6)), 0), 20)
+    attacks = min(max(int(ctx.option("daisy_attacks")), 0), 20)
     if attacks <= 0:
         return no_damage(
             ctx,
@@ -102,7 +103,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
             reason="daisy_attacks is 0 — set it to price Daisy's attacks.",
         )
     index = min(rank - 1, len(_DAISY_AD_BY_RANK) - 1)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     per_attack = _DAISY_AD_BY_RANK[index] + _DAISY_AD_AP_RATIO * ap
     per_smash = _DAISY_SMASH_BY_RANK[index] + _DAISY_SMASH_AP_RATIO * ap
 
@@ -118,6 +119,9 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
         per_attack * normals + per_smash * smashes,
         "physical",
     )
+    # Daisy's ordinary swings apply nothing; the smash this module already
+    # reviews as a knockup carries that kind, which is why R's kinds ride
+    # its parts instead of MODULE_CC.
     entry["parts"] = (
         DamagePart(
             "physical",
@@ -125,6 +129,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
             count=normals,
             time_offset=0.0,
             hit_interval=interval,
+            cc_kind="none",
         ),
         DamagePart(
             "magic",
@@ -132,6 +137,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
             count=smashes,
             time_offset=2.0 * interval,
             hit_interval=3.0 * interval,
+            cc_kind="knockup",
         ),
     )
     entry["detail"] = (
@@ -149,8 +155,14 @@ SLOTS = {
         name="Friend of the Forest",
         reason="Grove channel, health/mana cost, camp release and full bounty are jungle utility state.",
     ),
+    # The vine damages "the first enemy hit and root[s] them"; the root's
+    # duration is read off the packet's own Root Duration row rather than
+    # restated, and the single-hit certification is what carries the kind
+    # into the event ledger.
     "Q": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
         kind="root",
         duration_attr="Root Duration",
     ),
@@ -158,7 +170,14 @@ SLOTS = {
     "E": _triggerseed,
     "R": _daisy,
 }
-parse_abilities = build_parser(SLOTS, "Ivern")
+
+# Q's vine damages "the first enemy hit and root[s] them"; E's seed
+# "explode[s] to deal magic damage to nearby enemies and slow them for 2
+# seconds".  R is absent because Daisy's two packets differ (see _daisy).
+# P and W author no damage part (W is the on-hit bolt).
+MODULE_CC = {"Q": "root", "E": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Ivern", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "w_in_brush",
@@ -194,37 +213,4 @@ ASSUMPTIONS = [
     "and falls back to Ivern in a solo fight; the sourced explosion "
     "damage after 2s and the slow are the module's E damage entry.",
 ]
-SOURCES = [
-    source_row(
-        "Ivern parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Ivern",
-        4015438,
-        "2026-05-04T18:32:23Z",
-    ),
-    source_row(
-        "Ivern Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/Q",
-        2863951,
-        "2019-11-03T19:57:08Z",
-    ),
-    source_row(
-        "Ivern W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/W",
-        2864246,
-        "2019-11-03T20:09:55Z",
-    ),
-    source_row(
-        "Ivern E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/E",
-        2864392,
-        "2019-11-03T20:12:26Z",
-    ),
-    source_row(
-        "Ivern R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Ivern/R",
-        2864538,
-        "2019-11-03T20:15:50Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Ivern")

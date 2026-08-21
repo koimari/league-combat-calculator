@@ -1,65 +1,52 @@
-"""E9 — Practice-Tool corpus verification.
+"""E9 - Practice-Tool corpus verification.
 
-Every active corpus scenario is driven through ``/api/calculate`` on the
-CURRENT engine and its exact expected receipt is asserted against the
-coupled combat ledger (``combat``) and the legacy aggregate response.
+Every non-legacy corpus scenario is driven through ``/api/calculate`` and its
+exact expected receipt is asserted against the coupled combat ledger
+(``combat``) and the legacy aggregate response.  There is no selection: a
+receipt an engine change breaks stays executed and fails loudly on its own
+numbers, which is the gate the corpus exists to be.
 
-SHA semantics
--------------
-Each scenario's ``sha`` records the git HEAD its receipt was probed at —
-provenance for the audit trail, not a gate.  Receipts are asserted against
-the current engine unconditionally: an engine change that moves a receipt
-fails here with the numeric diff, and the fix is to re-probe
-``/api/calculate``, update ``expected``, and record the new ``sha`` in the
-same commit.  (An earlier design skipped every receipt and failed a
-pin-freshness meta-test whenever ``src/`` changed at all, which forced a
-re-pin commit per engine PR while deferring the actual numeric signal.)
+A scenario's ``sha`` is provenance -- the commit its receipt was last probed
+at, written by ``scripts/repin_corpus.py`` and never dereferenced here, so the
+corpus gates a shallow checkout as fully as a clone.  The legacy four
+(cp21-*/e0-*/vladimir-*) predate the E-series rework, are enumerated in
+``LEGACY_SCENARIO_IDS`` and are re-verified only by a deliberate re-capture.
 
-The four legacy scenarios (cp21-*/e0-*/vladimir-*) predate the E-series
-rework: their expected values are only valid at their recorded commits, so
-they are skipped until a deliberate re-capture promotes them.
-
-Every expected number below was produced by probing ``/api/calculate`` at
-the recorded commit; nothing is hand-invented (each scenario carries its
-formula in ``expected.formula`` for the audit trail).
+Every expected number below was produced by probing ``/api/calculate``;
+nothing is hand-invented (each scenario carries its formula in
+``expected.formula`` for the audit trail), and re-pinning re-probes.
 """
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
+from scripts.repin_corpus import (
+    LEGACY_SCENARIO_IDS,
+    check_pins,
+    load_corpus,
+    non_legacy_scenarios,
+)
 
 from src import app as app_module
 
+pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CORPUS_PATH = REPO_ROOT / "data" / "practice-corpus" / "scenarios.json"
+REPIN_SCRIPT = REPO_ROOT / "scripts" / "repin_corpus.py"
 
 # Response values are rounded to one decimal (amounts/damage); survival
 # timestamps to three.  The tolerances below cover that rounding.
 AMOUNT_ABS = 0.15
 TIME_ABS = 0.01
 
-# Pre-E-series scenarios whose expected values are only valid at their
-# recorded commits; excluded from current-engine verification until a
-# deliberate re-capture promotes them.
-LEGACY_SCENARIOS = {
-    "cp21-ziggs-outer-blast",
-    "cp21-bis-utility-ahri",
-    "e0-vladimir-sanguine-pool-heal",
-    "vladimir-hemoplague-multitarget",
-}
-
-
-def _load_corpus() -> dict:
-    with CORPUS_PATH.open(encoding="utf-8") as handle:
-        return json.load(handle)
-
 
 @pytest.fixture(scope="module")
 def corpus() -> dict:
-    return _load_corpus()
+    return load_corpus()
 
 
 def _payload(setup: dict) -> dict:
@@ -389,19 +376,69 @@ def test_all_scenarios_have_required_fields(corpus):
             ), f"{scenario['id']} is a fight scenario without practice steps"
 
 
-_ACTIVE = [s for s in _load_corpus()["scenarios"] if s["id"] not in LEGACY_SCENARIOS]
-
-_ACTIVE_CASES = list(_ACTIVE)
+_EXECUTED = non_legacy_scenarios(load_corpus())
 
 
-@pytest.mark.parametrize("scenario", _ACTIVE_CASES, ids=[s["id"] for s in _ACTIVE])
-def test_scenario_receipt_reproduces_on_current_engine(scenario):
-    """Every active scenario's receipt reproduces on the engine at HEAD.
-
-    A failure here means an engine change moved this receipt: re-probe
-    ``/api/calculate``, update ``expected``, and record the new ``sha``.
-    """
+@pytest.mark.parametrize("scenario", _EXECUTED, ids=[s["id"] for s in _EXECUTED])
+def test_scenario_receipt_reproduces(scenario):
+    """Every non-legacy scenario reproduces its receipt on this engine."""
     kind = scenario["expected"]["kind"]
     assert kind in _KIND_ASSERTIONS, f"unknown receipt kind {kind!r}"
     data = _run_calculate(scenario["setup"])
     _KIND_ASSERTIONS[kind](data, scenario["expected"])
+
+
+# ---------------------------------------------------------------------------
+# The gate itself (R-22): the executed set, and a red it can reproduce
+# ---------------------------------------------------------------------------
+
+
+def test_the_reader_walks_no_history():
+    """Reader and writer alike answer from the tree, never from git."""
+    assert not hasattr(sys.modules[__name__], "subprocess")
+    reader_half = REPIN_SCRIPT.read_text(encoding="utf-8").split("# The writer")[0]
+    assert "subprocess.run" not in reader_half
+    assert _EXECUTED == non_legacy_scenarios(load_corpus())
+
+
+def test_check_passes_on_the_committed_corpus():
+    """The committed corpus satisfies the gate."""
+    assert check_pins(load_corpus(), parametrized=[s["id"] for s in _EXECUTED]) == ()
+
+
+def test_check_fails_on_a_missing_pin(corpus):
+    """A scenario carrying no provenance is reported, by scenario id."""
+    mutated = json.loads(json.dumps(corpus))
+    victim = non_legacy_scenarios(mutated)[0]
+    victim["sha"] = ""
+    reasons = check_pins(mutated, parametrized=[s["id"] for s in _EXECUTED])
+    assert any(victim["id"] in reason for reason in reasons), reasons
+
+
+def test_check_fails_on_an_empty_corpus(corpus):
+    """A corpus that asserts nothing fails rather than reporting green."""
+    mutated = json.loads(json.dumps(corpus))
+    mutated["scenarios"] = [
+        s for s in mutated["scenarios"] if s["id"] in LEGACY_SCENARIO_IDS
+    ]
+    reasons = check_pins(mutated, parametrized=[s["id"] for s in _EXECUTED])
+    assert any("holds 0 non-legacy" in reason for reason in reasons), reasons
+
+
+def test_check_fails_on_a_short_corpus(corpus):
+    """Losing one scenario from the executed set is a failure, not a smaller run."""
+    mutated = json.loads(json.dumps(corpus))
+    dropped = non_legacy_scenarios(mutated)[0]
+    mutated["scenarios"] = [s for s in mutated["scenarios"] if s["id"] != dropped["id"]]
+    reasons = check_pins(mutated, parametrized=[s["id"] for s in _EXECUTED])
+    assert any("test_e9_corpus" in reason for reason in reasons), reasons
+
+
+def test_check_fails_when_the_receipt_count_disagrees(corpus):
+    """The fingerprints receipt's non_legacy_count is a gate, once it exists."""
+    reasons = check_pins(
+        corpus,
+        parametrized=[s["id"] for s in _EXECUTED],
+        expected_count=len(_EXECUTED) + 1,
+    )
+    assert any("non_legacy_count" in reason for reason in reasons), reasons

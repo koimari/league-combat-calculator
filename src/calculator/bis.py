@@ -13,6 +13,10 @@ import math
 import time
 from collections.abc import Mapping
 
+from .interpreters import (
+    survival_ledger_certifications,
+    survival_ledger_note,
+)
 from .item_effects import validate_item_input_options
 from .loadout_rules import (
     required_boots_tier,
@@ -25,6 +29,15 @@ from .optimizer import (
     optimizer_supported_items,
 )
 from .pipeline import DEFAULT_FIGHT_DURATION
+from .program.build import Tagged, ranked_total
+from .program.views import (
+    RankingWriter,
+    UnrankableNumber,
+    name_every_number,
+    published_quantity,
+    published_tag,
+    refuse_previewed,
+)
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
@@ -66,6 +79,10 @@ def bis_main_request(
         ability_ranks=dict(request.fight_params.ability_ranks or {}),
         champion_options=dict(request.fight_params.champion_options or {}),
         cast_order=request.fight_params.cast_order,
+        # The rune page is part of the main champion's stats everywhere else
+        # (calculate, optimize); a swap priced page-less would rank items
+        # against a different champion than the one on screen.
+        rune_page=request.fight_params.rune_page,
     )
 
 
@@ -157,7 +174,7 @@ def roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, ob
     blocked: list[dict[str, object]] = []
     for loadout in loadouts:
         coverage = target_build_coverage(list(loadout.item_data))
-        for entry in coverage.get("blocked", []):
+        for entry in coverage.get("withheld", []):
             blocked.append(
                 {
                     "champion": loadout.champion_data.get(
@@ -241,36 +258,26 @@ BIS_OBJECTIVES: dict[str, dict[str, str]] = {
     },
 }
 
-BIS_CERTIFIED_DEFENSIVE_EFFECTS: dict[str, str] = {
-    "Eclipse": (
-        "Ever Rising Moon's two-hit trigger creates a timestamped self shield "
-        "with its sourced melee/ranged amount and two-second expiry; the "
-        "survival model stacks same-time shields additively (the in-game "
-        "strongest-shield rule is not modeled)."
-    ),
-    "Death's Dance": (
-        "Ignore Pain splits post-mitigation physical/magic damage into sourced "
-        "true-damage ticks; Defy clears the remaining store and heals on a "
-        "qualifying takedown."
-    ),
-    "Sundered Sky": (
-        "Lightshield Strike's first-hit heal is timestamped and included in "
-        "the participant survival/eHP ledger; any sourced temporary-health "
-        "overheal is applied through the same ordered heal event."
-    ),
-}
-
 # Retained as an explicit API field for clients that display the audit
-# contract.  A non-empty entry means the candidate is withheld; CP6 now
-# certifies Eclipse and Death's Dance through the ordered event walk.
+# contract.  A non-empty entry means the candidate is withheld; the certified
+# half beside it is read from the declarations by
+# `interpreters.survival_ledger_certifications`, so nothing here says which
+# items are certified.
 BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {}
 
 
 def bis_defensive_effect_receipt(
     item_name: str, survival: Mapping[str, object]
 ) -> dict[str, object]:
-    """Describe why a defensive item did or did not affect candidate eHP."""
-    certified_note = BIS_CERTIFIED_DEFENSIVE_EFFECTS.get(item_name)
+    """Describe why a defensive item did or did not affect candidate eHP.
+
+    The certification is the declaration's, not this module's: an item is
+    certified exactly when one of its rules declares a contribution to its
+    holder's survival ledger — a proc's self shield, a routing rule's
+    deferral, a forced strike's heal — which is what the effective health
+    below was computed over.
+    """
+    certified_note = survival_ledger_note(item_name)
     if certified_note is None:
         return {"status": "no_special_defensive_effect", "sources": []}
     return {
@@ -360,6 +367,30 @@ def bis_time_to_target_defeat(
     return min(times, default=duration)
 
 
+#: The consumer every BIS refusal names.  A message that said which function
+#: raised would answer the wrong question: what a reader needs to know is
+#: that the surface which picks a build refused to pick one.
+BIS_SURFACE = "the BIS objective"
+
+
+def _focus_survival_path(
+    combat: Mapping[str, object], focus: Mapping[str, object]
+) -> str:
+    """Where the focus participant's survival row lives in the payload.
+
+    Matched by identity rather than by participant id, because the entry
+    describing a number has to be the entry for *that* row: two participants
+    of the same champion at the same level publish equal dicts, and a path
+    that named the wrong one would carry the wrong meaning with no symptom.
+    """
+    for index, row in enumerate(combat.get("participants", ())):
+        if row is focus:
+            return f"participants[{index}].survival"
+    raise UnrankableNumber(
+        BIS_SURFACE, "a row the payload does not publish", ["participants"]
+    )
+
+
 def bis_objective_score(
     objective_key: str,
     *,
@@ -369,7 +400,47 @@ def bis_objective_score(
     objective: Mapping[str, object],
     focus: Mapping[str, object],
 ) -> tuple[float, str, dict[str, float], tuple[float, ...] | None]:
-    """Derive one candidate's selected objective from the shared timeline."""
+    """Derive one candidate's selected objective from the shared timeline.
+
+    Every score below is folded through :func:`~.program.build.ranked_total`
+    out of parts carrying the meaning the payload published for them, and the
+    candidate's whole map is refused first if any of its numbers is a
+    preview.  D-62: ``THEORETICAL`` is never an optimizer objective and never
+    feeds BIS.  Before this, a retagged field would have been ranked exactly
+    like a delivered one -- both are ordinary ``MEASURED`` floats, and
+    nothing on this path ever asked what they meant.
+
+    The refusal is an ``UnrankableNumber``, which is a ``TypeError`` and so
+    passes through the candidate loop's ``except (KeyError, ValueError)``
+    rather than being turned into a withheld row: a previewed number is not a
+    candidate that could not be evaluated, it is a payload meaning something
+    other than what the ranking assumed.
+    """
+    dispositions = combat.get("dispositions", {})
+    refuse_previewed(dispositions, surface=BIS_SURFACE)
+    survival_path = _focus_survival_path(combat, focus)
+
+    def part(path: str, value: float) -> Tagged:
+        """One published number, carrying what its own entry says it means.
+
+        Both halves come from the entry: what the number *means* (its view)
+        and whether there is a number at all (its disposition).  The second
+        matters because a withheld leaf is absent from the payload, so the
+        ``.get(..., 0.0)`` above it reads a zero no rule computed; taking the
+        quantity from the entry is what makes the fold propagate the refusal
+        instead of ranking the candidate on it.
+
+        Two raise sites now, and Python evaluates arguments left to right, so
+        a path with no ``dispositions`` entry fails inside the *quantity*
+        read rather than the tag read.  Same ``UnrankableNumber`` and the
+        same message; different origin, which is worth a sentence for
+        anything reading the traceback.
+        """
+        return Tagged(
+            published_quantity(dispositions, path, value, surface=BIS_SURFACE),
+            published_tag(dispositions, path, surface=BIS_SURFACE),
+        )
+
     focus_survival = focus.get("survival", {})
     if not isinstance(focus_survival, Mapping):
         focus_survival = {}
@@ -381,9 +452,11 @@ def bis_objective_score(
     healing = float(focus_survival.get("healing_received", 0.0) or 0.0)
     support_shield = float(focus_survival.get("support_shield_received", 0.0) or 0.0)
     support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
+    damage_part = part("objective.focus_damage_before_death", focus_damage)
+    health_part = part(f"{survival_path}.effective_health", effective_health)
     if objective_key == "overall":
         if subject_team == "main":
-            score = focus_damage
+            score = ranked_total([damage_part], surface=BIS_SURFACE)
             metric = "main TTD (survival-coupled)"
             components = {
                 "damage_before_death": focus_damage,
@@ -396,7 +469,14 @@ def bis_objective_score(
             team_damage = float(
                 objective.get("main_team_damage_before_death", 0.0) or 0.0
             )
-            score = team_damage + support_value + effective_health
+            score = ranked_total(
+                [
+                    part("objective.main_team_damage_before_death", team_damage),
+                    part("objective.focus_support_value", support_value),
+                    health_part,
+                ],
+                surface=BIS_SURFACE,
+            )
             metric = "team damage + ally utility + effective health"
             components = {
                 "main_team_damage_before_death": team_damage,
@@ -412,7 +492,7 @@ def bis_objective_score(
             duration=duration,
         )
         rank_key = enemy_bis_rank_key(objective, focus_survival, duration=duration)
-        score = focus_damage
+        score = ranked_total([damage_part], surface=BIS_SURFACE)
         metric = "enemy survival gate · threat before defeat"
         components = {
             "survival_time": survival_time,
@@ -437,7 +517,7 @@ def bis_objective_score(
         }
         return score, metric, components, None
     if objective_key == "survival":
-        score = effective_health
+        score = ranked_total([health_part], surface=BIS_SURFACE)
         metric = BIS_OBJECTIVES[objective_key]["metric"]
         components = {
             "effective_health": effective_health,
@@ -447,9 +527,19 @@ def bis_objective_score(
         return score, metric, components, None
     if objective_key == "damage":
         if subject_team == "ally":
-            score = float(objective.get("main_team_damage_before_death", 0.0) or 0.0)
+            score = ranked_total(
+                [
+                    part(
+                        "objective.main_team_damage_before_death",
+                        float(
+                            objective.get("main_team_damage_before_death", 0.0) or 0.0
+                        ),
+                    )
+                ],
+                surface=BIS_SURFACE,
+            )
         else:
-            score = focus_damage
+            score = ranked_total([damage_part], surface=BIS_SURFACE)
         metric = BIS_OBJECTIVES[objective_key]["metric"]
         components = {
             "damage_before_death": score,
@@ -458,8 +548,16 @@ def bis_objective_score(
         return score, metric, components, None
     # Utility is intentionally an additive receipt of values that the event
     # walk actually applied.  It does not infer movement, range, or a value
-    # for an unmodelled item tooltip.
-    score = support_value + healing + support_shield
+    # for an unmodelled item tooltip -- and "actually applied" is now the
+    # fold's own refusal rather than a comment: three parts, one meaning.
+    score = ranked_total(
+        [
+            part("objective.focus_support_value", support_value),
+            part(f"{survival_path}.healing_received", healing),
+            part(f"{survival_path}.support_shield_received", support_shield),
+        ],
+        surface=BIS_SURFACE,
+    )
     metric = BIS_OBJECTIVES[objective_key]["metric"]
     components = {
         "support_value": support_value,
@@ -558,6 +656,43 @@ def _bis_coverage_receipt(
 # The public interface stays deliberately small; the internal orchestration
 # mirrors one candidate through every coverage and scoring gate.
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
+    """The payload's parallel ``dispositions`` map, keyed by leaf path.
+
+    Every member of the finished payload is re-written through the one
+    writer at the path it lives at -- assigning an existing key keeps its
+    position, so each row is byte-identical and every entry is produced
+    beside its leaf by ``serialize_leaf`` rather than by a second pass that
+    describes numbers it did not write.
+
+    It walks the whole payload rather than two named leaves.  Naming only
+    ``score`` and ``objective_value`` left 14 959 of this endpoint's 18 807
+    numbers with no entry -- including each candidate's
+    ``components.{damage_before_death, effective_health, healing,
+    support_shield_received}``, which are the components the objective is
+    folded from, and every candidate's stat block.  The endpoint that ranks
+    builds was serving the calculator's largest undispositioned numeric
+    surface while its own test asserted its two headline leaves were there.
+
+    The survival entries are produced here rather than carried from the
+    combat receipt on a private ``_survival_dispositions`` key smuggled
+    through the public row.  That key was inserted first in each row and
+    popped later, and the coverage receipt ran *before* the pop -- so a row
+    reaching the payload by any other route would have leaked it.  Writing
+    the leaf and its entry in the same ``serialize_leaf`` call is what the
+    single writer means; re-serialising a value at the path it now lives at
+    is that writer, not a second one.
+
+    The writer is a :class:`~.program.views.RankingWriter`: this payload is a
+    ranking, so a block a view opened ``THEORETICAL`` may not reach it.  That
+    is the write half of D-62's rule; the read half is
+    :func:`~.program.views.refuse_previewed`, which
+    :func:`bis_objective_score` runs over each candidate's own combat map
+    before folding a score out of it.
+    """
+    return name_every_number(payload, RankingWriter())
+
+
 def bis_payload(
     data: Mapping[str, object],
     *,
@@ -639,10 +774,12 @@ def bis_payload(
     # changing actor's full loadout signature.
     if pair_result_cache is None:
         pair_result_cache = {}
-    if candidate_item_options:
+    # A candidate is ranked on the receipt's objective block, which the
+    # compiled score projection does not carry, so BIS never creates a
+    # search context of its own; one handed in by a caller still applies
+    # only to a fixed-roster main-slot search.
+    if candidate_item_options or subject_team != "main":
         search_context = None
-    elif search_context is None and subject_team == "main":
-        search_context = CoupledSearchContext()
     for candidate in candidates:
         try:
             candidate_params = fight_params
@@ -708,7 +845,6 @@ def bis_payload(
                 allies=candidate_allies,
                 focus_participant_id=focus_id,
                 pair_result_cache=pair_result_cache,
-                include_receipt=False,
                 reuse_main_stats=(
                     subject_team == "main" and not candidate_params.ally_stat_bonuses
                 ),
@@ -799,10 +935,10 @@ def bis_payload(
     coverage_receipt, target_note, timing_excluded = _bis_coverage_receipt(
         certified, partial, withheld, target_filtered
     )
-    return {
+    payload = {
         "objective": objective_meta,
         "defensive_effects": {
-            "certified": BIS_CERTIFIED_DEFENSIVE_EFFECTS,
+            "certified": dict(survival_ledger_certifications()),
             "withheld": BIS_UNMODELED_DEFENSIVE_EFFECTS,
         },
         "subject_team": subject_team,
@@ -825,6 +961,8 @@ def bis_payload(
         "target_coverage_note": target_note,
         "timing_excluded_candidate_count": len(timing_excluded),
     }
+    payload["dispositions"] = _bis_dispositions(payload)
+    return payload
 
 
 def _batch_replace_subject_slot(
@@ -898,11 +1036,7 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
     subject_team = request_string(scenario, "subject_team", "main")
     subject_index = request_int(scenario, "subject_index", 0, 0, 4)
     pair_result_cache: dict = {}
-    batch_search_context = (
-        CoupledSearchContext()
-        if subject_team == "main" and not scenario.get("candidate_item_options")
-        else None
-    )
+    batch_search_context = None
     results: list[dict] = []
     selected: list[dict[str, object]] = []
     tested = 0

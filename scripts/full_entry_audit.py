@@ -265,10 +265,12 @@ def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
             "reason": "Synthetic page audit; no runtime cache record requested.",
         }
     if kind == "item":
-        from src.calculator.item_coverage import item_model_coverage
+        from src.calculator.item_coverage import ATTACKER_LANES, item_model_coverage
         from src.calculator.item_effects import ITEM_EFFECTS
 
-        coverage = item_model_coverage(record)
+        coverage = item_model_coverage(
+            str(record.get("name", "")), ATTACKER_LANES
+        ).as_payload()
         return {
             "ready": bool(str(coverage.get("reason", "")).strip())
             and coverage.get("status") != "review_pending",
@@ -426,7 +428,7 @@ def _item_effect_coverage(
     issue_refs = [int(value) for value in runtime.get("review_issue_refs", [])]
     rows: list[dict[str, Any]] = []
     for effect in expected.get("effects", []):
-        if status == "blocked":
+        if status == "withheld":
             verdict = "withheld"
         elif status == "stats_only":
             verdict = "stats_only" if effect.get("stat_fields") else "out_of_scope"
@@ -560,7 +562,7 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
         expected["effect_coverage"] = _item_effect_coverage(expected, runtime)
         expected["runtime_gaps"] = (
             [str(runtime.get("reason"))]
-            if status in {"blocked", "review_pending"} and runtime.get("reason")
+            if status in {"withheld", "review_pending"} and runtime.get("reason")
             else []
         )
     else:

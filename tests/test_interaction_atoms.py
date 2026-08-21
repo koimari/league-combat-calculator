@@ -1,5 +1,7 @@
 """Integration tests for authored control and projectile-defense atoms."""
 
+import importlib
+
 import pytest
 
 from src.app import app
@@ -757,9 +759,20 @@ def test_nautilus_r_knockup_uses_the_primary_target_duration():
     )
 
     r_event = _events(combat, attacker="main", target="enemy:Aatrox", source="R")[0]
-    assert r_event["cc_kind"] == "knockup"
+    # The primary target "is stunned for the same duration, and knocked up
+    # for a modified duration" — one cast, two immobilize kinds, so
+    # ``nautilus.MODULE_CC`` states the un-narrowed "immobilize" and takes
+    # its length from the cached "Knock Up Duration" row (1 / 1.5 / 2s),
+    # which is the number this test is named for.
+    assert r_event["cc_kind"] == "immobilize"
     assert r_event["cc_duration"] == pytest.approx(2.0)
     assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
+
+
+# A cast whose control is one branch of a two-branch active has to be told
+# which branch it was: Lulu's Whimsy either buffs an ally or polymorphs an
+# enemy, never both, and the module's default is the buff.
+_CONTROL_CASE_OPTIONS = {("Lulu", "W"): {"lulu_whimsy_target": "enemy"}}
 
 
 @pytest.mark.parametrize(
@@ -771,15 +784,19 @@ def test_nautilus_r_knockup_uses_the_primary_target_duration():
         ("Elise", "E", "stun", 2.4),
         ("Jax", "E", "stun", 1.0),
         ("Rammus", "E", "taunt", 2.0),
-        ("Poppy", "E", "stun", 2.0),
         ("Taric", "E", "stun", 1.5),
-        ("Tristana", "R", "knockback", 0.7),
         ("Rakan", "R", "charm", 1.5),
         ("Lulu", "W", "polymorph", 2.0),
         ("Varus", "R", "root", 2.0),
         ("Vayne", "E", "stun", 1.5),
         ("Bel'Veth", "W", "knockup", 1.0),
-        ("Singed", "E", "root", 2.0),
+        # Poppy's Heroic Charge "carries them along with her" and then
+        # "stuns them" on terrain, and Tristana's Buster Shot knocks back
+        # AND stuns: two immobilize kinds from one cast, which is what the
+        # un-narrowed "immobilize" states.  Both take their length from the
+        # cached "Stun Duration" row, so only the label moved.
+        ("Poppy", "E", "immobilize", 2.0),
+        ("Tristana", "R", "immobilize", 0.7),
         ("Twisted Fate", "W", "stun", 2.0),
     ],
 )
@@ -796,10 +813,17 @@ def test_structured_control_atoms_create_action_downtime(
         "include_auto_attacks": False,
         "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
     }
+    options = _CONTROL_CASE_OPTIONS.get((champion, slot))
+    if options is not None:
+        payload["champion_options"] = options
     if champion not in {"Elise"}:
         payload["ability_ranks"] = ranks
     combat = _calculate(payload)
 
+    # ``MODULE_CC`` is one declaration per slot and a slot is one cast, so
+    # every part of that cast carries the reviewed kind (Amumu's Q and R
+    # each price a magic hit and a Cursed Touch true hit).  Exactly one of
+    # them carries the sourced interval; the rest restate the kind.
     controls = [
         event
         for event in _events(
@@ -807,7 +831,10 @@ def test_structured_control_atoms_create_action_downtime(
         )
         if event.get("cc_kind") == kind
     ]
-    assert len(controls) == 1
+    assert controls
+    timed = [event for event in controls if event.get("cc_duration")]
+    assert len(timed) == 1
+    controls = timed
     assert controls[0]["cc_duration"] == pytest.approx(duration)
     assert controls[0]["control_source_atoms"]
     assert controls[0]["control_source_atoms"][0]["behavior"] in {
@@ -942,10 +969,13 @@ def test_soraka_e_root_is_a_delayed_control_only_event():
             "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
         }
     )
+    # The cast's damage row carries the slot's reviewed kind too (that is
+    # what ``MODULE_CC`` declares); the control-only event is the one that
+    # carries the sourced interval.
     root = next(
         event
         for event in _events(combat, attacker="main", target="enemy:Aatrox", source="E")
-        if event.get("cc_kind") == "root"
+        if event.get("cc_kind") == "root" and event.get("cc_duration")
     )
     assert root["damage"] == pytest.approx(0.0)
     assert root["time"] == pytest.approx(1.5)
@@ -956,8 +986,10 @@ def test_soraka_e_root_is_a_delayed_control_only_event():
 @pytest.mark.parametrize(
     ("champion", "slot", "kind", "duration"),
     [
-        ("Anivia", "Q", "stun", 1.5),
-        ("Bard", "Q", "stun", 1.8),
+        # Cosmic Binding's own row is the 60% slow it always applies for
+        # the cached "Disable Duration"; the stun is the second branch,
+        # gated on the bolt hitting terrain or a second enemy.
+        ("Bard", "Q", "slow", 1.8),
         ("Fiddlesticks", "Q", "fear", 2.0),
         ("Ivern", "Q", "root", 2.0),
         ("Jhin", "W", "root", 2.25),
@@ -965,13 +997,20 @@ def test_soraka_e_root_is_a_delayed_control_only_event():
         ("Maokai", "W", "root", 1.4),
         ("Neeko", "E", "root", 1.5),
         ("Senna", "W", "root", 2.25),
-        ("Seraphine", "E", "root", 1.5),
+        # Beat Drop always "slows them by 99% for a few seconds" (the
+        # cached "Disable Duration"); the root needs a target that is
+        # already slowed, and the stun one already immobilized.
+        ("Seraphine", "E", "slow", 1.5),
         ("Seraphine", "R", "charm", 1.75),
         ("Orianna", "R", "stun", 0.75),
-        ("Camille", "E", "stun", 0.75),
-        ("Brand", "Q", "stun", 1.75),
+        # Wall Dive knocks back "all nearby enemy champions ... as well as
+        # stunning them for 0.75 seconds": two immobilize kinds from one
+        # cast, stated un-narrowed at the sourced "Stun Duration".
+        ("Camille", "E", "immobilize", 0.75),
         ("Cassiopeia", "R", "stun", 2.0),
-        ("Malphite", "R", "airborne", 1.5),
+        # Unstoppable Force is a knockup and only a knockup, so the module
+        # narrows past the Wiki's "airborne" umbrella class.
+        ("Malphite", "R", "knockup", 1.5),
         ("Velkoz", "E", "knockup", 0.75),
         ("Zyra", "E", "root", 2.0),
     ],
@@ -995,6 +1034,65 @@ def test_additional_structured_cc_rows_emit_typed_duration(
     part = next(part for part in parsed[slot]["parts"] if part.cc_duration > 0.0)
     assert part.cc_kind == kind
     assert part.cc_duration == pytest.approx(duration)
+
+
+@pytest.mark.parametrize(
+    ("champion", "slot", "declared", "withheld_duration_attr"),
+    [
+        # Flash Frost's one priced row is "Total Magic Damage" — the
+        # pass-through AND the recast shatter in a single number.  The
+        # shatter's "Stun Duration" is sourced, but a row that is two
+        # landings certifies no single hit, so no kind on it could reach
+        # the ledger and the slot stays unreviewed rather than guessing.
+        ("Anivia", "Q", None, "Stun Duration"),
+        # Sear's stun is an "Ablaze Bonus" branch: whether a cast controls
+        # depends on the target's stack state at that cast, not on the
+        # slot, and one kind per slot cannot say both.
+        ("Brand", "Q", None, None),
+        # Fling's unconditional control is the displacement it names; the
+        # root is a second cached effect gated on the target landing in
+        # Mega Adhesive, a condition the engine does not track.
+        ("Singed", "E", "airborne", "Root Duration"),
+    ],
+)
+def test_conditional_control_branches_are_reviewed_and_withheld(
+    champion: str, slot: str, declared: str | None, withheld_duration_attr: str | None
+):
+    """A branch the cast may not take never authors a typed duration.
+
+    These three slots each have a real, sourced crowd-control interval in
+    ``data/champions.json`` that the module deliberately does not publish,
+    and each module records why beside its ``MODULE_CC``.  The pin is here
+    so the withholding stays a decision rather than an omission: if a slot
+    starts emitting the branch, this test is what notices.
+    """
+    module = importlib.import_module(
+        f"src.calculator.champions.{_MODULE_NAMES[champion]}"
+    )
+    assert module.MODULE_CC.get(slot) == declared
+
+    data = get_champion(champion)
+    stats = calculate_total_stats(data, 18, [])
+    parsed = parse_champion_abilities(
+        data,
+        18,
+        stats["ability_power"],
+        ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+        champion_stats=stats,
+        target_stats={
+            "target_max_health": 2000.0,
+            "target_current_health": 2000.0,
+        },
+    )
+    assert all(part.cc_duration == 0.0 for part in parsed[slot]["parts"])
+    assert not parsed[slot].get("control_events")
+
+    if withheld_duration_attr is not None:
+        text = str(data["abilities"][slot])
+        assert withheld_duration_attr in text
+
+
+_MODULE_NAMES = {"Anivia": "anivia", "Brand": "brand", "Singed": "singed"}
 
 
 @pytest.mark.parametrize(
@@ -1060,7 +1158,10 @@ def test_stateful_control_atoms_create_timed_downtime(
         for event in _events(
             combat, attacker="main", target="enemy:Aatrox", source=slot
         )
-        if event.get("cc_kind") == kind
+        # Nocturne's E prices the tether hit at 0.5s and lands its fear as
+        # a separate control-only event at the break; both rows carry the
+        # slot's declared kind, and the later one carries the interval.
+        if event.get("cc_kind") == kind and event.get("cc_duration")
     )
     assert control["cc_duration"] == pytest.approx(duration)
     if champion == "Nocturne":

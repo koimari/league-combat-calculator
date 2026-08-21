@@ -21,16 +21,31 @@ E3 additions over the CP10.9 packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
-_packet_parse, _packet_slots, _packet_assumptions, _packet_sources, _packet_options = (
-    build_packet_module("Volibear", PACKET_SHA256, single_hit_slots=frozenset({"E"}))
-)
-PACKET_SPEC = _packet_slots.packet_spec
+# Stormbringer's damage is its landing: "Volibear impacts after 1 second,
+# slowing nearby enemies by 50% decaying over 1 second. Enemies within the
+# epicenter are also dealt physical damage" (data/champions.json Volibear
+# R), and he "leaps to the target location ... over 1 second" regardless of
+# distance, so the offset is a constant, not a travel estimate.
+_R_IMPACT_SECONDS = 1.0
+
+# Frenzied Maul's strike is its cast time: the cached note says "Frenzied
+# Maul deals bonus damage and heals if the target is still Wounded after
+# the cast time.  If the mark wears off before the cast time completes, the
+# ability's animation will appear as if the bite was applied but there is
+# no bonus damage or heal" (data/champions.json Volibear W), and that cast
+# time is the cached ``castTime`` of 0.25 seconds.  Both halves of the bite
+# — the base slash and the Wounded surplus — are the one strike, so both
+# land on that instant.
+_W_BITE_SECONDS = 0.25
+
 
 # HARDCODED: verify on patch updates — The Relentless Storm's per-stack
 # attack speed (5% + 3% per 100 AP) and the Wounded bite's increase
@@ -67,7 +82,7 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.options.get("relentless_storm_stacks", _RELENTLESS_STORM_MAX_STACKS)
     )
     stacks = min(max(stacks, 0), _RELENTLESS_STORM_MAX_STACKS)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     per_stack = _STORM_AS_PER_STACK + _STORM_AS_PER_100_AP * ap / 100.0
     bonus_as = stacks * per_stack
 
@@ -115,17 +130,19 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     name = ability.get("name", "Frenzied Maul")
 
     if not ctx.options.get("w_wounded", True):
-        return damage_entry(name, rank, cooldown, base, "physical")
+        entry = damage_entry(name, rank, cooldown, base, "physical")
+        entry["parts"] = (DamagePart("physical", base, time_offset=_W_BITE_SECONDS),)
+        return entry
 
-    bonus_ad = ctx.stats.get("bonus_attack_damage", 0.0)
+    bonus_ad = ctx.stat("bonus_attack_damage")
     extra_ratio = (
         _WOUNDED_BONUS_BASE + _WOUNDED_BONUS_PER_100_BONUS_AD * bonus_ad / 100.0
     )
     extra = base * extra_ratio
     entry = damage_entry(name, rank, cooldown, base + extra, "physical")
     entry["parts"] = (
-        DamagePart("physical", base),
-        DamagePart("physical", extra),
+        DamagePart("physical", base, time_offset=_W_BITE_SECONDS),
+        DamagePart("physical", extra, time_offset=_W_BITE_SECONDS),
     )
     entry["detail"] = (
         f"Wounded 2nd bite: +{extra_ratio * 100:g}% increased damage "
@@ -134,41 +151,73 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _sky_splitter(ctx: SlotCtx) -> dict[str, Any] | None:
+def _sky_splitter(packet_e):
     """E: the reviewed magic hit plus the sourced self-shield payload.
 
     The 14% max HP + 75% AP shield (cached description prose) rides the
     E damage event; the shared ledger grants it as a timed 3-second
     self-shield at the cast.
     """
-    entry = _packet_e(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stats.get(
-        "health", 0.0
-    ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stats.get("ability_power", 0.0)
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_SKY_SPLITTER_SHIELD_DURATION_SECONDS,
-        source=entry.get("name", "Sky Splitter"),
-        detail=(
-            f"E also shields Volibear for {shield:g} for "
-            f"{_SKY_SPLITTER_SHIELD_DURATION_SECONDS:g}s "
-            f"(14% max HP + 75% AP)"
-        ),
-    )
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_e(ctx)
+        rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
+        if entry is None or rank < 1:
+            return entry
+        shield = _SKY_SPLITTER_SHIELD_MAX_HP_RATIO * ctx.stat(
+            "health"
+        ) + _SKY_SPLITTER_SHIELD_AP_RATIO * ctx.stat("ability_power")
+        return attach_self_shield(
+            entry,
+            amount=shield,
+            duration=_SKY_SPLITTER_SHIELD_DURATION_SECONDS,
+            source=entry.get("name", "Sky Splitter"),
+            detail=(
+                f"E also shields Volibear for {shield:g} for "
+                f"{_SKY_SPLITTER_SHIELD_DURATION_SECONDS:g}s "
+                f"(14% max HP + 75% AP)"
+            ),
+        )
+
+    return parse
 
 
-SLOTS = dict(_packet_slots)
-SLOTS["P"] = _relentless_storm
-SLOTS["W"] = _frenzied_maul
-_packet_e = SLOTS["E"]
-SLOTS["E"] = _sky_splitter
-parse_abilities = build_parser(SLOTS, "Volibear")
+# Thundering Smash's empowered attack pounces "dealing bonus physical
+# damage and stunning them for 1 second"; Sky Splitter's bolt "deals magic
+# damage to enemies hit ... and slows them by 40% for 2 seconds".  P is the
+# stack buff plus its Lightning Claws on-hit rider — a basic-attack row,
+# not an ability event.
+#
+# Stormbringer's landing "slow[s] nearby enemies by 50% decaying over 1
+# second" on the same impact that deals its damage, now authored at that
+# impact.
+#
+# Frenzied Maul "slashes the target enemy with his claws to deal physical
+# damage, apply on-hit effects, trigger on-attack effects, and mark the
+# target Wounded", and the Wounded bite only deals "increased damage and
+# heal[s] himself" — a mark and a heal, no control.  Both halves of the
+# bite now land on the cached cast time, so that review reaches the event
+# ledger; the self-heal rule pays per bite rather than per part
+# (``HealAnchor.CAST``), so the second half is not a second heal.
+MODULE_CC = {"Q": "stun", "W": "none", "E": "slow", "R": "slow"}
 
-OPTIONS = list(_packet_options) + [
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Volibear",
+    PACKET_SHA256,
+    # Q's empowered attack is one pounce on one target; E is one bolt.
+    single_hit_slots=frozenset({"Q", "E"}),
+    packet_part_timings={"R": {"time_offset": _R_IMPACT_SECONDS}},
+    slot_parsers={
+        "P": _relentless_storm,
+        "W": _frenzied_maul,
+    },
+    slot_wrappers={
+        "E": _sky_splitter,
+    },
+    cc_kinds=MODULE_CC,
+)
+
+OPTIONS = list(OPTIONS) + [
     {
         "key": "relentless_storm_stacks",
         "type": "int",
@@ -185,7 +234,7 @@ OPTIONS = list(_packet_options) + [
     },
 ]
 
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The Relentless Storm stack count is user-set (default 5 = fully "
     "stacked); the 6-second stack window and which damage events refresh "
     "it are not simulated",
@@ -203,17 +252,8 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "Q's stun/MS, W's heal and R's bonus health remain utility/state " "only",
 ]
 
-SOURCES = list(_packet_sources)
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-
-
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -237,28 +277,27 @@ def derive_self_healing(
     ) -> float:
         return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
 
-    w_hits = 0
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "W"
+    # One bite, one heal: the cached note is "Frenzied Maul deals bonus
+    # damage and heals if the target is still Wounded after the cast time",
+    # so the payment is the cast, not the parts this module prices that bite
+    # with (base slash + Wounded surplus).  The first W applies the Wound;
+    # the heal lands on every later W.
+    for index, payment in enumerate(
+        _healing._payments(_healing.HealAnchor.CAST, "W", damage_events, cast_timeline)
     ):
-        w_hits += 1
-        if w_hits < 2:
+        if index < 1:
             continue
         healing.append(
             {
-                "time": float(event.get("time", 0.0)),
+                "time": float(payment.event.get("time", 0.0)),
                 "amount": 0.0,
                 "amount_formula": frenzied_maul_heal,
                 "source": "Frenzied Maul",
                 "kind": "champion_ability",
-                **_healing._trigger_fields(event),
+                **_healing._trigger_fields(payment.event),
             }
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Volibear", derive_self_healing)

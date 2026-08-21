@@ -1,0 +1,103 @@
+{
+  "receipt": "oracle-P5-resolver-leaf3",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/dream_maker_roster/fights/0:Aatrox/rotation/dependencies",
+  "old_value": "<absent>",
+  "new_value": "seven empty ledgers (all seven rotation entries carry an empty dependency ledger; i.e. the resolver reports zero dependency edges for Aatrox)",
+  "verdict": "both_wrong",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-p5",
+    "read": ["data/champions.json (Aatrox)", "data/atoms/aatrox.atoms.json", "data/champion-audit/batch-0.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/f3-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "independent_computation": {
+    "question_restated": "Does Aatrox's rotation, as described by the cached wiki text, contain zero dependency edges? An all-empty ledger asserts that no cast in the rotation depends on any other cast, buff, hit-count or prior damage.",
+    "answer": "No. The cached wiki text yields at least six distinct, load-bearing dependency edges, five of which are already carried as non-empty `relations` in the cached atom decomposition. The correct value is a NON-EMPTY dependency ledger.",
+
+    "edges_derived_from_cache": [
+      {
+        "id": "E1",
+        "edge": "R (World Ender) -> Q1/Q2/Q3, W, P, basic attacks  [buff-before-damage]",
+        "source": "data/champions.json Aatrox.abilities.R effects[2]: 'During World Ender, Aatrox gains bonus attack damage ...' leveling 'Bonus Attack Damage' = [20, 30, 40] units ['% AD']; effects[0]: 'unleashes his true form for 10 seconds'.",
+        "why_load_bearing": "Every Aatrox damage row is AD-scaling (Q first cast 60-90% AD, third cast 90-135% AD, third sweetspot 236.25% AD at rank 5; W 40% AD). At R rank 3 the AD term is multiplied by 1.40. Worked example, Q third-cast sweetspot at rank 5: 183.75 + 236.25% AD without R, versus 183.75 + 330.75% AD with R first (236.25 x 1.4 = 330.75). Cast order R-then-Q vs Q-then-R changes the packet by +40% of its AD component. An empty ledger cannot express this ordering constraint.",
+        "corroboration": "data/champion-audit/batch-e9-1.json Aatrox: 'R World Ender modeled as %total-AD stat buff'. data/worklists/f2-task.md line 10 names this exact edge as a required resolver signal: 'buffs first (Aatrox R AD amp before damage, ...)'."
+      },
+      {
+        "id": "E2",
+        "edge": "Q1 -> Q2 -> Q3  [intra-ability cast chain, ordering + 1s gate + 4s expiry]",
+        "source": "data/champions.json Aatrox.abilities.Q effects[0]: 'Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. If Aatrox does not recast the ability within 4 seconds of the previous cast, it goes on cooldown.' effects[1]: 'Each subsequent cast gains 25% more damage.'",
+        "arithmetic_check": "Rank-5 rows confirm the chain multipliers exactly: First 70 + 90% AD, Second 87.5 + 112.5% AD (87.5/70 = 1.25, 112.5/90 = 1.25), Third 105 + 135% AD (105/70 = 1.50, 135/90 = 1.50). Sweetspot rows are 1.75x their base cast (122.5/70 = 1.75, 157.5/90 = 1.75), matching 'Enemies hit within a Sweetspot ... take 75% bonus damage'.",
+        "why_load_bearing": "The third cast is the largest packet and is only reachable after the first two; the 1s inter-cast gate and 4s recast window are hard scheduling dependencies. Zero edges asserts Q3 is independently castable."
+      },
+      {
+        "id": "E3",
+        "edge": "every ability hit / on-hit auto -> P (Deathbringer Stance) cooldown  [hit-count dependency]",
+        "source": "data/champions.json Aatrox.abilities.P effects[1]: 'Whenever Aatrox hits at least one enemy champion or large monster with a basic attack on-hit or an ability, Deathbringer Stance's current cooldown is reduced by 2 seconds, doubled to 4 if he hits with the Sweetspot of The Darkin Blade.' P cooldown modifier values run 22.0 at level 1 to 10.0 at level 18, affectedByCdr false.",
+        "arithmetic_check": "At level 18 the P cooldown is 10.0s. A three-cast Q rotation landing sweetspots removes 3 x 4 = 12s >= 10.0s, so P is fully reset by one Q rotation; the same rotation landing no sweetspots removes 3 x 2 = 6s, leaving 4.0s. The number of P procs in the fight window is therefore a strict function of the cast schedule and its sweetspot flags.",
+        "why_load_bearing": "P damage is 4%-10% (by level) of target max health (rank rows 4.0 ... 10.0 '%'), so a proc-count difference is a first-order damage difference. An empty ledger asserts P's cadence is independent of the rotation."
+      },
+      {
+        "id": "E4",
+        "edge": "W first hit -> W tether second hit (delayed, 1.5s)",
+        "source": "data/champions.json Aatrox.abilities.W effects[0] 'Physical Damage' [30,40,50,60,70] + 40% AD; effects[1] 'a tether is formed ... for 1.5 seconds'; effects[2] 'If the tether is not broken by the end of its duration, the target is dealt the same physical damage again', 'Total Damage' [60,80,100,120,140] + 80% AD.",
+        "arithmetic_check": "140/70 = 2.0 and 80/40 = 2.0 — the Total row is exactly twice the initial row, confirming the second instance is conditional on and identical to the first.",
+        "why_load_bearing": "The second packet exists only as a consequence of the first and only after a 1.5s delay; that is a dependency edge with a timing attribute."
+      },
+      {
+        "id": "E5",
+        "edge": "damage dealt -> E (Umbral Dash) passive heal; R -> that heal's magnitude",
+        "source": "data/champions.json Aatrox.abilities.E effects[0]: 'Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions.' Aatrox.abilities.R effects[2] leveling 'Increased Healing' [50, 75, 100] units ['%'].",
+        "why_load_bearing": "The heal ledger is a function of the damage ledger (post-mitigation, champion-only), and R multiplies it by 1.5/1.75/2.0. Two chained dependencies. data/champion-audit/batch-e9-1.json confirms the engine models exactly this: 'E1 added Deathbringer Stance passive heal + E 16%+1.1%/100 bHP heal + R healing-amp rule ... verified in /api/calculate (self-heal 313.7 at level 18, no items)'."
+      },
+      {
+        "id": "E6",
+        "edge": "E (Umbral Dash) -> basic-attack cadence [attack reset]; E interleaves inside other casts",
+        "source": "data/champions.json Aatrox.abilities.E effects[2]: 'Umbral Dash resets Aatrox's basic attack timer and can be cast during his other abilities without cancelling them and vice versa.' Aatrox.abilities.Q notes cast-time table: 'Abilities: Umbral Dash can be cast. Other abilities are disabled.'",
+        "corroboration": "data/atoms/aatrox.atoms.json, atom 'interaction.attack-reset' (behavior AatroxE) carries relations ['stats.attack-speed', 'damage.basic-attack'] — the cached atomization already records this exact edge."
+      }
+    ],
+
+    "cached_atom_relations_contradicting_an_empty_ledger": [
+      "AatroxQ  damage.damage-instance -> ['damage.resistance-mitigation', 'heal-shield.life-steal', 'heal-shield.omnivamp', 'heal-shield.grey-health']",
+      "AatroxW  damage.damage-instance -> ['damage.resistance-mitigation', 'heal-shield.life-steal', 'heal-shield.omnivamp', 'heal-shield.grey-health']",
+      "AatroxE  interaction.attack-reset -> ['stats.attack-speed', 'damage.basic-attack']",
+      "AatroxRRevive heal-shield.revive -> ['damage.damage-instance', 'heal-shield.heal']",
+      "AatroxRevive  heal-shield.revive -> ['damage.damage-instance', 'heal-shield.heal']",
+      "NOTE: 5 of Aatrox's 25 cached atoms carry non-empty `relations`. Any dependency ledger derived from the atomized data must be non-empty; a ledger derived from the wiki prose is non-empty for the six independent reasons above."
+    ],
+
+    "correct_value": "A non-empty dependency ledger. Minimum required content, one edge per row: (E1) R -> all AD-scaling rows [buff-first]; (E2) Q1 -> Q2 -> Q3 [cast chain, 1s gate, 4s expiry, 1.00/1.25/1.50 damage multipliers]; (E3) each ability/auto hit -> P cooldown [-2s, -4s on Q sweetspot]; (E4) W hit -> W tether hit [+1.5s, same packet]; (E5) damage dealt -> E passive heal, amplified by R; (E6) E -> basic-attack timer reset / intra-cast interleave. Seven empty ledgers is the assertion that none of these exist.",
+
+    "why_the_narrow_reading_does_not_rescue_the_new_value": "One could argue Aatrox has no classic 'setup/consume' combo (no Varus Blight, no Brand Blaze) and that an empty ledger is therefore defensible. That defence fails on the project's own stated resolver contract: data/worklists/f2-task.md line 10 lists four dependency signals the resolver must encode — (a) per-rank DPS, (b) setup/consume, (c) cooldown gating, (d) buffs first — and names Aatrox under (d) verbatim ('Aatrox R AD amp before damage'). Aatrox also satisfies (c) via the Q 1s inter-cast gate / 4s expiry and the P hit-driven cooldown. Under either the wiki text or the resolver's own declared signal set, the ledger must be non-empty.",
+
+    "verdict_reasoning": "The old value (<absent>) is not a computable value of a field that now exists and records nothing. The new value (seven empty ledgers) makes a positive, checkable claim — 'this rotation has no dependencies' — that the cached wiki text and the cached atom relations both refute. Neither the old nor the new value equals the independently computed correct value, so the verdict is both_wrong. The actionable half is the new value: seven empty ledgers is a false negative from the resolver, not a neutral placeholder."
+  },
+
+  "sources_quoted": [
+    {"file": "data/champions.json", "path": "Aatrox.abilities.P.effects[0]", "quote": "Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health"},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.P.effects[1]", "quote": "Whenever Aatrox hits at least one enemy champion or large monster with a basic attack on-hit or an ability, Deathbringer Stance's current cooldown is reduced by 2 seconds, doubled to 4 if he hits with the Sweetspot of The Darkin Blade."},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.P.cooldown.modifiers[0].values", "quote": "[22.0, ..., 10.0] (level 1 -> 18), affectedByCdr: false"},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.Q.effects[0]", "quote": "Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. If Aatrox does not recast the ability within 4 seconds of the previous cast, it goes on cooldown."},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.Q.effects[1]", "quote": "Enemies hit within a Sweetspot of the area take 75% bonus damage and are also knocked up for 0.25 seconds. Each subsequent cast gains 25% more damage."},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.Q.effects[2..4].leveling", "quote": "First Cast Damage [10,25,40,55,70] + [60,67.5,75,82.5,90]% AD; Second Cast Damage [12.5,31.25,50,68.75,87.5] + [75,84.375,93.75,103.125,112.5]% AD; Third Cast Damage [15,37.5,60,82.5,105] + [90,101.25,112.5,123.75,135]% AD; Third Sweetspot Damage [26.25,...,183.75] + [157.5,...,236.25]% AD"},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.W.effects[0] / effects[2]", "quote": "Physical Damage [30,40,50,60,70] + 40% AD ... If the tether is not broken by the end of its duration, the target is dealt the same physical damage again and pulled to the center of the area. Total Damage [60,80,100,120,140] + 80% AD"},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.E.effects[0]", "quote": "Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of non-persistent post-mitigation damage he deals against enemy champions."},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.E.effects[2]", "quote": "Umbral Dash resets Aatrox's basic attack timer and can be cast during his other abilities without cancelling them and vice versa."},
+    {"file": "data/champions.json", "path": "Aatrox.abilities.R.effects[0] / effects[2]", "quote": "Active: Aatrox unleashes his true form for 10 seconds ... During World Ender, Aatrox gains bonus attack damage ... and receives increased self-healing from all sources. Bonus Attack Damage [20,30,40]% AD; Increased Healing [50,75,100]%"},
+    {"file": "data/atoms/aatrox.atoms.json", "path": "atoms[].relations", "quote": "AatroxE interaction.attack-reset -> ['stats.attack-speed','damage.basic-attack']; AatroxQ/AatroxW damage.damage-instance -> ['damage.resistance-mitigation','heal-shield.life-steal','heal-shield.omnivamp','heal-shield.grey-health']"},
+    {"file": "data/champion-audit/batch-e9-1.json", "path": "Aatrox.gap_summary", "quote": "R World Ender modeled as %total-AD stat buff; Q 3-cast, W two-hit, P %maxHP on-hit all sourced from the JSON."},
+    {"file": "data/worklists/f2-task.md", "path": "line 10", "quote": "(d) buffs first (Aatrox R AD amp before damage, Vladimir R before burst, Jhin R after setup)"},
+    {"file": "docs/math-foundations.md", "path": "Section 5, row 'Ability rotation casts'", "quote": "shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast"},
+    {"file": "docs/math-foundations.md", "path": "Section 1.1", "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress"}
+  ],
+
+  "caveats": [
+    "This oracle worked only from the permitted export (data/ and docs/math-foundations.md). The emitting code and the exact JSON schema of the `dependencies` ledger were not read, so the shape of the correct value (list-of-edges vs keyed ledger) is stated semantically, not as a literal JSON blob.",
+    "The count 'seven' was not independently reproducible from data/ alone; the finding does not depend on it. Whatever the seven entries are, all-empty is refuted by the six edges above.",
+    "docs/math-foundations.md documents the shared-timeline cast scheduler (Section 1.1) but contains no 'dependencies' term; it therefore cannot license an empty ledger either."
+  ]
+}

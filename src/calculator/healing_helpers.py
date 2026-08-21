@@ -1,9 +1,13 @@
 """Shared helpers for champion-owned healing declarations.
 
 Healing is deliberately kept separate from item/stat heuristics.  A result
-contains post-mitigation, ordered damage events; this module applies only
-champion-specific Wiki rules to those events and returns another ordered
-ledger for the participant simulator.
+contains post-mitigation, ordered damage events; a champion module's
+``derive_self_healing`` applies its own Wiki rules to those events and
+returns another ordered ledger for the participant simulator.  This module
+is the one home for what those resolvers share: the sourced readers, and
+the payment machinery (:class:`HealAnchor`, :func:`_payments`) that decides
+*how many times* a rule pays — the occasion the Wiki names, never the shape
+of the ledger the module happened to author.
 """
 
 # These names form the compatibility helper surface used by champion modules.
@@ -12,6 +16,8 @@ ledger for the participant simulator.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Iterable
 
 from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
@@ -302,6 +308,141 @@ def _cast_slot_times(
     )
 
 
-# Compatibility names for the reviewed self-healing rules. The public
-# ``healing.py`` entrypoint loads typed declarations from champion modules and
-# keeps this set during the formula migration. The scoring fast path reads the
+class HealAnchor(Enum):
+    """What the game pays one self-heal on — the rule's own answer.
+
+    A self-heal rule reads a damage ledger, but the ledger's *shape* is not
+    what the wiki pays on: a champion module that authors an ability's true
+    hit cadence turns one row into several events, and a rule that counted
+    events would turn one heal into several with it.  So every rule that
+    reads the ledger names the occasion it pays on here, and the resolver
+    (``healing_helpers._payments``) turns that answer into the payments.
+
+    ``CAST``
+        One payment per activation, however many hits the cast authors —
+        Frenzied Maul's bite, Void Spike's explosion, Piercing Darkness'
+        ray.  The payment lands on the cast's first hit, which is where the
+        ability arrives.
+    ``DAMAGING_HIT``
+        One payment per hit that *dealt damage* — every rule whose amount
+        is a share of what the hit did (Severum, Soul Siphon, lifesteal,
+        Spirit of Dread).  A hit that dealt nothing pays nothing.
+    ``CAST_SCHEDULE``
+        The heal has a cadence of its own, counted from the cast, not from
+        the damage the cast eventually deals — Chilling Scream heals
+        "every 0.25 seconds" *while charging*, before the scream lands.
+    """
+
+    CAST = "cast"
+    DAMAGING_HIT = "damaging_hit"
+    CAST_SCHEDULE = "cast_schedule"
+
+
+# One cast's events and its cast time can disagree by the rounding the
+# engine applies to published cast times (damage.py rounds to 3 decimals
+# while authored offsets stay raw), so an event is attributed to the last
+# cast at or before it within this slack.
+_CAST_MATCH_TOLERANCE = 1e-3
+
+
+@dataclass(frozen=True, slots=True)
+class _Payment:
+    """One occasion a self-heal rule pays.
+
+    ``event`` is the damage event the payment rides — the cast's first hit
+    for a ``CAST`` payment, the hit itself for a ``DAMAGING_HIT`` one — and
+    is what links the heal receipt to the damage that caused it, so a heal
+    whose trigger the coupled walk skipped is skipped with it.
+    ``cast_time`` is the activation the event belongs to, which is where a
+    heal with a cadence of its own starts counting.
+    """
+
+    cast_time: float
+    event: dict[str, Any]
+
+
+def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
+    """Damage events whose source key the rule claims."""
+    if callable(source):
+        return [event for event in damage_events if source(_event_source(event))]
+    if isinstance(source, str):
+        return [event for event in damage_events if _event_source(event) == source]
+    return [event for event in damage_events if _event_source(event) in source]
+
+
+def _attributing_cast(cast_times: list[float], event_time: float) -> float | None:
+    """The activation an event at *event_time* came from, if one names it."""
+    attributed: float | None = None
+    for cast_time in cast_times:
+        if cast_time <= event_time + _CAST_MATCH_TOLERANCE:
+            attributed = cast_time
+        else:
+            break
+    return attributed
+
+
+def _takedown_payments(
+    count: int, damage_events: list[dict[str, Any]]
+) -> list[_Payment]:
+    """The first *count* hits a takedown-paid rule can honestly ride.
+
+    A heal the game pays when a nearby unit *dies* — Cho'Gath's Carnivore,
+    Trundle's King's Tribute, Alistar's seven-stack Triumph — has neither a
+    cast nor a damage row of its own, and a duel simulates neither the wave
+    nor the takedown.  So the champion module declares the count as an
+    option and the fight supplies the times: the first *count* hits that
+    dealt damage, in order.  That is the most a rule can conclude without a
+    kill to point at, and it keeps the heals inside the window the fight
+    actually covers instead of stacking them all on one instant.
+    """
+    if count <= 0:
+        return []
+    payments = _payments(HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events)
+    payments.sort(key=lambda payment: payment.cast_time)
+    return payments[: int(count)]
+
+
+def _payments(
+    anchor: HealAnchor,
+    source,
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+) -> list[_Payment]:
+    """The occasions a rule pays on, per the anchor the rule declares.
+
+    ``source`` is the event source key the rule reads — a slot letter, a
+    set of them, or a predicate over the key.  Only a slot letter can be
+    matched against the cast timeline, so only that form may anchor on a
+    cast.
+
+    The number of payments comes from the declaration, never from how many
+    events a champion module authored: a ``CAST`` rule pays once per
+    activation whether its module prices the ability as one hit or six.
+    When no cast in the timeline names an event (an ability the timeline
+    does not publish, or a caller that passed none), each distinct event
+    timestamp stands in for its own activation — which keeps the several
+    parts of one instant together and is the most a rule can honestly
+    conclude without a cast to point at.
+    """
+    events = _events_matching(source, damage_events)
+    if anchor is HealAnchor.DAMAGING_HIT:
+        return [
+            _Payment(float(event.get("time", 0.0)), event)
+            for event in events
+            if float(event.get("damage", 0.0) or 0.0) > 0.0
+        ]
+    if not isinstance(source, str):
+        raise ValueError(f"{anchor} needs one slot to match casts, got {source!r}")
+    cast_times = _cast_slot_times(cast_timeline, source)
+    activations: dict[float, dict[str, Any]] = {}
+    for event in events:
+        event_time = float(event.get("time", 0.0))
+        cast_time = _attributing_cast(cast_times, event_time)
+        if cast_time is None:
+            cast_time = event_time
+        held = activations.get(cast_time)
+        if held is None or event_time < float(held.get("time", 0.0)):
+            activations[cast_time] = event
+    return [
+        _Payment(cast_time, activations[cast_time]) for cast_time in sorted(activations)
+    ]

@@ -1,0 +1,118 @@
+{
+  "receipt": "oracle-C6-leaf22",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/slot",
+  "old_value": "W",
+  "new_value": "Q",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "isolation_note": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were never opened."
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].rechargeRate / .cooldown",
+      "quote": "rechargeRate: [7, 7, 7, 7, 7]; cooldown.modifiers[0].values: [7, 7, 7, 7, 7], cooldown.affectedByCdr: false"
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].cooldown",
+      "quote": "values: [12, 11, 10, 9, 8], affectedByCdr: true"
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].cooldown / .abilities.R[0].cooldown",
+      "quote": "E: [15, 15, 15, 15, 15], affectedByCdr true, castTime 0.25. R: [120, 100, 80], affectedByCdr true, castTime 0.25"
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -> leveling attribute 'Ability Haste', values [10, 20, 30]"
+    },
+    {
+      "id": "S6",
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0] and effects[2]",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. ... At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S7",
+      "file": "docs/math-foundations.md",
+      "path": "section 1.1, 'Renewal theory for cast + auto timing schedules'",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, ...` -- again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S8",
+      "file": "CLAUDE.md (domain knowledge, restated in docs/math-foundations.md row 'Ability haste (effective_cooldown)')",
+      "quote": "cd' = cd*100/(100+AH)"
+    },
+    {
+      "id": "S9",
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage, P 120-splinter +15% AP capstone"
+    }
+  ],
+
+  "scenario_reading": {
+    "claim": "The '_120' suffix is the Splinters-of-Wrath option set to its maximum, 120.",
+    "support": "S6 caps Splinters at 120 and puts the AP capstone exactly at 120; S9 (cached audit, written independently of the change) names the option 'splinters (0-120)' and lists 120 as the capstone value. No other Syndra quantity in the cached data equals 120 for a plausible scenario knob except R rank-1 cooldown, which a rank-3-ult scenario would not name.",
+    "consequence": "120 >= 40, so S1's Transcendent bonus is active: Dark Sphere is a 2-charge (stocked) ability, and Syndra enters the fight with both charges stocked."
+  },
+
+  "independent_computation": {
+    "assumptions": [
+      "Level 18-20 max ranks: Q5 / W5 / E5 / R3 (the ability-haste value from S5 is then 30; the conclusion is shown below to be rank-insensitive).",
+      "Effective cooldown per S8: cd' = cd * 100/(100+AH).",
+      "Shared-timeline greedy scheduling per S7: every ability whose cooldown has elapsed and that is not blocked by an in-progress cast is castable; ties at t=0 are broken by the scenario's custom cast order.",
+      "Cast times from S4: E 0.25 s, R 0.25 s, Q and W parse as 'none' (~0 s), so the whole opening burst finishes well inside 1 s.",
+      "Mana is not binding: level-18 mana = 480 + 40*17*(0.7025+0.0175*17) = 480 + 680*1.0 = 1160, versus an opening burst cost of Q 60 + Q 60 + W 100 + E 50 + R 100 = 370."
+    ],
+    "effective_cooldowns_at_zero_external_haste": {
+      "Q_recharge": "7 * 100/(100+30) = 5.3846 s   (S2 base 7 s, S5 R-rank-3 passive grants Q 30 ability haste)",
+      "W": "8 * 100/100 = 8.0 s   (S3 rank 5)",
+      "E": "15 * 100/100 = 15.0 s   (S4)",
+      "R": "80 * 100/100 = 80.0 s   (S4 rank 3)"
+    },
+    "timeline_with_the_second_charge_active_(splinters = 120)": [
+      "index 0..4  -- five casts are available at t ~ 0: Q (charge 1), Q (charge 2, per S1), W, E, R. Their internal order is the scenario's custom cast order; it only permutes indices 0..4.",
+      "index 5     -- the first *recharged* cast. Candidate epochs: Q charge at t = 5.38 s, W at t = 8.0 s, E at t = 15.0 s, R at t = 80.0 s. The minimum is Q.",
+      "=> cast_timeline[5].slot = Q"
+    ],
+    "timeline_without_the_second_charge_(one_Q_only)": [
+      "index 0..3  -- four opening casts: Q, W, E, R.",
+      "index 4     -- Q at t = 5.38 s.",
+      "index 5     -- W at t = 8.0 s.",
+      "=> cast_timeline[5].slot = W"
+    ],
+    "cross_validation": "The two branches reproduce the recorded new and old leaf values exactly. That is a non-trivial self-check: the old value W at index 5 is only reachable if Q's recharge lands before W's cooldown in this scenario (otherwise index 4 would be W and index 5 Q). The same ordering, applied after inserting the second stocked Q of S1, forces index 5 = Q. So the scenario's own recorded old value certifies the event ordering used to derive the new value.",
+    "robustness": {
+      "W_rank": "Irrelevant. For any W rank (12 -> 8 s, S3), Q's recharge (5.38 s at R3, 6.36 s at R1) is still the earliest post-burst epoch, so the extra stocked Q always occupies index 5.",
+      "external_ability_haste": "If Q's recharge scales with global haste, Q beats W for every haste value, since 7/(100+h+x) < 8/(100+h) for all h,x >= 0. If Q's recharge is taken as haste-immune (S2 marks cooldown.affectedByCdr = false) and only S5's R passive applies, Q still leads W for global haste up to h = (100+8x)/7 - 100/7... concretely up to h ~ 48 at R3 and h ~ 26 at R1. The recorded OLD value (W at index 5, i.e. Q at index 4) independently confirms the scenario sits inside that regime.",
+      "insertion_argument": "Independently of which slot the custom order places the second charge in, adding exactly one legitimate cast to the opening burst shifts every later entry one index right, so new[5] = old[4] = Q and old[5] = W is the first W recharge. The old and new leaves are consistent with one another under exactly this insertion."
+    }
+  },
+
+  "why_the_old_value_is_wrong": "At 120 Splinters of Wrath the Transcendent bonus of S1 is unambiguously active (threshold 40), so Dark Sphere is stocked to 2 charges and Syndra can open with two Q casts. A timeline that emits only one Q in the opening burst models a sub-40-splinter Syndra, understates her cast count in the first ~5 s, and pushes the first recharged Q from index 5 down to index 4. The old leaf value W is the signature of that missing charge.",
+
+  "caveats": [
+    "The scenario definition itself lives outside the permitted evidence tree (no scenario file under data/ names 'syndra_custom_order_120'), so the custom cast order, level and item haste were not read. The derivation was therefore built to be independent of the custom order (which only permutes indices 0..4) and was shown robust across ranks and a wide haste range, with the recorded old value used as an internal consistency check on the regime.",
+    "This receipt validates one leaf. It cannot rule out that the same change also double-counts the stocked charge somewhere else in the timeline; only the value at index 5 was adjudicated."
+  ]
+}

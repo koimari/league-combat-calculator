@@ -3,9 +3,11 @@
 Drives the same shared walk (:func:`~survival.transitions.run_survival_walk`)
 and the same canonical state dicts as the receipt adapter, but observes
 transitions into parallel arrays: per-action ``applied`` slots and the
-write-once trigger ``status`` bytearray.  It never annotates events and
-never schedules walk-authored packets (compilation rejects every mechanic
-that could author one, so ``schedule_heal`` fails closed).
+write-once trigger ``status`` bytearray.  It never annotates events, and it
+schedules a walk-authored recovery packet only when its wiring handed it the
+live actions list and the one action builder (P3 package 3T: Maw's
+post-Lifeline omnivamp heals); wiring that did not is an assertion, never a
+dropped heal.
 
 The kernel's applied-amount observation is the only write the score ledger
 records: ``write(action, damage=...)`` (damage actions) and
@@ -19,9 +21,9 @@ float-addition order.
 from __future__ import annotations
 
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
-from .actions import SurvivalAction
+from .actions import SurvivalAction, TransitionRank, action_key
 
 
 class ScoreLedger:
@@ -42,6 +44,7 @@ class ScoreLedger:
         "actions",
         "index_of",
         "current_index",
+        "compile_event",
     )
 
     # Ledger capability flags (issue #171): the kernel's hot loop skips
@@ -56,13 +59,25 @@ class ScoreLedger:
         *,
         actions: list | None = None,
         index_of: Mapping | None = None,
+        compile_event: Callable[..., SurvivalAction] | None = None,
     ) -> None:
+        """The arrays, plus the builder this adapter may not reach for itself.
+
+        ``compile_event`` is the same injection :class:`ReceiptLedger` takes
+        and for the same reason: the one ``SurvivalAction`` constructor lives
+        in ``program/compile.py`` and ``survival/`` may not import
+        ``program/``.  It is optional here and required there because a score
+        ledger that never schedules a walk-authored heal never needs one --
+        and one that does, without it, raises in :meth:`schedule_heal` rather
+        than silently dropping the recovery.
+        """
         self.n_actions = n_actions
         self.applied: list[float] = [0.0] * n_actions
         self.status = bytearray(n_actions)
         self.actions: list | None = actions
         self.index_of: Mapping | None = index_of
         self.current_index: int = -1
+        self.compile_event: Callable[..., SurvivalAction] | None = compile_event
 
     # -- observation ---------------------------------------------------------
     # pylint: disable=unused-argument  # protocol-shaped no-op
@@ -72,6 +87,16 @@ class ScoreLedger:
             self._record(action, fields["damage"])
         elif "applied_amount" in fields:
             self._record(action, fields["applied_amount"])
+
+    def restore(self, action: SurvivalAction, **fields: Any) -> None:
+        """A packet input put back, observed exactly as a write is here.
+
+        The score adapter keeps one number per slot and the last writer
+        wins, so an input restore and the outcome that follows it are
+        indistinguishable by construction — which is why the channel is
+        separate at the interface rather than at this implementation.
+        """
+        self.write(action, **fields)
 
     def _record(self, action: SurvivalAction, amount: float) -> None:
         if 0 <= action.aidx < self.n_actions:
@@ -88,9 +113,18 @@ class ScoreLedger:
         reason: str,
         *,
         damage_phase: bool = False,
+        preserve_reason: bool = False,
     ) -> None:
         # Skipped actions leave their applied slot at zero, exactly like the
         # legacy compiled walk's ``continue`` before any state mutation.
+        #
+        # ``preserve_reason`` is accepted because the kernel passes it, and
+        # this adapter keeps no reason to preserve.  It was absent while the
+        # only caller passing it was the redirect-cancelled arm, which is
+        # how a keyword the shared kernel sends came to be a ``TypeError``
+        # the score walk had simply never reached: an adapter that answers a
+        # narrower protocol than the one kernel sends is a crash waiting for
+        # its first roster.
         return None
 
     # -- trigger linkage -----------------------------------------------------
@@ -119,23 +153,25 @@ class ScoreLedger:
         heal must land at the same timestamp with the same amount; the
         parallel arrays grow by one slot for the inserted action.
         """
-        if self.actions is None or self.index_of is None:
+        if self.actions is None or self.index_of is None or self.compile_event is None:
             raise AssertionError(
                 "score ledger cannot schedule walk-authored heals without "
-                "the live actions list and index_of (compiler wiring)"
+                "the live actions list, index_of and compile_event "
+                "(compiler wiring)"
             )
-        from .actions import action_key, survival_action_from_event
-
         heal_event["_sk"] = action_key(
-            float(heal_event.get("time", 0.0)), 1.0, recipient_id, heal_event
+            float(heal_event.get("time", 0.0)),
+            TransitionRank.RECOVERY,
+            recipient_id,
+            heal_event,
         )
         aidx = self.n_actions
         self.n_actions += 1
         self.applied.append(0.0)
         self.status.append(0)
-        action = survival_action_from_event(
+        action = self.compile_event(
             heal_event,
-            1.0,
+            TransitionRank.RECOVERY,
             self.index_of[recipient_id],
             self.index_of,
             subject_id=recipient_id,

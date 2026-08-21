@@ -3,7 +3,7 @@
 import pytest
 
 from src.calculator.champions import (
-    _CUSTOM_CHAMPION_MODULES,
+    _CHAMPION_MODULES,
     engine_registration_kind,
     parse_champion_abilities,
     registered_champion_names,
@@ -19,15 +19,37 @@ def _stats(name: str, level: int = 6):
     return champion, stats
 
 
-def test_all_registered_modules_parse_without_a_generic_runtime_fallback():
+#: The shapes a parsed row may take.  A row carrying none of them is a slot
+#: the engine would price as nothing at all.
+VALUE_KEYS = (
+    "parts",
+    "on_hit",
+    "double_shot",
+    "auto_attack_conversion",
+    "stat_buff",
+    "no_damage",
+)
+
+
+@pytest.mark.parametrize(
+    "level, ability_ranks",
+    [(6, None), (18, {"Q": 5, "W": 5, "E": 5, "R": 3})],
+    ids=["early", "max_rank"],
+)
+def test_all_registered_modules_parse_without_a_generic_runtime_fallback(
+    level, ability_ranks
+):
+    """Every name resolves to its own reviewed module and prices every row it
+    authors, at the first ultimate rank and again at the maxed kit."""
     for name in registered_champion_names():
-        assert name in _CUSTOM_CHAMPION_MODULES
+        assert name in _CHAMPION_MODULES
         assert engine_registration_kind(name) == "reviewed_module", name
-        champion, stats = _stats(name)
+        champion, stats = _stats(name, level)
         result = parse_champion_abilities(
             champion,
-            6,
+            level,
             stats["ability_power"],
+            ability_ranks=ability_ranks,
             champion_stats=stats,
             target_stats={
                 "target_max_health": 1000.0,
@@ -38,18 +60,7 @@ def test_all_registered_modules_parse_without_a_generic_runtime_fallback():
         assert isinstance(result, dict), name
         assert result, name
         assert all(
-            any(
-                key in entry
-                for key in (
-                    "parts",
-                    "on_hit",
-                    "double_shot",
-                    "auto_attack_conversion",
-                    "stat_buff",
-                    "no_damage",
-                )
-            )
-            for entry in result.values()
+            any(key in entry for key in VALUE_KEYS) for entry in result.values()
         ), name
 
 

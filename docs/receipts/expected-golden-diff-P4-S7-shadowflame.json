@@ -1,0 +1,161 @@
+{
+  "slice": "P4-S7-shadowflame",
+  "status": "landed",
+  "decisions": [
+    "D-62",
+    "D-66",
+    "D-72",
+    "D-97",
+    "D-101"
+  ],
+  "authority_move": {
+    "mechanic": "shadowflame.cinderbloom",
+    "was": "one PAIR half, COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW, with no walk half at all - the pair engine's lump-sum bonus row travelled into every roster total as if it had been delivered there",
+    "now": "a PAIR preview half (shadowflame.cinderbloom_preview, ViewTag.THEORETICAL) and a rider-delivered PAIRED walk half (shadowflame.cinderbloom, RiderDelivery)",
+    "position": "fourth and last of Phase 4 S7's four landing authority moves",
+    "why": "Cinderbloom's predicate reads the target's live health under a whole roster's fire. That is a roster input, so under the campaign's authority rule the walk is the smallest engine that can see every input the rule reads. The pair engine's reading - the bonus a single attacker alone would have earned against a full-health target - is the honest one-attacker figure and survives as a declared THEORETICAL preview.",
+    "unblocked_by": "Amendment C to D-07, recorded in the umbrella beside D-07: a PAIRED walk half may be rider-delivered, and the cross-participant producer derivation keys on trigger_stream.cross_participant_packet_source so a rider that amplifies its own holder's event is not a seventh producer."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97 - no baseline moves inside the landing commit"
+  },
+  "qualifying_population": {
+    "enumerated_before_first_src_edit": true,
+    "enumerated_at_commit": "2853376",
+    "rule": "R-20's second half. The occurrence count is not readable off the pre-change tree by inspection, so the population is enumerated from committed artifacts - scripts/golden_snapshot.py's COUPLED_SCENARIOS and scripts/bench_coupled_optimizer.py's SCENARIOS - and its membership bounds what may qualify. An occurrence outside it stops the slice.",
+    "coupled_golden": {
+      "size": 0,
+      "why_zero_is_a_measurement_and_not_an_assumption": "Six of the thirteen committed coupled scenarios equip Shadowflame (the six Syndra pins; SYNDRA_PIN_ITEMS holds it). In all six the request carries no enemies at all - _syndra_pin_request declares only an ally Syndra against a manual 10000 HP target - so the composed coupled fight holds no enemy participant, both breakdown rows total 0.0, and no subject exists whose live health could satisfy a predicate about a target's health. The remaining seven scenarios equip Shadowflame on no participant. The pair snapshot is untouched by a walk-side rider: this slice changes no pair-engine number, only which of them the roster composes.",
+      "scenarios_that_equip_shadowflame": [
+        "syndra_custom_order_0",
+        "syndra_derived_order_0",
+        "syndra_custom_order_3",
+        "syndra_derived_order_3",
+        "syndra_custom_order_7",
+        "syndra_derived_order_7"
+      ],
+      "scenarios_that_do_not": 7,
+      "golden": 0
+    },
+    "bench": {
+      "size": 4,
+      "instrument": "scripts/bench_coupled_optimizer.py's SCENARIOS, each posted to /api/optimize at the time-budget ceiling with optimizer._evaluate_build counting the candidates whose item list holds Shadowflame. Every candidate any regime proposes arrives at that function (R-24), so the count is the proposal population and not a sample.",
+      "measured_at_commit": "2853376",
+      "rule": "A walk-side Cinderbloom can move a bench reading only where the optimizer proposes a build holding Shadowflame and the composed roster holds an enemy participant whose live health the predicate can read. All four bench scenarios satisfy both halves, so the population is four and not three.",
+      "prose_figure_this_measurement_replaces": "docs/receipts/escalated-defects-P4-S7.json says 'the three enemy-bearing bench scenarios'. Measured, it is four: every bench scenario carries enemies and every one of them proposes Shadowflame. The prose figure had no producing instrument, which is why R-20 asks for an enumeration rather than a restatement.",
+      "per_scenario": {
+        "cassiopeia_3champ": {
+          "enemies": [
+            "Alistar",
+            "Dr. Mundo"
+          ],
+          "proposals": 1306,
+          "proposals_holding_shadowflame": 402,
+          "winner_holds_shadowflame": false
+        },
+        "cassiopeia_5champ": {
+          "enemies": [
+            "Alistar",
+            "Dr. Mundo",
+            "Vayne"
+          ],
+          "proposals": 1015,
+          "proposals_holding_shadowflame": 10,
+          "winner_holds_shadowflame": false
+        },
+        "mundo_3champ": {
+          "enemies": [
+            "Cassiopeia",
+            "Vayne"
+          ],
+          "proposals": 688,
+          "proposals_holding_shadowflame": 6,
+          "winner_holds_shadowflame": false
+        },
+        "syndra_mandate_3champ": {
+          "enemies": [
+            "Alistar",
+            "Dr. Mundo"
+          ],
+          "proposals": 782,
+          "proposals_holding_shadowflame": 8,
+          "winner_holds_shadowflame": false
+        }
+      },
+      "what_this_bounds": "R-01 row 8 reports counters, residual, rung histogram, winner and score. No bench winner holds Shadowflame, so a score move on a Shadowflame-holding candidate changes the published winner and score only if it lifts such a candidate past the incumbent. That is the prediction the landing commit measures; a winner change in a scenario outside these four would be an occurrence outside the population and stops the slice."
+    }
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "note": "Both empty, as predicted before the first src/ edit: the coupled-golden population is 0 because no committed coupled scenario equips Shadowflame against an enemy participant."
+  },
+  "measured": {
+    "golden": 0,
+    "coupled_golden": 0,
+    "coupled_exact": 0,
+    "how_zero_is_read_off_a_failing_compare": "The coupled compares do not report OK at this point in the campaign: S6, the Bloodsong move and the re-arm correction each landed against the committed baselines under R-17 and their diffs stand until the phase-boundary re-capture. The reading is therefore a difference of counts across this commit alone, taken with the working tree stashed and restored: 132 differing coupled-golden leaves and 3 coupled-exact before, 132 and 3 after, and golden identical both times.",
+    "bench": {
+      "population": 4,
+      "published_surface": "counters, residual, rung histogram, winner and score identical to the priors on all four scenarios (evaluations 1324/1033/706/796, residual 87/28/34/1422, scores 4003.1/5010.8/3305.0/4642.3); row 11 routing_divergences [] on all four.",
+      "candidate_scores_did_move_and_here_is_the_proof": "A published winner that did not move could equally mean the move was inert on the score path, so it is measured directly: one fully locked Shadowflame build per bench scenario, scored through /api/optimize with evaluations = 1, before and after this commit.",
+      "locked_shadowflame_build_scores": {
+        "cassiopeia_3champ": {
+          "before": 3967.1,
+          "after": 3967.1,
+          "delta": 0.0
+        },
+        "syndra_mandate_3champ": {
+          "before": 4594.8,
+          "after": 4594.8,
+          "delta": 0.0
+        },
+        "mundo_3champ": {
+          "before": 2740.1,
+          "after": 2745.1,
+          "delta": 5.0
+        },
+        "cassiopeia_5champ": {
+          "before": 4980.0,
+          "after": 4969.6,
+          "delta": -10.4
+        }
+      },
+      "instrumented_reach": "cassiopeia_3champ with Shadowflame locked and the rest of the search free: 1564 resolutions of the holder's riders, 3057 stamped damage events and 22921 kernel evaluations of the predicate. The move is live on the score path, not merely declared.",
+      "no_winner_holds_shadowflame_before_or_after": true
+    },
+    "wall_cassiopeia_5champ_ms": 3555.5,
+    "wall_ratchet": "S7's declared baseline 3385.5 ms, ceiling 3724.1 ms"
+  },
+  "shape_of_the_move": {
+    "removed_from_the_roster_composition": "The pair engine's shadowflame_<owner> row and the damage events it authors. They remain in the pair fight's own published breakdown, where the single-attacker figure is the answer, and this slice changes that number by nothing at all.",
+    "added_by_the_walk": "A LiveAmp rider on each of the holder's own magic and true damage packets, evaluated in survival/transitions._apply_live_packet_chain at the point the packet has finished mitigation and has not yet been absorbed. The bonus is folded into the host packet's damage and published beside it as the event's live_amp receipt, so the number names the rule that produced it.",
+    "why_the_two_differ": "The pair engine simulates one attacker against a target it also models alone; the walk sees the roster. In the probe roster (Ahri + Shadowflame, one ally Pantheon, one enemy Aatrox) the pair engine prices 154.5 and the walk delivers 229.3 across five packets, because the roster brings Aatrox under 40% earlier and keeps him there. With no ally the same holder delivers 0.0 while the pair preview still says 154.5: Aatrox's own healing keeps him above the threshold for the whole window, which is a roster fact the pair fight cannot see."
+  },
+  "oracle_receipts": {
+    "status": "FILED - docs/receipts/oracle-P4-S7-shadowflame-leaf0.json, verdict new_value_correct",
+    "rule": "R-19 gates the baseline re-capture, not the slice: R-17 lands this against the committed baselines plus this allowlist, and no baseline moves here.",
+    "qualifying_leaves": 0,
+    "why_zero": "compare emits no new differing leaf in either jurisdiction, so no leaf satisfies qualifies_for_investigation and R-18 owes no investigator.",
+    "the_downward_move_criterion_12_names": {
+      "where": "not a baseline leaf \u2014 a locked-build probe on the bench scenario cassiopeia_5champ",
+      "leaf": "optimize.total_damage for the locked build [Shadowflame, Void Staff, Rabadon's Deathcap, Stormsurge, Actualizer]",
+      "old_value": 4980.0,
+      "new_value": 4969.6,
+      "why_it_is_recorded_here_anyway": "Phase 4 criterion 12 says a downward diff carries its own oracle receipt. This one moves no committed baseline, so R-18's machinery has nothing to point at and the lane may not grade its own arithmetic either. It is written down instead, with both values and its reproducer, so the phase-boundary re-capture cannot absorb it silently.",
+      "reproducer": "POST /api/optimize with scripts/bench_coupled_optimizer.SCENARIOS['cassiopeia_5champ'], locked_items set to the five items above and locked_boots to Sorcerer's Shoes, at the time-budget ceiling; evaluations is 1.",
+      "the_lane_s_own_reading_offered_as_a_hypothesis_not_a_verdict": "The pair preview this composition now drops was priced against a target the holder was fighting alone, and in the five-champion roster the walk's own predicate is satisfied on fewer of the holder's packets than the pair fight assumed. mundo_3champ moves the other way by 5.0 on the same mechanism, which is what a preview replaced by a live reading should look like: sometimes more, sometimes less, never the same number by construction.",
+      "oracle": {
+        "receipt": "docs/receipts/oracle-P4-S7-shadowflame-leaf0.json",
+        "verdict": "new_value_correct",
+        "filed": "2026-08-13",
+        "isolation": "R-18: a fresh investigator whose only evidence was `git archive HEAD data docs/math-foundations.md` - never src/, tests/, scripts/, the diff, the plan or this receipt.",
+        "independent_finding": "The removed 10.4 reconstructs uniquely as 20% of a 52.00 damage instance, and 52.00 is Cassiopeia's level-18 basic attack (104 AD, growth factor exactly 1.0) mitigated by ~100 armor - a PHYSICAL instance. No magic or true instance in the kit at this build's ability power equals 52.00, and the build's 42 flat + 40% magic penetration floors every un-itemised level-18 target's magic resistance to 0, so no resistance freedom is left to bend one onto it. data/items.json's Cinderbloom text amplifies magic and true damage only, so the old total was granting the bonus to physical damage and the downward move removes exactly that ineligible bonus.",
+        "note": "The oracle reached the same instance the lane's hypothesis did not name, and by a mechanism the lane did not propose - it graded the arithmetic the lane may not grade for itself, which is what R-18's isolation buys. Its own recorded limitation: the absolute totals were not reproduced end-to-end, because the scenario tuple lives in scripts/, which R-18 forbids it to read; the adjudication is of the 10.4 delta and its mechanism."
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "receipt_id": "oracle-C6-leaf75",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[1]/name",
+  "old_value": "Force of Will",
+  "new_value": "Dark Sphere (2nd charge)",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read_only_scope": "data/** and docs/math-foundations.md only; src/, tests/, scripts/, docs/plans/, docs/receipts/, git history and the diff were never opened"
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].name",
+      "quote": "Dark Sphere"
+    },
+    {
+      "id": "S2",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S3",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].rechargeRate / cooldown.affectedByCdr",
+      "quote": "rechargeRate = [7, 7, 7, 7, 7]; cooldown.affectedByCdr = false",
+      "note": "A rechargeRate with a CDR-immune cooldown is the ammo/charge shape: the ability stocks charges on a 7 s timer rather than gating on a single cooldown."
+    },
+    {
+      "id": "S4",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].notes",
+      "quote": "After Syndra gains the  Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar, visible to the player only."
+    },
+    {
+      "id": "S5",
+      "path": "data/champions.json",
+      "locator": "Syndra.abilities.W[0].name and W[0].effects[3].description",
+      "quote": "Force of Will | Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S6",
+      "path": "data/worklists/e3-stacks.json",
+      "locator": "entry champion=Syndra, hint field",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S7",
+      "path": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots.note and Syndra.notable_atoms",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge) ... \"ammo (Q 2nd charge at 40 splinters)\"",
+      "note": "Confirms the second Dark Sphere charge is a first-class, separately-nameable slot (Q2) in the Syndra contract, not an implicit repeat of Q."
+    },
+    {
+      "id": "S8",
+      "path": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra.gap_summary",
+      "quote": "splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage"
+    },
+    {
+      "id": "S9",
+      "path": "docs/math-foundations.md",
+      "locator": "lines 59-67, shared-timeline section",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "note": "The timeline is ordered by cast order over slots; a legal slot in the supplied order occupies its own timeline index."
+    },
+    {
+      "id": "S10",
+      "path": "data/worklists/f2-task.md",
+      "locator": "lines 7-11",
+      "quote": "The event order shown in the UI comes from the fight's cast_order + breakdown damage_events. ... a rotation resolver ... computes the fight's cast_order from the champion's atomized data + the combo table, replacing the naive DEFAULT_CAST_ORDER when a combo exists.",
+      "note": "Establishes that a 'custom order' scenario supplies an explicit cast_order over slot ids, and that cast_timeline entries are that order's slots in sequence."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_what_the_scenario_parameter_60_is": "Syndra's Transcendent (P) thresholds in the cached wiki text are 40 (Q second charge, S2), 60 (W bonus true damage, S5), 80 (E scatter/slow), 100 (R execute), 120 (P +15% AP). The champion contract exposes exactly one integer knob over that range - 'splinters option (0-120)' (S7, S8). A Syndra scenario suffixed _60 therefore denotes splinters = 60, the W true-damage threshold; 60 is a named splinter gate for Syndra and matches no other Syndra parameter in the cached data.",
+    "step_2_charge_availability": "Charge gate from S2: charges_available = 2 if splinters >= 40 else 1. With splinters = 60: 60 >= 40 -> TRUE, so Syndra holds up to 2 stocked Dark Sphere charges. S3 confirms the stocking mechanism (rechargeRate 7 s per charge, base cooldown flagged not-affected-by-CDR, i.e. ammo semantics, not a single-cooldown ability), and S4 confirms the charges are a visible, countable resource once the Transcendent bonus is active.",
+    "step_3_back_to_back_legality": "Because a second charge is stocked, a second Dark Sphere cast may follow the first immediately - it does not wait 7 s. Under the shared-timeline rule (S9) the only constraint on the next cast is that no other cast is in progress; Syndra's Q has castTime 'none' in the cache, so the second charge occupies the next timeline index directly after the first Dark Sphere.",
+    "step_4_index_1_identity": "The scenario is a custom-cast-order scenario (S10): the timeline is the supplied slot order in sequence. Syndra's slot set includes the synthetic Q2 = 'second Dark Sphere charge' (S7, S8) alongside Q, W, E, R. A custom order authored at splinters = 60 exercises exactly the two bonuses live at 60 - the Q second charge (>=40) and W's true damage (>=60) - so the natural order is Q, Q2, W, E, R. Index 0 = Dark Sphere, index 1 = Q2 = the second stocked charge, index 2 = Force of Will.",
+    "step_5_diagnosis_of_the_old_value": "The old leaf value 'Force of Will' at index 1 is what the timeline degrades to when the Q2 slot is dropped from the supplied order and every later entry shifts up one index: Q, [Q2 dropped], W -> index 1 = W = 'Force of Will'. Dropping Q2 at splinters = 60 contradicts S2 directly (the charge unlocks at 40, and 60 >= 40). No reading of the cached wiki text withholds the second charge at 60 splinters.",
+    "step_6_label_check": "The new label's two components are both sourced: 'Dark Sphere' is the verbatim ability name (S1), and '(2nd charge)' is the wiki's own charge framing - 'stock a Dark Sphere charge, up to a maximum of 2' (S2) with the per-charge count shown in-client (S4). A bare 'Dark Sphere' would be ambiguous with index 0; the disambiguating suffix is correct and matches the contract's own naming of the slot as the 2nd charge (S7).",
+    "conclusion": "At splinters = 60 Syndra has 2 Dark Sphere charges, so the second Dark Sphere cast is a legal, distinct timeline entry immediately after the first. cast_timeline[1].name = 'Dark Sphere (2nd charge)'. The new value is correct; the old value is the symptom of the Q2 entry being omitted and Force of Will shifting from index 2 to index 1."
+  },
+
+  "arithmetic": {
+    "splinter_gate_Q_second_charge": "threshold 40; scenario 60; 60 - 40 = +20 over the gate -> charges = 2",
+    "splinter_gate_W_true_damage": "threshold 60; scenario 60; 60 - 60 = 0, gate met (met-at-equality is why the scenario is pinned at exactly 60)",
+    "charge_recharge": "7 s per stocked charge, cooldown.affectedByCdr = false -> the 2nd charge is already banked at fight start and imposes no wait before index 1"
+  },
+
+  "residual_uncertainty": "The scenario definition itself lives in scripts/ or tests/, which this runbook forbids reading, so the supplied cast order was inferred rather than read. The inference rests on: (a) 'custom_order' meaning an author-supplied order over slot ids (S10); (b) Q2 being a real slot id in Syndra's contract (S7, S8); and (c) an engine not inventing casts absent from a custom order, so a slot can only appear at index 1 if the author placed it there. The mechanical fact that is fully independent of the scenario file - that a second Dark Sphere charge is available and castable at 60 splinters (S2, S3) - is the load-bearing one, and it is what makes the new value admissible and the old value's omission a defect.",
+
+  "aside": "A stray file 'syndra.txt' (20,043 bytes, a plain dump of Syndra's five ability entries) was present at the root of the scratch directory alongside the export. Its content matches data/champions.json Syndra verbatim, so it introduced no contradiction; it was not used as a source and nothing in it was treated as instruction. Flagging it only because it did not come from the git archive command."
+}

@@ -1,0 +1,107 @@
+{
+  "receipt": "oracle-C6-leaf71",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/health_damage",
+  "old_value": 4998.4,
+  "new_value": 5648.4,
+  "delta": 650.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "data/worklists/f3-task.md", "data/practice-corpus/scenarios.json", "data/bin/behavior-index.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+  "scenario_reconstruction": {
+    "note": "The golden scenario table lives in scripts/, which this investigation is barred from reading. The scenario was therefore reconstructed from its name plus the cached wiki data only, and the computation below is a mechanism identification of the 650.0 delta rather than a from-scratch recomputation of the absolute 5648.4.",
+    "champion": "Syndra",
+    "'60'": "60 Splinters of Wrath (the Transcendent stack option). 60 is exactly a sourced threshold in data/champions.json; data/champion-audit/batch-6.json confirms the module exposes a 0-120 splinters option.",
+    "'custom_order'": "a user-specified ability cast order (the F2/F3 optimal-event-order feature described in data/worklists/f2-task.md and f3-task.md, whose gate text notes 'cast orders change fight totals')."
+  },
+  "independent_computation": {
+    "step_1_which_transcendent_bonuses_are_live_at_60_splinters": {
+      "active": [
+        "Q, 40-splinter bonus: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' -> at 60 splinters a rotation may legitimately contain TWO Dark Spheres.",
+        "W, 60-splinter bonus: 'Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.'"
+      ],
+      "not_active_at_60": [
+        "E 80-splinter (scatter angle + 70% slow — utility only, no damage)",
+        "R 100-splinter execute (<15% max health)",
+        "P 120-splinter Transcendence (+15% ability power)"
+      ]
+    },
+    "step_2_calibrate_the_W_true_damage_row_against_the_wiki_table": {
+      "model": "bonus_true = (0.12 + 0.02*AP/100) * (W_base + 0.65*AP), W_base = 70/100/130/160/190",
+      "check_flat": "0.12 * 70 = 8.4, 0.12*100 = 12, 0.12*130 = 15.6, 0.12*160 = 19.2, 0.12*190 = 22.8 == wiki 'Bonus True Damage' flat row [8.4, 12, 15.6, 19.2, 22.8]",
+      "check_AP": "0.12*65 + 0.02*W_base = 9.2 / 9.8 / 10.4 / 11.0 / 11.6 == wiki AP row [9.2, 9.8, 10.4, 11, 11.6]",
+      "conclusion": "the 60-splinter bonus is 12% (+2% per 100 AP) OF Force of Will's damage, and it is true damage (unmitigated). Wiki 'Total Mixed Damage' row 78.4 = 70 + 8.4 corroborates."
+    },
+    "step_3_can_the_60_splinter_W_true_damage_explain_+650.0": {
+      "method": "brute force over W rank 1-5, cast count n = 1..12, integer AP 0..2000 (stat rounding to integers is the engine convention per docs/math-foundations.md, row 'Stat rounding'), solving n*(0.12+0.0002*AP)*(W_base+0.65*AP) = 650.0 +/- 0.05",
+      "result": "only far-fetched fits: (rank1, 5 casts, AP 676) = 649.99, (rank5, 3 casts, AP 854) = 650.03, (rank3, 1 cast, AP 1845). No solution at a maxed W with 1-2 casts and a plausible AP.",
+      "conclusion": "the delta is NOT the 60-splinter true-damage row being switched on."
+    },
+    "step_4_can_the_120_splinter_+15%_AP_capstone_explain_+650.0_i.e._a_threshold_bug": {
+      "method": "a +15% AP buff moves every AP-scaling instance: delta = 0.15 * AP * SUM(ap_ratios). Syndra's ratios are 0.70 (Q), 0.65 (W), 0.60 (E), 0.20 (R per sphere) — all multiples of 0.05.",
+      "arithmetic": "0.15 * AP * 0.05*k = 650  =>  AP * k = 650/0.0075 = 86666.67, not an integer",
+      "conclusion": "with an integer AP and 0.05-granular ratios the capstone can never produce a delta of exactly 650.0. The change is NOT the 120-splinter capstone leaking down to 60 splinters."
+    },
+    "step_5_what_does_produce_exactly_650.0": {
+      "solved": "one additional magic-damage instance against a 0-magic-resist manual target, m(R)=100/(100+R)=1 (docs/math-foundations.md sec 2.1)",
+      "exact_integer_AP_solutions": {
+        "Q Dark Sphere (base 90/125/160/195/230 + 70% AP)": "AP = 800/750/700/650/600 for rank 1/2/3/4/5 — e.g. rank 5: 230 + 0.70*600 = 650.0",
+        "E Scatter the Weak (200 + 60% AP, rank 5)": "AP = 750",
+        "W Force of Will magic (130 + 65% AP, rank 3)": "AP = 800",
+        "R Unleashed Power (+2 spheres at rank 3, 160 + 20% AP each)": "AP = 825"
+      },
+      "most_likely": "one extra Dark Sphere (Q). Two sourced mechanisms both give exactly one extra Q at 60 splinters: (a) the 40-splinter double Q charge, live at 60; (b) R's passive 'Dark Sphere's cooldown is reduced equivalent to an amount of ability haste' (10/20/30), which adds a Q cast to a cooldown-gated order. Both are cached-wiki-sourced and both are correct behaviour at 60 splinters.",
+      "decimal_cross_check": "both goldens end in .4 while every magic/physical instance above is integral at AP 600 (Q 650, W magic 580, E 560, R sphere 280, auto 103); the .4 tail is exactly what an even number of W casts contributes through the unmitigated true-damage row (2 * 139.2 = 278.4 at AP 600 rank 5), i.e. the 60-splinter true damage is present in BOTH the old and new values and is not what moved."
+    }
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects (Dark Sphere)",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location ... Magic Damage: [90, 125, 160, 195, 230] (+ [70]% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].effects (Transcendent Bonus)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].effects (Transcendent Bonus + Bonus True Damage leveling row)",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage. | Bonus True Damage: [8.4, 12, 15.6, 19.2, 22.8] (+ [9.2, 9.8, 10.4, 11, 11.6]% AP)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].effects (Transcendent)",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects (Unleashed Power)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste: [10, 20, 30] | Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones ... Magic Damage per Sphere: [80, 120, 160] (+ 20% AP) | Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "source": "docs/math-foundations.md sec 2.1",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)"
+    },
+    {
+      "source": "docs/math-foundations.md sec 5 formula-audit table, 'Stat rounding' row",
+      "quote": "display-level integer rounding of health/AD/AP/armor/MR before damage ... APPROX ... corpus-wide convention, pinned by golden"
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count"
+    },
+    {
+      "source": "data/worklists/f2-task.md (gates line)",
+      "quote": "golden — re-capture + explain every diff (cast orders change fight totals for the combo champions — THIS IS EXPECTED AND DESIRED)"
+    }
+  ],
+  "residual_uncertainty": [
+    "The scenario's exact loadout (AP, ranks, target resistances, cast list) could not be read — scripts/ is out of bounds for this investigation — so the absolute 5648.4 was not recomputed end to end; the 650.0 delta was identified by exhaustive fit against the cached wiki numbers.",
+    "The fit is over-determined only up to which ability supplies the extra instance (Q at AP 600/650/700/750/800 by rank is the cleanest; E rank 5 at AP 750, W rank 3 at AP 800, or +2 R spheres at AP 825 also fit). Every one of these is a sourced damage instance that Syndra legitimately has at 60 splinters, so the direction of the verdict is unaffected.",
+    "This receipt certifies that the increase is wiki-supported and that the two candidate 'threshold bug' explanations (the 120-splinter +15% AP capstone firing at 60, or the 60-splinter true-damage row being double-counted) are arithmetically excluded. It does not exclude the possibility that the true value is higher still (i.e. that some other sourced instance remains missing from both values)."
+  ],
+  "verdict_rationale": "At 60 Splinters of Wrath the cached wiki grants Syndra the 40-splinter double Dark Sphere charge and the 60-splinter Force of Will true damage, and grants NOT the 100-splinter execute nor the 120-splinter +15% AP. The +650.0 move is exactly one additional unmitigated-magic damage instance (rank-5 Dark Sphere at 600 AP, 230 + 70% AP = 650.0), which is sourced behaviour at this splinter count; it is arithmetically incompatible with the +15% AP capstone leaking down (would require AP*k = 86666.67) and incompatible with the true-damage row toggling (no integer-AP fit at a plausible rank/cast count). The old value under-counts one sourced Dark Sphere; nothing in the cached wiki supports it."
+}

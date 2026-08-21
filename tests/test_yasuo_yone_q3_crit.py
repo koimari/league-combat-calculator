@@ -76,6 +76,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import (
@@ -83,6 +84,7 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
@@ -446,7 +448,7 @@ class TestSourceEvidence:
         assert abilities_domain["sha256"] == hash_domain_file(
             Path("data/atoms/abilities.json")
         )
-        actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
+        actual = sha256_as_committed("data/champions.json")
         assert (
             abilities_domain["source_ref"]
             == f"data/champions.json@sha256:{actual[:16]}"
@@ -479,7 +481,12 @@ class TestNormalVsQ3Parity:
             q = abilities["Q"]
             assert [p.amount for p in q["parts"]] == pytest.approx([120.0, 107.1])
             assert q["total_raw"] == pytest.approx(227.1)
-            assert all(p.cc_kind is None for p in q["parts"])
+            # MODULE_CC vocabulary: a reviewed *absence* of control is
+            # the string "none" (engine._apply_module_cc), never None.
+            # None is what an UNREVIEWED part carries — here the AD part,
+            # which books no event of its own to mark.
+            assert [p.cc_kind for p in q["parts"]] == ["none", None]
+            assert q["parts"][0].cc_duration == 0.0
         _, q3, _ = _parse("Yasuo", {"q_gathering_storm": 2})
         q3_q = q3["Q"]
         assert [p.amount for p in q3_q["parts"]] == pytest.approx([120.0, 107.1])
@@ -570,7 +577,12 @@ class TestGatheringStormState:
         for name in ("Yasuo", "Yone"):
             for stacks in (0, 1):
                 _, abilities, _ = _parse(name, {"q_gathering_storm": stacks})
-                assert all(p.cc_kind is None for p in abilities["Q"]["parts"])
+                # "none" is the reviewed no-control marker; see
+                # TestNormalVsQ3Parity for the rule.
+                assert [p.cc_kind for p in abilities["Q"]["parts"]] == [
+                    "none",
+                    None,
+                ]
                 assert f"{stacks}/2 stacks" in abilities["Q"]["detail"]
             _, q3, _ = _parse(name, {"q_gathering_storm": 2})
             assert "at 2 stacks" in q3["Q"]["detail"]
@@ -581,7 +593,7 @@ class TestGatheringStormState:
         _, high, _ = _parse("Yasuo", {"q_gathering_storm": 5})
         assert high["Q"]["parts"][0].cc_kind == "knockup"
         _, low, _ = _parse("Yasuo", {"q_gathering_storm": -3})
-        assert low["Q"]["parts"][0].cc_kind is None
+        assert low["Q"]["parts"][0].cc_kind == "none"
 
     def test_option_meta_declares_the_state(self):
         meta = get_champion_options_meta("Yasuo")
@@ -985,7 +997,11 @@ class TestAtomAndSourceReceipts:
 # ---------------------------------------------------------------------------
 
 # Fields the compiled score path deliberately omits (run_fight docs): the
-# display splits and survival/target summaries.
+# display splits, and the whole one-pair shield outcome.  That outcome is
+# all-or-nothing -- score mode skips ``_resolve_starting_shield_outcome``
+# entirely (``ledger_projection.SKIPPED_SHIELD_OUTCOME``) because its
+# consumers replay shields inside the coupled survival walk -- so every key
+# that function returns belongs here, its threshold-heal receipts included.
 _SCORE_DROPPED = {
     "ability_damage",
     "auto_attack_damage",
@@ -1000,6 +1016,9 @@ _SCORE_DROPPED = {
     "target_ending_health",
     "target_healing_received",
     "threshold_health_bonus_gained",
+    "threshold_health_cadence_certified",
+    "threshold_health_expired",
+    "threshold_health_heal_ticks",
     "threshold_health_triggered",
     "threshold_shield_absorbed",
 }
@@ -1007,6 +1026,9 @@ _SCORE_DROPPED = {
 # does not (documented in run_fight): per-event order/ordinal and the
 # timeline_coverage certification note.
 _SCORE_RECEIPT_ONLY = {"damage_events", "timeline_coverage"}
+# The one key that goes the other way: score mode takes the compiled tuple
+# ledger where the build allows it, and says so.  The full path never does.
+_SCORE_ONLY = {"damage_events_tuple"}
 
 
 class TestScoreReceiptParity:
@@ -1034,8 +1056,8 @@ class TestScoreReceiptParity:
     def test_full_vs_score_only_byte_identical(self, champion, items, options):
         full = _run(champion, items, options)
         score = _run(champion, items, options, score_only=True)
-        assert set(score) == set(full) - _SCORE_DROPPED
-        for key in sorted(set(score) - _SCORE_RECEIPT_ONLY):
+        assert set(score) - _SCORE_ONLY == set(full) - _SCORE_DROPPED
+        for key in sorted(set(score) - _SCORE_RECEIPT_ONLY - _SCORE_ONLY):
             assert _json_bytes(score[key]) == _json_bytes(full[key]), key
         # damage_events: the score path emits the same events with the same
         # values; it omits the full-path-only receipt fields.  Every shared
@@ -1049,11 +1071,35 @@ class TestScoreReceiptParity:
             "source_missing_ratio",
         }
         assert len(score["damage_events"]) == len(full["damage_events"])
+        # A build whose adequacy conditions all hold is served the LIGHT
+        # tuple ledger, so the two paths publish one ledger in two shapes.
+        # The comparison reads the light rows through the one declaration of
+        # that layout (``ledger_projection.LightRow``) rather than a second
+        # set of indices here, and asks of both shapes exactly the fields
+        # both carry (``SHARED_ROW_FIELDS``).
+        light = bool(score.get("damage_events_tuple"))
         for score_event, full_event in zip(
             score["damage_events"], full["damage_events"]
         ):
+            if light:
+                row = LightRow._make(score_event)
+                assert row.sort_key[0] == full_event["time"]
+                assert row.sort_key[3] == full_event["sequence"]
+                # A dict row spells these the same way when the engine
+                # authored them; ``raw_damage`` rides only the rows that
+                # carry a raw figure, so the comparison is over what
+                # BOTH rows hold rather than what the light shape packs.
+                score_event = {
+                    field: getattr(row, field)
+                    for field in SHARED_ROW_FIELDS
+                    if field in full_event
+                }
             assert set(score_event) <= set(full_event)
-            assert set(full_event) - set(score_event) <= _FULL_PATH_EVENT_RECEIPT_FIELDS
+            assert set(full_event) - set(score_event) <= (
+                _FULL_PATH_EVENT_RECEIPT_FIELDS
+                if not light
+                else set(full_event) - set(SHARED_ROW_FIELDS)
+            )
             shared = set(score_event) & set(full_event)
             assert _json_bytes({k: score_event[k] for k in shared}) == _json_bytes(
                 {k: full_event[k] for k in shared}

@@ -1,0 +1,81 @@
+{
+  "receipt_id": "oracle-C6-leaf68",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[5]",
+  "old_value": "<absent>",
+  "new_value": "proc_Luden's Echo",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracleC6",
+    "read": [
+      "data/items.json (id 6655)",
+      "data/item-atoms/6655.json",
+      "data/champions.json (Syndra)",
+      "data/economics-sourced.json",
+      "data/worklists/e9-bis-a-task.md",
+      "docs/math-foundations.md"
+    ],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "what_the_leaf_asserts": "timeline_coverage partitions a fight's damage sources into exact_sources (timing authored / derivable exactly on the shared timeline) and coarse_sources (timing only estimated). The leaf asserts that the Luden's Echo proc row is an exactly-timed source in the manual_target fight of scenario syndra_custom_order_120.",
+
+  "sources_quoted": [
+    {
+      "source": "data/items.json -> \"6655\" (Luden's Echo), passives[0]",
+      "fields": {
+        "name": "Echo",
+        "unique": true,
+        "cooldown": "12"
+      },
+      "branch_text": "Gain 6 ''Echo'' stacks. Dealing [[ability damage]] to an enemy consumes all ''Echo'' stacks to deal {{as|75|magic damage}} {{as|(+ 5% AP)}} {{as|'''bonus''' magic damage}} to them and, for each stack consumed beyond the first, an additional enemy within {{tip|cr|icononly=true}} 600 units of them, firing an orb at each secondary target that impacts after {{rutngt|0.5}} to deal the damage. If the number of additional targets fired at is less than the number of stacks consumed,{{ft|deal an additional {{as|{{pp|75*0.2 to 75*5*0.2 for 5|1 to 5|changedisplay=true|type=remaining ''Echo'' stacks}}|magic damage}} ... for a total of {{as|{{pp|(75*0.2)+75 to (75*5*0.2)+75 for 5|1 to 5|...}}|magic damage}} {{as|(+ {{pp|key=%|(5*0.2)+5 to (5*5*0.2)+5 for 5|1 to 5|...}} AP)}}|deal an additional 20% damage to the primary target for each remaining ''Echo'' stack}}"
+    },
+    {
+      "source": "data/item-atoms/6655.json",
+      "quote": "atoms include {\"atom_id\": \"damage.magic\", \"behavior\": \"Echo\", \"evidence\": \"passive:Echo\"} and {\"atom_id\": \"stack-transform-summon-resource.mana\", \"behavior\": \"Echo\"} — the passive is a classified magic-damage proc, not a stat-only or DoT effect."
+    },
+    {
+      "source": "data/economics-sourced.json",
+      "quote": "{\"id\": 6655, \"name\": \"Luden's Echo\", \"total\": 2750, \"rank\": [\"LEGENDARY\"], \"purchasable\": true} — an ordinary purchasable SR legendary, so a legal member of a Syndra loadout."
+    },
+    {
+      "source": "data/champions.json -> Syndra abilities",
+      "quote": "Q Dark Sphere cd [7,7,7,7,7] Magic Damage 90/125/160/195/230 (+70% AP); W Force of Will cd [12,11,10,9,8]; E Scatter the Weak cd [15]x5; R Unleashed Power cd [120,100,80]. Every damaging Syndra entry is ability damage, so the Echo trigger condition ('Dealing ability damage') is met on the cast timeline, never gated on autos."
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 1.1",
+      "quote": "Ability recasts are scheduled on **one shared timeline** ... a cast counts when it *starts* within the window (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`, the cast epochs of a solo ability are `0, c_i, 2c_i, …` — again a deterministic renewal schedule"
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 1.2 (3) and Sec. 0",
+      "quote": "\"procs fire on their deterministic cadence\"; \"Deterministic every-`N`th-hit procs ... have exact count `⌊n/N⌋` — modular counting over the shared hit sequence\"; \"The engine models every-Nth cadences exactly and fixed-count chains exactly\""
+    },
+    {
+      "source": "docs/math-foundations.md Sec. 5 formula-audit table",
+      "quote": "Row 'Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | **EXACT**'. The APPROX rows are burn/DoT items (0.5 s GCD spread), ability-DoT even split, BC/Terminus ramps, and stat rounding — Luden's Echo is in none of those families."
+    },
+    {
+      "source": "data/worklists/e9-bis-a-task.md (definition of the coverage vocabulary)",
+      "quote": "\"multi-part procs (blight_detonation) carry DamagePart(time_offset=...) so damage.py's _apply_post_hit_proc marks timing_is_authored and the timeline coverage goes exact\"; gate is \"timeline_coverage complete==true, coarse_sources==[]\" — i.e. a proc belongs in exact_sources exactly when its firing instants are authored on the shared timeline."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_trigger_is_deterministic": "Echo has no chance term. It is a unique passive with a static 12 s cooldown that fires on the first ability damage instance after it re-arms. Syndra's damage is 100% ability damage (Q 7 s, W 12/11/10/9/8 s, E 15 s base cooldowns before haste), so ability-damage instants occur far more often than once per 12 s and the proc is cooldown-limited, not trigger-limited.",
+    "step_2_proc_schedule": "The firing epochs are therefore a deterministic renewal schedule with interarrival Δ = 12 s anchored at the first ability damage of the window (t = 0 in the engine's convention): t_k = 12k. Over the 120 s window of scenario syndra_custom_order_120, N = ⌊120 / 12⌋ = 10 procs at t = 0, 12, 24, 36, 48, 60, 72, 84, 96, 108 s; the k = 10 epoch at t = 120 s falls exactly on the boundary and is excluded by the engine's documented convention (math-foundations Sec. 1.1: 'a swing whose impact would land exactly at the window boundary is excluded'). Every one of those 10 timestamps is derived from exact quantities only (a fixed 12 s item cooldown plus the exactly-scheduled shared cast timeline) — no GCD estimate, no averaging, no Bernoulli draw enters. That is precisely the definition of an exact_sources member.",
+    "step_3_per_proc_damage_single_target": "manual_target is a single-target fight, so 0 secondary targets are available for the 5 stacks 'consumed beyond the first'. The wiki's fallback branch applies: additional damage = 75 x 0.2 x k with k = 5 remaining stacks = 75, so total = 75 + 75 = 150 magic damage; AP ratio = 5% + (5% x 0.2 x 5) = 5% + 5% = 10% AP. This equals the wiki's own stated maximum total, '(75*5*0.2)+75' and '(5*5*0.2)+5 AP'. Independently via the alternate rendering of the same branch ('deal an additional 20% damage to the primary target for each remaining Echo stack'): 75 x (1 + 5 x 0.20) = 75 x 2 = 150. The two renderings agree.",
+    "step_4_no_timing_ambiguity_in_this_fight": "The only travel-time term in the effect ('firing an orb at each secondary target that impacts after 0.5 s') applies solely to secondary targets. With a single manual target there are zero orbs in flight, so the whole proc payload lands instantaneously at the trigger instant — the placement is unambiguous even at sub-second resolution.",
+    "step_5_value_delivered": "Raw per proc = 150 + 0.10 x AP; post-mitigation per proc = (150 + 0.10 x AP) x 100/(100 + MR_post_pen) (math-foundations Sec. 2.1, m(R) = 100/(100+R)). Fight total over the window = 10 x that quantity. The total is computable only because the 10 timestamps are known exactly, which is the claim the leaf makes.",
+    "conclusion": "Luden's Echo in a Syndra 120 s manual-target fight is a deterministic, exactly-schedulable, instantaneous magic-damage proc. It belongs in exact_sources. Its previous absence (either omitted from the coverage ledger or classified coarse) understated coverage; listing it is the correct classification."
+  },
+
+  "residual_caveats": [
+    "The scenario's loadout is defined outside the permitted evidence tree (src/, tests/, scripts/), so this receipt verifies the classification conditional on Luden's Echo being in the scenario build — which the leaf's own emission of a proc_Luden's Echo row implies, and which data/economics-sourced.json confirms is legal (purchasable SR legendary, 2750 g).",
+    "The 10-proc count assumes the item passive's 12 s cooldown is not reduced by ability haste (standard for item passives); no cached source in data/ states the interaction either way. This affects only the proc count, not the exact-vs-coarse classification the leaf asserts, since any AH-adjusted cadence is still a deterministic renewal schedule.",
+    "Index position 5 is consistent with a lexicographically sorted coverage list: a 'proc_' prefixed entry sorts after 'ability_'/'auto_'/'item_' prefixed entries, so the new source appending at the tail leaves indices 0-4 unchanged."
+  ]
+}

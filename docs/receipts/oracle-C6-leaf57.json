@@ -1,0 +1,62 @@
+{
+  "receipt": "oracle-C6-leaf57",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/cast_order[4]",
+  "old_value": "<absent>",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6",
+    "note": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were not consulted."
+  },
+  "independent_computation": {
+    "step_1_decode_scenario_name": {
+      "claim": "The '_120' suffix is Syndra's Splinters-of-Wrath stack count at its cap (the champion option is documented as 'splinters (0-120)'), not a cooldown or a fight length.",
+      "support": [
+        "data/champions.json Syndra P 'Transcendent': 'Syndra collects Splinters of Wrath ... stacking up to 120 times.'",
+        "data/champions.json Syndra P: 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.'",
+        "data/champion-audit/batch-e9-1.json (Syndra): 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.'"
+      ]
+    },
+    "step_2_enumerate_castable_slots_at_120_splinters": {
+      "slots": ["Q", "Q2", "W", "E", "R"],
+      "count": 5,
+      "derivation": [
+        "P 'Transcendent' is a passive AP buff, not a cast (data/champion-audit/batch-6.json: 'P = 120-splinter +15% total AP BUFF'), so it occupies no cast-order position.",
+        "Q 'Dark Sphere' Transcendent Bonus (data/champions.json): 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 120 >= 40, so the second charge is live; the audit names it as the synthetic slot 'Q2' (data/champion-audit/batch-6.json module_slots.modeled = [P, Q, Q2, W, E, R]; notable_atoms: 'ammo (Q 2nd charge at 40 splinters)').",
+        "W 'Force of Will' recast throw is a damaging cast (70/100/130/160/190 + 65% AP, plus the 60-splinter true-damage bonus, which 120 satisfies).",
+        "E 'Scatter the Weak' is a damaging cast (60/95/130/165/200 + 60% AP).",
+        "R 'Unleashed Power' is a damaging cast: 'Magic Damage per Sphere' 80/120/160 (+20% AP), min 240/360/480 (+60% AP), max 560/840/1120 (+140% AP).",
+        "Therefore a one-rotation fight for Syndra at 120 splinters contains exactly five ability casts, i.e. cast_order has indices 0..4 and index 4 must exist."
+      ]
+    },
+    "step_3_R_appears_exactly_once": {
+      "rule": "docs/math-foundations.md Section 5 formula-audit table: 'R casts exactly once per timed fight (model constraint, documented)' and, on the rotation row, 'R single-cast'.",
+      "consequence": "Because indices 0..3 are reported unchanged and the new index 4 is 'R', the pre-change list of four entries contained no R at all - a two-R list would violate the documented single-cast constraint. So the old rotation omitted Syndra's ultimate entirely, and the change restores the one R the model requires. It also rules out the competing hypotheses that would put something else at index 4: if the old four entries had been a permutation containing R (e.g. E,Q,W,R), the missing fifth slot would be Q2, and index 4 would read 'Q2', not 'R'."
+    },
+    "step_4_R_belongs_last": {
+      "reasons": [
+        "Default ordering: data/worklists/f2-task.md records the engine's fallback as 'DEFAULT_CAST_ORDER (fixed Q,W,E,R)' - R terminal.",
+        "Setup -> consume mechanic (the exact criterion f2-task.md names for ordering): R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones' (data/champions.json Syndra R). Live spheres come from Q/Q2 ('The Dark Sphere then remains on the ground for 6 seconds'), so R must follow the sphere-placing casts to reach its sourced sphere count (the module's r_spheres option). Casting R first would strand it at its 3-sphere minimum.",
+        "Finisher semantics: R's 100-splinter Transcendent Bonus is an execute below 15% max health - a closing cast, not an opening buff. The 'buff first' exception in f2-task.md (Aatrox R, Vladimir R, cast_order 'R,Q,W,E' in data/champion-audit/batch-p1-3.json) does not apply: Syndra's R grants no self-buff.",
+        "Cooldowns do not gate the position: in a single rotation each slot fires once, and R's 120/100/80 s cooldown (data/champions.json) only limits recasts."
+      ]
+    },
+    "conclusion": "The correct cast_order for Syndra at 120 splinters is the five casts Q, Q2, W, E, R with R terminal; index 4 = 'R'. The old value (index 4 absent, i.e. a four-cast rotation with no ultimate) understates the rotation by one modeled damaging slot."
+  },
+  "residual_assumption": "This holds unless the scenario's 'custom order' input deliberately excluded R (a user-authored four-cast order). The evidence tree contains no scenario definitions, so that input could not be read; it is judged unlikely because a rotation that never casts the ultimate contradicts the engine's own documented constraint that R casts exactly once per fight, and because the four unchanged leading entries plus a terminal R reconstruct exactly the default Q,W,E,R order with the 40-splinter Q2 charge inserted.",
+  "sources_quoted": [
+    "data/champions.json -> Syndra.abilities.P 'Transcendent' (stacking up to 120 times; 120 splinters -> +15% AP; 40-splinter Q charge; 60-splinter W true damage)",
+    "data/champions.json -> Syndra.abilities.Q 'Dark Sphere' (7 s cd, affectedByCdr false; sphere lingers 6 s; 40-splinter second charge)",
+    "data/champions.json -> Syndra.abilities.W 'Force of Will' (recast throw damage 70/100/130/160/190 + 65% AP; 60-splinter bonus true damage)",
+    "data/champions.json -> Syndra.abilities.E 'Scatter the Weak' (60/95/130/165/200 + 60% AP)",
+    "data/champions.json -> Syndra.abilities.R 'Unleashed Power' (cd 120/100/80; conjures 3 spheres and grabs up to 4 nearby live ones; 80/120/160 + 20% AP per sphere; 100-splinter execute below 15% max HP)",
+    "data/champion-audit/batch-6.json -> Syndra module_slots (modeled P, Q, Q2, W, E, R; 'P = 120-splinter +15% total AP BUFF'; 'ammo (Q 2nd charge at 40 splinters)')",
+    "data/champion-audit/batch-e9-1.json -> Syndra ('splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage; R sphere count (r_spheres); All five slots modeled')",
+    "data/champion-audit/batch-p1-3.json -> Vladimir ('cast_order R,Q,W,E') as the contrasting buff-first precedent",
+    "data/worklists/f2-task.md -> 'DEFAULT_CAST_ORDER (fixed Q,W,E,R)' and the setup/consume + cooldown-gating ordering criteria",
+    "docs/math-foundations.md Section 5 -> 'R casts exactly once per timed fight (model constraint, documented)'; rotation row 'R single-cast'; Section 1.1 shared-timeline cast scheduling ('a cast counts when it starts within the window ... resolved greedily by cast order')"
+  ]
+}

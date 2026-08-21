@@ -7,53 +7,25 @@ receives one hit. Fey Feathers and Battle Dance do not damage enemies.
 E8d ally-support: Q (Gleaming Quill) heals Rakan and nearby allies (cached
 Heal 40-230 by level + 55% AP; scope self_and_all_teammates) — the event is
 authored by the engine's ally-support scanner from cached leveling at the Q
-cast time.  P (Fey Feathers) is a passive periodic self-shield (cached
-Shield 30-247.94 by level + 95% AP); it is authored directly by this
-module (``_q_with_p_shield`` below, the Shen Ki Barrier precedent), not
-by the ally-support scanner.
+cast time.  E (Battle Dance) is a zero-damage cast so the scanner prices its
+sourced ally shield (150.0 at rank 5, 0 AP); the free recast within 5
+seconds re-applies it and is not modeled.
 
-Roadmap session (2026-08-21): closes one of Rakan's two out_of_scope
-slots (P); E stays open with a named receipt.
-
-  - P (Fey Feathers): not a damage gap but a stale label. The shield IS
-    already computed and emitted — ``_q_with_p_shield`` attaches it to
-    every Q cast via ``attach_self_shield`` (the sourced 30:247.94 by
-    level + 95% AP row, riding Q exactly as Shen's Ki Barrier rides E).
-    ``MODULE_COVERAGE`` read "out_of_scope" only because P has no
-    standalone top-level SLOTS entry of its own — the label was stale,
-    not the calculation. Reclassified to modeled (the Shen-P precedent:
-    a self-shield authored inside another slot's own parser counts as
-    modeled, not no_damage/out_of_scope).
-  - E (Battle Dance): the shield IS sourced (cached "Shield Strength"
-    50/75/100/125/150 + 70% AP, data/champions.json Rakan E) and its
-    attribute name is already recognized by the generic ally-support
-    scanner (``support_effects._SUPPORT_ATTRIBUTES`` includes "Shield
-    Strength"). It stays out_of_scope because the scanner keys strictly
-    off ``cast_timeline`` slot entries built from THIS module's own
-    ``parse_abilities`` output (``derive_ally_effects`` filters
-    ``event.get("slot") == slot`` against the engine's cast timeline,
-    not against raw champion_data) — and E has no SLOTS entry, so no E
-    cast is ever scheduled (confirmed: ``parse_champion_abilities``
-    returns exactly ``{"Q", "W", "R"}`` for Rakan today, pinned by
-    ``tests/test_rakan.py::test_rakan_rotation_counts_each_enemy_damage_cast_once``).
-    Wiring E therefore needs (a) a new "E" SLOTS entry (a ``no_damage``
-    row, the Kai'Sa-E/Shen-W precedent) so E gets a cast and a
-    cast_timeline slot, which changes the published ability count and
-    is captured verbatim by ``scripts/golden_snapshot.py`` and the
-    pinned ability-set test above, and (b) the sourced "free 5s recast"
-    ("Battle Dance can be recast within 5 seconds at no additional
-    cost... mimics the first cast's effects") is a second-cast timing
-    rule this engine has no existing convention for (unlike Shen's E,
-    which is a single dash) — both are real, in-scope-eventually work
-    this session's stale-label cadence does not cover. Stays
-    out_of_scope with this receipt (the Kai'Sa-R precedent) for
-    whichever session next owns the SLOTS + recast wiring.
+P (Fey Feathers) is ``modeled`` through the ``self_shield_events`` channel,
+not through the scanner: the periodic self-shield (30 : 247.94 by level +
+95% AP — 247.94 at level 18) rides the Q cast, which is the only channel a
+shield-only passive has (a passive is never cast, so no packet can hang on
+it).  The out-of-combat refresh cadence stays state.
 """
 
 from typing import Any
 
+from .inputs import champion_stat
 from .engine import build_parser
-from .slotlib import attach_self_shield, simple_damage, with_control
+from .healing_contract import declare_healing_rule
+from .slotlib import attach_self_shield, simple_damage, support_cast, with_control
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -86,38 +58,7 @@ ASSUMPTIONS = [
     "is also unmodeled second-cast timing. E stays out_of_scope.",
 ]
 
-SOURCES = [
-    {
-        "label": "Fey Feathers",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Fey_Feathers",
-        "revision_id": 4016025,
-        "revision_timestamp": "2026-05-08T17:35:55Z",
-    },
-    {
-        "label": "Gleaming Quill",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Gleaming_Quill",
-        "revision_id": 3996425,
-        "revision_timestamp": "2026-03-04T16:52:28Z",
-    },
-    {
-        "label": "Grand Entrance",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Grand_Entrance",
-        "revision_id": 4007760,
-        "revision_timestamp": "2026-04-12T14:15:53Z",
-    },
-    {
-        "label": "Battle Dance",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/Battle_Dance",
-        "revision_id": 4008001,
-        "revision_timestamp": "2026-04-13T02:59:27Z",
-    },
-    {
-        "label": "The Quickness",
-        "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Rakan/The_Quickness",
-        "revision_id": 3971183,
-        "revision_timestamp": "2025-12-02T06:20:48Z",
-    },
-]
+SOURCES = load_champion_sources("Rakan")
 
 # HARDCODED: verify on patch updates — Fey Feathers' shield is the cached
 # "Shield" per-level row (30 : 247.94 based on level) + 95% AP; the
@@ -138,10 +79,14 @@ def _p_shield_amount(level: int, ability_power: float) -> float:
 
 
 def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
-    entry = simple_damage(attr="Magic Damage", dmg_type="magic")(ctx)
+    entry = simple_damage(
+        attr="Magic Damage",
+        dmg_type="magic",
+        event_order_certified="single_hit",
+    )(ctx)
     if entry is None or int(entry.get("rank", 0) or 0) < 1:
         return entry
-    shield = _p_shield_amount(ctx.level, ctx.stats.get("ability_power", 0.0))
+    shield = _p_shield_amount(ctx.level, ctx.stat("ability_power"))
     return attach_self_shield(
         entry,
         amount=shield,
@@ -156,32 +101,53 @@ def _q_with_p_shield(ctx: Any) -> dict[str, Any] | None:
 
 
 SLOTS = {
+    # Each of the three deals one magic-damage instance per enemy (the
+    # module's own assumption above), so each certifies the cast boundary
+    # its reviewed control rides on.
     "Q": _q_with_p_shield,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
         kind="charm",
         duration_attr="Disable Duration",
     ),
+    # Battle Dance shields the target ally ("Rakan grants a shield to the
+    # target allied champion for 3 seconds", cached "Shield Strength"
+    # 50-150 + 70% AP).  The slot exists so the rotation casts it and the
+    # support scanner can price the shield; the free recast within 5
+    # seconds re-applies it and is not modeled.
+    "E": support_cast(
+        default_name="Battle Dance",
+        detail="Ally shield (sourced by the support scanner); the free "
+        "recast within 5s is not modeled.",
+    ),
 }
 
-parse_abilities = build_parser(SLOTS, "Rakan")
+# Cached kit review.  Q's feather only "deals magic damage to the first
+# enemy hit" before healing Rakan and his allies.  W "deals magic damage to
+# nearby enemies and knocks them up for 1 second" — the "immobilizing"
+# wording beside it is about Rakan being knocked down mid-dash, not about
+# control he applies.  R "deals magic damage to enemies he collides with
+# and charms and slows them by 75%": the charm is the immobilize the slow
+# rides with.  P (a self-shield) and E (an ally shield and dash) damage
+# nothing, so neither is declared: P is never cast, and E's slot exists
+# only so the support scanner can price its ally shield.
+MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm"}
+
+parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
+
+# P emits no cast row of its own — a passive is never cast — so the
+# derivation would call it out_of_scope; the shield Q carries is what the
+# engine prices (247.94 for 10s at level 18 with no items).
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "out_of_scope",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-
-
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -192,14 +158,15 @@ def derive_self_healing(
 ):
     """Resolve Rakan self-healing events from its authored packet."""
     healing = []
-    level = max(1, int(champion_stats.get("level", 18) or 18))
+    level = max(1, int(champion_stat(champion_stats, "level")))
     heal = _healing.extract_named(
         _healing._ability(champion_data, "Q"), "Heal", level, champion_stats
     )
     if heal > 0.0:
-        for event in _healing._attributed_events(
-            damage_events, lambda source, _event: source == "Q"
+        for payment in _healing._payments(
+            _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
         ):
+            event = payment.event
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)) + 3.0,
@@ -211,9 +178,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Rakan", derive_self_healing)

@@ -1,0 +1,113 @@
+{
+  "receipt_id": "oracle-C6-leaf106",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/damage_events[4]/damage_type",
+  "old_value": "magic",
+  "new_value": "true",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-leaf106",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan, and git history were never opened."
+  },
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].leveling[0].attribute",
+      "quote": "Bonus True Damage",
+      "modifiers": {
+        "flat_by_rank": [8.4, 12, 15.6, 19.2, 22.8],
+        "ap_percent_by_rank": [9.2, 9.8, 10.4, 11, 11.6],
+        "quadratic_percent_ap": [1.14, 1.14, 1.14, 1.14, 1.14]
+      }
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[3].leveling[1].attribute",
+      "quote": "Total Mixed Damage",
+      "note": "The wiki labels the combined W output MIXED, not MAGIC. Mixed is only representable as at least one magic component plus at least one true component; the base recast damage stays magic."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[2]",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land.",
+      "leveling_attribute": "Magic Damage",
+      "modifiers": {
+        "flat_by_rank": [70, 100, 130, 160, 190],
+        "ap_percent": 65
+      }
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].damageType",
+      "quote": "MAGIC_DAMAGE",
+      "note": "Ability-level scalar. It describes the recast nuke only and is the field a naive implementation would stamp onto every component of the W, which is exactly the shape of the observed old value."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.gap_summary",
+      "quote": "All damage and splinter atom families covered: splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres)."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra (whole record), regex scan for 'true damage'",
+      "quote": "Exactly two hits: the W Transcendent Bonus description and the 'Bonus True Damage' leveling attribute. Q, E, R and the passive contain no true-damage text; all four carry damageType MAGIC_DAMAGE."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "quote": "No section assigns per-event damage types; the document covers penetration order, resistance, DoT partitioning and the survival walk. It neither supports nor contradicts this leaf, so the wiki cache is the sole authority here."
+    }
+  ],
+
+  "independent_computation": {
+    "threshold_check": {
+      "statement": "'Collecting 60 Splinters of Wrath' is inclusive at 60.",
+      "consequence": "At the scenario's splinter value of 60 the Transcendent bonus is ACTIVE, so a true-damage component must be present in this fight. Scenario suffix '_60' pins exactly this threshold."
+    },
+    "decomposition": {
+      "claim": "The Transcendent bonus is an ADDITIONAL true-damage instance equal to (12% + 2% per 100 AP) of the W recast's magic damage; the recast damage itself stays magic.",
+      "magic_component": "D_magic(rank, AP) = base[rank] + 0.65 * AP,  base = [70, 100, 130, 160, 190]",
+      "true_component": "D_true(rank, AP) = (0.12 + 0.0002 * AP) * D_magic(rank, AP)",
+      "verification_against_cached_leveling_row": {
+        "constant_term": "0.12 * base = [8.4, 12.0, 15.6, 19.2, 22.8]  -> matches cached flat_by_rank EXACTLY for all 5 ranks",
+        "linear_ap_term": "(0.12 * 0.65 + 0.0002 * base) * 100 = [9.2, 9.8, 10.4, 11.0, 11.6] %AP  -> matches cached ap_percent_by_rank EXACTLY for all 5 ranks",
+        "quadratic_term": "0.12*0.65 gives the 7.8%AP piece and 0.0002*base gives the 1.4/2.0/2.6/3.2/3.8 %AP piece; their sum reproduces the cached row, which pins the decomposition uniquely",
+        "total_mixed_check": "magic + true at rank 1 = 78.4 + 74.2%AP  -> matches the cached 'Total Mixed Damage' row EXACTLY"
+      },
+      "worked_examples": [
+        {"rank": 5, "AP": 500, "magic": 515.0, "bonus_true": 113.3, "total_mixed": 628.3},
+        {"rank": 1, "AP": 300, "magic": 265.0, "bonus_true": 47.7, "total_mixed": 312.7},
+        {"rank": 5, "AP": 0, "magic": 190.0, "bonus_true": 22.8, "total_mixed": 212.8}
+      ]
+    },
+    "conclusion": "The W at >=60 splinters produces two damage instances of different types. Any faithful damage_events list for this scenario must contain at least one event whose damage_type is 'true'. The only true-damage source anywhere in Syndra's kit is this W Transcendent bonus, so an event flipping magic -> true in a scenario pinned at 60 splinters is the Transcendent bonus being typed from its sourced 'Bonus True Damage' row instead of from the ability-level MAGIC_DAMAGE scalar. Typing it 'magic' understates the event by routing it through 100/(100+MR), which is the material error the old value carried."
+  },
+
+  "scope_and_limits": {
+    "index_resolution": "The scenario definition (cast order, ranks, items, r_spheres) lives outside the permitted evidence tree, so index 4 could not be resolved to a named event directly. The verdict rests on the mechanism plus elimination: (a) at splinters=60 a true event MUST exist; (b) Syndra has exactly one true-damage source in her entire kit; (c) magic -> true is the direction of honoring the 'Bonus True Damage' row, whereas no plausible change turns a Q, E, or R-sphere event true.",
+    "residual_risk": "The verdict would flip to 'both_wrong' only if the change had retyped the W's BASE recast damage to true and dropped the bonus, since the wiki's 'Total Mixed Damage' row forbids the W from being wholly true. Nothing in the permitted evidence suggests that, and such a change would also have moved the event's amount, not only its damage_type."
+  },
+
+  "asides": [
+    {
+      "severity": "low",
+      "finding": "The cached quadratic modifier on both the 'Bonus True Damage' and 'Total Mixed Damage' rows is 1.14 %AP, but the correct AP^2 coefficient implied by the very same row's other two modifiers is 1.30 %AP (0.0002 * 0.65 * 100 * 100).",
+      "demonstration": "Rank 5 at 500 AP: closed form (0.12 + 0.0002*500) * 515 = 113.30. Reconstructing from the cached row with 1.30 gives 22.8 + 58.0 + 32.5 = 113.30 (exact); with 1.14 it gives 109.30 (short by 4.00, ~3.5%). Rank 1 at 500 AP: closed form 86.90, row@1.30 = 86.90, row@1.14 = 82.90.",
+      "impact": "Only matters if any consumer reads the third modifier literally instead of deriving the bonus as a multiplier on the W's magic damage. Deriving it multiplicatively (the decomposition above) is immune. Flagging as an off-task data-cache defect, consistent with CLAUDE.md's 'known-degraded wiki parses' class - note the same row's units array is the mangled '  2' string, so this row's third modifier is demonstrably a half-parse."
+    }
+  ]
+}

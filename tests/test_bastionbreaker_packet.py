@@ -78,6 +78,7 @@ from src.calculator.damage import (
     _shaped_charge_proc_receipts,
 )
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interpreters import charged_strike
 from src.calculator.item_effects import (
     DamageInputs,
     required_effect_value,
@@ -90,6 +91,23 @@ from src.calculator.timeline_coverage import (
 
 BASTION = "Bastionbreaker"
 SC_ROW = "shaped_charge_Bastionbreaker"
+
+
+def _shaped_charge():
+    """The shaped charge Bastionbreaker declares.
+
+    MERGE: the strike families left ``BuildDamageEffects`` -- a projection
+    field that defaulted to an empty tuple would price a whole family at
+    zero with nothing saying so -- so they resolve through their own
+    interpreter instead.
+    """
+    return charged_strike.resolve_slots(
+        (BASTION,),
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    ).shaped_charges[0]
 
 
 def _stats(*, is_melee: bool = False, lethality: float = 22.0) -> dict:
@@ -208,7 +226,7 @@ class TestTypedContract:
             required_effect_value(BASTION, "shaped_missing_key_3d")
 
     def test_compiled_effect_contract(self) -> None:
-        effect = resolve_damage_effects([{"name": BASTION}]).shaped_charges[0]
+        effect = _shaped_charge()
         assert effect.source.item_name == BASTION
         assert effect.source.breakdown_key == SC_ROW
         assert effect.source.display_name == "Bastionbreaker (Shaped Charge)"
@@ -216,7 +234,7 @@ class TestTypedContract:
         assert effect.cooldown == 20.0
 
     def test_compiled_formula_melee_and_ranged(self) -> None:
-        effect = resolve_damage_effects([{"name": BASTION}]).shaped_charges[0]
+        effect = _shaped_charge()
         melee = DamageInputs(_stats(is_melee=True), 18, True, 1000.0, 1000.0)
         ranged = DamageInputs(_stats(is_melee=False), 18, False, 1000.0, 1000.0)
         # 50 + 1.5 * 22 = 83 ; 25 + 0.75 * 22 = 41.5
@@ -255,6 +273,12 @@ class TestTypedContract:
                 "damage_type",
                 "damage_events",
                 "event_phase",
+                # MERGE: every item row now names the declaration it was
+                # priced from (``declared``) and which pair preview it
+                # descends from (``pair_preview_of``), so a number in the
+                # breakdown traces to the rule that produced it.
+                "declared",
+                "pair_preview_of",
             }
 
 
@@ -279,14 +303,17 @@ class TestAbilityTriggerEligibility:
         )
         row = _sc_row(fight)
         assert row["count"] == 1
-        assert row["damage_events"] == [
-            {
-                "time": 0.0,
-                "damage": 41.5,
-                "damage_type": "true",
-                "event_precision": "exact",
-            }
-        ]
+        # MERGE: the event carries its ``declared`` provenance tuple now
+        # (rule id, amount, attack class, and the three unset slots), so
+        # the shared fields are compared rather than the whole mapping.
+        (event,) = row["damage_events"]
+        assert {key: event[key] for key in ("time", "damage", "damage_type")} == {
+            "time": 0.0,
+            "damage": 41.5,
+            "damage_type": "true",
+        }
+        assert event["event_precision"] == "exact"
+        assert event["declared"][0] == "bastionbreaker.shaped_charge"
 
     def test_non_damaging_only_fight_authors_no_row(self) -> None:
         fight = _fight(

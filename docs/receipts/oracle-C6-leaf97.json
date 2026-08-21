@@ -1,0 +1,88 @@
+{
+  "receipt_id": "oracle-C6-leaf97",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[6]/ordinal",
+  "old_value": 3,
+  "new_value": 2,
+  "verdict": "new_value_correct",
+  "independent_value": 2,
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/champion-audit/batch-6.json", "data/champion-audit/batch-e9-1.json", "data/worklists/f2-task.md", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/ (incl. golden_baseline.json)", "docs/plans/", "docs/receipts/ (other)", "git history", "the diff", "the plan"],
+    "note": "A file 'syndra.txt' was present at the scratch-directory root and is NOT part of the git-archive export (the export contains only data/ and docs/math-foundations.md). It was deliberately not opened and contributed nothing to this computation."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "docs/math-foundations.md, S1.1 (Renewal theory for cast + auto timing schedules)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). With c_i the effective cooldown of ability i, the cast epochs of a solo ability are 0, c_i, 2c_i, ... - again a deterministic renewal schedule; the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order.",
+      "used_for": "The timeline model: per-ability renewal epochs superposed and merged by time, with the cast order acting only as the tie-break/priority. Rules out a strict 'wait for each slot in turn' cycle (that model would stall on R's 80 s cooldown and contradicts the cited Cassiopeia E '3 in-game casts over 3 s' correction in the same paragraph)."
+    },
+    {
+      "source": "docs/math-foundations.md, S5 formula-audit table",
+      "quote": "Ability rotation casts (_schedule_shared_casts, _compute_ability_rotation) | shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast",
+      "used_for": "R contributes exactly one cast to a timed fight (its 80 s cooldown exceeds the 60 s window anyway), so R's ordinal is always 1 and R never re-enters the merge."
+    },
+    {
+      "source": "docs/math-foundations.md, S5 formula-audit table (ability haste row)",
+      "quote": "Ability haste (effective_cooldown) | cd' = cd*100/(100+AH); casts/unit time affine in AH | EXACT",
+      "used_for": "Effective-cooldown conversion for every slot."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P[0].description (cached wiki text)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times. She gains Splinters of Wrath from the following: ... Ranking up an ability with any skill points beyond level 1 grants 5 Splinters, up to 85.",
+      "used_for": "THE LOAD-BEARING FACT. A level-18 Syndra has spent 17 skill points beyond the first; 17 x 5 = 85, exactly the stated cap. So a level-18 Syndra enters any fight already holding 85 Splinters of Wrath with no in-combat stacking required."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[1].description (cached wiki text)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.",
+      "used_for": "85 >= 40, so Dark Sphere is a 2-charge ability for the whole fight: the opening burst contains TWO Dark Sphere casts, not one."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0].cooldown / rechargeRate",
+      "quote": "cooldown = {\"modifiers\": [{\"values\": [7, 7, 7, 7, 7]}], \"affectedByCdr\": false}; rechargeRate = [7, 7, 7, 7, 7]",
+      "used_for": "Dark Sphere recharge = 7 s at every rank (charge-based, flagged not generic-CDR-affected)."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].description + leveling (cached wiki text)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. -> Ability Haste: 10 / 20 / 30",
+      "used_for": "At R rank 3 (level 18) Dark Sphere gets +30 ability haste: 7 * 100/130 = 5.3846 s per charge."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W/E/R cooldowns and cast times",
+      "quote": "W Force of Will cd [12, 11, 10, 9, 8] affectedByCdr true, castTime \"none\"; E Scatter the Weak cd [15 x5] affectedByCdr true, castTime \"0.25\"; R Unleashed Power cd [120, 100, 80] affectedByCdr true, castTime \"0.25\"; Q castTime \"none\"",
+      "used_for": "Level-18 ranks are Q5/W5/E5/R3 (5+5+5+3 = 18 points), so W = 8 s, E = 15 s, R = 80 s. Cast times are 0/0/0.25/0.25, so the whole opening burst fits inside the first 0.5 s under mutual exclusion and occupies timeline indices 0..k-1 in cast-order sequence."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra",
+      "quote": "module_slots.modeled = [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge) ... splinters option (0-120) gates Q2 second charge",
+      "used_for": "The second Dark Sphere charge is a distinct timeline slot (Q2), so cast-timeline ordinals are counted per slot."
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... It must respect per-rank cooldowns in time-based mode (recast when off CD ...)",
+      "used_for": "Confirms 'custom order' = a caller-supplied cast_order list (cf. data/champion-audit/batch-p1-3.json: 'cast_order R,Q,W,E'), and that in timed mode the order does not gate recasts - cooldowns do."
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_ranks": "60 s timed fight at level 18 -> Q5, W5, E5, R3 (5+5+5+3 = 18 skill points).",
+    "step_2_splinters": "P text: 5 Splinters per skill point beyond the first, capped at 85. 17 x 5 = 85 >= the 40-Splinter Transcendent threshold -> Dark Sphere holds up to 2 charges for the entire fight.",
+    "step_3_effective_cooldowns": "cd' = cd * 100/(100+AH). Dark Sphere: 7 * 100/130 = 5.3846 s per charge (R rank-3 passive grants +30 AH to Dark Sphere; the wiki flags Q as not generic-CDR-affected). W: 8 * 100/(100+AH). E: 15 * 100/(100+AH). R: 80 s > 60 s window -> exactly one cast (also the documented 'R single-cast' model constraint).",
+    "step_4_opening_block": "At t = 0 every slot is off cooldown, so the opening burst is Q, Q2, W, E, R - five casts - laid down in the scenario's custom order inside the first 0.5 s (cast times 0/0/0/0.25/0.25 under mutual exclusion). These occupy cast_timeline indices 0, 1, 2, 3, 4, each with ordinal 1 for its own slot.",
+    "step_5_merge": "Superpose the remaining renewal epochs: Dark Sphere charges at 5.3846, 10.769, ...; W at 8, 16, ...; E at 15, 30, 45. Merged, index 5 = the first recharged Dark Sphere at 5.3846 s (ordinal 2 of its slot) and index 6 = W at 8 s, which is Force of Will's SECOND cast -> ordinal 2.",
+    "step_6_robustness": "Swept item ability haste 0-100 and both readings of Q's affectedByCdr flag (Q haste = 30, or 30+AH). Index 6 is ordinal 2 in every case: for AH < ~49 it is W's 2nd cast at 800/(100+AH) s; for AH >= ~49 W's 2nd cast overtakes the Dark Sphere recharge and index 6 becomes the Dark Sphere's 2nd cast - still ordinal 2. The result is invariant to the custom order itself, because a permutation only rearranges the five opening casts among indices 0-4.",
+    "result": 2
+  },
+
+  "why_the_old_value_was_3": "3 is exactly the value this leaf takes when the opening burst has only FOUR casts, i.e. when Syndra is modelled with a single Dark Sphere charge. With opening Q, W, E, R at indices 0-3, the merge continues Q@5.38 (ordinal 2, index 4), W@8 (ordinal 2, index 5), Q@10.77 (ordinal 3, index 6) -> 3. That configuration contradicts the cached wiki text for a level-18 Syndra, who holds 85 Splinters (>= 40) from skill points alone and therefore opens with two Dark Spheres. Adding the missing second opening cast shifts the timeline right by one and turns index 6 from Dark Sphere's 3rd cast into a 2nd cast of its slot - precisely the observed 3 -> 2.",
+
+  "residual_uncertainty": "The scenario's own definition lives outside the permitted evidence tree (scripts/, tests/), so level, item ability haste, the literal custom order and the splinters option value were not read. The derivation is invariant to ability haste and to the custom order permutation. It is NOT invariant to the splinters option: a Syndra explicitly configured below 40 Splinters would open with four casts and index 6 would be ordinal 3. That configuration is unreachable for a level-18 fight per the sourced skill-point rule, which is why the verdict is new_value_correct rather than indeterminate.",
+
+  "committed": false
+}

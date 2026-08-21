@@ -54,7 +54,7 @@ def _slicing_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    bolts = max(1, min(6, int(ctx.options.get("r_bolts", 6))))
+    bolts = max(1, min(6, int(ctx.option("r_bolts"))))
     per = extract_named(ability, "Magic Damage Per Bolt", rank, ctx.stats, ctx.target)
     return {
         "name": ability.get("name", "Slicing Maelstrom"),
@@ -102,9 +102,23 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kennen")
+
+# No MODULE_CC: Mark of the Storm puts the stun on the target's stack
+# count, not on any ability — "Kennen's abilities apply a stack of Mark of
+# the Storm to enemies hit ... stacking up to 3 times" and "the third
+# stack against a target consumes them all to stun them for 1.25 seconds".
+# Every damaging slot is capable of being either the applier or the
+# detonator, and none of their own entries names a control, so neither a
+# slot-wide stun nor a slot-wide "none" is true of Q, W, E or R (the Annie
+# Pyromania rule).  This kit therefore keeps the coarse control-armed scan.
+#
+# The blocker is the kind alone, never the timing: Slicing Maelstrom
+# already lands on the cadence the cache states ("summons a storm around
+# himself for 3 seconds", striking "every 0.5 seconds" — the six bolts
+# ``_slicing_maelstrom`` authors), so R's hits reach the event ledger and
+# still have nothing true to carry.
 parse_abilities = build_parser(SLOTS, "Kennen")
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "P" else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

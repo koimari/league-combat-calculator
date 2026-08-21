@@ -1,0 +1,101 @@
+{
+  "receipt_id": "oracle-C6-leaf54",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = `git archive HEAD data docs/math-foundations.md` only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/rotation/cast_order[1]",
+  "old_value": "W",
+  "new_value": "Q2",
+  "verdict": "new_value_correct",
+
+  "evidence_isolation": {
+    "export_command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_root": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-C6",
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"]
+  },
+
+  "sources": [
+    {
+      "id": "S1",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].effects[1].description (Dark Sphere)",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[0].description (Transcendent)",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "id": "S3",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "id": "S4",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.Q[0].cooldown / rechargeRate / notes",
+      "quote": "cooldown.modifiers[0].values = [7,7,7,7,7], affectedByCdr = false; rechargeRate = [7,7,7,7,7]; notes: \"After Syndra gains the Transcendent bonus, the number of Dark Sphere charges available is represented by small Sphere icons under her health bar\"",
+      "reading": "Dark Sphere is an ammo/charge ability once the Transcendent bonus is online: the 7 s value is a per-charge RECHARGE, not a gate between the two stocked casts."
+    },
+    {
+      "id": "S5",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].effects[0] (Unleashed Power, passive)",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. — Ability Haste [10, 20, 30]",
+      "reading": "R only accelerates the Dark Sphere RECHARGE; it does not create or remove the second stocked charge."
+    },
+    {
+      "id": "S6",
+      "file": "data/wiki-atoms/stack-transform-summon-resource.json",
+      "locator": "resource atom (internal index 12) description",
+      "quote": "A resource (internal index 12) consumed by specific actions, shown as pips or icons below the health bar: basic-attack ammo with reload (Graves, Jhin, Xayah, Gwen), stocked ability casts (Ahri's Spirit Rush, Gangplank's Powder Keg, Syndra's Dark Sphere), and readiness indicators ...",
+      "reading": "Independent confirmation from the cached wiki-atom layer that Syndra's Dark Sphere is a STOCKED-CAST (ammo) resource — stocked charges are spendable back-to-back."
+    },
+    {
+      "id": "S7",
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots / notable_atoms / gap_summary",
+      "quote": "module_slots.modeled = [\"P\",\"Q\",\"Q2\",\"W\",\"E\",\"R\"]; note: \"modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.\"; notable_atoms includes \"ammo (Q 2nd charge at 40 splinters)\"; gap_summary: \"splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff\"",
+      "reading": "Fixes the meaning of the label 'Q2' in this codebase: it is the synthetic slot for Syndra's SECOND stocked Dark Sphere charge, gated on splinters >= 40. It is not a recast, not a second ability rank, not a Yasuo-style Q-chain step."
+    },
+    {
+      "id": "S8",
+      "file": "data/champion-audit/batch-e9-1.json",
+      "locator": "Syndra gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers.",
+      "reading": "Second, independent corroboration that the splinters option value 120 is the scenario knob and that the Q2 slot is unlocked at 40+."
+    },
+    {
+      "id": "S9",
+      "file": "docs/math-foundations.md",
+      "locator": "Section 1.1 + Section 5 formula-audit row 'Ability rotation casts'",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (`_schedule_shared_casts`). ... | Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT |",
+      "reading": "The rotation contract admits any cast whose resource/cooldown state permits it at that instant; a stocked second charge is available at t=0, so nothing in the scheduling identity forbids Q2 as the second cast."
+    },
+    {
+      "id": "S10",
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0] (Force of Will)",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units ... Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage.",
+      "reading": "W's damage row is self-contained (it can grab a minion/monster, not only a sphere) and its Transcendent bonus is gated on 60 splinters, which 120 also satisfies. Nothing about W requires it to occupy the index-1 position, and deferring W by one cast does not change its availability."
+    }
+  ],
+
+  "independent_computation": {
+    "question": "At the scenario's splinter value, what is the second entry of Syndra's cast order?",
+    "step_1_identify_the_scenario_knob": "The scenario suffix '120' matches exactly one Syndra quantity in the cached data: Splinters of Wrath, which cap at 120 (S2) and whose capstone (+15% AP) fires at 120 (S3). The module's splinters option range is documented as 0-120 (S7, S8). Therefore syndra_custom_order_120 = Syndra at 120 splinters, i.e. every Transcendent threshold satisfied.",
+    "step_2_threshold_arithmetic": "Splinter thresholds read off the cached wiki text: Q second charge >= 40 (S1), W true damage >= 60 (S10), E scatter/slow >= 80, R execute >= 100, P +15% AP = 120 (S3). Scenario value 120 >= 40, so the Q charge cap is 2, not 1.",
+    "step_3_charge_semantics": "Dark Sphere at >= 40 splinters is an ammo/stocked-cast resource (S4, S6): the 7 s figure is the per-charge recharge and R's passive (S5) only shortens that recharge. Two stocked charges are on hand at t=0, so two Dark Sphere casts are legal back-to-back with no cooldown wait between them. In the one-hands/shared-timeline scheduling contract (S9) the only cost of the second cast is its own cast time (Dark Sphere castTime = 'none' in the cache), so nothing displaces it from index 1.",
+    "step_4_label_resolution": "'Q2' is this codebase's synthetic slot name for exactly that second stocked charge (S7: \"synthetic Q2 (2nd charge)\", ammo atom \"Q 2nd charge at 40 splinters\"; S8: \"40+ Q charges via Q2 slot\"). So the sequence Q, Q2, W, ... is 'spend both stocked Dark Spheres, then Force of Will'.",
+    "step_5_conclusion": "cast_order = [Q, Q2, W, ...]; cast_order[1] = Q2. The old value W is the sequence that never spends the second stocked charge in the leading position — i.e. a rotation computed as if the charge cap were 1, which is only true below 40 splinters and is contradicted by the scenario's own 120 value.",
+    "materiality_check": "Dropping/deferring the second Dark Sphere is not cosmetic. Q rank 5 = 230 (+70% AP) (S1 leveling row). At 120 splinters the +15% AP capstone applies (S3), so with a nominal 500 AP loadout: AP_eff = 500 x 1.15 = 575; Q_raw = 230 + 0.70 x 575 = 632.5; against 100 MR the mitigation identity m(R) = 100/(100+R) = 0.5 (docs/math-foundations.md Section 2.1) gives 316.25 post-mitigation per Dark Sphere. Illustrative stats (the scenario's own AP/MR are outside this evidence tree), but it fixes the order of magnitude: whether the second charge is in the rotation is a several-hundred-damage leaf, not a naming detail.",
+    "counter_hypothesis_tested": "Could W legitimately hold index 1 — i.e. is there a game rule that forces Force of Will before the second sphere? No. W grabs 'the nearest Dark Sphere, enemy minion or non-epic monster' (S10), so it is not gated on a second sphere existing, and its own Transcendent bonus is a 60-splinter damage rider, not an ordering constraint. The one sphere created by the first Q already satisfies any grab-a-sphere reading. Conversely, no cached rule permits only one Dark Sphere cast at 120 splinters — S1 is explicit that the cap is 2. So the old value is unsupported and the new value is required."
+  },
+
+  "residual_uncertainty": "The scenario definition itself (its explicit stat block and any user-supplied cast order) lives outside the permitted evidence tree, so the splinters=120 reading of the '120' suffix is inferred from the cached data (S2/S3/S7/S8) rather than read from the scenario file. Under that reading the verdict is unambiguous. The only world in which 'W' would be right is one where the scenario pins splinters < 40, which would contradict its own name and the documented 0-120 option range.",
+
+  "verdict_statement": "new_value_correct - at 120 Splinters of Wrath Syndra stocks 2 Dark Sphere charges (wiki threshold 40), both are spendable at fight start, and 'Q2' is precisely the second-charge slot; the second cast is Q2, not W."
+}

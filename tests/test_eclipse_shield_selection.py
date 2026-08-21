@@ -1,7 +1,7 @@
 """Eclipse Ever Rising Moon shield-selection boundary matrix.
 
 HANDOVER.md section 4.26 certifies Eclipse's shield amount, proc time, and
-two-second duration.  ``BIS_CERTIFIED_DEFENSIVE_EFFECTS`` documents the current
+two-second duration.  ``survival_ledger_certifications()`` documents the current
 survival rule: overlapping shields stack additively.  It also records strongest
 shield selection as unmodeled.
 
@@ -14,7 +14,7 @@ GOAL-0fails.md).  Two independent grounds, both required:
 
 1. Unsourced in every authority layer — the strongest-shield rule appears in
    no wiki effect text, no ``item_effects`` accessor, and is explicitly
-   recorded as absent in ``bis.py:245-250`` (``BIS_CERTIFIED_DEFENSIVE_EFFECTS``)
+   recorded as absent by ``interpreters.survival_ledger_certifications``
    and ``HANDOVER.md:1311``.
 2. Physically unreachable — Eclipse's cooldown (``item_effects.py``
    ``"cooldown": 6.0``) exceeds its shield duration (``"shield_duration": 2.0``),
@@ -36,18 +36,21 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.bis import BIS_CERTIFIED_DEFENSIVE_EFFECTS
+from src.calculator.interpreters import survival_ledger_certifications
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
+from src.calculator.program.build import roster_program
+from src.calculator.program.compile import action_from_event
+from src.calculator.program.views.survival import survival
+from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.survival import (
     ReceiptLedger,
     ScoreLedger,
+    SUPPORT_RANK_KEY,
     TransitionContext,
-    assemble_survival_rows,
+    TransitionRank,
     build_states,
-    finalize_states,
-    run_survival_walk,
 )
-from src.calculator.survival.actions import survival_action_from_event
 
 HOLDER = "main"
 ENEMY = "enemy:Aatrox"
@@ -69,7 +72,7 @@ def _combatants() -> list[Combatant]:
             level=18,
             items=(),
             stats={"health": 1000.0, "is_melee": True},
-            defenses=SimpleNamespace(
+            defenses=StartingDefenses(
                 magic_shield=0.0,
                 physical_shield=0.0,
                 general_shield=0.0,
@@ -98,7 +101,9 @@ def _shield(
         "attacker": HOLDER,
         "target": HOLDER,
         "_event_id": event_id,
-        "_priority": 0.5,
+        # Eclipse's stack shield is a barrier placed AFTER the damage that
+        # triggered it; ``0.5`` was that rank's float.
+        SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
     }
 
 
@@ -125,9 +130,9 @@ def _walk(events: list[dict], ledger_type, *, duration: float = 4.0):
     receipt_events = deepcopy(events)
     actions = []
     for aidx, event in enumerate(receipt_events):
-        phase = float(event.get("_priority", 0.0))
+        phase = event.get(SUPPORT_RANK_KEY, TransitionRank.DAMAGE)
         actions.append(
-            survival_action_from_event(
+            action_from_event(
                 event,
                 phase,
                 index_of[HOLDER],
@@ -137,12 +142,13 @@ def _walk(events: list[dict], ledger_type, *, duration: float = 4.0):
             )
         )
     actions.sort(key=lambda action: action.sort_key)
-    states = build_states(combatants)
+    states = build_states(combatants, (0.0,) * len(combatants))
     if ledger_type is ReceiptLedger:
         walk_actions = actions
         ledger = ReceiptLedger(
             actions=walk_actions,
             index_of=index_of,
+            compile_event=action_from_event,
             annotating=True,
         )
     else:
@@ -154,10 +160,10 @@ def _walk(events: list[dict], ledger_type, *, duration: float = 4.0):
         combatants=combatants,
         index_of=index_of,
         ledger=ledger,
+        regeneration_windows=(None,) * len(combatants),
     )
-    run_survival_walk(walk_actions, context)
-    finalize_states(states, duration)
-    return assemble_survival_rows(states, combatants)[HOLDER], receipt_events
+    result = run_one_walk(walk_actions, context)
+    return survival(roster_program(combatants), result)[HOLDER], receipt_events
 
 
 def _receipt(events: list[dict], *, duration: float = 4.0):
@@ -165,11 +171,23 @@ def _receipt(events: list[dict], *, duration: float = 4.0):
 
 
 def test_bis_receipt_names_unavailable_strongest_shield_rule():
-    """The public BIS boundary names the additive survival assumption."""
-    receipt = BIS_CERTIFIED_DEFENSIVE_EFFECTS["Eclipse"]
+    """The public BIS boundary names what the survival ledger does with the proc.
 
-    assert "stacks same-time shields additively" in receipt
-    assert "strongest-shield rule is not modeled" in receipt
+    The note is derived from the declaration now
+    (``interpreters._LEDGER_CONTRIBUTION_NOTES``, keyed by
+    ``SurvivalLedgerContribution.SELF_SHIELD``) rather than hand-written per
+    item, so it names the modelled behaviour rather than the unmodelled
+    strongest-shield rule main's prose called out.  The additive stacking
+    itself is still pinned, by the same-time rows below.
+
+    MERGE-TODO(interpreters): main's note also disclosed "the strongest-shield
+    rule is not modeled".  A derived note has no home for that caveat yet; it
+    is a disclosure, not prose, and should come back as one.
+    """
+    receipt = survival_ledger_certifications()["Eclipse"]
+
+    assert "declares a self shield on its proc" in receipt
+    assert "survival ledger" in receipt
 
 
 @pytest.mark.parametrize(

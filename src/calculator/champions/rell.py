@@ -21,7 +21,7 @@ P1-2 fixes:
 from typing import Any
 
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .slotlib import on_hit_entry
 
 # HARDCODED: verify on patch updates — Break the Mold's on-hit formula
@@ -32,6 +32,37 @@ _BREAK_THE_MOLD_ARMOR_RATIO = 0.05
 _BREAK_THE_MOLD_MR_RATIO = 0.05
 
 PACKET_SHA256 = "c88088e022b4afb695def1471bb4068ad40512c06c50d5a43cd479eebd11445a"
+
+
+def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: on-hit bonus magic damage from Rell's own resistances."""
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+    armor = float(ctx.stat("armor"))
+    magic_resistance = float(ctx.stat("magic_resistance"))
+    per_hit = (
+        _BREAK_THE_MOLD_ARMOR_RATIO * armor
+        + _BREAK_THE_MOLD_MR_RATIO * magic_resistance
+    )
+    return on_hit_entry(ability.get("name", "Break the Mold"), per_hit, "magic")
+
+
+_break_the_mold.phase = ONHIT
+
+
+# Cached kit review.  Q "deal[s] them magic damage and stun[s] them for
+# 0.65 seconds"; its "immobilized" wording is about Rell failing to lunge,
+# not control she applies.  Both W forms apply two immobilize kinds at
+# once, which is what the un-narrowed "immobilize" states: Crash Down
+# "deals magic damage to nearby enemies, stuns them for 0.8 seconds, and
+# knocks them up for 0.4 seconds", and Mount Up's charge "deals bonus
+# magic damage, stuns the target for 0.6 seconds, and flings them 150
+# units over herself".  E only "deals bonus magic damage" through the
+# explosion it creates.  R's field "deals magic damage every 0.25 seconds
+# to nearby enemies and drags them towards her".  P is an on-hit rider on
+# the auto stream, so it carries no ability event of its own.
+MODULE_CC = {"Q": "stun", "W": "immobilize", "E": "none", "R": "pull"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rell",
@@ -44,30 +75,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             "dot_duration": 2.0,
         }
     },
+    # Shattering Strike thrusts once and both W forms land one hit — the
+    # crash-down impact and the mounted charge's empowered attack — which
+    # is the boundary claim that carries MODULE_CC's reviewed answers into
+    # the event ledger; E's explosion lands once on the target.  R already
+    # authors its own eight-tick timing above.
+    single_hit_slots=frozenset({"Q", "W", "E"}),
+    slot_parsers={
+        "P": _break_the_mold,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-VARIANT_OPTION_KEYS = ("w_variant",)
-
-
-def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: on-hit bonus magic damage from Rell's own resistances."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
-    armor = float(ctx.stats.get("armor", 0.0))
-    magic_resistance = float(ctx.stats.get("magic_resistance", 0.0))
-    per_hit = (
-        _BREAK_THE_MOLD_ARMOR_RATIO * armor
-        + _BREAK_THE_MOLD_MR_RATIO * magic_resistance
-    )
-    return on_hit_entry(ability.get("name", "Break the Mold"), per_hit, "magic")
-
-
-_break_the_mold.phase = ONHIT
-
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _break_the_mold
-parse_abilities = build_parser(SLOTS, "Rell")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "P (Break the Mold) deals 5% of Rell's total armor + 5% of her total "
@@ -82,5 +100,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "target's maximum health + 3% per 100 AP on the empowered basic "
     "attack or Shattering Strike.",
 ]
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"

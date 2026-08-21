@@ -33,8 +33,8 @@ def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
     base = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    missing_ratio = float(ctx.target.get("target_missing_health", 0.0) or 0.0) / max(
-        1.0, float(ctx.target.get("target_max_health", 1.0) or 1.0)
+    missing_ratio = float(ctx.target_stat("target_missing_health") or 0.0) / max(
+        1.0, float(ctx.target_stat("target_max_health") or 1.0)
     )
     value = base * (1.0 + max(0.0, min(1.0, missing_ratio)))
     result = on_hit_entry("Silver Stake", value, "magic")
@@ -52,9 +52,9 @@ def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for()
-    casts = max(1, min(3, int(ctx.options.get("q_casts", 3))))
+    casts = max(1, min(3, int(ctx.option("q_casts"))))
     per = extract_named(ability, "Magic Damage per Nail", rank, ctx.stats, ctx.target)
-    stacks = max(0, min(3, int(ctx.options.get("soul_nails", 0))))
+    stacks = max(0, min(3, int(ctx.option("soul_nails"))))
     bonus_attr = {
         1: "One Stack Bonus Damage",
         2: "Two Stacks Bonus Damage",
@@ -149,7 +149,14 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Locke")
-parse_abilities = build_parser(SLOTS, "Locke")
+
+# Cached kit review: Q's nails "slow[] them by 25% for 1 second" (60% at
+# two Soul Nails stacks) and R's latching nails slow "by 99% decaying over
+# 2 seconds"; E blinks and dashes without applying control.  W is a
+# self-buff and P an on-hit rider, neither emitting an ability event.
+MODULE_CC = {"Q": "slow", "E": "none", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Locke", cc_kinds=MODULE_CC)
 
 _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
@@ -168,11 +175,11 @@ def parse_abilities(*args, **kwargs):
     return result
 
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+# The wrapper is the module's published parser, so it republishes the
+# wiring the inner parser holds — the contract proves declaration and
+# wiring are one dict off whichever function the module exports.
+parse_abilities.cc_kinds = _parse_abilities.cc_kinds
+
 
 ASSUMPTIONS += [
     "W (Soul Ignition) recast heal is authored by the grey-health "

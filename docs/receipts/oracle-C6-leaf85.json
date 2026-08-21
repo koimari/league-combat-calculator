@@ -1,0 +1,94 @@
+{
+  "receipt": "oracle-C6-leaf85",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[4]/name",
+  "old_value": "Dark Sphere",
+  "new_value": "Unleashed Power",
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "command": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch": "C:\\Users\\skywa\\AppData\\Local\\Temp\\claude\\C--Users-skywa-Desktop-claude-code-merged-calculator\\a5d13eb4-3688-46ad-b045-6ef563ce6f18\\scratchpad\\oracle-c6",
+    "read": ["data/champions.json (Syndra)", "data/practice-corpus/scenarios.json", "data/champion-audit/batch-e9-1.json", "data/worklists/e3-stacks.json", "data/staleness.json", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "note": "A stray file 'syndra.txt' (mtime 7 minutes before this run) was present in the scratch parent and is NOT part of the git-archive export. It was not used as evidence; every quote below is from data/ or docs/math-foundations.md inside the export."
+  },
+
+  "sources_quoted": [
+    {
+      "id": "S1",
+      "where": "data/champions.json -> Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "id": "S2",
+      "where": "data/champions.json -> Syndra.abilities.W[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 60 Splinters of Wrath enhances Force of Will to deal 12% (+ 2% per 100 AP) bonus true damage."
+    },
+    {
+      "id": "S3",
+      "where": "data/champions.json -> Syndra.abilities.R[0].effects[1].description and effects[0]",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit. | Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. [Ability Haste 10/20/30]"
+    },
+    {
+      "id": "S4",
+      "where": "data/champions.json -> Syndra ability cooldowns",
+      "quote": "Q Dark Sphere cd {values:[7,7,7,7,7], affectedByCdr:false}; W Force of Will cd [12,11,10,9,8] affectedByCdr:true; E Scatter the Weak cd [15,15,15,15,15] affectedByCdr:true; R Unleashed Power cd [120,100,80] affectedByCdr:true"
+    },
+    {
+      "id": "S5",
+      "where": "docs/math-foundations.md, section 1.1 (lines 59-68)",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`). ... the shared-timeline version is the superposition with mutual-exclusion, resolved greedily by cast order."
+    },
+    {
+      "id": "S6",
+      "where": "docs/math-foundations.md, section 5 formula-audit table",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)` | EXACT | R casts exactly once per timed fight (model constraint, documented)  ...  Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) ... R single-cast"
+    },
+    {
+      "id": "S7",
+      "where": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres). All five slots modeled with sourced numbers."
+    },
+    {
+      "id": "S8",
+      "where": "data/champions.json -> Syndra.stats.mana",
+      "quote": "mana {flat:480, perLevel:40}"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_scenario_parameter": {
+      "claim": "The '60' in 'syndra_custom_order_60' is the Transcendent splinter count, not a fight length or ability-haste value.",
+      "why": "60 is one of exactly four splinter thresholds carried in the cached wiki text (40 Q charges [S1], 60 W true damage [S2], 80 E scatter/slow, 100 R execute; 120 = max stacks). data/champion-audit/batch-e9-1.json [S7] confirms 'splinters' is a modeled option with those thresholds. 60 is the natural boundary value to pin. This is the one assumption in the chain and is flagged in residual_risk below; the arithmetic in step 3 shows the conclusion holds for any splinters value >= 40."
+    },
+    "step_2_which_slots_can_occupy_the_5th_cast": {
+      "effective_cooldowns_at_R_rank_3_and_0_external_haste": {
+        "Q Dark Sphere": "7 s base, affectedByCdr=false [S4]; R's passive grants Dark Sphere 30 ability haste at rank 3 [S3] -> 7 * 100/130 = 5.3846 s",
+        "W Force of Will": "8 s at rank 5 [S4]",
+        "E Scatter the Weak": "15 s [S4]",
+        "R Unleashed Power": "80 s at rank 3 [S4], and the engine model casts R exactly once per fight [S6]"
+      },
+      "same_check_at_60_ability_haste_for_robustness": {
+        "Q": "3.68 s (if external haste applied) or 5.38 s (if only R's passive applies)",
+        "W": "8 * 100/160 = 5.00 s",
+        "E": "15 * 100/160 = 9.375 s",
+        "R": "80 * 100/160 = 50.0 s"
+      },
+      "conclusion": "Under the shared-timeline rule [S5], every ability is off cooldown at t=0, so the opening block of casts is exactly the scenario's cast order, one cast per sourced cast time (Q/W castTime 'none', E 0.25 s, R 0.25 s) -- the whole opener starts inside the first ~0.5 s. The first *recast* cannot occur before ~5.0-5.4 s, and it is Q (or W), never R: R's cooldown is 50-80 s and it is single-cast by model constraint [S6]. Therefore cast_timeline[4] is Unleashed Power if and only if the opening block contains five casts; if the opener contains only four, index 4 is necessarily the earliest recast, which is Dark Sphere."
+    },
+    "step_3_does_the_opener_contain_five_casts": {
+      "rule": "S1: at 40+ Splinters of Wrath Syndra stocks a Dark Sphere charge, up to a maximum of 2.",
+      "at_splinters_60": "60 >= 40, so the charge system is live and Syndra holds up to 2 Dark Sphere charges. Two Dark Sphere casts are legal back to back with no cooldown wait -- this is the 'Q2 slot' the cached audit records [S7]. The castable opening set is therefore {Q, Q(charge), W, E, R} = 5 casts, not 4.",
+      "mana_check": "Level-18 mana = 480 + 40 * 17 * (0.7025 + 0.0175*17) = 480 + 680 = 1160 [S8]. Opener cost at ranks 5/5/5/3 = Q 60 + Q 60 + W 100 + E 50 + R 100 = 370 < 1160. Mana does not gate the fifth cast.",
+      "R_placement": "R grabs 'up to 4 nearby live ones' and its damage scales from a 240-base 3-sphere floor to a 560-base 7-sphere ceiling at rank 1 [S3], so R is correct only after the sphere generators have fired; the module tracks this as the r_spheres option [S7]. R last in the opener is both the damage-maximizing and the game-legal placement, and it is the only placement consistent with the R-single-cast model constraint [S6]."
+    },
+    "result": "Opening block = Dark Sphere, Dark Sphere (charge), Force of Will, Scatter the Weak, Unleashed Power. Index 4 = 'Unleashed Power'. The old value 'Dark Sphere' is exactly what a four-cast opener (charge-less Q) produces, where index 4 falls through to the first Q recast at t = 5.38 s -- i.e. the old timeline silently dropped the 40+ splinter Dark Sphere charge that S1 grants at splinters = 60."
+  },
+
+  "residual_risk": "The scenario tuple itself lives outside the permitted evidence tree (scripts/ and tests/ were not read), so the custom cast order and the meaning of the '60' suffix were reconstructed from the cached data rather than read directly. The cooldown arithmetic in step 2 is order-independent and rules R out of every slot except the opening block; the verdict therefore rests only on the opener containing five casts, which S1 guarantees for any splinters value >= 40.",
+
+  "verdict_statement": "new_value_correct -- 'Unleashed Power' at fights/manual_target/cast_timeline[4]/name is the value the cached wiki rules and the documented shared-timeline model produce."
+}

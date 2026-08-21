@@ -11,33 +11,42 @@ Why each slot is non-generic:
 - Q (Cosmic Binding) parses generically ("Magic Damage" is exactly
   right); pinned to the explicit attr so a JSON reshuffle can't move
   it. The slow/stun is CC with no damage component.
-- W (Caretaker's Shrine) is an ally-only heal/MS buff — its "Minimum
-  Heal"/"Maximum Heal" attributes are NOT damage.  E8d: the engine's
-  ally-support scanner looks up ("Total Heal", "Heal", "Heal Per Tick")
-  only, so Bard's "Minimum Heal"/"Maximum Heal" rows are not readable by
-  the support path — the ally heal itself is a documented missing engine
-  hook (support_effects heal-attribute lookup); the slot emits an
-  explicit zero-damage state row instead of staying silently absent.
+- W (Caretaker's Shrine) is an ally-only heal: a zero-damage cast whose
+  only job is to exist, so the rotation casts it and the ally-support
+  scanner prices the sourced heal (200.0 to one teammate at rank 5, 0 AP,
+  the cached "Maximum Heal" row).  The 5-second charge that separates that
+  row from "Minimum Heal" is the boundary; the shrine is priced at full
+  power.  No enemy-damage row exists: the cached W leveling carries only
+  Minimum Heal / Maximum Heal / Bonus Movement Speed.
 - E (Magical Journey) is a one-way terrain portal: every effect row in
   the cached JSON carries an empty ``leveling`` list and the ability has
   no ``damageType`` — zero damage, confirmed against data/champions.json.
+  The travel itself stays unpriced on the terrain axis, which the fight
+  engine does not model at all.
 - R (Tempered Fate) is 2.5s stasis; the cached notes are explicit —
   "Tempered Fate deals 0 proc true damage" — atoms-confirmed zero
-  numeric combat effect, not merely an assumption.
+  numeric combat effect, not merely an assumption.  The stasis magnitude
+  stays unpriced: ``ability_spec.cc_kind`` is one vocabulary string per
+  part with no duration and no percent, so a stasis can be declared but
+  never priced.
 
-Roadmap session 2 (2026-08-20): W, E, and R are reclassified from
-out_of_scope to no_damage. All three carry zero sourced damage/heal-to-
-enemy numbers (confirmed against data/champions.json leveling arrays and
-the R ability's own wiki notes), so each now emits an explicit,
-user-visible zero-damage row via ``module_helpers.no_damage`` instead of
-staying silently absent from the parse output.
+Roadmap session 2 (2026-08-20): E and R emit an explicit, user-visible
+zero-damage row via ``module_helpers.no_damage`` instead of staying
+silently absent, and ``MODULE_COVERAGE`` calls them ``no_damage`` rather
+than letting ``SLOTS`` derive ``modeled``.
 """
 
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import ability_on_hit_entry, simple_damage, with_control
+from .slotlib import (
+    ability_on_hit_entry,
+    simple_damage,
+    support_cast,
+    with_control,
+)
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
 # no effects/leveling in the wiki JSON at all (known-degraded parse), so
@@ -97,11 +106,11 @@ class _TravelersCallRule:
         self.stock_tiers = list(_MEEP_STOCK_TIERS)
         self.recharge_tiers = list(_MEEP_RECHARGE_TIERS)
         self.permanent = True
+        # The revision has one home (the champion source receipt); only the
+        # label narrows it to the prose this rule reads.
         self.source = {
+            **load_champion_sources("Bard")[0],
             "label": "Local League Wiki cache — Bard P (Traveler's Call) prose",
-            "url": "https://wiki.leagueoflegends.com/en-us/Bard",
-            "revision_id": 4002472,
-            "revision_timestamp": "2026-03-25T15:16:50Z",
         }
 
     def public_receipt(self) -> dict[str, Any]:
@@ -133,7 +142,7 @@ def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     chimes = max(0, int(ctx.options.get("chimes", _DEFAULT_CHIMES)))
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     per_meep = (
         _MEEP_BASE + _MEEP_PER_TIER * (chimes // _CHIMES_PER_TIER) + _MEEP_AP_RATIO * ap
     )
@@ -160,27 +169,6 @@ def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 _travelers_call.phase = ONHIT
-
-
-def _caretakers_shrine(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: ally-only heal/MS buff — documented zero-damage row."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability.get("name", "Caretaker's Shrine"),
-        reason=(
-            "Caretaker's Shrine heals Bard and the target ally (Minimum "
-            "Heal 25-125 + 40% AP scaling up to Maximum Heal 50-200 + 70% "
-            "AP over the healing window) and grants bonus movement speed; "
-            "no enemy-target damage row exists (data/champions.json Bard "
-            "W leveling carries only Minimum Heal / Maximum Heal / Bonus "
-            "Movement Speed). The ally heal itself is a documented missing "
-            "engine hook — the support scanner's heal-attribute lookup "
-            "does not read 'Minimum Heal'/'Maximum Heal'."
-        ),
-    )
 
 
 def _magical_journey(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -240,40 +228,60 @@ ASSUMPTIONS = [
     "single-target calculator; the splash never hits the primary target",
     "Q counted as a single hit on the primary target; the slow/stun is "
     "CC with no damage component",
-    "W (heal), E (portal), and R (stasis) deal no enemy damage; each "
-    "emits an explicit zero-damage state row (no_damage) rather than "
-    "staying absent from the breakdown",
+    "W (heal), E (portal), and R (stasis) deal no enemy damage. W is "
+    "cast so the ally-support scanner can price its sourced heal at the "
+    "fully-charged shrine; E and R emit an explicit zero-damage state "
+    "row (no_damage) rather than staying absent from the breakdown, "
+    "with the portal's travel and the stasis magnitude left unpriced",
 ]
 
 SLOTS = {
     "P": _travelers_call,
+    # The bolt "deals magic damage to the first enemy hit" once, at the
+    # cast — the 300-unit continuation only reaches a second target.  The
+    # cached "Disable Duration" row (1-1.8s) sits in the same effect as
+    # that first hit, so it is the SLOW's duration here; the stun the
+    # second effect describes lasts "the same duration".
     "Q": with_control(
-        simple_damage(attr="Magic Damage", dmg_type="magic"),
-        kind="stun",
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="slow",
         duration_attr="Disable Duration",
     ),
-    "W": _caretakers_shrine,
+    # Caretaker's Shrine heals the ally who walks over it.  The slot exists
+    # so the rotation casts it and the support scanner can price the shrine
+    # at full power (cached "Maximum Heal", 50-200 + 70% AP); the 5-second
+    # charge that separates it from "Minimum Heal" is the boundary.
+    "W": support_cast(
+        default_name="Caretaker's Shrine",
+        detail="Ally heal (sourced by the support scanner) at the "
+        "fully-charged shrine; the 5s charge ramp is not modeled.",
+    ),
     "E": _magical_journey,
     "R": _tempered_fate,
 }
 
-parse_abilities = build_parser(SLOTS, "Bard")
+# Cached kit review.  Q "slows [the first enemy hit] by 60% for a
+# duration"; the stun it can add needs the bolt to go on and hit "terrain
+# or a second enemy", which the single-target model never supplies, so the
+# slow is the answer for the target Q damages here.  W, E and R deal no
+# damage, and P's Meep slow rides basic attacks rather than an ability.
+MODULE_CC = {"Q": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Bard",
-        "revision_id": 4002472,
-        "revision_timestamp": "2026-03-25T15:16:50Z",
-    }
-]
+SOURCES = load_champion_sources("Bard")
+
+# E and R are emitted rows that price nothing, so the coverage they derive
+# from SLOTS ("modeled") would overstate them.  W stays modeled: its own
+# row prices no damage, but the ally-support scanner prices its sourced
+# heal off the cast this slot schedules.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",
-    "W": "no_damage",
+    "W": "modeled",
     "E": "no_damage",
     "R": "no_damage",
 }
-REVIEW_STATUS = "reviewed_module"

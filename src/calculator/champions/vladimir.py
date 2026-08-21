@@ -12,34 +12,35 @@ on the target, gated by the ``r_hemoplague_debuff`` option (default on,
 with the sourced R-first opening assumption).  In-game true damage is
 not amplified (wiki bug note); Vladimir's kit deals none.
 
-Roadmap session 4 batch H (2026-08-21): P (Crimson Pact) has no
-enemy-damage formula: its cached effect converts a percentage of
-Vladimir's bonus health into ability power (a pure self stat-conversion,
-no enemy-damage row anywhere in the entry). The pinned reviewed packet
-(static/reviewed-packets.json) independently declares P ``kind:
-"no_damage"`` with a sourced reason, and P is not one of the slots this
-module's ``slot_parsers`` reassigns (only W and E are overridden), so it
-falls to ``build_packet_module``'s default no_damage branch and already
-emits the packet's sourced zero-damage row today — MODULE_COVERAGE was
-simply stale, still reading "out_of_scope" for an already-covered slot
-(the Malzahar/Nasus precedent, roadmap session 4 batch D; the
-Ryze/Senna/Swain/Tahm Kench precedent, batch G). Reclassified to
-"no_damage"; zero fight-computation change.
+Coverage: P (Crimson Pact) converts ability power into bonus health and
+bonus health back into ability power. A two-way stat conversion is an
+axis the engine does not have — ``stat_buff`` grants a stat, it does not
+derive one from another — and the pinned reviewed packet declares P
+``kind: "no_damage"``, so the slot emits that sourced zero row and
+``MODULE_COVERAGE`` states the reviewed absence of damage.
 """
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import (
     AbilityAtomQuery,
     ranked_ability_atom_value,
     required_ability_atom,
 )
 from ..ability_spec import DamagePart
-from .engine import AMP, SlotCtx, build_parser
+from .engine import AMP, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
+
+# Hemoplague's damage lands at the end of the infection, not at the cast:
+# "infects enemies hit for 4 seconds ... After the duration, the infection
+# bursts to deal magic damage to all affected targets" (data/champions.json
+# Vladimir R).  The same 4 seconds is the mark's duration.
+_R_INFECTION_SECONDS = 4.0
 
 # HARDCODED: verify on patch updates — Tides of Blood's charge ramp
 # ("increased based on charge time up to the first second" of the
@@ -190,7 +191,7 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    raw_fraction = ctx.options.get("e_charge_fraction", 1.0)
+    raw_fraction = ctx.option("e_charge_fraction")
     if isinstance(raw_fraction, bool):
         raise ValueError("e_charge_fraction must be a number, not a bool")
     fraction = min(max(float(raw_fraction), 0.0), 1.0)
@@ -250,6 +251,9 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
         cooldown,
         total,
         "magic",
+        # The nova damages an enemy "only once" — one landing at the cast,
+        # which is what carries MODULE_CC's reviewed slow to the ledger.
+        event_order_certified="single_hit",
     )
     hp_percent = _interp("Minimum Magic Damage", 1)
     ap_percent = _interp("Minimum Magic Damage", 2)
@@ -261,27 +265,6 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     return entry
 
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Vladimir",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
-        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
-    ),
-    slot_parsers={
-        "W": repeat_damage_parser(
-            attr="Magic Damage Per Tick",
-            dmg_type="magic",
-            count=4,
-            time_offset=0.5,
-            hit_interval=0.5,
-            dot_duration=2.0,
-        ),
-        "E": _tides_of_blood,
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON
 # leveling rows.  Hemoplague: "increasing the damage they take from all
@@ -345,9 +328,43 @@ def _hemoplague_amp(ctx: SlotCtx) -> None:
 _hemoplague_amp.phase = AMP
 
 
-SLOTS = dict(SLOTS)
-SLOTS["hemoplague"] = _hemoplague_amp
-parse_abilities = build_parser(SLOTS, "Vladimir")
+# Sanguine Pool's ticks land on enemies who "are slowed by 40%"; Tides of
+# Blood prices the fully charged nova, and "if Tides of Blood was charged
+# for at least 1 second, enemies hit are also slowed for 0.5 seconds".
+# Transfusion only drains.  Hemoplague controls nothing — it "increas[es]
+# the damage they take from all sources by 10%" and bursts for damage.  P
+# is the AP/health conversion and ``hemoplague`` is the AMP pseudo-slot;
+# neither emits a cast.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Vladimir",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
+        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
+    ),
+    # Q "drains blood from the target enemy, dealing magic damage": one
+    # hit, at the cast.  E's nova also damages an enemy "only once", but
+    # its row is charge-interpolated by ``_tides_of_blood``, which
+    # replaces the compiled slot and carries the same certification
+    # itself.
+    single_hit_slots=frozenset({"Q"}),
+    packet_part_timings={"R": {"time_offset": _R_INFECTION_SECONDS}},
+    slot_parsers={
+        "W": repeat_damage_parser(
+            attr="Magic Damage Per Tick",
+            dmg_type="magic",
+            count=4,
+            time_offset=0.5,
+            hit_interval=0.5,
+            dot_duration=2.0,
+        ),
+        "E": _tides_of_blood,
+        "hemoplague": _hemoplague_amp,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -408,12 +425,9 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -428,9 +442,10 @@ def derive_self_healing(
     q_heal = _healing.extract_named(
         _healing._ability(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "Q"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
+        event = payment.event
         _healing._heal_from_damage(
             healing, event, q_heal, "Transfusion", link_to_damage=False
         )
@@ -459,9 +474,10 @@ def derive_self_healing(
     r_reduced = _healing.extract_named(
         _healing._ability(champion_data, "R"), "Reduced Heal", r_rank, champion_stats
     )
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "R"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
     ):
+        event = payment.event
         _healing._heal_from_damage(
             healing,
             event,
@@ -472,9 +488,5 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Vladimir", derive_self_healing)

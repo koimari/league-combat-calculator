@@ -5,13 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     with_control_event,
 )
+from .source_receipts import load_champion_sources
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
 _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
@@ -29,7 +30,7 @@ def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
     if not bool(ctx.options.get("spider_form", False)):
         return None
     tier = _spider_tier(ctx.level)
-    bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stats.get("ability_power", 0.0)
+    bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stat("ability_power")
     entry = no_damage(
         ctx,
         name="Spider Queen",
@@ -53,7 +54,7 @@ _spider_queen.phase = ONHIT
 
 
 def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
-    form = int(ctx.options.get("q_form", 0))
+    form = int(ctx.option("q_form"))
     form = min(max(form, 0), 1)
     ability = ctx.ability("Q", form)
     if ability is None:
@@ -64,7 +65,13 @@ def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     name = "Neurotoxin" if form == 0 else "Venomous Bite"
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        name, rank, extract_cooldown(ctx.ability("Q"), rank), value, "magic"
+        name,
+        rank,
+        extract_cooldown(ctx.ability("Q"), rank),
+        value,
+        "magic",
+        # Both forms fire one hit at the target they are aimed at.
+        event_order_certified="single_hit",
     )
     entry["parts"] = (entry["parts"][0],)
     entry["detail"] = (
@@ -95,6 +102,11 @@ def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         value,
         "magic",
+        # One explosion.  Its arrival has no sourced duration — the spider
+        # crawls "after a delay of 0.75 seconds" only when it detects a
+        # target first, and its travel is proximity-driven — so the cast
+        # boundary is the only placement the source gives it.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         "One untargetable spider explosion; target selection is a sourced proximity branch."
@@ -130,7 +142,15 @@ SLOTS = {
     ),
     "R": _form_toggle,
 }
-parse_abilities = build_parser(SLOTS, "Elise")
+# Cached kit review.  Neither Q form controls what it damages (Neurotoxin
+# fires a toxin, Venomous Bite pounces and reveals) and the Volatile
+# Spiderling only "explodes to deal magic damage to nearby enemies".  E
+# (Cocoon) deals no damage, so it carries its stun as a sourced
+# ``control_event`` off the "Stun Duration" row instead of on a part.  W's
+# Skittering Frenzy form, R and P grant stats.
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Elise", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {"key": "spider_form", "type": "bool", "default": False, "label": "Spider Form"},
@@ -149,37 +169,4 @@ ASSUMPTIONS = [
     "Spiderlings, Rappel untargetability and the Spider Form heal are explicit state/utility rows; only Spider Form's on-hit damage enters TDD.",
 ]
 
-SOURCES = [
-    source_row(
-        "Elise parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Elise",
-        4008134,
-        "2026-04-13T19:00:09Z",
-    ),
-    source_row(
-        "Elise Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/Q",
-        2863935,
-        "2019-11-03T19:56:52Z",
-    ),
-    source_row(
-        "Elise W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/W",
-        2864230,
-        "2019-11-03T20:09:39Z",
-    ),
-    source_row(
-        "Elise E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/E",
-        2864376,
-        "2019-11-03T20:12:09Z",
-    ),
-    source_row(
-        "Elise R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Elise/R",
-        2864522,
-        "2019-11-03T20:15:34Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Elise")

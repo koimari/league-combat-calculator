@@ -41,6 +41,8 @@ def _fight(
     enemy: str = "Ahri",
     level: int = 18,
     enemies: list | None = None,
+    fight_mode: str = "one_rotation",
+    fight_duration: int = 8,
 ) -> dict:
     """Run one /api/calculate one-rotation fight and return the full JSON."""
     if enemies is None:
@@ -61,7 +63,8 @@ def _fight(
         "ability_ranks": ranks or dict(_RANKS),
         "champion_options": options or {},
         "target_health": target_health,
-        "fight_mode": "one_rotation",
+        "fight_mode": fight_mode,
+        "fight_duration": fight_duration,
         "include_auto_attacks": False,
         "enemies": enemies,
     }
@@ -304,17 +307,27 @@ def test_veigar_r_uses_minimum_base_not_unconditional_maximum():
 
 
 def test_veigar_r_fight_damage_scales_with_missing_health():
-    # With MR=100, Q + W deal 120 + 152.5 = 272.5 post-mitigation before R.
-    # At 1000 HP that is 27.25% missing: bonus = 0.2725 / (2/3).
-    data = _fight("Veigar", target_health=1000.0, enemies=[])
+    """R prices the missing-health curve against what had actually landed.
+
+    A **time-based** fight, deliberately.  An hp-scaled part is priced at
+    the state of its own landing instant, and in one rotation Veigar's four
+    casts all land at t=0.0 (W's meteor lands later still), so R would read
+    a full-health target and sit exactly on its 325 minimum -- the curve
+    this row exists to test would go untested.  Time-based casts Q at 0.0
+    and R at 0.75, so R reads the Q that landed before it.
+    """
+    # One Q has landed by R's cast at 0.75: 120.0 post-mitigation at MR=100.
+    # At 1000 HP that is 12% missing: bonus = 0.12 / (2/3) = 18%.
+    data = _fight("Veigar", target_health=1000.0, enemies=[], fight_mode="time_based")
     mr = float(data["effective_mr"])
     r_damage = data["breakdown"]["R"]["total_damage"]
-    expected_raw = 325.0 * (1.0 + (272.5 / 1000.0) / (2.0 / 3.0))
+    expected_raw = 325.0 * (1.0 + (120.0 / 1000.0) / (2.0 / 3.0))
     assert r_damage == pytest.approx(_mitigated(expected_raw, mr), abs=0.06)
+    assert r_damage > _mitigated(325.0, mr)
 
-    # At 300 HP, the same Q + W leave 27.5 HP (90.83% missing), so the
-    # 66.66%-missing cap applies and R prices the 650 maximum row.
-    low = _fight("Veigar", target_health=300.0, enemies=[])
+    # At 150 HP the same landed Q is 80% missing, so the 66.66%-missing cap
+    # applies and R prices the 650 maximum row.
+    low = _fight("Veigar", target_health=150.0, enemies=[], fight_mode="time_based")
     low_mr = float(low["effective_mr"])
     low_r = low["breakdown"]["R"]["total_damage"]
     assert low_r == pytest.approx(_mitigated(650.0, low_mr), abs=0.06)

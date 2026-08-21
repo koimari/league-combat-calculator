@@ -20,7 +20,7 @@ Why each slot is non-generic:
   it per shot against the target's falling HP.
 - P (Icathian Surprise) is a self-death trigger: after Kog'Maw takes
   FATAL damage he rides out a 4-second zombie state, then explodes for
-  the cached "Bonus True Damage" (140-1310 by champion level). Roadmap
+  the cached "Bonus True Damage" (140 : 650 over levels 1-18). Roadmap
   session 4 batch C (2026-08-21): closes the single out_of_scope slot
   with an explicit zero-damage boundary receipt (the Karthus P "Death
   Defied" pattern) rather than leaving MODULE_COVERAGE reading
@@ -47,6 +47,7 @@ from .slotlib import (
     pct_health_per_hit,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # Caustic Spittle's shred lasts 4s ("reduces their armor and magic
 # resistance for 4 seconds") — it is not permanent.
@@ -70,6 +71,10 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "magic",
         "parts": (DamagePart("magic", damage),),
         "total_raw": damage,
+        # One wad, first enemy hit, no travel row in the cached packet:
+        # the cast boundary is the hit, which is what carries MODULE_CC's
+        # reviewed answer for Q into the event ledger.
+        "event_order_certified": "single_hit",
     }
 
     # Passive bonus attack speed: the fight engine recalculates auto
@@ -109,7 +114,7 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
         "Bonus Magic Damage",
         rank,
         ctx.target,
-        ap=ctx.stats.get("ability_power", 0.0),
+        ap=ctx.stat("ability_power"),
         ap_ratio_per_100=True,
     )
     if per_hit is None:
@@ -132,8 +137,8 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
 def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: zero-damage receipt — a death-only trigger outside the fight.
 
-    Icathian Surprise's explosion (cached "Bonus True Damage": 140-1310
-    by champion level) only fires after Kog'Maw takes FATAL damage and
+    Icathian Surprise's explosion (cached "Bonus True Damage": 140 : 650
+    over levels 1-18) only fires after Kog'Maw takes FATAL damage and
     rides out a 4-second zombie state. The deterministic single-target
     fight has no death event for the main, so the passive contributes
     zero damage here; this receipt documents the boundary — with the
@@ -213,7 +218,7 @@ ASSUMPTIONS = [
     "raise the spell's mana cost — no damage impact, so the stack count "
     "is not modeled",
     "Passive (Icathian Surprise) is a self-death trigger: after taking "
-    "fatal damage Kog'Maw explodes for the sourced 140-1310 (by "
+    "fatal damage Kog'Maw explodes for the sourced 140 : 650 (by "
     "champion level) true damage. The deterministic alive-state fight "
     "never kills the main, so this boundary is priced at zero damage "
     "(MODULE_COVERAGE: modeled, not out_of_scope) — the would-be "
@@ -224,23 +229,19 @@ SLOTS = {
     "P": _icathian_surprise,
     "Q": _caustic_spittle,
     "W": _bio_arcane_barrage,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _living_artillery,
 }
 
-parse_abilities = build_parser(SLOTS, "Kog'Maw")
+# Cached kit review: E's ooze field "slow[s] enemies within the area every
+# 0.25 seconds"; Q reduces resistances (not control), W empowers basic
+# attacks and R reveals the targets it hits.  P's death-boundary row
+# prices nothing and authors no part, so it declares no kind.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kog'Maw", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Kog%27Maw",
-        "revision_id": 3937121,
-        "revision_timestamp": "2025-07-28T11:17:12Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Kog'Maw")

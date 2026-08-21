@@ -25,7 +25,10 @@ hardcoded.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
+from .. import healing_helpers as _healing
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     extract_auto,
     extract_cooldown,
@@ -33,6 +36,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -47,7 +51,7 @@ def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    fragments = max(0, int(ctx.options.get("p_essence_fragments", 9)))
+    fragments = max(0, int(ctx.option("p_essence_fragments")))
     if fragments < 9:
         return None
     return {
@@ -124,11 +128,14 @@ def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
         "name": ability.get("name", "Charm"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
+        # The charm's KIND is declared once in MODULE_CC and stamped onto
+        # this part; what the entry states here is the sourced DURATION
+        # and the separate claim that E's one hit lands at the cast
+        # boundary, which is what puts the marker in the event ledger.
         "parts": (
             DamagePart(
                 "magic",
                 damage,
-                cc_kind="immobilize",
                 cc_duration=extract_value(ability, "Disable Duration", rank),
             ),
         ),
@@ -165,7 +172,16 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _essence_theft,
-    "Q": simple_damage(attr="Damage Per Pass", dmg_type="mixed", casts=2),
+    # One pass out and one back is one landing per enemy ("enemies can be
+    # hit only once per pass"), split magic outgoing / true returning —
+    # the mixed split ``engine._certify_shared_instant`` gives its shared
+    # instant to.
+    "Q": simple_damage(
+        attr="Damage Per Pass",
+        dmg_type="mixed",
+        casts=2,
+        event_order_certified="single_hit",
+    ),
     "W": _fox_fire,
     "E": _charm,
     "R": _spirit_rush,
@@ -178,25 +194,25 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"
 
-parse_abilities = build_parser(SLOTS, "Ahri")
-
-
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Ahri",
-        "revision_id": 4047800,
-        "revision_timestamp": "2026-07-31T01:16:52Z",
-    }
-]
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+# Q (Orb of Deception) "deals magic damage to enemies it passes through"
+# and returns "to deal the same amount in true damage" — damage only, so a
+# reviewed absence of control.
+#
+# W and R stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  Fox-Fire is two flame tiers (a second part of the same damage
+# type, hitting twice) and Spirit Rush is three dashes in one part: both
+# are schedules with unsourced cadence, which ``single_hit`` refuses.
+MODULE_CC = {"E": "immobilize", "Q": "none"}
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)
+
+
+SOURCES = load_champion_sources("Ahri")
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -209,7 +225,7 @@ def derive_self_healing(
     healing = []
     if "passive" in ability_damages:
         # The module emits the P receipt only at 9+ fragments.
-        level = int(champion_stats.get("level", 0) or 0)
+        level = int(champion_stat(champion_stats, "level"))
         heal = _healing.extract_named(
             _healing._ability(champion_data, "P"), "Heal", level, champion_stats
         )
@@ -227,9 +243,5 @@ def derive_self_healing(
             break
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Ahri", derive_self_healing)

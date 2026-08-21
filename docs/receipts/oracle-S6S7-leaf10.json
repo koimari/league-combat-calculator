@@ -1,0 +1,74 @@
+{
+  "receipt": "oracle-S6S7-leaf10",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree built only from `git archive --format=tar HEAD data docs/math-foundations.md`)",
+  "scenario": "cleaver_bloodsong_roster",
+  "leaf_path": "/coupled_scenarios/cleaver_bloodsong_roster/combat/events[82]/damage_type",
+  "old_value": "physical",
+  "new_value": "magic",
+  "verdict": "old_value_correct",
+  "data_provenance": {
+    "patch": "16.15",
+    "checked_at": "2026-08-06T12:36:09.630672+00:00",
+    "source_file": "data/staleness.json"
+  },
+  "independent_computation": {
+    "step_1_identify_the_damage_instance": "The scenario name pins two items: Black Cleaver (id 3071) and Bloodsong (id 3877). Only one of them emits a damage event at all. Black Cleaver's two passives ('Carve', 'Fervor') deal NO damage — Carve is a 6%-per-stack armor reduction (max 5 stacks / 30%) and Fervor is a movement-speed buff; both are *triggered by* the wielder dealing physical damage. Bloodsong is the only damage-emitting item named in the scenario, via its Spellblade passive. A combat event carrying a `damage_type` in this scenario is therefore the Bloodsong Spellblade proc.",
+    "step_2_read_the_type_off_the_cached_wiki_text": "data/items.json['3877'].passives[0] (name 'Spellblade') branches[0]: \"After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]].\" The type token is literally `bonus physical damage`. Independently, the same record's `riotDescription` (Riot's own tooltip, cached alongside the wiki parse) reads: \"your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>\" — the `<physicalDamage>` tag is Riot's type marker. Two independent source channels in the cache agree: PHYSICAL.",
+    "step_3_rule_out_the_confusion_mode": "The Spellblade exclusivity family is genuinely split between physical and magic, which is the plausible origin of a 'magic' retype. Enumerating every item in data/items.json whose passive is named 'Spellblade': Sheen (3057) 100% base AD bonus PHYSICAL; Trinity Force (3078) 200% base AD bonus PHYSICAL; Essence Reaver (3508) 125% base AD (+crit-scaled) PHYSICAL; Iceborn Gauntlet (6662) 150% base AD bonus PHYSICAL; Divine Sunderer (446632) 180% base AD (+% max HP) bonus PHYSICAL; Bloodsong (3877) 100% base AD bonus PHYSICAL; versus Lich Bane (3100) 75% base AD (+45% AP) bonus MAGIC and Dusk and Dawn (2510) 75% base AD (+10% AP) bonus MAGIC. Bloodsong sits in the physical group (it is the AD-only, no-AP-ratio variant — an AP ratio is the tell for the magic members, and Bloodsong has none). Retyping Bloodsong to magic is exactly the Lich-Bane/Dusk-and-Dawn cross-contamination this enumeration excludes.",
+    "step_4_cross_check_from_an_unrelated_cached_page": "data/champions.json['Gangplank'] carries a wiki section on Spellblade-item interactions that treats the two items as distinct types in the same list: \"Specific Spellblade item interactions: Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them. ... Lich Bane: The magic dam[age] ...\". The cached text attaches 'magic' to Lich Bane and never to Bloodsong.",
+    "step_5_internal_consistency_of_the_scenario_itself": "The scenario couples the two items, and the coupling only exists under the physical typing. Black Cleaver Carve reads (data/items.json['3071'].passives[0]): \"Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks.\" A magic-typed Spellblade proc would apply no Carve stack, so the scenario's own premise (a Cleaver+Bloodsong roster) degenerates under the new value. This is a semantic contradiction, not merely a mislabel.",
+    "step_6_downstream_magnitude_consequence": "Type is not cosmetic here: it selects the mitigation channel. Per docs/math-foundations.md 2.1, mitigation is m(R) = 100/(100+R) against the resistance matching the damage type, and per CLAUDE.md's penetration ordering the attacker's armor pen / Cleaver-reduced armor applies only to physical. Typing the proc as magic routes 100% base AD past the Cleaver-shredded armor into unshredded MR (and past the attacker's lethality/armor-pen), which both misprices this instance and removes a Carve stack from every subsequent physical instance in the ledger.",
+    "conclusion": "The correct value of the leaf is `physical`. The pre-change golden value was already correct; the change to `magic` is a regression."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/items.json",
+      "locator": "['3877'] Bloodsong -> passives[0] (name: 'Spellblade') -> branches[0]",
+      "quote": "After using an ability, your next basic attack within 10 seconds deals {{as|100% '''base''' AD}} {{as|'''bonus''' physical damage}} [[on-hit]]. If the target is a champion, inflict them with ''Expose Weakness'' for 4 seconds, causing them to take {{rd|8%|5%}} increased damage from all sources ({{fd|1.5}} second cooldown, starts after using the empowered attack)."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "['3877'] Bloodsong -> riotDescription",
+      "quote": "<passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage>  <OnHit>On-Hit</OnHit>."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "['3071'] Black Cleaver -> passives[0] (name: 'Carve') -> branches[0]",
+      "quote": "Dealing {{as|physical damage}} to an enemy champion applies a stack of ''Carve'' for 6 seconds, stacking up to 5 times. Each stack inflicts {{as|6% armor reduction}}, up to {{as|30%|armor}} at 5 stacks."
+    },
+    {
+      "file": "data/items.json",
+      "locator": "['3100'] Lich Bane -> passives[0] 'Spellblade' (contrast case)",
+      "quote": "After using an [[Champion ability|ability]], your next basic attack within 10 seconds gains {{as|50% '''bonus''' attack speed}} and deals {{as|75% '''base''' AD}} {{as|(+ 45% AP)}} {{as|'''bonus''' magic damage}} [[on-hit]]"
+    },
+    {
+      "file": "data/items.json",
+      "locator": "['2510'] Dusk and Dawn -> passives[0] 'Spellblade' (contrast case)",
+      "quote": "After using an [[Champion ability|ability]], your next basic attack within 10 seconds deals {{as|75% '''base''' AD}} {{as|(+ 10% AP)}} {{as|'''bonus''' magic damage}} and {{tip|heals}} you"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "['Gangplank'] wiki text, 'Specific Spellblade item interactions'",
+      "quote": "Specific Spellblade item interactions:\n Bloodsong: Dealing damage with kegs to champions won't apply Expose Weakness to them.\n Iceborn Gauntlet: The frost field will be created on the location of the keg that is attacked.\n Lich Bane: The magic dam[age] ..."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.1 'The 100/(100+R) identity'",
+      "quote": "m(R) = 100 / (100 + R)          (apply_resistance, resistance.py)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "Section 2.3 item 2, 'Black Cleaver average stacks'",
+      "quote": "Black Cleaver average stacks (`ArmorReductionEffect.average_reduction`): the established model uses a fixed `0.8·max_stacks` constant (with a `hits/2` short-fight branch)."
+    },
+    {
+      "file": "data/staleness.json",
+      "locator": "root",
+      "quote": "{\"patch\": \"16.15\", \"checked_at\": \"2026-08-06T12:36:09.630672+00:00\", ...}"
+    }
+  ],
+  "caveats": [
+    "The golden corpus scenario definition lives outside the permitted evidence tree (scripts/ and tests/ are off-limits under this runbook), so the identity of the event at ordinal 82 was inferred from the scenario name plus the fact that Black Cleaver emits no damage instance of its own — Bloodsong's Spellblade proc is the only damage-typed event the named pairing can produce.",
+    "If the ordinal 82 in fact addresses some other event because upstream events were inserted or reordered, the index-anchored diff would be a re-indexing artifact rather than a retype; that possibility cannot be discharged from data/ alone. It does not change the finding that Bloodsong Spellblade damage is physical, nor that no cached source in the permitted tree licenses a magic-typed instance in a Cleaver+Bloodsong fight."
+  ]
+}

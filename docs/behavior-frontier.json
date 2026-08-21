@@ -1,0 +1,596 @@
+{
+  "by_module": {
+    "app.py": {
+      "class_d": 1
+    },
+    "calculator/champions/janna.py": {
+      "class_d": 1
+    },
+    "calculator/champions/viego.py": {
+      "class_d": 1
+    },
+    "calculator/cleanse_eligibility.py": {
+      "counter_1": 20
+    },
+    "calculator/damage.py": {
+      "counter_1": 22
+    },
+    "calculator/interaction_effects.py": {
+      "counter_1": 3
+    },
+    "calculator/item_coverage.py": {
+      "class_c_claim_evidence": 267,
+      "counter_2": 18
+    },
+    "calculator/item_effects.py": {
+      "class_c": 546
+    },
+    "calculator/item_outcomes.py": {
+      "class_c": 44
+    },
+    "calculator/item_source.py": {
+      "class_c": 7
+    },
+    "calculator/item_support_effects.py": {
+      "counter_1": 17
+    },
+    "calculator/loadout_rules.py": {
+      "class_c": 28
+    },
+    "calculator/passive_parser.py": {
+      "class_c": 92
+    },
+    "calculator/pipeline.py": {
+      "counter_1": 1
+    },
+    "calculator/role_quests.py": {
+      "class_c": 21
+    },
+    "calculator/rotation_resolver.py": {
+      "class_d": 9
+    },
+    "calculator/scenario.py": {
+      "class_d": 1
+    },
+    "calculator/shield_ledger.py": {
+      "class_d": 1
+    },
+    "calculator/trigger_stream.py": {
+      "class_c": 93
+    }
+  },
+  "compiled_walk_refusals": {
+    "consumed_by": "interpreters.uncompilable_item_receipt",
+    "refused": {
+      "Catalyst of Aeons": [
+        "sustain"
+      ],
+      "Death's Dance": [
+        "damage_routing"
+      ],
+      "Doran's Blade": [
+        "sustain"
+      ],
+      "Doran's Helm": [],
+      "Doran's Ring": [
+        "sustain"
+      ],
+      "Doran's Shield": [
+        "sustain"
+      ],
+      "Eclipse": [
+        "cast_proc"
+      ],
+      "Fimbulwinter": [
+        "ally_packet"
+      ],
+      "Gluttonous Greaves": [],
+      "Immortal Path": [
+        "sustain"
+      ],
+      "Ionian Boots of Lucidity": [],
+      "Lost Chapter": []
+    },
+    "scope": "survival_ledger_transition",
+    "symbol": "interpreters.compilability_for",
+    "undeclared_base": [
+      "counter_3 is not yet 0: Doran's Helm, Gluttonous Greaves, Ionian Boots of Lucidity, Lost Chapter carry a registry entry no family declares, so the declaration base this fold reads is knowingly incomplete."
+    ]
+  },
+  "counters": {
+    "counter_1": {
+      "counts": "runtime item-name dispatch sites",
+      "provenance": "VERIFIED",
+      "retires_at": "3.4-3.7",
+      "target": 0,
+      "value": 63
+    },
+    "counter_2": {
+      "counts": "claim-prose sites in name-keyed containers",
+      "provenance": "VERIFIED",
+      "retires_at": "3.8",
+      "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
+      "value": 18
+    },
+    "counter_3": {
+      "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
+      "provenance": "VERIFIED",
+      "retires_at": "3.2-3.7",
+      "target": 0,
+      "value": 4
+    },
+    "counter_4": {
+      "counts": "declared (family, lane) pairs with no interpreter",
+      "deferrals": {
+        "by_lane": {},
+        "rows": {},
+        "rule": "umbrella criterion 7, Amendment B (2026-08-12): a declared (family, lane) gap Phase 3 cannot close is deferred in writing to the stage that can.  The Phase-3 exit target is 0 net of these rows; Phase 4's exit re-asserts them retired.  A row naming a gap the tree no longer holds, or a stage the tree's own receipt does not say, fails the gate"
+      },
+      "pairs": [
+        "active_cast/compiled_score_walk",
+        "ally_packet/compiled_score_walk",
+        "cast_proc/compiled_score_walk",
+        "charged_strike/compiled_score_walk",
+        "combat_state/compiled_score_walk",
+        "crit_profile/compiled_score_walk",
+        "damage_routing/compiled_score_walk",
+        "delta_amp/compiled_score_walk",
+        "on_hit_strike/compiled_score_walk",
+        "opening_defense/compiled_score_walk",
+        "periodic/compiled_score_walk",
+        "reactive/compiled_score_walk",
+        "resistance_shred/compiled_score_walk",
+        "spellblade/compiled_score_walk",
+        "sustain/compiled_score_walk",
+        "threshold_defense/compiled_score_walk"
+      ],
+      "provenance": "VERIFIED",
+      "receipts": {
+        "dated": {
+          "active_cast/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "ally_packet/compiled_score_walk": {
+            "reason": "the compiled kernel stages support templates from the packets item_support_effects emits, not from the declaration; the packet kinds it cannot stage are refused per rule by compilability_for",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "receipt_walk"
+            ]
+          },
+          "cast_proc/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "charged_strike/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "combat_state/compiled_score_walk": {
+            "reason": "the compiled score walk stages what the defence resolver already built, so the declaration reaches it through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number, which is why the receipt walk no longer declares a lane for this family at all",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "defense_resolver"
+            ]
+          },
+          "crit_profile/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk is owed nothing by this family, whose declarations author no pair row and fold only into the holder's own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "damage_routing/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "delta_amp/compiled_score_walk": {
+            "reason": "the compiled score walk reads no amp declaration: a holder-side amp reaches it already priced inside the pair engine's damage rows, and a cross-participant one as the damage_modifier packet item_support_effects emits, which survival/transitions stages as an ActionKind.DAMAGE_MODIFIER \u2014 two routes, neither of them the rule",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "on_hit_strike/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "opening_defense/compiled_score_walk": {
+            "reason": "the compiled score walk stages what the defence resolver already built, so the declaration reaches it through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number, which is why the receipt walk no longer declares a lane for this family at all",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "defense_resolver"
+            ]
+          },
+          "periodic/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "reactive/compiled_score_walk": {
+            "reason": "the two reactive shields reach the compiled ledger as the resolved defensive state the resolver granted, and the strike-back reaches it as the profile participant_timeline compiled through this family's walk interpreter \u2014 survival/compile.py prices it against the striker's own resistances \u2014 so neither half arrives as the rule",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "defense_resolver",
+              "receipt_walk"
+            ]
+          },
+          "resistance_shred/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "spellblade/compiled_score_walk": {
+            "reason": "the compiled score walk consumes this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches it through the pair interpreter rather than through one of its own; the receipt walk reads the declaration itself since this family retired",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "sustain/compiled_score_walk": {
+            "reason": "both walks consume this family as the pair engine's timed rows \u2014 participant_timeline._pair_run_fight prices the pair and survival/compile.py stages the resulting packets \u2014 so the declaration reaches them through the pair interpreter rather than through one of its own",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "pair_engine"
+            ]
+          },
+          "threshold_defense/compiled_score_walk": {
+            "reason": "the compiled score walk stages what the defence resolver already built, so the declaration reaches it through the resolver interpreter; a walk-lane interpreter here would be a second producer of one number, which is why the receipt walk no longer declares a lane for this family at all",
+            "retires_at": "Phase 4 S3 \u2014 one kernel, five views",
+            "via": [
+              "defense_resolver"
+            ]
+          }
+        },
+        "gate": "interpreters.validate_registrations refuses an unserved lane that is in neither population, and refuses a dated row no declaration reaches (D-92)",
+        "per_rule_receipted": [],
+        "unreceipted": []
+      },
+      "retires_at": "3.9",
+      "target": "0 for PAIR_ENGINE and RECEIPT_WALK",
+      "value": 16
+    }
+  },
+  "exclusions": {
+    "class_b_claim_prose": {
+      "modules": {
+        "calculator/item_coverage.py": "the reviewed no-runtime-behaviour set NO_RUNTIME_BEHAVIOR, the one name-keyed container 3.8's collapse left standing here: 'we looked and there is nothing' is a fact no declaration can carry, so it is reviewed prose by construction and criterion 2 keeps it as a non-increasing ratchet rather than retiring it.  Its members are counter 2's whole population *and* the count counter 2 is bounded by, which is what makes 'at or below the reviewed reason count' the end state rather than zero"
+      },
+      "sites": 18
+    },
+    "class_c_claim_evidence_containers": {
+      "amendment": "umbrella criterion 7, Amendment A (2026-08-12): Phase 1's authored claim-evidence corpus and _REVIEW_ISSUE_REFS are Class C, not claim prose; counter 2 is measured net of them",
+      "containers": {
+        "calculator/item_coverage.py": {
+          "_ATTACKER_STATE_HOMES": "the attacker lane's authored claims: where a modelled state actually comes from, resolved against the symbol it names",
+          "_DUAL_SIDED_MECHANICS": "the evidence member naming the mechanic a dual-sided claim's two halves belong to, and the handshake policy its packet declares, both resolved against the pairing registry",
+          "_ISSUE_REF_ONLY_ITEMS": "the two items whose only claim carrier is their tracked review, authored so the ref rides a claim instead of being published by nothing",
+          "_REVIEW_ISSUE_REFS": "criterion 14's own blessed survivor: tracked review issues per item, routed onto a claim at import.  An issue reference states no coverage, so it is not the prose counter 2 is named for",
+          "_SOURCE_REFS": "the wiki revision each claim's evidence was read from; a claim with no source is the sentence this phase deletes, so the table is mandated rather than retirable",
+          "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": "the cached wiki branch text each certified stats-only item was read at, pinned so tests/test_stats_only_items.py fails loudly when a refresh appends a mechanic to a passive without renaming it.  The member is the evidence a review was performed, not a claim about coverage, so it is the same exclusion _SOURCE_REFS carries for the same reason",
+          "_SUPPORT_PACKET_CLAIMS": "the support-packet lane's authored claims, each quoting the packet source the totality check reads back",
+          "_TARGET_CERTIFIED_IMPLS": "the target lane's certified half, same shape and same resolution",
+          "_TARGET_MODELED_IMPLS": "the target lane's authored claims, each naming the implementation the resolver resolves it against",
+          "_UTILITY_HOMES": "the utility lane's authored evidence: the module and symbol a utility outcome is delivered by"
+        }
+      },
+      "sites": 267,
+      "sites_by_container": {
+        "calculator/item_coverage.py": {
+          "_ATTACKER_STATE_HOMES": 22,
+          "_DUAL_SIDED_MECHANICS": 5,
+          "_ISSUE_REF_ONLY_ITEMS": 3,
+          "_REVIEW_ISSUE_REFS": 22,
+          "_SOURCE_REFS": 59,
+          "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": 42,
+          "_SUPPORT_PACKET_CLAIMS": 19,
+          "_TARGET_CERTIFIED_IMPLS": 9,
+          "_TARGET_MODELED_IMPLS": 42,
+          "_UTILITY_HOMES": 44
+        }
+      }
+    },
+    "class_c_declarative_homes": {
+      "modules": {
+        "calculator/item_effects.py": "the number registries themselves \u2014 ITEM_EFFECTS, ALLY_ITEM_EFFECTS and the static effect tables. An item name is the key of the home this phase reads through",
+        "calculator/item_outcomes.py": "the reviewed outcome-dimension declaration and nothing else \u2014 one mapping, no function, no branch, asserted by tests/test_item_outcomes.py.  Twenty of its items compile to no rule at all, so what an item changes about a fight besides the damage number is a product fact whose key is the item it is about",
+        "calculator/item_source.py": "availability from the cached source data; the name is the identity of the row being decided, per CLAUDE.md rule 6",
+        "calculator/loadout_rules.py": "build legality \u2014 uniques, boots and slot rules keyed by the item they constrain",
+        "calculator/passive_parser.py": "the wiki-text parser's per-item parse configuration; the names decide how a page is read, not how a fight is priced",
+        "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
+        "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
+      },
+      "sites": 831
+    },
+    "class_d_non_behavioural": {
+      "modules": {
+        "app.py": "one `kind=\"Boots\"` stat-category label that collides with the item literally named Boots \u2014 a name match, not a dispatch",
+        "calculator/champions/janna.py": "an ability display-name default (`Zephyr` is Janna's W) that collides with an item name",
+        "calculator/champions/viego.py": "an ability display-name default (Viego's R is named after the item he steals) that collides with an item name",
+        "calculator/rotation_resolver.py": "three sample builds in the rotation certification matrix; they name builds to certify orders over and dispatch no behaviour",
+        "calculator/scenario.py": "the same `kind=\"Boots\"` stat-category label on the request-parsing side",
+        "calculator/shield_ledger.py": "the shield-source label `Lifeline`, which names a mechanic class and collides with an item name"
+      },
+      "sites": 14
+    }
+  },
+  "h4_tags": {
+    "dead": [
+      "conditional_attack_speed",
+      "shield_reduction",
+      "target_attack_speed_aura",
+      "target_state"
+    ],
+    "families": {
+      "conditional_attack_speed": "stat_derivation",
+      "defensive_start": "opening_defense",
+      "shield_reduction": "damage_routing",
+      "stat_conversion": "stat_derivation",
+      "sustain": "sustain",
+      "target_attack_speed_aura": "stat_derivation",
+      "target_mitigation": "opening_defense",
+      "target_state": "combat_state",
+      "target_threshold_health": "threshold_defense",
+      "target_threshold_shield": "threshold_defense"
+    },
+    "reasons": {
+      "conditional_attack_speed": "was dead \u2014 read nowhere in src/ \u2014 until the stat-derivation migration declared Yun Tal Wildarrows' crit stacks and its assumed-active attack speed as STAT_DERIVATION, which is the family this tag always named. H4's decision on the tag stands",
+      "defensive_start": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name in defensive_effects \u2014 until 3.5 made it a real dispatch: every entry carrying it now compiles an OPENING_DEFENSE declaration. H4's decision on the tag stands",
+      "shield_reduction": "was dead \u2014 read nowhere in src/ \u2014 until 3.7 declared Serpent's Fang's venom as DAMAGE_ROUTING: the share of the target's shielding a strike passes through is a routing rule and not a defence the holder owns, and it now reaches a real dispatch. H4's decision on the tag stands",
+      "stat_conversion": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name in item_effects' stat fold \u2014 until the stat-derivation migration gave every entry carrying it a STAT_DERIVATION declaration. H4's decision on the tag stands",
+      "sustain": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name \u2014 until 3.7 gave every entry carrying it a SUSTAIN declaration, which is the family this tag always named. H4's decision on the tag stands",
+      "target_attack_speed_aura": "was dead \u2014 read nowhere in src/ \u2014 until the stat-derivation migration gave Winter's Caress a STAT_DERIVATION aura declaration, which is the family this tag always named. H4's decision on the tag stands",
+      "target_mitigation": "was self-referential \u2014 read only by item_coverage's own claim while the behaviour was reached by item name \u2014 until 3.5 declared Plated Steelcaps-class mitigation as OPENING_DEFENSE. H4's decision on the tag stands",
+      "target_state": "was dead \u2014 read nowhere in src/ \u2014 until 3.5 gave Force of Nature's and Jak'Sho's stack ledgers a COMBAT_STATE declaration, which is the family this tag always named. Whether the *tag* is then deleted or kept is still H4's, the human's",
+      "target_threshold_health": "was self-referential \u2014 read only by item_coverage's own claim \u2014 until 3.5 declared Protoplasm Harness's temporary health as THRESHOLD_DEFENSE. H4's decision on the tag stands",
+      "target_threshold_shield": "was self-referential \u2014 read only by item_coverage's own claim \u2014 until 3.5 declared the Lifeline shields as THRESHOLD_DEFENSE. H4's decision on the tag stands"
+    },
+    "self_referential": [
+      "defensive_start",
+      "stat_conversion",
+      "sustain",
+      "target_mitigation",
+      "target_threshold_health",
+      "target_threshold_shield"
+    ]
+  },
+  "no_runtime_behavior": {
+    "ceiling_source": "the size of item_coverage._REVIEWED_STATS_ONLY measured before 3.8, the reviewed no-modelled-effect claim this set is the rename of; the set is non-increasing from it",
+    "declaring": [],
+    "members": [
+      "Boots of Swiftness",
+      "Chempunk Chainsword",
+      "Cosmic Drive",
+      "Crimson Lucidity",
+      "Doran's Helm",
+      "Executioner's Calling",
+      "Gustwalker Hatchling",
+      "Ionian Boots of Lucidity",
+      "Morellonomicon",
+      "Mortal Reminder",
+      "Mosstomper Seedling",
+      "Oblivion Orb",
+      "Phantom Dancer",
+      "Refillable Potion",
+      "Rylai's Crystal Scepter",
+      "Scorchclaw Pup",
+      "Serylda's Grudge",
+      "Youmuu's Ghostblade"
+    ],
+    "ratchet_ceiling": 56,
+    "rule": "|members| may never exceed the ceiling and may never grow once a slice has set it; every member carries a SourceReceipt and a reviewed reason",
+    "sourced": [
+      "Boots of Swiftness",
+      "Chempunk Chainsword",
+      "Cosmic Drive",
+      "Crimson Lucidity",
+      "Doran's Helm",
+      "Executioner's Calling",
+      "Gustwalker Hatchling",
+      "Ionian Boots of Lucidity",
+      "Morellonomicon",
+      "Mortal Reminder",
+      "Mosstomper Seedling",
+      "Oblivion Orb",
+      "Phantom Dancer",
+      "Refillable Potion",
+      "Rylai's Crystal Scepter",
+      "Scorchclaw Pup",
+      "Serylda's Grudge",
+      "Youmuu's Ghostblade"
+    ]
+  },
+  "priors": {
+    "class_c": {
+      "cause": "trigger_stream.py did not exist when the prior was taken",
+      "value": 600
+    },
+    "class_d": {
+      "cause": "unchanged",
+      "value": 14
+    },
+    "counter_1": {
+      "cause": "measured over a tree without Phase 1's evidence corpus and without Phase 2's trigger_stream; item_support_effects also lost sites to 0B's corrections",
+      "value": 282
+    },
+    "counter_2": {
+      "cause": "item_coverage grew Phase 1's claim corpus (_SOURCE_REFS, _RULE_CLAIMS and the evidence tables), which the prior counted as claim prose; the umbrella's Amendment A (2026-08-12) rules that corpus and _REVIEW_ISSUE_REFS into Class C, so the measurement is net of them and is not comparable to the prior term for term",
+      "value": 191
+    },
+    "counter_3": {
+      "cause": "unchanged",
+      "value": 142
+    },
+    "counter_4": {
+      "cause": "no producing tool before this script; the plan records n/a",
+      "value": null
+    }
+  },
+  "schema_version": 2,
+  "slice": "3.9",
+  "targets": {
+    "rule": "a target's gap may not grow, a met target may not stay recorded outstanding, and a target the receipt has lost is a failure; the block records targets and never amends one.  Counter 4's lane targets are measured net of the committed deferral rows (Amendment B), and the gross and deferred halves ride the entry so the netting is checkable arithmetic",
+    "targets": {
+      "counter_1": {
+        "bound": 0,
+        "criterion": "criterion 1: runtime item-name dispatch reaches zero",
+        "gap": 63,
+        "measured": 63,
+        "met": false,
+        "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
+      },
+      "counter_2": {
+        "bound": 18,
+        "criterion": "criterion 1: claim-prose sites at or below the reviewed NO_RUNTIME_BEHAVIOR reason count",
+        "gap": 0,
+        "measured": 18,
+        "met": true,
+        "owed_to": ""
+      },
+      "counter_3": {
+        "bound": 0,
+        "criterion": "criterion 2: every registry entry declares a rule or a reviewed NO_RUNTIME_BEHAVIOR",
+        "gap": 4,
+        "measured": 4,
+        "met": false,
+        "owed_to": "post-merge lane: undeclared registry entries (frontier-open-debts.json)"
+      },
+      "counter_4/pair_engine": {
+        "bound": 0,
+        "criterion": "criterion 4: no declared family is uninterpreted on the pair engine",
+        "deferred": 0,
+        "gap": 0,
+        "gross": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
+      },
+      "counter_4/receipt_walk": {
+        "bound": 0,
+        "criterion": "criterion 4: no declared family is uninterpreted on the receipt walk",
+        "deferred": 0,
+        "gap": 0,
+        "gross": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
+      }
+    }
+  },
+  "zero_policy_frontier": {
+    "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
+    "forbidden_input_fallbacks": [],
+    "hand_built_entries_by_module": {
+      "ahri.py": 4,
+      "akali.py": 2,
+      "alistar.py": 1,
+      "amumu.py": 1,
+      "annie.py": 1,
+      "ashe.py": 2,
+      "azir.py": 1,
+      "belveth.py": 2,
+      "blitzcrank.py": 1,
+      "brand.py": 1,
+      "braum.py": 2,
+      "briar.py": 1,
+      "caitlyn.py": 2,
+      "camille.py": 3,
+      "chogath.py": 2,
+      "corki.py": 3,
+      "darius.py": 1,
+      "diana.py": 2,
+      "gangplank.py": 1,
+      "hecarim.py": 1,
+      "illaoi.py": 1,
+      "jayce.py": 1,
+      "jhin.py": 1,
+      "kaisa.py": 2,
+      "karthus.py": 1,
+      "katarina.py": 1,
+      "kayn.py": 1,
+      "kennen.py": 1,
+      "khazix.py": 1,
+      "kled.py": 1,
+      "kogmaw.py": 1,
+      "ksante.py": 1,
+      "leblanc.py": 2,
+      "lillia.py": 1,
+      "locke.py": 1,
+      "lucian.py": 1,
+      "malzahar.py": 1,
+      "mel.py": 1,
+      "module_helpers.py": 3,
+      "morgana.py": 1,
+      "naafiri.py": 2,
+      "nasus.py": 2,
+      "senna.py": 2,
+      "sett.py": 1,
+      "shyvana.py": 2,
+      "sion.py": 2,
+      "sivir.py": 1,
+      "slotlib.py": 5,
+      "smolder.py": 2,
+      "soraka.py": 1,
+      "syndra.py": 2,
+      "taliyah.py": 1,
+      "talon.py": 1,
+      "thresh.py": 1,
+      "tristana.py": 1,
+      "twitch.py": 2,
+      "varus.py": 1,
+      "veigar.py": 2,
+      "velkoz.py": 1,
+      "vi.py": 2,
+      "volibear.py": 1,
+      "xayah.py": 1,
+      "yasuo.py": 1,
+      "yorick.py": 1,
+      "zed.py": 1,
+      "zoe.py": 1,
+      "zyra.py": 1
+    },
+    "input_vocabularies": "src/calculator/champions/inputs.py \u2014 the declared defaults that replaced the forbidden literals, each with a reason and a producer its name is asserted against",
+    "issue": "issue #213",
+    "produced_fallbacks_by_receiver": {
+      "burrow": 1,
+      "carnivore": 2,
+      "carried": 1,
+      "cast": 13,
+      "chained": 2,
+      "entry": 15,
+      "event": 48,
+      "fix": 2,
+      "part_timing": 1,
+      "proc_auto": 2,
+      "realm": 1,
+      "spec": 3,
+      "tribute": 2,
+      "trigger_by_time": 1
+    },
+    "rule": "a .get(key, <literal>) on a champion input block (stats, target, options) is forbidden outright \u2014 D-24's source assertion, and the guard the declared zero_policy default only holds with; the same shape on a block the tree produced is pinned non-growing per receiver, and hand-built ability entries per module, so neither can widen without a decision",
+    "totals": {
+      "forbidden_input_fallbacks": 0,
+      "hand_built_entries": 99,
+      "produced_fallbacks": 94
+    }
+  }
+}

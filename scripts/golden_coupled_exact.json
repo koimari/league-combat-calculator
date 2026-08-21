@@ -1,0 +1,249 @@
+{
+  "coupled_scenarios": {
+    "amp_armed_mage_roster": {
+      "combat/0:main/incoming": "0.0",
+      "combat/0:main/outgoing": "1713.1",
+      "combat/1:ally:Pantheon/incoming": "0.0",
+      "combat/1:ally:Pantheon/outgoing": "874.9",
+      "combat/2:enemy:Aatrox/incoming": "2588.0",
+      "combat/2:enemy:Aatrox/outgoing": "0.0",
+      "fights/0:Aatrox": "3681.8"
+    },
+    "cassiopeia_3champ": {
+      "combat/0:main/incoming": "1128.1",
+      "combat/0:main/outgoing": "768.0",
+      "combat/1:enemy:Alistar/incoming": "509.7",
+      "combat/1:enemy:Alistar/outgoing": "514.4",
+      "combat/2:enemy:Dr. Mundo/incoming": "258.2",
+      "combat/2:enemy:Dr. Mundo/outgoing": "613.7",
+      "fights/0:Alistar": "509.7",
+      "fights/1:Dr. Mundo": "258.2"
+    },
+    "cassiopeia_5champ": {
+      "combat/0:main/incoming": "1488.0",
+      "combat/0:main/outgoing": "1309.3",
+      "combat/1:ally:Alistar/incoming": "1290.1",
+      "combat/1:ally:Alistar/outgoing": "1292.7",
+      "combat/2:enemy:Alistar/incoming": "1013.0",
+      "combat/2:enemy:Alistar/outgoing": "946.0",
+      "combat/3:enemy:Dr. Mundo/incoming": "513.2",
+      "combat/3:enemy:Dr. Mundo/outgoing": "1155.1",
+      "combat/4:enemy:Vayne/incoming": "1075.9",
+      "combat/4:enemy:Vayne/outgoing": "676.9",
+      "fights/0:Alistar": "509.7",
+      "fights/1:Dr. Mundo": "258.2",
+      "fights/2:Vayne": "541.4"
+    },
+    "catalyst_roster": {
+      "combat/0:main/incoming": "1057.3",
+      "combat/0:main/outgoing": "2318.4",
+      "combat/1:ally:Pantheon/incoming": "920.8",
+      "combat/1:ally:Pantheon/outgoing": "1646.8",
+      "combat/2:enemy:Aatrox/incoming": "1973.1",
+      "combat/2:enemy:Aatrox/outgoing": "1604.1",
+      "combat/3:enemy:Malphite/incoming": "1992.1",
+      "combat/3:enemy:Malphite/outgoing": "374.1",
+      "fights/0:Aatrox": "1148.4",
+      "fights/1:Malphite": "1170.0"
+    },
+    "cleaver_bloodsong_roster": {
+      "combat/0:main/incoming": "3248.4",
+      "combat/0:main/outgoing": "3436.3",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "1002.9",
+      "combat/2:enemy:Aatrox/incoming": "4439.2",
+      "combat/2:enemy:Aatrox/outgoing": "5377.4",
+      "fights/0:Aatrox": "3921.0"
+    },
+    "crit_onhit_carry_roster": {
+      "combat/0:main/incoming": "3794.0",
+      "combat/0:main/outgoing": "7698.5",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "745.1",
+      "combat/2:enemy:Aatrox/incoming": "5524.0",
+      "combat/2:enemy:Aatrox/outgoing": "4085.2",
+      "combat/3:enemy:Malphite/incoming": "2919.6",
+      "combat/3:enemy:Malphite/outgoing": "1837.8",
+      "fights/0:Aatrox": "8220.1",
+      "fights/1:Malphite": "10920.9"
+    },
+    "dream_maker_roster": {
+      "combat/0:main/incoming": "1774.1",
+      "combat/0:main/outgoing": "377.2",
+      "combat/1:ally:Jax/incoming": "1602.3",
+      "combat/1:ally:Jax/outgoing": "798.8",
+      "combat/2:enemy:Aatrox/incoming": "1176.0",
+      "combat/2:enemy:Aatrox/outgoing": "3376.3",
+      "fights/0:Aatrox": "377.2"
+    },
+    "everlasting_forced_swing_roster": {
+      "combat/0:main/incoming": "2421.8",
+      "combat/0:main/outgoing": "1906.4",
+      "combat/1:enemy:Darius/incoming": "1906.4",
+      "combat/1:enemy:Darius/outgoing": "2421.7",
+      "fights/0:Darius": "1906.4"
+    },
+    "hexoptics_basic_amp_carry": {
+      "combat/0:main/incoming": "2629.0",
+      "combat/0:main/outgoing": "3597.6",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "814.6",
+      "combat/2:enemy:Aatrox/incoming": "4412.2",
+      "combat/2:enemy:Aatrox/outgoing": "4758.0",
+      "fights/0:Aatrox": "3932.5"
+    },
+    "immolate_active_bruiser_roster": {
+      "combat/0:main/incoming": "2239.1",
+      "combat/0:main/outgoing": "4805.8",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "1037.4",
+      "combat/2:enemy:Aatrox/incoming": "5843.3",
+      "combat/2:enemy:Aatrox/outgoing": "4691.0",
+      "fights/0:Aatrox": "5682.3"
+    },
+    "lethality_window_assassin_roster": {
+      "combat/0:main/incoming": "2781.0",
+      "combat/0:main/outgoing": "2867.2",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "814.6",
+      "combat/2:enemy:Aatrox/incoming": "3681.8",
+      "combat/2:enemy:Aatrox/outgoing": "4910.0",
+      "fights/0:Aatrox": "3157.7"
+    },
+    "liandry_reprice_mage_roster": {
+      "combat/0:main/incoming": "0.0",
+      "combat/0:main/outgoing": "2257.8",
+      "combat/1:ally:Pantheon/incoming": "0.0",
+      "combat/1:ally:Pantheon/outgoing": "843.6",
+      "combat/2:enemy:Malphite/incoming": "3101.4",
+      "combat/2:enemy:Malphite/outgoing": "0.0",
+      "fights/0:Malphite": "2282.7"
+    },
+    "mandate_abyssal_curse_roster": {
+      "combat/0:main/incoming": "0.0",
+      "combat/0:main/outgoing": "1699.4",
+      "combat/1:ally:Pantheon/incoming": "0.0",
+      "combat/1:ally:Pantheon/outgoing": "888.6",
+      "combat/2:enemy:Aatrox/incoming": "2588.0",
+      "combat/2:enemy:Aatrox/outgoing": "0.0",
+      "fights/0:Aatrox": "2423.1"
+    },
+    "mundo_3champ": {
+      "combat/0:main/incoming": "1584.5",
+      "combat/0:main/outgoing": "959.1",
+      "combat/1:enemy:Cassiopeia/incoming": "482.0",
+      "combat/1:enemy:Cassiopeia/outgoing": "1209.8",
+      "combat/2:enemy:Vayne/incoming": "477.1",
+      "combat/2:enemy:Vayne/outgoing": "374.7",
+      "fights/0:Cassiopeia": "499.1",
+      "fights/1:Vayne": "494.3"
+    },
+    "score_event_scan_holder": {
+      "combat/0:main/incoming": "868.2",
+      "combat/0:main/outgoing": "1865.2",
+      "combat/1:ally:Pantheon/incoming": "740.3",
+      "combat/1:ally:Pantheon/outgoing": "824.6",
+      "combat/2:enemy:Aatrox/incoming": "2689.9",
+      "combat/2:enemy:Aatrox/outgoing": "1608.6",
+      "fights/0:Aatrox": "1865.2"
+    },
+    "score_event_view_holder": {
+      "combat/0:main/incoming": "0.0",
+      "combat/0:main/outgoing": "1763.4",
+      "combat/1:ally:Pantheon/incoming": "0.0",
+      "combat/1:ally:Pantheon/outgoing": "824.6",
+      "combat/2:enemy:Aatrox/incoming": "2588.0",
+      "combat/2:enemy:Aatrox/outgoing": "0.0",
+      "fights/0:Aatrox": "2089.8"
+    },
+    "score_plain_tuple": {
+      "combat/0:main/incoming": "868.2",
+      "combat/0:main/outgoing": "1643.9",
+      "combat/1:ally:Pantheon/incoming": "740.3",
+      "combat/1:ally:Pantheon/outgoing": "824.6",
+      "combat/2:enemy:Aatrox/incoming": "2468.5",
+      "combat/2:enemy:Aatrox/outgoing": "1608.6",
+      "fights/0:Aatrox": "1643.9"
+    },
+    "swing_term_armed_carry_roster": {
+      "combat/0:main/incoming": "2666.7",
+      "combat/0:main/outgoing": "1373.7",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "716.6",
+      "combat/2:enemy:Aatrox/incoming": "984.5",
+      "combat/2:enemy:Aatrox/outgoing": "2919.6",
+      "combat/3:enemy:Malphite/incoming": "1105.9",
+      "combat/3:enemy:Malphite/outgoing": "1876.1",
+      "fights/0:Aatrox": "3483.1",
+      "fights/1:Malphite": "4420.2"
+    },
+    "syndra_custom_order_120": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "6185.5"
+    },
+    "syndra_custom_order_39": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "4720.0"
+    },
+    "syndra_custom_order_60": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "5648.4"
+    },
+    "syndra_derived_order_120": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "6185.5"
+    },
+    "syndra_derived_order_39": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "4720.0"
+    },
+    "syndra_derived_order_60": {
+      "combat/0:/incoming": "0.0",
+      "combat/0:/outgoing": "0.0",
+      "combat/1:/incoming": "0.0",
+      "combat/1:/outgoing": "0.0",
+      "fights/manual_target": "5648.4"
+    },
+    "syndra_mandate_3champ": {
+      "combat/0:main/incoming": "1151.1",
+      "combat/0:main/outgoing": "1092.4",
+      "combat/1:enemy:Alistar/incoming": "717.6",
+      "combat/1:enemy:Alistar/outgoing": "538.2",
+      "combat/2:enemy:Dr. Mundo/incoming": "374.8",
+      "combat/2:enemy:Dr. Mundo/outgoing": "612.9",
+      "fights/0:Alistar": "717.6",
+      "fights/1:Dr. Mundo": "374.8"
+    }
+  },
+  "metadata": {
+    "champions_fetched_at": 1787268652.393148,
+    "exact": true,
+    "fingerprint": {
+      "entries": 25,
+      "leaves": 179,
+      "numeric_leaves": 0,
+      "sections": "coupled_scenarios"
+    },
+    "git_head": "f90e9b55559d7117902ec91cb4c3394a287b1b49",
+    "items_fetched_at": 1787268672.008812,
+    "producer_count": 6,
+    "scenario_count": 25,
+    "snapshot_kind": "coupled",
+    "src_tree_sha": "923e30479f18effd811fe0cd5363206b0146f01d"
+  }
+}

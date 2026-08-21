@@ -28,19 +28,11 @@ All numeric values are read from the champion JSON data except the
 proc cadence: Silver Bolts' every-3rd-hit rule is prose, not leveling
 data, hence the module constant.
 
-Roadmap session 4 batch H (2026-08-21): P (Night Hunter) has no
-enemy-damage formula: its one cached effect is a self bonus-movement-speed
-buff toward slowed/immobile enemies, with no enemy-damage row anywhere in
-the entry. The pinned reviewed packet (static/reviewed-packets.json)
-independently declares P ``kind: "no_damage"`` with a sourced reason, and
-P has never been wired into SLOTS below (deliberate, documented since
-before this pass — see the SLOTS comment above), so the fight ledger
-never invents an enemy hit for it. MODULE_COVERAGE was simply stale,
-reading "out_of_scope" for a slot this module already treats as
-non-damaging (the Tahm Kench E precedent, roadmap session 4 batch G, for
-an absent-but-sourced-no_damage slot). Reclassified to "no_damage"; P
-remains absent from ``parse_abilities``' output (zero fight-computation
-change).
+Coverage: P (Night Hunter) is a self movement-speed buff toward
+slowed/immobile enemies — the pinned reviewed packet declares it
+``kind: "no_damage"``. It stays off the slot map so the ledger never
+invents an enemy hit, and ``MODULE_COVERAGE`` states that reviewed
+absence of damage rather than an unmodeled gap.
 """
 
 from typing import Any
@@ -52,13 +44,18 @@ from .slotlib import (
     pct_health_per_hit,
     simple_damage,
     stat_buff,
-    with_control,
+    with_control_event,
 )
+from .source_receipts import load_champion_sources
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3
 
-_tumble_damage = simple_damage(attr="Bonus Physical Damage", dmg_type="physical")
+_tumble_damage = simple_damage(
+    attr="Bonus Physical Damage",
+    dmg_type="physical",
+    event_order_certified="single_hit",
+)
 
 
 def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -78,7 +75,7 @@ def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
     """
     entry = _tumble_damage(ctx)
     if entry is not None:
-        reduction = ctx.stats.get("tumble_cd_reduction_percent", 0.0)
+        reduction = ctx.stat("tumble_cd_reduction_percent")
         entry["cooldown"] *= 1.0 - reduction / 100.0
         if ctx.options.get("q_tumble_reset") is True:
             entry["empowers_next_auto"] = {
@@ -182,34 +179,51 @@ SLOTS = {
     "E": by_option(
         "condemn_wall",
         {
-            True: with_control(
-                simple_damage(attr="Total Physical Damage", dmg_type="physical"),
+            # The wall branch adds the sourced 1.5s stun as its own control
+            # event: the slot's declared kind stays the knockback every cast
+            # applies, so the no-wall branch cannot report a stun it never
+            # lands.
+            True: with_control_event(
+                simple_damage(
+                    attr="Total Physical Damage",
+                    dmg_type="physical",
+                    event_order_certified="single_hit",
+                ),
                 kind="stun",
                 duration_attr="Stun Duration",
                 effect_index=1,
             ),
-            False: simple_damage(attr="Physical Damage", dmg_type="physical"),
+            False: simple_damage(
+                attr="Physical Damage",
+                dmg_type="physical",
+                event_order_certified="single_hit",
+            ),
         },
         default=True,
     ),
 }
 
-parse_abilities = build_parser(SLOTS, "Vayne")
+# Tumble only "empowers her next basic attack ... to deal bonus physical
+# damage"; Condemn "knocks them back 475 units" on every cast, and adds a
+# 1.5s stun only "if the target collides with terrain" — the knockback is
+# the control the cast always applies, and both branches of the
+# ``condemn_wall`` option carry it; the wall branch adds the sourced stun
+# as a control event rather than as the slot's kind.  W is the Silver
+# Bolts on-hit shell
+# (its true damage rides a basic attack, not an ability event) and R is a
+# pure stat buff, so neither authors a part a review could reach.
+MODULE_CC = {"Q": "none", "E": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Vayne", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Vayne",
-        "revision_id": 3979075,
-        "revision_timestamp": "2025-12-25T10:25:25Z",
-    }
-]
+SOURCES = load_champion_sources("Vayne")
+
+# P damages nothing and is deliberately off the slot map, so it is a
+# reviewed no-damage slot rather than the unmodeled gap SLOTS derives.
 MODULE_COVERAGE = {
     slot: (
         "modeled" if slot in SLOTS else "no_damage" if slot == "P" else "out_of_scope"
     )
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

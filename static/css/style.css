@@ -2032,6 +2032,16 @@ a { color: inherit; }
   color: var(--ink-muted);
 }
 
+/* A leaf the model refused to produce. It must not read as a number and it
+   must not read as a blank: dotted, muted and italic is deliberately unlike
+   every measured figure on the page, and the receipt is on the title. */
+.leaf-withheld {
+  font-style: italic;
+  color: var(--ink-muted);
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+}
+
 /* --------------------------------------------------------------------------
    9. Dialogs — picker, best in slot, share
    -------------------------------------------------------------------------- */
@@ -2523,3 +2533,111 @@ a { color: inherit; }
   .rail-primary, .add-button, .toggle, .segment,
   .banner-button, .buy-dismiss, .ledger-open { min-height: 40px; }
 }
+
+/* --- level slider + breakpoints (main champion and roster cards) --- */
+.level-range { display: block; width: 100%; margin: 7px 0 4px; accent-color: var(--win-dark); }
+.level-range:disabled { opacity: .45; }
+.level-marks { display: flex; gap: 3px; }
+.level-marks button {
+  flex: 1 1 0;
+  padding: 3px 0;
+  border: 1px solid var(--dline-3);
+  border-radius: var(--radius);
+  background: transparent;
+  font: 700 10px var(--mono);
+  color: rgba(246, 242, 223, .6);
+}
+.level-marks button:hover:not(:disabled) { color: var(--cream); }
+.level-marks button.is-on { border-color: var(--win-dark); color: var(--win-dark); }
+.level-marks button:disabled { opacity: .4; cursor: not-allowed; }
+.roster-level-control .level-range { margin-top: 6px; }
+.roster-level-all {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 9px;
+  background: var(--rail-chip-panel);
+  border: 1px solid rgba(246, 242, 223, .1);
+}
+.roster-level-all > span {
+  flex: 1 1 100%;
+  font: 700 9px var(--font);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(246, 242, 223, .68);
+}
+.roster-level-all button {
+  flex: 1 1 auto;
+  padding: 4px 8px;
+  border: 1px solid var(--dline-3);
+  border-radius: var(--radius);
+  background: transparent;
+  font: 700 10px var(--mono);
+  color: rgba(246, 242, 223, .7);
+}
+.roster-level-all button:hover { color: var(--cream); border-color: var(--cream-62); }
+
+/* --- ability cards: rank cap, engine cast readout, in-card options --- */
+.ability-key {
+  display: inline-block;
+  min-width: 14px;
+  margin-right: 2px;
+  font: 800 9px var(--mono);
+  color: var(--win-dark);
+}
+.ability-rank output i { font: 600 9px var(--mono); font-style: normal; color: rgba(246, 242, 223, .5); }
+.ability-readout { grid-column: 2; font: 500 9.5px var(--mono); color: rgba(246, 242, 223, .58); }
+.ability-option { grid-column: 2; }
+.ability-option.champion-option-field input,
+.ability-option.champion-option-field select { width: 72px; }
+
+/* --- verdict: the defeated-target disclosure under each headline --- */
+.verdict-note {
+  margin-top: 3px;
+  font: 700 9.5px var(--mono);
+  letter-spacing: .04em;
+  color: var(--win-dark);
+}
+.verdict-note[hidden] { display: none; }
+
+/* --- event lanes: the one collapsed lane for post-defeat swings --- */
+.timeline-event.is-collapsed { background: var(--spine-panel); }
+.timeline-event.is-collapsed .timeline-what { color: var(--ink-muted); }
+
+/* --- rune page dialog: the whole page in one open --- */
+.rune-dialog { width: min(920px, calc(100vw - 48px)); }
+.rune-page { overflow-y: auto; margin-top: 12px; }
+.rune-group + .rune-group { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+.rune-group h3 { display: flex; align-items: baseline; gap: 8px; font: 800 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.rune-group h3 small { font: 500 10px var(--mono); letter-spacing: 0; text-transform: none; color: var(--ink-muted); }
+.rune-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
+.rune-row > b { flex: 0 0 84px; font: 700 9.5px var(--mono); color: var(--ink-muted); }
+.rune-path { margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line-1); }
+.rune-path > b { font: 800 10px var(--font); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.rune-path.is-on { border-color: var(--win); background: var(--spine-panel); }
+.rune-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: transparent;
+  font: 700 11px var(--font);
+  color: var(--ink);
+  text-align: left;
+}
+.rune-pick img { width: 22px; height: 22px; object-fit: cover; border: 1px solid var(--line-3); background: var(--spine-green); }
+.rune-pick:hover:not(:disabled) { border-color: var(--ink); }
+.rune-pick.is-on { border-color: var(--win); background: var(--spine-panel); color: var(--win); }
+.rune-pick.locked { opacity: .45; cursor: not-allowed; }
+.rune-note { margin-top: 6px; font: 500 11px var(--font); color: var(--ink-muted); }
+.rune-page .duel-rune-options { margin-top: 14px; }
+.duel-rune-head { margin-top: 10px; }
+
+/* options in the shared Scenario options block use the card idiom (dark rail) */
+.champion-options-grid .ability-variants,
+.champion-options-grid .ability-rank { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.champion-options-grid .ability-variants small,
+.champion-options-grid .ability-rank small { font: 700 9px var(--font); letter-spacing: .12em; text-transform: uppercase; color: rgba(246, 242, 223, .68); }

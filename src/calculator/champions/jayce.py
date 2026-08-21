@@ -86,6 +86,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — against the GAME FILES, not the
 # wiki (a stale wiki transform box is exactly what burned Gnar):
@@ -146,38 +147,42 @@ def _level_tier(level: int) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _certified(parser):
-    """Certify a single-hit parser's cast boundary as the authored hit."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
-
-_q_hammer = _certified(
-    simple_damage(attr="Physical Damage", dmg_type="physical", source=("Q", _HAMMER))
+# Every kind below rides its own construction rather than MODULE_CC: each
+# Jayce slot is a stance dispatcher, and the two stances' abilities are
+# different spells with different control.
+_q_hammer = simple_damage(
+    attr="Physical Damage",
+    dmg_type="physical",
+    source=("Q", _HAMMER),
+    # "smashes his hammer to the ground to deal physical damage ...
+    # and slow them for 2 seconds"
+    cc_kind="slow",
+    event_order_certified="single_hit",
 )
 
 # Cannon's two cases DO share one entry shape, so the gate is a plain
 # ``by_option``: gated Shock Blast reads the "Increased Damage" TOTAL,
 # ungated reads the base line.
-_q_cannon = _certified(
-    by_option(
-        "accelerated_q",
-        {
-            True: simple_damage(
-                attr="Increased Damage", dmg_type="physical", source=("Q", _CANNON)
-            ),
-            False: simple_damage(
-                attr="Physical Damage", dmg_type="physical", source=("Q", _CANNON)
-            ),
-        },
-        default=True,
-    )
+_q_cannon = by_option(
+    "accelerated_q",
+    {
+        # Shock Blast only detonates and grants sight — no control.
+        True: simple_damage(
+            attr="Increased Damage",
+            dmg_type="physical",
+            source=("Q", _CANNON),
+            cc_kind="none",
+            event_order_certified="single_hit",
+        ),
+        False: simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            source=("Q", _CANNON),
+            cc_kind="none",
+            event_order_certified="single_hit",
+        ),
+    },
+    default=True,
 )
 
 
@@ -220,6 +225,8 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
             count=ticks,
             time_offset=1.0,
             hit_interval=1.0,
+            # The field only "deals magic damage every second".
+            cc_kind="none",
         ),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
@@ -236,8 +243,8 @@ def _burst_attack_speed(ctx: SlotCtx) -> float:
     sits AT the cap for any build. Bonus attack speed from items is
     therefore wasted during the burst — it only speeds his ordinary autos.
     """
-    attack_speed = ctx.stats.get("attack_speed", 0.0)
-    as_ratio = ctx.stats.get("attack_speed_ratio", 0.0)
+    attack_speed = ctx.stat("attack_speed")
+    as_ratio = ctx.stat("attack_speed_ratio")
     burst = attack_speed + as_ratio * (HYPER_CHARGE_BONUS_ATTACK_SPEED / 100.0)
     return min(burst, ATTACK_SPEED_CAP)
 
@@ -268,7 +275,7 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     ratio = extract_value(ability, "Physical Damage", rank) / 100.0
-    total_ad = ctx.stats.get("attack_damage", 0.0)
+    total_ad = ctx.stat("attack_damage")
     delta_ratio = ratio - 1.0
     return {
         "name": ability.get("name", "Hyper Charge"),
@@ -287,6 +294,11 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=1.0,
                 basic_damage=True,
                 bonus_ad_ratio=delta_ratio,
+                # Hyper Charge only "empowers his next 3 basic attacks
+                # ... to deal modified physical damage and gain 360%
+                # bonus attack speed" — no control on the swings it
+                # forces, which is what this row's events are.
+                cc_kind="none",
             ),
         ),
         "empowers_next_auto": {
@@ -351,8 +363,14 @@ def _w(ctx: SlotCtx) -> dict[str, Any] | None:
 # E: Thundering Blow (Hammer) / Acceleration Gate (Cannon — no damage)
 # ---------------------------------------------------------------------------
 
-_e_hammer = _certified(
-    simple_damage(attr="Magic Damage", dmg_type="magic", source=("E", _HAMMER))
+_e_hammer = simple_damage(
+    attr="Magic Damage",
+    dmg_type="magic",
+    source=("E", _HAMMER),
+    # The root lands over the cast time; what arrives with the damage
+    # is the "knock them back 600 units".
+    cc_kind="knockback",
+    event_order_certified="single_hit",
 )
 
 
@@ -384,7 +402,7 @@ def _transform_ability(ctx: SlotCtx, stance: str) -> dict[str, Any] | None:
 def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
     """R Hammer: armor/MR buff + ONE empowered bonus-magic basic attack."""
     tier = _level_tier(ctx.level)
-    bonus_ad = ctx.stats.get("bonus_attack_damage", 0.0)
+    bonus_ad = ctx.stat("bonus_attack_damage")
     resists = HAMMER_BONUS_RESISTS[tier] + HAMMER_RESISTS_BONUS_AD_RATIO * bonus_ad
     bonus_damage = (
         HAMMER_EMPOWERED_AUTO_DAMAGE[tier]
@@ -396,6 +414,10 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
         "magic",
+        # The transform empowers one attack with bonus magic damage and
+        # buffs Jayce; nothing lands on the target but damage.
+        cc_kind="none",
+        event_order_certified="single_hit",
     )
     # Self-defensive only — shown in the stats panel, no effect on
     # outgoing damage.
@@ -576,17 +598,13 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Jayce")
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Jayce",
-        "revision_id": 4008136,
-        "revision_timestamp": "2026-04-13T19:03:09Z",
-    }
-]
+SOURCES = load_champion_sources("Jayce")
+
+# P is emitted, but its row is a sourced zero — not a fact SLOTS derives.
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

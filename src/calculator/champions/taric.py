@@ -41,11 +41,20 @@ below; every number in it is read from the cached wiki entry.
 """
 
 import re
+from functools import partial
 from typing import Any
 
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import find_named_leveling, on_hit_entry, sum_modifiers, with_control
+from .slotlib import (
+    find_named_leveling,
+    on_hit_entry,
+    simple_damage,
+    sum_modifiers,
+    with_control,
+)
+from ..healing_helpers import _ability, _rank, _taric_starlights_touch
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
 
@@ -137,7 +146,7 @@ def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
     # above is the one that fails closed).  W's own 6-10% of Taric's
     # armor grant is not applied to ``ctx.stats``, so this reads the
     # build's item/rune bonus armor only — see ASSUMPTIONS.
-    per_hit = base + armor_ratio * ctx.stats.get("bonus_armor", 0.0)
+    per_hit = base + armor_ratio * ctx.stat("bonus_armor")
     entry = on_hit_entry(ability.get("name", "Bravado"), per_hit, "magic")
     entry["on_hit"]["empower_window"] = {
         "armed_by": _BRAVADO_ARMED_BY,
@@ -158,69 +167,77 @@ def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
 _bravado.phase = ONHIT
 
 
+# Reviewed crowd control, read from the cached kit: E (Dazzle) "projects a
+# beam of starlight in the target direction that deals magic damage to
+# enemies hit and stuns them for 1.5 seconds".  Q, W and R deal no damage
+# — heal, shield and invulnerability — and P is an attack-stream rider, so
+# E is the whole of this kit's reviewable control.
+MODULE_CC = {"E": "stun"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Taric", PACKET_SHA256
+    "Taric",
+    PACKET_SHA256,
+    slot_parsers={
+        # One beam, one blow, so the row is a hit the ledger can time.
+        "E": simple_damage(
+            attr="Magic Damage",
+            dmg_type="magic",
+            ranks="rank",
+            source=("E", 0),
+            event_order_certified="single_hit",
+        ),
+        "P": _bravado,
+    },
+    # The stun's duration and its source atom come off the cached E entry,
+    # so MODULE_CC's reviewed kind and the priced interval are one fact.
+    slot_wrappers={
+        "E": partial(with_control, kind="stun", duration_attr="Stun Duration"),
+    },
+    cc_kinds=MODULE_CC,
 )
-SLOTS["E"] = with_control(
-    SLOTS["E"],
-    kind="stun",
-    duration_attr="Stun Duration",
-)
-SLOTS["P"] = _bravado
-parse_abilities = build_parser(SLOTS, "Taric")
-PACKET_SPEC = SLOTS.packet_spec
-ASSUMPTIONS.append("E's sourced 1.5-second stun counts as target action downtime")
-ASSUMPTIONS.extend(
-    [
-        "W (Bastion) shields Taric and the linked selected teammate the "
-        "sourced Shield Strength as a live % of the PROTECTED TARGET's "
-        "maximum health (scanner packet with a max-health amount formula "
-        "and 2.5s duration, selection key shield:W:<cast>).",
-        "Q (Starlight's Touch) heals Taric and every selected teammate "
-        "the sourced per-charge heal (25 + 15% AP + 1% of his maximum "
-        "health per charge, capped at the 5-charge maximum) via the E1 "
-        "rule and its self_and_all_teammates fan-out; the scanner defers "
-        "the slot (no heal row in the cached Q leveling).",
-        "R (Cosmic Radiance) grants the caster and every selected "
-        "teammate invulnerability after the sourced 2.5s descent for the "
-        "sourced 2.5s window (state packet).",
-        "P (Bravado) prices the sourced on-attack bonus magic damage "
-        "(25 : 101 based on level, the cached 'Per-Level Scaling' row, "
-        "+ 15% bonus armor read from the same description) once per "
-        "empowered attack the window actually grants.  A cast arms up to "
-        "two charges for 5 seconds and re-arming REFRESHES rather than "
-        "stacks, so a four-cast rotation still books at most two "
-        "empowered attacks; damage.py's empower-window walk spends the "
-        "charges against the accepted cast timeline and the fight's own "
-        "swings.  An attack that lands at the same instant as its arming "
-        "cast does not consume a charge (the named conservative "
-        "tie-break), so one-rotation fights, whose casts all collapse to "
-        "t=0, price the passive at or below its live value.",
-        "P (Bravado)'s two NON-damage effects are not modeled: the 100% "
-        "total attack speed on each empowered attack (it would change "
-        "the fight's swing count, which the auto-attack schedule owns) "
-        "and the 1 : 2 (based on ability haste) cooldown refund on "
-        "Taric's basic abilities.  Both are omissions, so the modeled "
-        "damage is a floor, never an overstatement.",
-        "P (Bravado)'s '+ 15% bonus armor' term reads the BUILD's bonus "
-        "armor.  W (Bastion)'s sourced 6-10% of Taric's armor passive "
-        "grant is not applied to ctx.stats by this module, so it does "
-        "not feed the passive; adding it belongs to W, not P.",
-    ]
-)
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "E's sourced 1.5-second stun counts as target action downtime",
+    "W (Bastion) shields Taric and the linked selected teammate the "
+    "sourced Shield Strength as a live % of the PROTECTED TARGET's "
+    "maximum health (scanner packet with a max-health amount formula "
+    "and 2.5s duration, selection key shield:W:<cast>).",
+    "Q (Starlight's Touch) heals Taric and every selected teammate "
+    "the sourced per-charge heal (25 + 15% AP + 1% of his maximum "
+    "health per charge, capped at the 5-charge maximum) via the E1 "
+    "rule and its self_and_all_teammates fan-out; the scanner defers "
+    "the slot (no heal row in the cached Q leveling).",
+    "R (Cosmic Radiance) grants the caster and every selected "
+    "teammate invulnerability after the sourced 2.5s descent for the "
+    "sourced 2.5s window (state packet).",
+    "P (Bravado) prices the sourced on-attack bonus magic damage "
+    "(25 : 101 based on level, the cached 'Per-Level Scaling' row, "
+    "+ 15% bonus armor read from the same description) once per "
+    "empowered attack the window actually grants.  A cast arms up to "
+    "two charges for 5 seconds and re-arming REFRESHES rather than "
+    "stacks, so a four-cast rotation still books at most two "
+    "empowered attacks; damage.py's empower-window walk spends the "
+    "charges against the accepted cast timeline and the fight's own "
+    "swings.  An attack that lands at the same instant as its arming "
+    "cast does not consume a charge (the named conservative "
+    "tie-break), so one-rotation fights, whose casts all collapse to "
+    "t=0, price the passive at or below its live value.",
+    "P (Bravado)'s two NON-damage effects are not modeled: the 100% "
+    "total attack speed on each empowered attack (it would change "
+    "the fight's swing count, which the auto-attack schedule owns) "
+    "and the 1 : 2 (based on ability haste) cooldown refund on "
+    "Taric's basic abilities.  Both are omissions, so the modeled "
+    "damage is a floor, never an overstatement.",
+    "P (Bravado)'s '+ 15% bonus armor' term reads the BUILD's bonus "
+    "armor.  W (Bastion)'s sourced 6-10% of Taric's armor passive "
+    "grant is not applied to ctx.stats by this module, so it does "
+    "not feed the passive; adding it belongs to W, not P.",
+]
+
+COVERAGE_CHANNELS = {"Q": ("self_healing_rule",)}
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -229,11 +246,19 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Taric self-healing events from its authored packet."""
-    healing = []
-    heal, charges = _healing._taric_starlights_touch(
-        _healing._ability(champion_data, "Q"),
-        _healing._rank(ability_damages, "Q"),
+    """Starlight's Touch pays its per-charge heal on each Q cast.
+
+    Issue #143: this rule is the ONE ledger owner of the Q heal.  The
+    support scanner defers the slot (``_MODULE_AUTHORED_HEAL_SLOTS``) and
+    the participant timeline fans this event out to selected teammates, so
+    one formula prices every recipient.  The event declares
+    ``target_scope: self_and_all_teammates`` and stamps the charge count
+    used (``charges``) for the public receipt.
+    """
+    healing: list[dict] = []
+    heal, charges = _taric_starlights_touch(
+        _ability(champion_data, "Q"),
+        _rank(ability_damages, "Q"),
         champion_stats,
     )
     if heal > 0.0:
@@ -254,9 +279,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Taric", derive_self_healing)

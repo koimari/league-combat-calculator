@@ -115,16 +115,32 @@ from typing import Any
 import pytest
 
 from src.app import app
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.roster_composition import ActorRequest
 from src.calculator import shield_ledger
 from src.calculator.delivery_eligibility import DefenseWindow, stable_event_key
 from src.calculator.participant_timeline import (
     Combatant,
     _WalkCompiler,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import ActionKind
 from src.calculator.survival.compile import unrepresentable_template_receipt
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
 
 try:  # P2 Slice 3 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import crowd_control_eligibility as cce
@@ -235,6 +251,11 @@ def _enemy(
 ) -> dict:
     enemy: dict = {"champion": champion, "level": 18, "items": []}
     enemy["ability_ranks"] = ranks or {"Q": 0, "W": 0, "E": 5, "R": 0}
+    if champion == "Lulu":
+        # Whimsy is one cast with two exclusive branches (cached effects[1]
+        # enemy polymorph vs effects[2] self/ally attack speed); these
+        # fixtures are about the control, so they cast it on the enemy.
+        enemy["champion_options"] = {"lulu_whimsy_target": "enemy"}
     if cast is not None:
         enemy["cast_order"] = cast
     return enemy
@@ -266,7 +287,7 @@ def _dummy_combatant(
     health: float = 3000.0,
 ) -> Combatant:
     """Minimal combatant for timeline tests, mirroring the pinned suite."""
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -290,13 +311,14 @@ def _braum_combatant(
     from src.calculator.data_fetcher import get_champion
 
     data = get_champion("Braum")
-    request = SimpleNamespace(
+    # ``Combatant`` admits a typed ``ActorRequest`` and nothing else; the
+    # level rides the combatant itself, not the request.
+    request = ActorRequest(
         champion_options={
             "e_active": True,
             "e_active_seconds": 4.0,
             "e_blocked_skillshots": [],
         },
-        level=18,
     )
     return Combatant(
         participant_id=participant_id,
@@ -305,7 +327,7 @@ def _braum_combatant(
         level=18,
         items=(),
         stats={"health": health, "armor": 0.0, "magic_resistance": 0.0},
-        defenses=SimpleNamespace(
+        defenses=StartingDefenses(
             magic_shield=0.0,
             physical_shield=0.0,
             general_shield=0.0,
@@ -1411,6 +1433,9 @@ def test_r12_receipt_result_parity():
         (event["time"], event["source"]) for event in lux_blocked
     }
     # The decisions carry the control kinds in walk order (Ahri E first).
+    # A control takes effect after everything that landed at its own
+    # timestamp (``TransitionRank.DEBUFF_ARM``), so Ahri's Charm resolves
+    # with the damage it rides and Lulu's control-only Whimsy follows it.
     assert [entry["control_kind"] for entry in blocked_entries] == [
         "immobilize",
         "polymorph",

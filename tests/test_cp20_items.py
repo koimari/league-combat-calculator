@@ -22,7 +22,7 @@ import pytest
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
-    _OFFLINE_ITEM_EFFECTS,
+    _STATIC_ITEM_EFFECTS,
     _PARSEABLE_ITEM_KEYS,
     _STATIC_ITEM_EFFECTS,
     first_auto_state_ready,
@@ -41,6 +41,15 @@ from src.calculator.item_coverage import (
     item_model_coverage,
     require_calculation_item_coverage,
 )
+
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
 
 
 def _actor(
@@ -424,9 +433,19 @@ def test_tear_state_receipt_exposes_timing_triggers_cap_and_minion_boundary():
 
 
 def test_umbral_nightstalker_true_damage_formula_is_typed():
-    effects = resolve_damage_effects([get_item_by_name("Umbral Glaive")])
-    assert len(effects.first_autos) == 1
-    source = effects.first_autos[0].source
+    from src.calculator.interpreters import charged_strike
+
+    # First-auto strikes compile in the charged-strike interpreter, the one
+    # home for that family; ``BuildDamageEffects`` no longer carries them.
+    slots = charged_strike.resolve_slots(
+        ("Umbral Glaive",),
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert len(slots.first_autos) == 1
+    source = slots.first_autos[0].source
     assert source.damage_type == "true"
     from src.calculator.item_effects import DamageInputs
 
@@ -513,11 +532,21 @@ def test_umbral_state_receipt_exposes_the_sourced_windows_and_duration():
 
 
 def test_new_typed_keys_have_exactly_one_registry_owner():
-    for item_name, offline_values in _OFFLINE_ITEM_EFFECTS.items():
+    """Every typed key has exactly one owner: the code-owned static table or
+    the parser-owned key set, never both and never neither.
+
+    The union is checked against the LIVE registry entry rather than against
+    the static table itself: ``_OFFLINE_ITEM_EFFECTS`` retired, and the
+    resolved ``ITEM_EFFECTS`` record is what the two tables are supposed to
+    partition.
+    """
+    for item_name in _STATIC_ITEM_EFFECTS:
         static_keys = frozenset(_STATIC_ITEM_EFFECTS[item_name])
-        parseable_keys = _PARSEABLE_ITEM_KEYS[item_name]
-        assert static_keys.isdisjoint(parseable_keys)
-        assert static_keys | parseable_keys == frozenset(offline_values)
+        parseable_keys = _PARSEABLE_ITEM_KEYS.get(item_name, frozenset())
+        assert static_keys.isdisjoint(parseable_keys), item_name
+        assert static_keys | parseable_keys == frozenset(
+            ITEM_EFFECTS.get(item_name, {})
+        ), item_name
 
 
 @pytest.mark.parametrize(
@@ -533,7 +562,7 @@ def test_new_typed_keys_have_exactly_one_registry_owner():
 )
 def test_cp20_items_are_classified_modeled_state_and_optimizer_eligible(item_name):
     item = get_item_by_name(item_name)
-    coverage = item_model_coverage(item)
+    coverage = _attacker_coverage(item)
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True

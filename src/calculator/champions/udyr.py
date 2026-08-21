@@ -22,12 +22,20 @@ The cache's Q "Heal" row (40 : 174.12 by level) is the lightning
 strike's minimum damage against MINIONS (wiki prose), not a self-heal;
 the Awaken self-heal family is the W stance stream, which the healing
 rule already models.
+
+Coverage: P (Bridge Between) is the stance and Awaken system itself and
+E (Blazing Stampede) is a stance stun with movement speed. Transform and
+CC magnitude are axes the engine does not have, so both slots are out of
+scope; the stances' own damage is priced on Q/W/E/R.
 """
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
+from .inputs import target_stat
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_on_hit_entry,
@@ -44,26 +52,6 @@ _Q_LIGHTNING_STRIKES_PER_ATTACK = 6
 _Q_LIGHTNING_HIT_INTERVAL = 0.2
 
 PACKET_SHA256 = "468fd3bf2d2dd7e836b89c0ae6eff50d844990c0c03442f7f864a2032525dd9c"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Udyr",
-    PACKET_SHA256,
-    assumption_overrides=(
-        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
-        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
-    ),
-    slot_parsers={
-        "R": repeat_damage_parser(
-            attr="Magic Damage per Tick",
-            dmg_type="magic",
-            count=8,
-            time_offset=0.5,
-            hit_interval=0.5,
-            dot_duration=4.0,
-        )
-    },
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 
 def _target_max_health_percent(
@@ -99,7 +87,7 @@ def _target_max_health_percent(
         unit = units[idx] if idx < len(units) else ""
         stripped = unit.strip()
         if stripped == "%":
-            total += value / 100.0 * float(target.get("target_max_health", 0.0))
+            total += value / 100.0 * float(target_stat(target, "target_max_health"))
         else:
             total += resolve_scaling(unit, value, stats, target)
     return total
@@ -188,9 +176,35 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _wilding_claw.phase = ONHIT
 
-SLOTS = dict(SLOTS)
-SLOTS["Q"] = _wilding_claw
-parse_abilities = build_parser(SLOTS, "Udyr")
+
+# Reviewed crowd control, read from the cached kit: R (Wingborne Storm)
+# "summons a blizzard around himself for 4 seconds that deals magic damage
+# every 0.5 seconds to nearby enemies and slows them while they remain
+# within" (the Awakened storm "slows by an additional 5%").  Q rides the
+# attack stream as an on-hit payload and W is a shield; E (Blazing
+# Stampede), where the stun lives, deals no damage of its own.
+MODULE_CC = {"R": "slow"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Udyr",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
+        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
+    ),
+    slot_parsers={
+        "R": repeat_damage_parser(
+            attr="Magic Damage per Tick",
+            dmg_type="magic",
+            count=8,
+            time_offset=0.5,
+            hit_interval=0.5,
+            dot_duration=4.0,
+        ),
+        "Q": _wilding_claw,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic "
@@ -232,12 +246,9 @@ OPTIONS.append(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "R", "W"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -269,9 +280,5 @@ def derive_self_healing(
                 )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Udyr", derive_self_healing)

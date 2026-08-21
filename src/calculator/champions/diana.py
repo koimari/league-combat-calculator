@@ -52,6 +52,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # Mechanic constants anchored in the ability descriptions (not leveling
 # data): the cleave's 2-stack cycle empowers every 3rd basic attack, and
@@ -59,6 +60,14 @@ from .slotlib import (
 # https://wiki.leagueoflegends.com/en-us/Diana
 _CLEAVE_EVERY_N_ATTACKS = 3
 _R_MAX_CHAMPIONS_PULLED = 5
+
+# Moonfall's damage is the beam, and the beam lands after the pull: "If an
+# enemy champion is pulled, she calls down a beam of moonlight to strike
+# upon the area around her after 1 second, dealing magic damage to all
+# nearby enemies" (data/champions.json Diana R).  The cached entry
+# attaches no cast-time qualifier to the number, so it is read from the
+# cast start as written.
+_R_BEAM_SECONDS = 1.0
 
 # P stores base and tripled attack speed as the 1st and 2nd
 # "Per-Level Scaling" leveling entries (both arrays run 40 entries,
@@ -90,11 +99,9 @@ def _moonsilver_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     tripled_as = sum_modifiers(leveling, ctx.level)
 
     # Parse-time context: the cleave slot's auto count reads attack_speed.
-    ctx.stats["bonus_attack_speed"] = (
-        ctx.stats.get("bonus_attack_speed", 0.0) + tripled_as
-    )
-    ctx.stats["attack_speed"] = ctx.stats.get("attack_speed", 0.0) + ctx.stats.get(
-        "attack_speed_ratio", 0.0
+    ctx.stats["bonus_attack_speed"] = ctx.stat("bonus_attack_speed") + tripled_as
+    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + ctx.stat(
+        "attack_speed_ratio"
     ) * (tripled_as / 100.0)
 
     entry = damage_entry(
@@ -127,10 +134,8 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     if duration is None:
         return None
 
-    uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-    num_autos = math.floor(
-        ctx.stats.get("attack_speed", 0.0) * float(duration) * uptime
-    )
+    uptime = float(ctx.option("auto_attack_uptime"))
+    num_autos = math.floor(ctx.stat("attack_speed") * float(duration) * uptime)
     cleaves = num_autos // _CLEAVE_EVERY_N_ATTACKS
     if cleaves <= 0:
         return None
@@ -138,7 +143,7 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     per_cleave = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    autos_per_second = ctx.stats.get("attack_speed", 0.0) * uptime
+    autos_per_second = ctx.stat("attack_speed") * uptime
     return {
         "name": "Moonsilver Blade (cleave)",
         "damage_type": "magic",
@@ -200,7 +205,7 @@ def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    pulled = int(ctx.options.get("champions_pulled", 1))
+    pulled = int(ctx.option("champions_pulled"))
     pulled = min(max(pulled, 1), _R_MAX_CHAMPIONS_PULLED)
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total += (pulled - 1) * extract_named(
@@ -214,6 +219,7 @@ def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
+    entry["parts"] = (DamagePart("magic", total, time_offset=_R_BEAM_SECONDS),)
     if pulled > 1:
         entry["detail"] = f"beam vs {pulled} champions pulled"
     return entry
@@ -262,7 +268,11 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "P": _moonsilver_blade,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The bolt's arc has no sourced duration in the cached packet, so the
+    # cast boundary is the only placement its one explosion has.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "E": _lunar_rush,
     "R": _moonfall,
@@ -271,19 +281,21 @@ SLOTS = {
     "auto_attacks_moonsilver_cleave": _moonsilver_cleave,
 }
 
-parse_abilities = build_parser(SLOTS, "Diana")
+# Cached kit review.  Q only "afflict[s] them with Moonlight", a mark that
+# reveals and that Lunar Rush consumes — no control.  R "pulls all nearby
+# enemies towards her ... then slows them for 2 seconds" and only then
+# lands the beam this row prices, so the pull is the immobilizing control
+# the damaged target took; the beam's sourced 1-second delay is now
+# authored, which is what lets the row say so.
+#
+# W and E stay UNREVIEWED, so this kit keeps the coarse control-armed
+# scan.  W's row is the cached "Total Magic Damage" of all three spheres,
+# which detonate "upon contact with an enemy" on no sourced cadence, and
+# E's row is the dash count in one part with no interval between the two
+# dashes.  Neither is a delay this review can author.
+MODULE_CC = {"Q": "none", "R": "pull"}
+
+parse_abilities = build_parser(SLOTS, "Diana", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Diana",
-        "revision_id": 3892621,
-        "revision_timestamp": "2025-05-02T11:24:50Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Diana")

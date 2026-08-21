@@ -21,11 +21,13 @@ from typing import Any
 
 import re
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .inputs import champion_stat
+from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .source_receipts import load_champion_sources
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -46,10 +48,6 @@ _Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 
 PACKET_SHA256 = "122d6d40606b4b120f4fd94cc1ba7fa968cbda67af830338296f41fe94ca3820"
 
-_BATCH_PARSE, _BATCH_SLOTS, _BATCH_ASSUMPTIONS, _BATCH_SOURCES, _BATCH_OPTIONS = (
-    build_packet_module("Sett", PACKET_SHA256)
-)
-PACKET_SPEC = _BATCH_SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Pit Grit's Right Punch: "deal 5 : 100 (based on level) (+ 55% bonus
@@ -62,7 +60,7 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    punches = min(max(int(ctx.options.get("p_right_punches", 0)), 0), 30)
+    punches = min(max(int(ctx.option("p_right_punches")), 0), 30)
     if punches <= 0:
         return no_damage(
             ctx,
@@ -74,7 +72,7 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
             ),
         )
     flat = extract_named(ability, "Per-Level Scaling", ctx.level)
-    bonus_ad = float(ctx.stats.get("bonus_attack_damage", 0.0))
+    bonus_ad = float(ctx.stat("bonus_attack_damage"))
     per_punch = flat + _RIGHT_PUNCH_BONUS_AD_RATIO * bonus_ad
     total = per_punch * punches
     return {
@@ -136,9 +134,8 @@ def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
             if len(values_in_unit) >= 5:
                 per_100_ad = float(values_in_unit[index])
         total += (
-            value / 100.0
-            + per_100_ad / 100.0 * ctx.stats.get("attack_damage", 0.0) / 100.0
-        ) * float(ctx.target.get("target_max_health", 0.0))
+            value / 100.0 + per_100_ad / 100.0 * ctx.stat("attack_damage") / 100.0
+        ) * float(ctx.target_stat("target_max_health"))
     entry = damage_entry(
         ability.get("name", "Knuckle Down"),
         rank,
@@ -194,10 +191,9 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
         # percentage (25).
         if "of expended Grit" in str(unit):
             grit_ratio = (
-                value / 100.0
-                + 0.25 * float(ctx.stats.get("bonus_attack_damage", 0.0)) / 100.0
+                value / 100.0 + 0.25 * float(ctx.stat("bonus_attack_damage")) / 100.0
             )
-    grit = max(0.0, float(ctx.options.get(_W_GRIT_OPTION, 0) or 0))
+    grit = max(0.0, float(ctx.option(_W_GRIT_OPTION) or 0))
     entry = damage_entry(
         ability.get("name", "Haymaker"),
         rank,
@@ -206,6 +202,11 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
         "true",
     )
     entry["parts"] = (DamagePart("true", flat + grit_ratio * grit),)
+    # One blast, one blow per target ("he unleashes a massive blast ...
+    # dealing physical damage to enemies hit; those hit in a line in the
+    # middle are dealt true damage instead"), so the single part is a hit
+    # the ledger can time.
+    entry["event_order_certified"] = "single_hit"
     if grit > 0.0:
         return attach_self_shield(
             entry,
@@ -228,14 +229,56 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _pit_grit,
-    "Q": _knuckle_down,
-    "W": _haymaker,
-    "E": _BATCH_SLOTS["E"],
-    "R": _BATCH_SLOTS["R"],
-}
-parse_abilities = build_parser(SLOTS, "Sett")
+# Reviewed crowd control, read from the cached kit.  W (Haymaker) is a
+# blast with no control clause.  E (Facebreaker) "pulls in enemies at his
+# front and back ... dealing physical damage and slowing them by 70%" —
+# the pull is the immobilizing half and the one a control-armed reader
+# needs; the two-sided stun is conditional on hitting both sides.  R (The
+# Show Stopper) "suppresses and reveals the target enemy champion" it
+# then slams.  Q is deliberately absent: its row is BOTH empowered basic
+# attacks summed at the cast, so no part of it is a hit the ledger can
+# time, and an unreachable declaration reviews nothing.
+MODULE_CC = {"W": "none", "E": "pull", "R": "suppression"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sett",
+    PACKET_SHA256,
+    assumption_overrides=(
+        "Pit Grit's combo alternates Left and Right punches on-attack; the Right Punch deals the "
+        "sourced bonus physical damage (5 : 100 by level + 55% bonus AD) and is priced per "
+        "p_right_punches",
+        "The fight model does not auto-derive Right Punch count from the auto stream (each attack "
+        "alternates); p_right_punches is the explicit pre-stack state",
+        "The Right Punch's 8x attack speed and 50 bonus range are state",
+        "Q (Knuckle Down) prices BOTH empowered attacks from the cached 'Total Bonus Physical "
+        "Damage' row (20-100 by rank); the %max-HP term uses the cached base percentage plus the "
+        "rank-scaled per-100-AD percentage embedded in the row's unit string",
+        "W (Haymaker) prices the center-line TRUE damage: the cached 'Damage' row flat (80-160 by "
+        "rank) plus 25% (+ 25% per 100 bonus AD) of the expended Grit (w_grit option, 0 = flat "
+        "only); the expended Grit also grants Sett an equal shield for 3s (self_shield_events). "
+        "The outer physical ring is state",
+        "E/R damage keep the reviewed CP10.7 packet pricing",
+        "P (Pit Grit) always-on missing-health regeneration is authored by this module's "
+        "derive_self_healing: the cached prose row 0.075 / 0.25 / 0.5 / 1 / 1.025 / 1.05 (based on "
+        "level) health per 0.5 seconds per 5% of missing health, capped at the sourced 19x maximum "
+        "at 95% missing health (1.425 / 4.75 / 9.5 / 19 / 19.475 / 19.95); the 6-value rows use "
+        "the standard 1/6/11/16/17/18 breakpoints and the survival walk re-prices each tick from "
+        "the fighter's live health",
+    ),
+    # Facebreaker and The Show Stopper each land one blow on a target
+    # ("dealing physical damage and slowing them"; "Enemies within the
+    # epicenter take physical damage"), so their single authored part
+    # is a hit the ledger can time — which is what carries their
+    # MODULE_CC answer to the control-armed readers.
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "P": _pit_grit,
+        "Q": _knuckle_down,
+        "W": _haymaker,
+    },
+    slot_order=("P", "Q", "W", "E", "R"),
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = [
     {
@@ -255,41 +298,6 @@ OPTIONS = [
         "label": "Expended Grit (Haymaker damage + shield)",
     },
 ]
-
-ASSUMPTIONS = [
-    "Pit Grit's combo alternates Left and Right punches on-attack; the "
-    "Right Punch deals the sourced bonus physical damage (5 : 100 by "
-    "level + 55% bonus AD) and is priced per p_right_punches",
-    "The fight model does not auto-derive Right Punch count from the "
-    "auto stream (each attack alternates); p_right_punches is the "
-    "explicit pre-stack state",
-    "The Right Punch's 8x attack speed and 50 bonus range are state",
-    "Q (Knuckle Down) prices BOTH empowered attacks from the cached "
-    "'Total Bonus Physical Damage' row (20-100 by rank); the %max-HP "
-    "term uses the cached base percentage plus the rank-scaled "
-    "per-100-AD percentage embedded in the row's unit string",
-    "W (Haymaker) prices the center-line TRUE damage: the cached "
-    "'Damage' row flat (80-160 by rank) plus 25% (+ 25% per 100 bonus "
-    "AD) of the expended Grit (w_grit option, 0 = flat only); the "
-    "expended Grit also grants Sett an equal shield for 3s "
-    "(self_shield_events). The outer physical ring is state",
-    "E/R damage keep the reviewed CP10.7 packet pricing",
-    "P (Pit Grit) always-on missing-health regeneration is authored by "
-    "the HEALING_RULE_CHAMPIONS rule in healing.py: the cached prose row "
-    "0.075 / 0.25 / 0.5 / 1 / 1.025 / 1.05 (based on level) health per "
-    "0.5 seconds per 5% of missing health, capped at the sourced 19x "
-    "maximum at 95% missing health (1.425 / 4.75 / 9.5 / 19 / 19.475 / "
-    "19.95); the 6-value rows use the standard 1/6/11/16/17/18 "
-    "breakpoints and the survival walk re-prices each tick from the "
-    "fighter's live health",
-]
-
-SOURCES = load_champion_sources("Sett")
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
 
 
 def derive_self_healing(
@@ -330,7 +338,7 @@ def derive_self_healing(
     max_values = [
         float(value) for value in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))
     ]
-    level = max(1, int(champion_stats.get("level", 18) or 18))
+    level = max(1, int(champion_stat(champion_stats, "level")))
     base = _healing._level_breakpoint_value(base_values, level)
     maximum = _healing._level_breakpoint_value(max_values, level)
     segments_cap = int(round(maximum / base)) if base > 0.0 else 0
@@ -363,10 +371,5 @@ def derive_self_healing(
         tick += 0.5
     return healing
 
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-from .healing_contract import (  # pylint: disable=wrong-import-position
-    declare_healing_rule,
-)
 
 SELF_HEALING_RULE = declare_healing_rule("Sett", derive_self_healing)

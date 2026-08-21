@@ -17,13 +17,14 @@ Contract under test (binding for the coordinator's P3-3A integration):
 * Public output exposes the applied restore/heal amount, time, and source,
   and the ledger receipts exist.
 * The compiled/score path fails closed for Catalyst builds with the named
-  ``item_mechanic=Catalyst of Aeons`` receipt (COMPILED_WALK_UNREPRESENTABLE_ITEMS).
+  ``item_mechanic=Catalyst of Aeons`` receipt (its owner's declared
+  ``ReceiptOnly`` compilability in the survival-ledger scope).
 
 This file is the focused matrix owner's file for P3-3A: it tests the
 contract through the fight kernel (``calculate_fight_damage`` /
 ``run_fight`` / ``build_participant_timeline``) with Catalyst of Aeons in
 the build, plus the two producer/consumer seams the contract rides
-(``participant_timeline._catalyst_resource_restores`` and
+(``roster_composition.resource_restores`` and
 ``pipeline._item_self_healing_events``).
 
 Asserted constants (0.10 / 0.25 / 20 / 20) are the typed accessors'
@@ -42,7 +43,14 @@ from src.calculator.item_effects import sustain_effect_value
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
-    _catalyst_resource_restores,
+)
+
+# MERGE: the producer seam moved to ``roster_composition`` and dropped the
+# item's name from its own -- it now asks the build for its declared
+# mana-spent heal rule instead (CLAUDE.md rule 6).  Same signature, same
+# ``(restores, complete)`` return.
+from src.calculator.roster_composition import (
+    resource_restores as _catalyst_resource_restores,
 )
 from src.calculator.pipeline import (
     FightParams,
@@ -53,10 +61,11 @@ from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.survival.compile import (
-    COMPILED_WALK_UNREPRESENTABLE_ITEMS,
+from src.calculator.interpreters import (
+    compilability_for,
     uncompilable_item_receipt,
 )
+from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
 
 CATALYST = "Catalyst of Aeons"
 ETERNITY = "Catalyst of Aeons (Eternity)"
@@ -198,18 +207,31 @@ def _catalyst_actor(participant_id="main", *, has_catalyst=True):
     return SimpleNamespace(participant_id=participant_id, items=items)
 
 
-def _karthus_fixture(duration=10.0):
-    """Mana-poor Karthus with the full cast order — forces late denials."""
+def _karthus_fixture(duration=20.0):
+    """Karthus cast until his mana runs out — forces late denials.
+
+    MERGE: the twenty-second window is what the module's own rotation needs
+    to exhaust the pool now that the fixture runs as Karthus rather than
+    under a renamed generic parser; ten seconds accepts every cast.
+    """
+    # MERGE: the fixture used to rename the champion so the generic parser
+    # would take it.  There is no generic parser now -- an unknown name
+    # fails closed -- so it runs as Karthus, whose named module is what the
+    # mana ledger under test is fed by anyway.
     champ = get_champion("Karthus")
-    champ = {**champ, "name": "Resource Timeline Fixture"}
     params = _catalyst_params(
         target_health=2000.0,
         target_armor=50.0,
         target_magic_resistance=40.0,
         fight_duration_seconds=duration,
-        cast_order=["Q", "W", "E", "R"],
+        # Karthus declares a certified alive-state order (W first, so the
+        # wall reduction is established before the damage), and the module
+        # is the authority on it -- a custom order is refused.
+        cast_order=None,
     )
-    result = run_fight(champ, 18, [get_item_by_name(CATALYST)], params, synthetic=True)
+    # MERGE: there is no ``synthetic`` parser any more -- every attacker
+    # resolves to a validated named champion module or fails closed.
+    result = run_fight(champ, 18, [get_item_by_name(CATALYST)], params)
     spends = [
         r for r in result["resource_ledger"]["receipts"] if r["operation"] == "spend"
     ]
@@ -471,15 +493,23 @@ def test_per_cast_cap_and_per_second_cap_interplay():
 # ---------------------------------------------------------------------------
 
 
-def test_restores_outside_the_fight_window_fail_closed():
-    """A hit packet timestamped after the fight window returns complete=False
-    (the fail-closed signal the participant timeline turns into a named
-    ValueError) — no partial restore guess is produced."""
+def test_restores_outside_the_fight_window_are_dropped_not_refused():
+    """A hit past the end of the window is late, not unreadable.
+
+    MERGE: the merged reader distinguishes the two.  A number the packet
+    cannot state still refuses the whole ledger; a hit after ``duration``
+    is something the survival walk already knows what to do with -- every
+    action past the window is skipped ``outside_window`` -- so its restore
+    is mana for damage the fight never takes, dropped here rather than
+    clamped forward.  Refusing the packet for it would cap every authored
+    ``time_offset`` at the fight length, and Aatrox's third Q strike lands
+    at 8.85s in an eight-second roster fight on a sourced cadence.
+    """
     actor = _catalyst_actor()
     incoming = {"main": [{"time": 11.0, "raw_damage": 100.0, "attacker": "enemy:Zed"}]}
     restores, complete = _catalyst_resource_restores(actor, incoming, 10.0)
     assert restores == ()
-    assert complete is False
+    assert complete is True
 
 
 def test_zero_damage_packets_mint_no_mana():
@@ -626,7 +656,10 @@ def test_catalyst_is_reported_unrepresentable_by_the_compiled_score_walk():
     second pass is legacy-only), and the compiled score walk returns the
     named ``item_mechanic=Catalyst of Aeons`` receipt for any build that
     carries it."""
-    assert CATALYST in COMPILED_WALK_UNREPRESENTABLE_ITEMS
+    assert isinstance(
+        compilability_for(CATALYST, ReceiptScope.SURVIVAL_LEDGER_TRANSITION),
+        ReceiptOnly,
+    )
     assert (
         uncompilable_item_receipt([{"name": CATALYST}]) == f"item_mechanic={CATALYST}"
     )

@@ -47,7 +47,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -59,10 +59,6 @@ from .slotlib import (
 
 PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Mel", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # Default Overwhelm stacks the blast detonates in a one-rotation combo.
 # P prose: "Mel's basic attacks and abilities apply a stack of Overwhelm
@@ -177,9 +173,7 @@ def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> fl
             f"{index + 1}, which is not {_P_MAX_MISSILES} x the cached "
             f"per-projectile {cached:.6g}"
         )
-    return cached + _P_MISSILE_AP_RATIO * float(
-        ctx.stats.get("ability_power", 0.0) or 0.0
-    )
+    return cached + _P_MISSILE_AP_RATIO * float(ctx.stat("ability_power") or 0.0)
 
 
 def _searing_brilliance(ctx: SlotCtx):
@@ -207,9 +201,7 @@ def _searing_brilliance(ctx: SlotCtx):
     if ability is None:
         return None
     per_missile = _searing_brilliance_per_missile(ctx, ability)
-    missiles = int(
-        ctx.options.get("p_searing_brilliance_missiles", _P_MISSILES_PER_CAST)
-    )
+    missiles = int(ctx.option("p_searing_brilliance_missiles"))
     missiles = max(0, min(missiles, _P_MAX_MISSILES))
     name = ability.get("name", "Searing Brilliance")
     entry = on_hit_entry(name, per_missile * missiles, "magic")
@@ -312,9 +304,7 @@ def _golden_eclipse(ctx: SlotCtx):
     # and the per-stack share is priced explicitly below.
     flat_share = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_value(ability, "Magic Damage", rank, modifier_index=2)
-    per_stack += _R_PER_STACK_AP_RATIO * float(
-        ctx.stats.get("ability_power", 0.0) or 0.0
-    )
+    per_stack += _R_PER_STACK_AP_RATIO * float(ctx.stat("ability_power") or 0.0)
     stacks = int(ctx.options.get("r_overwhelm_stacks", _R_DEFAULT_OVERWHELM_STACKS))
     stacks = max(0, min(stacks, 50))
     total = flat_share + per_stack * stacks
@@ -324,6 +314,10 @@ def _golden_eclipse(ctx: SlotCtx):
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One radiant blast on the marked target, so one part and one hit —
+        # the certification that carries R's reviewed "no control" into the
+        # event ledger.
+        event_order_certified="single_hit",
     )
     entry["detail"] = (
         f"{flat_share:g} flat + {per_stack:g} per Overwhelm stack x "
@@ -412,14 +406,20 @@ def _solar_snare(ctx: SlotCtx):
         total,
         "magic",
     )
+    # The two halves of Solar Snare do not control alike — "enemies hit by
+    # the orb are dealt magic damage and rooted for 1.5 seconds", while
+    # "enemies within the field are dealt magic damage and slowed by 30%
+    # every 0.125 seconds" — so the reviewed kind is authored per part
+    # rather than declared once for the slot.
     entry["parts"] = (
-        DamagePart("magic", amount=orb, time_offset=0.0),
+        DamagePart("magic", amount=orb, time_offset=0.0, cc_kind="root"),
         DamagePart(
             "magic",
             amount=per_tick,
             count=4,
             time_offset=0.5,
             hit_interval=0.125,
+            cc_kind="slow",
         ),
     )
     entry["dot_duration"] = 0.5
@@ -430,13 +430,28 @@ def _solar_snare(ctx: SlotCtx):
     return entry
 
 
-SLOTS = dict(SLOTS)
-SLOTS["W"] = _rebuttal
-SLOTS["Q"] = _radiant_volley
-SLOTS["E"] = _solar_snare
-SLOTS["R"] = _golden_eclipse
-SLOTS["P"] = _searing_brilliance
-parse_abilities = build_parser(SLOTS, "Mel")
+# Reviewed crowd control, read from the cached kit.  Q (Radiant Volley)
+# is bolts that "explode[] upon landing to deal magic damage to nearby
+# enemies" with no control clause, and R (Golden Eclipse) "deal[s] magic
+# damage to each of them" and reveals, which is not control.  E's orb and
+# field answer differently and are authored per part (see
+# ``_solar_snare``).  P's Searing Brilliance projectiles "fire ... at the
+# target" and do nothing else, so the slot answers "none" for the
+# empowered swing it arms; W authors no damage part of its own.
+MODULE_CC = {"P": "none", "Q": "none", "R": "none"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Mel",
+    PACKET_SHA256,
+    slot_parsers={
+        "P": _searing_brilliance,
+        "W": _rebuttal,
+        "Q": _radiant_volley,
+        "E": _solar_snare,
+        "R": _golden_eclipse,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -479,7 +494,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(28-42% + 3.5% per 100 AP) are percentages of the original enemy "
     "projectile's damage (data/champions.json W), the game binary's "
     "MelW owns only DamagePercent and ShieldAmount nodes "
-    "(data/bin/characters/mel.bin.json), and data/atoms/mel.atoms.json "
+    "(data/bin/characters/mel.bin.json), and the atom corpus "
     "emits no damage.* atom for MelW at all — only cc-immunity, "
     "heal-shield.shield and interaction.projectile-destruction. The "
     "calculator's target never casts, so the multiplicand is "
@@ -520,4 +535,3 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 MODULE_COVERAGE = {
     slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

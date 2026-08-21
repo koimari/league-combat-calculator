@@ -7,7 +7,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -16,6 +16,7 @@ from .slotlib import (
     simple_damage,
     with_control,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Whisper's final round "always critically strikes ... and deals bonus
@@ -37,7 +38,7 @@ def _final_round_active(ctx: SlotCtx) -> bool:
     """The next auto is Whisper's final round (4th shot of the clip)."""
     if bool(ctx.options.get("p_final_shot", False)):
         return True
-    return int(ctx.options.get("p_shot_number", 1)) >= 4
+    return int(ctx.option("p_shot_number")) >= 4
 
 
 def _final_round_count(ctx: SlotCtx) -> int:
@@ -51,10 +52,10 @@ def _final_round_count(ctx: SlotCtx) -> int:
     """
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        uptime = float(ctx.options.get("auto_attack_uptime", 0.0))
-        num_autos = math.floor(ctx.stats.get("attack_speed", 0.0) * uptime * duration)
+        uptime = float(ctx.option("auto_attack_uptime"))
+        num_autos = math.floor(ctx.stat("attack_speed") * uptime * duration)
         if num_autos > 0:
-            pre = min(max(int(ctx.options.get("p_shot_number", 1)), 1), 4) - 1
+            pre = min(max(int(ctx.option("p_shot_number")), 1), 4) - 1
             return (pre + num_autos) // 4 - pre // 4
     return 1
 
@@ -64,10 +65,10 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     base_percent = extract_value(ability, "Per-Level Scaling", ctx.level)
-    crit = float(ctx.stats.get("critical_strike_chance", 0.0))
-    bonus_as = float(ctx.stats.get("bonus_attack_speed", 0.0))
+    crit = float(ctx.stat("critical_strike_chance"))
+    bonus_as = float(ctx.stat("bonus_attack_speed"))
     percent = base_percent + 0.35 * crit + 0.30 * bonus_as
-    bonus_ad = ctx.stats.get("attack_damage", 0.0) * percent / 100.0
+    bonus_ad = ctx.stat("attack_damage") * percent / 100.0
     entry = no_damage(
         ctx,
         name=ability.get("name", "Whisper"),
@@ -85,7 +86,7 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
                     "physical",
                     0.0,
                     hp_scaled_damage=lambda ratio: missing
-                    * float(ctx.target.get("target_max_health", 0.0) or 0.0)
+                    * float(ctx.target_stat("target_max_health") or 0.0)
                     * ratio,
                     crit_effectiveness=1.0,
                 ),
@@ -115,8 +116,8 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P")
     if ability is None:
         return None
-    target_max = float(ctx.target.get("target_max_health", 0.0) or 0.0)
-    missing_ratio = min(max(float(ctx.options.get("p_missing_health", 0.0)), 0.0), 1.0)
+    target_max = float(ctx.target_stat("target_max_health") or 0.0)
+    missing_ratio = min(max(float(ctx.option("p_missing_health")), 0.0), 1.0)
     per_round = _fourth_shot_missing_ratio(ctx.level) * target_max * missing_ratio
     if per_round <= 0.0:
         return None
@@ -144,8 +145,8 @@ def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    bounces = min(max(int(ctx.options.get("q_bounces", 1)), 1), 4)
-    deaths = min(max(int(ctx.options.get("q_target_deaths", 0)), 0), 3)
+    bounces = min(max(int(ctx.option("q_bounces")), 1), 4)
+    deaths = min(max(int(ctx.option("q_target_deaths")), 0), 3)
     value = extract_named(
         ability, "Physical Damage", rank, ctx.stats, ctx.target
     ) + deaths * extract_named(
@@ -183,7 +184,7 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    traps = min(max(int(ctx.options.get("e_traps", 1)), 1), 2)
+    traps = min(max(int(ctx.option("e_traps")), 1), 2)
     full = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
     parts = [DamagePart("magic", full, time_offset=0.0)]
@@ -216,7 +217,7 @@ def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    shots = min(max(int(ctx.options.get("r_shots", 4)), 1), 4)
+    shots = min(max(int(ctx.option("r_shots")), 1), 4)
     minimum = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target
     )
@@ -270,14 +271,29 @@ SLOTS = {
     "final_round": _final_round,
     "Q": _dancing_grenade,
     "W": with_control(
-        simple_damage(attr="Physical Damage", dmg_type="physical"),
+        simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
         kind="root",
         duration_attr="Root Duration",
     ),
     "E": _captive_audience,
     "R": _curtain_call,
 }
-parse_abilities = build_parser(SLOTS, "Jhin")
+
+# Q's grenade only damages and bounces.  W "roots them" on a marked
+# champion, and Whisper marks every champion "damaged by Jhin" for 4
+# seconds — the module's rotation always lands Q's grenade (+0.2s) before
+# W's shot, in every fight mode, so the mark is up when W arrives.  E's
+# trap "slow[s] enemies within the area by 35% for 2 seconds before
+# exploding" and each R bullet stops on a champion, "slowing them by 80%".
+# P and its final-round proc row author no cast the ledger reads as an
+# ability event.
+MODULE_CC = {"Q": "none", "W": "root", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Jhin", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_final_shot",
@@ -354,37 +370,4 @@ ASSUMPTIONS = [
     "Curtain Call interpolates each bullet's missing-health range and "
     "keeps the fourth bullet's sourced critical packet separate.",
 ]
-SOURCES = [
-    source_row(
-        "Jhin parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Jhin",
-        4022310,
-        "2026-05-24T11:33:51Z",
-    ),
-    source_row(
-        "Jhin Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/Q",
-        2863956,
-        "2019-11-03T19:57:13Z",
-    ),
-    source_row(
-        "Jhin W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/W",
-        2864251,
-        "2019-11-03T20:10:00Z",
-    ),
-    source_row(
-        "Jhin E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/E",
-        2864397,
-        "2019-11-03T20:12:31Z",
-    ),
-    source_row(
-        "Jhin R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Jhin/R",
-        2864543,
-        "2019-11-03T20:15:55Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Jhin")

@@ -20,7 +20,9 @@ hardcoded.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from .engine import build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import simple_damage
@@ -33,7 +35,7 @@ ASSUMPTIONS = [
     "P, W, and R deal no enemy damage and are explicit no-damage slots.",
 ]
 
-SOURCES = list(load_champion_sources("Tryndamere"))
+SOURCES = load_champion_sources("Tryndamere")
 
 SLOTS = {
     "P": no_damage_parser(
@@ -48,7 +50,12 @@ SLOTS = {
         "W",
         "Mocking Shout reduces enemy AD and slows; no enemy damage.",
     ),
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # One dash, one blow ("dealing physical damage to enemies hit").
+    "E": simple_damage(
+        attr="Physical Damage",
+        dmg_type="physical",
+        event_order_certified="single_hit",
+    ),
     "R": no_damage_parser(
         "R",
         "Undying Rage is a minimum-health/fury ultimate; no enemy damage.",
@@ -65,13 +72,18 @@ MODULE_COVERAGE = {
 
 OPTIONS: list[dict[str, Any]] = []
 
-parse_abilities = build_parser(SLOTS, "Tryndamere")
-REVIEW_STATUS = "reviewed_module"
+# Reviewed crowd control, read from the cached kit: E (Spinning Slash)
+# "dashes to the target location, dealing physical damage to enemies hit"
+# and applies no control.  It is the kit's only damaging slot — W (Mocking
+# Shout) is where the slow lives ("they become slowed while facing in the
+# opposite direction of Tryndamere"), and it deals no damage, so no part
+# can carry that answer.
+MODULE_CC = {"E": "none"}
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -98,9 +110,5 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Tryndamere", derive_self_healing)

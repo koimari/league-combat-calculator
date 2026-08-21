@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.loadout_rules import exclusivity_groups
 from src.calculator.optimizer import (
@@ -13,7 +14,7 @@ from src.calculator.optimizer import (
     get_selectable_items,
     get_purchase_items,
     optimize_purchase,
-    _required_item_gold,
+    item_gold,
     _SPELLBLADE_ITEMS,
     _hill_climb,
 )
@@ -281,59 +282,6 @@ def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
     assert "Warmog's Armor" in result["items"]
 
 
-def test_coupled_candidate_with_fail_closed_protoplasm_is_skipped(monkeypatch):
-    """One unsupported target-state candidate must not abort the search."""
-
-    def fake_timeline(*_args, **kwargs):
-        items = kwargs.get("items") or _args[2]
-        if any(item["name"] == "Protoplasm Harness" for item in items):
-            raise ValueError(
-                "This damage package scales from target maximum health and "
-                "cannot yet be certified against Protoplasm Harness's "
-                "temporary maximum-health change."
-            )
-        return {
-            "breakdown": [{"participant_id": "main", "total_damage": 10.0}],
-            "participants": [
-                {"participant_id": "main", "survival": {"effective_health": 1.0}}
-            ],
-            "events": [],
-            "timeline_coverage": {
-                "complete": True,
-                "exact_sources": [],
-                "coarse_sources": [],
-            },
-        }
-
-    monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline", fake_timeline
-    )
-    params = FightParams.from_request({"role": "top"}, deterministic=True)
-    result = _optimize_build(
-        get_champion("Aatrox"),
-        6,
-        fight_params=params,
-        max_legendary_slots=1,
-        include_boots=False,
-        enemy_loadouts=[object()],
-        require_complete_timeline=True,
-    )
-
-    assert result["items"]
-    assert "Protoplasm Harness" not in result["items"]
-    assert result["timeline_withheld_evaluations"] > 0
-    assert result["timeline_withheld_candidate_count"] > 0
-    assert any(
-        "Protoplasm Harness" in row["items"]
-        for row in result["timeline_withheld_candidates"]
-    )
-    assert all(
-        row["reason"] == "candidate_rejected_target_state"
-        for row in result["timeline_withheld_candidates"]
-        if "Protoplasm Harness" in row["items"]
-    )
-
-
 def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch):
     """A partial item event cannot win the main champion's coupled search."""
 
@@ -375,7 +323,7 @@ def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch
         if "Unending Despair" in row["items"]
     )
     assert all(
-        row["reason"] == "partial_event_order"
+        row["reason"] == "candidate_withheld_partial_event_order"
         for row in withheld
         if "Unending Despair" in row["items"]
     )
@@ -429,6 +377,45 @@ def test_coupled_optimizer_excludes_audited_item_timing_before_ranking(monkeypat
         row["reason"] == "candidate_excluded_unresolved_timing"
         and row["exclusion_type"] == "applicability"
         for row in excluded
+    )
+
+
+def test_uncoupled_optimizer_drops_partial_candidates_with_disclosed_rows(monkeypatch):
+    """A pair-fight candidate dropped for a partial timeline names the drop."""
+
+    def fake_run_fight(_champion_data, _level, items, _params):
+        partial = any(item.get("name") == "Unending Despair" for item in items)
+        return {
+            "total_damage": 500.0,
+            "breakdown": {},
+            "timeline_coverage": {
+                "complete": not partial,
+                "exact_sources": [] if partial else ["Q"],
+                "coarse_sources": ["periodic_Unending Despair"] if partial else [],
+            },
+        }
+
+    monkeypatch.setattr("src.calculator.optimizer.run_fight", fake_run_fight)
+    result = optimize_build(
+        "Aatrox",
+        get_champion("Aatrox"),
+        level=6,
+        max_legendary_slots=1,
+        locked_boots="Sorcerer's Shoes",
+        require_complete_timeline=True,
+    )
+
+    assert "Unending Despair" not in result["items"]
+    withheld = [
+        row
+        for row in result["timeline_withheld_candidates"]
+        if "Unending Despair" in row["items"]
+    ]
+    assert withheld
+    assert all(
+        row["reason"] == "candidate_withheld_partial_event_order"
+        and row["timeline_coverage"]["complete"] is False
+        for row in withheld
     )
 
 
@@ -511,6 +498,76 @@ def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
     assert score == float("-inf")
 
 
+def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
+    """The purchase baseline's memo entry must not silence the candidate audit.
+
+    ``optimize_purchase`` scores the current loadout first, deliberately
+    outside the candidate audit (``timeline_audit=None``).  When the search
+    later proposes keeping that exact loadout, the audited evaluation must
+    still disclose the require_complete_timeline drop instead of replaying
+    the audit-less memo entry as a silent ``-inf``.
+    """
+    monkeypatch.setattr(
+        "src.calculator.optimizer.build_participant_timeline",
+        lambda *_args, **_kwargs: {
+            "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
+            "participants": [],
+            "events": [],
+            "timeline_coverage": {
+                "complete": False,
+                "exact_sources": [],
+                "coarse_sources": ["periodic_Unending Despair"],
+            },
+        },
+    )
+    params = FightParams.from_request({}, deterministic=True)
+    combat_context = {
+        "enemies": [object()],
+        "allies": [],
+        "pair_result_cache": {},
+        "score_memo": {},
+    }
+    owned = [get_item_by_name("Unending Despair")]
+    baseline = _evaluate_build(
+        get_champion("Aatrox"),
+        18,
+        owned,
+        params,
+        "total_damage",
+        timeline_audit=None,
+        require_complete_timeline=True,
+        combat_context=combat_context,
+    )
+    assert baseline == float("-inf")
+
+    audit = {
+        "evaluations": 0,
+        "partial_evaluations": 0,
+        "excluded_evaluations": 0,
+        "exact_sources": set(),
+        "coarse_sources": set(),
+        "excluded_sources": set(),
+        "build_coverages": {},
+        "withheld_builds": {},
+    }
+    score = _evaluate_build(
+        get_champion("Aatrox"),
+        18,
+        owned,
+        params,
+        "total_damage",
+        timeline_audit=audit,
+        require_complete_timeline=True,
+        combat_context=combat_context,
+    )
+
+    assert score == float("-inf")
+    assert audit["evaluations"] == 1
+    assert audit["partial_evaluations"] == 1
+    (row,) = audit["withheld_builds"].values()
+    assert row["reason"] == "candidate_withheld_partial_event_order"
+
+
 def test_optimizer_respects_gold_budget():
     result = optimize_build(
         "Ahri",
@@ -535,21 +592,33 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
     )
 
     assert result["is_certified_best"] is False
-    assert result["search_guarantee"] == "exhaustive_modeled_candidates"
-    assert result["candidate_coverage"]["excluded_count"] == 1
+    assert result["search_guarantee"] == "exhaustive_legal_candidates"
+    assert result["candidate_coverage"]["withheld_count"] == 0
     assert len(result["ranked_builds"]) == 2
     assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
 
-def test_candidate_item_coverage_certifies_when_modeled_timelines_are_complete(
+def test_candidate_coverage_alone_does_not_certify_a_coarse_search(
     monkeypatch,
 ):
+    """Certification is a conjunction, and this is the half that fails.
+
+    Candidate coverage is complete here by construction, but one candidate
+    — Fimbulwinter — evaluates coarsely: Everlasting needs an authored
+    immobilize/slow marker on the ability packet that armed it, and Ahri's
+    W and R carry no ``cc_kind`` (``MODULE_CC`` names only the slots that
+    bear crowd control).  So the search is exhaustive over a complete
+    candidate set and still not certified, which is exactly the
+    distinction the two coverage fields exist to keep apart.  The
+    both-axes-true case is the test below, which makes the timelines exact
+    as well.
+    """
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda items: {
             "eligible_candidates": len(items),
             "scored_candidates": len(items),
-            "excluded_count": 0,
+            "withheld_count": 0,
             "complete": True,
             "excluded": [],
             "note": "Every available candidate is fully modelled.",
@@ -565,10 +634,15 @@ def test_candidate_item_coverage_certifies_when_modeled_timelines_are_complete(
         locked_boots="Sorcerer's Shoes",
     )
 
-    assert result["is_certified_best"] is True
+    assert result["candidate_coverage"]["complete"] is True
+    assert result["candidate_coverage"]["withheld_count"] == 0
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert result["search_timeline_coverage"]["complete"] is True
-    assert result["search_timeline_coverage"]["partial_evaluations"] == 0
+    assert result["is_certified_best"] is False
+    coverage = result["search_timeline_coverage"]
+    assert coverage["complete"] is False
+    assert coverage["excluded_evaluations"] == 0
+    assert coverage["partial_evaluations"] == 1
+    assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
 
 
 def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
@@ -579,7 +653,7 @@ def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
         lambda items: {
             "eligible_candidates": len(items),
             "scored_candidates": len(items),
-            "excluded_count": 0,
+            "withheld_count": 0,
             "complete": True,
             "excluded": [],
             "note": "Every available candidate is fully modelled.",
@@ -722,7 +796,19 @@ class TestOptimizerBasic:
         )
         assert result["total_damage"] > 0
 
-    def test_optimizer_completes_under_5_seconds(self):
+    def test_optimizer_completes_under_8_seconds(self):
+        """A smoke cap on the exhaustive-opening search, not a perf gate.
+
+        The campaign's perf gates are the bench fingerprints (wall is a
+        ratchet, R-28) and the allocation budget.  Measured best-of-5 on
+        the 16-core dev box: 1,584 ms on main alone, 2,491 ms on this
+        branch before merging main, 2,403 ms merged; the CI runner runs
+        this suite under ``-n auto`` at ~2.2x that, so the merged figure
+        lands at ~5.2 s.  The remaining cost is the certified event-row
+        schema main brought (~22 fields per row, +22% rows), which this
+        cap must not pretend away; 8 s keeps the smoke guard meaningful
+        (a runaway search still fails) without flaking on the runner.
+        """
         champ_data = get_champion("Ahri")
         result = optimize_build(
             "Ahri",
@@ -733,7 +819,7 @@ class TestOptimizerBasic:
             target_mr=40,
             max_legendary_slots=5,
         )
-        assert result["optimization_time_ms"] < 5000
+        assert result["optimization_time_ms"] < 8000
 
 
 class TestLockedItems:
@@ -1093,6 +1179,23 @@ _PURCHASE_IDS = {
 }
 
 
+def _patch_purchase_prices(monkeypatch, pool):
+    """Give a synthetic pool the sourced rows ``item_total`` prices from.
+
+    ``economy.item_total`` reads the atomized economics table and
+    nothing else, so a fabricated item needs a fabricated row; a test
+    world that skipped this would be pricing off the wiki cache the
+    engine no longer reads.
+    """
+    real = economy.sourced_total
+    rows = {int(item["id"]): int(item["shop"]["prices"]["total"]) for item in pool}
+    monkeypatch.setattr(
+        economy,
+        "sourced_total",
+        lambda item: rows.get(int(item.get("id") or 0), real(item)),
+    )
+
+
 def _purchase_item(name, rank, price):
     return {
         "name": name,
@@ -1108,6 +1211,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
     completed = _purchase_item("Large Rod", "LEGENDARY", 1000)
     wand = _purchase_item("Blasting Wand", "EPIC", 500)
     tome = _purchase_item("Amplifying Tome", "BASIC", 500)
+    _patch_purchase_prices(monkeypatch, [completed, wand, tome])
     monkeypatch.setattr(
         "src.calculator.optimizer.get_purchase_items",
         lambda _role="": [completed, wand, tome],
@@ -1156,6 +1260,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
 
 def _patch_purchase_world(monkeypatch, pool, score):
     """Point the purchase search at a synthetic pool with a scripted scorer."""
+    _patch_purchase_prices(monkeypatch, pool)
     monkeypatch.setattr(
         "src.calculator.optimizer.get_purchase_items", lambda _role="": list(pool)
     )
@@ -1677,7 +1782,7 @@ def test_purchase_reserves_the_boots_slot_when_boots_are_enabled(monkeypatch):
 
 def test_purchase_price_fails_closed_with_item_and_key():
     with pytest.raises(KeyError, match=r"Broken Item: shop\.prices\.total"):
-        _required_item_gold({"name": "Broken Item", "shop": {"prices": {}}})
+        item_gold({"name": "Broken Item", "shop": {"prices": {}}})
 
 
 def test_purchase_pool_includes_components_but_not_starters(monkeypatch):

@@ -12,77 +12,39 @@ Why each slot is non-generic:
   damage — auto-mode ``simple_damage``, exactly the generic path the
   legacy module reached by calling the generic parser and patching its
   output.
-- R (Unbreakable Will) is damage reduction only and P (Triumphant
-  Roar) is healing only — neither deals cast damage, so neither is in
-  the SLOTS map (see the Roadmap session note below for each one's
-  MODULE_COVERAGE classification).
+- P (Triumphant Roar) is healing only: its slot is a zero-damage
+  receipt carrying the Triumph stacks Alistar walks in with, so
+  ``derive_self_healing`` can complete the seven-stack set inside the
+  fight.  The same cached sentence also heals *allies* for 7% of his
+  maximum health on the same trigger — a different amount than his own
+  5%, which the engine's heal fan-out (``participant_timeline.py``
+  clones one shared ``amount`` to every recipient) cannot express, so it
+  belongs to the ally scanner rather than to this rule.
+- R (Unbreakable Will) stays off the slot map: it reduces incoming
+  damage by 55/65/75% for 7s and cleanses Alistar's own CC, and the
+  engine's ``incoming_damage_multiplier`` axis is item-only, wired
+  inline inside ``resolve_starting_defenses`` and keyed by item name
+  (``defensive_effects.py``) — no champion can author a
+  damage-reduction-taken row.  The three champion-module hooks the
+  runtime actually reads are ``SELF_HEALING_RULE``,
+  ``starting_revive_defense`` and ``GRIEVOUS_WOUNDS_SOURCES``; none
+  accepts a mid-fight reduction window.
 
-Roadmap session 3 (2026-08-20): closes one of Alistar's two out_of_scope
-slots (P); R stays open with a named receipt.
-
-  - P (Triumphant Roar): already fully modeled as a sourced self-heal via
-    ``derive_self_healing`` below (5% of Alistar's maximum health per
-    completed 7-stack window, cached passive prose: "heal himself for 5%
-    of his maximum health"), wired through ``SELF_HEALING_RULE`` (the
-    same runtime path Taric's Q and Zac/Zilean's revive-adjacent heals
-    use) and live-tested end to end (``tests/test_e1_healing_b3.py::
-    test_alistar_triumphant_roar_heals_five_percent_max_health_per_seven_stacks``).
-    ``MODULE_COVERAGE`` was simply stale, still reading "out_of_scope" for
-    a slot the self-heal ledger had already closed — the identical
-    stale-label pattern Shen P/Taric P/Zilean R were already corrected
-    under in earlier roadmap sessions. Reclassified from out_of_scope to
-    modeled; no behavior change.
-
-    The same cached passive prose also grants a second, larger heal to
-    "nearby allied champions for 7% of his maximum health" on the same
-    7-stack trigger — a DIFFERENT amount than Alistar's own 5%. That ally
-    heal is NOT modeled and stays a documented gap, not a silent one: the
-    engine's only fan-out mechanism for a champion-authored
-    ``SELF_HEALING_RULE`` heal (``participant_timeline.py``, the
-    ``self_and_all_teammates``/``self_and_one_teammate`` clone loop that
-    Taric's Q ally heal rides) clones the SAME event dict — same
-    ``amount`` key — to every recipient; it has no support for a
-    self-amount that differs from the ally-amount on one trigger. Wiring
-    a correctly-differentiated 5%-self/7%-ally split would need a new
-    fan-out shape in ``participant_timeline.py``, which is outside this
-    session's alistar.py/anivia.py-only scope. Documented in
-    ASSUMPTIONS rather than fabricated or silently dropped.
-  - R (Unbreakable Will): stays out_of_scope. The number IS sourced
-    (``data/champions.json`` Alistar R "Damage Reduction" leveling row:
-    55/65/75% by rank, 7s duration, cleanses Alistar's own CC on cast) —
-    but wiring it is structurally blocked, not missing sourcing.
-    Every per-champion-authored non-damage hook this engine's runtime
-    actually reads is enumerated by three call sites (grepped
-    ``getattr(module, "..."...)`` across ``src/calculator/*.py``):
-    ``SELF_HEALING_RULE`` (healing.py), ``starting_revive_defense``
-    (defensive_effects.py), and ``GRIEVOUS_WOUNDS_SOURCES``
-    (healing_reduction.py). None of the three accepts an "incoming
-    damage reduction while active" contract. The nearest existing
-    mechanism, ``StartingDefenses.incoming_damage_multiplier``
-    (defensive_effects.py), is real and already consumed by the fight
-    engine — but every producer of it today is an ITEM effect wired
-    inline inside ``resolve_starting_defenses`` (Celestial Opposition,
-    Armored Advance's ``basic_damage_multiplier``), keyed by item name,
-    not by a champion-module resolver function; there is no
-    ``_champion_incoming_damage_reduction``-style lookup the way
-    ``_champion_starting_revive`` exists for revives. Adding one is a new
-    hook in ``defensive_effects.py`` (plus deciding how a MID-fight,
-    player-triggered 7s active window should be represented against a
-    module whose name is literally ``StartingDefenses`` — Unbreakable
-    Will is not "ready at fight start" the way a passive shield or a
-    revive is), which is outside this session's alistar.py/anivia.py-only
-    scope. Named here so a session with defensive_effects.py in scope can
-    close it without re-deriving the audit.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import HealAnchor, _payments, _ability, _trigger_fields
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _extract_e_on_hit_damage(
@@ -177,6 +139,11 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
         per_tick * _E_TICKS + empowered,
         "magic",
     )
+    # E's control belongs to the empowered auto, not to the trample: the
+    # ticks only "deal magic damage to nearby enemies", while the 5-stack
+    # basic attack that ends Trample "stun[s] the target for 1 second".
+    # One cast, two answers, so they are authored per part instead of in
+    # MODULE_CC.
     entry["parts"] = (
         DamagePart(
             "magic",
@@ -184,8 +151,9 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
             count=_E_TICKS,
             time_offset=_E_TICK_INTERVAL,
             hit_interval=_E_TICK_INTERVAL,
+            cc_kind="none",
         ),
-        DamagePart("magic", empowered, time_offset=_E_DURATION),
+        DamagePart("magic", empowered, time_offset=_E_DURATION, cc_kind="stun"),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
     # whole 5-second trample (the Cassiopeia rule).
@@ -196,101 +164,164 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-OPTIONS: list[dict[str, Any]] = []
+# A carried set of 7 would consume itself before the fight, so the option
+# stops one short: 0-6 stacks in hand, and Q/W supply the rest.
+_TRIUMPH_CARRY_MAX = 6
+
+
+def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the Triumph stacks Alistar carries into the fight.
+
+    "Alistar generates a stack of Triumph for each enemy champion he stuns
+    or displaces with his abilities, and each time a nearby enemy minion or
+    non-epic monster dies... At 7 stacks, Alistar consumes them all to heal
+    himself for 5% of his maximum health."  Q and W each generate one
+    against this fight's champion, so a duel reaches at most two — the
+    stacks Alistar walked in with are what decide whether the set completes,
+    and they are player state the model cannot derive.  The heal formula
+    itself stays in the self-heal rule, which reads it from the same cached
+    P prose.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        return None
+    stacks = max(0, min(int(ctx.option("p_triumph_stacks")), _TRIUMPH_CARRY_MAX))
+    if stacks <= 0:
+        return None
+    return {
+        "name": ability.get("name", "Triumphant Roar"),
+        "rank": ctx.level,
+        "cooldown": 0.0,
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_heal_state": {"stacks": stacks},
+        "detail": f"{stacks} Triumph stack(s) carried into the fight",
+    }
+
+
+OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "p_triumph_stacks",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": _TRIUMPH_CARRY_MAX,
+        "step": 1,
+        "label": "Triumph stacks carried into the fight (P Triumphant Roar)",
+        "rotation": {
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Q and W each add one Triumph stack; the carried stacks "
+                "decide whether the seventh lands inside the fight, and "
+                "no cast order changes them."
+            ),
+        },
+    },
+]
 
 ASSUMPTIONS = [
     "E Trample deals full duration damage (10 ticks over 5 seconds)",
     "E empowered auto always procs once per cast (5 stacks reached)",
-    "P (Triumphant Roar) is modeled as a sourced self-heal: 5% of "
-    "Alistar's maximum health per completed 7-stack window (cached "
-    "passive prose), via SELF_HEALING_RULE. The same passive's 7%-of-"
-    "maximum-health heal to nearby allies on the same trigger is a "
-    "different amount than the 5% self heal and is NOT modeled — the "
-    "engine's champion-authored heal fan-out clones one shared amount to "
-    "every recipient, with no differentiated self/ally split.",
+    "P (Triumphant Roar) heals 5% of maximum health when the seventh "
+    "Triumph stack lands (cached P prose), through SELF_HEALING_RULE. Q "
+    "and W each generate one stack against this fight's champion, so "
+    "p_triumph_stacks (default 0) supplies the rest; minion and monster "
+    "deaths are not simulated, and the wiki's unstated internal cooldown "
+    "('only once every few seconds') is not enforced. The 7%-of-maximum-"
+    "health ally heal in the same sentence is a different amount than "
+    "the 5% self heal, and the engine's champion-authored heal fan-out "
+    "clones one shared amount to every recipient — so it belongs to the "
+    "ally scanner, not to this rule",
     "R (Unbreakable Will) damage reduction (55/65/75% for 7s, cleanses "
     "Alistar's own CC) is sourced but unmodeled: no champion-authored "
     "hook for a mid-fight incoming-damage-reduction window exists in "
     "this engine today (only SELF_HEALING_RULE, starting_revive_defense, "
-    "and GRIEVOUS_WOUNDS_SOURCES are read from a champion module).",
+    "and GRIEVOUS_WOUNDS_SOURCES are read from a champion module)",
 ]
 
 SLOTS = {
-    "Q": simple_damage(),
-    "W": simple_damage(),
+    "P": _triumphant_roar,
+    # Both are one instantaneous hit with no sourced sub-cast phase — the
+    # smash lands beneath Alistar and the headbutt on arrival — so each
+    # certifies the cast boundary its reviewed control rides on.
+    "Q": simple_damage(event_order_certified="single_hit"),
+    "W": simple_damage(event_order_certified="single_hit"),
     "E": _trample,
 }
 
-parse_abilities = build_parser(SLOTS, "Alistar")
+# Cached kit review.  Q stuns "and knock[s] them up simultaneously for 1
+# second" and W "knocks them back 700 units ... while also stunning them
+# for 0.75 seconds": each cast applies two immobilize kinds at once, which
+# is what the un-narrowed "immobilize" kind states.  E is absent because
+# its two parts disagree (see _trample); R and P deal no damage.
+MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
+
+parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Alistar",
-        "revision_id": 3892578,
-        "revision_timestamp": "2025-05-02T10:24:06Z",
-    }
-]
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "out_of_scope",
-}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-import re  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Alistar")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=too-many-arguments,too-many-positional-arguments,protected-access
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
-    """Resolve Alistar self-healing events from its authored packet."""
-    healing = []
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Triumphant Roar: 5% maximum health per completed 7-stack set.
+
+    Both numbers are read from the cached P prose ("At 7 stacks, Alistar
+    consumes them all to heal himself for 5% of his maximum health").  Q
+    and W each generate one Triumph stack per enemy champion hit, so the
+    stacks count *casts*, not the parts a cast is priced with — hence the
+    ``CAST`` anchor.  A duel reaches at most two stacks on its own, so the
+    set completes only with stacks already in hand, which the P row
+    carries from its declared option.  A nearby champion death would grant
+    all seven at once, but a 1v1 kill ends the fight before any heal
+    receipt can apply.
+    """
+    del fight_duration_seconds
+    healing: list[dict[str, Any]] = []
     p_text = " ".join(
         effect.get("description", "")
-        for effect in _healing._ability(champion_data, "P").get("effects", [])
+        for effect in _ability(champion_data, "P").get("effects", [])
     )
     stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
     stack_cap = int(stack_match.group(1)) if stack_match else 0
+    if stack_cap <= 0:
+        return healing
     self_match = re.search(
-        r"heal(?:s|ing)? himself for\s+(\d+(?:\.\d+)?)%\s+of his " r"maximum health",
+        r"heal(?:s|ing)? himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
         p_text,
         flags=re.IGNORECASE,
     )
     self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
-    qw_seen = 0
-    for event in damage_events:
-        if _healing._event_source(event) not in {"Q", "W"}:
-            continue
-        if stack_cap <= 0:
-            break
+    casts = sorted(
+        _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+        + _payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
+        key=lambda payment: float(payment.event.get("time", 0.0)),
+    )
+    carried = ability_damages.get("passive", {}).get("self_heal_state")
+    qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
+    for payment in casts:
+        event = payment.event
         qw_seen += 1
         if qw_seen % stack_cap == 0:
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),
-                    "amount": self_ratio * float(champion_stats.get("health", 0.0)),
+                    "amount": self_ratio * champion_stat(champion_stats, "health"),
                     "source": "Triumphant Roar",
                     "kind": "champion_passive",
-                    **_healing._trigger_fields(event),
+                    **_trigger_fields(event),
                 }
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Alistar", derive_self_healing)

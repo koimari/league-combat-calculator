@@ -4,7 +4,12 @@ import pytest
 
 from src.calculator.scenario import load_public_champion as _load_public_champion
 from src.app import app
-from src.calculator.champions import get_champion_options_meta
+from src.calculator.champions import (
+    get_champion_options_meta,
+    get_supported_fight_modes,
+    get_unsupported_fight_mode_reason,
+)
+from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.pipeline import FightParams, run_fight
 
 
@@ -102,10 +107,14 @@ def test_soraka_equinox_emits_the_delayed_eruption_hit():
 
 
 @pytest.mark.parametrize("champion,source", (("Shen", "Q"),))
-def test_unsupported_empowered_or_state_packets_remain_withheld(champion, source):
+def test_empowered_attack_packets_certify_their_authored_swing_ledger(champion, source):
+    """Wave 1B: Shen Q's bonus hits carry authored swing timing."""
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
-    assert result["timeline_coverage"]["complete"] is False
-    assert source in result["timeline_coverage"]["coarse_sources"]
+    assert result["timeline_coverage"]["complete"] is True
+    assert source in result["timeline_coverage"]["exact_sources"]
+    events = result["breakdown"][source]["damage_events"]
+    assert events
+    assert {event["event_precision"] for event in events} == {"exact"}
 
 
 def test_belveth_ability_carried_ramping_on_hit_has_authored_carrier_times():
@@ -137,9 +146,8 @@ def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
     "champion,source",
     (("Shen", "Q"),),
 )
-def test_calculate_api_surfaces_partial_timeline_without_claiming_exact_order(
-    champion, source
-):
+def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, source):
+    """Wave 1B: the public API no longer reports Shen Q as coarse."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
@@ -155,10 +163,10 @@ def test_calculate_api_surfaces_partial_timeline_without_claiming_exact_order(
         )
     assert response.status_code == 200
     coverage = response.get_json()["timeline_coverage"]
-    assert coverage["complete"] is False
-    assert coverage["certification"] == "partial_event_order"
-    assert source in coverage["coarse_sources"]
-    assert coverage["coarse_sources"] == sorted(coverage["coarse_sources"])
+    assert coverage["complete"] is True
+    assert coverage["certification"] == "event_order_certified"
+    assert coverage["coarse_sources"] == []
+    assert source in coverage["exact_sources"]
 
 
 def test_calculate_api_soraka_exposes_exact_delayed_equinox_receipt():
@@ -183,134 +191,49 @@ def test_calculate_api_soraka_exposes_exact_delayed_equinox_receipt():
     assert "E" in coverage["exact_sources"]
 
 
-def test_vi_timed_mode_is_rejected_before_any_partial_timeline_is_exposed():
-    params = _timed_params()
-    with pytest.raises(ValueError, match="Time-based Vi calculations are withheld"):
-        params.validate_for_champion("Vi", 18)
+#: The four modules whose persistent state once withheld every timed window.
+#: Each now models its own mechanic on the shared timeline — Denting Blows on
+#: the merged stream, Plasma across the window, Defile until mana runs dry,
+#: Worked Ground between casts — so the window they refused is the window they
+#: serve.  Each mechanic's own behaviour is pinned in its champion test file;
+#: what belongs here is that no fight mode is refused and no source is coarse.
+FORMERLY_ONE_ROTATION_ONLY = ("Vi", "Kai'Sa", "Karthus", "Taliyah")
 
 
-def test_karthus_timed_mode_is_rejected_before_defile_timeline_is_built():
-    params = _timed_params()
-    with pytest.raises(
-        ValueError, match="Time-based Karthus calculations are withheld"
-    ):
-        params.validate_for_champion("Karthus", 18)
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_persistent_state_champions_validate_for_every_fight_window(champion):
+    _timed_params().validate_for_champion(champion, 18)
 
 
-def test_calculate_api_surfaces_vi_timed_withholding_as_a_client_error():
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_calculate_api_serves_persistent_state_champions_in_timed_windows(champion):
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/calculate",
-            json={"champion": "Vi", "level": 18, "fight_mode": "time_based"},
+            json={"champion": champion, "level": 18, "fight_mode": "time_based"},
         )
-    assert response.status_code == 400
-    assert "Time-based Vi calculations are withheld" in response.get_json()["error"]
+    assert response.status_code == 200
+    coverage = response.get_json()["timeline_coverage"]
+    assert coverage["complete"] is True
+    assert coverage["coarse_sources"] == []
 
 
-def test_calculate_api_surfaces_karthus_timed_withholding_as_a_client_error():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Karthus", "level": 18, "fight_mode": "time_based"},
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Karthus calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_calculate_api_surfaces_taliyah_timed_withholding_as_a_client_error():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Taliyah", "level": 18, "fight_mode": "time_based"},
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Taliyah calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_calculate_api_surfaces_kaisa_timed_withholding_as_a_client_error():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/calculate",
-            json={"champion": "Kai'Sa", "level": 18, "fight_mode": "time_based"},
-        )
-    assert response.status_code == 400
-    assert "Time-based Kai'Sa calculations are withheld" in response.get_json()["error"]
-
-
-def test_optimize_api_surfaces_vi_timed_withholding_as_a_client_error():
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_optimize_api_matches_calculate_for_persistent_state_champions(champion):
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
             json={
-                "champion": "Vi",
+                "champion": champion,
                 "level": 18,
                 "fight_mode": "time_based",
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 400
-    assert "Time-based Vi calculations are withheld" in response.get_json()["error"]
-
-
-def test_optimize_api_matches_calculate_withholding_for_karthus():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Karthus",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Karthus calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_optimize_api_matches_calculate_withholding_for_taliyah():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Taliyah",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 400
-    assert (
-        "Time-based Taliyah calculations are withheld" in response.get_json()["error"]
-    )
-
-
-def test_optimize_api_matches_calculate_withholding_for_kaisa():
-    app.config["RATE_LIMIT_ENABLED"] = False
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Kai'Sa",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 400
-    assert "Time-based Kai'Sa calculations are withheld" in response.get_json()["error"]
+    assert response.status_code == 200
+    assert response.get_json()["items"] is not None
 
 
 def test_optimize_api_certifies_tahm_kench_event_order():
@@ -373,14 +296,18 @@ def test_optimize_api_certifies_shyvana_form_packets():
     assert body["ranked_builds"]
 
 
-def test_optimize_api_labels_withheld_item_scope_without_certified_best():
-    """A sourced item gap withholds exhaustive candidate certification."""
+def test_optimize_api_labels_partial_candidate_search_without_claiming_certified_best():
+    """A complete winner cannot certify an exhaustive search with coarse candidates.
+
+    Ahri's W and R carry no reviewed control kind (docs/coverage-residue.json),
+    so her Fimbulwinter candidates are honestly coarse in every window.
+    """
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
             json={
-                "champion": "Shen",
+                "champion": "Ahri",
                 "level": 18,
                 "fight_mode": "time_based",
                 "max_legendary_slots": 1,
@@ -390,14 +317,21 @@ def test_optimize_api_labels_withheld_item_scope_without_certified_best():
     payload = response.get_json()
     assert payload["timeline_coverage"]["complete"] is True
     assert payload["is_certified_best"] is False
-    assert payload["selection_certification"] == "event_ordered_item_scope_gap"
+    # MERGE: the label is coupled to search coverage (optimizer.py) - an
+    # item-scope gap is only reported when the SEARCH covered everything.
+    # These two searches carry coarse candidate evaluations (7 here), so
+    # the partial label is the certification, and it is the same fact the
+    # partial_evaluations assertion below states.
+    assert payload["selection_certification"] == "partial_or_unexhaustive"
+    # Coarse candidate evaluations make the SEARCH partial, which is the
+    # certification the coverage block reports.
     assert (
         payload["search_timeline_coverage"]["certification"]
-        == "candidate_event_order_certified"
+        == "partial_candidate_event_order"
     )
-    assert payload["search_timeline_coverage"]["partial_evaluations"] == 0
-    assert payload["candidate_coverage"]["complete"] is False
-    assert payload["candidate_coverage"]["excluded_count"] == 1
+    assert payload["search_timeline_coverage"]["partial_evaluations"] > 0
+    assert payload["candidate_coverage"]["complete"] is True
+    assert payload["candidate_coverage"]["withheld_count"] == 0
 
 
 def test_optimize_api_darius_returns_visible_event_certified_build():
@@ -420,7 +354,12 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
     assert payload["timeline_coverage"]["certification"] == "event_order_certified"
     assert payload["timeline_coverage"]["coarse_sources"] == []
     assert payload["is_certified_best"] is False
-    assert payload["selection_certification"] == "event_ordered_item_scope_gap"
+    # MERGE: the label is coupled to search coverage (optimizer.py) - an
+    # item-scope gap is only reported when the SEARCH covered everything.
+    # These two searches carry coarse candidate evaluations (7 here), so
+    # the partial label is the certification, and it is the same fact the
+    # partial_evaluations assertion below states.
+    assert payload["selection_certification"] == "partial_or_unexhaustive"
 
 
 def test_optimize_api_certifies_ziggs_minefield_cadence():
@@ -443,16 +382,10 @@ def test_optimize_api_certifies_ziggs_minefield_cadence():
     assert body["ranked_builds"]
 
 
-@pytest.mark.parametrize(
-    "champion,reason",
-    (
-        ("Kai'Sa", "Time-based Kai'Sa calculations are withheld"),
-        ("Taliyah", "Time-based Taliyah calculations are withheld"),
-    ),
-)
-def test_persistent_state_champions_reject_unsupported_timed_mode(champion, reason):
-    with pytest.raises(ValueError, match=reason):
-        _timed_params().validate_for_champion(champion, 18)
+@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
+def test_persistent_state_champions_publish_every_fight_mode(champion):
+    assert get_supported_fight_modes(champion) is None
+    assert get_unsupported_fight_mode_reason(champion) is None
 
 
 def test_shyvana_multi_form_e_and_w_have_certified_sources():
@@ -489,13 +422,18 @@ def test_garen_demacian_justice_is_a_single_dynamic_health_hit():
 
 
 def test_poppy_hammer_shock_exports_both_authored_hits():
+    # The certified fact is the pair: every cast authors its impact and the
+    # sourced 1.0s aftershock. How many pairs fit the window is the
+    # cooldown's business, so only the first cast's absolute time is pinned.
     result = run_fight(_load_public_champion("Poppy"), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     hammer_shock = result["breakdown"]["Q"]
-    assert [round(event["time"], 2) for event in hammer_shock["damage_events"]] == [
-        0.0,
-        1.0,
-    ]
+    times = [round(event["time"], 2) for event in hammer_shock["damage_events"]]
+    assert times[0] == 0.0
+    assert len(times) % 2 == 0
+    assert [second - first for first, second in zip(times[::2], times[1::2])] == [
+        pytest.approx(1.0)
+    ] * (len(times) // 2)
     assert sum(
         event["damage"] for event in hammer_shock["damage_events"]
     ) == pytest.approx(hammer_shock["total_damage"])
@@ -546,11 +484,16 @@ def test_aurora_spirit_abjuration_on_hit_receipts_are_chronological():
 
 
 def test_warwick_jaws_of_the_beast_uses_the_sourced_bite_delay():
+    # The bite delay is the certified fact; the recast lands one cached
+    # cooldown later, read at the rank being cast rather than restated here.
     result = run_fight(_load_public_champion("Warwick"), 18, [], _timed_params())
     jaws = result["breakdown"]["Q"]
+    cooldown = extract_cooldown(
+        _load_public_champion("Warwick")["abilities"]["Q"][0], 5
+    )
     assert [round(event["time"], 3) for event in jaws["damage_events"]] == [
         0.264,
-        8.264,
+        round(0.264 + cooldown, 3),
     ]
     assert sum(event["damage"] for event in jaws["damage_events"]) == pytest.approx(
         jaws["total_damage"]

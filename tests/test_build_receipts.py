@@ -189,7 +189,7 @@ def test_item_receipt_effects_exclude_stats():
 # ---------------------------------------------------------------------------
 
 
-def test_main_builds_receipts_and_summary(patched):
+def test_main_builds_the_receipt_trees(patched):
     summary = br.build()
     out = patched / "docs" / "receipts"
     assert summary["champions"]["Aatrox"]["atoms"] == 1
@@ -203,7 +203,9 @@ def test_main_builds_receipts_and_summary(patched):
         == 1
     )
     assert json.loads((out / "items" / "1001.json").read_text())["atoms"]["count"] == 2
-    assert json.loads((out / "summary.json").read_text()) == summary
+    # The summary is the run's printed report, not a tracked artefact: its
+    # champion atom counts come from the gitignored corpus.
+    assert not (out / "summary.json").exists()
 
 
 def test_main_fails_closed_on_manifest_mismatch(patched):

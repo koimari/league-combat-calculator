@@ -191,7 +191,8 @@ class TestKalistaSoulMarkProc:
     # `isinstance(ability_damages.get(s), Mapping)`) -- so R now appears in the
     # derived order.  That is the established convention, not a regression:
     # Bard (R no_damage), Tryndamere (R no_damage), Twisted Fate (R no_damage),
-    # Singed (R zero-total) and Olaf (R _rank_gated_no_damage) all already carry
+    # Singed (R zero-total) and Milio (R module_helpers.rank_gated_no_damage_parser,
+    # which replaced packet_module's private _rank_gated_no_damage) all already carry
     # a zero-damage R in their derived level-11 order in the committed baseline.
     # R stays correctly rank-gated -- absent at levels 1 and 5, present at 11.
     # These tests pin W's OPTION-GATING semantics, which are unchanged.

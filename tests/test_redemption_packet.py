@@ -84,6 +84,9 @@ from pathlib import Path
 import pytest
 
 from src.app import app
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_coverage import (
@@ -104,9 +107,10 @@ from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival,
+    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
+from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
@@ -114,6 +118,27 @@ from src.calculator.survival.compile import (
     unrepresentable_damage_receipt,
     unrepresentable_template_receipt,
 )
+
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
+# walk handed to five views -- so a caller that wants the published rows
+# projects it through the survival view, exactly as the composition does.
+def _simulate_survival(combatants, *args, **kwargs):
+    combatant_list = list(combatants)
+    return _survival_view(
+        _roster_program(combatant_list),
+        _simulate_survival_walk(combatant_list, *args, **kwargs),
+    )
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
 
 REDEMPTION = "Redemption"
 SOURCE = "Redemption \u2014 Intervention"  # "Redemption — Intervention"
@@ -126,7 +151,7 @@ def _kernel_combatant(participant_id, team, health=5000.0):
     """A minimal Combatant for the shared survival-kernel seam."""
     from types import SimpleNamespace
 
-    defenses = SimpleNamespace(
+    defenses = StartingDefenses(
         magic_shield=0.0,
         physical_shield=0.0,
         general_shield=0.0,
@@ -936,7 +961,12 @@ def test_intervention_authors_the_area_reveal_receipt():
     call-down) is a support kind="vision" receipt per selected enemy at the
     activation time, window [cast, impact] = the sourced 2.5s beam_delay,
     with the same cast-range coverage assumption as the heal/damage
-    packets."""
+    packets.
+
+    The window has ONE published home: ``duration``, with ``beam_delay``
+    naming the sourced figure it came from.  ``reveal_duration`` is not a
+    third spelling of the same 2.5 — the publisher does not carry it — so
+    a reader looking for the reveal window reads ``duration``."""
     combat = _calculate(
         _main(
             allies=[_ally("Jinx")],
@@ -951,8 +981,10 @@ def test_intervention_authors_the_area_reveal_receipt():
     assert receipts, "no Redemption reveal receipt exists"
     for receipt in receipts:
         assert receipt["time"] == pytest.approx(1.0)  # activation time
-        assert receipt["reveal_duration"] == pytest.approx(2.5)
+        assert "reveal_duration" not in receipt
+        assert receipt["beam_delay"] == pytest.approx(2.5)
         assert receipt["duration"] == pytest.approx(2.5)
+        assert receipt["expires_at"] == pytest.approx(3.5)
         assert receipt["target_scope"] == "enemy_champions_in_radius"
         assert receipt["range_assumption"] == "within_5500_units"
         assert receipt["target"] == "enemy:Aatrox"
@@ -1099,6 +1131,32 @@ def test_compiled_walk_equals_receipt_walk_with_redemption_packets_staged():
     assert enemy["survival"]["damage_taken"] >= 258.8
 
 
+def _scoring_rows(result):
+    """The scoring fields of one fight's damage events, in either shape.
+
+    A build the projection finds adequate is served the LIGHT tuple
+    ledger, so the score path's rows are positional.  They are read through
+    the one declaration of that layout (``ledger_projection.LightRow``)
+    rather than a second set of indices here, and compared on the fields
+    both shapes carry (``SHARED_ROW_FIELDS``) plus the time the light row
+    packs into its sort key.
+    """
+    rows = []
+    for event in result["damage_events"]:
+        if isinstance(event, tuple):
+            row = LightRow._make(event)
+            rows.append(
+                (row.sort_key[0],)
+                + tuple(getattr(row, field) for field in SHARED_ROW_FIELDS)
+            )
+        else:
+            rows.append(
+                (event.get("time"),)
+                + tuple(event.get(field) for field in SHARED_ROW_FIELDS)
+            )
+    return rows
+
+
 def test_score_only_fight_parity_redemption_build():
     """run_fight score-only keeps every scoring field identical for an
     active Redemption build (totals, damage events, resource spent)."""
@@ -1121,13 +1179,7 @@ def test_score_only_fight_parity_redemption_build():
     score = run_fight(champion, 18, [item], params, score_only=True)
     assert score["total_damage"] == full["total_damage"]
     assert score["resource_spent"] == full["resource_spent"]
-    scoring_keys = ("time", "source_key", "damage_type", "raw_damage", "damage")
-    assert [
-        tuple(event.get(key) for key in scoring_keys)
-        for event in score["damage_events"]
-    ] == [
-        tuple(event.get(key) for key in scoring_keys) for event in full["damage_events"]
-    ]
+    assert _scoring_rows(score) == _scoring_rows(full)
 
 
 def test_redemption_is_optimizer_eligible_with_modeled_state():
@@ -1135,7 +1187,7 @@ def test_redemption_is_optimizer_eligible_with_modeled_state():
     'sustain' outcome dimensions), in get_eligible_legendaries, and the
     target model is 'modeled' (not target-blocked)."""
     item = get_item_by_name(REDEMPTION)
-    coverage = item_model_coverage(item)
+    coverage = _attacker_coverage(item)
     assert coverage["optimizer_eligible"] is True
     assert coverage["status"] == "modeled_state"
     assert coverage["calculation_eligible"] is True

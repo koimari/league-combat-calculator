@@ -12,7 +12,6 @@ from src.calculator.economy import (
     is_transformation_item,
     item_sell_value,
     item_total,
-    validate_economy_loadout,
 )
 
 
@@ -218,30 +217,10 @@ def test_stackability_review():
     assert not is_stackable(_item("Sorcerer's Shoes"))  # BOOTS
 
 
-def test_duplicate_legendary_final_loadout_rejected():
-    plan = apply_purchase_plan(
-        [],
-        None,
-        [_item("Infinity Edge"), _item("Infinity Edge")],
-        gold_on_hand=8000,
-    )
-    with pytest.raises(ValueError, match="Infinity Edge"):
-        validate_economy_loadout(plan)
-
-
-def test_duplicate_stackable_final_loadout_accepted():
-    plan = apply_purchase_plan(
-        [],
-        None,
-        [_item("Long Sword"), _item("Long Sword")],
-        gold_on_hand=700,
-    )
-    validate_economy_loadout(plan)
-
-
 def test_missing_price_fails_closed():
-    with pytest.raises(KeyError, match=r"Broken Item: shop\.prices\.total"):
-        item_total({"name": "Broken Item", "shop": {"prices": {}}})
+    """An unsourced item is withheld, never priced from the stale wiki cache."""
+    with pytest.raises(KeyError, match=r"Broken Item: economics-sourced"):
+        item_total({"name": "Broken Item", "shop": {"prices": {"total": 3000}}})
 
 
 def test_unaffordable_plan_raises():

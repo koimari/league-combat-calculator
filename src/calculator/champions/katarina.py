@@ -39,7 +39,7 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    daggers = max(1, min(15, int(ctx.options.get("r_daggers", 15))))
+    daggers = max(1, min(15, int(ctx.option("r_daggers"))))
     physical = extract_named(
         ability, "Physical Damage Per Dagger", rank, ctx.stats, ctx.target
     )
@@ -78,17 +78,22 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 _packet_slots = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Q and E each deal their packet once, at the cast: the reviewed
+    # cast-boundary claim that carries MODULE_CC into the event ledger.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": lambda ctx: no_damage(
         ctx,
         name="Preparation",
         reason="Dagger toss, movement speed and landing location are utility state.",
     ),
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _death_lotus,
 }
 _packet_assumptions = list(REVIEWED_MODULE_ASSUMPTIONS)
-_packet_sources = load_champion_sources("Katarina")
 _packet_options = [
     {
         "key": "p_daggers",
@@ -131,8 +136,8 @@ def _spin_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One dagger spin: flat(level) + 60% bonus AD + level-banded AP."""
     flat = extract_value(ability, "Bonus Magic Damage", ctx.level, 0)
     bonus_ad_ratio = extract_value(ability, "Bonus Magic Damage", ctx.level, 1) / 100.0
-    ad = ctx.stats.get("bonus_attack_damage", 0.0)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ad = ctx.stat("bonus_attack_damage")
+    ap = ctx.stat("ability_power")
     return flat + bonus_ad_ratio * ad + _sinister_steel_ratio(ctx.level) * ap
 
 
@@ -158,7 +163,13 @@ SLOTS["P"] = with_item_on_hits(
 SLOTS["E"] = with_item_on_hits(
     SLOTS["E"], effectiveness=1.0, hits=1, triggers=("on_hit",)
 )
-parse_abilities = build_parser(SLOTS, "Katarina")
+
+# Cached kit review: nothing in Katarina's kit applies crowd control.  Q
+# bounces, W tosses a dagger and grants movement speed, E blinks, and R's
+# only debuff is Grievous Wounds (healing reduction, not control).
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Katarina", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options)
 ASSUMPTIONS = list(_packet_assumptions) + [
@@ -175,8 +186,7 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "hit (wiki prose); the coupled timeline refreshes the patch-wide "
     "40% window per hit",
 ]
-SOURCES = list(_packet_sources)
+SOURCES = load_champion_sources("Katarina")
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "W" else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

@@ -1,6 +1,8 @@
 """Tests for Annie champion module."""
 
 import pytest
+from src.calculator.champions import annie
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # P: Pyromania (stun only, no damage)
@@ -268,3 +270,38 @@ class TestPreLevel6:
     def test_q_works_without_r(self, annie_data, parse_at) -> None:
         _, abilities = parse_at(annie_data, 5, ap=100.0)
         assert abilities["Q"]["total_raw"] > 0
+
+
+class TestReviewedCrowdControl:
+    """Annie's crowd-control review, and the slot that still withholds.
+
+    Pyromania's stun is stack state, not slot state: it empowers 'her
+    next cast of Disintegrate, Incinerate, or Summon: Tibbers' at four
+    stacks, so neither a slot-wide stun nor a slot-wide 'none' is true
+    of Q, W or R.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        passive = cc_review.slot_text(cc_review.kit("Annie"), "P")
+        assert not hasattr(annie, "MODULE_CC")
+        assert (
+            "annie generates a stack of pyromania whenever she hits an "
+            "enemy with disintegrate or casts her other abilities, "
+            "stacking up to 4 times" in passive
+        )
+        assert (
+            "annie empowers her next cast of disintegrate, incinerate, or "
+            "summon: tibbers to consume all pyromania stacks to stun "
+            "enemies hit" in passive
+        )
+
+    def test_no_damaging_slot_states_a_control_of_its_own(self):
+        data = cc_review.kit("Annie")
+        for slot in ("Q", "W", "R"):
+            assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Annie") == ["Q", "R", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Annie")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

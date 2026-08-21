@@ -326,6 +326,49 @@ def test_calculate_exposes_immolate_cadence_in_the_shared_frontend_ledger():
     assert [event["time"] for event in events] == [1.0, 2.0, 3.0, 4.0, 5.0]
 
 
+def test_solo_combat_breakdown_publishes_no_unattributed_row():
+    """A manual-target fight has no coupled opponent, so it has no rows."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "items": ["Luden's Echo"],
+            "target_health": 2000,
+            "target_armor": 60,
+            "target_mr": 50,
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    assert combat["breakdown"] == []
+    assert not [key for key in combat["dispositions"] if key.startswith("breakdown")]
+    assert [row["participant_id"] for row in combat["participants"]] == ["main"]
+
+
+def test_roster_combat_breakdown_keeps_every_named_participant():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "items": ["Luden's Echo"],
+            "enemies": [{"champion": "Garen", "level": 11}],
+            "allies": [{"champion": "Lulu", "level": 11}],
+        },
+    )
+
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    assert [row["participant_id"] for row in combat["breakdown"]] == [
+        "main",
+        "ally:Lulu",
+        "enemy:Garen",
+    ]
+    assert all(row["participant_id"] for row in combat["breakdown"])
+
+
 def test_calculate_applies_self_granted_annie_molten_shield():
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -354,7 +397,7 @@ def test_loadout_stats_exposes_target_item_coverage_without_hiding_the_card():
     assert response.status_code == 200
     coverage = response.get_json()["target_model_coverage"]
     assert coverage["complete"] is True
-    assert coverage["blocked"] == []
+    assert coverage["withheld"] == []
 
 
 def test_calculate_applies_an_opening_enemy_spell_shield():
@@ -456,13 +499,37 @@ def test_calculate_prices_steraks_lifeline_in_certified_timed_fight():
     assert target["result"]["threshold_shield_absorbed"] > 0
 
 
-def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
+def _uncertify(monkeypatch, source="proc_Synthetic"):
+    """Make every fight report one uncertified damage source.
+
+    The coverage campaign certified every source a real build can reach, so
+    the Lifeline guard has nothing left to fire on — and a guard proven only
+    by whichever mechanic happens to be uncertified this week is a guard that
+    retires itself silently. The fight is made to report a coarse source
+    instead, which is the one input the guard reads.
+    """
+    real = calculate_module.run_fight
+
+    def coarse(*args, **kwargs):
+        result = real(*args, **kwargs)
+        coverage = dict(result.get("timeline_coverage") or {})
+        coverage["complete"] = False
+        coverage["coarse_sources"] = [source]
+        result["timeline_coverage"] = coverage
+        return result
+
+    monkeypatch.setattr(calculate_module, "run_fight", coarse)
+    return source
+
+
+def test_calculate_withholds_uncertified_timed_fight_against_lifeline(monkeypatch):
+    source = _uncertify(monkeypatch)
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Ziggs",
             "level": 18,
-            "items": ["Muramana"],
+            "items": [],
             "fight_mode": "timed",
             "fight_duration": 10,
             "enemies": [
@@ -478,14 +545,30 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline():
     assert response.status_code == 400
     error = response.get_json()["error"]
     assert "Sterak's Gage" in error
-    assert "muramana_ability" in error
+    assert source in error
     assert "not event-certified" in error
 
 
-def test_timed_fight_rejects_one_rotation_only_enemy_module_cleanly():
-    """The coupled timeline runs every roster member as an attacker, so a
-    timed window with a one-rotation-only enemy module is a clean 400
-    naming the member — never an uncaught 500 mid-timeline."""
+@pytest.mark.parametrize("side,field", (("Enemy", "enemies"), ("Ally", "allies")))
+def test_timed_fight_rejects_a_window_a_roster_module_cannot_join(
+    monkeypatch, side, field
+):
+    """The coverage campaign left no champion declaring a window restriction,
+    so the guard is proven against a module made to declare one.  The coupled
+    timeline runs every roster member as an attacker: a member that cannot
+    join is a clean 400 naming it, never an uncaught 500 mid-timeline."""
+    import src.calculator.champions.vi as vi_module
+
+    monkeypatch.setattr(
+        vi_module, "SUPPORTED_FIGHT_MODES", ("one_rotation",), raising=False
+    )
+    monkeypatch.setattr(
+        vi_module,
+        "UNSUPPORTED_FIGHT_MODE_REASON",
+        "Synthetic restriction. Use One Rotation.",
+        raising=False,
+    )
+
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -494,17 +577,19 @@ def test_timed_fight_rejects_one_rotation_only_enemy_module_cleanly():
             "items": ["Rabadon's Deathcap"],
             "fight_mode": "timed",
             "fight_duration": 10,
-            "enemies": [{"champion": "Kai'Sa", "level": 18, "items": []}],
+            field: [{"champion": "Vi", "level": 18, "items": []}],
         },
     )
 
     assert response.status_code == 400
     error = response.get_json()["error"]
-    assert "Enemy Kai'Sa" in error
+    assert f"{side} Vi" in error
     assert "One Rotation" in error
 
 
-def test_timed_fight_rejects_one_rotation_only_ally_module_cleanly():
+@pytest.mark.parametrize("field", ("enemies", "allies"))
+@pytest.mark.parametrize("champion", ("Vi", "Kai'Sa", "Karthus", "Taliyah"))
+def test_timed_fight_accepts_every_champion_on_the_roster(field, champion):
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -513,14 +598,11 @@ def test_timed_fight_rejects_one_rotation_only_ally_module_cleanly():
             "items": ["Rabadon's Deathcap"],
             "fight_mode": "timed",
             "fight_duration": 10,
-            "allies": [{"champion": "Vi", "level": 18, "items": []}],
+            field: [{"champion": champion, "level": 18, "items": []}],
         },
     )
 
-    assert response.status_code == 400
-    error = response.get_json()["error"]
-    assert "Ally Vi" in error
-    assert "One Rotation" in error
+    assert response.status_code == 200
 
 
 def test_one_rotation_fight_still_accepts_one_rotation_only_enemy_module():
@@ -538,19 +620,20 @@ def test_one_rotation_fight_still_accepts_one_rotation_only_enemy_module():
     assert response.get_json()["scenario"]["primary_target"] == "Kai'Sa"
 
 
-def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy():
+def test_crossover_curve_fails_closed_for_uncertified_lifeline_enemy(monkeypatch):
     """The curve's timed windows need the same certified-timeline gate.
 
     A one-rotation request keeps its primary result, but the crossover
     curve silently re-runs the fight in timed mode; against a Lifeline
     enemy that pricing needs a certified event order.
     """
+    _uncertify(monkeypatch)
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
             "champion": "Ziggs",
             "level": 18,
-            "items": ["Muramana"],
+            "items": [],
             "include_crossover": True,
             "enemies": [
                 {
@@ -1165,10 +1248,13 @@ def test_bis_frontend_sends_and_filters_by_the_selected_objective():
 def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert "mergeItemCoverage" in source
+    assert "buildItemCatalog" in source
+    # The served catalogues are the whole catalogue: no snapshot-preference
+    # helper may let static/data.json outrank a backend 0.
+    assert "preferReportedNumbers" not in source
+    assert "SNAPSHOT_NUMERIC_FIELDS" not in source
     assert 'fetch("/api/items")' in source
     assert 'fetch("/api/boots")' in source
-    assert "backendAvailable" in source
     assert "findItemByBackendName" in source
     assert "entry.targetModelCoverage" in source
     assert "itemCoverage?.calculation_eligible" in source
@@ -1199,8 +1285,8 @@ def test_frontend_round_trips_all_backend_champion_options():
         '$("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";'
         in source
     )
-    assert 'data-ability-hits="${ability.slot}"' in source
-    assert 'data-ability-variant="${ability.slot}"' in source
+    assert 'data-ability-rank="${slot}"' in source
+    assert 'data-ability-variant="${slot}"' in source
     assert "function abilityBindsChampionOption(key)" in source
     assert "!abilityBindsChampionOption(option.key)" in source
 
@@ -1210,7 +1296,7 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
 
     assert response.status_code == 200
     contract = response.get_json()["capabilities"]
-    assert contract["schema_version"] == 1
+    assert contract["schema_version"] == 6
     assert set(contract["participants"]) == {"main", "enemy", "ally"}
     assert (
         contract["participants"]["enemy"]["fields"]["champion"]["state_path"]
@@ -1240,7 +1326,6 @@ def test_config_exposes_the_champion_review_boundary():
     from src.calculator.champions import registered_champion_names
 
     assert engine["registered_count"] == len(registered_champion_names())
-    assert engine["reviewed_count"] == len(registered_champion_names())
     assert "generated_count" not in engine
     assert "unreviewed_count" not in engine
     assert "generic_enabled" not in engine
@@ -1492,6 +1577,12 @@ def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
     assert "main.survival?.healing_received" in source
     assert "const hasHealingReceipt" in source
     assert "main.survival?.support_shield_received" in source
+    # The utility objective reads the main's own survival ledger only: the
+    # backend never emits top-level healing/support fields, and top-level
+    # shield_absorbed is the *target's* absorption of the attacker's damage.
+    assert "result?.healing_received" not in source
+    assert "result?.support_shield_received" not in source
+    assert "result?.shield_absorbed" not in source
     assert "support shield received" in source
     assert "aResult?.damage_by_type" in source
     assert "aResult?.self_healing" in source
@@ -1773,14 +1864,23 @@ def test_config_exclusivity_groups_cover_frontend_optimizer_families():
     assert "Ravenous Hydra" in groups["Hydra"]
 
 
-def test_frontend_exposes_the_full_reviewed_module_contract():
+def test_frontend_reads_one_registry_field():
+    """One field in, one map out: no second always-equal registry set."""
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
-    assert 'entry.engine_registration === "reviewed_module"' in source
     assert (
-        "if (entry.availability?.ready) engine.reviewed.add(entry.name);" not in source
+        "engine.registration.set(entry.name, entry.engine_registration || null);"
+        in source
     )
-    assert "champion.engineRegistration = entry.engine_registration || null" in source
+    for retired in (
+        "engine.reviewed",
+        "engine.backend",
+        "engine.availability",
+        "engineRegistration",
+        "engine_backend_enabled",
+        "verified_attacker",
+    ):
+        assert retired not in source
     assert "generated packet · not reviewed" not in source
 
 
@@ -1906,7 +2006,8 @@ def test_frontend_exposes_calculated_uptime_mode_and_policy_receipt():
 
     assert 'aaUptimeMode: "calculated"' in source
     assert "payload.auto_attack_uptime_mode = state.fight.aaUptimeMode" in source
-    assert "rotations: state.fight.rotations" in source
+    assert "rotations: 1," in source
+    assert 'state.fight.autosOnly\n    ? "auto_only"' in source
     assert "auto_attack_schedule" in source
     assert "aResult?.auto_attack_policy" in source
     assert 'id="uptimeModeToggle"' in template
@@ -1940,10 +2041,11 @@ class TestIconUrlsAreHttps:
         items = client.get("/api/items").get_json()
         boots = client.get("/api/boots").get_json()
 
-        assert all(
-            item["id"] and "price" in item and "categories" in item
-            for item in items + boots
-        )
+        assert all(item["id"] and "price" in item for item in items + boots)
+        # C4: `into`/`categories` read cache keys that do not exist
+        # (`buildsInto` / `shop.tags`), so they were always [] and no
+        # consumer read them.
+        assert not any({"into", "categories"} & set(item) for item in items + boots)
         assert {item["id"] for item in items} & {2530, 3040, 3042, 3121, 3866}
         assert any(item["name"] == "Blade of the Ruined King" for item in items)
         bloodthirster = next(item for item in items if item["name"] == "Bloodthirster")
@@ -1987,6 +2089,23 @@ class TestIconUrlsAreHttps:
         assert hunger["statConversions"]["famine_base_ability_haste"] == 5.0
         bandlepipes = next(item for item in items if item["name"] == "Bandlepipes")
         assert bandlepipes["statConversions"]["bonus_attack_speed_ranged"] == 20.0
+        # Display fields the browser used to take from static/data.json ride
+        # the backend receipt, so the snapshot can never outrank it.
+        phantom = next(item for item in items if item["name"] == "Phantom Dancer")
+        swiftness = next(item for item in boots if item["name"] == "Boots of Swiftness")
+        assert phantom["moveSpeed"] == 0.0 and phantom["moveSpeedPercent"] == 10.0
+        assert phantom["tier"] == 3
+        assert swiftness["moveSpeed"] == 55.0 and swiftness["tier"] == 2
+        assert all("moveSpeed" in item and "tier" in item for item in items + boots)
+        # Stat numbers and price come from the typed accessor and the sourced
+        # shop price; the cache keeps them under ``stats``/``shop``, so a
+        # top-level .get(key, 0) read served zero for every item.
+        deathcap = next(item for item in items if item["name"] == "Rabadon's Deathcap")
+        assert deathcap["ap"] == 130.0 and deathcap["price"] == 3500
+        assert swiftness["price"] == 1000
+        edge = next(item for item in items if item["name"] == "Infinity Edge")
+        assert edge["crit"] == 25.0 and edge["ad"] > 0
+        assert sum(1 for item in items if item["price"] > 0) > len(items) // 2
 
     def test_item_apis_expose_optimizer_coverage(self):
         client = app_module.app.test_client()
@@ -2011,11 +2130,18 @@ class TestIconUrlsAreHttps:
         assert items["Guardian Angel"]["model_coverage"]["outcome_dimensions"] == [
             "revive"
         ]
-        assert "Rebirth" in items["Guardian Angel"]["model_coverage"]["reason"]
+        # Guardian Angel declares only defences, so the attacker card now
+        # says the mechanic changes durability rather than naming Rebirth;
+        # the target card is where Rebirth is priced and named.
+        assert items["Guardian Angel"]["model_coverage"]["status"] == "stats_only"
+        assert "Rebirth" in items["Guardian Angel"]["target_model_coverage"]["reason"]
         assert items["Zhonya's Hourglass"]["model_coverage"]["outcome_dimensions"] == [
             "stasis"
         ]
-        assert "Time Stop" in items["Zhonya's Hourglass"]["model_coverage"]["reason"]
+        # Same shape: Zhonya's declares only defences, so the attacker card
+        # states the rule that decided it and Time Stop's bounded control
+        # is a scenario input rather than a sentence in the coverage payload.
+        assert items["Zhonya's Hourglass"]["model_coverage"]["status"] == "stats_only"
         assert items["Runaan's Hurricane"]["target_model_coverage"]["status"]
         assert "calculation_eligible" in boots["Immortal Path"]["target_model_coverage"]
 
@@ -2080,6 +2206,9 @@ class TestIconUrlsAreHttps:
             if row["participant_id"] == "main"
         )
         assert main["survival"]["healing_received"] > 0
+        # Recovery lives only on the participant ledger (what app.js reads).
+        assert "healing_received" not in omnivamp_boots
+        assert "support_shield_received" not in omnivamp_boots
         assert gunmetal_response.status_code == 200
         assert (
             gunmetal_boots["champion_stats"]["attack_speed"]
@@ -2104,7 +2233,8 @@ class TestIconUrlsAreHttps:
         assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 20.0
 
     def test_ability_icons_are_https(self):
-        abilities = app_module.app.test_client().get("/api/abilities/Aatrox").get_json()
+        champions = app_module.app.test_client().get("/api/champions").get_json()
+        abilities = next(c for c in champions if c["name"] == "Aatrox")["abilities"]
 
         assert all(not a["icon"].startswith("http://") for a in abilities.values())
         assert set(abilities) == {"P", "Q", "W", "E", "R"}
@@ -2122,77 +2252,145 @@ class TestIconUrlsAreHttps:
             set(champion["abilities"]) == {"P", "Q", "W", "E", "R"}
             for champion in champions
         )
-        assert sum(champion["verified"] for champion in champions) == len(
-            registered_champion_names()
-        )
+        assert sum(
+            champion["engine_registration"] is not None for champion in champions
+        ) == len(registered_champion_names())
         by_name = {champion["name"]: champion for champion in champions}
         assert by_name["Aatrox"]["engine_registration"] == "reviewed_module"
         assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
         assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
 
-class TestChampionVerifiedFlags:
-    """/api/champions exposes the complete dedicated-module registry."""
+@pytest.mark.parametrize("key", ["icon", "patchLastChanged"])
+def test_champion_cache_fields_are_required_reads(key):
+    """A cache-owned champion field is never defaulted into the response."""
+    with pytest.raises(KeyError, match=f"Ahri: cached champion record has no {key}"):
+        app_module._cached_champion_field({"name": "Ahri"}, key)
 
-    def test_flags_match_the_module_registry(self):
+
+def test_headline_total_is_the_attacker_row_in_a_roster_fight():
+    """One published answer to which number the result headlines."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": ["Liandry's Torment", "Shadowflame", "Rabadon's Deathcap"],
+            "enemies": [{"champion": "Garen", "level": 18, "items": ["Sunfire Aegis"]}],
+            "enemies_attack": True,
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    main = next(
+        row for row in data["combat"]["breakdown"] if row["participant_id"] == "main"
+    )
+    assert data["headline_total"] == main["total_damage"]
+    assert data["headline_total"] != data["total_damage"]
+    assert data["dispositions"]["headline_total"]["disposition"] == "MEASURED"
+
+
+def test_headline_total_is_the_rotation_total_without_a_coupled_row():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={"champion": "Ahri", "level": 11, "target_health": 2000},
+    )
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["headline_total"] == data["total_damage"]
+
+
+def test_frontend_reads_the_published_headline_and_team_receipt():
+    """A8/C2: neither the headline nor the team total is re-derived in JS."""
+    source = Path("static/js/app.js").read_text(encoding="utf-8")
+
+    assert "const total = Number(result.headline_total);" in source
+    assert 'participant_id === "main")?.total_damage' not in source
+    assert "combat?.objective?.main_team_damage_before_death" in source
+    assert "alliedRows" not in source
+
+
+def test_loadout_summary_carries_the_registry_once():
+    """The summary emitted the same fact three times; one field now."""
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 11,
+            "enemies": [{"champion": "Garen", "level": 11}],
+        },
+    )
+
+    assert response.status_code == 200
+    target = response.get_json()["targets"][0]["target"]
+    assert target["engine_registration"] == "reviewed_module"
+    assert "verified_attacker" not in target
+    assert "engine_registered" not in target
+
+
+class TestChampionRegistrationField:
+    """``engine_registration`` is the one registry fact /api/champions serves."""
+
+    def test_registration_matches_the_module_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {c["name"]: c["verified"] for c in champs}
+        by_name = {c["name"]: c["engine_registration"] for c in champs}
 
-        assert by_name["Aatrox"] is True
-        assert by_name["Bel'Veth"] is True
-        assert by_name["Kled"] is True
-        assert by_name["Zoe"] is True
-        assert by_name["Zyra"] is True
+        assert by_name["Aatrox"] == "reviewed_module"
+        assert by_name["Bel'Veth"] == "reviewed_module"
+        assert by_name["Kled"] == "reviewed_module"
+        assert by_name["Soraka"] == "reviewed_module"
+        assert by_name["Zoe"] == "reviewed_module"
+        assert by_name["Zyra"] == "reviewed_module"
 
-    def test_unverified_champions_expose_specific_fail_closed_reasons(self):
+    def test_no_second_field_repeats_the_registry(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {champion["name"]: champion for champion in champs}
 
-        assert by_name["Soraka"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
+        assert set(champs[0]) == {
+            "name",
+            "icon",
+            "engine_registration",
+            "supported_fight_modes",
+            "unsupported_fight_mode_reason",
+            "patch_last_changed",
+            "abilities",
+            "ability_ingestion",
         }
-        assert by_name["Zoe"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
-        assert by_name["Zoe"]["engine_registration"] == "reviewed_module"
-        assert by_name["Zyra"]["availability"] == {
-            "ready": True,
-            "verification": "reviewed_module",
-            "blockers": [],
-        }
-        assert by_name["Zyra"]["engine_registration"] == "reviewed_module"
 
-    def test_fight_mode_restrictions_are_published(self):
-        """A module certifying a fight-mode subset publishes it with its
-        sourced reason, so the interface can request a supported mode (the
-        timed recast window by default) instead of failing closed."""
+    def test_every_champion_publishes_an_unrestricted_fight_window(self):
+        """The published contract carries the restriction and its sourced
+        reason together, and after the coverage campaign no module declares
+        one: every champion certifies every public fight mode."""
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        by_name = {champion["name"]: champion for champion in champs}
 
-        # Unrestricted module: every public fight mode is certified.
-        assert by_name["Ahri"]["supported_fight_modes"] is None
-        assert by_name["Ahri"]["unsupported_fight_mode_reason"] is None
-
-        # Restricted module: modes and the sourced reason ride together.
-        assert by_name["Karthus"]["supported_fight_modes"] == ["one_rotation"]
-        assert "time-based" in (
-            by_name["Karthus"]["unsupported_fight_mode_reason"].lower()
+        restricted = {
+            champion["name"]: champion["supported_fight_modes"]
+            for champion in champs
+            if champion["supported_fight_modes"] is not None
+        }
+        assert restricted == {}
+        assert all(
+            champion["unsupported_fight_mode_reason"] is None for champion in champs
         )
 
-    def test_verified_champions_sort_first(self):
+    def test_registered_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        flags = [c["verified"] for c in champs]
+        flags = [c["engine_registration"] is not None for c in champs]
 
         assert flags == sorted(flags, reverse=True)
 
     def test_each_group_is_alphabetical(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()
-        for group in (True, False):
-            names = [c["name"] for c in champs if c["verified"] is group]
+        for registered in (True, False):
+            names = [
+                c["name"]
+                for c in champs
+                if (c["engine_registration"] is not None) is registered
+            ]
             assert names == sorted(names)
 
 
@@ -2208,8 +2406,27 @@ class TestUpdateDataDevGate:
 
         assert response.status_code == 404
 
+    def test_update_data_is_404_without_a_configured_token(self, monkeypatch):
+        """The endpoint fails closed on an unset LOL_CALC_DEV_UPDATE_TOKEN."""
+        monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.delenv("LOL_CALC_DEV_UPDATE_TOKEN", raising=False)
+        client = app_module.app.test_client()
+
+        config = client.get("/api/config")
+        response = client.get("/api/update-data")
+
+        assert "Set-Cookie" not in config.headers
+        assert response.status_code == 404
+
+    def test_dev_update_token_is_the_configured_value(self, monkeypatch):
+        """Every worker reads one token, so a minted-per-import one is gone."""
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "  shared-secret  ")
+
+        assert app_module._dev_update_token() == "shared-secret"
+
     def test_update_data_streams_events_in_dev_mode(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         monkeypatch.setattr(
             app_module, "_run_data_update", lambda: iter([{"phase": "done"}])
         )
@@ -2231,6 +2448,7 @@ class TestUpdateDataDevGate:
 
     def test_update_data_needs_same_site_bootstrap_cookie(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
 
         response = app_module.app.test_client().get("/api/update-data")
 
@@ -2238,6 +2456,7 @@ class TestUpdateDataDevGate:
 
     def test_dev_mode_rejects_non_local_host_even_from_loopback(self, monkeypatch):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         client = app_module.app.test_client()
 
         config = client.get("/api/config", headers={"Host": "attacker.example"})
@@ -2250,6 +2469,7 @@ class TestUpdateDataDevGate:
         self, monkeypatch
     ):
         monkeypatch.setenv("LOL_CALC_DEV", "1")
+        monkeypatch.setenv("LOL_CALC_DEV_UPDATE_TOKEN", "shared-secret")
         monkeypatch.setattr(
             app_module,
             "_run_data_update",
@@ -2290,7 +2510,6 @@ class TestUpdateDataDevGate:
 
 @pytest.mark.parametrize("slot_count", [1, 2, 3, 4, 5])
 def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     monkeypatch.setattr(
         app_module,
         "optimize_build",
@@ -2304,7 +2523,6 @@ def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
 
 
 def test_optimize_accepts_six_items_only_after_bottom_quest(monkeypatch):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     captured = {}
 
     def fake_optimize(**kwargs):
@@ -2335,7 +2553,6 @@ def test_optimize_accepts_six_items_only_after_bottom_quest(monkeypatch):
 
 
 def test_optimize_uses_tier_three_boots_only_for_completed_mid_quest(monkeypatch):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
     tiers = []
 
     def fake_optimize(**kwargs):
@@ -2365,9 +2582,7 @@ def test_optimize_uses_tier_three_boots_only_for_completed_mid_quest(monkeypatch
 
 
 @pytest.mark.parametrize("slot_count", [0, 7, -1])
-def test_optimize_rejects_slot_counts_outside_one_through_six(monkeypatch, slot_count):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
-
+def test_optimize_rejects_slot_counts_outside_one_through_six(slot_count):
     payload = {"champion": "Ahri", "level": 18, "max_legendary_slots": slot_count}
     response = app_module.app.test_client().post("/api/optimize", json=payload)
 
@@ -2375,9 +2590,7 @@ def test_optimize_rejects_slot_counts_outside_one_through_six(monkeypatch, slot_
     assert "max_legendary_slots" in response.get_json()["error"]
 
 
-def test_optimize_rejects_more_locked_items_than_slots(monkeypatch):
-    monkeypatch.setattr(app_module, "get_champion", lambda _name: {"name": "Ahri"})
-
+def test_optimize_rejects_more_locked_items_than_slots():
     payload = {
         "champion": "Ahri",
         "level": 18,
@@ -2521,6 +2734,30 @@ def test_bis_rejects_level_impossible_ranks_and_unknown_champion_options():
     assert unknown_option.status_code == 400
     assert (
         "champion_options contains unknown option" in unknown_option.get_json()["error"]
+    )
+
+
+def test_bis_unrankable_number_is_a_400_with_its_message(monkeypatch):
+    """An ``UnrankableNumber`` refusal is the caller's 400, never a 500.
+
+    It is deliberately a ``TypeError`` so it bypasses the candidate loops'
+    ``except (KeyError, ValueError)``; the route clauses therefore never see
+    it and the app boundary must translate it itself.
+    """
+    from src.calculator.program.views import UnrankableNumber
+
+    def _refuse(_data):
+        raise UnrankableNumber("bis", "a previewed number", ["candidates[0].score"])
+
+    monkeypatch.setattr(app_module, "bis_payload", _refuse)
+    response = app_module.app.test_client().post(
+        "/api/bis", json={"champion": "Ahri", "level": 18}
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json()["error"]
+        == "bis may not rank a previewed number: ['candidates[0].score']"
     )
 
 
@@ -2759,3 +2996,57 @@ def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
             assert response.status_code == expected, (endpoint, extra)
             if expected == 400:
                 assert "top" in response.get_json()["error"]
+
+
+def test_a_panel_that_repeats_an_event_id_is_a_400_and_not_a_receipt(monkeypatch):
+    """The serving-path arm S10's ``SumPlan`` added, asserted at the endpoint.
+
+    ``program/views/receipt`` builds a :class:`SumPlan` over the three
+    published panels, and the plan refuses at construction when one panel
+    published an event id twice.  That is a *new failure mode on the serving
+    path*: a receipt with that defect used to serve, and now it does not.
+    Deliberate — a panel repeating its own id has no benign reading and no
+    symptom — but a refusal nobody has watched fire is a refusal nobody
+    knows the shape of, so this fires it and pins the shape: a named 400
+    carrying the panel and the id, never a 500 and never a served payload.
+
+    Cross-panel sharing is the other case and is deliberately not tested
+    here as a failure: it is recorded in ``SumPlan.shared`` and it serves.
+    """
+    from src.calculator.program.views import receipt as receipt_view
+
+    real_rows = receipt_view._damage_event_rows  # pylint: disable=W0212
+
+    def duplicating_rows(events, writer, section):
+        rows = real_rows(events, writer, section)
+        return [*rows, dict(rows[0])] if rows else rows
+
+    monkeypatch.setattr(receipt_view, "_damage_event_rows", duplicating_rows)
+
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "fight_mode": "time_based",
+            "fight_duration": 8,
+            "enemies": [{"champion": "Aatrox", "level": 18, "role": "top"}],
+        },
+    )
+    assert response.status_code == 400
+    assert "twice" in response.get_json()["error"]
+
+
+def test_retired_routes_are_not_registered():
+    """Surfaces the API no longer carries; each had a more complete twin
+    (/api/champions, /api/share/<token>, /api/receipts, /api/health/deep,
+    scripts/patch_update.py)."""
+    rules = {rule.rule: rule.methods for rule in app_module.app.url_map.iter_rules()}
+    for gone in (
+        "/api/abilities/<champion_name>",
+        "/api/builds/<int:build_id>",
+        "/api/cache-status",
+        "/api/staleness/regenerate",
+    ):
+        assert gone not in rules, gone
+    assert "POST" not in rules["/api/feedback"]

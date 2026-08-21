@@ -17,7 +17,10 @@ Why each slot is non-generic:
   Damage Per Tick" x30 == "Total Magic Damage"); the bonus health /
   resistances are self-stats and the Siphoning Strike cooldown halving
   is not modeled.
-- P (Soul Eater) and W (Wither) deal no enemy damage: zero-damage rows.
+- P (Soul Eater) and W (Wither) both emit rows that deal no enemy
+  damage, but they are not the same claim. P is modeled: the Soul Eater
+  heal rule prices its lifesteal off every physical hit (declared
+  through ``COVERAGE_CHANNELS``). W is a no_damage row.
 
 W (Wither) is already a cast slot in this module (SLOTS["W"] =
 _wither) emitting the pinned packet's sourced zero-damage row; the
@@ -26,13 +29,17 @@ alongside P. MODULE_COVERAGE was simply stale, still reading
 "out_of_scope" for an already-covered slot. Roadmap session 4 batch D
 (2026-08-21) reclassifies W to "no_damage" (the Cassiopeia/Cho'Gath/
 Jarvan precedent) — a documentation-only fix with zero
-fight-computation change.
+fight-computation change.  Wither's slow/cripple magnitude is still
+unpriced; its kind rides ``MODULE_CC``.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import HealAnchor, _heal_from_damage, _payments
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -67,7 +74,7 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    stacks = max(0, int(ctx.options.get("q_stacks", 0)))
+    stacks = max(0, int(ctx.option("q_stacks")))
     bonus = (
         extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
         + stacks
@@ -78,13 +85,17 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         bonus,
         "physical",
+        # The bonus rides one empowered basic attack — one hit, at the cast
+        # boundary — which is the claim that carries MODULE_CC's reviewed
+        # answer for Q into the event ledger.
+        event_order_certified="single_hit",
     )
     # Fury of the Sands halves Siphoning Strike's cooldown while active
     # (cached R prose).  The module prices all 30 sourced R ticks, i.e.
     # the fight sits inside R's 15s window, so the halving applies to
     # the whole fight's Q schedule; the option turns it off to price an
     # un-empowered rotation.
-    if ctx.rank_for("R") >= 1 and ctx.options.get("r_q_cooldown_halved", True):
+    if ctx.rank_for("R") >= 1 and ctx.option("r_q_cooldown_halved"):
         entry["cooldown"] *= _R_Q_COOLDOWN_MULTIPLIER
     entry["parts"] = (DamagePart("physical", bonus),)
     entry["empowers_next_auto"] = True
@@ -268,46 +279,78 @@ SLOTS = {
     "P": _soul_eater,
 }
 
-parse_abilities = build_parser(SLOTS, "Nasus")
+# Cached kit review.  Nothing Nasus damages with applies control: Q only
+# empowers a basic attack to "deal bonus physical damage", E's fire deals
+# magic damage and "inflict[s] them with armor reduction" (a resistance
+# shred, not a control class), and R "deals magic damage every 0.5 seconds
+# to nearby enemies" while buffing his own stats.  W is absent rather than
+# "none" — Wither is the kit's one control ("slowing them by 35% and
+# crippling them"), but it deals no damage, so no event of its own could
+# carry an answer.  P (lifesteal) likewise damages nothing.
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 
+parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
+
+# P emits a row that prices no enemy damage; what the engine prices for
+# the slot is Soul Eater's lifesteal, authored by the healing rule below
+# (48.6 over a level-18 itemless timed fight with autos).  W is a cast
+# slot emitting the pinned packet's sourced zero-damage row: no_damage,
+# not a gap — only its slow/cripple magnitude stays unpriced.
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# Soul Eater is level-gated lifesteal, not an ability packet: "Nasus has
+# 12% / 18% / 24% (based on level) life steal" against the physical
+# damage his attacks and on-hits deal, so the rule pays per damaging hit
+# rather than per cast.
+_SOUL_EATER_BREAKPOINTS = ((13, 0.24), (7, 0.18), (1, 0.12))
+
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
-    """Resolve Nasus self-healing events from its authored packet."""
-    healing = []
-    nasus_level = max(1, int(champion_stats.get("level", 18) or 18))
-    soul_eater_ratio = (
-        0.24 if nasus_level >= 13 else (0.18 if nasus_level >= 7 else 0.12)
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Soul Eater's lifesteal off every physical basic-attack hit.
+
+    The empowered swing counts.  Siphoning Strike does not replace a basic
+    attack, it rides one ("Nasus's next basic attack ... deals bonus
+    physical damage"), so the engine reattributes that swing to the Q row
+    and publishes no ``auto_attacks`` row for it.  A rule reading only
+    ``auto_attacks`` therefore pays nothing at all once R halves Q's
+    cooldown and every swing is empowered.  Q rows and ``auto_attacks``
+    rows partition the swings, so reading both is exactly one payment per
+    swing, never two.
+    """
+    del champion_data, cast_timeline, fight_duration_seconds
+    healing: list[dict[str, Any]] = []
+    level = max(1, int(champion_stat(champion_stats, "level")))
+    ratio = next(
+        share for breakpoint, share in _SOUL_EATER_BREAKPOINTS if level >= breakpoint
     )
-    for event in damage_events:
-        source = _healing._event_source(event)
-        if source != "auto_attacks" and not source.startswith("on_hit_"):
-            continue
+    empowered = bool(ability_damages.get("Q", {}).get("empowers_next_auto"))
+
+    def is_swing(source: str) -> bool:
+        if source == "auto_attacks" or source.startswith("on_hit_"):
+            return True
+        return empowered and source == "Q"
+
+    for payment in _payments(HealAnchor.DAMAGING_HIT, is_swing, damage_events):
+        event = payment.event
         if event.get("damage_type") != "physical":
             continue
-        amount = max(0.0, float(event.get("damage", 0.0))) * soul_eater_ratio
-        _healing._heal_from_damage(healing, event, amount, "Soul Eater")
+        amount = max(0.0, float(event.get("damage", 0.0))) * ratio
+        _heal_from_damage(healing, event, amount, "Soul Eater")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Nasus", derive_self_healing)
 

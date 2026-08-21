@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .source_receipts import load_champion_sources
 
 
 def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -18,7 +21,7 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    procs = min(max(int(ctx.options.get("p_procs", 0)), 0), 10)
+    procs = min(max(int(ctx.option("p_procs")), 0), 10)
     if procs <= 0:
         return no_damage(
             ctx,
@@ -63,6 +66,7 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
     }
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Ranged attack: applies on-hit/on-attack effects and may critically strike for the sourced 230% modifier."
     )
@@ -200,6 +204,7 @@ def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
     )
     entry["parts"] = (DamagePart("physical", bonus),)
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Champion keg branch: triggering attack plus the sourced bonus; 40% armor-ignore is retained in provenance."
     )
@@ -249,7 +254,12 @@ SLOTS = {
     "E": _powder_keg,
     "R": _cannon_barrage,
 }
-parse_abilities = build_parser(SLOTS, "Gangplank")
+# P burns and Q is a ranged shot — neither controls.  E's explosion leaves
+# enemies "slowed for 2 seconds" and each R wave "slows them by 30% for 0.5
+# seconds".  W is the self-cleanse and authors no damage part.
+MODULE_CC = {"P": "none", "Q": "none", "E": "slow", "R": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Gangplank", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -280,45 +290,10 @@ ASSUMPTIONS = [
     "Cannon Barrage exposes the 12/18-wave and Death's Daughter branches with ordered tick events.",
 ]
 
-SOURCES = [
-    source_row(
-        "Gangplank parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Gangplank",
-        4002542,
-        "2026-03-26T01:37:40Z",
-    ),
-    source_row(
-        "Gangplank Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/Q",
-        2863942,
-        "2019-11-03T19:57:00Z",
-    ),
-    source_row(
-        "Gangplank W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/W",
-        2864237,
-        "2019-11-03T20:09:46Z",
-    ),
-    source_row(
-        "Gangplank E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/E",
-        2864383,
-        "2019-11-03T20:12:16Z",
-    ),
-    source_row(
-        "Gangplank R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/R",
-        2864529,
-        "2019-11-03T20:15:41Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Gangplank")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -355,13 +330,17 @@ def derive_self_healing(
                 "source": "Remove Scurvy",
                 "kind": "champion_ability",
                 "actor_wide": True,
+                # Remove Scurvy is the game's canCastWhileDisabled: being
+                # crowd-controlled is the reason to cast it, so the heal
+                # is exempt from the walk's attacker-state gate on the
+                # crowd-control branch only (stasis, invulnerable and
+                # untargetable still block it — the wiki Cleanse atom).
+                # It rides no damage event, so the cast is all it has to
+                # name; the flag is what says so.
+                "cast_while_disabled": True,
             }
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Gangplank", derive_self_healing)

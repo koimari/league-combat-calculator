@@ -2,7 +2,7 @@
 
 What to watch on the closed beta, where each signal comes from, and when to
 page someone. The deep health probe is `/api/health/deep`; the remaining
-signals come from Sentry, access logs, and `/api/cache-status`.
+signals come from Sentry and access logs.
 
 ## Deep health probe
 
@@ -18,7 +18,7 @@ signals come from Sentry, access logs, and `/api/cache-status`.
                "cached_entries": 711},
     "golden": {"status": "ok", "patch": "16.15", "checked_at": "2026-08-06T...",
                "age_days": 0.2, "stale_threshold_days": 14},
-    "engine": {"status": "ok", "registered": 173, "reviewed": 173,
+    "engine": {"status": "ok", "registered": 173,
                "module_contract": "champion_module_v1"}
   },
   "generated_at": "..."
@@ -75,8 +75,8 @@ status is immediate).
 
 ### 4. Cache hit ratio
 
-- **Source**: `/api/cache-status` (`hits`, `misses`, `cached_entries`);
-  `hit_ratio` is computed in `/api/health/deep` → `checks.cache`.
+- **Source**: `/api/health/deep` → `checks.cache` (`hits`, `misses`,
+  `hit_ratio`, `cached_entries`).
 - **What to watch**: steady-state ratio below ~0.9 means the UI is generating
   many distinct loadouts (normal for a research tool) or the cache is being
   flushed too often (patch updates clear it — expect a dip right after).
@@ -101,9 +101,6 @@ status is immediate).
 # Deep health (public)
 curl -fsS https://scryglass-item-calculator.vercel.app/api/health/deep
 
-# Cache counters
-curl -fsS https://scryglass-item-calculator.vercel.app/api/cache-status
-
 # Liveness (uptime monitors)
 curl -fsS https://scryglass-item-calculator.vercel.app/healthz
 
@@ -115,8 +112,8 @@ python scripts/load_sanity.py --url http://127.0.0.1:8000
 ## Incident response shortcuts
 
 - **Cache backend down**: cache reads raise `CacheUnavailable` —
-  `/api/cache-status` 503s and cached endpoints error rather than serve stale
-  data. Restart/repair Redis; the cache self-heals under load (no data loss —
+  `checks.cache` reports `error` and cached endpoints error rather than serve
+  stale data. Restart/repair Redis; the cache self-heals under load (no data loss —
   it is derived).
 - **Golden stale**: run `scripts/patch_update.py run`, commit the refreshed
   `data/`, deploy. The badge (`/api/staleness`) and `checks.golden` flip back

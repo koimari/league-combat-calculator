@@ -21,6 +21,8 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import briar
+from tests import cc_review
 
 # Rank pins for hand-math tests (independent of level/skill order).
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 2}
@@ -385,3 +387,86 @@ class TestFightIntegration:
         expected_casts = 2 + 1 + 1
         row = result["breakdown"]["stacking_dot_passive"]
         assert row["count"] == total_attacks + expected_casts
+
+
+class TestReviewedCrowdControl:
+    """Briar's crowd-control review, now complete.
+
+    E's scream lands on the recast at the end of the cached charge, which
+    this module always prices in full, and the charge's own healing stays
+    inside the charge because the heal rule counts from the cast
+    (``HealAnchor.CAST_SCHEDULE``) rather than from the scream.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Briar")
+        assert briar.MODULE_CC == {"Q": "stun", "W": "none", "R": "none"}
+        assert "stuns them for 0.85 seconds" in " ".join(
+            cc_review.slot_text(data, "Q").split()
+        )
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == [
+            "fear",
+            "slow",
+        ]
+        # R fears "all non-marked targets"; the marked one is the target
+        # its explosion damages, and it is not feared.
+        assert "fears all non-marked targets" in cc_review.slot_text(data, "R")
+
+    def test_chilling_scream_lands_at_the_end_of_its_cached_charge(
+        self, briar_data, parse_at
+    ):
+        """The scream is the recast, one cached second after the cast."""
+        text = cc_review.slot_text(cc_review.kit("Briar"), "E")
+        assert (
+            "briar prepares to unleash a scream in the target direction, "
+            "charging for up to 1 second" in text
+        )
+        assert (
+            "if chilling scream was charged for its full duration, enemies hit "
+            "are also knocked back 575 units" in text
+        )
+        _, abilities = parse_at(briar_data, 18)
+        (part,) = abilities["E"]["parts"]
+        assert part.time_offset == briar.E_FULL_CHARGE_SECONDS == 1.0
+        assert part.cc_kind == "knockback"
+
+    def test_the_charge_heals_during_the_charge_not_after_the_scream(self):
+        """The four ticks belong to the charge: "charging for up to 1
+        second, during which she ... heals herself every 0.25 seconds".
+
+        This is the defect the anchor exists for.  The ticks used to hang
+        off the scream's own damage event, so timing the scream at the end
+        of the charge would have pushed the charge's healing to 1.25-2.0s
+        — after the thing it happens during.
+        """
+        from src.calculator.calculate import calculate_payload
+
+        payload = calculate_payload(
+            {
+                "champion": "Briar",
+                "level": 18,
+                "items": ["Fimbulwinter"],
+                "fight_mode": "timed",
+                "include_auto_attacks": True,
+            }
+        )
+        ticks = [
+            round(float(event["time"]), 3)
+            for event in payload["self_healing_events"]
+            if event["source"] == "Chilling Scream"
+        ]
+        assert ticks[:4] == [0.25, 0.5, 0.75, 1.0]
+        scream = [
+            round(float(event["time"]), 3)
+            for event in payload["damage_events"]
+            if event.get("source") == "E"
+        ]
+        assert scream and min(scream) == 1.0
+        assert max(ticks[:4]) <= min(scream)
+
+    def test_the_kit_clears_the_control_armed_scan(self):
+        assert cc_review.unreviewed_ability_slots("Briar") == []
+        coverage = cc_review.fimbulwinter_coverage("Briar")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

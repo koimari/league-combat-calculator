@@ -605,23 +605,26 @@ class TestChargeTiming:
         assert "charge" in option["label"].lower()
 
     def test_parts_time_offset_equals_charge(self):
-        # Non-All Out: the W physical part carries time_offset == charge.
-        # All Out: the TRUE part carries time_offset == charge; the
-        # physical part is UNTIMED (time_offset None) — pinned actual
-        # asymmetry flagged for the coordinator's typed declaration.
+        # One cast lands one blow: BOTH W parts carry time_offset ==
+        # charge, in All Out and out of it.  The asymmetry this test was
+        # written to pin (an untimed physical part beside a timed true
+        # one) is the defect the completion removed — the physical and
+        # true halves are the same hit at the same instant.
         for charge in (0.0, 0.25, 0.5, 0.75, 1.0):
             _, abilities = _parse({"w_charge": charge})
             assert abilities["W"]["parts"][0].time_offset == pytest.approx(charge)
             _, abilities = _parse({"all_out": True, "w_charge": charge})
             parts = abilities["W"]["parts"]
-            assert parts[1].time_offset == pytest.approx(charge)
-            assert parts[0].time_offset is None
+            assert [part.damage_type for part in parts] == ["physical", "true"]
+            assert [part.time_offset for part in parts] == pytest.approx(
+                [charge, charge]
+            )
 
     def test_damage_event_times_one_rotation(self):
-        # One-rotation casts land at 0.0: the non-All Out W hit lands at
-        # exactly the charge (0/0.25/0.5/0.75/1).  In All Out the W row
-        # has NO damage_events (the physical part is untimed) — pinned
-        # actual.
+        # One-rotation casts land at 0.0: the W hit lands at exactly the
+        # charge (0/0.25/0.5/0.75/1).  In All Out the same instant carries
+        # two rows — the physical hit and the charge-interpolated true
+        # half — and together they are the row's whole total.
         for charge in (0.0, 0.25, 0.5, 0.75, 1.0):
             result = _fight({"w_charge": charge}, one_rotation=True)
             events = result["breakdown"]["W"]["damage_events"]
@@ -629,19 +632,28 @@ class TestChargeTiming:
             assert events[0]["raw_damage"] == pytest.approx(
                 result["breakdown"]["W"]["total_raw"]
             )
-            result = _fight({"all_out": True, "w_charge": charge}, one_rotation=True)
-            assert "damage_events" not in result["breakdown"]["W"]
+            row = _fight({"all_out": True, "w_charge": charge}, one_rotation=True)[
+                "breakdown"
+            ]["W"]
+            events = row["damage_events"]
+            assert [e["damage_type"] for e in events] == ["physical", "true"]
+            assert [e["time"] for e in events] == pytest.approx([charge, charge])
+            assert sum(e["raw_damage"] for e in events) == pytest.approx(
+                row["total_raw"]
+            )
 
     def test_damage_event_times_timed_fight(self):
         # Timed fight: the W cast starts at 0.45 (Q's 0.45 cast time), so
-        # the non-All Out hit lands at cast + charge (0.45/0.7/0.95/...);
-        # All Out again emits no W damage_events.
+        # the hit lands at cast + charge (0.45/0.7/0.95/...) — All Out
+        # puts both of its rows on that same instant.
         for charge, want in ((0.0, 0.45), (0.25, 0.7), (0.5, 0.95), (1.0, 1.45)):
             result = _fight({"w_charge": charge}, duration=10.0)
             events = result["breakdown"]["W"]["damage_events"]
             assert [e["time"] for e in events] == pytest.approx([want])
-        result = _fight({"all_out": True}, duration=10.0)
-        assert "damage_events" not in result["breakdown"]["W"]
+            events = _fight({"all_out": True, "w_charge": charge}, duration=10.0)[
+                "breakdown"
+            ]["W"]["damage_events"]
+            assert [e["time"] for e in events] == pytest.approx([want, want])
 
 
 # ---------------------------------------------------------------------------

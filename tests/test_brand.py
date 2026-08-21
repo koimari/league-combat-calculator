@@ -11,6 +11,8 @@ Sanity anchors (magic damage, pre-mitigation, 100 AP):
 """
 
 import pytest
+from src.calculator.champions import brand, parse_champion_abilities
+from tests import cc_review
 
 TARGET = {"target_max_health": 3000.0}
 
@@ -197,3 +199,50 @@ class TestBrandFightIntegration:
         ) == pytest.approx(blaze["total_damage"])
         assert "passive" in result["timeline_coverage"]["exact_sources"]
         assert result["total_damage"] > 0
+
+
+class TestReviewedCrowdControl:
+    """Brand's crowd-control review, and the slots that still withhold.
+
+    W's eruption is now authored where the cache puts it, and neither W
+    nor E controls.  Q's stun and R's slow are both 'Ablaze Bonus'
+    branches — they follow the target's stack state, not the slot — so
+    one kind per slot cannot state either.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Brand")
+        assert brand.MODULE_CC == {"E": "none", "W": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
+        assert "the target takes 25% increased damage" in cc_review.slot_text(data, "W")
+
+    def test_pillar_of_flame_erupts_at_the_cached_total_from_cast_start(self):
+        """The note gives the number that includes the cast time."""
+        data = cc_review.kit("Brand")
+        assert "After a 0.627 seconds delay" in (
+            data["abilities"]["W"][0]["effects"][0]["description"]
+        )
+        assert (
+            "The delay would be a total of 0.891 seconds if it included the "
+            "cast time." in data["abilities"]["W"][0]["notes"]
+        )
+        parsed = parse_champion_abilities(
+            data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
+        )
+        (part,) = parsed["W"]["parts"]
+        assert part.time_offset == 0.891
+        assert part.cc_kind == "none"
+
+    def test_the_ablaze_conditional_slots_keep_the_fight_coarse(self):
+        """Q stuns and R slows only an already-Ablaze target."""
+        data = cc_review.kit("Brand")
+        assert "Ablaze Bonus: The target is stunned" in (
+            data["abilities"]["Q"][0]["effects"][1]["description"]
+        )
+        assert "Ablaze Bonus: The target is slowed" in (
+            data["abilities"]["R"][0]["effects"][2]["description"]
+        )
+        assert cc_review.unreviewed_ability_slots("Brand") == ["Q", "R"]
+        coverage = cc_review.fimbulwinter_coverage("Brand")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

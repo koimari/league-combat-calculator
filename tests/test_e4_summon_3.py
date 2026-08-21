@@ -257,8 +257,9 @@ class TestNidaleeBushwhack:
             data["target_effective_max_health"],
         )
         row = data["breakdown"]["W"]
-        assert row["total_damage"] == pytest.approx(per_tick * 4)
-        assert len(_slot_events(data, "W")) == 4
+        casts = max(1, int(row.get("casts", 1)))
+        assert row["total_damage"] == pytest.approx(per_tick * 4 * casts)
+        assert len(_slot_events(data, "W")) == 4 * casts
 
     def test_w_traps_option_prices_additional_detonations(self) -> None:
         """Pre-placed Bushwhack traps each deal their own full DoT."""
@@ -273,8 +274,9 @@ class TestNidaleeBushwhack:
             data["target_effective_max_health"],
         )
         row = data["breakdown"]["W"]
-        assert row["total_damage"] == pytest.approx(per_tick * 4 * 2)
-        assert len(_slot_events(data, "W")) == 8
+        casts = max(1, int(row.get("casts", 1)))
+        assert row["total_damage"] == pytest.approx(per_tick * 4 * 2 * casts)
+        assert len(_slot_events(data, "W")) == 8 * casts
 
     def test_pounce_variant_stays_a_single_hit(self) -> None:
         """The cougar Pounce variant must remain one hit per cast (the

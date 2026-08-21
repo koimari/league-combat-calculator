@@ -10,7 +10,7 @@ bonus.
 
 import pytest
 
-from src.calculator.champions import diana
+from src.calculator.champions import diana, parse_champion_abilities
 from src.calculator.champions.slotlib import (
     extract_named,
     find_named_leveling,
@@ -24,6 +24,7 @@ from src.calculator.damage import (
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests import cc_review
 
 # Round stats so wiki arithmetic is checkable by eye. attack_speed_ratio
 # is 0 by default so the passive's AS buff doesn't move the auto-count
@@ -411,3 +412,37 @@ class TestJsonCrossChecks:
                 ability, "Total Damage Vs. 5 Champions", rank, stats
             )
             assert derived == pytest.approx(display)
+
+
+class TestReviewedCrowdControl:
+    """Diana's crowd-control review, and the slots that still withhold.
+
+    R's beam strikes "after 1 second" — the sourced delay the row now
+    authors, and the instant its pull and slow have already landed on.
+    W's row is the cached 'Total Magic Damage' of all three spheres and
+    E's is the dash count in one part, neither with a cadence to place.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Diana")
+        assert diana.MODULE_CC == {"Q": "none", "R": "pull"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        assert "pulls all nearby enemies towards her" in cc_review.slot_text(data, "R")
+
+    def test_moonfalls_beam_lands_on_its_sourced_delay(self):
+        data = cc_review.kit("Diana")
+        assert "strike upon the area around her after 1 second" in (
+            cc_review.slot_text(data, "R")
+        )
+        parsed = parse_champion_abilities(
+            data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
+        )
+        (part,) = parsed["R"]["parts"]
+        assert part.time_offset == 1.0
+        assert part.cc_kind == "pull"
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Diana") == ["E", "W"]
+        coverage = cc_review.fimbulwinter_coverage("Diana")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

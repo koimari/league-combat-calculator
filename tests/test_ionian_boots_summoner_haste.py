@@ -109,6 +109,16 @@ from src.calculator.item_effects import (
 from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
 
+from src.calculator.item_coverage import ATTACKER_LANES
+
+
+def _attacker_coverage(item):
+    """Ours' lane-taking classifier, called with the cached record these
+    tests carry.  The payload shape is unchanged; only the argument moved
+    from the record to the name plus the lanes the caller needs."""
+    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+
+
 BOOTS = "Ionian Boots of Lucidity"
 ITEM_ID = 3158
 PRICE = 900
@@ -611,7 +621,7 @@ def test_coverage_wording_names_the_summoner_spell_haste_mechanic():
     boundary receipt surface would legitimately upgrade it to
     modeled_state) with a reason naming "summoner spell haste", and both
     eligibility flags True.  The boots also stay in the optimizer pool."""
-    coverage = item_model_coverage(_boots())
+    coverage = _attacker_coverage(_boots())
     assert coverage["status"] in {"stats_only", "modeled_state"}
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True

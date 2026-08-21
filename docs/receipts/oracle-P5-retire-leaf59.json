@@ -1,0 +1,106 @@
+{
+  "receipt": "oracle-P5-retire-leaf59",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/aoe/Q",
+  "old_value": null,
+  "old_value_note": "leaf absent from the previous baseline",
+  "new_value": 5,
+  "verdict": "new_value_correct",
+  "confidence": "moderate",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope_read": [
+      "data/champions.json",
+      "data/champion-audit/batch-6.json",
+      "data/champion-audit/batch-e9-1.json",
+      "data/worklists/f3-task.md",
+      "data/worklists/e3-stacks.json",
+      "data/worklists/e3-mechanics.json",
+      "data/practice-corpus/scenarios.json",
+      "docs/math-foundations.md"
+    ],
+    "scope_not_read": [
+      "src/",
+      "tests/",
+      "scripts/ (incl. golden_baseline.json)",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / the diff / the plan",
+      "data/worklists/p5-ux-task.md (withheld deliberately: it is the plan for the change under test)"
+    ]
+  },
+  "scenario_decoding": {
+    "id": "syndra_derived_order_120",
+    "champion": "Syndra",
+    "the_120": "Splinters of Wrath at cap. data/champions.json Syndra P (Transcendent): \"Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times\" and \"At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.\" data/champion-audit/batch-6.json corroborates: \"P = 120-splinter +15% total AP BUFF\", \"splinters option (0-120)\".",
+    "the_derived_order": "the algorithmically derived cast order from the rotation resolver. data/worklists/f3-task.md (F3 workstream, prior to the change under test) specifies the derivation and its ranking term: \"RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)\" - i.e. the rotation carries a per-ability AoE weight / target count, which is what the '/fights/manual_target/rotation/aoe/<slot>' subtree records.",
+    "residual_uncertainty": "The exact serialization of the rotation receipt lives in src/ and scripts/, which this oracle is forbidden to read. The semantics of the 'aoe' node were therefore inferred from the cached F3 specification, not read off the emitter."
+  },
+  "independent_computation": {
+    "step_1_is_Q_an_aoe_ability": {
+      "source": "data/champions.json -> Syndra.abilities.Q[0]",
+      "quoted": "\"spellEffects\": \"Aoe\", \"targeting\": \"Location\", \"affects\": \"Enemies\", \"effectRadius\": \"210\", \"targetRange\": \"800\"; description: \"Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies.\"",
+      "conclusion": "Dark Sphere is an uncapped circular area effect (210-unit radius) that damages every nearby enemy. It therefore MUST carry an entry in a per-ability AoE listing; the leaf's previous absence is itself the defect, independent of the number."
+    },
+    "step_2_the_target_ceiling": {
+      "reasoning": "The cached Q text states no target cap (the only 'limit' note on the ability is about simultaneous spheres: \"There is no limit as to how many Dark Spheres can be active at a time\"). An uncapped enemy-champion AoE on Summoner's Rift is bounded only by the enemy team size, 5.",
+      "value": 5
+    },
+    "step_3_linearity_check": {
+      "source": "docs/math-foundations.md, Section 1.2 (linearity of expectation for multi-hit abilities)",
+      "quoted": "\"A part with h identical hits is mitigated per hit and summed: sum_h m(R)*raw = h*m(R)*raw ... This is exact because the mitigation operator x -> x*100/(100+R) is linear in raw damage for a fixed resistance.\"",
+      "conclusion": "A target/AoE count enters the rotation score linearly, so an integer target count of 5 is the mathematically well-formed form of this leaf; there is no fractional or damage-magnitude reading under which 5 could be a damage number (Q's damage per rank is 90/125/160/195/230 (+70% AP), never 5)."
+    },
+    "step_4_rule_out_the_cast_count_reading": {
+      "computation": "Q cooldown is 7s at every rank (data/champions.json Syndra.abilities.Q[0].cooldown = [7,7,7,7,7]); R's passive grants Dark Sphere 10/20/30 ability haste (R effects[0] leveling 'Ability Haste'). Applying the documented identity cd' = cd*100/(100+AH) (CLAUDE.md / math-foundations Section 5): AH 0 -> 7.000s, AH 30 -> 5.385s, AH 120 -> 3.182s, AH 150 -> 2.800s. Cast counts (renewal counting, casts starting inside the window, math-foundations Section 1.1 N(T)=floor(T/c)+1): over a 120s window these are 18 / 23 / 38 / 43 casts; over 15s they are 3 / 3 / 5 / 6; over 25s 4 / 5 / 8 / 9.",
+      "conclusion": "No reading in which '120' is the fight length or the ability haste produces 5 robustly (a 120s fight gives 18-43 Q casts), so the leaf is not a cast count. This corroborates the AoE-target-count reading and the splinter reading of '120'."
+    },
+    "step_5_rule_out_other_syndra_integers": {
+      "checked": [
+        "Q charges: \"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2\" -> 2, but that is a charge/ammo count (the module carries it as the separate Q2 slot per data/champion-audit/batch-6.json: \"ammo (Q 2nd charge at 40 splinters)\"), not an AoE target count.",
+        "R spheres: \"Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones\" -> 3..7 spheres, an R-slot quantity, not Q.",
+        "Q max rank = 5 (five cooldown/damage entries). Note this alternate reading of the leaf ALSO evaluates to 5."
+      ],
+      "conclusion": "Every reading of this leaf that the cached data supports evaluates to 5 (uncapped AoE target ceiling = 5; Q max rank = 5). No source value other than 5 is defensible for a '/fights/manual_target/rotation/aoe/Q' node."
+    }
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.Q[0]",
+      "text": "spellEffects=\"Aoe\"; effectRadius=\"210\"; targeting=\"Location\"; affects=\"Enemies\"; cooldown values [7,7,7,7,7]; \"Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. The Dark Sphere then remains on the ground for 6 seconds.\"; Magic Damage [90,125,160,195,230] (+70% AP); \"Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.\""
+    },
+    {
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.P[0]",
+      "text": "\"Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times.\"; \"At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.\""
+    },
+    {
+      "file": "data/champions.json",
+      "locus": "Syndra.abilities.R[0]",
+      "text": "\"Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.\" Ability Haste [10,20,30]; \"Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones.\""
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locus": "Syndra",
+      "text": "modeled slots [P,Q,Q2,W,E,R]; \"P = 120-splinter +15% total AP BUFF\"; \"ammo (Q 2nd charge at 40 splinters)\""
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "locus": "deliverable 1b",
+      "text": "\"RANK per-rank DPS at the fight's stats for the remaining abilities (total_raw / effective cooldown x AoE weight)\""
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locus": "Section 1.2 / Section 1.1 / Section 5",
+      "text": "per-hit mitigation is linear in raw damage (so a target count enters linearly); renewal cast counting N(T)=floor(T/c) with casts counted at start; cd' = cd*100/(100+AH)"
+    }
+  ],
+  "verdict_rationale": "Two independent legs. (1) Existence: Syndra's Q is flagged and described in the cached wiki data as an uncapped circular area effect that damages all nearby enemies, so it belongs in a per-ability AoE listing - the old state (leaf absent) cannot be right. (2) Value: the only ceiling the game imposes on an uncapped enemy-champion AoE is the 5-champion enemy team, and the alternate reading of the node (Q's rank) is likewise 5; no cached source supports any other integer, and the cast-count reading is arithmetically excluded (a 120-unit window of any interpretation yields 18-43 Q casts, never 5).",
+  "caveats": [
+    "The emitter for the '/fights/manual_target/rotation/aoe/*' subtree lives in src/ and scripts/, which this oracle did not read by design; the node's semantics were inferred from data/worklists/f3-task.md's specification of the AoE weight term plus the cached ability data.",
+    "If the node were ever intended to hold the SCENARIO's live enemy count rather than the ability's target ceiling, 5 is still the maximum legal value and is only falsifiable by the scenario roster, which is not present anywhere under data/.",
+    "verdict old_value_correct is excluded outright: an absent leaf asserts Q carries no AoE character, which contradicts data/champions.json (spellEffects=\"Aoe\", effectRadius 210, \"damage to nearby enemies\")."
+  ]
+}

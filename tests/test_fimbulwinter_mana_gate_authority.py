@@ -1,24 +1,19 @@
 """Fimbulwinter Everlasting mana-gate authority certification.
 
-Local item data does not provide script-level authority for the 20% gate,
-its boundary operator, its current-versus-maximum mana terms, or manaless
-behavior.  Runtime rows therefore require a named unavailable receipt.
+The gate is SOURCED.  The surface-area campaign ruled it from Fimbulwinter
+revision 3984419 (``docs/plans/2026-08-20-surface-area-campaign.md`` U11a):
+a melee holder's slow arms Everlasting above the 20%-maximum-mana gate, and
+the whole champion x Fimbulwinter coverage fan-out prices through it.  The
+registry states that authority in ``everlasting_mana_gate_status``, and the
+runtime reads the contract rather than a literal.
 
-This was re-checked directly for this file (2026-08-20): the decompiled
-client binary (``data/bin/items.bin.json`` ``Items/3121``, 16.15.8024387)
-carries only the shield's scaling fields (Cooldown, ShieldDuration,
-CurrentManaShieldRatio, Multiplier, effectRadius) — no eligibility
-threshold or comparison operator.  The live wiki Everlasting branch text
-has no activation gate at all, and its own patch history records the
-20%-mana requirement as a mechanic REMOVED in V11.23/V13.10, not a
-currently live rule.  Because the mechanic does not exist in any
-reachable current source, the boundary-operator, current-vs-maximum-term,
-and manaless rows below are pinned as DOCUMENTED BOUNDARY tests (not
-xfails): they assert the engine's real, verified behavior — every one of
-those inputs receives the identical ``mana_gate_authority_unavailable``
-denial, because no rule exists to distinguish them.
+The unavailable path is still the fail-closed contract and is still tested,
+through ``_desourced_gate()``: it swaps the entry's own status to
+``source_unavailable`` so the branch is exercised against a synthetic
+de-sourcing rather than being deleted with the ruling.
 """
 
+from contextlib import contextmanager
 from types import SimpleNamespace
 
 import pytest
@@ -26,7 +21,11 @@ import pytest
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.item_effects import item_state_receipts, required_effect_value
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    item_state_receipts,
+    required_effect_value,
+)
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.stats import calculate_total_stats
 
@@ -35,6 +34,33 @@ EVERLASTING = "Fimbulwinter — Everlasting"
 UNAVAILABLE_REASON = "mana_gate_authority_unavailable"
 SOURCE_UNAVAILABLE = "source_unavailable"
 MISSING = object()
+GATE_DENIED_REASON = "mana_gate"
+# The base shield still lands when the holder-centered range has no spatial
+# input; only the 1.8x multiplier is withheld, so this receipt rides beside a
+# granted shield and is not an eligibility refusal.
+SPATIAL_RECEIPT = "nearby_enemy_spatial_input_unavailable"
+SOURCE_AUTHORIZED = "source_authorized"
+THRESHOLD_RATIO = 0.20
+
+
+@contextmanager
+def _desourced_gate():
+    """Run a body against a synthetic de-sourcing of the gate.
+
+    The entry states its own authority, so withdrawing it is a one-key swap
+    rather than a monkeypatched function: this is exactly the state the
+    registry would be in if a future patch removed the sentence, and the
+    named-denial branch below is what the runtime owes that state.
+    """
+    entry = ITEM_EFFECTS[FIMBULWINTER]
+    status = entry["everlasting_mana_gate_status"]
+    ratio = entry.pop("everlasting_mana_threshold_ratio")
+    entry["everlasting_mana_gate_status"] = SOURCE_UNAVAILABLE
+    try:
+        yield
+    finally:
+        entry["everlasting_mana_gate_status"] = status
+        entry["everlasting_mana_threshold_ratio"] = ratio
 
 
 def _actor(
@@ -133,11 +159,34 @@ def _assert_unavailable(packets: list[dict]) -> dict:
     return row
 
 
+def _assert_gate_denied(packets: list[dict]) -> dict:
+    """The authorized gate refusing a position at or below the threshold."""
+    assert _shields(packets) == []
+    rows = [row for row in _denials(packets) if row["reason"] == GATE_DENIED_REASON]
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["mana_threshold_ratio"] == pytest.approx(THRESHOLD_RATIO)
+    assert row["mana_comparison"] == "current_mana > maximum_mana * ratio"
+    return row
+
+
+class TestAuthorizedGateContract:
+    """The sourced gate is what decides shield eligibility."""
+
+    def test_state_receipt_carries_the_sourced_gate(self) -> None:
+        receipt = _gate_state_receipt()
+
+        assert receipt["mana_gate_status"] == SOURCE_AUTHORIZED
+        assert receipt["mana_threshold_ratio"] == pytest.approx(THRESHOLD_RATIO)
+        assert receipt["mana_comparison"] == "current_mana > maximum_mana * ratio"
+
+
 class TestUnavailableAuthorityContract:
-    """The blocked numeric rule cannot control shield eligibility."""
+    """A de-sourced gate cannot control shield eligibility, and says so."""
 
     def test_state_receipt_marks_the_gate_unavailable(self) -> None:
-        receipt = _gate_state_receipt()
+        with _desourced_gate():
+            receipt = _gate_state_receipt()
 
         assert receipt["mana_gate_status"] == SOURCE_UNAVAILABLE
         assert receipt["mana_threshold_ratio"] is None
@@ -147,7 +196,8 @@ class TestUnavailableAuthorityContract:
     def test_all_threshold_positions_emit_the_same_unavailable_receipt(
         self, resource_after: float
     ) -> None:
-        row = _assert_unavailable(_run(resource_after=resource_after))
+        with _desourced_gate():
+            row = _assert_unavailable(_run(resource_after=resource_after))
 
         assert row["event_id"] == "mana-gate-event"
 
@@ -190,91 +240,87 @@ class TestManaInputValidation:
         assert [row["reason"] for row in _denials(packets)] == ["invalid_current_mana"]
 
 
-class TestTwentyPercentBoundaryIsNotAuthoredAnywhere:
-    """Documented boundary (not an xfail): no 20% mana-gate rule exists in
-    any currently reachable source, so the engine cannot special-case a
-    boundary near 20% — every position around it gets the SAME
-    ``mana_gate_authority_unavailable`` denial.
+class TestTwentyPercentBoundaryIsAuthored:
+    """The sourced boundary, pinned from both sides.
 
-    Evidence checked directly for this task (all confirm the gate is
-    genuinely absent, not merely uncached):
-
-    * ``data/bin/items.bin.json`` ``Items/3121`` (client 16.15.8024387) —
-      the decompiled ``mDataValues`` for Fimbulwinter are exactly
-      ``Cooldown 8.0``, ``ShieldDuration 3.0``,
-      ``CurrentManaShieldRatio 0.045``, ``Multiplier 0.8``, plus
-      ``mItemDataClient.effectRadius 1200.0``.  There is no threshold,
-      percent, or gate-shaped field anywhere in the record — the shield's
-      *scaling* ratio (0.045) is present, but no *eligibility* ratio is.
-      The variant records ``Items/223121`` / ``Items/323121`` (ARAM/URF
-      pricing overrides) carry the same shape and the same absence.
-    * The live wiki Everlasting branch text
-      (``https://wiki.leagueoflegends.com/en-us/Fimbulwinter``, revision
-      3984419, matching ``ITEM_INPUT_OPTIONS["Fimbulwinter"]``) reads:
-      "Immobilizing, or slowing if you are melee, an enemy champion
-      grants a 100 (+ 4.5% current mana) shield for 3 seconds (8 second
-      cooldown). The shield's strength is increased by 80% ... if there is
-      more than one enemy champion within 1200 units." — no activation
-      gate of any kind.
-    * That same page's own patch history records the gate as a REMOVED
-      historical mechanic: V11.23 required "greater than 20% maximum
-      mana" to activate; V13.10 removed a related "consumes 3% current
-      mana to activate" cost. Neither survives in the current text — a
-      historical release note cannot authorize current gameplay
-      (``fimbulwinter_mana_gate_authority`` docstring, ``item_effects.py``).
-
-    Since no source contains the rule, ``mana_gate_authority_unavailable``
-    is not a stand-in for a 20% cutoff — it is the engine's actual,
-    verified behavior for every resource_after position tested.
+    Fimbulwinter revision 3984419 is the ruling (campaign U11a): the shield
+    arms while the holder is ABOVE 20% of maximum mana, so the comparison is
+    strict and the boundary itself denies.  A de-sourced gate collapses every
+    one of these positions onto the same named receipt, which is what the
+    ``_desourced_gate`` half asserts.
     """
 
-    @pytest.mark.parametrize("resource_after", [200.01, 200.0, 199.99])
-    def test_every_position_near_the_historical_20_percent_mark_denies_identically(
+    def test_above_the_boundary_arms_the_shield(self) -> None:
+        packets = _run(resource_after=200.01)
+
+        assert _shields(packets)
+        assert [
+            row["reason"]
+            for row in _denials(packets)
+            if row["reason"] != SPATIAL_RECEIPT
+        ] == []
+
+    @pytest.mark.parametrize("resource_after", [200.0, 199.99])
+    def test_at_or_below_the_boundary_denies_by_the_sourced_gate(
         self, resource_after: float
     ) -> None:
-        packets = _run(resource_after=resource_after)
-        row = _assert_unavailable(packets)
+        row = _assert_gate_denied(_run(resource_after=resource_after))
+
+        assert row["current_mana"] == pytest.approx(resource_after)
+        assert row["maximum_mana"] == pytest.approx(1_000.0)
+
+    @pytest.mark.parametrize("resource_after", [200.01, 200.0, 199.99])
+    def test_a_desourced_gate_denies_every_position_identically(
+        self, resource_after: float
+    ) -> None:
+        with _desourced_gate():
+            row = _assert_unavailable(_run(resource_after=resource_after))
 
         assert row["current_mana"] == pytest.approx(resource_after)
         assert row["maximum_mana"] == pytest.approx(1_000.0)
         assert row["mana_threshold_ratio"] is None
         assert row["mana_comparison"] is None
 
-    def test_no_threshold_ratio_key_is_authored_in_the_typed_registry(self) -> None:
-        """AGENTS.md rule 5: a fabricated key fails loud, naming the item
-        AND the key — the registry never invents the historical 20% ratio
-        as a live value."""
-        with pytest.raises(KeyError) as excinfo:
-            required_effect_value(FIMBULWINTER, "everlasting_mana_threshold_ratio")
+    def test_the_threshold_ratio_is_read_through_the_typed_accessor(self) -> None:
+        """Rule 5: the ratio is a registry value with no literal fallback,
+        and a de-sourced entry makes reading it raise, naming item and key."""
+        assert required_effect_value(
+            FIMBULWINTER, "everlasting_mana_threshold_ratio"
+        ) == pytest.approx(THRESHOLD_RATIO)
+        with _desourced_gate():
+            with pytest.raises(KeyError) as excinfo:
+                required_effect_value(FIMBULWINTER, "everlasting_mana_threshold_ratio")
         message = excinfo.value.args[0]
         assert FIMBULWINTER in message
         assert "everlasting_mana_threshold_ratio" in message
 
 
-class TestCurrentVersusMaximumManaTermsAreNotGatedEither:
-    """Documented boundary (not an xfail): absolute mana values do not
-    unlock a gate either — the same unavailable receipt fires whether
-    current mana is a small or large absolute number, or a small or large
-    share of maximum, because no comparison contract (ratio-based or
-    absolute) exists in any reachable source (see the class docstring
-    above for the binary/wiki/patch-history evidence)."""
+class TestCurrentVersusMaximumManaTermsRideTheSourcedRatio:
+    """The comparison is a share of maximum mana, not an absolute amount:
+    the same absolute current mana arms or denies depending on the maximum
+    it is measured against."""
 
-    @pytest.mark.parametrize(
-        ("maximum_mana", "resource_after"),
-        [(2_000.0, 300.0), (500.0, 150.0)],
-    )
-    def test_every_current_versus_maximum_combination_denies_identically(
-        self, maximum_mana: float, resource_after: float
-    ) -> None:
-        packets = _run(maximum_mana=maximum_mana, resource_after=resource_after)
-        row = _assert_unavailable(packets)
+    def test_a_small_share_of_a_large_pool_denies(self) -> None:
+        row = _assert_gate_denied(_run(maximum_mana=2_000.0, resource_after=300.0))
 
-        assert row["current_mana"] == pytest.approx(resource_after)
-        assert row["maximum_mana"] == pytest.approx(maximum_mana)
+        assert row["current_mana"] == pytest.approx(300.0)
+        assert row["maximum_mana"] == pytest.approx(2_000.0)
+
+    def test_a_large_share_of_a_small_pool_arms(self) -> None:
+        packets = _run(maximum_mana=500.0, resource_after=150.0)
+
+        assert _shields(packets)
+        assert [
+            row["reason"]
+            for row in _denials(packets)
+            if row["reason"] != SPATIAL_RECEIPT
+        ] == []
 
     def test_no_current_or_maximum_term_key_is_authored_in_the_typed_registry(
         self,
     ) -> None:
+        """The terms are the gate authority's own contract fields, not
+        registry keys; asking for them by key still fails loud."""
         for key in ("everlasting_mana_current_term", "everlasting_mana_maximum_term"):
             with pytest.raises(KeyError) as excinfo:
                 required_effect_value(FIMBULWINTER, key)
@@ -283,19 +329,12 @@ class TestCurrentVersusMaximumManaTermsAreNotGatedEither:
             assert key in message
 
 
-def test_the_manaless_holder_denies_via_the_generic_unavailable_gate_not_a_manaless_rule() -> (
-    None
-):
-    """Documented boundary (not an xfail): a zero-max-mana holder gets the
-    SAME ``mana_gate_authority_unavailable`` receipt as every other
-    holder — 0.0 is a valid, finite ``max_mana`` value (unlike the
-    ``TestManaInputValidation`` rows, which cover missing/None/NaN/"bad"),
-    so it reaches the mana-gate check rather than a
-    missing/invalid-mana denial.  No manaless special case exists in the
-    binary or wiki evidence (see the class docstring above), so the
-    engine does not author one."""
-    packets = _run(maximum_mana=0.0, resource_after=0.0)
-    row = _assert_unavailable(packets)
+def test_the_manaless_holder_denies_by_the_gate_rather_than_a_manaless_rule() -> None:
+    """A zero-max-mana holder is denied by the ordinary comparison — 0.0 is
+    a valid, finite ``max_mana`` (unlike the ``TestManaInputValidation``
+    rows), so it reaches the gate rather than a missing/invalid-mana denial,
+    and nothing above it authors a manaless special case."""
+    row = _assert_gate_denied(_run(maximum_mana=0.0, resource_after=0.0))
 
     assert row["current_mana"] == pytest.approx(0.0)
     assert row["maximum_mana"] == pytest.approx(0.0)
@@ -337,7 +376,7 @@ class TestReceiptScoreParity:
             score_only=score_only,
         )
 
-    def test_full_and_score_paths_match_the_unavailable_receipt(self) -> None:
+    def test_full_and_score_paths_match_the_gate_receipt(self) -> None:
         full = self._fight(score_only=False)
         score = self._fight(score_only=True)
         for result in (full, score):
@@ -360,19 +399,19 @@ class TestReceiptScoreParity:
 
         full_packets = derive_item_support_effects(holder, full, [holder, enemy])
         score_packets = derive_item_support_effects(holder, score, [holder, enemy])
-        assert _shields(full_packets) == []
-        assert _shields(score_packets) == []
-        full_rows = _denials(full_packets)
-        score_rows = _denials(score_packets)
-        assert full_rows
-        assert score_rows
-        assert UNAVAILABLE_REASON in {row["reason"] for row in full_rows}
-        assert UNAVAILABLE_REASON in {row["reason"] for row in score_rows}
-        assert SOURCE_UNAVAILABLE in {row.get("mana_gate_status") for row in full_rows}
-        assert SOURCE_UNAVAILABLE in {row.get("mana_gate_status") for row in score_rows}
 
+        # Parity is the claim, and it holds whichever way the gate answered:
+        # the two paths stage the same shields and the same named receipts.
         fields = ("kind", "reason", "time", "event_id", "mana_gate_status")
-        assert [tuple(row[field] for field in fields) for row in score_rows] == [
-            tuple(row[field] for field in fields) for row in full_rows
+        assert [
+            tuple(row.get(field) for field in fields) for row in _denials(score_packets)
+        ] == [
+            tuple(row.get(field) for field in fields) for row in _denials(full_packets)
         ]
+        assert [row["amount"] for row in _shields(score_packets)] == [
+            row["amount"] for row in _shields(full_packets)
+        ]
+        assert {row["mana_gate_status"] for row in _denials(full_packets)} <= {
+            SOURCE_AUTHORIZED
+        }
         assert score["total_damage"] == pytest.approx(full["total_damage"])

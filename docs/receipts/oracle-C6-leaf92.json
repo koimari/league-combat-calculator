@@ -1,0 +1,93 @@
+{
+  "receipt_id": "oracle-C6-leaf92",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_60",
+  "leaf_path": "fights/manual_target/cast_timeline[5]/time",
+  "old_value": 7.27,
+  "new_value": 5.0,
+  "verdict": "new_value_correct",
+
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <fresh scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-C6-fresh",
+    "read": ["data/**", "docs/math-foundations.md"],
+    "not_read": ["src/", "tests/", "scripts/", "docs/plans/", "docs/receipts/", "git history", "the diff", "the plan"],
+    "contamination_note": "A first scratch directory at .../scratchpad/oracle-C6 was NOT fresh: it already held data/ and docs/ from an earlier run (mtime 19:34) plus a root-level file 'syndra.txt' (20043 bytes, mtime 20:15). 'git ls-tree --name-only HEAD' shows no 'syndra.txt' at the repo root, and the mandated archive command exports only data/ and docs/math-foundations.md, so that file could not have come from the export. It was discarded unread and a genuinely fresh tree (oracle-C6-fresh) was built and used for every quotation below."
+  },
+
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0] (\"Force of Will\")",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [12, 11, 10, 9, 8], \"units\": [\"\",\"\",\"\",\"\",\"\"]}], \"affectedByCdr\": true}",
+      "used_for": "W rank-5 base cooldown = 8.0 s, and W IS reduced by ability haste"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.W[0].castTime",
+      "quote": "\"castTime\": \"none\"",
+      "used_for": "W occupies no blocking cast time on the shared timeline"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.Q[0] (\"Dark Sphere\")",
+      "quote": "\"cooldown\": {\"modifiers\": [{\"values\": [7,7,7,7,7]}], \"affectedByCdr\": false}, \"castTime\": \"none\", \"rechargeRate\": [7,7,7,7,7]",
+      "used_for": "Q base cooldown 7 s; Q is flagged static (see caveat)"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.E[0] / R[0]",
+      "quote": "E cooldown [15,15,15,15,15], castTime \"0.25\"; R cooldown [120,100,80], castTime \"0.25\"; both affectedByCdr true",
+      "used_for": "the other two cooldowns and cast times on the shared timeline"
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[0]",
+      "quote": "\"Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste.\" leveling row: Ability Haste [10, 20, 30]",
+      "used_for": "the only sourced ability-haste quantity in Syndra's kit (10/20/30 by R rank) - it applies to Dark Sphere ONLY, never to Force of Will"
+    },
+    {
+      "source": "CLAUDE.md domain knowledge (restated verbatim in docs/math-foundations.md row 'Ability haste (effective_cooldown)')",
+      "quote": "cd' = cd*100/(100+AH); casts/unit time affine in AH | EXACT",
+      "used_for": "the effective-cooldown formula"
+    },
+    {
+      "source": "docs/math-foundations.md section 1.1 'Renewal theory for cast + auto timing schedules'",
+      "quote": "Ability recasts are scheduled on one shared timeline (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts). With c_i the effective cooldown of ability i, the cast epochs of a solo ability are 0, c_i, 2c_i, ...",
+      "used_for": "the scheduling semantics used to place cast_timeline entries"
+    },
+    {
+      "source": "data/worklists/f2-task.md",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events.",
+      "used_for": "confirming the cast order is a Q,W,E,R-style sequence over the four abilities"
+    }
+  ],
+
+  "independent_computation": {
+    "step_1_identify_the_leaf": "cast_timeline[5] is the 6th cast event. With four abilities and Q/W having castTime 'none' (0 s), the opening block fills indices 0-3 at t = 0, 0, 0, 0.25 (E occupies 0->0.25, so R starts at 0.25). Indices 4 and 5 are therefore the first two recasts, ordered by effective cooldown.",
+    "step_2_effective_cooldowns": "cd' = cd*100/(100+AH) applied to the sourced bases Q=7, W=8, E=15, R=80 (R rank 3).",
+    "step_3_solve_for_the_haste_each_value_implies": {
+      "old_7.27": "8 * 100/(100+AH) = 7.2727... => AH = 10. Exactly 800/110 = 7.272727..., which rounds to the stored 7.27. No other sourced base (7, 15, 80) can produce 7.2727 at any non-negative haste (7 would need AH = -3.75).",
+      "new_5.00": "8 * 100/(100+AH) = 5.0 => AH = 60. Exactly 800/160 = 5.0."
+    },
+    "step_4_full_timeline_reconstruction": {
+      "at_AH_10": {
+        "effective_cds": {"Q": 6.3636, "W": 7.2727, "E": 13.6364, "R": 72.7273},
+        "timeline": [[0.0, "Q"], [0.0, "W"], [0.0, "E"], [0.25, "R"], [6.3636, "Q"], [7.2727, "W"], [13.6364, "E"], [72.9773, "R"]],
+        "index_5": 7.2727
+      },
+      "at_AH_60": {
+        "effective_cds": {"Q": 4.375, "W": 5.0, "E": 9.375, "R": 50.0},
+        "timeline": [[0.0, "Q"], [0.0, "W"], [0.0, "E"], [0.25, "R"], [4.375, "Q"], [5.0, "W"], [9.375, "E"], [50.25, "R"]],
+        "index_5": 5.0
+      },
+      "note": "One scheduler, one cast order, one parameter changed. Index 5 is Force of Will's second cast in BOTH baselines; only the ability haste fed to cd' differs (10 vs 60). A brute-force sweep over AH in {0..120 step 5}, R ranks 1-3, four Q-haste policies, both cast-time conventions and every cast order of length 3-6 found NO configuration that yields 7.2727 at AH = 60, and none that yields 5.0 at AH = 10: the leaf value is a pure function of the haste applied to W."
+    },
+    "step_5_which_haste_is_the_scenario_s": "The scenario is named 'syndra_custom_order_60'. 60 is not a level (the level cap is 20 per CLAUDE.md) and cannot be an ability rank; as an ability-haste knob it reproduces the new value exactly (8*100/160 = 5.0). The old value's implied AH = 10 matches no scenario knob - the only '10' anywhere in Syndra's sourced kit is R's rank-1 passive haste, which the cached R text scopes to Dark Sphere alone ('Dark Sphere's cooldown is reduced...'), never to Force of Will, and at a level-18 golden fixture R is rank 3 (30) anyway. So 10 is not a defensible haste for W's cooldown under any reading of the cached data, while 60 is exactly the scenario's own number.",
+    "result": "cast_timeline[5].time = 8 * 100/(100 + 60) = 800/160 = 5.0 s"
+  },
+
+  "caveat_recorded_but_not_verdict_bearing": {
+    "observation": "data/champions.json flags Syndra Q with affectedByCdr: false (a genuine static-cooldown marker - the same flag carries Yasuo Q, Yone Q, Zeri Q, Jinx Q, Gangplank E, Karthus E and 49 other real static-cooldown abilities, 55 of 741 total, so it is not a parser artifact), and R's passive grants Dark Sphere 10/20/30 ability haste. A fully faithful Q would therefore recast at 7*100/(100+30) = 5.3846 s at R rank 3, not at the 4.375 s (7*100/160) implied by the reconstructed timeline.",
+    "impact_on_this_leaf": "None for the value itself: index 5 is W, and W is affectedByCdr: true, so its cooldown is 8*100/160 = 5.0 regardless of how Q is treated. If the engine ever starts honouring Q's static flag, Q's cast at index 4 moves from 4.375 to 5.3846 and the ORDER of indices 4/5 flips - the 5.0 entry would then land at index 4. That is a separate, still-open question about Dark Sphere, flagged here as an aside; it does not make 7.27 correct.",
+    "aside": "If Syndra's Q static cooldown + R-passive haste is not modelled, Syndra's Q uptime is currently overstated at high ability haste (4.375 s vs the sourced 5.3846 s at R3), and understated below level 6 (7.0 s sourced). Worth a look independently of this leaf."
+  },
+
+  "verdict_rationale": "5.0 s is exactly the sourced Force of Will rank-5 cooldown (8 s, affectedByCdr true) under the scenario's own 60 ability haste, via the documented exact formula cd' = cd*100/(100+AH). 7.27 s is 800/110, i.e. the same cooldown with only 10 ability haste applied - a haste value no cached source supplies for Force of Will. The new baseline value is correct."
+}

@@ -36,16 +36,23 @@ Why each slot is non-generic:
   nothing in her own kit scales off them at parse time (no apply_to).
 """
 
+import math
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import (
     AbilityAtomQuery,
     ranked_ability_atom_value,
     required_ability_atom,
 )
-from ..ability_spec import ControlEvent
+from ..ability_spec import AttackClass, ControlEvent, DamageClass, DamagePart
+from ..survival.actions import TransitionRank
+from .healing_contract import declare_healing_rule
+from .inputs import champion_stat, target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
+from .module_helpers import missing_hp_fraction
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no clean JSON
 # home (the P parse is degraded; R's resist buff is prose only).
@@ -63,11 +70,16 @@ R_RESIST_PER_TOTAL_AD = 0.20  # armor AND MR gained, as % of total AD
 # Head Rush shreds "for 5 seconds" — not the rest of the fight.
 Q_SHRED_DURATION = 5.0
 
-
-def _missing_hp_fraction(ctx: SlotCtx) -> float:
-    """Shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
-    pct = float(ctx.options.get("target_missing_hp_pct", 50))
-    return min(max(pct, 0.0), 100.0) / 100.0
+# This module always prices the fully-charged scream ("Maximum Magic
+# Damage"), and the cache says how long that charge takes: Briar "prepares
+# to unleash a scream in the target direction, charging for up to 1 second"
+# and "Chilling Scream can be recast within the duration, and does so
+# automatically afterwards" (data/champions.json Briar E).  A full charge
+# is therefore the whole cached second, and the scream lands at its end.
+# The charge's own healing stays inside the charge: it is declared
+# ``HealAnchor.CAST_SCHEDULE`` and counts its four 0.25-second ticks from
+# the cast, not from the damage the scream eventually deals.
+E_FULL_CHARGE_SECONDS = 1.0
 
 
 def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -85,7 +97,7 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
     single_stack = (
         P_BLEED_BASE_MIN
         + (P_BLEED_BASE_MAX - P_BLEED_BASE_MIN) * (level - 1) / 17.0
-        + P_BLEED_BONUS_AD_RATIO * ctx.stats.get("bonus_attack_damage", 0.0)
+        + P_BLEED_BONUS_AD_RATIO * ctx.stat("bonus_attack_damage")
     )
     name = ability.get("name", "Crimson Curse")
     return {
@@ -123,6 +135,8 @@ def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         damage,
         "physical",
+        # The leap lands one hit on the target it leaps to.
+        event_order_certified="single_hit",
     )
     # Q is a real attack (wiki data template): per-hit on-hit items at
     # 100%, shared Kraken/Hullbreaker counter, on-attack cadences
@@ -202,9 +216,9 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     target = dict(ctx.target or {})
-    target["target_missing_health"] = target.get(
-        "target_max_health", 0.0
-    ) * _missing_hp_fraction(ctx)
+    target["target_missing_health"] = target_stat(
+        target, "target_max_health"
+    ) * missing_hp_fraction(ctx)
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, target)
 
     entry = damage_entry(
@@ -213,6 +227,8 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(frenzy, rank),  # W[1] has no cooldown of its own
         bonus,
         "physical",
+        # One empowered bite, riding the attack it empowers.
+        event_order_certified="single_hit",
     )
     entry["empowers_next_auto"] = True
     entry["applies_dot_stack"] = True
@@ -274,6 +290,20 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
+    # One scream, at the end of the charge this module always prices in
+    # full, and it always knocks back there ("If Chilling Scream was
+    # charged for its full duration, enemies hit are also knocked back 575
+    # units"); the same hit also slows, but the knockback is the
+    # immobilize a control-armed holder reads.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            total,
+            time_offset=E_FULL_CHARGE_SECONDS,
+            cc_kind="knockback",
+        ),
+    )
+    entry["event_order_certified"] = "single_hit"
     entry["applies_dot_stack"] = True
 
     # The atom catalog validates the same champion shape the pipeline parses.
@@ -309,7 +339,7 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
         duration_atom, 1, source=_E_REDUCTION_SOURCE
     )
     charge_seconds = min(
-        max(float(ctx.options.get("e_charge_seconds", 1.0)), 0.0),
+        max(float(ctx.option("e_charge_seconds")), 0.0),
         sourced_duration,
     )
     if charge_seconds > 0.0:
@@ -328,9 +358,15 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
                 # charging (physical, magic, and true — the sourced prose
                 # names no carve-out), so the modifier gates no source kind.
                 "all_sources": True,
-                # A modifier armed at the same timestamp as an incoming hit
-                # must apply before that hit (shield priority, not heal).
-                "_priority": -1.0,
+                # D-04: a modifier names its classes; "every damage type"
+                # is the full declaration, never an empty one.
+                "damage_classes": frozenset(DamageClass),
+                "attack_classes": frozenset(AttackClass),
+                # An amplification already in force at its own
+                # timestamp, so it must price the hit landing at that
+                # timestamp: that slot is AURA_ARM, and it is what
+                # DEBUFF_ARM (a debuff some trigger armed) is not.
+                "_rank": TransitionRank.AURA_ARM,
             }
         ]
 
@@ -360,11 +396,18 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
         knockup_seconds, stun_seconds = (float(values[0]), float(values[1]))
         if knockup_seconds <= 0.0 or stun_seconds <= 0.0:
             raise ValueError("Briar E control durations must be positive")
+        # The rebound happens where the scream lands, which is the end of
+        # the charge this module always prices in full — the same instant
+        # the damage part carries.
         entry["control_events"] = (
-            ControlEvent("knockup", knockup_seconds, time_offset=0.0),
+            ControlEvent("knockup", knockup_seconds, time_offset=E_FULL_CHARGE_SECONDS),
             # The stun starts when the knockup ends (the sourced sequence
             # "knocked up for 0.5 seconds and stunned for 1.5 seconds").
-            ControlEvent("stun", stun_seconds, time_offset=knockup_seconds),
+            ControlEvent(
+                "stun",
+                stun_seconds,
+                time_offset=E_FULL_CHARGE_SECONDS + knockup_seconds,
+            ),
         )
         entry["control_source_atoms"] = [_atom_receipt(control_atom)]
     return entry
@@ -392,9 +435,12 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(ability, rank),
         total,
         "magic",
+        # One explosion on arrival; the cached text gives the dash no
+        # duration of its own to author as an offset.
+        event_order_certified="single_hit",
     )
     entry["applies_dot_stack"] = True
-    resist_bonus = R_RESIST_PER_TOTAL_AD * ctx.stats.get("attack_damage", 0.0)
+    resist_bonus = R_RESIST_PER_TOTAL_AD * ctx.stat("attack_damage")
     entry["stat_buff"] = {
         "armor": resist_bonus,
         "magic_resistance": resist_bonus,
@@ -490,12 +536,6 @@ ASSUMPTIONS = [
     "it for the whole ult); toggling it off also removes Snack Attack",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
-
 SLOTS = {
     "W_frenzy": _blood_frenzy,
     "R": _certain_death,
@@ -505,24 +545,22 @@ SLOTS = {
     "P": _crimson_curse,
 }
 
-parse_abilities = build_parser(SLOTS, "Briar")
+# Cached kit review.  Q "stuns them for 0.85 seconds"; W's Snack Attack
+# bite and R's explosion apply nothing to the target they damage (R "fears
+# all non-marked targets", and the marked one is the target it damages).
+# E's scream now lands at the end of the cached charge and carries its
+# knockback on the part itself (see ``_chilling_scream``), because that
+# kind belongs to the full charge this module prices rather than to the
+# slot.  W_frenzy and P emit no ability damage.
+MODULE_CC = {"Q": "stun", "W": "none", "R": "none"}
+
+parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Briar",
-        "revision_id": 4046069,
-        "revision_timestamp": "2026-07-27T13:03:08Z",
-    }
-]
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
-import math  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Briar")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -540,21 +578,30 @@ def derive_self_healing(
     )
     maximum = _healing.extract_named(ability, "Maximum Heal", rank, champion_stats, {})
     if per_tick > 0.0 and maximum > 0.0:
-        for event in damage_events:
-            if _healing._event_source(event) != "E":
-                continue
+        # The ticks are the charge's, not the scream's: Briar is "charging
+        # for up to 1 second, during which she ... heals herself every 0.25
+        # seconds" and only then unleashes the scream, so the cadence counts
+        # from the CAST and stops before the damage the recast deals (cached
+        # E, data/champions.json).  Nor is a tick caused by the scream's
+        # damage — it happens while Briar is still charging, before there is
+        # any — so the receipt carries no damage trigger.  Gating a 0.25s
+        # tick on a hit that lands at 1.0s would drop three quarters of the
+        # charge.  An E event is still what proves the cast happened; it is
+        # not what the heal is paid for.
+        for payment in _healing._payments(
+            _healing.HealAnchor.CAST_SCHEDULE, "E", damage_events, cast_timeline
+        ):
             ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
             for index in range(1, ticks + 1):
                 healing.append(
                     {
-                        "time": float(event.get("time", 0.0)) + index * 0.25,
+                        "time": payment.cast_time + index * 0.25,
                         "amount": min(
                             float(per_tick),
                             max(0.0, maximum - per_tick * (index - 1)),
                         ),
                         "source": "Chilling Scream",
                         "kind": "champion_ability",
-                        **_healing._trigger_fields(event),
                     }
                 )
     # P (Crimson Curse) bleed self-heal: "The bleed always heals Briar
@@ -564,10 +611,12 @@ def derive_self_healing(
     # pre-mitigation bleed damage at every stack level, so one sourced
     # rule prices the whole stream.  The wiki's missing-health healing
     # amplifier (0% : 40%) is a live-state boundary, not priced here.
-    for event in _healing._attributed_events(
+    for payment in _healing._payments(
+        _healing.HealAnchor.DAMAGING_HIT,
+        lambda source: source.startswith("stacking_dot_"),
         damage_events,
-        lambda source, _event: source.startswith("stacking_dot_"),
     ):
+        event = payment.event
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
         amount = 0.25 * dealt
         if amount > 0.0:
@@ -583,7 +632,9 @@ def derive_self_healing(
     # W[1] (Snack Attack): "healing her for 5% of her maximum health
     # plus a percentage of the post-mitigation damage dealt" — the
     # percentage is the sourced "Heal Percentage" row (24 / 28 / 32 /
-    # 36 / 40% by rank).  The heal pays at the bite's hit event.
+    # 36 / 40% by rank).  The heal pays once per activation, at the
+    # bite's hit event; the CAST anchor keeps that one payment even if a
+    # future W is priced as several hits.
     w_rank = _healing._rank(ability_damages, "W")
     heal_percent = _healing.extract_named(
         _healing._ability(champion_data, "W", 1),
@@ -592,10 +643,11 @@ def derive_self_healing(
         champion_stats,
         {},
     )
-    max_health = float(champion_stats.get("health", 0.0) or 0.0)
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "W"
+    max_health = champion_stat(champion_stats, "health")
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
+        event = payment.event
         snack_heal = (
             0.05 * max_health
             + float(event.get("damage", 0.0) or 0.0) * heal_percent / 100.0
@@ -609,9 +661,10 @@ def derive_self_healing(
         _healing._ability(champion_data, "R"), "Life Steal", r_rank, champion_stats, {}
     )
     if life_steal > 0.0:
-        for event in _healing._attributed_events(
-            damage_events, lambda source, _event: source == "auto_attacks"
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT, "auto_attacks", damage_events
         ):
+            event = payment.event
             _healing._heal_from_damage(
                 healing,
                 event,
@@ -620,9 +673,5 @@ def derive_self_healing(
             )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Briar", derive_self_healing)

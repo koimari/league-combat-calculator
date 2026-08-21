@@ -1,33 +1,33 @@
 """Tahm Kench's acquired-taste and defensive-state packets.
 
-Roadmap session 4 batch G (2026-08-21): E (Thick Skin) is grey-health
-resource state, not enemy damage — confirmed independently of the
-existing SLOTS omission below. All three cached E effects
-(data/champions.json, ``affects: "Self"``) are self-directed: the grey-
-health store (15/23/31/39/47% of post-mitigation damage TAKEN, boosted
-to 42-50% with 2+ visible enemies), the out-of-combat consume-to-heal
-(60% : 100% based on level of the stored pool), and the grey-to-shield
-active conversion. The generic wiki parser's "Max Health Damage" leveling
-attribute on the second effect is its generic name for that self
-percent-of-max-health heal-restore term, not damage dealt to an enemy —
-the exact same misparse pattern as Rek'Sai P's "Max Health Damage" row
-(roadmap session 4 batch F precedent). The pinned reviewed packet
-(static/reviewed-packets.json) independently carries a ``kind: "packet"``
-declaration for E with ``base`` all zero and a ``targetMaxHp`` ratio that
-is the same misparsed self-heal term, not a corroborating enemy-damage
-formula — the module's own SLOTS dict below has never wired E (deliberate,
-documented since before this pass), so MODULE_COVERAGE was simply stale,
-reading "out_of_scope" for a slot this module already treats as
-non-damaging. Reclassified to "no_damage"; zero fight-computation change
-(E remains absent from ``parse_abilities``' output, matching
-``tests/test_champion_withholdings.py``'s ``"E" not in tahm_abilities``
-invariant).
+E (Thick Skin) stays off the slot map — it damages nothing, and a slot
+would invent a cast — so ``MODULE_COVERAGE`` states it ``no_damage``
+rather than leaving the derived ``out_of_scope`` of an unmodeled gap.
+All three cached E effects are ``affects: "Self"`` (the grey-health
+store, the out-of-combat consume-to-heal, the grey-to-shield active);
+the wiki parser's "Max Health Damage" leveling attribute on the second
+one is its generic name for that self percent-of-max-health restore, not
+damage dealt to an enemy — the same misparse as Rek'Sai P.
+The mechanic itself is priced elsewhere: the shared grey-health
+primitive (``participant_timeline._grey_health_receipts``, reached
+through ``healing.GREY_HEALTH_RULE_CHAMPIONS``) reads E's rank off the
+skill order and works the incoming ledger. Runtime probe, level 18 / E
+rank 5 / one enemy dealing 314.4 post-mitigation: ``grey_health_stored``
+147.75 (0.47 x, the rank row) and a ``Thick Skin (grey health)`` heal of
+147.75 four seconds after the last hit — which lands only when the fight
+leaves him those four seconds, exactly as the wiki states. The E ACTIVE
+(grey health converted into a 2.5 s shield) is the part with no channel:
+the pool is walk state and a parse-time ``attach_self_shield`` payload
+cannot read it. E remains absent from ``parse_abilities``' output, so
+the reclassification changes no fight computation.
 """
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -35,6 +35,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 
 def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -59,8 +60,12 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for("Q")
     if rank < 1:
         return None
-    total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    stacks = min(max(int(ctx.options.get("q_passive_stacks", 0)), 0), 3)
+    # Tongue Lash's row carries a per-rank base and an eighteen-entry per-level
+    # term, so reading it needs the level as well as the rank.
+    total = extract_named(
+        ability, "Magic Damage", rank, ctx.stats, ctx.target, level=ctx.level
+    )
+    stacks = min(max(int(ctx.option("q_passive_stacks")), 0), 3)
     if stacks:
         total += extract_named(
             ctx.ability("P") or ability,
@@ -76,7 +81,19 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
         total,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", total, time_offset=0.0),)
+    # Q's crowd control is stack-dependent, so it is authored on the part
+    # rather than declared once in MODULE_CC: the lash "deals magic damage
+    # to the first enemy hit and slows them by 50% for 2 seconds", and the
+    # "An Acquired Taste Bonus" at three stacks adds "The target is
+    # stunned for 1.5 seconds" on top of it.
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            total,
+            time_offset=0.0,
+            cc_kind="stun" if stacks >= 3 else "slow",
+        ),
+    )
     entry["detail"] = f"{stacks} Acquired Taste stack(s) before Q"
     return entry
 
@@ -104,7 +121,11 @@ def _regurgitate(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = {
     "P": _acquired_taste,
     "Q": _tongue_lash,
-    "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One emergence, one blow ("dealing magic damage to nearby enemies and
+    # knocking them up and stunning them for 1 second").
+    "W": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     # Thick Skin is grey-health/shield state, not damage; omitting it keeps
     # the damage timeline from inventing an enemy hit.  The E8a grey-health
     # primitive authors the E store (15/23/31/39/47% by rank, 42-50% with
@@ -114,7 +135,18 @@ SLOTS = {
     "R": _regurgitate,
 }
 
-parse_abilities = build_parser(SLOTS, "Tahm Kench")
+# Reviewed crowd control, read from the cached kit.  W (Abyssal Dive)
+# lands "dealing magic damage to nearby enemies and knocking them up and
+# stunning them for 1 second" — two immobilize kinds on one target, so the
+# reviewed answer is the un-narrowed one.  R prices Regurgitate, the spit
+# at the end of Devour, and Devour "can only be cast on enemies with 3
+# stacks of An Acquired Taste", whose bonus reads "The target is
+# suppressed during Devour's cast time and while attached".  P is an
+# on-hit rider on the attack stream and Q's answer is stack-dependent, so
+# Q authors its own kind on its part.
+MODULE_CC = {"W": "immobilize", "R": "suppression"}
+
+parse_abilities = build_parser(SLOTS, "Tahm Kench", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     {
@@ -148,29 +180,20 @@ ASSUMPTIONS = [
     "out_of_scope).",
 ]
 
-SOURCES = [
-    {
-        "label": "Tahm Kench — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Tahm_Kench",
-        "revision_id": 4047230,
-        "revision_timestamp": "2026-07-29T12:04:53Z",
-    }
-]
+SOURCES = load_champion_sources("Tahm Kench")
 
 
-# Authoritative review metadata (issue #161).
+# E damages nothing, so it is a reviewed no-damage slot rather than the
+# unmodeled gap the slot map would otherwise derive.
 MODULE_COVERAGE = {
     slot: (
         "modeled" if slot in SLOTS else "no_damage" if slot == "E" else "out_of_scope"
     )
     for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -194,9 +217,10 @@ def derive_self_healing(
     ) -> float:
         return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
 
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "Q"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
+        event = payment.event
         healing.append(
             {
                 "time": float(event.get("time", 0.0)),
@@ -209,9 +233,5 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Tahm Kench", derive_self_healing)

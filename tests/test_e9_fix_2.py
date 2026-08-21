@@ -462,6 +462,13 @@ class TestNaafiriQRecastAndE:
         # steroid, so the fight rows are re-derived from them (the
         # Lee Sin / Urgot idiom above) rather than from the parse stats.
         data = _fight("Naafiri")
+        fight_stats = _fight_stats(data)
+        fight_dash = extract_named(
+            _ability("Naafiri", "E"), "Dash Physical Damage", 5, fight_stats, {}
+        )
+        fight_flurry = extract_named(
+            _ability("Naafiri", "E"), "Flurry Physical Damage", 5, fight_stats, {}
+        )
         casts = int(data["breakdown"]["E"]["casts"])
         fight_dash = extract_named(
             _ability("Naafiri", "E"), "Dash Physical Damage", 5, _fight_stats(data), {}

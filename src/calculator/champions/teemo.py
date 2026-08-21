@@ -26,6 +26,11 @@ adds the player-controlled trap state:
 Boundary: shroom/trap placement, arm time, trigger radius and the 6-HP
 trap health bar are state the fight model does not price — the damage
 is the detonation DoT above.
+
+Coverage: P (Guerrilla Warfare) is idle stealth with an attack-speed
+burst on breaking it, and W (Move Quick) is movement speed. Neither
+vision/stealth nor movement speed is an axis the engine has, so both
+slots are out of scope.
 """
 
 from __future__ import annotations
@@ -33,7 +38,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value
 
@@ -57,41 +62,59 @@ def _shroom_detonations(ctx: SlotCtx) -> int:
     cap = 5
     if ability is not None and rank >= 1:
         cap = max(1, int(extract_value(ability, "Maximum Charges", rank) or 5))
-    return min(max(int(ctx.options.get("r_shrooms", 1)), 1), cap)
+    return min(max(int(ctx.option("r_shrooms")), 1), cap)
 
 
-def _noxious_trap(ctx: SlotCtx) -> dict[str, Any] | None:
+def _noxious_trap(packet_r):
     """R: one full poison DoT per shroom detonation (E2-3 tick pricing)."""
-    entry = _R_SLOT(ctx)
-    if entry is None:
-        return None
-    shrooms = _shroom_detonations(ctx)
-    if shrooms > 1:
-        entry["parts"] = tuple(
-            dataclasses.replace(part, count=part.count * shrooms)
-            for part in entry["parts"]
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_r(ctx)
+        if entry is None:
+            return None
+        shrooms = _shroom_detonations(ctx)
+        if shrooms > 1:
+            entry["parts"] = tuple(
+                dataclasses.replace(part, count=part.count * shrooms)
+                for part in entry["parts"]
+            )
+            entry["total_raw"] = entry.get("total_raw", 0.0) * shrooms
+        slow = 0.0
+        ability = ctx.ability()
+        rank = ctx.rank_for()
+        if ability is not None and rank >= 1:
+            slow = extract_value(ability, "Slow", rank)
+        inherited = entry.get("detail", "")
+        entry["detail"] = (
+            f"{shrooms} shroom detonation(s), each poisoning for "
+            f"{_R_DOT_SECONDS:g}s ({_R_TICKS} ticks at {_R_TICK_INTERVAL:g}s "
+            f"intervals) and slowing {slow:g}% for 4s."
+            + (f" {inherited}" if inherited else "")
         )
-        entry["total_raw"] = entry.get("total_raw", 0.0) * shrooms
-    slow = 0.0
-    ability = ctx.ability()
-    rank = ctx.rank_for()
-    if ability is not None and rank >= 1:
-        slow = extract_value(ability, "Slow", rank)
-    inherited = entry.get("detail", "")
-    entry["detail"] = (
-        f"{shrooms} shroom detonation(s), each poisoning for "
-        f"{_R_DOT_SECONDS:g}s ({_R_TICKS} ticks at {_R_TICK_INTERVAL:g}s "
-        f"intervals) and slowing {slow:g}% for 4s."
-        + (f" {inherited}" if inherited else "")
-    )
-    return entry
+        return entry
+
+    return parse
 
 
 PACKET_SHA256 = "82f4b06f86d7d9d576a27f3e9e4e639261e0bb5f50c969cd0592a0ff8459a2f4"
 
+
+# Reviewed crowd control, read from the cached kit.  Q (Blinding Dart)
+# "deals magic damage and blinds them for a duration" — real crowd
+# control that is neither an immobilize nor a movement slow, which is
+# what ``blind`` is in ability_spec.CC_KIND_VOCABULARY.  E (Toxic Shot)
+# is an on-hit poison — "the target takes magic damage every second over
+# 4 seconds" — with no control clause.  R (Noxious Trap) detonates
+# "inflicting poison to nearby enemies and slowing them for 4 seconds".
+# W (Move Quick) is Teemo's own movement speed and authors no damage.
+MODULE_CC = {"Q": "blind", "E": "none", "R": "slow"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Teemo",
     PACKET_SHA256,
+    # Blinding Dart is one dart "at the target enemy" — one part and one
+    # hit, which is what carries Q's reviewed blind into the event ledger.
+    single_hit_slots=frozenset({"Q"}),
     assumption_overrides=(
         "Noxious Trap prices the full 4-second poison: 4 ticks of Magic "
         "Damage per Tick (== Total Magic Damage) at 1-second intervals.",
@@ -119,11 +142,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             dot_duration=4.0,
         )
     },
+    slot_wrappers={
+        "R": _noxious_trap,
+    },
+    cc_kinds=MODULE_CC,
 )
-PACKET_SPEC = SLOTS.packet_spec
-_R_SLOT = SLOTS["R"]
-SLOTS["R"] = _noxious_trap
-parse_abilities = build_parser(SLOTS, "Teemo")
 ASSUMPTIONS.extend(
     [
         "R (Noxious Trap) is a summoned trap: one detonation prices the "
@@ -153,4 +176,3 @@ OPTIONS.append(
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"

@@ -11,6 +11,18 @@ Why the Q slot is non-generic:
   rule). In the sustained auto path the empowered swing rides the auto
   stream, which the fight engine prices against its single time-weighted
   armor scalar like every other post-Q hit.
+
+Coverage:
+- P (Stone Skin) is ``modeled``: the bonus armor is a ``stat_buff`` row the
+  holder's survival side reads; the health regeneration is not priced.
+- W (Warrior Trickster) is ``out_of_scope``, and the missing axis is a
+  pet timeline.  The clone's damage is not a W row at all: it basic
+  attacks autonomously for 4 seconds, takes Crushing Blow and Nimbus
+  Strike's attack speed, and casts Cyclone whenever Wukong does, all at
+  the cached "Clone Outgoing Damage" ratio (40/45/50/55/60%).  Pricing it
+  means running a second attacker's swing and cast stream at a scaled
+  output; the engine prices one attacker's timeline, and the cache states
+  no clone attack rate to author one from.
 """
 
 from typing import Any
@@ -26,6 +38,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
 # seconds", wiki prose below) — it is not permanent.
@@ -40,11 +53,11 @@ def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
     per_stack = find_named_leveling(ability, "Per-Level Scaling", 1)
     if base is None or per_stack is None:
         return None
-    stacks = min(max(int(ctx.options.get("stone_skin_stacks", 0)), 0), 5)
+    stacks = min(max(int(ctx.option("stone_skin_stacks")), 0), 5)
     armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
         per_stack, ctx.level
     )
-    ctx.stats["armor"] = ctx.stats.get("armor", 0.0) + armor
+    ctx.stats["armor"] = ctx.stat("armor") + armor
     entry = damage_entry("Stone Skin", ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"armor": armor}
     entry["detail"] = f"{stacks} Strength of Stone stack(s); +{armor:.2f} bonus armor"
@@ -99,7 +112,7 @@ def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Physical Damage Per Tick", rank, ctx.stats, ctx.target
     )
-    casts = min(max(int(ctx.options.get("r_casts", 1)), 1), 2)
+    casts = min(max(int(ctx.option("r_casts")), 1), 2)
     ticks = 8 * casts
     total = per_tick * ticks
     entry = damage_entry(
@@ -123,11 +136,24 @@ SLOTS = {
     "Q": _crushing_blow,
     # The W clone's attacks are a separate pet timeline; it is not a direct
     # cast packet and therefore is intentionally omitted here.
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # One strike on the dash target (the two clone strikes land on *other*
+    # enemies), so the single-target row is one hit at the cast.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _cyclone,
 }
 
-parse_abilities = build_parser(SLOTS, "Wukong")
+# Cyclone's staff "deals physical damage every 0.25 seconds to enemies hit,
+# and can knock them up once for 0.6 seconds".  Crushing Blow's empowered
+# swing only deals damage and "inflict[s] armor reduction" — a resistance
+# shred, not control — and Nimbus Strike only strikes.  W is the clone's
+# pet timeline (no direct cast packet) and P is the armor buff; neither
+# authors a damage part.
+MODULE_CC = {"Q": "none", "E": "none", "R": "knockup"}
+
+parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
+
 
 OPTIONS = [
     {
@@ -164,18 +190,4 @@ ASSUMPTIONS = [
     "Cyclone uses eight sourced 0.25-second ticks per cast; the second cast is explicit.",
 ]
 
-SOURCES = [
-    {
-        "label": "Wukong — full champion entry",
-        "url": "https://wiki.leagueoflegends.com/en-us/Wukong",
-        "revision_id": 4021883,
-        "revision_timestamp": "2026-05-21T19:27:04Z",
-    }
-]
-
-
-# Authoritative review metadata (issue #161).
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Wukong")

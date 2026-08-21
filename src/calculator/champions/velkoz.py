@@ -41,18 +41,6 @@ _PROC_STACKS = 3
 _PROC_LEVELING_ATTR = "Per-Level Scaling"
 
 
-def _certified_single_hit(parser):
-    """Wrap a simple one-instance parser with the event-order certification."""
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = parser(ctx)
-        if entry is not None and int(entry.get("rank", 0) or 0) >= 1:
-            entry["event_order_certified"] = "single_hit"
-        return entry
-
-    return parse
-
-
 def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: one 3-stack true-damage consume per fight, when 3+ abilities land."""
     ability = ctx.ability()
@@ -61,13 +49,17 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
 
     # Deconstruction stacks come from damaging abilities (Q, W's two
     # rift hits, E, R). Any full rotation applies 3+, so a fight with
-    # the rotation present prices one proc.
+    # the rotation present prices one proc. An autos-only window casts
+    # none of them, and a basic attack only refreshes a stack it cannot
+    # create, so the counter never leaves zero.
+    if ctx.option("auto_attacks_only"):
+        return None
     applications = sum(1 for slot in ("Q", "W", "E", "R") if slot in ctx.results)
     if applications < _PROC_STACKS:
         return None
 
     flat = extract_named(ability, _PROC_LEVELING_ATTR, ctx.level, ctx.stats, ctx.target)
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     total = flat + _PROC_AP_RATIO * ap
     return {
         "name": ability.get("name", "Organic Deconstruction"),
@@ -88,7 +80,7 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
         "event_phase": "effect",
         "damage_events": [
             {
-                "time": float(ctx.options.get("fight_duration_seconds", 0.0) or 0.0),
+                "time": float(ctx.option("fight_duration_seconds") or 0.0),
                 "damage_type": "true",
                 "damage": total,
                 "event_precision": "phase_order",
@@ -107,6 +99,11 @@ ASSUMPTIONS = [
     "Organic Deconstruction procs once per fight: the rotation's "
     "damaging abilities apply 3+ stacks (Q, W's two rift hits, E, and R "
     "ticks), so the conservative floor is one 3-stack consume per fight",
+    "An autos-only fight never reaches the third stack (the pipeline "
+    "states this with the auto_attacks_only reserved option): the cached "
+    "P text sources stacking to \"Vel'Koz's abilities apply a stack of "
+    "Deconstruction to enemies hit for 7 seconds, refreshing on basic "
+    'attacks on-hit" — a swing refreshes a stack it cannot create',
     "Proc damage = the 'Per-Level Scaling' array value at the champion's "
     "level (35 at 1 up to 197.06 at 19+) + 60% AP (prose ratio, module "
     "constant)",
@@ -167,24 +164,35 @@ def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 SLOTS = {
-    "Q": _certified_single_hit(simple_damage(attr="Magic Damage", dmg_type="magic")),
-    "W": _certified_single_hit(
-        simple_damage(attr="Total Magic Damage", dmg_type="magic")
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
-    "E": _certified_single_hit(
-        with_control(
-            simple_damage(attr="Magic Damage", dmg_type="magic"),
-            kind="knockup",
-            duration_attr="Knock Up Duration",
-        )
+    "W": simple_damage(
+        attr="Total Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # E's interval is read off the cached "Knock Up Duration" row, so the
+    # ledger gets the sourced 0.75s rather than a restated constant.
+    "E": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="knockup",
+        duration_attr="Knock Up Duration",
     ),
     "R": _disintegration_ray,  # already authors its 13-tick channel timing
     "P": _organic_deconstruction,  # after the damage slots: reads their emissions
 }
 
-parse_abilities = build_parser(SLOTS, "Vel'Koz")
+# Q's bolt "slows them by 70% decaying over a duration" and R's beam
+# "slows them by 20%, lingering for 1 second"; E lands "knocking them up
+# and stunning them for 0.75 seconds" — the airborne is the kind, and the
+# stun rides the same cast.  W's rift only "deal[s] magic damage to enemies
+# within", both on the cascade and on the collapse.  P is the Deconstruction
+# consume: its true-damage row is not an ability event, so it carries no
+# reviewable marker.
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": "slow"}
 
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
-REVIEW_STATUS = "reviewed_module"
+parse_abilities = build_parser(SLOTS, "Vel'Koz", cc_kinds=MODULE_CC)
+
 
 SOURCES = load_champion_sources("Vel'Koz")

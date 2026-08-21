@@ -1,0 +1,87 @@
+{
+  "receipt_id": "oracle-C6-leaf31",
+  "runbook": "R-18 / R-19 (independent oracle; evidence tree = git archive HEAD data docs/math-foundations.md only)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[10]",
+  "old_value": "<absent>",
+  "new_value": {
+    "damage": 713.0,
+    "damage_type": "magic",
+    "phase": "ability",
+    "source": "Q",
+    "time": 10.0
+  },
+  "independent_computation": {
+    "step_0_scenario_decode": "The scenario name decodes entirely from cached data: 'syndra' = Syndra; '120' = the Splinters of Wrath stack count, which data/champions.json Syndra P and data/champion-audit/batch-6.json both identify as the Transcendence capstone ('At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%'); 'custom_order' = a non-default cast/level order option. No src/, tests/, scripts/ or git history was consulted.",
+    "step_1_ability_identity": "data/champions.json -> Syndra.abilities.Q ('Dark Sphere') is the only Syndra source with damageType MAGIC_DAMAGE that can produce 713 as a single instance. Its single damage row is 'Magic Damage' = [90,125,160,195,230] + [70]% AP. The event's damage_type 'magic' matches Q's declared damageType MAGIC_DAMAGE; phase 'ability' matches an ability cast (Q castTime 'none', cooldown 7 s, effectRadius 210, targetRange 800).",
+    "step_2_ap_with_transcendence": "P (Transcendent) at 120 splinters multiplies total AP by 1.15. Solving the Q formula for AP: AP = (713 - 230) / 0.70 = 690.0, and 690.0 / 1.15 = 600.0 exactly. So the event is Q at rank 5 with 600 AP pre-buff and 690 AP after the 120-splinter Transcendence buff.",
+    "step_3_forward_check": "230 + 0.70 x 690 = 230 + 483 = 713.0 magic damage. Uniqueness sweep over all five Q ranks x round pre-buff AP values (400/500/600/700/800, each x1.15) yields exactly one hit within +/-0.6: rank 5, AP_pre 600 -> 713.0. Competing Syndra sources at AP 690 do not reach 713 as a single magic instance: E = 200 + 0.60x690 = 614.0; W = 190 + 0.65x690 = 638.5 magic (its transcendent add-on is true damage, a separate type); R per sphere = 160 + 0.20x690 = 298.0. Fitting W to 713 needs AP 804.6 (pre-buff 699.7, not round) and would carry source 'W'. So {damage 713.0, magic, source Q} is self-consistent and uniquely determined.",
+    "step_4_mitigation": "713.0 is exactly the pre-mitigation figure, so the recorded event is consistent with a manual target at 0 effective magic resistance (or with the event log carrying raw damage). Under docs/math-foundations.md 2.1, m(R) = 100/(100+R); any positive post-penetration MR would scale 713.0 to a non-integer (e.g. MR 30 -> 548.5, MR 100 -> 356.5), none of which the leaf shows.",
+    "step_5_timing_plausibility": "The cast epoch t = 10.0 is consistent with the sourced cooldown data. Q base cooldown is 7 s (data/champions.json Syndra.Q.cooldown, rechargeRate 7) and Syndra R's passive explicitly grants Dark Sphere '10/20/30 ability haste', so Q is a haste-scaled cooldown. Using the audited identity cd' = cd x 100/(100+AH) (docs/math-foundations.md 5, 'Ability haste (effective_cooldown)'), 40 total Q ability haste gives cd' = 7 x 100/140 = 5.0 s exactly, i.e. cast epochs 0.0, 5.0, 10.0, ... under the shared-timeline renewal schedule of 1.1 ('an ability recasts when its effective cooldown has elapsed and no other cast is in progress'). At 120 splinters Q additionally holds up to 2 stocked charges ('Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2'; data/champion-audit/batch-6.json models this as the synthetic 'Q2' slot), which can only add Q casts, never remove them. A Q instance at t = 10.0 is therefore schedulable; nothing in the cached data forbids it."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[0]",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies. ... leveling 'Magic Damage': values [90,125,160,195,230] and [70] units '% AP'"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0]",
+      "quote": "damageType: MAGIC_DAMAGE; cooldown modifiers [7,7,7,7,7]; rechargeRate [7,7,7,7,7]; castTime: none"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1]",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[2]",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[0]",
+      "quote": "Passive: Dark Sphere's cooldown is reduced equivalent to an amount of ability haste. Ability Haste [10,20,30]"
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots.note / gap_summary",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff"
+    },
+    {
+      "file": "data/staleness.json",
+      "path": "Syndra",
+      "quote": "{\"stale\": false, \"stat_drift\": {}, \"stats_checked\": 19, \"ability_rows_checked\": 15, \"ability_rows_stale\": 0, ... Q[0] Magic Damage matched BaseDamage}"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 5, formula-audit table",
+      "quote": "Ability haste (`effective_cooldown`) | `cd' = cd*100/(100+AH)`; casts/unit time affine in AH | EXACT"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1",
+      "quote": "Ability recasts are scheduled on one shared timeline ... an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 2.1",
+      "quote": "m(R) = 100 / (100 + R)   (apply_resistance, resistance.py)"
+    }
+  ],
+  "arithmetic": {
+    "formula": "Q_damage = base(rank) + 0.70 * AP_total,  AP_total = 1.15 * AP_pre (120 splinters)",
+    "substitution": "230 + 0.70 * (1.15 * 600) = 230 + 0.70 * 690 = 230 + 483 = 713.0",
+    "inverse_check": "(713 - 230) / 0.70 = 690.0 AP; 690.0 / 1.15 = 600.0 AP pre-buff (exact round value)",
+    "uniqueness": "Only Q rank 5 at AP_total 690 reproduces 713.0; ranks 1-4 give 573 / 608 / 643 / 678 at the same AP."
+  },
+  "caveats": [
+    "The evidence tree deliberately excludes the scenario definition (it lives outside data/ and docs/math-foundations.md), so AP 600 pre-buff, Q rank 5 and total Q ability haste 40 were reconstructed by inversion, not read. The inversion is exact and unique across all five Q ranks at round AP, which is why it is treated as confirmatory rather than assumed.",
+    "The cached wiki record carries `affectedByCdr: false` on Syndra Q's cooldown block, which contradicts the same champion's R passive expressing Q's cooldown reduction in ability-haste units. This is flagged as a wiki-data artifact; if an engine honored it literally, Q epochs would be 0/7/14 rather than 0/5/10. It does not change the damage magnitude of a Q instance, which is what this leaf's value asserts."
+  ],
+  "verdict": "new_value_correct",
+  "verdict_rationale": "713.0 magic from source Q is exactly and uniquely reproducible from the cached wiki numbers (Dark Sphere rank 5 base 230 + 70% AP, with the 120-splinter Transcendence 1.15x AP multiplier giving 690 AP). The prior state (event absent) records no Q instance where the sourced cooldown/charge data permits one, and cannot be reconciled with any cached formula. Every field of the new leaf - damage, damage_type, phase, source - checks out against data/champions.json; the timestamp is consistent with the audited cd' = cd*100/(100+AH) identity at 40 Q ability haste."
+}

@@ -192,8 +192,16 @@ class TestKogMaw:
         assert scaled(1.0) == pytest.approx(max_dmg, abs=0.5)
 
     def test_r_fight_lands_between_bounds(self) -> None:
-        """The fight's R hit prices the missing-HP curve above the flat min."""
-        combat = _fight("KogMaw")
+        """The fight's R hit prices the missing-HP curve above the flat min.
+
+        A **time-based** fight, deliberately: an hp-scaled part is priced
+        against the state at its own landing instant, and in one rotation
+        every cast lands at t=0.0, so R would read a full-health target and
+        sit exactly on the minimum -- the curve would go untested.  Here R
+        is cast at 0.25, after Q has landed, which is the fight this row is
+        about.
+        """
+        combat = _fight("KogMaw", fight_mode="time_based", duration=6)
         events = _main_events(combat, "R")
         assert len(events) == 1
         raw = float(events[0]["raw_damage"])
@@ -263,13 +271,15 @@ class TestVolibear:
         assert len(abilities["W"]["parts"]) == 1
 
     def test_fight_w_prices_the_wounded_bite(self) -> None:
+        """One bite, two parts, both on the cached 0.25s cast time."""
         combat = _fight("Volibear")
         events = _main_events(combat, "W")
-        assert len(events) == 1
+        assert len(events) == 2
         ad = _stats("Volibear")["attack_damage"]
-        assert float(events[0]["raw_damage"]) == pytest.approx(
+        assert sum(float(event["raw_damage"]) for event in events) == pytest.approx(
             (105.0 + 1.1 * ad) * 1.5, abs=0.2
         )
+        assert {round(float(event["time"]), 3) for event in events} == {0.25}
 
     def test_fight_lightning_claws_ride_autos(self) -> None:
         combat = _fight(

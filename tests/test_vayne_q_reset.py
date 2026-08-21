@@ -424,14 +424,15 @@ class TestOptionContract:
 
     def test_default_parity_absent_vs_false_pipeline(self) -> None:
         """Same parity on the pipeline's registered-fight surface, with
-        the current default surface pinned: Q 10 casts on the 0.25..9.25
-        grid (R-coupled 1.0s cooldown after E's 0.25 cast), all 10 swings
-        empowered, 3 Silver Bolts procs."""
+        the current default surface pinned: Q 10 casts on the 0.0..9.0
+        grid (R-coupled 1.0s cooldown), all 10 swings empowered, 3 Silver
+        Bolts procs.  The rotation opens on Q's own cast rather than
+        carrying E's 0.25s cast time in front of it."""
         absent = _pipeline_fight(None)
         explicit = _pipeline_fight({OPTION_KEY: False})
         assert _json(absent) == _json(explicit)
         assert absent["breakdown"]["Q"]["casts"] == 10
-        assert _q_times(absent) == _approx_times([0.25 + k for k in range(10)])
+        assert _q_times(absent) == _approx_times([float(k) for k in range(10)])
         assert absent["breakdown"]["auto_attacks"]["count"] == 0
         assert absent["breakdown"]["on_hit_ability_W"]["count"] == 3
 
@@ -650,11 +651,20 @@ class TestUnchangedBoundaries:
 
     def test_no_new_control_events(self) -> None:
         """The reset adds no control events: the only control source
-        stays E's stun, with the option on or off."""
+        stays E's stun, with the option on or off.
+
+        Condemn's stun is now published as a sourced control event of its
+        own (``cc_duration`` 1.5s off ``Vayne.E[0].effects[1]``), so the
+        list is not empty — what this row is about is that the reset adds
+        nothing to it and changes nothing in it.
+        """
         off = _fight(None)
         on = _fight({OPTION_KEY: True})
         assert _json(on["control_events"]) == _json(off["control_events"])
-        assert on["control_events"] == []
+        assert {
+            (event["source_key"], event["cc_kind"], event["cc_duration"])
+            for event in on["control_events"]
+        } == {("E", "stun", 1.5)}
 
     def test_other_champions_do_not_declare_the_option(self) -> None:
         """The reset option is Vayne-scoped: no other registered
@@ -750,11 +760,18 @@ class TestFailClosedValidation:
         )
         assert response.status_code == 200
         # The API surface (10s, Q CD 1.0s, 8 ambient autos): the cap lifts
-        # from 8 to the full cooldown grid (10 casts), the bought swings
-        # surface as the auto row (8 ordinary autos), and the W procs ride
-        # the augmented stream (6 vs 2).
+        # from 8 to the full cooldown grid, the bought swings surface as
+        # the auto row (8 ordinary autos), and the W procs ride the
+        # augmented stream (6 vs 2).
+        #
+        # The grid is 0.0..10.0 — eleven casts, the last landing exactly
+        # at the fight's end.  Whether a cast at ``t == fight_duration``
+        # belongs inside the window is an engine boundary question, not a
+        # Vayne one (the option-off surface stops at 9.0 because the
+        # ambient auto count caps it first, not because the window does);
+        # this row pins the reset's effect, not that boundary.
         body = response.get_json()["breakdown"]
-        assert body["Q"]["casts"] == 10
+        assert body["Q"]["casts"] == 11
         assert body["auto_attacks"]["count"] == 8
         assert body["on_hit_ability_W"]["count"] == 6
 

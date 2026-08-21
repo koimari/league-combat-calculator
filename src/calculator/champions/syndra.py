@@ -27,7 +27,9 @@ Why each slot is non-generic:
   rank 1 = 0.12 x 70).
 - E (Scatter the Weak) is a clean "Magic Damage" read; explicit attr
   for symmetry with the rest of the kit. The 80-splinter upgrade
-  (wider angle, 70% slow) is utility only.
+  (wider angle, 70% slow) is utility only. Its authored stun is the
+  one slot in this kit whose cast order is a mechanic rather than a
+  preference, which is what ``CAST_DEPENDENCIES`` below declares.
 - R (Unleashed Power) must read "Magic Damage per Sphere" — the
   "Minimum/Maximum Magic Damage" rows are precomputed 3- and 7-sphere
   totals that would double-count with the sphere-count option. The
@@ -39,15 +41,18 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_dependency import CastDependency, SuppressedInference
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
     extract_cast_time,
     extract_cooldown,
     extract_named,
+    extract_resource_cost,
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Transcendent's 120-splinter
 # upgrade multiplies TOTAL ability power by 15% (stacks multiplicatively
@@ -104,7 +109,7 @@ def _transcendent(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None or _splinters(ctx) < SPLINTERS_FULL:
         return None
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     delta = ap * TRANSCENDENT_AP_MULTIPLIER
     ctx.stats["ability_power"] = ap + delta
 
@@ -124,7 +129,12 @@ _transcendent.phase = BUFF
 # Q: Dark Sphere — R's Q-only ability haste folded into the cooldown
 # ---------------------------------------------------------------------------
 
-_q_damage = simple_damage(attr="Magic Damage", dmg_type="magic")
+# One sphere, one detonation ("appears after a 0.6-second delay, dealing
+# magic damage to nearby enemies") — one part and one hit, which is the
+# certification that carries Q's reviewed control answer into the ledger.
+_q_damage = simple_damage(
+    attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+)
 
 
 def _q_only_haste(ctx: SlotCtx) -> float:
@@ -151,9 +161,7 @@ def _dark_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     q_haste = _q_only_haste(ctx)
     if q_haste > 0:
-        global_haste = ctx.stats.get("ability_haste", 0.0) + ctx.stats.get(
-            "basic_ability_haste", 0.0
-        )
+        global_haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
         entry["cooldown"] *= (100.0 + global_haste) / (100.0 + global_haste + q_haste)
     return entry
 
@@ -165,6 +173,23 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     schedules it once at the first free moment; one-rotation mode casts
     every entry once anyway). Charge recharge beyond the opener is not
     simulated.
+
+    ``recast_of="Q"`` is the single authority for this row's parentage
+    (D-11): it is what keeps the charge riding Q's slot in a requested
+    cast order instead of being dropped, and what the rotation resolver
+    reads to place it after Q. Nothing may infer the link from the name.
+
+    Parentage is not price. A stocked charge is a whole cast of Dark
+    Sphere and pays Dark Sphere's mana, so the cost is read off Q's own
+    cached cost row at Q's rank — the engine's free-recast default is for
+    a recast that a single paid cast bought, which this is not:
+
+        Transcendent Bonus: Collecting 40 Splinters of Wrath causes
+        Syndra to periodically stock a Dark Sphere charge, up to a
+        maximum of 2.
+
+    (``data/champions.json`` Syndra Q, effect 2 — the charge gates
+    availability and says nothing about price.)
     """
     if _splinters(ctx) < SPLINTERS_Q_SECOND_CHARGE:
         return None
@@ -177,7 +202,19 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     name = ability.get("name", "Dark Sphere")
-    entry = damage_entry(f"{name} (2nd charge)", rank, 0.0, total, "magic")
+    # A stocked charge is a whole cast of Dark Sphere, so it is the same
+    # one sphere and one detonation Q certifies above.
+    entry = damage_entry(
+        f"{name} (2nd charge)",
+        rank,
+        0.0,
+        total,
+        "magic",
+        event_order_certified="single_hit",
+    )
+    entry["recast_of"] = "Q"
+    entry["resource_type"] = str(ability.get("resource", "NONE"))
+    entry["resource_cost"] = extract_resource_cost(ability, rank, ctx.level)
     # The engine can only auto-stamp cast time from the slot's own JSON
     # entry; a synthetic slot copies its parent's.
     cast_time = extract_cast_time(ability)
@@ -204,10 +241,21 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
     name = ability.get("name", "Force of Will")
+    # One landing either way: the thrown target deals its damage "once
+    # they land", which is the instant this row certifies.  Above 60
+    # splinters that landing is split into a magic and a true part, which
+    # is still one landing (``engine._certify_shared_instant``).
     if _splinters(ctx) < SPLINTERS_W_TRUE_DAMAGE:
-        return damage_entry(name, rank, cooldown, magic, "magic")
+        return damage_entry(
+            name,
+            rank,
+            cooldown,
+            magic,
+            "magic",
+            event_order_certified="single_hit",
+        )
 
-    ap = ctx.stats.get("ability_power", 0.0)
+    ap = ctx.stat("ability_power")
     true_bonus = (W_TRUE_RATIO_BASE + W_TRUE_RATIO_PER_100_AP * ap / 100.0) * magic
     return {
         "name": name,
@@ -218,6 +266,7 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
         # Magic part FIRST: the evaluator's first-part return is the
         # Horizon Focus trigger for mixed entries.
         "parts": (DamagePart("magic", magic), DamagePart("true", true_bonus)),
+        "event_order_certified": "single_hit",
     }
 
 
@@ -295,8 +344,12 @@ ASSUMPTIONS = [
     "R sphere count is user-set (default 3 = no setup; max 7 with "
     "spheres banked on the field); the Min/Max JSON damage rows are "
     "derived totals and are not used",
-    "E's 80-splinter upgrade (wider angle, slow) and all CC (stun, "
-    "knockback, W slow) are utility only — no damage contribution",
+    "E is assumed to scatter a sphere into the target (the standard QE "
+    "combo), so its cast is authored as a stun event (MODULE_CC) for "
+    "CC-triggered item passives (Imperial Mandate, Fimbulwinter, …); the "
+    "stun itself adds no damage. The 80-splinter upgrade (wider angle, "
+    "slow), the sphere-less knockback, and W's slow remain unmodeled "
+    "utility",
     "R's passive 10/20/30 ability haste applies to Q's cooldown only",
 ]
 
@@ -307,23 +360,107 @@ SLOTS = {
     "Q": _dark_sphere,
     "Q2": _dark_sphere_second_charge,
     "W": _force_of_will,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # The stun itself is declared once, in MODULE_CC below; what E states
+    # here is the separate claim that its one hit lands at the cast
+    # boundary, which is what puts the marker in the event ledger.
+    "E": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "R": _unleashed_power,
 }
 
-parse_abilities = build_parser(SLOTS, "Syndra")
+# Reviewed crowd control, read from the cached kit.  Q (Dark Sphere)
+# "appears after a 0.6-second delay, dealing magic damage to nearby
+# enemies" with no control clause, and Q2 is a stocked charge of that same
+# cast.  E (Scatter the Weak) scatters a sphere into the target, and
+# "targets hit are also stunned for 1.25 seconds".
+#
+# W (Force of Will) throws the grabbed target and deals its damage "once
+# they land"; "all targets hit are slowed by 25% for 1.5 seconds".
+#
+# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Unleashed Power is control-free ("each dealing magic damage upon hit")
+# but its row is one aggregated part of ``r_spheres`` hits with no sourced
+# cadence between them — a schedule, which ``single_hit`` refuses.
+MODULE_CC = {"E": "stun", "Q": "none", "Q2": "none", "W": "slow"}
+
+# The revision these declarations were read from, in the shape
+# scripts/cast_dependency_audit.py will resolve against the committed
+# wiki audit once this phase's audit slice lands -- that script is not
+# in the tree yet, so today this string is shape-checked and pinned
+# equal to SOURCES by test, nothing more. It is the same parent entry
+# SOURCES publishes below.
+_WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Syndra@4024662"
+
+_STUN_RIDES_A_SPHERE = (
+    "Scatter the Weak's stun is the Dark Sphere's, not the cone's: the "
+    "wave knocks a sphere through the target and only 'targets hit are "
+    "also stunned for 1.25 seconds'. E carries cc_kind='stun' on exactly "
+    "that assumption, so a sphere has to be on the field before E is cast "
+    "or the authored stun has no referent — and an amplifier keyed on "
+    "immobilizing CC would then price a stun that never happened."
+)
+
+_INFERENCE_READS_THE_STUN_BACKWARDS = (
+    "The detector reads E's cc_kind and fans a cc_setup edge out to every "
+    "castable damage row, Q among them, which would place E first. E's "
+    "stun is the sphere's consumer, never its setup; the inference has "
+    "the mechanic the wrong way round."
+)
+
+CAST_DEPENDENCIES = (
+    CastDependency(
+        slot="E",
+        requires="Q",
+        kind="cc_enabler",
+        reason=_STUN_RIDES_A_SPHERE,
+        source=_WIKI_SOURCE,
+        suppresses=(
+            SuppressedInference(
+                setup="E",
+                consume="Q",
+                kind="cc_setup",
+                reason=_INFERENCE_READS_THE_STUN_BACKWARDS,
+            ),
+        ),
+    ),
+    CastDependency(
+        slot="E",
+        requires="Q2",
+        kind="cc_enabler",
+        reason=(
+            "The 40-splinter second charge is another Dark Sphere ('causes "
+            "Syndra to periodically stock a Dark Sphere charge, up to a "
+            "maximum of 2'), so it is subject to the same rule as Q: the "
+            "stored charge is spent before E, not after it. Load-bearing, "
+            "not a restatement of E requires Q — without it the resolver's "
+            "tie-break ranks E ahead of Q2, which has no outgoing edges, "
+            "and the derived order changes (D-83)."
+        ),
+        source=_WIKI_SOURCE,
+        suppresses=(
+            SuppressedInference(
+                setup="E",
+                consume="Q2",
+                kind="cc_setup",
+                reason=_INFERENCE_READS_THE_STUN_BACKWARDS,
+                latent_reason=(
+                    "No E->Q2 cc_setup edge exists in this tree: the "
+                    "detector's _castable() requires cooldown > 0 and Q2 "
+                    "carries the 0.0 cast-exactly-once cooldown, so the "
+                    "fan-out skips it. Declared latent rather than dropped "
+                    "because a Q2 that ever gains a real charge cooldown "
+                    "brings the reversed edge with it. This is the fact "
+                    "the ('E','Q2') seed exception in "
+                    "tests/test_f3_rotation_all.py claimed while silently "
+                    "passing, moved where the audit can see it (D-84)."
+                ),
+            ),
+        ),
+    ),
+)
+
+parse_abilities = build_parser(SLOTS, "Syndra", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Syndra",
-        "revision_id": 4024662,
-        "revision_timestamp": "2026-06-02T13:31:37Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Syndra")

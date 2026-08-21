@@ -17,7 +17,6 @@ ANNOUNCEMENT = DOCS / "patch-announcement-template.md"
 REQUIRED_SCRIPTS = (
     "patch_update.py",
     "patch_regression.py",
-    "issue_gate.py",
 )
 
 

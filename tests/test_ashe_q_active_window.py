@@ -1146,13 +1146,16 @@ class TestUnchangedBoundaries:
         from src.calculator import defensive_effects  # noqa: F401
 
     def test_module_source_and_review_status_unchanged(self):
-        from src.calculator.champions.ashe import (
-            MODULE_COVERAGE,
-            REVIEW_STATUS,
-            SOURCES,
-        )
+        # MERGE: review status and coverage have ONE home now — the
+        # validated module contract.  A module restating either is
+        # refused at import (module_contract._RESTATED_FACTS).
+        from src.calculator.champions import get_champion_module_contract
+        from src.calculator.champions.ashe import SOURCES
 
-        assert REVIEW_STATUS == "reviewed_module"
+        contract = get_champion_module_contract("Ashe")
+        MODULE_COVERAGE = contract.coverage
+
+        assert contract.review_status == "reviewed_module"
         assert MODULE_COVERAGE == {
             "P": "modeled",
             "Q": "modeled",

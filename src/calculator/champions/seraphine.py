@@ -76,33 +76,18 @@ Roadmap session (2026-08-21): closes both remaining out_of_scope slots
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+    with_control,
+)
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Seraphine", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
-
-OPTIONS = list(OPTIONS) + [
-    {
-        "key": "w_already_shielded",
-        "type": "bool",
-        "default": False,
-        "label": "W caster already has a shield for the first pulse",
-    },
-    {
-        "key": "p_notes_fired",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 4,
-        "label": "Notes fired by the empowered basic attack",
-    },
-]
 
 # The sourced cap on Notes held by one unit: "stacks up to 4 times on
 # each unit" (cached P effect 1), corroborated by the game binary's
@@ -116,6 +101,38 @@ _MAX_NOTES = 4
 # it is cross-checked by the cached "Maximum Enhanced Damage" row
 # (105-280 + 70% AP == 1.75 x the base row at every rank).
 _Q_MISSING_HEALTH_MAX_BONUS = 0.75
+
+# Notes "stack up to 4 times on each unit" and every ability cast grants
+# one, so a full Q/W/E/R rotation puts the cap on Seraphine — the default.
+_NOTE_CAP = 4
+
+
+def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the empowered attack fires every active Note at the target."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    per_note = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target, level=ctx.level
+    )
+    if per_note <= 0:
+        return None
+    notes = min(max(0, int(ctx.option("p_notes"))), _NOTE_CAP)
+    entry = on_hit_entry(
+        ability.get("name", "Stage Presence"), per_note * notes, "magic"
+    )
+    # One empowered attack fires every Note it holds; the next attack has
+    # none until her abilities grant more.
+    entry["on_hit"]["max_procs"] = 1 if notes else 0
+    entry["detail"] = (
+        f"{notes} Note(s) of {per_note:.2f} bonus magic damage each "
+        "(4 : 27.47 based on level + 4% AP) on one empowered attack; Notes "
+        "from allies (reduced by 75%) and Echo's free recast are unpriced"
+    )
+    return entry
+
+
+_stage_presence.phase = ONHIT
 
 
 def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -161,61 +178,54 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the empowered attack's Note damage, per Note fired.
+# Reviewed crowd control, read from the cached kit: Q (High Note) "deals
+# magic damage to enemies within the area" and applies nothing else; E
+# (Beat Drop) "slows them by 99%" (its root and stun are conditional on
+# the target already being slowed / immobilized, which the duel model
+# does not establish); R (Encore) "deals magic damage to enemies hit,
+# charms them ... and slows them by 40%" — the charm is the control the
+# damaged target takes.  W and P emit no damage event, so they carry no
+# reviewable control.
+MODULE_CC = {"Q": "none", "E": "slow", "R": "charm"}
 
-    The "Bonus Magic Damage" leveling row is a per-LEVEL array (20
-    entries), so it is read at ``ctx.level``, not at an ability rank —
-    Stage Presence is an innate with no rank of its own (the Rumble
-    ``_junkyard_titan`` convention, which substitutes ``ctx.level`` for
-    the rank on passive slots).  ``extract_named`` resolves the flat
-    per-level term and the "% AP" modifier together.
-    """
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
-    notes = min(max(int(ctx.options.get("p_notes_fired", 0)), 0), _MAX_NOTES)
-    per_note = extract_named(
-        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-    )
-    total = per_note * notes
-    entry = damage_entry(
-        "Stage Presence (Notes)",
-        ctx.level,
-        extract_cooldown(ability, ctx.level),
-        total,
-        "magic",
-    )
-    # Only override the parts when a Note actually lands: the fight engine
-    # reads ONLY ``parts``, so a floored count would price a full Note at
-    # the default of zero Notes (the phantom-proc bug this session fixed
-    # in Rammus' thorns).
-    if notes > 0:
-        entry["parts"] = (DamagePart("magic", per_note, count=notes),)
-    entry["detail"] = (
-        f"empowered basic attack fires {notes} Note(s) at "
-        f"{per_note:.2f} magic damage each (level-{ctx.level} flat + 4% "
-        "AP); Notes from allies (25% damage) are outside the 1v1 surface "
-        "and the empowered attack's bonus attack range and uncancellable "
-        "windup are unmodeled state"
-    )
-    return entry
-
-
-SLOTS = dict(SLOTS)
-SLOTS["P"] = _stage_presence
-SLOTS["Q"] = _high_note
-SLOTS["E"] = with_control(
-    SLOTS["E"],
-    kind="root",
-    duration_attr="Disable Duration",
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Seraphine",
+    PACKET_SHA256,
+    single_hit_slots=frozenset({"E", "R"}),
+    slot_parsers={
+        "Q": _high_note,
+        "P": _stage_presence,
+    },
+    # The kinds above are the reviewed answer; these wrappers read each
+    # one's sourced duration off the packet ("Disable Duration" is the
+    # window E's 99% slow and R's charm both last).
+    slot_wrappers={
+        "E": lambda parser: with_control(
+            parser, kind="slow", duration_attr="Disable Duration"
+        ),
+        "R": lambda parser: with_control(
+            parser, kind="charm", duration_attr="Disable Duration"
+        ),
+    },
+    cc_kinds=MODULE_CC,
 )
-SLOTS["R"] = with_control(
-    SLOTS["R"],
-    kind="charm",
-    duration_attr="Disable Duration",
-)
-parse_abilities = build_parser(SLOTS, "Seraphine")
+
+OPTIONS = list(OPTIONS) + [
+    {
+        "key": "p_notes",
+        "type": "int",
+        "default": _NOTE_CAP,
+        "min": 0,
+        "max": _NOTE_CAP,
+        "label": "Notes on the empowered attack",
+    },
+    {
+        "key": "w_already_shielded",
+        "type": "bool",
+        "default": False,
+        "label": "W caster already has a shield for the first pulse",
+    },
+]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Surround Sound) pulses its sourced missing-health heal after 2.5 "
@@ -226,29 +236,34 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(0%:75% based on missing health; equals the cached Maximum Enhanced "
     "Damage row at full missing health)",
     "P (Stage Presence) prices the empowered basic attack's Note damage - "
-    "4:27.47 by level + 4% AP per Note fired (cached P effect 2, leveling "
+    "4:27.47 by level + 4% AP per Note fired (cached P effect 3, leveling "
     "attribute 'Bonus Magic Damage', a per-level array; corroborated by "
     "the game binary's SeraphinePassive AutoDamage ByCharLevel 4->25 and "
     "NoteAPRatio 0.04). The fight engine does not simulate the Note stack "
-    "window, so p_notes_fired is the explicit count of Notes on the "
-    "empowered attack (0 = none, the default), capped at the sourced "
-    "MaxNotes of 4. The option prices ONE empowered attack; a fight with "
-    "a second empowered attack would fire more Notes, so the reading is "
-    "conservative. Notes from allies (25% damage, binary "
+    "window, so p_notes is the explicit count of Notes the empowered "
+    "attack fires, capped at the sourced MaxNotes of 4 and defaulting to "
+    "that cap because every ability cast grants a Note and a full Q/W/E/R "
+    "rotation reaches it. The row rides the basic-attack stream as an "
+    "on-hit with max_procs 1: one empowered attack fires every Note it "
+    "holds and the next has none. Notes from allies (25% damage, binary "
     "AllyNoteDamagePercent 0.25) are NOT priced: they require allied "
     "champions in range at cast time and are structurally outside the 1v1 "
-    "damage surface. The empowered attack's 25 bonus attack range per "
-    "Note and its uncancellable windup are not damage and remain state. "
-    "Reclassified from out_of_scope to modeled; the packet's no_damage "
-    "label was incomplete, not stale.",
+    "damage surface, as is Echo's free recast. The empowered attack's 25 "
+    "bonus attack range per Note and its uncancellable windup are not "
+    "damage and remain state. Reclassified from out_of_scope to modeled; "
+    "the packet's no_damage label was incomplete, not stale.",
     "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/"
     "120/140 + 20% AP for 2.5 seconds on Seraphine and nearby allies. "
     "Shield-only abilities cannot carry attach_self_shield (that payload "
     "rides damage-event rows), so W stays priced by the ally-support "
     "scanner, which derives the shield at target scope "
-    "self_and_all_teammates with target_self true, plus the conditional "
-    "missing-health pulse heal through its typed live-missing-health "
-    "atom. W's bonus movement speed (20% + 2% per 100 AP on self, 8% + "
+    "self_and_all_teammates with target_self true. The conditional "
+    "missing-health pulse heal is REFUSED rather than published at zero: "
+    "its amount depends on each recipient's live missing health, which the "
+    "scanner cannot price per recipient, and w_already_shielded only drops "
+    "the caster's shield gate - it must not resurrect a zero-amount pulse "
+    "row (pinned by tests/test_e8_support.py). W's bonus movement speed "
+    "(20% + 2% per 100 AP on self, 8% + "
     "0.8% per 100 AP on allies) is sourced but NOT modeled: it is an "
     "additive percent and the ability stat_buff channel adds a flat "
     "number onto champion_stats['move_speed'], bypassing "
@@ -258,11 +273,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Rumble-W precedent for a scanner-priced shield-only slot).",
 ]
 
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
+# No MODULE_COVERAGE: every slot is emitted and priced, which is exactly
+# what ``module_contract.default_coverage`` derives from SLOTS.  Restating
+# it is refused as a second home for the same fact.

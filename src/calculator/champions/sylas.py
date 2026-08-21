@@ -100,17 +100,15 @@ out_of_scope slots.  P closes as ``modeled``; R stays open.
     not a slot.
 """
 
+from dataclasses import replace
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .. import healing_helpers as _healing
+from .engine import SlotCtx
+from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
-
-parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
-    "Sylas", PACKET_SHA256
-)
-PACKET_SPEC = SLOTS.packet_spec
 
 # HARDCODED: verify on patch updates — the Petricite Burst ratios exist
 # ONLY in the cached description prose. Every ``leveling`` array on
@@ -129,71 +127,112 @@ _SECONDARY_AP_RATIO = 0.20
 # (cached P effect 0), corroborated by the binary's ``PassiveCharges``.
 _MAX_UNSHACKLED_STACKS = 3
 
-SLOTS = dict(SLOTS)
 
-# The packet's own P parser (``_no_formula_parser``) already emits the
-# well-formed zero row every other slot in this module emits — name, rank,
-# cooldown, resource fields, ``damage_type``, ``total_raw`` 0.0 and an
-# EMPTY ``parts`` tuple.  Petricite Burst decorates that row rather than
-# replacing it: the ability ledger's contribution really is zero, because
-# every point of this passive's damage is delivered through the converted
-# basic attack, not through a cast.  Keeping the packet row also keeps the
-# module inside the batch-wide slot-shape contract
-# (tests/test_cp10_batch_08.py asserts every parsed slot carries ``parts``
-# and ``damage_type``).
-_PACKET_PASSIVE = SLOTS["P"]
+def _chain_lash(packet_q):
+    """Q: the packet's Total Magic Damage row, declared at the cast.
+
+    The row is the lash and the explosion "after a 0.6-second delay"
+    summed into one lump, so it is not a single hit the ledger can
+    certify.  Declaring the lump's own position — the cast boundary, where
+    the lash lands — is the Xin Zhao W shape: it leaves the row's price
+    and its aggregation alone and only says when the ledger sees it, which
+    is what carries Q's reviewed slow to the control-armed readers.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, time_offset=0.0) for part in entry.get("parts") or ()
+        )
+        return entry
+
+    return parse
 
 
-def _petricite_burst(ctx: SlotCtx) -> dict[str, Any] | None:
+def _petricite_burst(packet_passive):
     """P: convert the first N swings into empowered magic attacks.
 
     ``auto_attack_conversion`` wants the NON-AD remainder only: the
     engine adds the swing's own AD (and crits it) before mitigating the
-    whole instance as magic. The empowered attack's total is
+    whole instance as magic.  The empowered attack's total is
     ``1.30 x total AD + 0.30 x AP``, so the remainder this module owns is
     ``0.30 x total AD + 0.30 x AP`` (the Galio Colossal Smash contract,
     which subtracts total AD from the modified total for the same
-    reason).
+    reason).  It is a CONVERSION, not bonus on-hit damage: the empowered
+    swing replaces its own physical damage and is mitigated as magic, so
+    an on-hit reading would invent roughly one whole auto per stack spent.
 
-    The returned row keeps ``parts`` empty: this slot books no ability
-    damage of its own, so nothing here may be summed a second time
-    alongside the converted swing.
+    The packet's own zero row is decorated rather than replaced, so the
+    slot keeps its ``parts`` empty: it books no ability damage of its
+    own, and nothing here may be summed a second time alongside the
+    converted swing.
     """
-    entry = _PACKET_PASSIVE(ctx)
-    if entry is None:
-        return None
-    ability = ctx.ability("P")
-    name = (ability or {}).get("name", "Petricite Burst")
-    attacks = min(
-        max(int(ctx.options.get("passive_procs", 0)), 0),
-        _MAX_UNSHACKLED_STACKS,
-    )
-    total_ad = float(ctx.stats.get("attack_damage", 0.0))
-    ability_power = float(ctx.stats.get("ability_power", 0.0))
-    modified_total = (
-        _PRIMARY_TOTAL_AD_RATIO * total_ad + _PRIMARY_AP_RATIO * ability_power
-    )
-    entry = dict(entry)
-    entry["name"] = name
-    entry["auto_attack_conversion"] = {
-        "name": name,
-        "count": attacks,
-        "bonus_raw": max(0.0, modified_total - total_ad),
-        "damage_type": "magic",
-    }
-    entry["detail"] = (
-        f"{attacks} empowered basic attack(s) REPLACE their ordinary "
-        f"swing with {modified_total:.2f} magic damage (130% total AD "
-        "+ 30% AP), not bonus damage on top of it; the secondary-target "
-        "whirl (40% AD + 20% AP), the nonstandard (175% + 30%) critical "
-        "strike, the monster multiplier and the 125% bonus attack speed "
-        "are all unmodeled"
-    )
-    return entry
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_passive(ctx)
+        if entry is None:
+            return None
+        ability = ctx.ability("P")
+        name = (ability or {}).get("name", "Petricite Burst")
+        attacks = min(
+            max(int(ctx.option("passive_procs")), 0),
+            _MAX_UNSHACKLED_STACKS,
+        )
+        total_ad = ctx.stat("attack_damage")
+        ability_power = ctx.stat("ability_power")
+        modified_total = (
+            _PRIMARY_TOTAL_AD_RATIO * total_ad + _PRIMARY_AP_RATIO * ability_power
+        )
+        entry = dict(entry)
+        entry["name"] = name
+        entry["auto_attack_conversion"] = {
+            "name": name,
+            "count": attacks,
+            "bonus_raw": max(0.0, modified_total - total_ad),
+            "damage_type": "magic",
+        }
+        entry["detail"] = (
+            f"{attacks} empowered basic attack(s) REPLACE their ordinary "
+            f"swing with {modified_total:.2f} magic damage (130% total AD "
+            "+ 30% AP), not bonus damage on top of it; the secondary-target "
+            "whirl (40% AD + 20% AP), the nonstandard (175% + 30%) critical "
+            "strike, the monster multiplier and the 125% bonus attack speed "
+            "are all unmodeled"
+        )
+        return entry
+
+    return parse
 
 
-SLOTS["P"] = _petricite_burst
-parse_abilities = build_parser(SLOTS, "Sylas")
+# Reviewed crowd control, read from the cached kit.  W (Kingslayer)
+# applies no control.  E (Abduct) deals its damage and "reveal[s] and
+# stun[s] them for 0.5 seconds", then "knocks them up for 0.5 seconds upon
+# arrival" — two immobilize kinds on the one target, so the reviewed
+# answer is the un-narrowed one.  R (Hijack) deals no damage of its own.
+#
+# Q (Chain Lash) deals "magic damage to enemies hit and slow[s] them for
+# 1.5 seconds"; its lumped row is declared at the cast boundary (see
+# ``_chain_lash``) rather than split into the two cached rows, which was
+# measured to move the row's ledger position.
+MODULE_CC = {"W": "none", "E": "immobilize", "Q": "slow"}
+
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
+    "Sylas",
+    PACKET_SHA256,
+    # Kingslayer is one strike ("dashes to the front of the target enemy's
+    # location then strikes them") and Abduct is one chain hit ("deal magic
+    # damage to the first enemy hit"), so each packet is one part and one
+    # hit the ledger can time — which is what carries their MODULE_CC
+    # answer to the control-armed readers.
+    single_hit_slots=frozenset({"W", "E"}),
+    slot_wrappers={
+        "P": _petricite_burst,
+        "Q": _chain_lash,
+    },
+    cc_kinds=MODULE_CC,
+)
 
 OPTIONS = list(OPTIONS) + [
     {
@@ -203,6 +242,7 @@ OPTIONS = list(OPTIONS) + [
         "min": 0,
         "max": _MAX_UNSHACKLED_STACKS,
         "label": "Unshackled attacks spent (each replaces one swing)",
+        "rotation": {"role": "self_state", "slot": "P"},
     },
 ]
 
@@ -266,12 +306,9 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "out_of_scope",
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -286,9 +323,10 @@ def derive_self_healing(
     w_rank = _healing._rank(ability_damages, "W")
     min_heal = _healing.extract_named(w, "Minimum Heal", w_rank, champion_stats)
     max_heal = _healing.extract_named(w, "Maximum Heal", w_rank, champion_stats)
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "W"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
+        event = payment.event
         if float(event.get("damage", 0.0)) <= 0.0:
             continue
         healing.append(
@@ -305,10 +343,6 @@ def derive_self_healing(
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Sylas", derive_self_healing)
 

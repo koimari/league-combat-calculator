@@ -149,12 +149,3 @@ def test_cooldown_formula_lives_only_in_damage():
         assert (
             "100.0 / (100.0" not in line
         ), f"rotation_resolver reimplements cooldown math at line {lineno}"
-
-
-def test_resistance_math_not_duplicated_in_scripts():
-    """The Rengar script must consume resistance.py, not reimplement it."""
-    script = _src_text("scripts/rengar_pen_breakpoints.py")
-    assert "from src.calculator.resistance import" in script
-    assert "def apply_resistance" not in script
-    assert "def apply_armor_penetration" not in script
-    assert "Python 3.9" not in script

@@ -55,6 +55,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Corki
@@ -89,7 +90,7 @@ _R_AUTO_RECHARGE_MAX = 6.0
 
 def _fraction_option(ctx: SlotCtx, key: str) -> float:
     """Read a 0..1 uptime option, clamped (default: the whole duration)."""
-    return min(max(float(ctx.options.get(key, 1.0)), 0.0), 1.0)
+    return min(max(float(ctx.option(key)), 0.0), 1.0)
 
 
 def _ticks_at_uptime(ticks: int, uptime: float) -> int:
@@ -244,14 +245,12 @@ def _missile_count(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> tuple[in
         return charges, f"{charges} stored charge(s) fired"
     duration = float(duration)
 
-    haste = ctx.stats.get("ability_haste", 0.0)
+    haste = ctx.stat("ability_haste")
     recharge = effective_cooldown(extract_recharge(ability, rank), haste)
     autos = math.floor(
-        ctx.stats.get("attack_speed", 0.0)
-        * float(ctx.options.get("auto_attack_uptime", 0.0))
-        * duration
+        ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime")) * duration
     )
-    crit_chance = min(ctx.stats.get("critical_strike_chance", 0.0) / 100.0, 1.0)
+    crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
     per_auto = _R_AUTO_RECHARGE_MIN + crit_chance * (
         _R_AUTO_RECHARGE_MAX - _R_AUTO_RECHARGE_MIN
     )
@@ -291,13 +290,25 @@ def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     missiles, ammo_detail = _missile_count(ctx, ability, rank)
-    cycle = min(max(int(ctx.options.get("r_big_one_cycle_position", 0)), 0), 2)
+    cycle = min(max(int(ctx.option("r_big_one_cycle_position")), 0), 2)
     big_ones = (cycle + missiles) // _R_BIG_ONE_CYCLE
 
+    # One part per missile, in firing order, each riding the barrage's own
+    # cast boundary. The barrage is ONE cast in this model (see the
+    # assumptions below: one entry on the shared cast timeline, one
+    # spellblade proc), so the cast boundary is where its missiles land —
+    # authoring that here is what carries the row's reviewed control state
+    # into the event ledger instead of leaving it a coarse aggregate.
+    # The missiles' real 2-second firing cadence is a separate, unauthored
+    # fact: modelling it would move each missile onto its own timeline
+    # slot, which is a different fight model than "the barrage is one cast".
     parts = tuple(
-        DamagePart("physical", amount, count=count)
-        for amount, count in ((regular, missiles - big_ones), (big_one, big_ones))
-        if count > 0
+        DamagePart(
+            "physical",
+            big_one if (cycle + index + 1) % _R_BIG_ONE_CYCLE == 0 else regular,
+            time_offset=0.0,
+        )
+        for index in range(missiles)
     )
     return {
         "name": ability.get("name", "Missile Barrage"),
@@ -384,26 +395,34 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    # Q is one bomb, one explosion: the cached entry gives no travel
+    # duration to author as a time offset, so the cast boundary is the only
+    # sourced placement its hit has, and certifying that is what keeps the
+    # row out of the coarse aggregate.
+    "Q": simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
     "W": _valkyrie,
     "E": _gatling_gun,
     "R": _missile_barrage,
     "P": _hextech_munitions,
 }
 
-parse_abilities = build_parser(SLOTS, "Corki")
+# Reviewed cc-free, whole kit.  Nothing in the cached entries applies any
+# crowd control to an enemy: the bomb, the blazing patches, the gatling
+# cone (resistance shred, not control) and the missiles all deal damage
+# only.  Every castable slot says so explicitly, which is what lets
+# control-armed item passives (Fimbulwinter's Everlasting) price a Corki
+# fight instead of withholding on an unreviewed kit.
+#
+# P is not declared: Hextech Munitions is a true-damage rider the fight
+# engine prices onto each basic attack, so its damage is auto-phase and
+# the row emits no part of its own — a declaration there would reach no
+# ability event, which the engine now refuses rather than accepting as a
+# no-op.
+MODULE_CC = {slot: "none" for slot in SLOTS if slot != "P"}
+
+parse_abilities = build_parser(SLOTS, "Corki", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Corki",
-        "revision_id": 4047300,
-        "revision_timestamp": "2026-07-29T13:12:25Z",
-    }
-]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Corki")

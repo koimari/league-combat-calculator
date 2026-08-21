@@ -8,10 +8,9 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .atomizer_domains import atomize_abilities
+from .data_registry import data_version, store_for_generation
 
-_ABILITY_ATOMS_MEMO: dict[
-    int, tuple[Mapping[str, Any], dict[str, tuple[dict, ...]]]
-] = {}
+_ABILITY_ATOMS_MEMO: dict[tuple[int, str], dict[str, tuple[dict, ...]]] = {}
 
 
 @dataclass(frozen=True)
@@ -26,26 +25,32 @@ class AbilityAtomQuery:
 def _ability_atoms(
     champion_name: str, champion_data: Mapping[str, Any]
 ) -> dict[str, tuple[dict, ...]]:
-    """Return atomized ability rows for one cached champion object.
+    """Return atomized ability rows for one cached champion's abilities.
 
-    The cache keeps a strong reference to the source object. A refreshed
-    champion cache therefore cannot reuse rows from an older object with the
-    same Python identity.
+    A refreshed champion cache cannot serve rows atomized from the old one:
+    :func:`data_version` moves on every reload, so the reloaded data is a
+    miss under a key the stale rows can never occupy — and
+    :func:`store_for_generation` then drops them, because unreachable is not
+    gone while each row set still pins the ability dicts it came from.
     """
-    # The memo key is (object identity, champion_name): the SAME cached
-    # object can be atomized under the data key ("KSante") by a typed
-    # lookup and under the display name ("K'Sante") by the fight path —
-    # their source paths differ, so an id-only key would return the wrong
-    # champion's rows (P3 package 3J).
-    key = (id(champion_data), champion_name)
+    # The memo key is (data version, champion_name), the convention
+    # ``survival.receipt_state`` keys its state prototypes on.  The name is
+    # part of the key because the SAME cached object is atomized under the
+    # data key ("KSante") by a typed lookup and under the display name
+    # ("K'Sante") by the fight path — their source paths differ, so a
+    # version-only key would return the wrong champion's rows (P3 package
+    # 3J).  Keying on ``id(champion_data)`` instead cannot hit at all: the
+    # fight path builds a fresh mapping per request, so every request
+    # re-atomized every champion and left the rows in the memo forever.
+    key = (data_version(), champion_name)
     memo = _ABILITY_ATOMS_MEMO.get(key)
-    if memo is not None and memo[0] is champion_data:
-        return memo[1]
+    if memo is not None:
+        return memo
     rows = {
         slot: tuple(atoms)
         for slot, atoms in atomize_abilities(champion_name, dict(champion_data)).items()
     }
-    _ABILITY_ATOMS_MEMO[key] = (champion_data, rows)
+    store_for_generation(_ABILITY_ATOMS_MEMO, key, rows)
     return rows
 
 

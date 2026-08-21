@@ -60,6 +60,9 @@ class TestGetAbilityRank:
     def test_level_11_r_rank_2(self) -> None:
         assert get_ability_rank("R", 11) == 2
 
+    def test_level_16_r_rank_3(self) -> None:
+        assert get_ability_rank("R", 16) == 3
+
     def test_level_18_all_maxed(self) -> None:
         assert get_ability_rank("Q", 18) == 5
         assert get_ability_rank("W", 18) == 5

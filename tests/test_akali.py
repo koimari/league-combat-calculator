@@ -2,6 +2,8 @@
 
 from src.calculator.champions.slotlib import build_stats_context, extract_named
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions import akali
+from tests import cc_review
 
 
 def _passive_damage(
@@ -254,3 +256,24 @@ class TestPassiveInFightEngine:
         assert "passive" in result["breakdown"]
         assert result["breakdown"]["passive"]["total_damage"] > 0
         assert result["breakdown"]["passive"]["count"] == 3
+
+
+class TestReviewedCrowdControl:
+    """Akali's crowd-control review, and the slot that still withholds.
+
+    E's row is the cached 'Total Magic Damage' of the shuriken and the
+    recast dash together, and Q's slow reaches only 'targets beyond a
+    certain range', which the single-target model does not place.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Akali")
+        assert akali.MODULE_CC == {"R": "none", "P": "none"}
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "P")) == []
+
+    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Akali") == ["E", "Q"]
+        coverage = cc_review.fimbulwinter_coverage("Akali")
+        assert coverage["complete"] is False
+        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

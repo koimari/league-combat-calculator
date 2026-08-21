@@ -1,0 +1,83 @@
+{
+  "receipt_id": "oracle-C6-leaf41",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "date": "2026-08-09",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/damage_events[5]/time",
+  "old_value": 0.25,
+  "new_value": 0.0,
+  "verdict": "new_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scope": "data/** and docs/math-foundations.md ONLY; src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff, the plan and git history were never read"
+  },
+  "sources_quoted": [
+    {
+      "source": "data/champions.json -> Syndra.abilities[*].castTime",
+      "quote": "{'P': None, 'Q': 'none', 'W': 'none', 'E': '0.25', 'R': '0.25'}",
+      "use": "Sourced cast times: Q and W are instant (0 s); E (Scatter the Weak) and R (Unleashed Power) each occupy 0.25 s."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit.",
+      "use": "R is the multi-sphere slot whose sphere count is a module option (r_spheres); its damage events are the tail of the ledger."
+    },
+    {
+      "source": "docs/math-foundations.md L59-63 (Section 1.1)",
+      "quote": "Ability recasts are scheduled on **one shared timeline** (the champion has one set of hands): each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed *and* no other cast is in progress, and a cast counts when it *starts* within the window (`_schedule_shared_casts`).",
+      "use": "Defines the timing model: cast EPOCHS (start times) on one mutually-exclusive timeline; a cast that follows a 0.25 s cast starts at 0.25 s, and the opener starts at 0.0 s."
+    },
+    {
+      "source": "docs/math-foundations.md L471 (formula-audit table, burn/DoT row)",
+      "quote": "One-rotation cast spread uses a 0.5 s GCD estimate (engine casts at t=0); burn resolves past the fight end by design; timed mode uses the real `last_cast_time` (exact)",
+      "use": "Confirms the convention is cast-START timestamps and that the opener of a rotation carries t = 0.0 (the burn layer has to *estimate* a spread precisely because the ledger anchors casts at t=0)."
+    },
+    {
+      "source": "data/worklists/f2-task.md L7",
+      "quote": "src/calculator/damage.py computes a rotation from a DEFAULT_CAST_ORDER (fixed Q,W,E,R) ... The event order shown in the UI comes from the fight's cast_order + breakdown damage_events.",
+      "use": "Establishes (a) the DEFAULT order is Q,W,E,R, (b) a fight carries a per-fight cast_order that can differ from it, and (c) damage_events is a separate breakdown list (slot/part order) that the UI must combine with cast_order to render the sequence."
+    },
+    {
+      "source": "data/champion-audit/batch-6.json -> Syndra.module_slots",
+      "quote": "modeled: [P, Q, Q2, W, E, R] ... modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF.",
+      "use": "Damage-emitting slots are Q, Q2, W, E, R (P is a buff, no event), so the breakdown ledger is Q, Q2, W(magic), W(true), E, R... -> index 5 falls on an R event."
+    },
+    {
+      "source": "data/champion-audit/batch-e9-1.json -> Syndra.gap_summary",
+      "quote": "E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage), R sphere count (r_spheres).",
+      "use": "Confirms the '_120' in the scenario name = 120 Splinters of Wrath, which activates BOTH the Q2 charge slot and the W bonus-true-damage part -> the ledger has 6+ events, so index 5 exists and lands on R."
+    },
+    {
+      "source": "data/champion-audit/batch-p1-3.json -> Vladimir.gap_summary",
+      "quote": "Verified: test_p1_review_3.py TestVladimir - Q 176/W 330/R 385 with cast_order R,Q,W,E",
+      "use": "In-repo precedent that a non-default cast_order in this engine is expressed R-first; 'custom_order' scenarios exercise exactly this path."
+    },
+    {
+      "source": "data/champions.json -> Syndra.abilities.P (Transcendent)",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.",
+      "use": "Confirms the scenario suffix 120 = max splinters; note it is a passive buff, so a custom order cannot be motivated by buff-sequencing damage - only by the opener choice."
+    }
+  ],
+  "independent_computation": {
+    "step_1_identify_the_event": "Syndra's damage-emitting slots are Q, Q2, W, E, R (batch-6.json). At 120 splinters the Q2 charge slot and the W bonus-true-damage part are both live (batch-e9-1.json), so the breakdown ledger is at minimum [Q, Q2, W-magic, W-true, E, R...]. Index 5 is therefore an R (Unleashed Power) damage event under either R authoring (one aggregated multi-sphere event, or one event per sphere - both put index 5 inside R).",
+    "step_2_timing_model": "math-foundations 1.1: casts share one timeline, each occupies its sourced cast time, and a cast is timestamped when it STARTS (_schedule_shared_casts). Sourced cast times: Q = none (0 s), W = none (0 s), E = 0.25 s, R = 0.25 s.",
+    "step_3_default_order_epochs": "Under DEFAULT_CAST_ORDER Q,W,E,R (f2-task.md): Q starts 0.00 (0 s cast), Q2 starts 0.00, W starts 0.00, E occupies [0.00, 0.25], R starts at 0.25. => R event time = 0.25 s. This is EXACTLY the old value.",
+    "step_4_custom_order_epochs": "The scenario is 'syndra_custom_order_...', i.e. the fight carries a cast_order that is by construction NOT the default. With R leading the custom order (the repo's own R-first custom-order idiom, cf. Vladimir 'cast_order R,Q,W,E'), R is the opener: it starts at t = 0.00 and occupies [0.00, 0.25]; every following cast is pushed to >= 0.25 (E, if it follows R, starts at 0.25). => R event time = 0.00 s.",
+    "step_5_conclusion": "0.25 s is precisely R's DEFAULT-order epoch - the value a timeline that ignored the fight's custom cast_order would emit. 0.00 s is R's epoch as the opener of the custom order, and 0.00 is the only legitimate epoch a first cast can carry under the documented model ('engine casts at t=0', L471). The new value is the one that the sourced cast times plus the documented shared-timeline model produce for this scenario.",
+    "computed_value": 0.0
+  },
+  "cross_checks": [
+    "0.0 is not reachable for an R event under the DEFAULT order (E's sourced 0.25 s cast necessarily occupies [0, 0.25] before it), so the change cannot be explained as the default path drifting - it is the custom order taking effect.",
+    "0.25 is not reachable for a first cast under the documented convention: an ability's OWN cast time never shifts its own epoch (it only pushes the NEXT cast), and L471 states the engine casts at t=0.",
+    "No damage magnitude can change from a Syndra reorder - she has no setup/consume or cast-order-sensitive buff (P is a passive +15% AP at 120 splinters), which matches a diff that touches only 'time' leaves."
+  ],
+  "residual_uncertainty": {
+    "level": "moderate",
+    "statement": "The exact custom cast_order string and the exact ledger indexing are not derivable from data/ or docs/math-foundations.md; they live in scripts/ (golden corpus) and src/ (module), which this oracle is forbidden to read. The verdict rests on two inferences: (a) index 5 of the breakdown ledger is an R event (robust across both R authorings, given Q2 and W-true are live at 120 splinters), and (b) the scenario's custom order leads with R.",
+    "hypothesis_that_would_flip_the_verdict": "If the custom order leaves R after exactly one 0.25 s cast (i.e. R still trails E), then 0.25 would be R's correct epoch and the new 0.0 would be an unsourced zeroing. This alternative is rejected because it requires the 'custom' order to coincidentally reproduce the default epoch for R while some unrelated change zeroed only this leaf - and 0.0 would then have no derivation from any cached source, whereas the R-first reading explains both values exactly (0.25 = default epoch, 0.0 = opener epoch)."
+  },
+  "asides_flagged": [
+    "Neither value models Syndra Q's sourced 0.6 s sphere-formation delay ('a Dark Sphere at the target location that appears after a 0.6-second delay') nor R's 0.25 s windup-to-impact. The engine timestamps CAST epochs, not impacts, so every Syndra ability event is ~0.25-0.6 s earlier than the in-game damage instant. That is a documented model convention, not a defect in this leaf, but it means 'time' in the golden ledger must never be read as an impact time.",
+    "data/champions.json Syndra W leveling carries a units artifact: the 'Bonus True Damage' / 'Total Mixed Damage' rows show units ['  2'] on the flat term (a wiki-parse smear of the '+2% per 100 AP' clause). Values look right; the units are junk. Worth a look if anything ever reads W's true-damage units generically."
+  ]
+}

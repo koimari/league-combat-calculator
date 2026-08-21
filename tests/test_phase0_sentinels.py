@@ -1,0 +1,896 @@
+"""Phase 0 sentinels — deferred semantics pinned, with zero ``src/`` change.
+
+A correction with no reachable fixture is a declaration wearing a
+correction's clothes, so where Phase 0 declines to change behaviour it says
+so in a test instead: the sentinel pins today's answer, names the decision
+that deferred it, and goes red on the commit that changes the answer without
+re-reading this file.  Each sentinel also pins the size of its own
+population, because a sentinel that is green over an empty set proves
+nothing (D-26).
+
+Seven sentinels, one class each:
+
+* :class:`TestCommandWindowsMergeByRefresh` — D-12, the merge census.
+* :class:`TestCommandDoesNotAmpItsOwnTimestamp` — D-13, the same-tick tie.
+* :class:`TestCommandExpiryBoundaryDiverges` — D-13, ``start < t <= end``.
+* :class:`TestIsAttackOrSpellVersusFromAllSources` — D-04, the delivery gate.
+* :class:`TestCommandMarksOnlyTheFirstPairDefender` — H2, ``CcScope``.
+* :class:`TestAbyssalAuraHasNoRangeOrDeathCondition` — D-66, arm-time keys.
+* :class:`TestSupportValueMixesUnits` — D-14/H3, the utility objective.
+"""
+
+import math
+from functools import lru_cache
+from typing import NamedTuple
+
+import pytest
+
+from src import app as app_module
+from src.calculator import item_effects
+from src.calculator.ability_spec import (
+    AttackClass,
+    DamageClass,
+)
+from src.calculator.champions import registered_champion_names
+from src.calculator.interpreters import delta_amp
+from src.calculator.item_behavior import AmpChainSlot
+from src.calculator.trigger_stream import is_immobilizing_event
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.item_support_effects import (
+    _declared_authorities,
+)
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.survival.accumulate import accumulate_support_values
+from src.calculator.survival.actions import SurvivalAction, attack_class_of
+from src.calculator.survival.transitions import (
+    _apply_cross_participant_modifiers,
+    _apply_damage_modifier,
+    _modifier_applies,
+)
+
+from tests.test_item_support_effects import (
+    declared_classes_by_producer,
+    timed_cross_participant_producers,
+)
+
+# Every producer whose declaration admits AttackClass.OTHER — the packets for
+# which the walk's delivery gate is strictly narrower than what they say.
+# Pinned, not counted at run time from the same expression the assertions
+# use: five of the six producers, all but Blue Dream Bubble.
+FROM_ALL_SOURCES_PRODUCERS = 5
+
+# Registered champions that author an immobilizing ``cc_kind`` a Mandate
+# holder's own fight can read.  This is the Command sentinels' population and
+# umbrella criterion 15 requires it to be non-empty.  It was three — Ahri,
+# Pantheon, Syndra — while those were the only reviewed ``cc_kind`` markers in
+# the registry; the full-coverage campaign's decision 6 made every champion
+# module author its own kit's crowd-control facts, and the population grows
+# with every module that lands (40 at the time of writing).
+#
+# **A floor, not an equality**, and the difference is the sentinel's own
+# stated purpose: "pinned so the sweep cannot shrink in silence: a champion
+# that starts withholding is a champion whose later immobilizes stop being
+# swept."  Shrinking is the defect.  Growth is decision 6 working, and an
+# equality here would go red on each of the campaign's remaining champion
+# batches and be re-pinned without being read — which is the failure mode
+# D-26 exists to prevent, arriving through the gate meant to prevent it.
+COMMAND_CC_AUTHORS = 31
+
+# Champion modules that withhold a time-based answer and are swept through
+# one rotation instead.  Pinned so the sweep cannot shrink in silence: a
+# champion that starts withholding is a champion whose later immobilizes
+# stop being swept.  Zero is the campaign's own criterion 1 — the withhold
+# machinery is kept and its trigger population emptied — so this number
+# going *up* is a regression, not a new champion.
+TIME_BASED_WITHHOLDING_CHAMPIONS = 0
+
+# Authors whose two immobilizes land inside one Command duration, so their
+# windows merge instead of standing apart.  Zero when the Command sentinels
+# were written, which is what made ``merge`` a formality; it is now the
+# corpus fact ``merge=REFRESH`` rides on, and
+# ``tests/test_command_amp_roster.py`` is where one of them is priced.  A
+# floor for the same reason as above (12 at the time of writing): the
+# reachable claim is "at least one authored pair merges, and Maokai's does",
+# and a merging pair that *stops* merging is what would strand the fixture.
+MERGING_COMMAND_AUTHORS = 7
+
+# The cross-participant producers whose packet carries a finite expiry, and
+# whose closing instant the two engines therefore answer separately.  Five of
+# the six: Abyssal Mask's Unmake is a persistent aura and has no closing
+# instant to disagree about.
+TIMED_CROSS_PARTICIPANT_PRODUCERS = 5
+
+# The sentinel rosters' enemy count.  One authored immobilize could mark any
+# of the three; the scan marks exactly one, and the aura curses all three.
+SENTINEL_ROSTER_ENEMIES = 3
+COMMAND_MARKED_ENEMIES = 1
+
+# The support events one Mandate-plus-Locket holder contributes to a single
+# ``support_value`` sum: two shields in hit points and one unitless amp.
+UNIT_MIXED_SUPPORT_EVENTS = 3
+UNIT_MIXED_SUPPORT_UNITS = 2
+
+# The fields ``_apply_damage_modifier`` writes onto an armed modifier.
+# Pinned because this sentinel's claim is about what is *absent*: there is no
+# position, no radius and no holder-liveness key, so neither Unmake's range
+# nor its holder's death can gate it (D-66).
+ARMED_MODIFIER_FIELDS = frozenset(
+    {
+        "source",
+        "until",
+        "multiplier",
+        "reduction",
+        "damage_reduction",
+        "next_event_only",
+        "armor_reduction_percent",
+        "mr_reduction_percent",
+        "resistance_type",
+        "holder",
+        # The roster slot that *authored* the packet, which is what the
+        # re-arm rule folds on: a second trigger from one holder refreshes
+        # the window the first opened.  It is not a precondition — nothing
+        # reads it at application time, only at arming time — so the claim
+        # this sentinel makes about what is absent is unchanged.
+        "armed_by",
+        # MERGE: a modifier may name the one participant whose damage
+        # it prices, and may declare that it applies from every
+        # source.  Both are read at application time against the
+        # packet, not against a position or a holder's liveness, so
+        # the absence this sentinel claims is unchanged.
+        "source_participant",
+        "all_sources",
+        "damage_classes",
+        "attack_classes",
+    }
+)
+
+_SWEEP_TARGET = {
+    "target_health": 10000,
+    "target_armor": 0,
+    "target_mr": 0,
+    "level": 18,
+}
+
+
+class _CommandSweep(NamedTuple):
+    """One pass of the registered-champion sweep, holding Imperial Mandate.
+
+    ``inside`` and ``tie`` are the two damage readings the sentinels below
+    compare against the engine's own answer: the authored damage strictly
+    inside a window, and the authored damage sharing a trigger's exact
+    timestamp.  Both are summed over the *authored* event lists rather than
+    over a reconstructed ledger, so the sentinel reads the champion modules'
+    own declarations and not a second copy of ``damage.py``'s reconstruction.
+    """
+
+    authors: dict[str, tuple[tuple[float, ...], tuple[tuple[float, float], ...]]]
+    amped: dict[str, tuple[str, ...]]
+    inside: dict[str, float]
+    tie: dict[str, float]
+    swept: tuple[str, ...]
+    withheld: tuple[str, ...]
+    duration: float
+
+
+@lru_cache(maxsize=1)
+def command_slot() -> delta_amp.AmpSlot:
+    """Command's declared chain slot — where its window now comes from.
+
+    Phase 3 moved the window's duration, its merge policy and its expiry
+    boundary out of two engine helpers and into the rule's
+    ``TriggerWindow(IMMOBILIZE, merge=REFRESH, boundary=OPEN_CLOSED)``, which
+    is what these sentinels said the phase would do.  They read the same
+    facts through the declaration, so the sentinel and the policy it pins
+    have one referent instead of two.
+    """
+    slot = delta_amp.resolve_slot(
+        ["Imperial Mandate"],
+        AmpChainSlot.POST_IMMOBILIZE,
+        level=18,
+        fight_duration_seconds=10.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert slot is not None, "D-12: the sweep needs Command's declared window"
+    return slot
+
+
+@lru_cache(maxsize=1)
+def command_sweep() -> _CommandSweep:
+    """Every registered champion's authored immobilizes, holding Mandate.
+
+    The sweep is the whole registry, not a sample, because D-12's question —
+    can two Command windows ever overlap? — is a question about the corpus
+    of authored markers rather than about one champion.  Time-based is the
+    maximal fight mode for that question (a longer window authors more
+    immobilizes); the modules that withhold a time-based answer are swept
+    through one rotation and counted, never skipped.
+    """
+    mandate = get_item_by_name("Imperial Mandate")
+    slot = command_slot()
+    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    authors: dict[str, tuple] = {}
+    amped: dict[str, tuple[str, ...]] = {}
+    inside: dict[str, float] = {}
+    tie: dict[str, float] = {}
+    swept: list[str] = []
+    withheld: list[str] = []
+    for name in registered_champion_names():
+        champion = get_champion(name)
+        try:
+            result = run_fight(
+                champion,
+                18,
+                [mandate],
+                FightParams.from_request(
+                    {**_SWEEP_TARGET, "fight_mode": "time_based", "fight_duration": 10}
+                ),
+            )
+        except ValueError:
+            withheld.append(name)
+            result = run_fight(
+                champion,
+                18,
+                [mandate],
+                FightParams.from_request(
+                    {**_SWEEP_TARGET, "fight_mode": "one_rotation"}
+                ),
+            )
+        swept.append(name)
+        events = [
+            event
+            for entry in result["breakdown"].values()
+            if isinstance(entry, dict)
+            for event in entry.get("damage_events") or ()
+            if isinstance(event, dict) and float(event.get("damage", 0.0) or 0.0) > 0.0
+        ]
+        times = tuple(
+            sorted(
+                float(event.get("time", 0.0) or 0.0)
+                for event in events
+                if is_immobilizing_event(event)
+            )
+        )
+        if not times:
+            continue
+        windows = slot.trigger_windows(times)
+        authors[name] = (times, windows)
+        amped[name] = tuple(
+            key for key in result["breakdown"] if str(key).startswith("damage_amp_")
+        )
+        inside[name] = sum(
+            float(event["damage"])
+            for event in events
+            if slot.window_holds(windows, float(event.get("time", 0.0) or 0.0))
+        )
+        # The trigger's own packet is excluded, so what is left is damage the
+        # ledger shares a timestamp with an immobilize and does not amp.
+        tie[name] = sum(
+            float(event["damage"])
+            for event in events
+            if not is_immobilizing_event(event)
+            and any(
+                start == float(event.get("time", 0.0) or 0.0) for start, _ in windows
+            )
+        )
+    return _CommandSweep(
+        authors, amped, inside, tie, tuple(swept), tuple(withheld), duration
+    )
+
+
+@lru_cache(maxsize=8)
+def sentinel_roster(items, enemies, item_options=()):
+    """One roster response through the public request path.
+
+    ``items``/``enemies``/``item_options`` are tuples so the response can be
+    cached: three sentinels read the same two rosters and a roster costs a
+    full coupled walk.
+    """
+    app_module.app.config["TESTING"] = True
+    payload = {
+        "champion": "Ahri",
+        "level": 18,
+        "items": list(items),
+        "fight_mode": "time_based",
+        "fight_duration": 8,
+        "include_auto_attacks": False,
+        "enemies": [{"champion": name, "level": 18, "items": []} for name in enemies],
+        "allies": [
+            {
+                "champion": "Pantheon",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            }
+        ],
+    }
+    if item_options:
+        payload["item_options"] = {
+            item: dict(options) for item, options in item_options
+        }
+    response = app_module.app.test_client().post("/api/calculate", json=payload)
+    assert response.status_code == 200, response.get_data(as_text=True)[:400]
+    return response.get_json()["combat"]
+
+
+def _support_events(combat, source_prefix):
+    """The holder's support events from one source, in emission order."""
+    return [
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "main" and event["source"].startswith(source_prefix)
+    ]
+
+
+def _armed(**overrides):
+    """A cross-participant modifier as ``_apply_damage_modifier`` writes it."""
+    modifier = {
+        "source": "Imperial Mandate — Command",
+        "until": 4.0,
+        "multiplier": 1.07,
+        "reduction": 0.0,
+        "damage_reduction": False,
+        "next_event_only": False,
+        "armor_reduction_percent": 0.0,
+        "mr_reduction_percent": 0.0,
+        "resistance_type": "",
+        "holder": 0,
+        "damage_classes": frozenset(DamageClass),
+        "attack_classes": frozenset(AttackClass),
+    }
+    modifier.update(overrides)
+    return modifier
+
+
+class _LedgerCtx:
+    """The walk context these sentinels need: a ledger that records nothing.
+
+    ``combatants`` is empty on purpose; every packet below carries
+    ``attacker=-1``, so the owner skip cannot fire — these sentinels are
+    about the window, not about who owns it.
+    """
+
+    class _Ledger:
+        @staticmethod
+        def write(action, **fields):  # pylint: disable=unused-argument
+            """Record nothing."""
+
+        @staticmethod
+        def skip(action, reason):  # pylint: disable=unused-argument
+            """Record nothing."""
+
+    ledger = _Ledger()
+    combatants = ()
+    states: list = []
+
+
+class TestCommandWindowsMergeByRefresh:
+    """Repeat-Command has a reachable fixture now, and this is its census (D-12).
+
+    Command's rule merges overlapping immobilizes by moving the mark's expiry
+    to the last one plus its duration — ``merge=REFRESH``, which is what both
+    engines have always computed and, since the ruling, what the declaration
+    calls it.  The additive reading the League Wiki's "extend the duration"
+    wording admits is filed with its cost in
+    ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
+
+    This class used to assert that no authored pair could merge, and that the
+    day one did, ``merge`` needed "a fixture and an oracle receipt before
+    landing it".  The corpus grew past it, and keeps growing.  The fixture and
+    the receipt live in
+    ``tests/test_command_amp_roster.py::TestTwoImmobilizesMergeIntoOneRefreshedWindow``
+    — the merge is asserted here only as the census fact that makes that
+    fixture reachable, so one fact keeps one home.
+    """
+
+    def test_the_population_is_pinned_and_is_not_empty(self):
+        """D-26: the sentinel names how much it is green over."""
+        sweep = command_sweep()
+        assert sweep.authors, (
+            "D-12: no registered champion authors an immobilize a Mandate "
+            "holder can read, so every Command sentinel below is green over "
+            "nothing.  The emission gate in damage._evaluate_cast_parts or "
+            "the cc_kind markers themselves have regressed."
+        )
+        assert len(sweep.authors) >= COMMAND_CC_AUTHORS, (
+            "D-12: the Command population *shrank* to "
+            f"{sorted(sweep.authors)}.  A champion that stops authoring an "
+            "immobilize a Mandate holder can read has lost a reviewed "
+            "cc_kind marker or stopped reaching the emission gate in "
+            "damage._evaluate_cast_parts; growth is decision 6 landing and "
+            "raises this floor, a shrink is the regression."
+        )
+
+    def test_the_sweep_covered_every_registered_champion(self):
+        """A population is only a population if the sweep reached it."""
+        sweep = command_sweep()
+        assert sweep.swept == tuple(registered_champion_names())
+        assert len(sweep.withheld) == TIME_BASED_WITHHOLDING_CHAMPIONS, (
+            "D-12: the set of champions withholding a time-based answer "
+            f"moved to {sorted(sweep.withheld)}.  Those are swept through one "
+            "rotation instead, which authors fewer immobilizes, so a change "
+            "here silently narrows this sentinel's population."
+        )
+
+    def test_a_command_row_appears_exactly_when_something_lands_inside(self):
+        """The rule's own ZeroPolicy, as an iff over the whole corpus.
+
+        Authoring an immobilize does not entitle a fight to a Command row:
+        the rule is ``Disposition.MEASURED`` and a zero means "nothing landed
+        inside the window", which is a real answer for a champion whose next
+        damage falls past the four seconds.  Six authors are in exactly that
+        position, so the old "every author prices the amp" assertion was
+        false over the wider population *and* contradicted the declaration it
+        was supposed to guard.  The iff is what the ZeroPolicy actually says.
+        """
+        sweep = command_sweep()
+        for name, rows in sweep.amped.items():
+            assert ("damage_amp_Imperial Mandate" in rows) == (
+                sweep.inside[name] > 0.0
+            ), (
+                f"D-12: {name}'s Command row and its windowed damage "
+                f"({sweep.inside[name]}) disagree.  A row with nothing inside "
+                "it is an amp priced over damage the window never saw; "
+                "damage inside with no row is the incident this campaign is "
+                "named after."
+            )
+        priced = [
+            name
+            for name, rows in sweep.amped.items()
+            if "damage_amp_Imperial Mandate" in rows
+        ]
+        assert priced, (
+            "D-26: no author anywhere in the registry prices a Command row, "
+            "so the iff above is satisfied by an empty window every time and "
+            "proves nothing about the amp."
+        )
+
+    def test_authored_pairs_merge_and_the_fixture_that_prices_one_exists(self):
+        """The corpus fact ``merge=REFRESH`` rides on, and where it is priced."""
+        sweep = command_sweep()
+        merging = {
+            name: (times, windows)
+            for name, (times, windows) in sweep.authors.items()
+            if len(windows) != len(times)
+        }
+        assert len(merging) >= MERGING_COMMAND_AUTHORS, (
+            "D-12: the merging population shrank to "
+            f"{sorted(merging)}.  It is what makes the roster fixture's "
+            "merge reachable rather than synthetic — re-read "
+            "TestTwoImmobilizesMergeIntoOneRefreshedWindow before lowering "
+            "this floor."
+        )
+        assert "Maokai" in merging, (
+            "the priced fixture is Maokai's; his two roots no longer merge, "
+            "so the oracle in test_command_amp_roster has lost its subject"
+        )
+        for name, (times, windows) in merging.items():
+            assert len(windows) < len(times)
+            assert windows[-1][1] == pytest.approx(times[-1] + sweep.duration), (
+                f"D-12: {name}'s merged window does not end one duration "
+                "after its last trigger, so the merge is no longer a refresh"
+            )
+
+    def test_the_check_is_live_and_not_vacuous(self):
+        """R-05: the same predicate, over a pair that does overlap."""
+        slot = command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        overlapping = slot.trigger_windows([0.0, duration / 2.0])
+        assert len(overlapping) == 1
+        assert overlapping == ((0.0, duration / 2.0 + duration),)
+
+
+class TestCommandDoesNotAmpItsOwnTimestamp:
+    """A packet sharing a trigger's timestamp is unamped, on measured grounds.
+
+    ``window_holds`` is ``start < t <= end``, so damage authored at exactly an
+    immobilize's timestamp is outside the window it opened — including damage
+    the reconstructed ledger sorts *after* the trigger.  That coarseness is
+    priced here rather than argued about, and the ruling that keeps it is in
+    ``delta_amp.AmpSlot.window_holds``' docstring:
+
+    * the secondary sort key is not an authored ordering for these rows.
+      Champion modules never write ``timeline_order`` — the engine's own
+      device for a same-instant claim — so their key falls back to a
+      construction counter that follows the rotation planner's slot list;
+      reorder that list and the same simultaneous packets change sides.
+    * the coupled walk cannot make the statement at all.  Its order is
+      ``(time, ordering_slot(rank), …)`` with ``TransitionRank.DAMAGE`` at 3
+      and ``DEBUFF_ARM`` at 6, so every packet at one timestamp resolves
+      before any debuff arms there.  Command is ``Subject.ANY_ATTACKER`` —
+      one rule, both engines — so amping the tie on the pair side alone would
+      open a divergence at the one instant the two agree on.
+
+    The defect is upstream, in a cast timeline that puts several casts on one
+    instant.  This sentinel turns red when that is fixed, or when the rank
+    ladder moves, which are the two commits that should re-read the ruling.
+    """
+
+    def test_the_tie_population_is_not_empty_and_is_priced(self):
+        """D-26: the coarseness costs something, and the number is stated."""
+        sweep = command_sweep()
+        tied = {name: value for name, value in sweep.tie.items() if value > 0.0}
+        assert tied, (
+            "no authored packet anywhere shares an immobilize's timestamp, so "
+            "this sentinel is green over nothing.  If the cast timeline "
+            "stopped putting several casts on one instant, that is the "
+            "upstream fix this sentinel defers to — delete it in that commit."
+        )
+        fraction = command_slot().bonus_fraction
+        unpriced = sum(tied.values()) * fraction
+        assert unpriced > 0.0
+        assert max(tied.values()) > 0.0
+
+    def test_the_tie_is_outside_the_window_the_trigger_opened(self):
+        """The predicate itself, at the instant the population lives on."""
+        slot = command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        windows = slot.trigger_windows([0.3])
+        assert not slot.window_holds(windows, 0.3), (
+            "the pair engine now amps a packet at its own trigger's "
+            "timestamp.  That is one half of a two-engine ruling, not a local "
+            "fix: the walk orders every damage packet at a timestamp before "
+            "the debuff that arms there, so land both halves together and "
+            "delete this sentinel in that commit."
+        )
+        assert slot.window_holds(windows, 0.3 + duration / 2.0)
+
+
+class TestCommandExpiryBoundaryDiverges:
+    """The two engines answer the closing instant differently (D-13).
+
+    The pair engine's window test is ``start < t <= end``: a packet
+    landing at exactly the window's closing instant is amped.  The walk keeps
+    a modifier only while ``until > action.time``, so the same packet at the
+    same instant is not.  Both agree everywhere else, including at the
+    opening instant, where the pair engine excludes the trigger and the walk
+    arms the modifier after equal-time damage.
+
+    Reachable only on exact float equality, which no committed scenario
+    produces, so Phase 0 characterised the divergence rather than unifying
+    it: unifying it would be an unfixtured change to both engines at once.
+    Phase 3 declared the boundary ``OPEN_CLOSED`` (D-13), and this sentinel
+    is what that declaration has to satisfy — it now reads the pair half
+    through the declaration itself, so the divergence is pinned between a
+    declared policy and the walk rather than between two spellings.
+    """
+
+    def test_the_population_is_five_timed_producers_and_is_not_empty(self):
+        """D-26: only a producer with a closing instant can disagree."""
+        timed = timed_cross_participant_producers()
+        assert timed, "D-13: no cross-participant producer carries an expiry"
+        assert len(timed) == TIMED_CROSS_PARTICIPANT_PRODUCERS, (
+            "D-13: the timed-producer population moved to "
+            f"{sorted(timed)}; the boundary divergence now covers a "
+            "different set of mechanics than the one this sentinel pins."
+        )
+        assert timed < set(_declared_authorities())
+
+    def test_the_pair_engine_amps_the_closing_instant(self):
+        slot = command_slot()
+        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        windows = slot.trigger_windows([0.0])
+        assert not slot.window_holds(windows, 0.0), "the trigger itself is excluded"
+        assert slot.window_holds(windows, duration - 0.001)
+        assert slot.window_holds(windows, duration), (
+            "D-13: the pair engine stopped amping the closing instant.  That "
+            "is one half of a two-engine unification, not a local fix — land "
+            "it with the walk's half in the same slice."
+        )
+
+    def test_the_walk_drops_the_modifier_at_the_same_instant(self):
+        end = command_slot().value(delta_amp.WINDOW_DURATION_FIELD)
+        inside = {"active_damage_modifiers": [_armed(until=end)]}
+        closing = {"active_damage_modifiers": [_armed(until=end)]}
+        packet = {"damage_type": "magic", "is_ability": True, "attacker": -1}
+        amped = _apply_cross_participant_modifiers(
+            _LedgerCtx(),
+            SurvivalAction(time=end - 0.001, **packet),
+            inside,
+            100.0,
+        )
+        boundary = _apply_cross_participant_modifiers(
+            _LedgerCtx(),
+            SurvivalAction(time=end, **packet),
+            closing,
+            100.0,
+        )
+        assert amped == pytest.approx(107.0)
+        assert boundary == pytest.approx(100.0), (
+            "D-13: the walk now amps the closing instant, which is the pair "
+            "engine's answer.  If that is the intended unification it is a "
+            "correction with its own slice, allowlist and oracle receipt — "
+            "not a side effect; delete this sentinel in that commit."
+        )
+
+
+class TestIsAttackOrSpellVersusFromAllSources:
+    """C3 expresses "from all sources" as ``attack_classes``; the walk's gate
+    still prices only attacks and spells (D-04).
+
+    Abyssal Mask's Unmake, Bloodsong's Expose Weakness and Imperial
+    Mandate's Command all read "from all sources" on the Wiki, and Carve and
+    Vile Decay reduce a resistance without naming a delivery.  All five
+    therefore declare every :class:`AttackClass`.  The walk's live gate is
+    ``is_ability or basic_attack or source_key == "auto_attacks"``, which is
+    Blue Dream Bubble's own restriction — "the next attack or spell they
+    receive" — generalised to every modifier before any of them could say
+    otherwise, so ``AttackClass.OTHER`` damage (item procs, burns, thorns
+    returns) goes unpriced for those five.
+
+    C3 declines to widen the gate: silently widening a gate inside a commit
+    labelled "add a typed field" is a second correction riding the first,
+    and no committed baseline scenario reaches the branch, so the widening
+    would land unfixtured.  When a later slice widens it, this sentinel is
+    what turns red.
+    """
+
+    def test_the_population_is_five_producers_and_is_not_empty(self):
+        """D-26: the sentinel names how much it is green over."""
+        admitting_other = {
+            source
+            for source, declared in declared_classes_by_producer().items()
+            if AttackClass.OTHER in declared["attack_classes"]
+        }
+        assert len(admitting_other) == FROM_ALL_SOURCES_PRODUCERS, (
+            "D-04: the sentinel's population moved; a producer changed which "
+            "attack classes it declares, and the divergence this pins is "
+            f"now over {sorted(admitting_other)}"
+        )
+        assert admitting_other < set(_declared_authorities())
+
+    def test_other_class_damage_is_declared_but_not_priced(self):
+        """The divergence itself, at the one predicate that decides it."""
+        proc = SurvivalAction(damage_type="magic", source_key="item_burn", attacker=-1)
+        assert attack_class_of(proc) is AttackClass.OTHER
+        unmake = {
+            "source": "Abyssal Mask — Unmake",
+            "holder": 0,
+            "damage_classes": frozenset({DamageClass.MAGIC}),
+            "attack_classes": frozenset(AttackClass),
+        }
+        assert AttackClass.OTHER in unmake["attack_classes"]
+        # MERGE: ``_modifier_applies`` gained a source-restriction
+        # argument; Unmake names no ``source_participant``, so the
+        # restriction is inert and the source id is passed as "".
+        assert not _modifier_applies(unmake, proc, ""), (
+            "D-04: the walk now prices AttackClass.OTHER damage for a "
+            "from-all-sources modifier.  That is the correction this "
+            "sentinel defers, not a free improvement: re-read Phase 0's "
+            "is_attack_or_spell ruling, land it as its own slice with a "
+            "declared qualifying population, and delete this sentinel."
+        )
+
+    def test_the_one_producer_whose_text_matches_the_gate_is_blue_dream_bubble(self):
+        """The gate is not arbitrary — it is one producer's own restriction."""
+        declared = declared_classes_by_producer()
+        assert declared["Dream Maker — Blue Dream Bubble"]["attack_classes"] == (
+            frozenset({AttackClass.BASIC_ATTACK, AttackClass.ABILITY})
+        ), "D-04: Blue Dream Bubble is the reading the walk's gate encodes"
+
+
+class TestCommandMarksOnlyTheFirstPairDefender:
+    """One authored immobilize marks one enemy, chosen by roster position (H2).
+
+    The item scan reads the *first* pair's damage events and stamps every one
+    of them with that pair's defender id, so the Command packet's target is a
+    construction accident of running the rotation once per defender rather
+    than a reading of how many enemies the ability actually immobilised.
+    Reordering the roster moves the mark, which is the proof that no
+    targeting rule is involved.
+
+    H2 is the human-owned decision that answers it — how many roster targets
+    does one cone stun, and on what source — and the umbrella's recorded
+    ruling until then is *deferred, default shipped*: ``CcScope.Unreviewed``
+    resolves to a single target.  This sentinel pins the default so the day
+    ``CcScope`` takes a sourced value is a day this file is re-read.
+    """
+
+    def test_the_population_is_three_enemies_and_one_is_marked(self):
+        """D-26: three enemies could be marked; exactly one is."""
+        combat = sentinel_roster(("Imperial Mandate",), ("Aatrox", "Malphite", "Garen"))
+        enemies = [
+            row["participant_id"]
+            for row in combat["breakdown"]
+            if row["participant_id"].startswith("enemy:")
+        ]
+        assert len(enemies) == SENTINEL_ROSTER_ENEMIES
+        marked = _support_events(combat, "Imperial Mandate — Command")
+        assert len(marked) == COMMAND_MARKED_ENEMIES, (
+            "H2: one authored immobilize now marks "
+            f"{len(marked)} of {len(enemies)} enemies.  That is CcScope "
+            "taking a value, which is H2's to rule and Phase 4's to land — "
+            "not a change this sentinel may absorb."
+        )
+        assert marked[0]["target"] == enemies[0]
+
+    def test_reordering_the_roster_moves_the_mark(self):
+        """Positional, not targeted — the fact H2 has to replace."""
+        forward = sentinel_roster(
+            ("Imperial Mandate",), ("Aatrox", "Malphite", "Garen")
+        )
+        reversed_ = sentinel_roster(
+            ("Imperial Mandate",), ("Garen", "Malphite", "Aatrox")
+        )
+        assert _support_events(forward, "Imperial Mandate")[0]["target"] == (
+            "enemy:Aatrox"
+        )
+        assert _support_events(reversed_, "Imperial Mandate")[0]["target"] == (
+            "enemy:Garen"
+        ), (
+            "H2: the Command mark no longer follows roster order, so the "
+            "first-defender scan has been replaced.  Read the umbrella's H2 "
+            "row before pinning whatever replaced it."
+        )
+
+
+class TestAbyssalAuraHasNoRangeOrDeathCondition:
+    """Unmake declares a radius it never checks and outlives its holder (D-66).
+
+    The packet carries ``range_assumption="within_700_units"`` — an honest
+    declaration that positioning is assumed rather than modelled — and arms
+    ``persistent``, so the armed modifier's expiry is ``inf``.  Nothing the
+    walk holds can retract it: the armed record carries no position, no
+    radius and no holder-liveness field, so a dead holder's curse still
+    prices the enemy's incoming magic damage for the rest of the window.
+
+    Phase 0 does not fix this.  Both conditions are arm-time preconditions on
+    an idempotent aura, and D-66 is where an aura's arm key and its arming
+    conditions are ruled — with a `HolderStacking` field Phase 4 introduces
+    and Phase 0 cannot write against.  Pricing a curse whose precondition
+    never ran is the campaign's own invariant, so it is pinned here rather
+    than left as a comment.
+    """
+
+    def test_the_population_is_every_enemy_and_is_not_empty(self):
+        """D-26: the aura curses the whole enemy team, unconditionally."""
+        combat = sentinel_roster(
+            ("Imperial Mandate", "Abyssal Mask"), ("Aatrox", "Malphite", "Garen")
+        )
+        cursed = _support_events(combat, "Abyssal Mask — Unmake")
+        assert len(cursed) == SENTINEL_ROSTER_ENEMIES, (
+            "D-66: Unmake now curses "
+            f"{len(cursed)} of {SENTINEL_ROSTER_ENEMIES} enemies, so some "
+            "precondition has started running.  If that is a range or "
+            "liveness gate it is a correction with its own slice."
+        )
+        assert all(event["persistent"] for event in cursed)
+        assert all("expires_at" not in event for event in cursed)
+
+    def test_the_declared_range_is_an_assumption_and_not_a_check(self):
+        combat = sentinel_roster(
+            ("Imperial Mandate", "Abyssal Mask"), ("Aatrox", "Malphite", "Garen")
+        )
+        cursed = _support_events(combat, "Abyssal Mask — Unmake")
+        assert {event["range_assumption"] for event in cursed} == {
+            "within_700_units"
+        }, "D-66: the assumption is declared on the packet, in every roster"
+
+    def test_the_armed_curse_carries_no_range_and_no_liveness_field(self):
+        """The absence is the claim, so the field set is pinned."""
+        armed: list[dict] = []
+        state = {"active_damage_modifiers": armed}
+        _apply_damage_modifier(
+            _LedgerCtx(),
+            SurvivalAction(
+                source="Abyssal Mask — Unmake",
+                holder=0,
+                persistent=True,
+                multiplier=1.12,
+                amount=0.12,
+                damage_classes=frozenset({DamageClass.MAGIC}),
+                attack_classes=frozenset(AttackClass),
+            ),
+            state,
+        )
+        assert set(armed[0]) == ARMED_MODIFIER_FIELDS, (
+            "D-66: the armed modifier's field set moved.  If a range or "
+            "holder-liveness key joined it, the aura has gained a "
+            "precondition and this sentinel is the correction's fixture."
+        )
+        assert armed[0]["until"] == math.inf
+
+    def test_a_persistent_curse_survives_any_later_instant(self):
+        """No expiry means no death condition either — nothing retracts it."""
+        state = {
+            "active_damage_modifiers": [
+                _armed(
+                    source="Abyssal Mask — Unmake",
+                    until=math.inf,
+                    multiplier=1.12,
+                    damage_classes=frozenset({DamageClass.MAGIC}),
+                )
+            ]
+        }
+        late = _apply_cross_participant_modifiers(
+            _LedgerCtx(),
+            SurvivalAction(damage_type="magic", is_ability=True, time=1e6, attacker=-1),
+            state,
+            100.0,
+        )
+        assert late == pytest.approx(112.0), (
+            "D-66: something now expires a persistent aura.  Read this "
+            "sentinel's docstring: the range and death conditions are "
+            "deferred, and expiring the aura is neither of them."
+        )
+
+
+class TestSupportValueMixesUnits:
+    """One ``support_value`` sum adds hit points to a unitless amp (D-14, H3).
+
+    ``support_value`` is the sum of every non-damage support event's applied
+    amount, with no unit axis anywhere in the accumulator: a Locket shield
+    contributes 360 hit points and Imperial Mandate's Command contributes
+    0.07, the amp *fraction*, to the same total.  A Mandate holder is
+    therefore worth about a thousandth of a shield in the utility objective.
+
+    H3 is the human-owned decision — does amplification count as support
+    value at all, and in what unit — and D-14 rules that Phase 0 pins the
+    behaviour by characterisation and excludes it from every coverage
+    expectation, because it is a product decision about the objective and
+    not a defect with an oracle.
+    """
+
+    def _roster(self):
+        return sentinel_roster(
+            ("Imperial Mandate", "Locket of the Iron Solari"),
+            ("Aatrox",),
+            (("Locket of the Iron Solari", (("active_seconds", 1.0),)),),
+        )
+
+    def test_the_population_is_three_events_over_two_units(self):
+        """D-26: the sum is green over a real mixture, not one event."""
+        events = [
+            event
+            for event in self._roster()["support_events"]
+            if event["attacker"] == "main"
+        ]
+        assert len(events) == UNIT_MIXED_SUPPORT_EVENTS, (
+            "D-14: the holder's support-event population moved to "
+            f"{[event['source'] for event in events]}; this sentinel pins a "
+            "sum that mixes units and needs both units present."
+        )
+        assert len({event["kind"] for event in events}) == UNIT_MIXED_SUPPORT_UNITS
+        assert {event["kind"] for event in events} == {"shield", "damage_modifier"}
+
+    def test_one_sum_holds_hit_points_and_a_unitless_fraction(self):
+        combat = self._roster()
+        events = [
+            event for event in combat["support_events"] if event["attacker"] == "main"
+        ]
+        amounts = [event["applied_amount"] for event in events]
+        shields = [
+            event["applied_amount"] for event in events if event["kind"] == "shield"
+        ]
+        amps = [
+            event["applied_amount"]
+            for event in events
+            if event["kind"] == "damage_modifier"
+        ]
+        assert shields == [360.0, 360.0]
+        assert amps == [0.07]
+        holder = next(
+            row for row in combat["breakdown"] if row["participant_id"] == "main"
+        )
+        assert holder["support_value"] == pytest.approx(round(sum(amounts), 1)), (
+            "D-14: support_value stopped being the raw sum of applied "
+            "amounts.  Weighting or converting the amp is H3's answer, not a "
+            "refactor's — record the ruling in the umbrella first."
+        )
+        assert holder["support_value"] == pytest.approx(720.1)
+
+    def test_the_accumulator_has_no_unit_axis(self):
+        """The mixing is structural: one array, one ``+=``, no unit tag."""
+        entries = [
+            ("ally:Pantheon", 0, 0, False),
+            ("enemy:Aatrox", 0, 1, False),
+        ]
+        support_value, healing_output = accumulate_support_values(
+            [360.0, 0.07], entries, (), (), 1
+        )
+        assert support_value == [pytest.approx(360.07)], (
+            "D-14: the support accumulator gained a unit axis.  That is H3 "
+            "being answered, and it belongs in the umbrella's H3 row with "
+            "the objective's own re-derivation, not here."
+        )
+        assert healing_output == [0.0]

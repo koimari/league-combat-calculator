@@ -74,6 +74,7 @@ from typing import Any, Mapping
 
 from .crowd_control_eligibility import KNOWN_CONTROL_KINDS
 from .delivery_eligibility import stable_event_key
+from .item_effects import ally_item_effect_value
 from .state_lifecycle import SourceReceipt
 
 _EPS = 1e-9
@@ -248,8 +249,14 @@ ITEM_CLEANSE_DECLARATIONS: dict[str, dict[str, Any]] = {
         "cooldown_seconds": None,
         "cooldown_source_gap": True,
         "heal": {
-            "amount_min": 100.0,
-            "amount_max": 250.0,
+            # Rule 5: Purify's two numbers live in ALLY_ITEM_EFFECTS and are
+            # read through the typed accessor, which raises naming the item
+            # and the key if the registry ever loses one — never a literal
+            # here that could outlive the source.  Read at import because
+            # that registry is hand-authored and refresh-inert (D-47), so
+            # there is no generation for a re-read to catch.
+            "amount_min": ally_item_effect_value("Mikael's Blessing", "heal_min"),
+            "amount_max": ally_item_effect_value("Mikael's Blessing", "heal_max"),
             "scaling": "target_level",
             "source": "Mikael's Blessing — Purify",
             "source_atoms": [dict(MIKAELS_HEAL_ATOM)],

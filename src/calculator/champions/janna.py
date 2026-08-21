@@ -16,20 +16,23 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage, source_row
+from .healing_contract import declare_healing_rule
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     on_hit_entry,
 )
+from .source_receipts import load_champion_sources
+from ..healing_helpers import _ability, _rank
 
 
 def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    bonus_ms = max(0.0, float(ctx.options.get("bonus_movement_speed", 0.0)))
+    bonus_ms = max(0.0, float(ctx.option("bonus_movement_speed")))
     value = 0.30 * bonus_ms
     entry = on_hit_entry(ability.get("name", "Tailwind"), value, "magic")
     entry["detail"] = (
@@ -45,7 +48,7 @@ def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    charge = min(max(float(ctx.options.get("q_charge", 1.0)), 0.0), 1.0)
+    charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * charge
@@ -79,6 +82,7 @@ def _zephyr(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", value),)
+    entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         "Passive movement speed and active slow are sourced utility; the active is one magic hit."
     )
@@ -100,7 +104,13 @@ SLOTS = {
         reason="Knockback and channelled healing are utility; the parent entry has no outgoing champion damage formula.",
     ),
 }
-parse_abilities = build_parser(SLOTS, "Janna")
+# Q's whirlwind deals magic damage "and knock[s] them up"; W's air
+# elemental "deals magic damage and slows them for 2 seconds".  P is the
+# on-hit bonus row and E/R author no damage part at all (Monsoon's
+# knockback has no damage formula in the cached entry).
+MODULE_CC = {"Q": "knockup", "W": "slow"}
+
+parse_abilities = build_parser(SLOTS, "Janna", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "bonus_movement_speed",
@@ -134,45 +144,11 @@ ASSUMPTIONS = [
     "per-tick stream (12 x Heal Per Tick == Total Heal 300-600 + 150% "
     "AP) via the E1-rule fan-out; the knockback and channel are state.",
 ]
-SOURCES = [
-    source_row(
-        "Janna parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Janna",
-        3892602,
-        "2025-05-02T11:23:59Z",
-    ),
-    source_row(
-        "Janna Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/Q",
-        2863952,
-        "2019-11-03T19:57:09Z",
-    ),
-    source_row(
-        "Janna W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/W",
-        2864247,
-        "2019-11-03T20:09:56Z",
-    ),
-    source_row(
-        "Janna E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/E",
-        2864393,
-        "2019-11-03T20:12:27Z",
-    ),
-    source_row(
-        "Janna R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Janna/R",
-        2864539,
-        "2019-11-03T20:15:51Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Janna")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-locals
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -181,12 +157,27 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Janna self-healing events from its authored packet."""
-    healing = []
-    r_rank = _healing._rank(ability_damages, "R")
-    ability = _healing._ability(champion_data, "R")
-    per_tick = _healing.extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
-    total = _healing.extract_named(ability, "Total Heal", r_rank, champion_stats)
+    """Monsoon pays its sourced per-tick heal on its own 0.25s channel.
+
+    Monsoon channels for up to 3 seconds, healing Janna herself and nearby
+    allies every 0.25 seconds (wiki: "Heal Per Tick: 25 / 37.5 / 50
+    (+ 12.5% AP)"; "Total Heal: 300 / 450 / 600 (+ 150% AP)").  The tick
+    count is sourced from the total/per-tick ratio so the authored sum
+    stays exact at every rank.
+
+    Issue #143 (phase 2): this rule is the ONE ledger owner of the R heal.
+    The support scanner defers the slot (``_MODULE_AUTHORED_HEAL_SLOTS``)
+    and the participant timeline fans every tick out to all selected
+    teammates (``target_scope: self_and_all_teammates``), so the ally heal
+    is the same ticked sourced heal as the self heal instead of the
+    scanner's 600 lump.  R emits no damage, so the schedule is the cast's
+    own — never inferred from the damage ledger.
+    """
+    healing: list[dict] = []
+    r_rank = _rank(ability_damages, "R")
+    ability = _ability(champion_data, "R")
+    per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
+    total = extract_named(ability, "Total Heal", r_rank, champion_stats)
     tick_count = (
         max(1, min(100, int(round(total / per_tick))))
         if per_tick > 0.0 and total > 0.0
@@ -211,9 +202,5 @@ def derive_self_healing(
                 )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Janna", derive_self_healing)

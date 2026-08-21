@@ -17,6 +17,8 @@ from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions.slotlib import extract_value
+from src.calculator.champions import chogath
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -351,26 +353,85 @@ class TestRFeast:
 
 
 class TestPPassiveCarnivore:
-    """P (Carnivore) heals/restores mana ONLY on an enemy kill — the 1v1
-    model has no minion kills and no kill receipt. It emits a sourced
-    zero-damage row (MODULE_COVERAGE: no_damage) rather than staying
-    silently absent."""
+    """P (Carnivore) heals ONLY on an enemy kill, which a duel does not
+    simulate: the row exists exactly when the user declares the kills."""
 
-    def test_p_present_zero_damage(self, chogath_data, parse_at) -> None:
+    def test_no_receipt_without_declared_kills(self, chogath_data, parse_at) -> None:
         _, abilities = parse_at(chogath_data, 9)
+        assert "passive" not in abilities
+        assert "P" not in abilities
+
+    def test_declared_kills_emit_a_sourced_zero_damage_receipt(
+        self, chogath_data, parse_at
+    ) -> None:
+        _, abilities = parse_at(
+            chogath_data, 9, champion_options={"p_carnivore_kills": 2}
+        )
         entry = abilities["passive"]
         assert entry["name"] == "Carnivore"
         assert entry["total_raw"] == 0.0
         assert entry["parts"] == ()
         assert entry["detail"]
+        # The level row the heal rule spends: 18 : 52 by level, level 9.
+        assert entry["self_heal_state"] == {"kills": 2, "amount": 34.0}
+
+
+class TestReviewedCrowdControl:
+    """Cho'Gath's crowd-control review, whole kit.
+
+    Q's knock-up lands with the rupture, on the sourced delay the row
+    authors; E's slow rides the three basic attacks it empowers, on the
+    events the fight engine authors from the swings they consume.
+    """
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Cho'Gath")
+        assert chogath.MODULE_CC == {
+            "P": "none",
+            "Q": "knockup",
+            "W": "silence",
+            "E": "slow",
+            "R": "none",
+        }
+        assert "slowed by an amount that decays over 1.5 seconds" in (
+            cc_review.slot_text(data, "E")
+        )
+        assert "knocking them up for 1 second" in cc_review.slot_text(data, "Q")
+        assert "silenced for a duration" in cc_review.slot_text(data, "W")
+        assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
+        assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
+
+    def test_rupture_lands_on_the_cast_time_plus_its_sourced_delay(self):
+        """The cached note says the delay excludes the cast time."""
+        data = cc_review.kit("Cho'Gath")
+        assert "after a 0.627 seconds delay" in cc_review.slot_text(data, "Q")
+        entry = data["abilities"]["Q"][0]
+        assert "The delay before the rupture does not include the cast time." in (
+            entry["notes"]
+        )
+        assert entry["castTime"] == "0.5"
+        parsed = parse_abilities(data, 20, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3})
+        (part,) = parsed["Q"]["parts"]
+        assert part.time_offset == pytest.approx(1.127)
+        assert part.cc_kind == "knockup"
+
+    def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Cho'Gath") == []
+        coverage = cc_review.fimbulwinter_coverage("Cho'Gath")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestModuleCoverage:
-    def test_all_five_slots_covered(self) -> None:
-        from src.calculator.champions.chogath import MODULE_COVERAGE
+    """Every slot is covered, and P is ``modeled`` rather than no_damage:
+    its receipt carries the Carnivore heal the self-heal rule places."""
 
-        assert MODULE_COVERAGE == {
-            "P": "no_damage",
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions import get_champion_module_contract
+
+        contract = get_champion_module_contract("Cho'Gath")
+        assert contract.coverage == {
+            "P": "modeled",
             "Q": "modeled",
             "W": "modeled",
             "E": "modeled",

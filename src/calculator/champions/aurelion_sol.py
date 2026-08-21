@@ -13,6 +13,8 @@ Why each slot is non-generic:
   per-second attr is complete at every rank.
 - W (Astral Flight) is a damage-less dash, deliberately absent from the
   map; its only calc effect is Q's beam modifier, gated by ``w_active``.
+  The cached "Breath of Light Flat Damage Modifier" row (108-112%) is a
+  multiplier on Q, not a W damage row — hence ``no_damage``, not a gap.
 - E (Singularity) must read "Total Magic Damage" (full 5s zone) and
   carries the execute-threshold display line (5% + 2.6% per 100
   Stardust of max HP — wiki prose with no usable JSON home).
@@ -20,12 +22,14 @@ Why each slot is non-generic:
   the ``r_empowered`` option. The empowered shockwave (R[1] effect[1])
   is excluded: a target hit by the star is immune to the shockwave.
 - P (Cosmic Creator) is the Stardust stack mechanic — no damage row; it
-  exists as the ``stardust_stacks`` option feeding Q and E.
+  exists as the ``stardust_stacks`` option feeding Q and E.  Every
+  Stardust effect the cache states (Q burst %maxHP, W range, E radius and
+  execute threshold, R radius) augments another slot, so nothing about P
+  is unpriced.
 
-Roadmap session 3 (2026-08-20): P and W are reclassified from
-out_of_scope to no_damage. Both now emit an explicit, user-visible
-zero-damage row (``module_helpers.no_damage``) instead of staying
-silently absent from the parse output.
+P and W are ``no_damage``, not ``out_of_scope``: both emit an explicit,
+user-visible zero-damage row (``module_helpers.no_damage``) rather than
+staying silently absent from the parse output.
 
   - P (Cosmic Creator): the cached entry's own leveling is empty
     (``data/champions.json`` AurelionSol P: single effect row,
@@ -55,15 +59,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage
+from .module_helpers import delayed_damage, no_damage
 from .slotlib import (
     by_option,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
-    simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 # One full Q channel: 3.25 s of beam, with a burst on the primary target
 # at each full second of channel (3 bursts).
@@ -186,6 +190,15 @@ class _StardustRule:
 
 AURELION_SOL_STARDUST_RULE = _StardustRule()
 
+# Both R branches strike after their own sourced delay, from cast start:
+# "calls down a star that strikes the target location after 1.25 seconds,
+# dealing magic damage to enemies hit and stunning them for 1 second"
+# (R[0]) and "calls down a giant star that strikes the target location
+# after 2 seconds, dealing 25% increased damage in a larger area and
+# knocking up enemies hit for 1 second" (R[1]).
+_R_FALLING_STAR_SECONDS = 1.25
+_R_SKIES_DESCEND_SECONDS = 2.0
+
 
 def _w_beam_modifier(ctx: SlotCtx) -> float:
     """W's 108-112% multiplier on Q's beam flat damage; 1.0 when inactive.
@@ -230,13 +243,8 @@ def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    ap = ctx.stats.get("ability_power", 0.0)
-    beam_per_second = (
-        extract_value(ability, "Magic Damage per Second", rank, 0)
-        * _w_beam_modifier(ctx)
-        + ap * extract_value(ability, "Magic Damage per Second", rank, 1) / 100.0
-    )
-
+    ap = ctx.stat("ability_power")
+    beam_per_second = _beam_per_second(ctx, ability, rank, ap)
     per_burst = _burst_damage(ctx, ability, rank, ap)
 
     seconds, bursts, cooldown = _channel_window(ctx, ability, rank)
@@ -322,8 +330,8 @@ def _beam_per_second(
 
 def _burst_damage(ctx: SlotCtx, ability: dict[str, Any], rank: int, ap: float) -> float:
     """One primary-target Stardust burst: flat + % AP + Stardust % max HP."""
-    stacks = float(ctx.options.get("stardust_stacks", 0))
-    max_hp = ctx.target.get("target_max_health", 0.0)
+    stacks = float(ctx.option("stardust_stacks"))
+    max_hp = ctx.target_stat("target_max_health")
     return (
         extract_value(ability, "Bonus Magic Damage", rank, 0)
         + ap * extract_value(ability, "Bonus Magic Damage", rank, 1) / 100.0
@@ -357,13 +365,9 @@ def _secondary_beam_per_second(
     primary-only ("Against the primary target, the beam will deal a
     burst"), and W's flat-damage modifier applies to the secondary beam
     as non-burst flat damage.  Zero when no secondary target is
-    selected via the parse/API-level ``q_secondary_targets`` option: the
-    read-only option-meta test pins Aurelion Sol's declared OPTIONS set,
-    so the key is deliberately not declared in OPTIONS (the
-    pipeline-injected ``fight_duration_seconds`` context key follows
-    the same undeclared convention).
+    selected via the declared ``q_secondary_targets`` option.
     """
-    secondary_targets = min(max(int(ctx.options.get("q_secondary_targets", 0)), 0), 5)
+    secondary_targets = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     if not secondary_targets:
         return 0.0
     return (
@@ -414,12 +418,12 @@ def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
     # Cassiopeia rule).
     entry["dot_duration"] = _E_DURATION
 
-    stacks = float(ctx.options.get("stardust_stacks", 0))
+    stacks = float(ctx.option("stardust_stacks"))
     threshold_pct = _E_EXECUTE_BASE_PCT + _E_EXECUTE_PCT_PER_100_STARDUST * (
         stacks / 100.0
     )
     detail = f"Executes below {threshold_pct:.1f}% max HP"
-    max_hp = ctx.target.get("target_max_health", 0.0)
+    max_hp = ctx.target_stat("target_max_health")
     if max_hp > 0:
         detail += f" ({threshold_pct / 100.0 * max_hp:.0f} HP)"
     entry["detail"] = detail
@@ -500,6 +504,19 @@ OPTIONS: list[dict[str, Any]] = [
         "default": False,
         "label": "R empowered (The Skies Descend)",
     },
+    {
+        "key": "q_secondary_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Enemies caught by the beam beyond the primary (each takes "
+            "the sourced 50%-strength 'Secondary Magic Damage per "
+            "Second' row; the Stardust bursts stay primary-only)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
 ]
 
 ASSUMPTIONS = [
@@ -524,10 +541,11 @@ ASSUMPTIONS = [
     "selected via the parse/API-level q_secondary_targets option "
     "(default 0 = primary only); the Stardust bursts remain "
     "primary-target-only, and W's flat-damage modifier applies to the "
-    "secondary beam as non-burst flat damage.  The key is deliberately "
-    "not declared in OPTIONS because the read-only option-meta test "
-    "pins the declared set (the pipeline-injected context keys follow "
-    "the same undeclared convention)",
+    "secondary beam as non-burst flat damage.  The key is a declared "
+    "OPTIONS row like every other secondary-target count in the roster "
+    "(Orianna's Command: Attack, Xayah's Clean Cuts): a formula reads its "
+    "options through the rows the frontend renders, so the number it "
+    "falls back to and the number the user is shown are one value",
     "Q's cached 'cost' row (8.75/10/11.25/12.5/13.75 mana) is NOT a "
     "stale value: it is the wiki's per-0.25s-tick drain, exactly 1/4 "
     "of the game's per-second convention (bin AurelionSolQ 'mana' "
@@ -554,33 +572,50 @@ SLOTS = {
     "Q": _breath_of_light,
     "W": _astral_flight,
     "E": _singularity,
+    # Both R branches land on their own sourced delay, and the two apply
+    # different control, so each authors its own kind on its own part
+    # rather than sharing one MODULE_CC answer.
     "R": by_option(
         "r_empowered",
         {
-            False: simple_damage(attr="Magic Damage", dmg_type="magic"),
-            True: simple_damage(
+            False: delayed_damage(
+                delay=_R_FALLING_STAR_SECONDS,
+                attr="Magic Damage",
+                dmg_type="magic",
+                cc_kind="stun",
+            ),
+            True: delayed_damage(
+                delay=_R_SKIES_DESCEND_SECONDS,
                 attr="Empowered Magic Damage",
                 dmg_type="magic",
                 source=("R", 1),
                 cooldown_from=("R", 0),
+                cc_kind="knockup",
             ),
         },
         default=False,
     ),
 }
 
-parse_abilities = build_parser(SLOTS, "Aurelion Sol")
+# Cached kit review.  Q's beam only burns and reveals.  E's black hole
+# "drag[s] [enemies] inward", which the Wiki's crowd-control taxonomy does
+# not list among its four displacements (knock aside/back/up, pull) nor
+# among the immobilizing effects, and its movement-speed floor applies to
+# "minions and monsters" only — so neither slot controls the champion it
+# damages.  R is deliberately absent from this dict rather than
+# unreviewed: its two branches apply different control (Falling Star
+# stuns, The Skies Descend knocks up) on different sourced delays, so the
+# answer is a property of the branch and each variant authors its own
+# ``cc_kind`` on its own part above.  P and W are absent too: their rows
+# price no damage part for an event to carry a kind.
+MODULE_CC = {"Q": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Aurelion_Sol",
-        "revision_id": 3952788,
-        "revision_timestamp": "2025-09-10T01:55:29Z",
-    }
-]
+SOURCES = load_champion_sources("Aurelion Sol")
+
+# P and W emit a row but price no damage, which is not what SLOTS derives.
 MODULE_COVERAGE = {
     "P": "no_damage",
     "Q": "modeled",
@@ -588,4 +623,3 @@ MODULE_COVERAGE = {
     "E": "modeled",
     "R": "modeled",
 }
-REVIEW_STATUS = "reviewed_module"

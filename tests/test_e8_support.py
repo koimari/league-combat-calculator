@@ -33,6 +33,7 @@ from dataclasses import replace
 import pytest
 
 from src import app as app_module
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import build_participant_timeline
@@ -291,7 +292,15 @@ def test_taric_cosmic_radiance_targets_the_caster_and_selected_ally():
     assert ally_row["survival"]["action_downtime"] >= 2.5
 
 
-def test_seraphine_w_pulse_checks_the_caster_shield_and_keeps_the_atom_receipt():
+def test_seraphine_w_publishes_the_priced_shield_and_no_zero_pulse_row():
+    """The roster path's half of the recipient-scaled-row ruling.
+
+    Surround Sound's pulse heals off each recipient's *missing* health, which
+    no scan-time stat holds, so the merged scanner refuses the row rather
+    than publishing a 0.0 amount for the walk to price later.  What reaches
+    the roster is the sourced caster-and-allies shield, carrying its own atom
+    receipt.  Per-recipient pricing is the deferred follow-up.
+    """
     app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -319,25 +328,26 @@ def test_seraphine_w_pulse_checks_the_caster_shield_and_keeps_the_atom_receipt()
     support = [
         event
         for event in response.get_json()["combat"]["support_events"]
-        if event["attacker"] == "main"
-        and event["source"].startswith("Surround Sound")
-        and event["kind"] == "heal"
+        if event["attacker"] == "main" and event["source"].startswith("Surround Sound")
     ]
-    assert support
+    assert {event["kind"] for event in support} == {"shield"}
     assert {event["target"] for event in support} == {"main", "ally:Jinx"}
-    assert all(event["time"] == pytest.approx(2.5) for event in support)
+    assert all(event["amount"] == pytest.approx(140.0) for event in support)
+    assert all(event["duration"] == pytest.approx(2.5) for event in support)
     assert all(
-        event["skipped_reason"] == "existing_shield_required" for event in support
-    )
-    assert all(
-        event["amount_formula_atom"]["source"]
-        == "Seraphine.W[0].effects[1].leveling[0].modifiers[0]"
+        event["duration_atom"]["source"] == "Seraphine.W[0].effects[0].description"
         for event in support
     )
-    assert all(event["shield_gate_target"] == "main" for event in support)
 
 
-def test_seraphine_w_option_allows_the_first_live_missing_health_pulse():
+def test_seraphine_w_option_resurrects_no_zero_pulse_row_on_the_roster():
+    """``w_already_shielded`` assumes away a gate on a row that is refused.
+
+    Pinned on the roster path as well as the scanner's, because the option is
+    the one input that could put a zero-amount pulse back on the wire: it
+    exists only to drop the shield gate, and dropping a gate must not turn a
+    refusal into a published packet.
+    """
     app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -369,14 +379,9 @@ def test_seraphine_w_option_allows_the_first_live_missing_health_pulse():
         if event["attacker"] == "main"
         and event["target"] == "ally:Jinx"
         and event["source"].startswith("Surround Sound")
-        and event["kind"] == "heal"
     ]
-    assert support
-    pulse = support[0]
-    assert pulse["requires_existing_shield"] is False
-    assert pulse["shield_gate_assumed"] is True
-    assert pulse["raw_amount"] > 0.0
-    assert pulse["applied_amount"] > 0.0
+    assert [event["kind"] for event in support] == ["shield"]
+    assert support[0]["amount"] == pytest.approx(140.0)
 
 
 def test_support_selection_can_choose_a_different_ally_per_packet_kind():
@@ -639,3 +644,129 @@ def test_revive_module_sourcing_matches_cached_rows():
     assert zilr(18, {"ability_power": 0.0})["revive_health_amount"] == 1100.0
     assert zilr(18, {"ability_power": 100.0})["revive_health_amount"] == 1300.0
     assert zilr(18, {"ability_power": 0.0})["revive_cooldown"] == 60.0
+
+
+# ---------------------------------------------------------------------------
+# Census slice 2 — every support slot the map calls ``modeled`` publishes a
+# row in the COUPLED walk (docs/plans/utility-axis-census.md §2 slice 2).
+# Reaching ``derive_ally_effects`` is not the claim; reaching the ledger is.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("champion", "slot", "ability", "kind", "amount", "scope", "recipient"),
+    [
+        # Cozy Campfire "Total Heal" 70/90/110/130/150 (+15% AP), rank 5.
+        ("Milio", "W", "Cozy Campfire", "heal", 150.0, "one_teammate", "ally:Jinx"),
+        # Warm Hugs "Shield Strength" 45/75/105/135/165 (+45% AP), rank 5.
+        ("Milio", "E", "Warm Hugs", "shield", 165.0, "one_teammate", "ally:Jinx"),
+        # Breath of Life "Heal" 150/250/350 (+50% AP), rank 3 — owned by the
+        # healing rule and fanned out to the ally by the participant timeline.
+        (
+            "Milio",
+            "R",
+            "Breath of Life",
+            "heal",
+            350.0,
+            "self_and_all_teammates",
+            "ally:Jinx",
+        ),
+        # Valor "Shield Strength" 70/95/120/145/170 (+110% bonus AD), rank 5,
+        # no items: "granting herself a shield" — the caster's own ledger.
+        ("Riven", "E", "Valor", "shield", 170.0, "self", "main"),
+        # Surround Sound "Shield Strength" 60/80/100/120/140 (+20% AP), rank 5.
+        (
+            "Seraphine",
+            "W",
+            "Surround Sound",
+            "shield",
+            140.0,
+            "self_and_all_teammates",
+            "ally:Jinx",
+        ),
+        # Sivir E's Spell Shield heal is NOT here any more: the wiki pays
+        # it only "upon successfully blocking a hostile effect", which a
+        # scanner row cannot express, so ("Sivir", "E") is a declared
+        # _STATE_AUTHORED_HEAL_SLOTS member and the champion module authors
+        # it on the spell-shield state.  Pinned by
+        # tests/test_support_effects.py::test_sivir_spell_shield_heals_only_sivir.
+        # Aria of Perseverance "Shield Strength" 25/45/65/85/105 (+25% AP).
+        (
+            "Sona",
+            "W",
+            "Aria of Perseverance",
+            "shield",
+            105.0,
+            "self_and_one_teammate",
+            "ally:Jinx",
+        ),
+        # Dark Passage "Shield Strength" 50/70/90/110/130 (+2 per Soul).
+        ("Thresh", "W", "Dark Passage", "shield", 130.0, "one_teammate", "ally:Jinx"),
+        # Zoomies "Shield" 65/90/115/140/165 (+40% AP), rank 5, to the anchor.
+        ("Yuumi", "E", "Zoomies", "shield", 165.0, "one_teammate", "ally:Jinx"),
+        # --- census slice 3: the row was cached; the hook was missing ------
+        # Caretaker's Shrine "Maximum Heal" 50/87.5/125/162.5/200 (+70% AP).
+        (
+            "Bard",
+            "W",
+            "Caretaker's Shrine",
+            "heal",
+            200.0,
+            "one_teammate",
+            "ally:Jinx",
+        ),
+        # Golden Aegis "Shield Strength" 60-140 (+70% bonus AD), rank 5.
+        ("Jarvan IV", "W", "Golden Aegis", "shield", 140.0, "self", "main"),
+        # Battle Dance "Shield Strength" 50/75/100/125/150 (+70% AP), rank 5.
+        ("Rakan", "E", "Battle Dance", "shield", 150.0, "one_teammate", "ally:Jinx"),
+        # Wish "Heal" 150/250/350 (+50% AP), rank 3.
+        ("Soraka", "R", "Wish", "heal", 350.0, "self_and_all_teammates", "ally:Jinx"),
+        # Stand United "Minimum Shield Strength" 120/220/320 (+135% AP
+        # + 15% bonus health), rank 3 — the floor, because the 0-60%
+        # missing-health increase is a live-health condition.
+        ("Shen", "R", "Stand United", "shield", 320.0, "one_teammate", "ally:Jinx"),
+        # Ki Barrier "Shield" 47:128.59 by level (+13% bonus health) at 18,
+        # riding the E cast as a self_shield_events payload.
+        ("Shen", "P", "Ki Barrier", "shield", 120.0, "self", "main"),
+        # Black Shield "Magic Shield Strength" 100-320 (+70% AP), rank 5.
+        (
+            "Morgana",
+            "E",
+            "Black Shield",
+            "shield",
+            320.0,
+            "one_teammate",
+            "ally:Jinx",
+        ),
+        # Bastion "Shield Strength" 7/8/9/10/11% of the RECIPIENT's maximum
+        # health; the scan holds only the caster's, so Taric's own copy is
+        # priced (11% of his level-18 2328.0) and granted to him alone.
+        pytest.param(
+            "Taric",
+            "W",
+            "Bastion",
+            "shield",
+            256.08,
+            "self",
+            "main",
+        ),
+        # Fey Feathers "Shield" 30:247.94 by level (+95% AP) at 18, riding
+        # the Q cast as a self_shield_events payload.
+        ("Rakan", "P", "Fey Feathers", "shield", 247.94, "self", "main"),
+    ],
+)
+def test_a_modeled_support_slot_publishes_its_row_in_the_coupled_walk(
+    champion, slot, ability, kind, amount, scope, recipient
+):
+    from src.calculator.champions import get_champion_module_contract
+
+    assert get_champion_module_contract(champion).coverage[slot] == "modeled"
+    combat, _ally_row = _roster_combat(champion)
+    published = [
+        event
+        for event in _support_events(combat, ability)
+        if event["kind"] == kind and event["recipient"] == recipient
+    ]
+    assert published, f"{champion} {slot} ({ability}) published no {kind} row"
+    assert published[0]["amount"] == pytest.approx(amount)
+    assert published[0]["target_scope"] == scope

@@ -38,6 +38,7 @@ from .loadout_rules import (
     role_scoped_shop_items,
     validate_resolved_loadout,
 )
+from .program.views import RankingWriter, name_every_number
 from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
@@ -46,6 +47,7 @@ from .timeline_coverage import (
     applicability_exclusion_sources,
     combine_timeline_coverages,
 )
+from .work_counters import WorkCounterSink
 
 # Item exclusivity groups — at most one item from each group per build
 # (e.g. Spellblade items are mutually exclusive in-game). This table is
@@ -118,10 +120,10 @@ def _get_occupied_groups(items: list[dict[str, Any]]) -> set[str]:
 
 def _conflicts_with_build(
     candidate_name: str,
-    occupied_groups: set[str],
+    occupied: set[str],
 ) -> bool:
     """Return True if *candidate_name* would violate an exclusivity group."""
-    return conflicts_with_groups(candidate_name, occupied_groups)
+    return conflicts_with_groups(candidate_name, occupied)
 
 
 def _evaluate_build(
@@ -134,6 +136,7 @@ def _evaluate_build(
     timeline_audit: dict[str, Any] | None = None,
     require_complete_timeline: bool = False,
     combat_context: dict[str, Any] | None = None,
+    work_counters: WorkCounterSink | None = None,
 ) -> float:
     """Evaluate a build, reusing this search's score for an exact repeat.
 
@@ -142,7 +145,13 @@ def _evaluate_build(
     Scoring is deterministic for an identical ordered item list, so a repeat
     replays the recorded score and its ordering-audit contribution instead of
     re-simulating the roster.  The public receipts are byte-identical.
+
+    This is also the campaign's proposal counter (runbook R-24): every
+    candidate any regime proposes arrives here.  The memo *misses* are
+    counted one layer down, in the function that pays for them.
     """
+    if work_counters is not None:
+        work_counters.measured_proposals += 1
     score_memo = combat_context.get("score_memo") if combat_context else None
     if score_memo is None:
         return _evaluate_build_uncached(
@@ -155,9 +164,17 @@ def _evaluate_build(
             timeline_audit=timeline_audit,
             require_complete_timeline=require_complete_timeline,
             combat_context=combat_context,
+            work_counters=work_counters,
         )
     memo_key = tuple(item["name"] for item in items)
     hit = score_memo.get(memo_key)
+    # An entry recorded without an audit (the purchase baseline scores the
+    # current loadout outside the candidate audit) carries no delta and no
+    # withheld-build row; serving it to an audited caller would drop the
+    # candidate from the receipts silently.  Re-evaluate instead — line
+    # below overwrites the entry with a real delta.
+    if hit is not None and timeline_audit is not None and hit[1] is None:
+        hit = None
     if hit is not None:
         score, audit_delta = hit
         if timeline_audit is not None and audit_delta is not None:
@@ -192,6 +209,7 @@ def _evaluate_build(
         timeline_audit=timeline_audit,
         require_complete_timeline=require_complete_timeline,
         combat_context=combat_context,
+        work_counters=work_counters,
     )
     audit_delta = None
     if audit_before is not None:
@@ -221,11 +239,18 @@ def _evaluate_build_uncached(
     timeline_audit: dict[str, Any] | None = None,
     require_complete_timeline: bool = False,
     combat_context: dict[str, Any] | None = None,
+    work_counters: WorkCounterSink | None = None,
 ) -> float:
     """Evaluate a build and return the damage score for the given objective.
 
     Creates fresh copies of mutable state to avoid cross-call contamination.
+
+    This is the simulation the search pays for, so it is where a memo miss is
+    counted (R-24) — one increment in the function that does the work, rather
+    than one beside every branch that decides to call it.
     """
+    if work_counters is not None:
+        work_counters.score_memo_misses += 1
     if gold_budget is not None and _build_gold(items) > gold_budget:
         return float("-inf")
     targets = fight_params if isinstance(fight_params, tuple) else (fight_params,)
@@ -245,6 +270,7 @@ def _evaluate_build_uncached(
             role=base_params.role,
             role_quest_complete=base_params.role_quest_complete,
             external_stat_bonuses=base_params.ally_stat_bonuses,
+            rune_page=base_params.rune_page,
         )
         defenses = resolve_starting_defenses(
             champion_data["name"],
@@ -253,53 +279,34 @@ def _evaluate_build_uncached(
             items,
             item_options=base_params.item_options,
         )
-        try:
-            combat = build_participant_timeline(
-                champion_data,
-                level,
-                items,
-                base_params,
-                main_stats=stats,
-                main_defenses=defenses,
-                enemies=list(combat_context.get("enemies", [])),
-                allies=list(combat_context.get("allies", [])),
-                pair_result_cache=combat_context.get("pair_result_cache"),
-                search_context=combat_context.get("search_context"),
-                # Typed objectives score from the serialized events list
-                # below, so they need the full receipt; total damage scores
-                # from the breakdown row and can take the scoring subset.
-                include_receipt=objective in ("physical_damage", "magic_damage"),
-                # ``stats`` above used this exact configuration; the claim
-                # only holds when no external ally bonuses were folded in,
-                # because pair fights strip those.
-                reuse_main_stats=not base_params.ally_stat_bonuses,
-            )
-        except ValueError as exc:
-            # A candidate can introduce a target-state interaction that is
-            # deliberately fail-closed by the fight engine (for example,
-            # Protoplasm's temporary maximum-health expiry combined with an
-            # enemy max-health ability).  That makes this candidate ineligible
-            # for this exact search; it must not abort every other legal build.
-            # Keep unrelated validation errors visible to the API caller.
-            if "Protoplasm Harness" not in str(exc):
-                raise
-            if timeline_audit is not None:
-                coverage = {
-                    "complete": False,
-                    "certification": "partial_candidate_event_order",
-                    "exact_sources": [],
-                    "coarse_sources": ["target_Protoplasm Harness"],
-                    "note": "Candidate rejected by a target-state interaction.",
-                }
-                timeline_audit["evaluations"] += 1
-                timeline_audit["partial_evaluations"] += 1
-                timeline_audit["coarse_sources"].add("target_Protoplasm Harness")
-                timeline_audit.setdefault("withheld_builds", {})[
-                    _build_receipt_key(items)
-                ] = _public_build_receipt(
-                    items, coverage, "candidate_rejected_target_state"
-                )
-            return float("-inf")
+        combat = build_participant_timeline(
+            champion_data,
+            level,
+            items,
+            base_params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=list(combat_context.get("enemies", [])),
+            allies=list(combat_context.get("allies", [])),
+            pair_result_cache=combat_context.get("pair_result_cache"),
+            search_context=combat_context.get("search_context"),
+            # Typed objectives score from the serialized events list
+            # below, so they need the full receipt; total damage scores
+            # from the breakdown row and can take the scoring subset.
+            include_receipt=objective in ("physical_damage", "magic_damage"),
+            # Nobody reads this payload.  A search evaluates thousands of
+            # candidates and shows none of them, so the parallel
+            # dispositions map would be a few hundred dict entries per
+            # evaluation describing a payload that is compared and thrown
+            # away -- which the phase's allocation gate measures and
+            # refuses.  Said here, at the one call site it is true of,
+            # rather than assumed inside a view on every caller's behalf.
+            published=False,
+            # ``stats`` above used this exact configuration; the claim
+            # only holds when no external ally bonuses were folded in,
+            # because pair fights strip those.
+            reuse_main_stats=not base_params.ally_stat_bonuses,
+        )
         coverage = combat.get("timeline_coverage", {})
         excluded_sources = (
             applicability_exclusion_sources(coverage)
@@ -337,9 +344,21 @@ def _evaluate_build_uncached(
                 )
             if not coverage.get("complete", False) and not excluded_sources:
                 timeline_audit["partial_evaluations"] += 1
+                # The reason names the disposition: under a complete-timeline
+                # requirement this candidate is dropped from ranking just
+                # below, while otherwise it stays ranked with a partial
+                # receipt.  One code per disposition, like its siblings.
                 timeline_audit.setdefault("withheld_builds", {})[
                     _build_receipt_key(items)
-                ] = _public_build_receipt(items, coverage, "partial_event_order")
+                ] = _public_build_receipt(
+                    items,
+                    coverage,
+                    (
+                        "candidate_withheld_partial_event_order"
+                        if require_complete_timeline
+                        else "partial_event_order"
+                    ),
+                )
         if require_complete_timeline and not coverage.get("complete", False):
             # A coupled optimizer must never rank a candidate whose own
             # timeline is only phase-ordered.  Exclude it from the search and
@@ -458,9 +477,20 @@ def _evaluate_build_uncached(
             timeline_audit["coarse_sources"].update(coverage["coarse_sources"])
         if not coverage["complete"] and not excluded_sources:
             timeline_audit["partial_evaluations"] += 1
+            # Same disposition split as the coupled path above: dropped from
+            # ranking under a complete-timeline requirement, kept with a
+            # partial receipt otherwise.
             timeline_audit.setdefault("withheld_builds", {})[
                 _build_receipt_key(items)
-            ] = _public_build_receipt(items, coverage, "partial_event_order")
+            ] = _public_build_receipt(
+                items,
+                coverage,
+                (
+                    "candidate_withheld_partial_event_order"
+                    if require_complete_timeline
+                    else "partial_event_order"
+                ),
+            )
     if require_complete_timeline and not coverage["complete"]:
         return float("-inf")
 
@@ -599,14 +629,25 @@ def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _item_gold(item: dict[str, Any]) -> int:
-    """Return the sourced total shop price for one item."""
-    return int(item.get("shop", {}).get("prices", {}).get("total", 0))
+def item_gold(item: dict[str, Any]) -> int:
+    """Return the sourced total shop price, failing closed on a broken record.
+
+    ``shop.prices.total`` is cache-owned; a literal default here would make
+    an item free the moment the parser stopped writing its price.
+    """
+    name = str(item.get("name") or "Unknown item")
+    prices = item.get("shop", {}).get("prices", {})
+    if "total" not in prices:
+        raise KeyError(f"{name}: shop.prices.total")
+    price = int(prices["total"])
+    if price <= 0:
+        raise ValueError(f"{name}: shop.prices.total must be positive")
+    return price
 
 
 def _build_gold(items: list[dict[str, Any]]) -> int:
     """Return total shop price for a resolved build."""
-    return sum(_item_gold(item) for item in items)
+    return sum(item_gold(item) for item in items)
 
 
 def _greedy_fill(
@@ -640,7 +681,7 @@ def _greedy_fill(
             current.append(seed_item)
 
     used_names = {i["name"] for i in current}
-    occupied_groups = _get_occupied_groups(current)
+    build_groups = _get_occupied_groups(current)
 
     while len(current) < len(locked_legendaries) + slots_to_fill:
         best_score = -1.0
@@ -651,7 +692,7 @@ def _greedy_fill(
             if name in used_names:
                 continue
             # Enforce exclusivity groups
-            if _conflicts_with_build(name, occupied_groups):
+            if _conflicts_with_build(name, build_groups):
                 continue
 
             trial_items = current + [candidate]
@@ -672,7 +713,7 @@ def _greedy_fill(
             break
         current.append(best_item)
         used_names.add(best_item["name"])
-        occupied_groups.update(ITEM_TO_EXCLUSIVITY_GROUPS.get(best_item["name"], ()))
+        build_groups.update(ITEM_TO_EXCLUSIVITY_GROUPS.get(best_item["name"], ()))
 
     # Fill boots if needed
     if fill_boots and boots_pool:
@@ -817,18 +858,6 @@ def _legal_locked_shop_item(item: dict[str, Any]) -> bool:
     return bool(ranks & _LEGAL_LOCKED_RANKS)
 
 
-def _required_item_gold(item: dict[str, Any]) -> int:
-    """Return sourced total price, failing closed instead of making an item free."""
-    name = str(item.get("name") or "Unknown item")
-    prices = item.get("shop", {}).get("prices", {})
-    if "total" not in prices:
-        raise KeyError(f"{name}: shop.prices.total")
-    price = int(prices["total"])
-    if price <= 0:
-        raise ValueError(f"{name}: shop.prices.total must be positive")
-    return price
-
-
 def get_purchase_items(role: str = "") -> list[dict[str, Any]]:
     """Return ordinary modeled singles for the purchase search.
 
@@ -889,6 +918,7 @@ class _PurchaseSearch:
         deadline: float,
         capacity: int,
         reserve_boot_slot: bool,
+        work_counters: WorkCounterSink | None = None,
     ) -> None:
         self.champion_data = champion_data
         self.level = level
@@ -907,6 +937,10 @@ class _PurchaseSearch:
         self.deadline = deadline
         self.capacity = capacity
         self.reserve_boot_slot = reserve_boot_slot
+        # The work-counter sink rides the search context itself rather than
+        # a patched module attribute (runbook R-24), so the counters CI reads
+        # come from the same object the search itself carries.
+        self.work_counters = work_counters
         self.evaluations = 0
         self.candidates: dict[
             tuple[tuple[str, ...], str | None],
@@ -987,6 +1021,7 @@ class _PurchaseSearch:
             timeline_audit=self.timeline_audit,
             require_complete_timeline=self.require_complete_timeline,
             combat_context=self.combat_context,
+            work_counters=self.work_counters,
         )
         self.evaluations += 1
         self._score_memo[key] = score
@@ -1310,6 +1345,8 @@ def optimize_purchase(
     combine_policy: str = "shop_combine",
     include_starters: bool = False,
     time_budget_ms: int = 12_000,
+    work_counters: WorkCounterSink | None = None,
+    use_compiled_walk: bool = True,
 ) -> dict[str, Any]:
     """Fill the empty inventory slots with the available gold.
 
@@ -1374,7 +1411,7 @@ def optimize_purchase(
         if "LEGENDARY" in item.get("rank", []) and name not in allowed_legendary_names:
             raise ValueError(f"{name} is not available in the selected role shop")
         require_optimizer_item_coverage(item)
-        _required_item_gold(item)
+        item_gold(item)
         owned.append(item)
     owned_boots = None
     if locked_boots:
@@ -1384,7 +1421,7 @@ def optimize_purchase(
         if not is_ordinary_sr_item(owned_boots):
             raise ValueError(f"{locked_boots} is not an ordinary shop item")
         require_optimizer_item_coverage(owned_boots)
-        _required_item_gold(owned_boots)
+        item_gold(owned_boots)
     validate_resolved_loadout(
         owned,
         boots=owned_boots,
@@ -1448,7 +1485,10 @@ def optimize_purchase(
             {
                 "pair_result_cache": {},
                 "score_memo": {},
-                "search_context": CoupledSearchContext(),
+                "search_context": CoupledSearchContext(
+                    work_counters=work_counters,
+                    compiled_walk_enabled=use_compiled_walk,
+                ),
             }
         )
 
@@ -1470,6 +1510,7 @@ def optimize_purchase(
         deadline=started + time_budget_ms / 1000,
         capacity=capacity,
         reserve_boot_slot=include_boots and owned_boots is None,
+        work_counters=work_counters,
     )
 
     def current_loadout_score() -> float | None:
@@ -1721,6 +1762,37 @@ def _plan_type(plan: Any) -> str:
     return "single_item"
 
 
+def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, object]]:
+    """The optimize payload's parallel ``dispositions`` map, keyed by leaf path.
+
+    Every member of the finished payload is re-written through the one
+    writer at the path it lives at -- assigning an existing key keeps its
+    position, so each row is byte-identical and the entry is produced beside
+    the leaf by ``serialize_leaf`` rather than by a second pass over the
+    payload.
+
+    It walks the whole payload rather than four named keys on each ranked
+    row.  The version that named them left the response's own
+    ``total_damage``, ``team_fight_value`` and ``optimization_time_ms``
+    unnamed -- the three numbers a consumer reads first -- and, by writing
+    ``gold`` through ``measured``, changed it from ``7300`` to ``7300.0`` on
+    the wire.  ``publish`` classifies each member by what it is, so an int
+    stays an int and carries no entry: a build's price is a count of gold,
+    not a quantity a rule measured, and the payload-schema check reads ints
+    the same way.
+
+    The writer is a :class:`~.program.views.RankingWriter`, because this
+    payload *is* the ranking: a block some view opened ``THEORETICAL`` holds
+    what one attacker-versus-one-defender fight would have produced, and
+    publishing it in the row that names a winner is ranking by a fight that
+    never happened.  The candidate payloads one layer down are refused the
+    same way -- they go through ``DISCARD``, which is a ranking writer for
+    the same reason and is the only check available there, since a candidate
+    payload carries no map to consult afterwards.
+    """
+    return name_every_number(payload, RankingWriter())
+
+
 def optimize_build(
     champion_data: dict[str, Any],
     level: int,
@@ -1736,6 +1808,8 @@ def optimize_build(
     enemy_loadouts: list[Any] | None = None,
     ally_loadouts: list[Any] | None = None,
     include_boots: bool = True,
+    work_counters: WorkCounterSink | None = None,
+    use_compiled_walk: bool = True,
 ) -> dict[str, Any]:
     """Find the optimal item build for a champion.
 
@@ -1751,6 +1825,11 @@ def optimize_build(
         boots_tier: 2 normally; 3 after the mid-lane role quest.
         require_complete_timeline: Withhold any build whose damage is not
             event-order certified. Public BIS requests enable this.
+        work_counters: Optional benchmark sink for this search's proposal,
+            memo, pair-fight and fallback-rung counts (runbook R-24).
+        use_compiled_walk: False forces every coupled evaluation onto the
+            receipt walk. The two walks are pinned equivalent, so this
+            changes cost and never an answer (R-01 row 11).
 
     Returns:
         Dict with optimized build, damage, and metadata.
@@ -1795,6 +1874,7 @@ def optimize_build(
             if enemy_loadouts or ally_loadouts
             else None
         ),
+        "work_counters": work_counters,
     }
     # Pairwise roster receipts that do not depend on the candidate main
     # build's offense are invariant across the search: roster-to-roster pairs
@@ -1804,7 +1884,10 @@ def optimize_build(
     if eval_kwargs["combat_context"] is not None:
         eval_kwargs["combat_context"]["pair_result_cache"] = {}
         eval_kwargs["combat_context"]["score_memo"] = {}
-        eval_kwargs["combat_context"]["search_context"] = CoupledSearchContext()
+        eval_kwargs["combat_context"]["search_context"] = CoupledSearchContext(
+            work_counters=work_counters,
+            compiled_walk_enabled=use_compiled_walk,
+        )
     coupled_objective = bool(enemy_loadouts or ally_loadouts)
 
     # Build item pools.  Keep the complete legal lists for the public coverage
@@ -1836,7 +1919,7 @@ def optimize_build(
                 if not _legal_locked_shop_item(item):
                     raise ValueError(f"{name} is not an ordinary non-boots shop item")
                 require_optimizer_item_coverage(item)
-                _required_item_gold(item)
+                item_gold(item)
                 resolved_locked.append(item)
                 locked_names.add(name)
 
@@ -2122,7 +2205,7 @@ def optimize_build(
         # coarse candidates were rejected above rather than silently ranked.
         certified_best = True
 
-    return {
+    payload = {
         "items": legendary_names,
         "boots": boots_name,
         "total_damage": round(ranked[0][2], 1),
@@ -2180,3 +2263,5 @@ def optimize_build(
         "timeline_withheld_candidates": timeline_withheld_candidates,
         "gold_budget": gold_budget,
     }
+    payload["dispositions"] = _optimize_dispositions(payload)
+    return payload

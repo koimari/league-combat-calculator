@@ -24,23 +24,15 @@ Why each slot is non-generic:
   with ``proc_window`` (zone duration): the fight engine procs it on
   the autos landing inside the window against decaying current health,
   and shows zero with no autos (one-rotation / autos off).
-- P (Adaptive Defenses) is a defensive shield — no slot function of its
-  own, but it is NOT unmodeled: ``_tactical_sweep_with_shield`` (W)
-  attaches the sourced shield (20% max HP, 2s) as a
+- P (Adaptive Defenses) is a defensive shield with no cast of its own,
+  so it is absent from the slot map; ``_tactical_sweep_with_shield`` (W)
+  hangs the sourced shield (20% max HP, 2s) on W's damage event as a
   ``self_shield_events`` payload the survival ledger grants pre-fight,
   live-tested end to end
   (``tests/test_e8_shields.py::test_camille_adaptive_defenses_payload_is_sourced``,
   ``test_camille_api_adaptive_defenses_absorbs_known_incoming_hit``).
-
-Roadmap session 4 batch B (2026-08-21): closes the single out_of_scope
-slot (P). MODULE_COVERAGE was stale, still reading "out_of_scope" for a
-mechanic the shield kernel had already closed via W — the identical
-stale-label pattern Anivia's P (Rebirth) was corrected under in Roadmap
-session 3 (``anivia.py``) and Blitzcrank's P (Mana Barrier) was corrected
-under earlier in this same batch. Reclassified from out_of_scope to
-modeled; no behavior change, no new SLOTS entry (P stays absent from the
-``abilities`` dict — the shield surfaces through W's payload and the
-survival receipt, not a standalone P row).
+  That channel is why the coverage map calls P ``modeled`` rather than
+  out_of_scope, with no standalone P row in the ``abilities`` dict.
 
 All numeric values are read from the champion JSON data.
 """
@@ -49,6 +41,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -57,6 +50,8 @@ from .slotlib import (
     extract_value,
     with_control,
 )
+from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _true_split_parts(
@@ -101,7 +96,7 @@ def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
-    total_ad = ctx.stats.get("attack_damage", 0.0)
+    total_ad = ctx.stat("attack_damage")
     return {
         "name": ability.get("name", "Precision Protocol"),
         "rank": rank,
@@ -109,6 +104,9 @@ def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "physical",
         "total_raw": bonus,
         "parts": (DamagePart("physical", bonus),),
+        # One empowered swing's worth of bonus damage, landing with that
+        # swing: the certified boundary MODULE_CC's answer rides.
+        "event_order_certified": "single_hit",
         # Rides the auto stream when one exists; with no autos the fight
         # engine appends these module-authored swing parts instead of
         # its default expected-crit swing (Q attacks cannot crit).
@@ -131,7 +129,7 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Increased Mixed Damage", rank, ctx.stats, ctx.target
     )
     ratio = _q_true_ratio(ability, ctx.level)
-    total_ad = ctx.stats.get("attack_damage", 0.0)
+    total_ad = ctx.stat("attack_damage")
     return {
         "name": f"{ability.get('name', 'Precision Protocol')} (Q2)",
         "rank": rank,
@@ -139,6 +137,10 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
         "damage_type": "true" if ratio >= 1.0 else "mixed",
         "total_raw": bonus,
         "parts": _true_split_parts(bonus, ratio),
+        # One empowered swing, whose bonus below level 16 is split into a
+        # true and a physical half: one landing in two damage types, which
+        # is what the shared-instant certification states.
+        "event_order_certified": "single_hit",
         "empowers_next_auto": {
             "swing_parts": _true_split_parts(total_ad, ratio, basic_damage=True)
         },
@@ -166,10 +168,10 @@ def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
         percent = extract_value(ability, "Outer Cone Additional Damage", rank, 0)
         percent += (
             extract_value(ability, "Outer Cone Additional Damage", rank, 1)
-            * ctx.stats.get("bonus_attack_damage", 0.0)
+            * ctx.stat("bonus_attack_damage")
             / 100.0
         )
-        total += percent / 100.0 * ctx.target.get("target_max_health", 0.0)
+        total += percent / 100.0 * ctx.target_stat("target_max_health")
 
     return damage_entry(
         ability.get("name", "Tactical Sweep"),
@@ -197,6 +199,9 @@ def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_cooldown(hookshot, rank),
         damage,
         "physical",
+        # Wall Dive damages "enemies near the landing location" once, on
+        # arrival; the cached text gives the dash no duration to author.
+        event_order_certified="single_hit",
     )
     bonus_as = extract_value(wall_dive, "Bonus Attack Speed", rank)
     if bonus_as > 0:
@@ -274,7 +279,7 @@ def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stats.get("health", 0.0)
+    shield = ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stat("health")
     entry["event_order_certified"] = "single_hit"
     return attach_self_shield(
         entry,
@@ -302,8 +307,7 @@ ASSUMPTIONS = [
     "slow are not modeled",
     "E's 40-60% attack speed is applied for the whole fight (in-game: 5s "
     "per cast); the sourced 0.75-second stun is counted as action downtime",
-    "P (Adaptive Defenses) is modeled as a pre-fight granted shield "
-    "(MODULE_COVERAGE: modeled, not out_of_scope): 20% "
+    "P (Adaptive Defenses) is modeled as a pre-fight granted shield: 20% "
     "of max HP for 2s riding the first W cast. The in-game trigger (the "
     "next auto against a champion) and the physical/magic adaptation "
     "are documented boundaries — the model grants a general shield that "
@@ -327,36 +331,38 @@ _packet_w = SLOTS["W"]
 SLOTS["W"] = _tactical_sweep_with_shield
 SLOTS["E"] = with_control(
     SLOTS["E"],
-    kind="stun",
+    # Two immobilizes land together and only one of them is given a number:
+    # the un-narrowed kind states both, and the 0.75-second "Stun Duration"
+    # row is the sourced interval Camille's target cannot act for.
+    kind="immobilize",
     duration_attr="Stun Duration",
     source=("E", 1),
     effect_index=1,
 )
-parse_abilities = build_parser(SLOTS, "Camille")
+# Cached kit review.  Q and Q2 are empowered basic attacks that only add
+# damage and self movement speed.  W's modeled hit is the outer-cone half,
+# whose enemies "are slowed by 80% decaying over 2 seconds".  E's Wall Dive
+# stops on the champion it hits, "knocking back all nearby enemy champions
+# ... as well as stunning them for 0.75 seconds" — two immobilizes at once,
+# which is what the un-narrowed kind states.  R deals its damage through
+# basic attacks inside the zone and has no ability damage row of its own.
+# Q2 is control-free by the same text: it "mimics the first cast's
+# effects", adding doubled bonus damage and a true conversion.
+MODULE_CC = {"Q": "none", "Q2": "none", "W": "slow", "E": "immobilize"}
+
+parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 
 
-# Authoritative review metadata (issue #161).
-SOURCES = [
-    {
-        "label": "Local League Wiki cache",
-        "url": "https://wiki.leagueoflegends.com/en-us/Camille",
-        "revision_id": 4002624,
-        "revision_timestamp": "2026-03-27T01:51:45Z",
-    }
-]
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
-REVIEW_STATUS = "reviewed_module"
+SOURCES = load_champion_sources("Camille")
 
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+# P emits no cast row, so the derivation would call it out_of_scope; the
+# shield W carries is what the engine prices (466.6 for 2s at level 18
+# with no items, 20% of max health).
+MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -372,9 +378,10 @@ def derive_self_healing(
     base_raw = _healing.extract_named(
         w_ability, "Physical Damage", w_rank, champion_stats, {}
     )
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "W"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
+        event = payment.event
         raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
         post = float(event.get("damage", 0.0) or 0.0)
         outer_raw = max(0.0, raw - base_raw)
@@ -382,9 +389,5 @@ def derive_self_healing(
         _healing._heal_from_damage(healing, event, amount, "Tactical Sweep")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Camille", derive_self_healing)

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import source_row
+from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -15,6 +16,7 @@ from .slotlib import (
     on_hit_entry,
     sum_modifiers,
 )
+from .source_receipts import load_champion_sources
 
 
 def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
@@ -26,15 +28,13 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.options.get("p_stacks", 4)), 0), 4)
+    stacks = min(max(int(ctx.option("p_stacks")), 0), 4)
     as_per_stack = _p_row(ability, 0, ctx)
     bonus_as = as_per_stack * stacks
     entry = on_hit_entry(ability.get("name", "Ionian Fervor"), 0.0, "magic")
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     if stacks >= 4:
-        damage = _p_row(ability, 2, ctx) + 0.20 * ctx.stats.get(
-            "bonus_attack_damage", 0.0
-        )
+        damage = _p_row(ability, 2, ctx) + 0.20 * ctx.stat("bonus_attack_damage")
         entry["on_hit"] = {
             "name": "Ionian Fervor max-stack hit",
             "damage_per_hit": damage,
@@ -85,7 +85,7 @@ def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    charge = min(max(float(ctx.options.get("w_charge", 1.0)), 0.0), 1.0)
+    charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
@@ -131,7 +131,7 @@ def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if rank < 1:
         return None
-    passes = min(max(int(ctx.options.get("r_passes", 2)), 1), 2)
+    passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Vanguard's Edge"),
@@ -140,9 +140,16 @@ def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
         value * passes,
         "magic",
     )
-    entry["parts"] = (
-        DamagePart("magic", value, count=passes, time_offset=0.25, hit_interval=2.5),
-    )
+    # One part per pass, at the times the single counted part already put
+    # them (0.25 then 2.75), because the two passes control differently:
+    # the barrage only damages and reveals — its blades "knock all enemy
+    # units away ... though not rendering them airborne", which is not an
+    # immobilize — while enemies crossing the perimeter "are slowed by 90%
+    # for 1.5 seconds".
+    parts = [DamagePart("magic", value, time_offset=0.25, cc_kind="none")]
+    if passes > 1:
+        parts.append(DamagePart("magic", value, time_offset=2.75, cc_kind="slow"))
+    entry["parts"] = tuple(parts)
     entry["event_order_certified"] = "initial barrage and one perimeter pass"
     return entry
 
@@ -154,7 +161,13 @@ SLOTS = {
     "E": _flawless_duet,
     "R": _vanguard,
 }
-parse_abilities = build_parser(SLOTS, "Irelia")
+# Q dashes, heals and applies on-hit; W's recast swipe only damages; E's
+# converging blades deal magic damage "and stun[] them for 0.75 seconds".
+# R differs per pass, so its kinds ride its parts above.  P is the
+# attack-speed/on-hit passive and authors no damage part.
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
+
+parse_abilities = build_parser(SLOTS, "Irelia", cc_kinds=MODULE_CC)
 OPTIONS = [
     {
         "key": "p_stacks",
@@ -187,45 +200,10 @@ ASSUMPTIONS = [
     "Bladesurge is one full-effectiveness basic attack; Defiant Dance exposes the sourced charge interval.",
     "Vanguard's Edge models the initial barrage and one perimeter pass; marks, stun and slow are utility.",
 ]
-SOURCES = [
-    source_row(
-        "Irelia parent entry",
-        "https://wiki.leagueoflegends.com/en-us/Irelia",
-        3892607,
-        "2025-05-02T11:24:10Z",
-    ),
-    source_row(
-        "Irelia Q template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/Q",
-        2863950,
-        "2019-11-03T19:57:08Z",
-    ),
-    source_row(
-        "Irelia W template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/W",
-        2864245,
-        "2019-11-03T20:09:54Z",
-    ),
-    source_row(
-        "Irelia E template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/E",
-        2864391,
-        "2019-11-03T20:12:25Z",
-    ),
-    source_row(
-        "Irelia R template",
-        "https://wiki.leagueoflegends.com/en-us/Template:Data_Irelia/R",
-        2864537,
-        "2019-11-03T20:15:49Z",
-    ),
-]
-MODULE_COVERAGE = {slot: "modeled" for slot in ("P", "Q", "W", "E", "R")}
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
+SOURCES = load_champion_sources("Irelia")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -244,9 +222,5 @@ def derive_self_healing(
             _healing._heal_from_damage(healing, event, amount, "Bladesurge")
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Irelia", derive_self_healing)

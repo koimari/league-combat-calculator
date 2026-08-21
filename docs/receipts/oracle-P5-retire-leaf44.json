@@ -1,0 +1,136 @@
+{
+  "receipt_id": "oracle-P5-retire-leaf44",
+  "runbook": "R-18 / R-19 (fresh independent oracle)",
+  "scenario": "syndra_derived_order_120",
+  "leaf_path": "/coupled_scenarios/syndra_derived_order_120/fights/manual_target/rotation/sources[3]",
+  "old_value": "R 'Magic Damage' per sphere closes the burst",
+  "new_value": "E applies cc_kind crowd control - setup before W",
+  "verdict": "old_value_correct",
+  "evidence_tree": {
+    "built_with": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle44",
+    "isolation": "Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were never opened."
+  },
+  "independent_computation": {
+    "step_1_what_the_leaf_is": "A rotation-rationale 'source' string. Per data/worklists/f3-task.md (deliverable 1c and invariant 2b), each source must 'cite the specific atoms that drove the order' and 'the rationale cites real atoms'. So the string is judged on (a) does it quote a real atom/attribute from data/champions.json, and (b) is the ordering claim it makes supported by the cached wiki text.",
+    "step_2_syndra_atoms_from_data_champions_json": {
+      "Q Dark Sphere": {
+        "leveling_attribute": "Magic Damage",
+        "values": "90/125/160/195/230 (+70% AP)",
+        "cooldown": "7s at all ranks (affectedByCdr: false)"
+      },
+      "W Force of Will": {
+        "leveling_attributes": ["Magic Damage", "Bonus True Damage (Transcendent, 60 splinters)", "Total Mixed Damage"],
+        "magic_values": "70/100/130/160/190 (+65% AP)",
+        "cooldown": "12/11/10/9/8s",
+        "cc_carried": "targets hit are slowed by 25% for 1.5s (recast row)",
+        "consume_rows": "NONE - no 'Enhanced', 'bonus vs immobilized/slowed/stunned', 'per stack' or '% of target's' row conditioned on a prior crowd control"
+      },
+      "E Scatter the Weak": {
+        "leveling_attribute": "Magic Damage",
+        "values": "60/95/130/165/200 (+60% AP)",
+        "cooldown": "15s at all ranks",
+        "cc_carried": "knock back 400-800 units; a knocked-back Dark Sphere stuns for 1.25s; Transcendent (80 splinters) adds a 70% slow for 1.25s"
+      },
+      "R Unleashed Power": {
+        "leveling_attributes": ["Ability Haste (passive)", "Magic Damage per Sphere", "Minimum Magic Damage", "Maximum Magic Damage"],
+        "per_sphere": "80/120/160 (+20% AP)",
+        "minimum": "240/360/480 (+60% AP) [3 conjured spheres]",
+        "maximum": "560/840/1120 (+140% AP) [3 conjured + up to 4 live]",
+        "cooldown": "120/100/80s",
+        "transcendent": "100 splinters -> executes the target if it would damage them below 15% maximum health"
+      }
+    },
+    "step_3_burst_magnitude_check": {
+      "assumption": "scenario suffix '120' = the 120-splinter Transcendent capstone, which per data/champion-audit/batch-6.json is a '+15% total AP BUFF'; demonstrative AP = 200 -> effective AP = 200 x 1.15 = 230",
+      "Q_rank5": "230 + 0.70*230 = 391",
+      "W_rank5_magic": "190 + 0.65*230 = 339.5",
+      "E_rank5": "200 + 0.60*230 = 338",
+      "R_rank3_per_sphere": "160 + 0.20*230 = 206",
+      "R_rank3_minimum_3_spheres": "480 + 0.60*230 = 618",
+      "R_rank3_maximum_7_spheres": "1120 + 1.40*230 = 1442",
+      "conclusion": "R's per-sphere row aggregates to 618-1442, strictly larger than any single basic ability, and at 120 splinters R additionally carries the sub-15%-max-health execute. 'R ... closes the burst' is exactly what the atoms say."
+    },
+    "step_4_dps_rank_check_rule_b": {
+      "formula": "total_raw / effective cooldown (no haste, ranks maxed)",
+      "Q": "391 / 7 = 55.9",
+      "W": "339.5 / 8 = 42.4",
+      "E": "338 / 15 = 22.5",
+      "conclusion": "E is Syndra's LOWEST-DPS damaging ability. Promoting E ahead of W also contradicts the per-rank DPS ranking rule (f3-task.md deliverable 1b), independently of the setup/consume question."
+    },
+    "step_5_does_an_E_before_W_setup_edge_exist": {
+      "test": "f3-task.md 1a defines a setup/consume edge as an application row that must precede a row that CONSUMES it (enhanced/consume/detonate/bonus-vs/X-stack/%missing).",
+      "finding_1": "W has no consume row of any kind. Its only conditional row (Bonus True Damage) is gated on 60 Splinters of Wrath, not on crowd control.",
+      "finding_2": "data/champion-audit/batch-6.json lists 'E/W CC (stun, knockback, slow - utility only)' under out_of_scope and states 'E/W CC are documented utility-only.' There is no damage coupling for the engine to order on.",
+      "finding_3": "The cached wiki notes make E-before-W actively ANTI-synergistic: E 'will knock back Spheres ... 950 units and up to 1200 units away from Syndra', while W 'grabs the nearest Dark Sphere ... within 500 units from the target location'. R's notes confirm the same displacement hazard: 'Spheres that are being pushed by Scatter the Weak ... will not get picked up for Unleashed Power.' Casting E first scatters the very spheres W (and R) want to pick up.",
+      "finding_4": "The real sphere dependency in the data runs Q -> W / R (W 'grabs the nearest Dark Sphere'; R 'conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones'), not E -> W.",
+      "conclusion": "No E->W setup edge exists in the atomized data; the wiki text contradicts it."
+    },
+    "step_6_placeholder_defect_in_the_new_value": {
+      "observation": "'cc_kind' is not a crowd-control kind. It is the name of a DamagePart metadata FIELD, per data/worklists/f2-task.md ('parts with DamagePart metadata, ... on_hit, cc_kind') and f3-task.md ('post_hit_proc, on_hit, dot_duration, stat_buff, AMP slots, cc_kind on parts'), and per data/champion-audit/batch-0.json ('CC charm/slow (utility, cc_kind marker on E)').",
+      "consequence": "The rendered string 'E applies cc_kind crowd control' is an unsubstituted template slot. The wiki-sourced kinds for Syndra E are 'knock back', 'stun (1.25s, via a pushed Dark Sphere)' and, at 80+ splinters, 'slow (70%, 1.25s)'. A rationale naming a field instead of a value fails f3-task.md invariant 2b ('the rationale cites real atoms').",
+      "contrast": "The old value's quote resolves to a real atom: R's leveling attribute in data/champions.json is literally 'Magic Damage per Sphere', which the old string reproduces as \"R 'Magic Damage' per sphere\". data/champion-audit/batch-6.json independently confirms the wording: \"R reads 'Magic Damage per Sphere' x user-set sphere count.\" The only blemish is quote placement (the quote marks close before 'per sphere'); the atom cited and the claim made are both correct."
+    },
+    "step_7_positional_sanity": "Under the default/derived Q,W,E,R slotting, index 3 is the fourth and final entry - the burst closer, i.e. R. The new string describes E and asserts E precedes W, which would place it at index 0, not index 3. The replacement is internally inconsistent with its own slot."
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[1].leveling[0].attribute",
+      "quote": "Magic Damage per Sphere - values 80/120/160, units '' + 20/20/20 '% AP'"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[1].effects[].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[3].description",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.E[0..2].description",
+      "quote": "Active: Syndra propels a wave of force in a cone ... knocks them back for 400 units and up to 800 units away from Syndra ... / Dark Spheres can be knocked back for 950 units and up to 1200 units away from Syndra ... Targets hit are also stunned for 1.25 seconds ... / Transcendent Bonus: Collecting 80 Splinters of Wrath ... slow enemies hit by 70% for 1.25 seconds"
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.W[0] and W[2].description",
+      "quote": "Active: Syndra telekinetically grabs the nearest Dark Sphere, enemy minion or non-epic monster within 500 units from the target location ... / Recast: ... dealing magic damage to them and nearby enemies once they land. All targets hit are slowed by 25% for 1.5 seconds."
+    },
+    {
+      "file": "data/champions.json",
+      "locator": "Syndra.abilities.R[0].notes",
+      "quote": "Spheres that are being pushed by Scatter the Weak (normally ones that were made late during the push) will not get picked up for Unleashed Power."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "locator": "Syndra.module_slots.out_of_scope and Syndra.gap_summary",
+      "quote": "E/W CC (stun, knockback, slow - utility only) ... R reads 'Magic Damage per Sphere' x user-set sphere count. ... E/W CC are documented utility-only."
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "locator": "deliverables 1a, 1b, 1c, 2b",
+      "quote": "DETECT setup/consume edges automatically ... an ability whose row names indicate application ... must precede abilities that consume (enhanced/consume/detonate/bonus-vs/X-stack/%missing) ... RANK per-rank DPS ... EMIT a rationale string citing the specific atoms that drove the order ... (b) the rationale cites real atoms"
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "locator": "CONTEXT paragraph",
+      "quote": "the champion modules in src/calculator/champions/ (options, parts with DamagePart metadata, dot_duration, post_hit_proc, empowers_next_auto, on_hit, cc_kind)"
+    },
+    {
+      "file": "data/champion-audit/batch-0.json",
+      "locator": "line 40",
+      "quote": "CC charm/slow (utility, cc_kind marker on E)"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "locator": "engine-family table, 'Ability rotation casts' row",
+      "quote": "shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast"
+    }
+  ],
+  "reasoning_summary": "The new value fails on three independent counts: (1) 'cc_kind' is a metadata field name, not a crowd-control kind - the rendered rationale contains an unsubstituted template slot and therefore cites no real atom value (the wiki kinds are knock back / 1.25s stun / 70% slow); (2) the asserted E->W setup edge does not exist - W has no consume row conditioned on crowd control, the cached audit records Syndra's E/W CC as utility-only, and the wiki notes show E actively scatters the Dark Spheres that W (and R) need to grab, so the edge is contradicted rather than merely unsupported; (3) E is Syndra's lowest-DPS damaging ability (22.5 vs W's 42.4 at the demonstrative stats), so promoting it ahead of W also violates the per-rank DPS ranking rule. The old value cites a genuine atom - R's leveling attribute is literally 'Magic Damage per Sphere' - and its claim is arithmetically right: R aggregates to 618-1442 at the demonstrative stats versus 338-391 for any basic ability, and at 120 splinters carries the sub-15% execute, making it unambiguously the burst closer.",
+  "caveat": "The old string's quote marks close early (\"'Magic Damage' per sphere\" rather than \"'Magic Damage per Sphere'\"). This is cosmetic - the phrase still names the exact atom and the claim is correct - so it does not move the verdict to both_wrong, but tightening the quote would be a strict improvement.",
+  "committed": false
+}

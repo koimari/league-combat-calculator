@@ -131,10 +131,21 @@ def test_aphelios_severum_heals_sourced_percent_of_post_mitigation_damage():
     )
     assert basic_ratio == pytest.approx(0.071)
     assert ability_ratio == pytest.approx(0.1775)
-    for heal in heals:
+    # Every heal the walk applied is its own attack's share.  A heal whose
+    # attack the walk skipped is compared to nothing: the published damage
+    # of a skipped event is 0 because the fight never took it, and the heal
+    # beside it pays 0 for the same reason (Onslaught's beat can carry its
+    # last attacks past the end of the window).
+    applied = [heal for heal in heals if not heal.get("skipped_reason")]
+    assert applied
+    for heal in applied:
         event = events[heal["trigger_event_id"]]
         ratio = ability_ratio if event["source"] == "Q" else basic_ratio
         assert heal["amount"] == pytest.approx(ratio * event["damage"], abs=0.11)
+    for heal in heals:
+        if heal.get("skipped_reason"):
+            assert float(heal["applied_amount"]) == 0.0
+            assert events[heal["trigger_event_id"]]["skipped_reason"]
     # The heal is weapon-gated: a non-Severum main weapon heals nothing.
     calibrum = _fight(
         "Aphelios",

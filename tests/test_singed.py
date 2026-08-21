@@ -1,51 +1,37 @@
-"""Tests for Singed champion ability parsing and damage calculation.
+"""Singed — ability parsing, the R steroid, and the reviewed crowd control.
 
-Closes the P/W/R slots (Q and E were already modeled before this session).
+Reference arithmetic (sourced ``data/champions.json`` Singed R "Bonus
+Stats" leveling, corroborated by the game binary's ``StatAmount``
+DataValue ``[-5, 25, 55, 85, 115, 145, 175]``, ranks 1-3 = 25/55/85):
 
-Reference arithmetic (sourced ``data/champions.json`` Singed R "Bonus Stats"
-leveling, corroborated by the game binary's ``StatAmount`` DataValue
-``[-5, 25, 55, 85, 115, 145, 175]`` at indices 0-6, ranks 1-3 = 25/55/85):
-
-- R (Insanity Potion) rank 1/2/3: +25 / +55 / +85 to ability power and move
-  speed (one sourced number feeds both ``stat_buff`` keys). Zero direct
-  damage, 25s duration, 100s flat cooldown (all 3 ranks). The same sourced
-  number also grants bonus armor and bonus magic resistance (the wiki text:
-  "ability power, bonus armor, bonus magic resistance, bonus movement
-  speed"), but those two stay OUT of ``stat_buff`` — see the closing-task
-  consumer trace below.
-- R is BUFF phase (Syndra P / Vayne R / Ambessa R precedent): it mutates
-  ``ctx.stats["ability_power"]`` in-parse, so Poison Trail (Q, AP ratio
-  0.10625 flat) and Fling (E, AP ratio 0.55 flat) read the buffed AP when
-  both are parsed in the same call. At 0 base AP, R rank 2 (+55 AP) adds
-  0.10625 * 55 = 5.84375 to Q's total_raw and 0.55 * 55 = 30.25 to E's
-  total_raw.
+- R (Insanity Potion) rank 1/2/3 grants +25 / +55 / +85 to ability power,
+  armour, magic resistance and movement speed at once — one sourced
+  number feeding every ``stat_buff`` key.  Zero direct damage, 25s
+  duration, 100s flat cooldown at all three ranks.
+- R is BUFF phase (Syndra P / Vayne R precedent): it mutates
+  ``ctx.stats["ability_power"]`` in-parse, so Poison Trail (Q, flat
+  0.10625 AP ratio) and Fling (E, flat 0.55 AP ratio) read the buffed AP
+  in the same call.  At 0 base AP, R rank 2 (+55 AP) adds 0.10625 * 55 to
+  Q's ``total_raw`` and 0.55 * 55 to E's.
 - P (Noxious Slipstream) and W (Mega Adhesive) carry no enemy-damage
   formula in the pinned Wiki packet spec or the game binary's DataValues
-  (MSPercent/MSDuration/PerTargetCD/TriggerArea for P; SlowPercent/
-  WDuration/WRadius/DelayExecute/Radius for W) - both are sourced
-  zero-damage rows, not silently absent slots.
+  (MSPercent/MSDuration/PerTargetCD/TriggerArea for P;
+  SlowPercent/WDuration/WRadius/DelayExecute/Radius for W) — both are
+  sourced zero-damage rows, not silently absent slots.
 
-Roadmap session (2026-08-21, closing task) — R's bonus_armor/
-bonus_magic_resistance consumer question: traced ``_apply_stat_buff_
-ultimates`` (``damage.py``) and the survival subsystem
-(``participant_timeline.py`` / ``survival/receipt_state.py`` /
-``survival/transitions.py``), then live-probed ``/api/calculate`` with
-Singed vs. Ashe at level 18, R rank 0 vs. rank 3 (see
-``src/calculator/champions/singed.py``'s module docstring for the full
-trace and probe numbers). Verdict: NOT consumed anywhere — Singed's own
-reported ``stats.bonus_armor``/``stats.bonus_magic_resistance`` and an
-opponent's ``survival.damage_taken`` against him are bit-identical at
-every R rank, in both attacker and defender roles. ``_INSANITY_POTION_
-STATS`` was trimmed to ``("ability_power", "move_speed")`` accordingly;
-bonus armor/MR moved to ``ASSUMPTIONS`` alongside the regen/Grievous
-Wounds riders.
+A control-armed holder shield (Fimbulwinter's Everlasting) has to know
+whether an ability event was a control event; an ability packet that
+never says makes the whole timed fight fall back to coarse ordering, so
+``MODULE_CC`` is asserted here too.
 """
 
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
+from src.calculator.champions import singed
 from src.calculator.champions.singed import ASSUMPTIONS, MODULE_COVERAGE
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests import cc_review
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,10 +39,12 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 
 STATS_0AP = {
     "ability_power": 0.0,
-    "bonus_armor": 0.0,
-    "bonus_magic_resistance": 0.0,
+    "armor": 0.0,
+    "magic_resistance": 0.0,
     "move_speed": 350.0,
 }
+
+_R_STAT_KEYS = {"ability_power", "armor", "magic_resistance", "move_speed"}
 
 
 def _parse(singed_data, *, ap=0.0, ranks, stats=None):
@@ -102,37 +90,26 @@ class TestNonDamageSlots:
 
 
 class TestRInsanityPotion:
-    """R grants a flat AP/move-speed steroid; bonus armor/MR are sourced
-    but have no consumer anywhere in this engine (see the module
-    docstring's traced+probed consumer verdict), so they are documented
-    in ASSUMPTIONS rather than carrying an inert stat_buff key."""
+    """One sourced Bonus Stats row feeds every stat the cast grants that has
+    a consumer here: ability power, the two self-resist keys every other
+    steroid module publishes, and move speed (read back out for
+    ``item_state_receipts``' ``total_move_speed`` input).  The row's
+    health/mana regeneration has none, so it carries no key."""
 
     def test_r_deals_no_damage(self, singed_data) -> None:
         abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 1})
         assert abilities["R"]["total_raw"] == 0.0
 
-    def test_r_has_stat_buff_for_two_consumed_stats_only(self, singed_data) -> None:
+    def test_r_stat_buff_covers_every_consumed_stat(self, singed_data) -> None:
         abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 1})
-        stat_buff = abilities["R"]["stat_buff"]
-        assert set(stat_buff) == {"ability_power", "move_speed"}
+        assert set(abilities["R"]["stat_buff"]) == _R_STAT_KEYS
 
-    def test_r_rank1_value_is_25(self, singed_data) -> None:
-        abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 1})
+    @pytest.mark.parametrize("rank, value", [(1, 25.0), (2, 55.0), (3, 85.0)])
+    def test_r_rank_values_are_the_sourced_row(self, singed_data, rank, value) -> None:
+        abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": rank})
         stat_buff = abilities["R"]["stat_buff"]
-        assert stat_buff["ability_power"] == pytest.approx(25.0)
-        assert stat_buff["move_speed"] == pytest.approx(25.0)
-
-    def test_r_rank2_value_is_55(self, singed_data) -> None:
-        abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 2})
-        stat_buff = abilities["R"]["stat_buff"]
-        assert stat_buff["ability_power"] == pytest.approx(55.0)
-        assert stat_buff["move_speed"] == pytest.approx(55.0)
-
-    def test_r_rank3_value_is_85(self, singed_data) -> None:
-        abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
-        stat_buff = abilities["R"]["stat_buff"]
-        assert stat_buff["ability_power"] == pytest.approx(85.0)
-        assert stat_buff["move_speed"] == pytest.approx(85.0)
+        for stat_key in _R_STAT_KEYS:
+            assert stat_buff[stat_key] == pytest.approx(value)
 
     def test_r_cooldown_is_100_at_every_rank(self, singed_data) -> None:
         for rank in (1, 2, 3):
@@ -234,19 +211,47 @@ class TestModuleCoverage:
 
 
 # ---------------------------------------------------------------------------
-# R's sourced-but-unmodeled riders (bonus armor/MR, HP/mana regen,
-# Grievous Wounds) are documented, not silently dropped
+# R's sourced-but-unmodeled riders are documented, not silently dropped
 # ---------------------------------------------------------------------------
 
 
 class TestRSourcedButUnmodeledRiders:
-    def test_bonus_armor_and_magic_resistance_are_documented_unmodeled(self) -> None:
-        assumptions_text = " ".join(ASSUMPTIONS)
-        assert "bonus armor" in assumptions_text
-        assert "bonus magic resistance" in assumptions_text
-        assert "no consumer" in assumptions_text
-
     def test_regen_and_grievous_wounds_riders_are_documented_unmodeled(self) -> None:
         assumptions_text = " ".join(ASSUMPTIONS)
-        assert "HP/Mana Regenerated" in assumptions_text
+        assert "health/mana regeneration" in assumptions_text
         assert "Grievous Wounds" in assumptions_text
+
+    def test_conditional_e_root_is_documented_unmodeled(self) -> None:
+        """Fling's root is gated on landing in W's field; the module says so
+        rather than arming an unconditional root."""
+        assumptions_text = " ".join(ASSUMPTIONS)
+        assert "Mega Adhesive's area of effect" in assumptions_text
+
+
+# ---------------------------------------------------------------------------
+# Reviewed crowd control (``MODULE_CC``)
+# ---------------------------------------------------------------------------
+
+
+class TestReviewedCrowdControl:
+    """Singed's reviewed crowd control, and what declaring it clears."""
+
+    def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
+        data = cc_review.kit("Singed")
+        assert singed.MODULE_CC == {"Q": "none", "E": "airborne"}
+        assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
+        # Fling throws the target; the cached text names the throw only as
+        # a displacement, so the reviewed kind is the un-narrowed airborne
+        # one.  Its root is conditional on landing in W's field.
+        assert "flings the target enemy 550 units over himself" in (
+            cc_review.slot_text(data, "E")
+        )
+        assert "after the displacement" in cc_review.slot_text(data, "E")
+
+    def test_every_ability_event_carries_the_review(self):
+        assert cc_review.unreviewed_ability_slots("Singed") == []
+
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        coverage = cc_review.fimbulwinter_coverage("Singed")
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

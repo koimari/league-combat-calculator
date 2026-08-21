@@ -13,13 +13,14 @@ adapters differ only in representation and observation:
 * the score ledger keeps parallel-array accumulation (``applied`` slots,
   trigger ``status``, per-attacker damage order) and never annotates.
 
-``apply_transition`` dispatches one :class:`SurvivalAction` against one
-per-participant state dict; ``run_survival_walk`` is the shared loop that
-applies every precondition gate (window, expiry, trigger linkage, death)
-in the authoritative order and then hands the action to the kernel.  The
-plain-damage hot-loop branch stays the first dispatch arm and reads none
-of the four fields it cannot carry (trigger, live formula, Grievous pack,
-wound).
+``run_survival_walk`` is the one entry point: it applies every
+precondition gate (window, expiry, trigger linkage, death) in the
+authoritative order and dispatches each :class:`SurvivalAction` to the
+single implementation of its mechanic against one per-participant state
+dict.  That dispatch lives in the loop itself — there is exactly one
+ladder here, so a mechanic cannot be routed two ways.  The plain-damage
+hot-loop branch stays the first dispatch arm and reads none of the four
+fields it cannot carry (trigger, live formula, Grievous pack, wound).
 
 Ledger observation contract (the only adapter difference):
 
@@ -31,6 +32,14 @@ Ledger observation contract (the only adapter difference):
   diagnostics (``pair_damage``, ``live_damage``, ``overkill``,
   ``raw_amount``, ``healing_reduction``, ``venom``, ...) that only the
   serialized receipt reads;
+* ``ctx.ledger.restore(action, **fields)`` — an **input** the walk puts back
+  onto a packet a later transition will price, not an outcome a transition
+  produced.  Knight's Vow's holder gate is the one caller: it cancels the
+  redirect child and puts the unredirected amount back on the parent so the
+  damage transition prices it.  It rides ``write``'s wire on both adapters
+  and changes nothing they do — the separation exists for the write-once
+  outcome ledger, which otherwise sees the restored input and the priced
+  outcome as two answers to one question and refuses the second;
 * ``ctx.ledger.mark_applied`` / ``mark_blocked`` — trigger-linkage status;
 * ``ctx.ledger.schedule_heal(event, recipient_id)`` — walk-authored
   recovery packets (receipt inserts beside the current action; score
@@ -43,9 +52,20 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Protocol
 
-from .actions import ActionKind, SurvivalAction
+from .actions import (
+    EVENT_SLOTS,
+    NO_SLOT,
+    ActionKind,
+    LiveProbe,
+    SurvivalAction,
+    TransitionRank,
+    attack_class_of,
+    damage_class_of,
+    declared_modifier_classes,
+)
+from . import pricing
 from .. import shield_ledger
 from ..crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
@@ -73,7 +93,6 @@ from ..delivery_eligibility import (
     spell_shield_group_key,
     stable_event_key,
 )
-from ..item_effects import sustain_effect_value
 from ..resistance import apply_resistance
 
 #: The revive label used when a participant's resolved defenses arm a revive
@@ -83,6 +102,44 @@ from ..resistance import apply_resistance
 #: same label; the kernel mirrors it so the resurrection stasis and the
 #: applied revive can never disagree about who owns the window.
 _DEFAULT_REVIVE_SOURCE = "Guardian Angel (Rebirth)"
+
+
+class SurvivalLedger(Protocol):
+    """The observation adapter every walk drives.
+
+    The module docstring above is the contract; this is its signature.
+    All three implementations (receipt, score, outcome) satisfy it, so
+    the kernel reads the capability flags directly instead of asking.
+    """
+
+    # pylint: disable=missing-function-docstring  # documented above
+
+    # Verbosity, read once per walk onto ``TransitionContext``.
+    records_annotations: bool
+    records_event_fields: bool
+
+    def write(self, action: SurvivalAction, **fields: Any) -> None: ...
+
+    def annotate(self, action: SurvivalAction, **fields: Any) -> None: ...
+
+    def restore(self, action: SurvivalAction, **fields: Any) -> None: ...
+
+    def skip(
+        self,
+        action: SurvivalAction,
+        reason: str,
+        *,
+        damage_phase: bool = False,
+        preserve_reason: bool = False,
+    ) -> None: ...
+
+    def trigger_applied(self, action: SurvivalAction) -> bool: ...
+
+    def mark_applied(self, action: SurvivalAction) -> None: ...
+
+    def mark_blocked(self, action: SurvivalAction) -> None: ...
+
+    def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None: ...
 
 
 def resolve_grievous(
@@ -134,8 +191,11 @@ def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
     # An authored starting health (roster ``current_health``) is the one way
     # a participant enters the fight below full health.  It is bounded to
     # (0, max health] by its parser, so a missing/None value is full health
-    # rather than an unsourced guess.
-    starting_health = getattr(combatant.request, "current_health", None)
+    # rather than an unsourced guess -- and a participant with no request at
+    # all (the kernel's own fixtures) authored none, which is the same fact.
+    starting_health = getattr(
+        getattr(combatant, "request", None), "current_health", None
+    )
     return shield_ledger.build_pools(
         max(0.0, float(combatant.stats.get("health", 0.0))),
         starting_health=(
@@ -144,39 +204,48 @@ def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
         magic_shield=float(defenses.magic_shield),
         physical_shield=float(defenses.physical_shield),
         general_shield=float(defenses.general_shield),
-        threshold_shield_amount=max(
-            0.0, float(getattr(defenses, "threshold_shield_amount", 0.0) or 0.0)
-        ),
+        threshold_shield_amount=max(0.0, float(defenses.threshold_shield_amount)),
         threshold_shield_health_ratio=max(
-            0.0, float(getattr(defenses, "threshold_shield_health_ratio", 0.0) or 0.0)
+            0.0, float(defenses.threshold_shield_health_ratio)
         ),
-        threshold_shield_duration=max(
-            0.0, float(getattr(defenses, "threshold_shield_duration", 0.0) or 0.0)
-        ),
-        threshold_shield_damage_type=str(
-            getattr(defenses, "threshold_shield_damage_type", "all") or "all"
-        ),
-        threshold_health_bonus=max(
-            0.0, float(getattr(defenses, "threshold_health_bonus", 0.0) or 0.0)
-        ),
-        threshold_health_heal=max(
-            0.0, float(getattr(defenses, "threshold_health_heal", 0.0) or 0.0)
-        ),
-        threshold_health_ratio=max(
-            0.0, float(getattr(defenses, "threshold_health_ratio", 0.0) or 0.0)
-        ),
-        threshold_health_duration=max(
-            0.0, float(getattr(defenses, "threshold_health_duration", 0.0) or 0.0)
-        ),
+        threshold_shield_duration=max(0.0, float(defenses.threshold_shield_duration)),
+        threshold_shield_damage_type=str(defenses.threshold_shield_damage_type),
+        threshold_health_bonus=max(0.0, float(defenses.threshold_health_bonus)),
+        threshold_health_heal=max(0.0, float(defenses.threshold_health_heal)),
+        threshold_health_ratio=max(0.0, float(defenses.threshold_health_ratio)),
+        threshold_health_duration=max(0.0, float(defenses.threshold_health_duration)),
     )
+
+
+class RegenerationWindow(NamedTuple):
+    """One holder's regeneration window, compiled before the walk runs.
+
+    The kernel's form of a ``sustain`` regeneration declaration: the five
+    sourced numbers plus the owner whose name the scheduled ticks publish.
+    ``survival`` may not reach a declaration itself — the dependency runs
+    ``interpreters -> survival`` and never back — so the caller that builds
+    the walk context compiles it and hands it over as data, which is the
+    same device every other walk-lane number arrives by.
+
+    ``None`` for a participant declaring none.  An absent window is an
+    answer, and the alternative — five defaulted zeros — is a recovery that
+    silently pays nothing.
+    """
+
+    owner: str
+    total_melee: float
+    total_reduced: float
+    duration: float
+    missing_health_cap: float
+    tick_interval: float
 
 
 class SubjectDefenseProfile(NamedTuple):
     """Per-event defense constants for one participant (issue #171).
 
     The kernel consults these on every damage packet; they are fixed for a
-    walk, so the context caches one profile per subject instead of walking
-    a ``getattr`` chain and an item scan ~100 times per participant.
+    walk, so the context caches one profile per subject instead of re-reading
+    the defense record and scanning items ~100 times per participant.
     """
 
     jak_interval: float
@@ -188,45 +257,33 @@ class SubjectDefenseProfile(NamedTuple):
     force_immobilize_stacks: int
     force_bonus_magic_resistance: float
     has_stack_items: bool
-    has_dorans_shield: bool
+    regeneration: RegenerationWindow | None
 
 
-def _subject_defense_profile(combatant: Any) -> SubjectDefenseProfile:
+def _subject_defense_profile(
+    combatant: Any, regeneration: RegenerationWindow | None
+) -> SubjectDefenseProfile:
     """Extract one participant's fixed combat-state defense constants."""
     defenses = combatant.defenses
-    jak_interval = max(
-        0.0, float(getattr(defenses, "jaksho_stack_interval", 0.0) or 0.0)
-    )
-    jak_max = max(0, int(getattr(defenses, "jaksho_max_stacks", 0) or 0))
-    force_interval = max(
-        0.0, float(getattr(defenses, "force_stack_interval", 0.0) or 0.0)
-    )
-    force_duration = max(
-        0.0, float(getattr(defenses, "force_stack_duration", 0.0) or 0.0)
-    )
-    force_max = max(0, int(getattr(defenses, "force_max_stacks", 0) or 0))
+    jak_interval = max(0.0, float(defenses.jaksho_stack_interval))
+    jak_max = max(0, int(defenses.jaksho_max_stacks))
+    force_interval = max(0.0, float(defenses.force_stack_interval))
+    force_duration = max(0.0, float(defenses.force_stack_duration))
+    force_max = max(0, int(defenses.force_max_stacks))
     return SubjectDefenseProfile(
         jak_interval=jak_interval,
         jak_max=jak_max,
-        jak_bonus_multiplier=float(
-            getattr(defenses, "jaksho_bonus_resistance_multiplier", 0.0) or 0.0
-        ),
+        jak_bonus_multiplier=float(defenses.jaksho_bonus_resistance_multiplier),
         force_interval=force_interval,
         force_duration=force_duration,
         force_max=force_max,
-        force_immobilize_stacks=int(
-            getattr(defenses, "force_immobilize_stacks", 0) or 0
-        ),
-        force_bonus_magic_resistance=float(
-            getattr(defenses, "force_bonus_magic_resistance", 0.0) or 0.0
-        ),
+        force_immobilize_stacks=int(defenses.force_immobilize_stacks),
+        force_bonus_magic_resistance=float(defenses.force_bonus_magic_resistance),
         has_stack_items=bool(
             (jak_interval > 0.0 and jak_max > 0)
             or (force_interval > 0.0 and force_max > 0)
         ),
-        has_dorans_shield=any(
-            str(item.get("name", "")) == "Doran's Shield" for item in combatant.items
-        ),
+        regeneration=regeneration,
     )
 
 
@@ -245,61 +302,85 @@ class TransitionContext:
     attacker-index-aligned Serpent's Fang packs and healing-reduction
     profiles (``None`` in score mode, where the compiler prebuilds the
     same data into each action's ``grievous`` field).
+
+    ``regeneration_windows`` is participant-index-aligned and **required**,
+    with no default: it is the compiled form of the ``sustain`` regeneration
+    declarations this roster brings, and ``survival`` cannot reach a
+    declaration to build it.  A default of ``None`` would make a context
+    that forgot to compile them indistinguishable from a roster declaring
+    none — a recovery that silently pays nothing, which is the failure this
+    campaign exists to remove.
     """
 
     duration: float
     states: list[dict[str, Any]]
     combatants: Sequence[Any]
     index_of: Mapping[str, int]
-    ledger: Any
+    ledger: SurvivalLedger
+    regeneration_windows: Sequence[RegenerationWindow | None]
     venom_profiles: list[tuple[float, float] | None] | None = None
     reduction_profiles: list[tuple[Any, ...]] | None = None
-    redirect_children: MutableMapping[str, Any] = field(default_factory=dict)
-    redirect_gate_checked: set[str] = field(default_factory=set)
-    redirect_cancelled: set[str] = field(default_factory=set)
+    # Keyed by event slot (Phase 4 S1): ``redirect_children`` maps a parent
+    # packet's slot to the redirected child action, and the two sets hold the
+    # slots the holder-health gate has judged and cancelled.
+    redirect_children: MutableMapping[int, Any] = field(default_factory=dict)
+    redirect_gate_checked: set[int] = field(default_factory=set)
+    redirect_cancelled: set[int] = field(default_factory=set)
     shield_presence_at_time: dict[tuple[int, float], bool] = field(
         default_factory=dict, repr=False
     )
     # Derived per-walk speed fields (issue #171).  The ledger capability
-    # flags let the kernel skip building kwargs a no-op adapter would drop
-    # (missing attributes conservatively keep full observation), and
-    # ``_defense_profiles`` lazily caches each subject's per-event defense
-    # constants so the hot loop never repeats a getattr chain or item scan.
+    # flags let the kernel skip building kwargs a no-op adapter would
+    # drop, and ``_defense_profiles`` lazily caches each subject's
+    # per-event defense constants so the hot loop never repeats a getattr
+    # chain or item scan.
     records_annotations: bool = field(init=False)
     records_event_fields: bool = field(init=False)
     record_defy_damage: bool = field(init=False)
     stack_flags: list[bool] = field(init=False, repr=False)
-    dorans_flags: list[bool] = field(init=False, repr=False)
+    regeneration_flags: list[bool] = field(init=False, repr=False)
     _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.records_annotations = bool(
-            getattr(self.ledger, "records_annotations", True)
-        )
-        self.records_event_fields = bool(
-            getattr(self.ledger, "records_event_fields", True)
-        )
+        self.records_annotations = bool(self.ledger.records_annotations)
+        self.records_event_fields = bool(self.ledger.records_event_fields)
         # ``damage_records`` feeds only Defy (Death's Dance) takedown
         # attribution; with no defy holder in the fight the per-event
         # record append is dead weight and is skipped entirely.
         self.record_defy_damage = any(
-            float(getattr(combatant.defenses, "defy_window", 0.0) or 0.0) > 0.0
-            for combatant in self.combatants
+            float(combatant.defenses.defy_window) > 0.0 for combatant in self.combatants
         )
         # Per-event gates read these plain lists directly (a method call per
         # damage packet is measurable at ~100k packets per request).
+        if len(self.regeneration_windows) != len(self.combatants):
+            raise ValueError(
+                f"{len(self.regeneration_windows)} compiled regeneration "
+                f"windows for {len(self.combatants)} participants; the "
+                "sequence is participant-index-aligned, so a short one would "
+                "give somebody else's window to the wrong subject"
+            )
         profiles = [
-            _subject_defense_profile(combatant) for combatant in self.combatants
+            _subject_defense_profile(combatant, window)
+            for combatant, window in zip(self.combatants, self.regeneration_windows)
         ]
         self._defense_profiles = profiles
         self.stack_flags = [profile.has_stack_items for profile in profiles]
-        self.dorans_flags = [profile.has_dorans_shield for profile in profiles]
+        self.regeneration_flags = [
+            profile.regeneration is not None for profile in profiles
+        ]
 
     def defense_profile(self, subject: int) -> "SubjectDefenseProfile":
         """The subject's cached per-event defense constants."""
         return self._defense_profiles[subject]
 
     def reductions_for(self, attacker: int) -> tuple[Any, ...]:
+        """One attacker's healing-reduction profiles, empty where it has none.
+
+        Score mode carries no profile list at all (the compiler folds the
+        same data into each action's ``grievous`` field), so an empty tuple
+        is the honest answer for both a missing list and an attacker outside
+        it -- neither is a reduction of zero that some rule computed.
+        """
         if self.reduction_profiles is None or not (
             0 <= attacker < len(self.reduction_profiles)
         ):
@@ -309,16 +390,22 @@ class TransitionContext:
 
 def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
     """Expire a temporary-health window at ``event_time``; return whether any
-    bonus was removed (the authoritative walk's exact clamp semantics)."""
+    bonus was removed.
+
+    The clamp itself is ``shield_ledger.expire_temporary_max_health`` — the
+    one implementation of the Wiki's maximum-health-decrease rule, shared
+    with the ordered damage walk's Lifeline expiry.  What stays here is this
+    walk's own bookkeeping: which window closed, and when.
+    """
     if (
         state["temporary_health_amount"] <= 0.0
         or state["temporary_health_until"] <= 0.0
         or event_time < state["temporary_health_until"]
     ):
         return False
-    expired = state["temporary_health_amount"]
-    state["pools"].max_health = max(0.0, state["pools"].max_health - expired)
-    state["pools"].health = min(state["pools"].health, state["pools"].max_health)
+    shield_ledger.expire_temporary_max_health(
+        state["pools"], state["temporary_health_amount"]
+    )
     state["temporary_health_amount"] = 0.0
     state["temporary_health_expired_at"] = round(state["temporary_health_until"], 3)
     state["temporary_health_until"] = 0.0
@@ -447,6 +534,96 @@ def update_combat_state(
         ]
 
 
+def apply_declared_price(
+    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+) -> float | None:
+    """Price one packet from its family's declaration, at the live resistance.
+
+    The from-declaration counterpart of :func:`reprice_dynamic_resistance`
+    below, and the reason the two sit together.  That one starts from a
+    number the pair engine already mitigated and divides the mitigation back
+    out to re-apply it, which it can only do where the fight published the
+    baseline the number was priced at.  This one never divides — the
+    declaration *is* the pre-mitigation side — so an armed resistance delta
+    is simply part of the resistance the raw value meets.
+
+    Returns the priced amount, or ``None`` when the packet went unpriced,
+    having receipted why.  Never a silent zero: an unpriced declaration is a
+    family's number missing from a roster total, which is the failure this
+    stage exists to make visible rather than to cause.
+
+    **A routed packet is receipted by its source and its route** (umbrella
+    Amendment R, Ruling 3).  ``rule`` is the mechanic that declared the
+    magnitude, which is what D-62 keys the applied contribution on, and the
+    ``routing`` block beside it names the family that re-delivered it and the
+    share it declared.  Provenance rather than a second number: without it a
+    reader would see a source mechanic's magnitude paid twice under one name
+    at two subjects and have nothing telling them the second was routed.
+
+    Reached by every action whose packet carries a declaration
+    (``action.declared``).
+    """
+    packet = action.declared
+    price = pricing.price_declared_packet(
+        packet,
+        baseline_effective_armor=action.baseline_effective_armor,
+        baseline_effective_mr=action.baseline_effective_mr,
+        dynamic_bonus_armor=state.get("dynamic_bonus_armor", 0.0),
+        dynamic_bonus_magic_resistance=state.get("dynamic_bonus_magic_resistance", 0.0),
+    )
+    if price.amount is None:
+        ctx.ledger.write(
+            action,
+            declared_price_unavailable={
+                "rule": packet.rule_id,
+                "reason": price.unavailable,
+                "damage_type": packet.damage_type,
+            },
+        )
+        return None
+    ctx.ledger.write(
+        action,
+        declared_price={
+            "rule": packet.rule_id,
+            "raw": round(float(packet.raw_amount), 6),
+            # The declared amp term, published beside the raw value rather
+            # than only inside the amount: a receipt that showed only the
+            # product could not tell a big declaration from an amplified
+            # one, and the whole reason the term rides the packet is that
+            # somebody has to be able to see it (Amendment M, Ruling 1).
+            # Unrounded, and the only unrounded number in this row: the
+            # others are walk-accumulated damage, where six decimals is the
+            # noise floor, while this is a build-time fold of two or three
+            # sourced fractions that a reader compares against the
+            # declaration itself.  Rounding it would also raise counter 6's
+            # kernel ratchet, which is declared non-increasing (D-71).
+            "holder_amp": float(packet.holder_amp),
+            # ``None`` for true damage, which met no resistance — a receipt
+            # that spelled that as 0.0 would read as "mitigated at zero
+            # armour", a different and checkable claim.
+            "resistance": (
+                None if price.resistance is None else round(price.resistance, 6)
+            ),
+            "amount": round(price.amount, 6),
+            # Absent on a packet that reached its subject directly, which is
+            # every packet a retired family authors today.  A key that were
+            # always present would publish "not routed" as a fact about every
+            # packet in the model, which is a claim nobody made.
+            **(
+                {}
+                if packet.routing is None
+                else {
+                    "routing": {
+                        "router": packet.routing.router_rule_id,
+                        "damage_share": float(packet.routing.damage_share),
+                    }
+                }
+            ),
+        },
+    )
+    return price.amount
+
+
 def reprice_dynamic_resistance(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> float | None:
@@ -570,14 +747,31 @@ def recovery_is_gated(
     return event_time - float(last_damage) < action.requires_damage_free_seconds - 1e-9
 
 
+def live_healing_factor(state: Mapping[str, Any], event_time: float) -> float:
+    """The defender's Grievous multiplier at *event_time*.
+
+    Every recovery this instant delivers reads it here — an authored heal and
+    the heal a Lifeline fires as it arms alike — so one wound window cannot
+    bite on one of them and miss the other.
+    """
+    if event_time >= state["healing_reduction_until"]:
+        return 1.0
+    return float(state["healing_reduction_factor"])
+
+
 def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> float:
-    """Apply received-healing modifiers except to vamp stat packets."""
+    """Apply received-healing modifiers except to vamp stat packets.
+
+    ``below_half_healing_bonus`` is the sourced share a declaration compiled
+    at the walk's boundary; the half itself is the declaration's identity
+    rather than a second number — the registry publishes the bonus under a
+    key that spells its own gate and publishes no threshold beside it, so
+    ``BelowHalfHealingRule`` is named after the boundary it is defined by.
+    """
     if str(action.healing_category) == "vamp":
         return 1.0
     multiplier = float(state["healing_received_multiplier"])
-    below_half_bonus = float(
-        state.get("immortal_path_below_half_healing_multiplier", 0.0) or 0.0
-    )
+    below_half_bonus = float(state.get("below_half_healing_bonus", 0.0) or 0.0)
     if (
         below_half_bonus > 0.0
         and state["pools"].max_health > 0.0
@@ -587,16 +781,20 @@ def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> flo
     return multiplier
 
 
-def schedule_doran_shield_recovery(
+def schedule_regeneration_recovery(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
-    """Schedule Enduring Focus only after a certified incoming hit.
+    """Schedule a regeneration window only after a certified incoming hit.
 
-    Enduring Focus does not trigger from damage absorbed entirely by a
-    shield; only health damage starts the recovery window (the caller
-    supplies the applied-to-health amount through the action's event).
+    The window does not trigger from damage absorbed entirely by a shield;
+    only health damage starts it (the caller supplies the applied-to-health
+    amount through the action's event).
+
+    Which subject has one, and every number the window pays, come from the
+    compiled declaration the context was handed — never from an item name.
     """
-    if not ctx.defense_profile(action.subject).has_dorans_shield:
+    window = ctx.defense_profile(action.subject).regeneration
+    if window is None:
         return
     event = action.event
     applied_to_health = (
@@ -605,15 +803,11 @@ def schedule_doran_shield_recovery(
     if applied_to_health <= 0.0:
         return
     combatant = ctx.combatants[action.subject]
-    total_melee = sustain_effect_value("Doran's Shield", "enduring_focus_total_melee")
-    total_reduced = sustain_effect_value(
-        "Doran's Shield", "enduring_focus_total_reduced"
-    )
-    missing_cap = sustain_effect_value(
-        "Doran's Shield", "enduring_focus_missing_health_cap"
-    )
-    duration_value = sustain_effect_value("Doran's Shield", "enduring_focus_duration")
-    tick = sustain_effect_value("Doran's Shield", "health_regen_tick_interval")
+    total_melee = window.total_melee
+    total_reduced = window.total_reduced
+    missing_cap = window.missing_health_cap
+    duration_value = window.duration
+    tick = window.tick_interval
     if missing_cap <= 0.0 or duration_value <= 0.0 or tick <= 0.0:
         return
     current_state = state
@@ -637,7 +831,7 @@ def schedule_doran_shield_recovery(
     total = total_cap * min(1.0, missing_ratio / missing_cap)
     if total <= 0.0:
         return
-    trigger_id = action.event_id or ""
+    trigger_id = EVENT_SLOTS.text(action.event_slot)
     ticks = max(1, int(round(duration_value / tick)))
     for tick_index in range(1, ticks + 1):
         heal_event = {
@@ -664,7 +858,7 @@ def schedule_doran_shield_recovery(
                     / ticks
                 )
             ),
-            "source": "Doran's Shield (Enduring Focus)",
+            "source": f"{window.owner} (Enduring Focus)",
             "kind": "regen",
             "attacker": combatant.participant_id,
             "target": combatant.participant_id,
@@ -692,7 +886,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
         if holder.participant_id == target_id or holder.team == target.team:
             continue
         defenses = holder.defenses
-        window = max(0.0, float(getattr(defenses, "defy_window", 0.0) or 0.0))
+        window = max(0.0, float(defenses.defy_window))
         if window <= 0.0 or holder_state["death_time"] is not None:
             continue
         matching = [
@@ -707,7 +901,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
         holder_state["defy_triggered"] = True
         holder_state["defy_trigger_time"] = float(event_time)
         holder_state["defy_triggered_damage_ids"].update(
-            record["event_id"] for record in matching
+            record["event_slot"] for record in matching
         )
         cleared = sum(holder_state["deferred_batches"].values())
         holder_state["damage_deferral_cleared"] += cleared
@@ -716,18 +910,14 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
             holder_state["deferred_batches"]
         )
         holder_state["deferred_batches"].clear()
-        duration_value = max(
-            0.0, float(getattr(defenses, "defy_heal_duration", 0.0) or 0.0)
-        )
-        ticks = int(getattr(defenses, "defy_heal_ticks", 0) or 0)
-        heal_ratio = max(
-            0.0, float(getattr(defenses, "defy_heal_bonus_ad_ratio", 0.0) or 0.0)
-        )
+        duration_value = max(0.0, float(defenses.defy_heal_duration))
+        ticks = int(defenses.defy_heal_ticks)
+        heal_ratio = max(0.0, float(defenses.defy_heal_bonus_ad_ratio))
         bonus_ad = max(0.0, float(holder.stats.get("bonus_attack_damage", 0.0)))
         if duration_value <= 0.0 or ticks <= 0 or heal_ratio <= 0.0 or bonus_ad <= 0.0:
             continue
         total_heal = bonus_ad * heal_ratio
-        trigger_id = matching[-1]["event_id"]
+        trigger_slot = matching[-1]["event_slot"]
         for tick in range(1, ticks + 1):
             heal_event = {
                 "time": float(event_time) + duration_value * tick / ticks,
@@ -741,7 +931,7 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
                     f"{holder.participant_id}:defy:{target_id}:"
                     f"{round(float(event_time), 9)}:{tick}"
                 ),
-                "_defy_trigger_id": trigger_id,
+                "_defy_trigger_slot": trigger_slot,
                 "_defy_target_id": target_id,
                 "_defy_window": window,
                 "sequence": tick - 1,
@@ -784,8 +974,13 @@ def schedule_maw_omnivamp_heal(
         "healing_category": "vamp",
         "attacker": attacker_id,
         "target": attacker_id,
-        "_event_id": f"{action.event_id}:maw-omnivamp",
-        "_trigger_event_id": action.event_id,
+        # ``EVENT_SLOTS.text`` where the parent id used to be interpolated
+        # directly.  Every damage packet that can reach this branch carries an
+        # id (the receipt composition stamps one on every engine row), so the
+        # string is unchanged; a packet without one used to interpolate the
+        # word ``None`` here and now contributes nothing.
+        "_event_id": f"{EVENT_SLOTS.text(action.event_slot)}:maw-omnivamp",
+        "_trigger_event_id": EVENT_SLOTS.text(action.event_slot),
         "sequence": int(action.sequence or 0) + 1,
     }
     ctx.ledger.schedule_heal(heal_event, attacker_id)
@@ -1200,7 +1395,8 @@ def _schedule_spell_shield_heal(
         "source": state["spell_shield_heal_source"],
         "source_key": action.source_key,
         "healing_category": "champion",
-        "_event_id": f"{action.event_id or action.source_key}:spell_shield_heal",
+        "_event_id": f"{EVENT_SLOTS.text(action.event_slot) or action.source_key}"
+        f":spell_shield_heal",
         "spell_shield_triggered": True,
     }
     ctx.ledger.schedule_heal(heal_event, ctx.combatants[action.subject].participant_id)
@@ -1343,7 +1539,7 @@ def _record_guardian_damage(
                 "time": float(event_time),
                 "amount": max(0.0, float(action.amount)),
                 "target": ctx.combatants[action.subject].participant_id,
-                "event_id": str(action.event_id or ""),
+                "event_id": EVENT_SLOTS.text(action.event_slot),
             }
         )
 
@@ -1473,7 +1669,7 @@ def _apply_stat_buff(
                 "time": round(action.time, 3),
                 "amount": round(permanent_health, 3),
                 "source": str(action.source or action.source_key),
-                "trigger_event_id": str(action.trigger_event_id or ""),
+                "trigger_event_id": EVENT_SLOTS.text(action.trigger_slot),
             }
         )
     buff = {
@@ -1509,7 +1705,7 @@ def _apply_stat_buff(
             "until": round(action.time + action.duration, 3),
             "bonus_armor": round(action.bonus_armor, 3),
             "bonus_magic_resistance": round(action.bonus_magic_resistance, 3),
-            "trigger_event_id": str(action.trigger_event_id or ""),
+            "trigger_event_id": EVENT_SLOTS.text(action.trigger_slot),
             "source": str(action.source or action.source_key),
         }
         state["aftershock_trigger_events"].append(trigger_event)
@@ -1527,6 +1723,9 @@ def _apply_damage_modifier(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
     """Arm a timed (or persistent) cross-participant damage modifier."""
+    # The declaration is read before the availability gate: a packet that
+    # restricts nothing is a bug whether or not this one arms (D-04).
+    damage_classes, attack_classes = declared_modifier_classes(action)
     persistent = action.persistent
     if action.duration <= 0.0 and not persistent:
         ctx.ledger.skip(action, "damage_modifier_not_available")
@@ -1542,32 +1741,82 @@ def _apply_damage_modifier(
         "armor_reduction_percent": action.armor_reduction_percent,
         "mr_reduction_percent": action.mr_reduction_percent,
         "resistance_type": action.resistance_type,
-        "owner": action.owner,
+        "holder": action.holder,
+        "armed_by": action.attacker,
+        "damage_classes": damage_classes,
+        "attack_classes": attack_classes,
+        # A *source* restriction, not the holder: this modifier applies only
+        # to damage whose source is this participant.  Empty is "no source
+        # restriction", which is every modifier that is not one.
         "source_participant": action.source_participant,
     }
-    state["active_damage_modifiers"].append(modifier)
+    replaced = _refresh_live_modifier(state["active_damage_modifiers"], modifier)
+    if replaced is None:
+        state["active_damage_modifiers"].append(modifier)
+    else:
+        ctx.ledger.write(action, refresh=replaced)
     if not persistent:
         ctx.ledger.write(action, expires_at=round(action.time + action.duration, 3))
     ctx.ledger.write(action, applied_amount=round(action.amount, 6))
+
+
+def _refresh_live_modifier(
+    armed: list[dict[str, Any]], modifier: Mapping[str, Any]
+) -> dict[str, Any] | None:
+    """Refresh one holder's live modifier in place, or ``None`` if it is new.
+
+    **One holder's one mechanic on one subject is one debuff.**  A second
+    trigger refreshes the window the first opened; it does not arm a second
+    copy beside it.  Bloodsong's Expose Weakness is a 4-second window on a
+    1.5-second cooldown, so an eight-second fight arms it three times with
+    overlapping windows, and every packet inside an overlap was multiplied
+    by ``1.08`` *twice* — a double count with no symptom, because
+    ``_apply_cross_participant_modifiers`` writes ``support_damage_multiplier``
+    once per applying modifier and the receipt therefore published the last
+    factor rather than the product.  The pair-side reading never had the
+    defect: ``interpreters.delta_amp.windows`` already unions overlapping
+    windows, so this is the walk being taught what the other engine says.
+
+    Identity is ``(source, armed_by)`` and ``armed_by`` is the roster slot
+    that *authored* the packet — deliberately not ``holder``, which is the
+    owner skip's slot and is ``-1`` for exactly the coupled-authoritative
+    mechanics that need this most.  Two **different** holders keep their two
+    modifiers, because whether they should is
+    :class:`~...trigger_stream.HolderStacking`'s question and D-66's
+    ``ArmingLedger`` is the one place it is answered.
+
+    The surviving window is the later expiry, which is what the pair engine's
+    union does and what ``WindowMerge.REFRESH`` names: a refresh never
+    truncates a window a longer earlier trigger opened.
+
+    The replaced expiry is published unrounded.  Rounding is presentation and
+    its home is ``program/``'s precision registry (D-71), which ``survival/``
+    may not import; a ``round`` here would be a seventy-sixth kernel opinion
+    on a counter the migration frontier holds non-increasing.
+    """
+    for index, live in enumerate(armed):
+        if (
+            live["source"] != modifier["source"]
+            or live["armed_by"] != modifier["armed_by"]
+        ):
+            continue
+        previous = float(live["until"])
+        armed[index] = {**modifier, "until": max(previous, float(modifier["until"]))}
+        return {
+            "reason": "refresh",
+            "source": str(modifier["source"]),
+            "previous_expires_at": previous if math.isfinite(previous) else None,
+        }
+    return None
 
 
 def _apply_utility(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
     """Utility dimensions (on-hit magic, movement, cleanse, slow, economy,
-    vision) are recorded in native units; the calculator never converts
-    them into damage.  On-hit magic also arms the source's live ledger."""
-    state["utility_effects"].append(
-        {
-            "source": str(action.source or action.utility_kind),
-            "kind": action.utility_kind,
-            "time": action.time,
-            "amount": action.amount,
-            "duration": action.duration,
-            "gold_amount": action.gold_amount,
-            "ward_uses": action.ward_uses,
-        }
-    )
+    vision) are receipted in their native units; the calculator never
+    converts them into damage.  On-hit magic is the one kind the walk's
+    arithmetic reads, and it arms the subject's live ledger here."""
     if action.kind is ActionKind.ON_HIT_MAGIC:
         state["active_on_hit_magic"].append(
             {
@@ -1755,7 +2004,7 @@ def _cleanse_action_view(
         time=action.time,
         source_key=action.source_key,
         sequence=action.sequence,
-        event_id=action.event_id,
+        event_id=EVENT_SLOTS.text(action.event_slot),
         item=item,
         target=target_id,
         holder=holder_id,
@@ -1874,18 +2123,11 @@ def _apply_heal(
     amount_formula = action.amount_formula
     if callable(amount_formula):
         amount = max(0.0, float(amount_formula(pools.health, pools.max_health)))
-    if (
-        state["healing_received_multiplier"] != 1.0
-        or state["immortal_path_below_half_healing_multiplier"]
-    ):
+    if state["healing_received_multiplier"] != 1.0 or state["below_half_healing_bonus"]:
         # With no received-healing modifier armed, the multiplier is exactly
         # 1.0 for every category and the multiply is skipped bit-for-bit.
         amount *= recovery_multiplier(state, action)
-    reduction_factor = (
-        1.0
-        if event_time >= state["healing_reduction_until"]
-        else state["healing_reduction_factor"]
-    )
+    reduction_factor = live_healing_factor(state, event_time)
     reduced_amount = amount * reduction_factor
     state["healing_reduced"] += max(0.0, amount - reduced_amount)
     received = min(
@@ -1952,7 +2194,7 @@ def _apply_heal(
         )
     ctx.ledger.write(action, applied_amount=round(received, 6))
     ctx.ledger.mark_applied(action)
-    if action.defy_trigger_id is not None:
+    if action.defy_trigger_slot != NO_SLOT:
         state["defy_heal_received"] += received
 
 
@@ -1979,7 +2221,17 @@ def _apply_live_packet_chain(
         or state.get("aftershock_until", 0.0) > action.time
     ):
         update_combat_state(ctx, action, state)
-    if (
+    if action.declared is not None:
+        # The packet's family declared its own price, so the walk mitigates
+        # the raw value here instead of re-ratioing a number the pair engine
+        # mitigated.  It reads the armed delta the line above may just have
+        # written, and it replaces the reprice rather than preceding it: a
+        # declaration priced at the live resistance has nothing left to
+        # re-price.  Every family in ``walk_repriced_mechanics()`` declares one.
+        priced = apply_declared_price(ctx, action, state)
+        if priced is not None:
+            amount = priced
+    elif (
         state.get("dynamic_bonus_armor")
         or state.get("dynamic_bonus_magic_resistance")
         or state.get("aftershock_until", 0.0) > action.time
@@ -2012,7 +2264,7 @@ def _apply_live_packet_chain(
     # champion-hit window.
     if (
         state["incoming_damage_multiplier"] < 1.0
-        and action.phase >= 0
+        and action.phase >= TransitionRank.DAMAGE
         and 0 <= attacker < len(ctx.combatants)
         and attacker != action.subject
         and not action.reactive
@@ -2038,6 +2290,8 @@ def _apply_live_packet_chain(
                 state["incoming_damage_cooldown_until"],
                 action.time + state["incoming_damage_cooldown"],
             )
+    if action.live_amp is not None and action.kind in _DAMAGE_KINDS:
+        amount = _apply_live_amp(ctx, action, state, amount)
     return amount
 
 
@@ -2062,7 +2316,7 @@ def _record_event_id_match(state: dict[str, Any], action: SurvivalAction) -> Non
     eligibility = state.get("projectile_defense_eligibility")
     if eligibility is None or not eligibility.selection.blocked_event_ids:
         return
-    event_id = str(getattr(action, "event_id", "") or "")
+    event_id = EVENT_SLOTS.text(action.event_slot)
     if event_id in eligibility.selection.blocked_event_ids:
         state.setdefault("projectile_defense_event_id_matches", set()).add(event_id)
 
@@ -2466,7 +2720,16 @@ def _apply_crowd_control(
     if not profile.kind:
         return
     duration = max(0.0, float(action.cc_duration))
-    if duration <= 0.0 or applied_amount <= 0.0:
+    if duration <= 0.0:
+        return
+    # A *damage* packet mitigated to nothing carries no control with it; a
+    # control-ONLY packet declares no damage in the first place and is not
+    # the same case.  The guard reads the packet's own declaration to tell
+    # them apart, because the coupled walk classifies a zero-damage control
+    # as a plain damage action (its authored kind is empty) and a bare
+    # ``applied_amount <= 0`` test silently dropped every one of them --
+    # Lulu's Whimsy against a Black Shield among them.
+    if applied_amount <= 0.0 and action.amount > 0.0:
         return
     if not profile.blocking and not profile.unknown:
         # A known soft control (slow, silence, ...): no action-downtime
@@ -2612,6 +2875,112 @@ def _apply_crowd_control(
     ctx.ledger.mark_applied(action)
 
 
+def _apply_live_amp(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    amount: float,
+) -> float:
+    """Price a live-predicate amplifier on this packet, before absorption.
+
+    Last in the chain, which is the ruling: the predicate reads the
+    subject's health as it stands *before* this packet is absorbed, and
+    the bonus amplifies the packet as everything else in the chain has
+    already left it.  A rider, not an event — so it never arrives at a
+    subject its host did not reach: a spell-shielded, state-blocked or
+    post-death packet never enters the damage branch at all, and the bonus
+    dies with it because it is a field on the packet rather than a
+    transition of its own.
+
+    The tag carries the meaning (:class:`~.actions.LiveProbe`).  An
+    unrecognised probe raises rather than declining to amplify, because a
+    kernel that quietly skipped an amplifier it did not recognise is a
+    number the model never computed wearing a measured zero's clothes.
+    """
+    live = action.live_amp
+    if live.probe is not LiveProbe.HEALTH_BELOW_RATIO:
+        raise ValueError(
+            f"{live.mechanic} rides a {live.probe!r} the walk cannot read; "
+            "the kernel evaluates a live amplifier by tag and a tag it does "
+            "not know is a rule that did not run, never a bonus of zero"
+        )
+    pools = state["pools"]
+    if not pools.health < pools.max_health * live.threshold:
+        return amount
+    bonus = amount * live.fraction
+    # Unrounded, both of them: rounding is presentation and its one home is
+    # ``program/precision`` (D-71).  The receipt projection rounds what it
+    # publishes, and the kernel's own rounding-site count is frontier
+    # counter 6, which this stage may not push up.
+    ctx.ledger.write(action, live_amp_bonus=bonus, live_amp_source=live.mechanic)
+    if ctx.records_annotations:
+        ctx.ledger.annotate(
+            action,
+            live_amp={
+                "mechanic": live.mechanic,
+                "fraction": live.fraction,
+                "threshold": live.threshold,
+                "health_ratio": (
+                    pools.health / pools.max_health if pools.max_health else 0.0
+                ),
+                "bonus": bonus,
+            },
+        )
+    return amount + bonus
+
+
+def _modifier_applies(
+    modifier: Mapping[str, Any], action: SurvivalAction, source_id: str
+) -> bool:
+    """Whether one armed cross-participant modifier prices this packet.
+
+    The one predicate every modifier branch consults — the reduction and
+    multiplier branches were separately untyped, and a mechanic answering
+    "does this apply to me?" in two places is how two answers drift apart.
+    Three clauses, in order:
+
+    * the **owner skip**: the originating holder's pair engine already
+      priced its own half, so the packet exists for every other source
+      (``Authority.SPLIT``'s machine-checked handshake);
+    * the **declared class match**: a magic-only curse does not amplify a
+      true-damage ability, which is what ``damage_classes`` says (D-04);
+    * the **source restriction**: a modifier may name the one participant
+      whose damage it prices, which is a different question from who armed
+      it -- ``source_participant`` is the source, ``holder`` is the arm;
+    * the **delivery gate**: today's walk prices only attacks and spells,
+      unless the modifier declared ``all_sources``.
+
+    Both sides of the owner skip are roster indices, so the predicate needs
+    no third argument: the armed modifier carries the slot that armed it and
+    the packet carries the slot that delivered it.  The participant-id
+    string this compared before was resolved by the caller purely because
+    the modifier remembered its holder by name.
+
+    The delivery gate and ``attack_classes`` are deliberately *both* here
+    and are **not** the same rule.  ``is_attack_or_spell`` is Blue Dream
+    Bubble's own restriction ("the next attack or spell they receive"),
+    generalised to every modifier before any of them could say so; Unmake,
+    Expose Weakness and Command all read "from all sources" and declare all
+    three attack classes, so for them the gate is narrower than the
+    declaration and ``AttackClass.OTHER`` damage goes unpriced.  Widening
+    the gate is a second correction and is not made here: the divergence
+    ships characterized behind a sentinel (D-04).
+    """
+    holder = modifier["holder"]
+    if holder >= 0 and holder == action.attacker:
+        return False
+    source_participant = str(modifier.get("source_participant", ""))
+    if source_participant and source_participant != source_id:
+        return False
+    if damage_class_of(action) not in modifier["damage_classes"]:
+        return False
+    if not modifier.get("all_sources") and not (
+        action.is_ability or action.basic_attack or action.source_key == "auto_attacks"
+    ):
+        return False
+    return attack_class_of(action) in modifier["attack_classes"]
+
+
 def _apply_cross_participant_modifiers(
     ctx: TransitionContext,
     action: SurvivalAction,
@@ -2625,25 +2994,19 @@ def _apply_cross_participant_modifiers(
         if float(modifier.get("until", 0.0)) > action.time
     ]
     state["active_damage_modifiers"] = active_modifiers
+    # Resolved only when some armed modifier actually restricts its source.
+    # The restriction compares participant-id strings, so answering it costs
+    # a roster read this function otherwise never makes -- and the walk's
+    # own fixtures hand it a context that carries a ledger and nothing else.
     source_id = (
         ctx.combatants[action.attacker].participant_id
-        if 0 <= action.attacker < len(ctx.combatants)
+        if any(modifier.get("source_participant") for modifier in active_modifiers)
+        and 0 <= action.attacker < len(ctx.combatants)
         else ""
     )
     for modifier in list(active_modifiers):
-        if modifier.get("owner") and modifier.get("owner") == source_id:
-            # The originating holder's pair engine already priced its
-            # own stack/amp.  The packet exists for every other eligible
-            # participant in the coupled ledger.
+        if not _modifier_applies(modifier, action, source_id):
             continue
-        source_participant = str(modifier.get("source_participant", ""))
-        if source_participant and source_participant != source_id:
-            continue
-        is_attack_or_spell = bool(
-            action.is_ability
-            or action.basic_attack
-            or action.source_key == "auto_attacks"
-        )
         resistance_key = str(modifier.get("resistance_type", ""))
         reduction_key = (
             "armor_reduction_percent"
@@ -2655,10 +3018,11 @@ def _apply_cross_participant_modifiers(
             )
         )
         if reduction_key:
+            # Which resistance the reduction touches is a separate fact from
+            # the modifier's declared damage classes: a packet may restrict
+            # itself to two classes and still reduce only one resistance.
             relevant_type = "physical" if reduction_key.startswith("armor") else "magic"
             if action.damage_type != relevant_type:
-                continue
-            if not is_attack_or_spell:
                 continue
             baseline = (
                 action.baseline_effective_armor
@@ -2690,8 +3054,6 @@ def _apply_cross_participant_modifiers(
                             "factor": round(reduced_factor / baseline_factor, 6),
                         }
                     )
-            continue
-        if not modifier.get("all_sources") and not is_attack_or_spell:
             continue
         if modifier.get("damage_reduction"):
             before = max(0.0, amount)
@@ -2760,23 +3122,23 @@ def _apply_damage(
     the four fields it cannot carry: trigger, live formula, Grievous pack,
     wound."""
     event_time = action.time
-    event_id = action.event_id
+    event_slot = action.event_slot
     ledger = ctx.ledger
     pools = state["pools"]
     amount = _apply_live_packet_chain(ctx, action, state)
     ledger.mark_applied(action)
     _apply_crowd_control(ctx, action, state, amount)
     if action.deferred:
-        batch_id = str(action.deferred_batch_id or "")
-        if batch_id in state["deferred_batches"]:
-            state["deferred_batches"][batch_id] = max(
-                0.0, state["deferred_batches"][batch_id] - amount
+        batch_slot = action.deferred_batch_slot
+        if batch_slot in state["deferred_batches"]:
+            state["deferred_batches"][batch_slot] = max(
+                0.0, state["deferred_batches"][batch_slot] - amount
             )
             state["damage_deferral_pending"] = max(
                 0.0, state["damage_deferral_pending"] - amount
             )
-            if state["deferred_batches"][batch_id] <= 1e-9:
-                del state["deferred_batches"][batch_id]
+            if state["deferred_batches"][batch_slot] <= 1e-9:
+                del state["deferred_batches"][batch_slot]
     original_amount = amount
     if action.kind is not ActionKind.PLAIN_DAMAGE:
         raw_formula = action.raw_formula
@@ -2837,7 +3199,13 @@ def _apply_damage(
     # Absorption order, Lifeline arming, and the health transition are owned
     # by ``shield_ledger`` (issue #159); this kernel supplies the storage and
     # the ledger annotations, never a second copy of the semantics.
-    outcome = shield_ledger.absorb(pools, amount, damage_type, event_time)
+    outcome = shield_ledger.absorb(
+        pools,
+        amount,
+        damage_type,
+        event_time,
+        live_healing_factor(state, event_time),
+    )
     if state.get("crowd_control_immunity_grants"):
         _sync_crowd_control_immunity(state, event_time)
         _fill_blocked_shield_after(state, action, outcome.absorbed)
@@ -2859,8 +3227,10 @@ def _apply_damage(
     if outcome.threshold_health_triggered:
         # The kernel granted the temporary maximum health and delivered
         # whatever of the sourced heal the arming instant could take; this
-        # walk has no over-time author for the remainder.
+        # walk has no over-time author for the remainder.  A wound live at
+        # the arming instant already cut that heal inside the kernel.
         state["healing_received"] += outcome.threshold_health_healed
+        state["healing_reduced"] += outcome.threshold_health_reduced
         ctx.ledger.write(action, threshold_health_triggered=True)
     if ctx.records_annotations:
         ctx.ledger.annotate(action, overkill=round(outcome.overkill, 6))
@@ -2880,8 +3250,8 @@ def _apply_damage(
     if event_damage > 0.0:
         state["last_damage_time"] = float(event_time)
         _record_guardian_damage(ctx, action, event_time, event_damage)
-        if ctx.dorans_flags[action.subject]:
-            schedule_doran_shield_recovery(ctx, action, state)
+        if ctx.regeneration_flags[action.subject]:
+            schedule_regeneration_recovery(ctx, action, state)
         if (
             action.attacker >= 0
             and ctx.states[action.attacker]["maw_lifeline_omnivamp_active"]
@@ -2900,12 +3270,13 @@ def _apply_damage(
             {
                 "target": ctx.combatants[action.subject].participant_id,
                 "time": float(event_time),
-                "event_id": str(event_id or ""),
+                "event_slot": event_slot,
             }
         )
-    # The Collector is an authored terminal transition.  Its threshold
-    # is carried by the attacker's packet from the cached item effect; it
-    # never contributes extra damage or fires from an aggregate row.
+    # An execution is an authored terminal transition.  Both its threshold
+    # and the name of whatever declared it are carried by the attacker's
+    # packet; this walk names no item, and an execution never contributes
+    # extra damage or fires from an aggregate row.
     if (
         action.execute_threshold_ratio > 0.0
         and applied_to_health > 0.0
@@ -2914,7 +3285,7 @@ def _apply_damage(
     ):
         pools.health = 0.0
         state["execute_time"] = float(event_time)
-        state["execute_source"] = str(action.execute_source or "The Collector")
+        state["execute_source"] = str(action.execute_source)
         state["death_time"] = min(float(ctx.duration), float(event_time))
         state["terminal_phase"] = "dead"
         state["action_downtime_intervals"].append(
@@ -3044,69 +3415,11 @@ _DAMAGE_KINDS = frozenset(
 )
 
 
-def apply_transition(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
-) -> None:
-    """One typed action against one participant state — the single kernel.
-
-    This is the issue #137 entry point: every mechanic has exactly one
-    semantic implementation here, and the two ledger adapters differ only
-    in representation and observation.
-    """
-    kind = action.kind
-    if kind is ActionKind.PLAIN_DAMAGE:
-        _apply_damage(ctx, action, state)
-        return
-    if kind in _DAMAGE_KINDS:
-        _apply_damage(ctx, action, state)
-        return
-    if kind in (ActionKind.HEAL, ActionKind.OVERHEAL_SHIELD, ActionKind.ICHOR_CONVERT):
-        # The shared packet chain runs before recovery too (a no-op unless
-        # a next-event-only modifier is armed), mirroring the walk.
-        _apply_live_packet_chain(ctx, action, state)
-        _apply_heal(ctx, action, state)
-        if action.cleanse or action.cleanse_item:
-            # Mikael's Purify rides its heal packet with the cleanse
-            # marker: the typed cleanse contract applies alongside the
-            # sourced heal (P2 Slice 4).
-            _apply_cleanse(ctx, action, state)
-        return
-    if kind is ActionKind.SHIELD:
-        _apply_shield(ctx, action, state)
-        return
-    if kind is ActionKind.TEMP_HEALTH:
-        _apply_live_packet_chain(ctx, action, state)
-        _apply_temp_health(ctx, action, state)
-        return
-    if kind is ActionKind.REVIVE:
-        _apply_revive(ctx, action, state)
-        return
-    if kind in (ActionKind.STASIS, ActionKind.INVULNERABLE, ActionKind.UNTARGETABLE):
-        _apply_combat_state_transition(ctx, action, state)
-        return
-    if kind is ActionKind.CROWD_CONTROL:
-        _apply_crowd_control(ctx, action, state, 1.0)
-        return
-    if kind is ActionKind.SPELL_SHIELD:
-        _apply_spell_shield(ctx, action, state)
-        return
-    if kind is ActionKind.STAT_BUFF:
-        _apply_stat_buff(ctx, action, state)
-        return
-    if kind is ActionKind.DAMAGE_MODIFIER:
-        _apply_damage_modifier(ctx, action, state)
-        return
-    if kind in (ActionKind.ON_HIT_MAGIC, ActionKind.UTILITY):
-        _apply_utility(ctx, action, state)
-        return
-    raise ValueError(f"unhandled survival action kind {kind}")
-
-
 def run_survival_walk(
     actions: Sequence[SurvivalAction], ctx: TransitionContext
 ) -> None:
     """The shared walk: every precondition gate in the authoritative order,
-    then one :func:`apply_transition` per action.
+    then this loop's own dispatch to the one implementation per mechanic.
 
     Both adapters drive this exact loop; the ledger abstracts the skip
     annotations, trigger-linkage status, and walk-authored scheduling so
@@ -3134,7 +3447,9 @@ def run_survival_walk(
             # The shared ledger is bounded by the authored fight window.  A
             # post-window revive, heal, or damage tick must remain visible in
             # the receipt but cannot alter terminal state or totals.
-            ledger.skip(action, "outside_window", damage_phase=phase >= 0)
+            ledger.skip(
+                action, "outside_window", damage_phase=phase >= TransitionRank.DAMAGE
+            )
             continue
 
         snapshot_time = round(float(event_time), 9)
@@ -3168,6 +3483,8 @@ def run_survival_walk(
             pools.venom_factor = 1.0
         if state["temporary_health_amount"] > 0.0:
             expire_temporary_health(state, event_time)
+        if pools.threshold_health is not None:
+            shield_ledger.expire_threshold_health(pools, event_time)
 
         kind = action.kind
         # Revive is a state transition rather than healing: it is allowed to
@@ -3186,8 +3503,8 @@ def run_survival_walk(
             _apply_spell_shield(ctx, action, state)
             continue
         if (
-            action.defy_trigger_id is not None
-            and str(action.defy_trigger_id) not in state["defy_triggered_damage_ids"]
+            action.defy_trigger_slot != NO_SLOT
+            and action.defy_trigger_slot not in state["defy_triggered_damage_ids"]
         ):
             ledger.skip(action, "defy_not_triggered")
             continue
@@ -3196,20 +3513,43 @@ def run_survival_walk(
         )
         if (
             not guardian_reactive
-            and (action.trigger >= 0 or action.trigger_event_id is not None)
+            and (action.trigger >= 0 or action.trigger_slot != NO_SLOT)
         ) and not ledger.trigger_applied(action):
             # An effect whose trigger packet was skipped (its target or
             # attacker was already dead) must not survive on its own —
             # neither a recovery tick nor a reactive strike-back.  An action
             # with no trigger linkage at all passes both adapters trivially,
             # so the ledger is only consulted when a link exists.
-            ledger.skip(action, "trigger_event_skipped", damage_phase=phase < 1)
+            #
+            # ``DEBUFF_ARM`` is a *threshold*, not the debuff rank: every
+            # rank below it resolves before any arming does, and the three
+            # arming ranks sit at or above it.  That was true when they
+            # shared one ordering slot and is still true now that Phase 4 S6
+            # has split them, which is why the split moved no comparison
+            # here (see ``actions.ordering_slot``).
+            # ``preserve_reason`` for the same reason the redirect-cancelled
+            # arm below carries it, and it was missing here only because this
+            # arm runs first.  A redirect child Knight's Vow already cancelled
+            # arrives with ``holder_health_gate`` stamped on it, and its
+            # trigger is skipped precisely *because* of that cancellation --
+            # so overwriting the stamp published the consequence in place of
+            # the cause, and the specific reason the walk refused this action
+            # was lost to the generic one that followed from it.
+            ledger.skip(
+                action,
+                "trigger_event_skipped",
+                damage_phase=phase < TransitionRank.DEBUFF_ARM,
+                preserve_reason=True,
+            )
             continue
         if action.redirect_cancelled or (
-            action.event_id is not None and action.event_id in ctx.redirect_cancelled
+            action.event_slot != NO_SLOT and action.event_slot in ctx.redirect_cancelled
         ):
             ledger.skip(
-                action, "redirect_gate", damage_phase=phase < 1, preserve_reason=True
+                action,
+                "redirect_gate",
+                damage_phase=phase < TransitionRank.DEBUFF_ARM,
+                preserve_reason=True,
             )
             continue
         # Knight's Vow's 30%-health condition is an ordered state gate.  The
@@ -3217,10 +3557,10 @@ def run_survival_walk(
         # the holder is already at or below the threshold, cancel that child
         # and restore the unredirected packet on the Worthy target.
         if ctx.redirect_children and not action.redirected:
-            child = ctx.redirect_children.get(str(action.event_id or ""))
+            child = ctx.redirect_children.get(action.event_slot)
             if child is not None and (
-                action.event_id is None
-                or action.event_id not in ctx.redirect_gate_checked
+                action.event_slot == NO_SLOT
+                or action.event_slot not in ctx.redirect_gate_checked
             ):
                 holder_state = states[child.subject]
                 holder_ready = bool(holder_state) and (
@@ -3234,16 +3574,16 @@ def run_survival_walk(
                         + 1e-9
                     )
                 )
-                if action.event_id is not None:
-                    ctx.redirect_gate_checked.add(action.event_id)
-                    ctx.redirect_gate_checked.add(str(child.event_id or ""))
+                if action.event_slot != NO_SLOT:
+                    ctx.redirect_gate_checked.add(action.event_slot)
+                    ctx.redirect_gate_checked.add(child.event_slot)
                 if not holder_ready:
-                    if child.event_id is not None:
-                        ctx.redirect_cancelled.add(child.event_id)
+                    if child.event_slot != NO_SLOT:
+                        ctx.redirect_cancelled.add(child.event_slot)
                     ctx.ledger.write(child, damage=0.0)
                     ctx.ledger.write(child, skipped_reason="holder_health_gate")
                     restored = max(0.0, action.redirect_original_damage)
-                    ctx.ledger.write(
+                    ctx.ledger.restore(
                         action,
                         damage=restored,
                         _redirected_amount=0.0,
@@ -3280,19 +3620,22 @@ def run_survival_walk(
             continue
         if (
             action.deferred
-            and action.deferred_batch_id is not None
-            and str(action.deferred_batch_id) in state["cleared_deferred_batches"]
+            and action.deferred_batch_slot != NO_SLOT
+            and action.deferred_batch_slot in state["cleared_deferred_batches"]
         ):
             ledger.skip(action, "defy_cleared_deferred_damage", damage_phase=True)
             continue
-        if phase >= 0 and (
+        if phase >= TransitionRank.DAMAGE and (
             state["stasis_until"] > event_time
             or state["invulnerable_until"] > event_time
             or state["untargetable_until"] > event_time
         ):
             ledger.skip(action, "target_state_blocked", damage_phase=True)
             continue
-        if phase >= 0 and state.get("projectile_defense_eligibility") is not None:
+        if (
+            phase >= TransitionRank.DAMAGE
+            and state.get("projectile_defense_eligibility") is not None
+        ):
             defense = state.get("projectile_defense")
             eligibility = state.get("projectile_defense_eligibility")
             composition = state.get("projectile_defense_composition")
@@ -3331,7 +3674,10 @@ def run_survival_walk(
                 continue
             if composition is not None and composition.full_block.mode != "none":
                 _prepare_full_block(ctx, action, state)
-        if phase >= 0 and state.get("spell_shield_eligibility") is not None:
+        if (
+            phase >= TransitionRank.DAMAGE
+            and state.get("spell_shield_eligibility") is not None
+        ):
             # The kernel-owned spell-shield lifecycle (P2 Slice 2): one
             # eligibility decision per packet, one use per hostile cast,
             # cast grouping for same-cast multi-part packets.
@@ -3429,12 +3775,22 @@ def run_survival_walk(
             ActionKind.OVERHEAL_SHIELD,
             ActionKind.ICHOR_CONVERT,
         ) and (
-            (action.trigger >= 0 or action.trigger_event_id is not None)
+            (action.trigger >= 0 or action.trigger_slot != NO_SLOT)
             and ledger.trigger_applied(action)
             or bool(action.cast_while_disabled)
         )
+        # A packet whose source declared itself "not the caster's own action"
+        # -- a pet, a summon, a persistent zone -- is exempt from the
+        # attacker's crowd control for the same reason a cleanse cast while
+        # disabled is: the control stops the champion acting, and the thing
+        # that is acting is not the champion.  Zyra's plants keep attacking
+        # while a charm holds her.  The exemption is narrow by construction:
+        # it covers the crowd-control disjunct only, so an attacker in
+        # stasis, invulnerable or untargetable still blocks every packet it
+        # authored -- those describe who is being hit, not who is acting.
+        control_exempt = heal_carry_exempt or bool(action.cast_while_disabled)
         if (
-            phase >= 0
+            phase >= TransitionRank.DAMAGE
             and 0 <= action.attacker < len(states)
             and not action.reactive
             and (
@@ -3443,7 +3799,7 @@ def run_survival_walk(
                 or states[action.attacker]["untargetable_until"] > event_time
                 or (
                     states[action.attacker]["crowd_control_until"] > event_time
-                    and not heal_carry_exempt
+                    and not control_exempt
                 )
             )
         ):
@@ -3506,12 +3862,13 @@ def run_survival_walk(
             if action.cleanse or action.cleanse_item:
                 # Mikael's Purify rides its heal packet with the cleanse
                 # marker: the typed cleanse contract applies alongside the
-                # sourced heal (P2 Slice 4; mirrored in apply_transition).
+                # sourced heal (P2 Slice 4).
                 _apply_cleanse(ctx, action, state)
             continue
-        if phase < 0:
-            # Phase -1 residue: the authoritative walk's phase -1 branch
-            # ends with a bare continue (no state change, no annotations).
+        if phase < TransitionRank.DAMAGE:
+            # Pre-damage residue: the authoritative walk's branch for ranks
+            # arming before damage ends with a bare continue (no state
+            # change, no annotations).
             continue
         if _interaction_event_key(action) in state.get(
             "projectile_defense_full_block_events", set()
@@ -3598,17 +3955,19 @@ def _finalize_crowd_control_immunity(state: dict[str, Any], duration: float) -> 
 
 
 def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
-    """Post-walk expiry: timed shields and temporary health at the window
-    edge (the authoritative walk's final pass)."""
+    """Post-walk expiry: timed shields, temporary health and an armed
+    temporary-health Lifeline at the window edge (the authoritative walk's
+    final pass)."""
     for state in states:
         shield_ledger.expire_timed(state["pools"], float(duration))
         _finalize_crowd_control_immunity(state, float(duration))
         expire_temporary_health(state, float(duration))
+        shield_ledger.expire_threshold_health(state["pools"], float(duration))
 
 
 __all__ = [
     "TransitionContext",
-    "apply_transition",
+    "apply_declared_price",
     "evaluate_live_raw_formula",
     "expire_temporary_health",
     "finalize_states",

@@ -1,0 +1,87 @@
+{
+  "slice": "campaign-close-crit-profile-retirement",
+  "decisions": [
+    "R-15",
+    "R-17",
+    "R-19",
+    "R-20",
+    "R-30",
+    "R-32",
+    "R-36",
+    "D-40",
+    "D-60",
+    "D-62",
+    "D-97",
+    "umbrella Amendment F",
+    "umbrella Amendment K",
+    "umbrella Amendment L, Ruling 1",
+    "umbrella Amendment M, Ruling 1"
+  ],
+  "what_was_attempted": "crit_profile/receipt_walk, the fifth of the fourteen and the second family of this slice group, in Amendment L, Ruling 1's whole shape: the family's three mechanics declaring both halves, its pair rows stamped pair_preview_of and declared THEORETICAL, interpreters.crit_profile gaining a WALK_INTERPRETER registered at (CRIT_PROFILE, RECEIPT_WALK), and the deferral row retiring with it.",
+  "what_landed": "Nothing in src/. The slice is STOPPED before its first src/ edit, on a measurement, and this receipt is what a stopped retirement leaves behind. The precedent is campaign-close-active-cast-retirement, which measured a missing term and reverted rather than shipping half a retirement; the difference is that that one's missing half was a term a ruling could add to a budgeted stage, and this one's is the retiring act itself.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "R-17/R-32/D-97. The slice stopped before its first src/ edit, so what this receipt is an allowlist OF is an empty claim set against the committed baselines -- and it names them anyway, because a receipt that did not say which baselines it was measured against would leave a reader unable to check that the zero it reports is a zero on the surfaces the campaign gates."
+  },
+  "expected_qualifying_occurrences": 0,
+  "qualifying_population": {
+    "enumerated_before_first_edit": true,
+    "rule": "R-20's second half, discharged in the order it requires even though the slice then stopped: the population was enumerated from committed artifacts -- the committed docs/receipts/receipt-walk-retirement-schedule.json at f9d2817 and scripts/golden_coupled_baseline.json's scenario subtrees -- before any src/ edit was attempted for this family. A stopped slice publishes its population for the same reason a shipped one does: the next lane to pick this family up inherits a measured bound rather than an estimate.",
+    "predicate": "Every committed coupled scenario that puts a declaring owner of the crit_profile family on a participant. The three owners are read live from the behaviour catalog over rule_owners() -- Infinity Edge, Navori Flickerblade, Sundered Sky -- which is the same family-to-owner join golden_snapshot.receipt_walk_families() makes for the coverage guard.",
+    "method": "scripts.receipt_walk_schedule.population_size over each selected scenario subtree of the committed coupled baseline.",
+    "population_by_scenario": {
+      "crit_onhit_carry_roster": 3498,
+      "hexoptics_basic_amp_carry": 1354
+    },
+    "population_total": 4852,
+    "pair_engine_population": {
+      "total": 0,
+      "why": "No src/ edit landed, so no leaf of either baseline could move. Both compares read 'snapshot identical' on the commit that files this receipt."
+    },
+    "occurrences_outside_the_population": 0
+  },
+  "the_measurement_that_stopped_it": {
+    "what_was_measured": "Which pair-engine breakdown rows the crit_profile family authors, run over both covering scenarios' roster shapes and over each of the three owners alone, ranged and melee.",
+    "infinity_edge.crit_damage_bonus": "Authors no breakdown row on any build measured. Its number is a multiplier on the critical-strike damage of the champion's own basic attacks, folded into the auto_attacks row while that row is priced.",
+    "navori_flickerblade.cooldown_refund": "Authors no breakdown row and no damage at all. It refunds a share of the holder's remaining ability cooldowns on a basic attack, which changes how many casts a rotation holds and therefore moves the ability rows -- rows this family does not own.",
+    "sundered_sky.forced_crit": "Authors one row, `sundered_sky`, and that row carries `informational: true`: it publishes the DIFFERENCE the forced crit made to the auto row as a display figure and is summed into no total. Its sibling `heal_Sundered Sky` is a heal, not damage. Measured on a Caitlyn and on a Darius, with and without the other two owners.",
+    "the_covering_scenarios_hold_only_the_first": "crit_onhit_carry_roster and hexoptics_basic_amp_carry both equip Infinity Edge and neither equips Sundered Sky or Navori Flickerblade, so across the whole enumerated population of 4852 the family authors zero pair-engine rows -- not one to stamp and not one to withhold."
+  },
+  "why_the_ruled_act_cannot_be_performed_in_the_ruled_shape": {
+    "the_shape": "Amendment L, Ruling 1 rules the retirement act as one behaviour slice carrying BOTH halves at once: the family's pair rows stamped pair_preview_of and declared THEORETICAL, and the lane interpreter wired to the from-declaration pricing path, with the family's numeric consequence -- 'the pair row leaving the roster total, the walk's own number entering it'. Both halves name a pair row this family authors. It authors none.",
+    "the_three_ways_out_and_why_each_is_refused": {
+      "stamp_the_row_the_number_is_folded_into": "auto_attacks would have to be stamped as a preview of infinity_edge.crit_damage_bonus. That row is the champion's own basic-attack damage with every other on-swing contribution folded into it, so stamping it takes a number this family did not author out of every roster total and hands the walk a declaration for damage that is not this family's -- the deletion Ruling 1's second forbidden shape names, at the largest row in the fight.",
+      "register_the_interpreter_alone": "(CRIT_PROFILE, RECEIPT_WALK) could be registered with an interpreter compiling the same fields the pair lane compiles and handing the walk nothing. Amendment K refuses this in terms -- 'it registers no interpreter that emits fields nothing consumes: a counter driven to zero by editing what it counts is worse than the gap' -- and it is D-40's own prohibition.",
+      "split_the_pair_engine_s_auto_row": "The crit bonus could be made a row of its own so that this family had one to preview. That is a pair-engine behaviour change with its own golden consequence and its own slice; this slice's gate is zero pair-engine golden diffs, and re-shaping the basic-attack ledger is not this family's retirement."
+    },
+    "why_the_delta_amp_shape_does_not_reach_it_either": "delta_amp is the one family already retired without stamping a pair row, and its receipt records the stamping half as discharged-by-emptiness for exactly the reason this one would: the three static holder amps author no row either. What made that legal is that Amendment M, Ruling 1 NAMED delta_amp's walk-side delivery -- the holder's static amps, composed onto every DeclaredPacket the walk prices -- so the interpreter it registered delivers a term the walk's own pricer consumes. Measured here: the pricing stage has no crit term of any kind, and none of the packets it prices crits. Across the committed coupled scenarios the tree authors 17 previewed pair rows and 0 of them carry a crit split (num_crits or crit_damage_per_hit). So there is no term for a crit_profile walk interpreter to deliver, and registering one would be the second refused way out above rather than the delta_amp shape."
+  },
+  "the_ruled_prerequisite_that_is_missing": {
+    "what": "A ruling naming crit_profile's retiring act's walk-side delivery, in the way umbrella Amendment M, Ruling 1 named delta_amp's -- or, alternatively, a ruling that this family's numbers are not the walk's to price and that its deferral row is closed on a different ground than a retirement.",
+    "why_no_lane_may_write_it": "Both readings re-scope a debt the umbrella sized. Amendment F sizes the receipt-walk debt at fourteen slices and Amendment K settles the lane each is spelled in; neither reaches a family with no packet, and choosing for it is a lane deciding what its own criterion means, which umbrella criterion 11 forbids a phase document from doing.",
+    "row_opened": "docs/receipts/rulings-owed.json, whether_a_family_that_authors_no_pair_row_can_retire_off_the_pair_engine"
+  },
+  "what_this_receipt_does_not_do": "It does not retire the row, re-date it, read the debt as smaller, or touch _FAMILY_LANES. crit_profile/receipt_walk stands in docs/behavior-frontier.json, overdue and gated, with its blocker unchanged; the schedule still sizes it at 4852 leaves across two covering scenarios; and the machine still refuses a row the tree no longer defers. What is removed is the excuse that nobody had measured why this one is different.",
+  "measured_after": {
+    "dated": "2026-08-16",
+    "qualifying_occurrences": 0,
+    "occurrences_outside_the_population": 0,
+    "golden": "python scripts/golden_snapshot.py compare scripts/golden_baseline.json -- OK: snapshot identical.",
+    "coupled_golden": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json -- OK: snapshot identical.",
+    "oracle_receipts_owed": "None. R-19 owes an investigator per qualifying occurrence (R-15); no src/ edit landed for this family, so no leaf of the enumerated 4852 could move and none did."
+  },
+  "the_ruling_that_settled_it": "Umbrella Amendment O, 2026-08-16, and it takes the SECOND of the two branches this receipt's owed ruling offered -- the deferral row is closed on a different ground than a retirement, and the ground is named. Ruling 1: under the umbrella's own semantic-authority rule, all-pair-local inputs => PAIR_ONLY, so a family whose mechanics author no pair row and fold only into the holder's OWN champion rows is PAIR_ONLY; the pair engine is its authoritative home, no second engine prices it, no double-count exists for a preview stamp to prevent, and its (family, RECEIPT_WALK) row was a schedule CATEGORY ERROR rather than a debt. It closes as not_a_gap by authority reclassification, WITH a machine check -- the zero-authored-rows property is re-measured over the covering population and over a probe per owner on every run of receipt_walk_schedule.py --check, and the row REOPENS if a future mechanic of the family ever authors one. What the ruling does NOT do is read Amendment F's fourteen as thirteen: one row leaves as mis-scheduled and says so, which is a correction to the schedule and not a discount on the debt. Ruling 2 answers the half this receipt could not ask for -- that the same shape is waiting behind the remaining rows and nobody had measured them for it -- by making the triage a one-time act in front of any further retirement round.",
+  "what_this_receipt_measured_that_the_triage_then_generalised": "Measured over all ten open rows on 2026-08-16 by the same ablation this receipt describes: SIX of them author no priced pair-engine row, not one -- combat_state, crit_profile, damage_routing, opening_defense, resistance_shred and threshold_defense -- so five further retirement attempts would have hit this receipt's shape one at a time. Exactly one of the six is the class Ruling 1 closes: crit_profile is the only family all of whose declarations name Subject.HOLDER. Of the other five, one -- damage_routing -- has no named walk-side delivery term anywhere in the tree or in an amendment, and the triage publishes it as the row that stops the next retirement round.",
+  "what_this_receipt_owes_next": "Nothing, and that is the difference between this stop and the active_cast one. That receipt's question was settled while its slice stayed STOPPED behind a gate that did not exist yet; this one's row is closed, so there is no slice to restart -- the retirement this receipt attempted is ruled to have been the wrong act for this family. What remains live is the machine check: the emptiness this receipt measured is now re-measured on every gate run, and the day a mechanic of crit_profile authors a priced pair row the closed row reopens and this receipt's measurement is the thing a reader compares against.",
+  "what_stands_unedited": "Every number, the outcome, the enumerated population of 4852, the three refused ways out and the reason for the stop stand exactly as filed. The answer is recorded BESIDE the question rather than in place of it, which is how rulings-owed.json keeps an answered row's question, measurement and answer joined. `decisions` is not extended either: that list is what the slice landed against, and an amendment dated after the slice stopped is not something it landed against.",
+  "the_red_this_receipt_shipped_with_that_its_commit_did_not_declare": {
+    "dated": "2026-08-17",
+    "raised_by": "An R-35 residue-sweep pass over this slice group, which returned the gates criterion NOT DISCHARGED.",
+    "what_the_commit_body_declared": "644f898, the commit that filed this receipt: 'Gates: R-01 rows 2-11 green. Row 1 is green but for test_verify_ledger's criterion-11 denominator, which this group's final commit closes.' One cause, named.",
+    "what_was_actually_red": "Two. tests/test_coupled_golden_allowlist.py::test_every_receipt_names_the_baseline_it_landed_against was also failing on that commit, on THIS receipt. The test exists at 644f898 and is parametrised over every committed expected-golden-diff receipt; it reads landed_against.coupled_golden and requires it to name scripts/golden_coupled_baseline.json; and this receipt as filed at 644f898 carried no landed_against block at all -- measured by reading the file out of that commit, where the top-level keys are slice, decisions, what_was_attempted, what_landed, expected_qualifying_occurrences, qualifying_population, the_measurement_that_stopped_it and why_the_ruled_act_cannot_be_performed_in_the_ruled_shape, and no landed_against among them. The next commit of this same slice group, fa7819e, says it in its own words: the test 'went red on 644f898'.",
+    "what_that_means_and_what_it_does_not": "R-01 row 1 is one row and it was red for two reasons; the body named one and reported the row as green but for it, so a reader of that body would have concluded the tree held exactly one known failure when it held two. That is an undeclared red on a filed commit, which is the state R-01 exists to make impossible to ship quietly, and it is recorded here rather than softened: 'rows 2-11 green' is true, and 'row 1 is green but for <one thing>' was not. What it is NOT is an unrepaired defect. The omission was closed inside this slice group -- fa7819e added the landed_against block this receipt now carries, and 6b8011b closed the backlog row -- and at HEAD tests/test_coupled_golden_allowlist.py is green on every committed receipt including this one.",
+    "why_it_is_written_down_anyway": "Because the repair is not the disclosure. A gate line is the one place a later reader learns what a commit knew about its own tree, and a commit that under-reports its reds teaches the next lane that a partial gate line is acceptable -- which is how a check that could not fail became indistinguishable from a check that passed, the sentence this whole campaign was opened on. The commit body cannot be edited; this receipt is the artifact that commit filed, so the disclosure lands here, where a reader checking that commit's claims already is."
+  }
+}

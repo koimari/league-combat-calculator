@@ -1,0 +1,162 @@
+{
+  "receipt": "oracle-P5-resolver-leaf4",
+  "runbook": "R-18 / R-19 independent oracle",
+  "date": "2026-08-10",
+  "scenario": "mandate_abyssal_curse_roster",
+  "leaf_path": "/coupled_scenarios/mandate_abyssal_curse_roster/fights/0:Aatrox/rotation/dependencies",
+  "old_value": "<absent> (the rotation receipt emitted no `dependencies` key)",
+  "new_value": "present: seven ledgers, all empty",
+  "verdict": "both_wrong",
+
+  "method": {
+    "isolation": "Evidence tree built with `git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>`. Only data/ and docs/math-foundations.md were read. src/, tests/, scripts/, docs/plans/, docs/receipts/, the diff and git history were never opened.",
+    "why_this_leaf_is_checkable_without_src": "The leaf is a structural receipt, not a number, so the oracle question reduces to: does Aatrox's rotation in a Mandate + Abyssal-Curse roster actually carry zero dependency edges? That is answerable purely from the cached wiki ability text plus the two cached item passives."
+  },
+
+  "independent_computation": {
+    "step_1_rotation_shape": {
+      "claim": "Aatrox's rotation has exactly seven entries, so the cardinality 7 in the new value is right.",
+      "derivation": "data/champion-audit/batch-e9-1.json pins the modeled slots as P/Q/W/R with E out_of_scope ('E (Umbral Dash: dash + heal amp, no damage)'). Expanding those four slots into rotation entries using the cached wiki text gives: (1) R World Ender stat buff, (2) Q first cast, (3) Q second cast, (4) Q third cast, (5) W Infernal Chains initial hit, (6) W tether pull re-hit, (7) P Deathbringer Stance empowered auto. 7 entries.",
+      "corroboration": "data/champions.json Aatrox Q carries three separate leveling rows (First/Second/Third Cast Damage) and W carries both a 'Physical Damage' row and a 'Total Damage' row that is exactly 2x it -- i.e. the cached data itself enumerates 3 Q entries and 2 W entries."
+    },
+
+    "step_2_are_the_ledgers_empty": {
+      "claim": "No. At least four of the seven entries carry a dependency that is explicit in the cached wiki text, and under the buffs-first edge six of seven do.",
+      "edges": [
+        {
+          "entry": "Q second cast",
+          "edge": "requires Q first cast",
+          "evidence": "data/champions.json Aatrox Q effect[0]: 'Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. If Aatrox does not recast the ability within 4 seconds of the previous cast, it goes on cooldown.' effect[1]: 'Each subsequent cast gains 25% more damage.'",
+          "numeric_check": "Second Cast Damage / First Cast Damage = [12.5,31.25,50,68.75,87.5] / [10,25,40,55,70] = 1.25 at every rank. The cast-index escalation is in the data, so the ordering edge is load-bearing, not cosmetic."
+        },
+        {
+          "entry": "Q third cast",
+          "edge": "requires Q second cast",
+          "numeric_check": "Third / First = [15,37.5,60,82.5,105] / [10,25,40,55,70] = 1.50 at every rank; and First+Second+Third = [37.5,93.75,150,206.25,262.5] exactly equals the cached 'Maximum Non-Minion Non-Sweetspot Damage' row -- the three casts are a chain, not three independent entries."
+        },
+        {
+          "entry": "W tether pull re-hit",
+          "edge": "requires the W initial hit to land on a champion or large monster AND the tether to survive 1.5 s",
+          "evidence": "data/champions.json Aatrox W effect[1]: 'If this hits an enemy champion or large monster, a tether is formed between the target and the ground beneath them for 1.5 seconds'; effect[2]: 'If the tether is not broken by the end of its duration, the target is dealt the same physical damage again and pulled to the center of the area.'",
+          "numeric_check": "W 'Total Damage' [60,80,100,120,140] / 'Physical Damage' [30,40,50,60,70] = 2.0 at every rank -- the total row exists only because of the conditional second instance."
+        },
+        {
+          "entry": "P Deathbringer Stance empowered auto",
+          "edge": "its availability is driven by the rest of the rotation's hits",
+          "evidence": "data/champions.json Aatrox P effect[1]: 'Whenever Aatrox hits at least one enemy champion or large monster with a basic attack on-hit or an ability, Deathbringer Stance's current cooldown is reduced by 2 seconds, doubled to 4 if he hits with the Sweetspot of The Darkin Blade.' The 22 s -> 17.76 s (level-scaled) P cooldown in the cached data is therefore a function of the Q/W cast schedule, not a constant."
+        },
+        {
+          "entry": "Q1/Q2/Q3, W initial, W pull, P (all damage entries)",
+          "edge": "buffs-first: all damage depends on World Ender's bonus AD when R precedes them",
+          "evidence": "data/champions.json Aatrox R effect[2]: 'During World Ender, Aatrox gains bonus attack damage...' with leveling row 'Bonus Attack Damage' = 20/30/40 % AD. data/worklists/f2-task.md names this exact edge as one of the ten verified seed combos: 'buffs first (... Aatrox R AD amp before damage ...)' and lists 'Aatrox (R->damage)' in the first combo batch. A dependency ledger that omits the very edge the resolver's own seed table cites as Aatrox's rationale is empty by omission."
+        }
+      ],
+      "roster_coupled_edges": [
+        {
+          "source": "Imperial Mandate (data/items.json id 4005, passive 'Command')",
+          "quote": "Immobilizing an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect.",
+          "why_it_binds_Aatrox": "Aatrox supplies the immobilize himself -- Q effect[1]: enemies in the Sweetspot 'are also knocked up for 0.25 seconds'; W effect[2]: the target is 'pulled to the center of the area'. So in this roster every Aatrox rotation entry after the first Sweetspot/pull sits inside a +7% all-source amp window. That is an apply->consume edge of exactly the kind the resolver is specified to detect."
+        },
+        {
+          "source": "Abyssal Mask (data/items.json id 8020, passive 'Unmake')",
+          "quote": "Enemy champions within 700 units of you become cursed, causing them to receive 12% increased magic damage from all sources.",
+          "why_it_binds_Aatrox": "Aatrox's P is his only magic-damage source (data/champions.json Aatrox P damageType = MAGIC_DAMAGE, 'bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health'), so the Curse amplifies rotation entry 7 and nothing else. The scenario is named for these two effects; an all-empty ledger asserts the rotation is independent of the exact two couplings the scenario exists to exercise."
+        }
+      ]
+    },
+
+    "step_3_correct_value": {
+      "shape": "seven ledgers (cardinality of the new value is correct)",
+      "contents": {
+        "1_R_world_ender": "[] -- correct as empty; R is the setup, it depends on nothing",
+        "2_Q_first_cast": "[R bonus AD 20/30/40% AD]",
+        "3_Q_second_cast": "[Q first cast (1 s static inter-cast CD, 4 s recast window, x1.25 escalation), R bonus AD]",
+        "4_Q_third_cast": "[Q second cast (x1.50 vs first), R bonus AD]",
+        "5_W_initial": "[R bonus AD]",
+        "6_W_tether_pull": "[W initial hit on champion/large monster, tether unbroken for 1.5 s, R bonus AD]",
+        "7_P_empowered_auto": "[P cooldown reduction 2 s per ability/auto hit and 4 s per Q Sweetspot hit, Abyssal Curse +12% magic amp, R bonus AD]"
+      },
+      "plus_scenario_level": "Imperial Mandate 'Vulnerable' (+7% damage from all sources, 4 s, extended by subsequent immobilizes) applies to entries 2-7 once Aatrox's Q Sweetspot knockup or W pull lands.",
+      "summary": "1 of 7 ledgers is legitimately empty; 6 of 7 are not. Under the narrowest reading (intra-rotation apply->consume only, ignoring the buffs-first and roster couplings) it is still 3 of 7 non-empty (Q2, Q3, W pull) plus P's schedule-dependent cooldown."
+    }
+  },
+
+  "verdict_reasoning": {
+    "new_value_correct": "rejected -- 'seven empty ledgers' is an affirmative claim that Aatrox's rotation carries no dependency edges. The cached wiki text contradicts that in four independent places (Q cast chain, W tether re-hit, P cooldown-on-hit, R bonus AD), and the scenario's own two named items add two more couplings. The cardinality 7 is right; the contents are not.",
+    "old_value_correct": "rejected -- <absent> is not the correct value either. The receipt is specified to expose why the order is what it is (data/worklists/f2-task.md deliverable 4: a rotation receipt '{order, rationale}' 'so the UI can show WHY the order is optimal'; f3-task.md deliverable 1a/1c requires detecting setup/consume edges and citing the specific atoms). A dependency ledger belongs in that receipt; omitting it entirely is a gap, not a correct value.",
+    "both_wrong": "selected -- the change moved the leaf from 'no claim' to 'a wrong claim'. The new shape (seven ledgers, one per rotation entry) is the right container and is an improvement in structure, but its contents assert independence that the source data refutes. Neither <absent> nor all-empty equals the computed correct value."
+  },
+
+  "severity_note": "This is a receipt/explanatory leaf, not a damage number. Nothing here implies the scenario's damage totals are wrong -- the golden diff for this leaf is structural. The defect is that the dependency ledger is emitted unpopulated, which is the failure mode CLAUDE.md rule 5 warns about in the numeric domain: a silently-empty accessor reads as 'nothing here' rather than failing closed. If the ledger cannot yet be populated, an empty ledger should be distinguishable from a computed-empty one.",
+
+  "sources": [
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.Q[0].effects[0].description",
+      "quote": "Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. If Aatrox does not recast the ability within 4 seconds of the previous cast, it goes on cooldown."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.Q[0].effects[1].description",
+      "quote": "Active: Aatrox performs a strike with his greatsword for each of the three casts, dealing physical damage to enemies hit within an area. Enemies hit within a Sweetspot of the area take 75% bonus damage and are also knocked up for 0.25 seconds. Each subsequent cast gains 25% more damage."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.Q[0] leveling rows",
+      "quote": "First Cast Damage 10/25/40/55/70 (+60/67.5/75/82.5/90% AD); Second Cast Damage 12.5/31.25/50/68.75/87.5; Third Cast Damage 15/37.5/60/82.5/105; Maximum Non-Minion Non-Sweetspot Damage 37.5/93.75/150/206.25/262.5"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.W[0].effects[1..2].description",
+      "quote": "If this hits an enemy champion or large monster, a tether is formed between the target and the ground beneath them for 1.5 seconds, during which they are revealed. / If the tether is not broken by the end of its duration, the target is dealt the same physical damage again and pulled to the center of the area."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.W[0] leveling rows",
+      "quote": "Physical Damage 30/40/50/60/70 (+40% AD); Total Damage 60/80/100/120/140 (+80% AD)"
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.P[0].effects[0..1].description",
+      "quote": "Innate: Periodically, Aatrox empowers his next basic attack to gain 50 bonus range and deal bonus magic damage equal to 4% : 10% (based on level) of the target's maximum health... / Whenever Aatrox hits at least one enemy champion or large monster with a basic attack on-hit or an ability, Deathbringer Stance's current cooldown is reduced by 2 seconds, doubled to 4 if he hits with the Sweetspot of The Darkin Blade."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Aatrox.abilities.R[0].effects[2].description + leveling",
+      "quote": "During World Ender, Aatrox gains bonus attack damage, has 5% increased size, is ghosted, and receives increased self-healing from all sources. / Bonus Attack Damage 20/30/40 % AD"
+    },
+    {
+      "file": "data/items.json",
+      "path": "4005 Imperial Mandate .passives[Command].branches[0]",
+      "quote": "{{tip|Immobilize|Immobilizing}} an enemy champion marks them as ''Vulnerable'' for 4 seconds, increasing the damage they take from all sources by 7%. Subsequent immobilizes against a target extend the duration of the effect."
+    },
+    {
+      "file": "data/items.json",
+      "path": "8020 Abyssal Mask .passives[Unmake].branches[0]",
+      "quote": "Enemy champions within {{tt|700 units|center to edge}} of you become cursed, causing them to receive {{as|12% increased magic damage|magic damage}} from all sources."
+    },
+    {
+      "file": "data/champion-audit/batch-e9-1.json",
+      "path": "Aatrox",
+      "quote": "slots: {P: modeled, Q: modeled, W: modeled, E: out_of_scope, R: modeled}"
+    },
+    {
+      "file": "data/worklists/f2-task.md",
+      "path": "deliverables 1, 3, 4",
+      "quote": "(d) buffs first (Aatrox R AD amp before damage, Vladimir R before burst, Jhin R after setup) ... Aatrox (R->damage) ... The /api/calculate response gains a 'rotation' receipt: {order: [Q,E,E,E,...], rationale: \"Q poisons, E consumes\"} so the UI can show WHY the order is optimal."
+    },
+    {
+      "file": "data/worklists/f3-task.md",
+      "path": "deliverable 1a/1c",
+      "quote": "DETECT setup/consume edges automatically from the ability rows + module metadata ... EMIT a rationale string citing the specific atoms that drove the order"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 5, formula-audit table",
+      "quote": "| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | EXACT | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast |",
+      "note": "Consulted for a dependency/ledger formula; docs/math-foundations.md defines no `dependencies` ledger, so the leaf has no formula anchor there. The computation above rests on the cached wiki text."
+    }
+  ],
+
+  "verdict": "both_wrong"
+}

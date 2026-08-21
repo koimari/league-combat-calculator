@@ -7,9 +7,11 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .healing_contract import declare_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import extract_cooldown, extract_named, on_hit_entry, simple_damage
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -54,14 +56,21 @@ def _taste_their_fear(ctx: SlotCtx) -> dict[str, Any] | None:
             "Isolated target branch is explicit; nearby-allies state disables "
             "the 210% branch."
         ),
+        "event_order_certified": "single_hit",
     }
 
 
 SLOTS = {
     "P": _unseen_threat,
     "Q": _taste_their_fear,
-    "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
-    "E": simple_damage(attr="Physical Damage", dmg_type="physical"),
+    # Each of Q/W/E deals its packet once, at the cast: the boundary claim
+    # that carries MODULE_CC's reviewed answers into the event ledger.
+    "W": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
+    ),
+    "E": simple_damage(
+        attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
+    ),
     "R": lambda ctx: no_damage(
         ctx,
         name="Void Assault",
@@ -87,17 +96,22 @@ OPTIONS = [
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kha'Zix")
-parse_abilities = build_parser(SLOTS, "Kha'Zix")
+
+# Cached kit review: the damaging slots this module prices are the
+# UNevolved abilities — Taste Their Fear slashes, Void Spike explodes and
+# Leap lands, none of them applying control.  The kit's two slows are the
+# evolution bonus (Evolved Spike Racks) and the Unseen Threat empowered
+# attack, neither of which is a slot packet this module emits.
+MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
+
+parse_abilities = build_parser(SLOTS, "Kha'Zix", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "R" else "no_damage") for slot in "PQWER"
 }
-REVIEW_STATUS = "reviewed_module"
-
-from .. import healing_helpers as _healing  # pylint: disable=wrong-import-position
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument,wrong-import-position
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -111,17 +125,14 @@ def derive_self_healing(
     w = _healing._ability(champion_data, "W")
     w_rank = _healing._rank(ability_damages, "W")
     w_heal = _healing.extract_named(w, "Heal", w_rank, champion_stats)
-    for event in _healing._attributed_events(
-        damage_events, lambda source, _event: source == "W"
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
+        event = payment.event
         _healing._heal_from_damage(
             healing, event, w_heal, "Void Spike", link_to_damage=False
         )
     return sorted(healing, key=lambda event: (event["time"], event["source"]))
 
-
-from .healing_contract import (
-    declare_healing_rule,
-)  # pylint: disable=wrong-import-position
 
 SELF_HEALING_RULE = declare_healing_rule("Kha'Zix", derive_self_healing)

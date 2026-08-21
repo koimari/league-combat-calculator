@@ -1,0 +1,123 @@
+{
+  "receipt_id": "oracle-C6-leaf66",
+  "runbook": "R-18 / R-19 independent oracle",
+  "scenario": "syndra_custom_order_120",
+  "leaf_path": "fights/manual_target/timeline_coverage/exact_sources[3]",
+  "old_value": "W",
+  "new_value": "R",
+  "verdict": "new_value_correct",
+  "isolation": {
+    "evidence_tree": "git archive --format=tar HEAD data docs/math-foundations.md | tar -x -C <scratch>",
+    "scratch_dir": "C:/Users/skywa/AppData/Local/Temp/claude/C--Users-skywa-Desktop-claude-code-merged-calculator/a5d13eb4-3688-46ad-b045-6ef563ce6f18/scratchpad/oracle-c6",
+    "not_read": [
+      "src/",
+      "tests/",
+      "scripts/",
+      "docs/plans/",
+      "docs/receipts/",
+      "git history / diff / plan"
+    ],
+    "note": "The scenario definition itself lives outside the permitted evidence tree, so the cast/option wiring was reconstructed from the scenario name plus the cached wiki text and the cached champion-audit records under data/."
+  },
+  "independent_computation": {
+    "step_1_scenario_decoding": {
+      "claim": "'_120' is the Syndra champion option 'splinters' set to its maximum, 120 Splinters of Wrath (not a level, not a duration).",
+      "support": [
+        "data/champions.json Syndra P Transcendent: 'Syndra collects Splinters of Wrath ... stacking up to 120 times.' and 'At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%.' -- 120 is the documented cap of exactly one Syndra quantity.",
+        "data/champion-audit/batch-6.json (Syndra): 'splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff'.",
+        "data/champion-audit/batch-e9-1.json (Syndra): 'E3 implemented the Transcendent splinter system (splinters option: 120 -> 1.15x AP buff, 40+ Q charges via Q2 slot, 60+ W true damage)'."
+      ]
+    },
+    "step_2_damage_source_set_at_120_splinters": {
+      "sources": ["Q", "Q2", "W", "E", "R"],
+      "derivation": [
+        "Q Dark Sphere - damaging active: 'Syndra conjures a Dark Sphere at the target location ... dealing magic damage to nearby enemies' (90/125/160/195/230 +70% AP).",
+        "Q2 - the SECOND Dark Sphere charge. Wiki Transcendent Bonus on Q: 'Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2.' 120 >= 40, so two Q casts are available inside one rotation and the second charge is a distinct timeline source (the audit calls it the 'synthetic Q2 (2nd charge)' slot: module_slots.modeled = [P, Q, Q2, W, E, R]).",
+        "W Force of Will recast - 'Syndra throws the grabbed target ... dealing magic damage' (70/100/130/160/190 +65% AP), plus at 60+ splinters '12% (+ 2% per 100 AP) bonus true damage' -- still one source named W.",
+        "E Scatter the Weak - 'deals magic damage to enemies hit' (60/95/130/165/200 +60% AP). Its 80-splinter Transcendent Bonus is scatter angle + 70% slow, i.e. utility only: it adds no new damage source.",
+        "R Unleashed Power - 'she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit' (80/120/160 +20% AP per sphere). Its 100-splinter Transcendent Bonus is an execute below 15% max health, documented as not modeled ('the fight target never dies'), so it adds no new source either.",
+        "P Transcendent contributes only the +15% AP buff at 120 splinters -- a stat buff, not a damage source, so it is not an entry in the source list."
+      ],
+      "castability_check": "Full 120-splinter rotation mana cost = Q 60 + Q2 60 + W 100 + E 50 + R 100 = 370. Syndra mana at level 18 = 480 + 40 x 17 x (0.7025 + 0.0175 x 17) = 1160 (level 20: 1266.6), and P additionally restores 20:255 (based on level) mana per collected Splinter. The five-cast rotation including the second Dark Sphere charge is comfortably castable, so nothing suppresses Q2."
+    },
+    "step_3_index_resolution": {
+      "list_under_test": ["E", "Q", "Q2", "R", "W"],
+      "index_3": "R",
+      "reasoning": "timeline_coverage partitions the fight's damage sources into exact_sources (authored event timing) vs coarse_sources (no authored timing) -- see data/worklists/e9-bis-a-task.md ('timeline_coverage complete==true, coarse_sources==[]') and data/worklists/e9-bis-b-task.md ('coarse sources with no authored event timing'). Every Syndra slot is an authored, sourced single-hit/multi-sphere event, so all five damage sources land in exact_sources and none in coarse_sources. Ordering the source list canonically (ascending) gives ['E','Q','Q2','R','W'], whose element 3 is 'R'.",
+      "old_value_explanation": "The old leaf value 'W' is exactly what the same list yields when the second Dark Sphere charge is missing: sorted(['Q','W','E','R']) = ['E','Q','R','W'], element 3 = 'W'. The old snapshot therefore encodes a Syndra timeline at 120 splinters that never fired the 40-splinter Q charge -- the precise mechanic the '_120' scenario exists to exercise. Adding the wiki-mandated Q2 source shifts element 3 from 'W' to 'R', which is the observed change.",
+      "cast_order_cross_check": "Under the alternative reading that exact_sources is in cast order rather than sorted order, the answer is still 'R' for any ultimate-last Syndra rotation (Q, W, E, R / E, Q, W, R / Q, E, W, R all put R at index 3). The only cast-order shapes that put W at index 3 require the ultimate to be cast before W, or require a non-damaging P entry to be occupying index 0 -- and in the latter case removing that spurious entry is itself the correct fix. Both readings converge on 'R'."
+    }
+  },
+  "sources_quoted": [
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[0].description",
+      "quote": "Innate: Syndra collects Splinters of Wrath that enhance each of her abilities based on the number of them collected, stacking up to 120 times."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.P[0].effects[2].description",
+      "quote": "At 120 Splinters of Wrath, Syndra achieves Transcendence, increasing her ability power by 15%."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[1].description",
+      "quote": "Transcendent Bonus: Collecting 40 Splinters of Wrath causes Syndra to periodically stock a Dark Sphere charge, up to a maximum of 2."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.Q[0].effects[0].description",
+      "quote": "Active: Syndra conjures a Dark Sphere at the target location that appears after a 0.6-second delay, dealing magic damage to nearby enemies."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.W[0].effects[2].description",
+      "quote": "Recast: Syndra throws the grabbed target towards the target location ... dealing magic damage to them and nearby enemies once they land."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.E[0].effects[2].description",
+      "quote": "Transcendent Bonus: Collecting 80 Splinters of Wrath enhances Scatter the Weak to have an increased scatter angle and slow enemies hit by 70% for 1.25 seconds ..."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[1].description",
+      "quote": "Active: Syndra conjures 3 Dark Spheres and additionally grabs up to 4 nearby live ones. Afterwards, she barrages the target enemy champion with all collected Dark Spheres, each dealing magic damage upon hit."
+    },
+    {
+      "file": "data/champions.json",
+      "path": "Syndra.abilities.R[0].effects[3].description",
+      "quote": "Transcendent Bonus: Collecting 100 Splinters of Wrath enhances Unleashed Power to execute the target if it would damage them to below 15% of their maximum health."
+    },
+    {
+      "file": "data/champion-audit/batch-6.json",
+      "path": "Syndra.module_slots / Syndra.gap_summary",
+      "quote": "modeled = SLOTS keys incl. synthetic Q2 (2nd charge). P = 120-splinter +15% total AP BUFF. ... splinters option (0-120) gates Q2 second charge, W 60-splinter true-damage (12%+2%/100 AP), P 120-splinter +15% AP buff; R reads 'Magic Damage per Sphere' x user-set sphere count. The one damage.execute atom (R at 100 splinters ...) is explicitly documented as not modeled."
+    },
+    {
+      "file": "data/worklists/e9-bis-a-task.md",
+      "path": "line 9",
+      "quote": "Verify with: /api/calculate (timeline_coverage complete==true, coarse_sources==[]) ..."
+    },
+    {
+      "file": "data/worklists/e9-bis-b-task.md",
+      "path": "line 7",
+      "quote": "EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES ... coarse sources with no authored event timing."
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 5, formula-audit table row 'Ability rotation casts'",
+      "quote": "shared-timeline renewal schedule; cast starts within window | EXACT | ... R single-cast"
+    },
+    {
+      "file": "docs/math-foundations.md",
+      "path": "Section 1.1",
+      "quote": "each cast occupies its sourced cast time, an ability recasts when its effective cooldown has elapsed and no other cast is in progress, and a cast counts when it starts within the window (_schedule_shared_casts) ... resolved greedily by cast order."
+    }
+  ],
+  "confidence": "high on the domain fact (at 120 Splinters Syndra has two Dark Sphere charges, so a second Q damage source belongs in the timeline and 'W' cannot be the fourth exact source); medium-high on the exact index mechanics, since the scenario definition and timeline_coverage implementation are outside the permitted evidence tree. Both the sorted-list reading and the cast-order reading of exact_sources land on 'R'.",
+  "caveats": [
+    "The scenario's literal cast order and champion_options could not be read under runbook isolation; the decoding of 'custom_order_120' rests on the Syndra option surface documented in data/champion-audit/*.json plus the wiki text.",
+    "Only the leaf's categorical value was checked. No numeric damage total in the same subtree was verified by this receipt."
+  ]
+}

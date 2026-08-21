@@ -2,11 +2,10 @@
 
 Operating procedure for a League of Legends patch day. This turns the P3
 automation (`scripts/patch_regression.py`, `scripts/patch_update.py`,
-`data/staleness.json`, `scripts/issue_gate.py`) into a repeatable,
-SLA-bound operating procedure.
+`data/staleness.json`) into a repeatable, SLA-bound operating procedure.
 
 Read `architecture.md` for the module map and the `/patch-update` skill
-(`.agents/skills/patch-update/SKILL.md`) for the audit-report interpretation
+(`.claude/skills/patch-update/SKILL.md`) for the audit-report interpretation
 detail this runbook summarizes.
 
 ## When this runs
@@ -97,7 +96,7 @@ What `run` does:
    - **Registered champions** — `NEEDS REVIEW` (numeric diff) vs
      `text-only`.
    - **Configured items** — same flags, plus `NOTE: code-owned values` when
-     `item_effects._OFFLINE_ITEM_EFFECTS` holds values the wiki does not
+     `item_effects._REFERENCE_ITEM_EFFECTS` holds values the wiki does not
      update (verify by hand against the new wiki text).
    - **Shop delta** — net-new / removed items; removed IMPLEMENTED items are
      flagged `** IMPLEMENTED — code must be updated **`.
@@ -108,24 +107,35 @@ What `run` does:
      wiki; the run stops there until each entry is recorded in `item_source`
      (`APPROVED_BRANCH_REMOVALS` / `ACKNOWLEDGED_SOURCE_CONFLICTS` /
      `OPEN_SOURCE_CONFLICTS`).
+   - **Item economics** — `BLOCKING` when `data/economics-sourced.json` is
+     pinned to another DDragon release than the cache, an ordinary item has
+     no sourced sell row, or a shop total disagrees with the cache without a
+     reviewed entry in `refresh_economics_data.ACKNOWLEDGED_TOTAL_DIVERGENCES`.
+     (Between steps 2 and 3 the run already refreshed the file from DDragon
+     for the release the new cache pins — `scripts/refresh_economics_data.py`,
+     the file's only writer; `economy.py` prices every purchase plan from it.
+     DDragon lagging the patch fails the run: re-run once it has published.)
 4. **Rebuilds the static catalogues** the UI fetches at runtime
    (`scripts/build_ability_catalog.py`, `scripts/build_effect_catalog.py`,
    `scripts/build_receipts.py`).
    `static/bis-profiles.json` is NOT rebuilt by the script — it needs the
    Axword Meraki sibling repo (`lol-strength-analysis`); rebuild by hand
    (`python scripts/build_bis_profiles.py`) if its wiki inputs moved.
-5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, and
-   the staleness gate (`patch_regression check`) — each fails closed and
-   aborts the run — then pytest, golden compare (diffs printed — expected
-   after a real patch), and re-captures the golden baseline ONLY if pytest is
-   green. If pytest is red, hand-validated expectations drifted — fix them
-   first (Step 4).
+5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, the
+   staleness gate (`patch_regression check`), and the coverage census
+   (`coverage_census.py run --output docs/coverage-census.json`, ~10 min; it
+   refreshes its receipt and fails on a frontier entry no
+   `docs/coverage-residue.json` row acknowledges or a row that no longer
+   reproduces) — each fails closed and aborts the run — then pytest, golden
+   compare (diffs printed — expected after a real patch), and re-captures the
+   golden baseline ONLY if pytest is green. If pytest is red, hand-validated
+   expectations drifted — fix them first (Step 4).
 
 Notes:
 
 - `FAILURE TO PARSE MODIFIER` spam during the pull is normal lolstaticdata
   noise; only `Skipped N` summary lines mean data was dropped. Compare new
-  spam against the known-degraded list in `Agents.md`.
+  spam against the known-degraded list in `CLAUDE.md`.
 - Re-print the audit later without re-pulling:
   ```bash
   python scripts/patch_update.py audit
@@ -185,8 +195,8 @@ For EVERY stale flag, pick exactly one of these outcomes:
   `data/gamefiles/` and the patch notes, then re-run the regression so the
   flag flips to false.
 - **Code-owned values** (`NOTE: code-owned values` in the audit): update
-  `item_effects._OFFLINE_ITEM_EFFECTS` by hand from the new wiki text
-  (`Agents.md` rule 5 — no literal fallbacks at call sites; missing keys must
+  `item_effects._REFERENCE_ITEM_EFFECTS` by hand from the new wiki text
+  (`CLAUDE.md` rule 5 — no literal fallbacks at call sites; missing keys must
   raise).
 - **Champion modules with hand-validated expectations**: update
   `tests/test_<champion>.py` with cited old → new values, and update the
@@ -197,9 +207,10 @@ For EVERY stale flag, pick exactly one of these outcomes:
 ### B. Boundary-documented (marked, not modeled)
 
 - The flagged value is deliberately out of scope (e.g. a known-degraded wiki
-  parse listed in `Agents.md`, or a mechanic the module declares out of
+  parse listed in `CLAUDE.md`, or a mechanic the module declares out of
   scope). Record the boundary where it lives:
-  - Champion module: `MODULE_COVERAGE` entry + `ASSUMPTIONS` line.
+  - Champion module: the slot left out of `SLOTS` (the contract derives
+    `out_of_scope`) or a declared `MODULE_COVERAGE` entry, + `ASSUMPTIONS` line.
   - Item: worklist entry or `docs/item-source-reconciliation.md` note.
 - The boundary must name the value, the patch that moved it, and why it is
   not modeled.
@@ -218,7 +229,7 @@ Triage rules of thumb:
   conversion mechanic worth modeling.
 - **Champion numeric changes**: update module + tests, re-pin.
 - **Removed item**: remove from `_ITEM_PARSE_CONFIG`,
-  `_OFFLINE_ITEM_EFFECTS`, and its tests.
+  `_REFERENCE_ITEM_EFFECTS`, and its tests.
 - **New item**: stats flow automatically; model passives via
   `/add-item-effect` (verify the exact name in `data/items.json` first —
   parser config and build scenarios use exact cached names).
@@ -228,7 +239,7 @@ net-new item.
 
 ## Step 4 — Golden re-capture, full gates, commit, push
 
-Golden semantics (`Agents.md`): after a real patch, golden diffs are
+Golden semantics (`CLAUDE.md`): after a real patch, golden diffs are
 EXPECTED; the gate is that every diff is explained in the commit.
 
 ```bash
@@ -255,12 +266,9 @@ python scripts/golden_snapshot.py capture scripts/golden_baseline.json
    `feat(patch): re-cert 16.16 — every golden diff explained in the body`
    (see commit f7e8aad for the established format).
 4. Push the patch branch and merge via the normal review flow.
-5. If the patch closes GitHub issues, gate the closures:
-   ```bash
-   python scripts/issue_gate.py check --issue <n> --commit <sha> [--deploy-sha <sha>]
-   ```
-   (per `docs/issue-closure-policy.md`: commit-addressed, merged on the
-   working branch, clean tree, gates green, deployment ancestor when known).
+5. If the patch closes GitHub issues, gate the closures per
+   `docs/issue-closure-policy.md`: commit-addressed, merged, clean tree,
+   gates green, deployment ancestor when known.
 
 ## Step 5 — Clear staleness; confirm badges disappear
 
@@ -286,7 +294,7 @@ A kit rework changes abilities, not just numbers. A number update is Step
 3-A; a rework is a full module review:
 
 1. Run the `/analyze-champion` skill's red-flag checklist (Step 4 of
-   `.agents/skills/analyze-champion/skill.md`): pet/summon secondary damage,
+   `.claude/skills/analyze-champion/SKILL.md`): pet/summon secondary damage,
    retaliation/shield damage, stat-granting abilities applied before damage
    calc, empowered-autos once per cast, passive cooldowns, recasts,
    %max/%current/%missing-HP components, unusual crit scaling, DoT tick
@@ -311,8 +319,8 @@ A kit rework changes abilities, not just numbers. A number update is Step
 1. Treat as a full re-cert of that item family (all items sharing the
    mechanic — see `/add-item-effect` and
    `docs/item-source-reconciliation.md`).
-2. Update the `item_effects` typed accessors and `_OFFLINE_ITEM_EFFECTS`; no
-   literal fallbacks at call sites (`Agents.md` rule 5).
+2. Update the `item_effects` typed accessors and `_REFERENCE_ITEM_EFFECTS`; no
+   literal fallbacks at call sites (`CLAUDE.md` rule 5).
 3. Update tests, re-run the regression, re-capture golden with explained
    diffs.
 
