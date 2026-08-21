@@ -8735,18 +8735,17 @@ def _add_rune_no_damage_receipts(state: FightState) -> None:
         state.notes.extend(effect.receipts)
 
 
-def _add_rune_stat_grant_receipts(state: FightState) -> None:
-    """Publish what every selected stat rune assumed to grant what it granted.
+def _add_rune_receipts_applied_elsewhere(state: FightState) -> None:
+    """Publish what every rune applied outside the damage walk assumed.
 
-    The grant itself is applied in ``stats.py``, before the fight; what the
-    fight owes the reader is the assumption behind it — the health share a
-    gate was priced at, the stack count a default supplied. A grant that
-    resolved silently is a number the reader cannot audit.
-
-    Both grant kinds are read here — a rune granting three channels owes the
-    same receipt a rune granting one does.
+    A stat grant lands in ``stats.py`` before the fight and a heal lands in
+    the pipeline's self-healing ledger after it; neither writes a damage
+    row, so what the fight owes the reader is the assumption behind the
+    number — the health share a gate was priced at, the stack count a
+    default supplied, the cooldown a heal was paid on. A number that
+    resolved silently is one the reader cannot audit.
     """
-    for effect in _page_effects(state, rune_effects.RUNE_STAT_GRANT_KINDS):
+    for effect in _page_effects(state, rune_effects.RUNE_RECEIPT_ONLY_KINDS):
         state.notes.extend(effect.disclosures)
 
 
@@ -12276,7 +12275,7 @@ def calculate_fight_damage(
 
     # ── Runes that book no damage, and their receipts ───────────────────
     _add_rune_no_damage_receipts(state)
-    _add_rune_stat_grant_receipts(state)
+    _add_rune_receipts_applied_elsewhere(state)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state, rotation)

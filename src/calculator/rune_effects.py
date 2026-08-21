@@ -223,6 +223,53 @@ class RuneProcEffect:
     armed: "Callable[[Mapping[str, Mapping[str, float]]], bool]" = _always_armed
 
 
+class RuneHealTrigger(Enum):
+    """Which of the fight's streams a rune heal is paid on.
+
+    The heal side's :class:`RuneTrigger`: the rune names the stream and the
+    engine owns what is in it, so a healing rune is walked by the same kind
+    of declaration a damaging one is.
+    """
+
+    #: Every damage instance the holder lands on the target, gated by the
+    #: rune's own cooldown (Taste of Blood).
+    DAMAGE_DEALT = "damage_dealt"
+    #: The takedowns the fight actually scored — the target reaching zero
+    #: health, at the instance that took it there (Triumph). None are
+    #: invented: a fight the target survives pays nothing.
+    TAKEDOWNS = "takedowns"
+
+
+@dataclass(frozen=True, slots=True)
+class RuneHealEffect:
+    """A rune that heals its holder, priced into the self-healing ledger.
+
+    The heal-side sibling of :class:`RuneProcEffect`, and deliberately the
+    same shape: a declared stream, a cooldown the engine gates on, a delay
+    the heal lands after, and one formula priced against the build. The
+    packets it produces are the ones item sustain produces — a rune heal is
+    not a different kind of heal, only a different owner.
+
+    ``amount`` reads :class:`~.item_effects.DamageInputs` because that is
+    already the shape every compiled rune formula is handed: the holder's
+    stat block, level and range class, and the target's health. Nothing in
+    it is damage-specific, and a second near-identical record for heals
+    would be one more thing to keep in step.
+    """
+
+    rune_name: str
+    trigger: RuneHealTrigger
+    cooldown_seconds: float
+    delay_seconds: float
+    amount: Callable[[DamageInputs], float]
+    disclosures: tuple[str, ...] = ()
+
+    @property
+    def source(self) -> str:
+        """The ledger label for this rune's heal packets."""
+        return display_name(self.rune_name)
+
+
 @dataclass(frozen=True, slots=True)
 class RuneNoDamageEffect:
     """A compiled rune that books no damage, and says why.
@@ -560,8 +607,16 @@ class RuneMultiStatGrantEffect:
         return amounts
 
 
-#: The two kinds that grant stats, for the walkers that treat them alike.
-RUNE_STAT_GRANT_KINDS = (RuneStatGrantEffect, RuneMultiStatGrantEffect)
+#: The kinds the damage walk carries for their *words* alone. Each applies
+#: its number somewhere else — a stat grant in ``stats.py`` before the fight,
+#: a heal in the pipeline's self-healing ledger after it — so none writes a
+#: damage row, and what the fight owes the reader is the assumption behind
+#: the number rather than the number.
+RUNE_RECEIPT_ONLY_KINDS = (
+    RuneStatGrantEffect,
+    RuneMultiStatGrantEffect,
+    RuneHealEffect,
+)
 
 
 class AmpCondition(Enum):
@@ -665,6 +720,7 @@ RuneEffect = (
     | RuneProcAmpEffect
     | RuneAbilityProcEffect
     | RuneNoDamageEffect
+    | RuneHealEffect
     | RuneStatGrantEffect
     | RuneMultiStatGrantEffect
     | RuneConditionalAmpEffect

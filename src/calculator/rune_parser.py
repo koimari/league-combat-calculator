@@ -104,7 +104,25 @@ _AS_QUANTITY_RATIO_RULES: tuple[tuple[str, re.Pattern], ...] = (
         "shield_amount_ratio",
         re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*shield amount\)"),
     ),
+    (
+        # The heal verb is part of the pattern: "70% of your maximum health"
+        # is Absolute Focus's health *gate*, and a share of maximum health
+        # is only a heal where the sentence says it heals.
+        "max_health_heal_ratio",
+        re.compile(
+            r"\{\{tip\|heals\}\} you for "
+            r"\{\{as\|([\d.]+)% of your '''maximum''' health\}\}"
+        ),
+    ),
+    (
+        "missing_health_heal_ratio",
+        re.compile(r"\{\{as\|\(\+\s*([\d.]+)% of your '''missing''' health\)"),
+    ),
 )
+# "both after a 1-second delay" — how long after its trigger a rune's payout
+# lands.  Its own rule rather than a branch of the damage delays: those read
+# a projectile's flight or a burn's tick, and this reads a payout's wait.
+_PAYOUT_DELAY = re.compile(r"after a ([\d.]+)-second delay")
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
 _STACK_DURATION = re.compile(r"apply a \{\{tip\|stacks?\}\} for ([\d.]+) seconds")
 _MAX_STACKS = re.compile(r"stacking up to (\d+) times")
@@ -952,6 +970,7 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
         or _POUNCE_DELAY.search(description)
         or _LANDING_DELAY.search(description)
         or _AFTER_DELAY.search(description)
+        or _PAYOUT_DELAY.search(description)
     )
     if delay_match:
         recorder.record("proc_delay_seconds", float(delay_match.group(1)))

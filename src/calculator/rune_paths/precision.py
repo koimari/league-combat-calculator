@@ -16,12 +16,15 @@ a declared option.
 from typing import Any, Callable, Mapping, NamedTuple
 
 from ..ability_spec import Disposition, ZeroPolicy
+from ..item_effects import DamageInputs
 from ..rune_effects import (
     AmpCondition,
     RuneAmpContext,
     RuneConditionalAmpEffect,
     RuneEffect,
     RuneFlatAmpEffect,
+    RuneHealEffect,
+    RuneHealTrigger,
     RuneMultiStatGrantEffect,
     RuneNoDamageEffect,
     RuneOption,
@@ -220,16 +223,6 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
             "read, so the amount is unknown on top of being unpriced.",
         ),
     ),
-    "Triumph": (
-        Disposition.WITHHELD,
-        "its heal and its gold both need a champion takedown, and the "
-        "simulated fight scores none",
-        (
-            "Triumph's heal reads the holder's maximum and missing health, "
-            "neither of which the pair engine tracks; its gold is not damage "
-            "and would never join a total.",
-        ),
-    ),
     "Presence of Mind": (
         Disposition.WITHHELD,
         "it restores mana or energy, and the fight's rotation is not gated by "
@@ -240,6 +233,47 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         ),
     ),
 }
+
+
+def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
+    """Compile Triumph: a share of maximum health on a champion takedown.
+
+    Its takedown is not an option and not an invention: the fight scores one
+    exactly when the target ends at or below zero health, and a fight the
+    target survives pays nothing. What the pair engine still cannot supply
+    is the *holder's* missing health, so that half of the heal is disclosed
+    rather than estimated — and the gold is not damage and never joins a
+    total.
+    """
+    name = "Triumph"
+    effects = RuneValues(name, entry.get("effects", {}))
+    max_health_ratio = effects.number("max_health_heal_ratio")
+    missing_health_ratio = effects.number("missing_health_heal_ratio")
+    gold = effects.number("flat_gold")
+
+    def amount(inputs: DamageInputs) -> float:
+        return max_health_ratio * inputs.champion_stats.get("health", 0.0)
+
+    return RuneHealEffect(
+        rune_name=name,
+        trigger=RuneHealTrigger.TAKEDOWNS,
+        # Every takedown pays; nothing gates a second one but a second kill.
+        cooldown_seconds=0.0,
+        delay_seconds=effects.number("proc_delay_seconds"),
+        amount=amount,
+        disclosures=(
+            f"{name} heals {max_health_ratio * 100:g}% of the holder's "
+            "maximum health on a takedown the fight actually scored — the "
+            "target ending at or below zero health — and nothing on a fight "
+            "the target survives. The takedown is dated at the window's last "
+            "damage instance, which is at or after the one that crossed "
+            "zero, so the heal arrives no earlier than it should.",
+            f"{name}'s other half ({missing_health_ratio * 100:g}% of the "
+            "holder's *missing* health) is withheld: the pair engine prices "
+            f"outgoing damage and carries no holder health. Its {gold:g} gold "
+            "is not damage and never joins a total.",
+        ),
+    )
 
 
 def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
@@ -342,6 +376,7 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()
     },
+    "Triumph": _compile_triumph,
     "Legend: Alacrity": _compile_legend_alacrity,
     "Legend: Haste": _compile_legend_haste,
     "Legend: Bloodline": _compile_legend_bloodline,

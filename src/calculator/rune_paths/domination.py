@@ -19,6 +19,8 @@ from ..ability_spec import Disposition, ZeroPolicy
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneEffect,
+    RuneHealEffect,
+    RuneHealTrigger,
     RuneNoDamageEffect,
     RuneOption,
     RuneOptionKind,
@@ -97,31 +99,44 @@ def _compile_cheap_shot(entry: Mapping[str, Any]) -> RuneProcEffect:
     )
 
 
-def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
-    """Compile Taste of Blood: a heal on damaging a champion, with no heal channel.
+def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneHealEffect:
+    """Compile Taste of Blood: a heal on damaging a champion, once per cooldown.
 
-    Its trigger is one the engine walks perfectly well — damaging a champion
-    on a cooldown — so what is missing is the destination, not the event: the
-    self-healing ledger is fed by champion rules and item packets, and a rune
-    has no entry into it.
+    Its trigger is one the engine already walks — damaging a champion on a
+    cooldown — so what was missing was only the destination, and the rune
+    heal channel is that: its packets join the self-healing ledger beside
+    the ones item sustain writes.
     """
     name = "Taste of Blood"
     effects = RuneValues(name, entry.get("effects", {}))
-    first, last = _level_span(name, effects)
+    base_by_level = required_leveling(name, effects)
     bonus_ad_ratio = effects.number("bonus_ad_ratio")
     ap_ratio = effects.number("ap_ratio")
-    return RuneNoDamageEffect(
+    top = RuneValues(name, entry)
+    first, last = _level_span(name, effects)
+
+    def amount(inputs: DamageInputs) -> float:
+        stats = inputs.champion_stats
+        return (
+            at_level(base_by_level, inputs.level)
+            + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
+            + ap_ratio * stats.get("ability_power", 0.0)
+        )
+
+    return RuneHealEffect(
         rune_name=name,
-        zero_policy=ZeroPolicy(
-            Disposition.WITHHELD,
-            "it heals rather than damages, and the self-healing ledger is fed "
-            "by champion rules and item packets with no rune entry point",
-        ),
+        trigger=RuneHealTrigger.DAMAGE_DEALT,
+        cooldown_seconds=top.number("cooldown"),
+        delay_seconds=0.0,
+        amount=amount,
         disclosures=(
-            f"{name} would heal {first:g} at level 1 rising to {last:g} at "
-            f"level 18, plus {bonus_ad_ratio * 100:g}% bonus AD and "
-            f"{ap_ratio * 100:g}% AP, once per cooldown; withholding it "
-            "understates survival, never the damage total.",
+            f"{name} heals {first:g} at level 1 rising to {last:g} at level "
+            f"18, plus {bonus_ad_ratio * 100:g}% bonus AD and "
+            f"{ap_ratio * 100:g}% AP, once per {top.number('cooldown'):g}s "
+            "cooldown on the fight's own damage events.",
+            f"{name} does not trigger at full health, and the pair engine "
+            "carries no holder health — so every window that lands damage is "
+            "priced, which is a ceiling on the heal rather than a floor.",
         ),
     )
 

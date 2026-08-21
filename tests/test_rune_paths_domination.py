@@ -1,11 +1,12 @@
 """Domination's minor runes: what each one prices, and what each one declines.
 
-Three of the nine reach the fight — Cheap Shot's bonus true damage on the
-impaired trigger stream, Sudden Impact's on a declared dash, and Ultimate
-Hunter's ultimate haste — and all three are pinned here against the cache and
-through the real pipeline. The other six are compiled refusals, so the test
-that matters for them is not "does it price" but "does it decline for the
-right reason, with the number it declined to price named".
+Four of the nine reach the fight — Cheap Shot's bonus true damage on the
+impaired trigger stream, Sudden Impact's on a declared dash, Taste of Blood's
+heal on the self-healing ledger, and Ultimate Hunter's ultimate haste — and
+all four are pinned here against the cache and through the real pipeline. The
+other five are compiled refusals, so the test that matters for them is not
+"does it price" but "does it decline for the right reason, with the number it
+declined to price named".
 
 The distinction is the disposition: ``WITHHELD`` is a real number this engine
 holds no channel for, ``STRUCTURAL_ZERO`` is a rune whose answer is zero.
@@ -42,9 +43,9 @@ _TIMED = {
 }
 
 
-def _inputs(*, level):
+def _inputs(*, level, bonus_ad=0.0, ap=0.0):
     return DamageInputs(
-        champion_stats={},
+        champion_stats={"bonus_attack_damage": bonus_ad, "ability_power": ap},
         level=level,
         is_melee=False,
         target_max_health=1000.0,
@@ -172,16 +173,20 @@ class TestSuddenImpact:
         assert dashed["total_damage"] == pytest.approx(1622.0, abs=0.05)
 
 
-class TestTasteOfBloodStillWaits:
-    """Row 1's third: a heal the self-healing ledger has no rune entry for."""
+class TestTasteOfBlood:
+    """Row 1's third: a heal, now that the ledger has a rune entry point."""
 
-    def test_taste_of_blood_names_the_heal_and_the_missing_destination(self):
-        """16 rising to 40, plus 10% bonus AD and 5% AP."""
+    def test_it_heals_its_cached_table_and_ratios_once_per_cooldown(self):
+        """16 rising to 40, plus 10% bonus AD and 5% AP, on a 20s cooldown."""
         effect = rune_effects.resolve_rune("Taste of Blood")
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert "self-healing ledger" in effect.zero_policy.reason
-        assert "heal 16 at level 1 rising to 40 at level 18" in effect.disclosures[0]
-        assert "10% bonus AD and 5% AP" in effect.disclosures[0]
+        assert isinstance(effect, rune_effects.RuneHealEffect)
+        assert effect.trigger is rune_effects.RuneHealTrigger.DAMAGE_DEALT
+        assert effect.cooldown_seconds == 20.0
+        assert effect.amount(_inputs(level=1)) == pytest.approx(16.0)
+        assert effect.amount(_inputs(level=18)) == pytest.approx(40.0)
+        assert effect.amount(
+            _inputs(level=18, bonus_ad=100.0, ap=200.0)
+        ) == pytest.approx(40.0 + 10.0 + 10.0)
 
     def test_the_quoted_span_is_the_cached_table_at_levels_1_and_18(self):
         """The receipt's numbers are read, not written: prove it off the cache."""
@@ -190,6 +195,24 @@ class TestTasteOfBloodStillWaits:
             pytest.approx(16.0),
             pytest.approx(40.0),
         )
+
+    def test_its_packets_join_the_self_healing_ledger(self):
+        """40 at level 18 with no items, once in a 20-second window."""
+        request = {**_TIMED, "champion": "Ahri", "minor_runes": ["Taste of Blood"]}
+        bare = calculate_payload(
+            {key: value for key, value in request.items() if key != "minor_runes"}
+        )
+        healed = calculate_payload(dict(request))
+        packets = [
+            event
+            for event in healed["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+        assert [(packet["source"], packet["amount"]) for packet in packets] == [
+            ("Taste of Blood (rune)", pytest.approx(40.0))
+        ]
+        assert healed["self_healing"] - bare["self_healing"] == pytest.approx(40.0)
+        assert healed["total_damage"] == pytest.approx(bare["total_damage"])
 
 
 class TestTheFiveUtilityRunes:
@@ -298,7 +321,7 @@ class TestUltimateHunter:
 
 class TestThePathThroughTheRealPipeline:
     def test_a_full_domination_row_prices_nothing_and_receipts_everything(self):
-        names = ["Taste of Blood", "Grisly Mementos", "Treasure Hunter"]
+        names = ["Grisly Mementos", "Treasure Hunter"]
         bare = calculate_payload(dict(_PROBE))
         with_runes = calculate_payload({**_PROBE, "minor_runes": names})
         assert with_runes["total_damage"] == pytest.approx(bare["total_damage"])
@@ -309,10 +332,10 @@ class TestThePathThroughTheRealPipeline:
                 f"{name} is not priced" in note for note in with_runes["notes"]
             ), name
 
-    def test_the_withheld_heal_reaches_the_notes_with_its_numbers(self):
+    def test_the_priced_heal_reaches_the_notes_with_its_numbers(self):
         result = calculate_payload({**_PROBE, "minor_runes": ["Taste of Blood"]})
         assert any(
-            "heal 16 at level 1 rising to 40 at level 18" in note
+            "heals 16 at level 1 rising to 40 at level 18" in note
             for note in result["notes"]
         )
 

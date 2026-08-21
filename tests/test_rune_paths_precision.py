@@ -1,18 +1,21 @@
 """Precision's minor runes: what each one compiles to, and what it costs.
 
 Precision's rows split three ways and each half of the split is pinned here.
-Row 1 pays on an event the pair engine never produces, so all three compile
-to receipted refusals. Row 2 grows with a game-long ``Legend`` counter, which
-becomes a declared option: Alacrity's attack speed, Bloodline's bonus health
-and Haste's *basic* ability haste are all real grants read through the real
-pipeline, each into the channel its own sentence names. Row 3's Coup de Grace
-is pinned in ``test_rune_paths.py`` beside the other exemplars.
+Row 1 pays on takedowns and kills: Triumph's heal is priced on the takedown
+the fight really scores, and its two row-mates pay on events the pair engine
+never produces and compile to receipted refusals. Row 2 grows with a
+game-long ``Legend`` counter, which becomes a declared option: Alacrity's
+attack speed, Bloodline's life steal and bonus health, and Haste's *basic*
+ability haste are all real grants read through the real pipeline, each into
+the channel its own sentence names. Row 3's Coup de Grace is pinned in
+``test_rune_paths.py`` beside the other exemplars.
 """
 
 import pytest
 
 from src.calculator import rune_effects
 from src.calculator.calculate import calculate_payload
+from src.calculator.item_effects import DamageInputs
 from src.calculator.rune_paths import precision
 
 # The two probe requests, each chosen so the grant under test is the only
@@ -199,13 +202,12 @@ class TestLegendHaste:
 
 
 class TestTheRowThatPaysOnATakedown:
-    """Row 1: three rewards for events one simulated fight never produces."""
+    """Row 1: Triumph's takedown the fight can score, and two it cannot."""
 
     @pytest.mark.parametrize(
         "name,phrase",
         [
             ("Absorb Life", "there is nothing to kill"),
-            ("Triumph", "the simulated fight scores none"),
             ("Presence of Mind", "not gated by a resource"),
         ],
     )
@@ -220,6 +222,68 @@ class TestTheRowThatPaysOnATakedown:
         effect = rune_effects.resolve_rune("Absorb Life")
         assert rune_effects.RUNE_EFFECTS["Absorb Life"]["effects"] == {}
         assert "the amount is unknown on top of being unpriced" in effect.receipts[1]
+
+    def test_triumph_heals_a_share_of_maximum_health_after_its_delay(self):
+        """2.5% of maximum health, one second after the takedown."""
+        effect = rune_effects.resolve_rune("Triumph")
+        assert isinstance(effect, rune_effects.RuneHealEffect)
+        assert effect.trigger is rune_effects.RuneHealTrigger.TAKEDOWNS
+        assert effect.delay_seconds == 1.0
+        assert effect.amount(_heal_inputs(health=2358.0)) == pytest.approx(58.95)
+
+    def test_triumph_s_two_unreachable_halves_are_named_with_their_numbers(self):
+        effect = rune_effects.resolve_rune("Triumph")
+        assert "5% of the holder's *missing* health) is withheld" in (
+            effect.disclosures[1]
+        )
+        assert "20 gold is not damage" in effect.disclosures[1]
+
+    def test_the_takedown_is_the_fight_s_own_or_it_does_not_happen(self):
+        """A 300-health target dies and pays 59.0; a 10000-health one does not.
+
+        No option and no invention: the takedown is the target ending at or
+        below zero health, dated at the window's last damage instance plus
+        the rune's own one-second delay.
+        """
+        request = {
+            "champion": "Ahri",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 20.0,
+            "target_armor": 100.0,
+            "target_mr": 100.0,
+            "minor_runes": ["Triumph"],
+        }
+        survived = calculate_payload({**request, "target_health": 10000.0})
+        killed = calculate_payload({**request, "target_health": 300.0})
+        assert survived["target_ending_health"] > 0.0
+        assert not [
+            event
+            for event in survived["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+        assert killed["target_ending_health"] == 0.0
+        packets = [
+            event
+            for event in killed["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+        assert [(packet["source"], packet["amount"]) for packet in packets] == [
+            ("Triumph (rune)", pytest.approx(59.0, abs=0.05))
+        ]
+        assert killed["champion_stats"]["health"] == 2358
+
+
+def _heal_inputs(*, health):
+    """A heal input carrying only the stat Triumph's formula reads."""
+    return DamageInputs(
+        champion_stats={"health": health},
+        level=18,
+        is_melee=False,
+        target_max_health=1000.0,
+        target_current_health=0.0,
+    )
 
 
 class TestTheGrantsReachTheRealPipeline:
