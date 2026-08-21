@@ -89,7 +89,7 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
             if doc is None:
                 continue
             _cite(found, where, doc.lineno, doc.value)
-            body = _span(node.body[1:])
+            body = _span(node.body[1:]) or 1  # a stub's docstring is its body
             if isinstance(node, FUNCS) and doc.end_lineno - doc.lineno + 1 > body:
                 found["long_docstring"].append(f"{where}:{doc.lineno}: {node.name}")
         funcs = [n for n in ast.walk(tree) if isinstance(n, FUNCS)]
