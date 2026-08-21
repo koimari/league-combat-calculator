@@ -1138,6 +1138,8 @@ class TestRegressionSurface:
             if "vladimir" in path.read_text(encoding="utf-8", errors="ignore").lower()
         )
         assert hits == [
+            # ci-evidence scanner cites this file as a docstring-citation fixture
+            "test_ci_evidence_parity.py",
             "test_cp10_batch_09.py",
             "test_e2_dot_3.py",
             "test_e9_corpus.py",

@@ -1050,6 +1050,8 @@ class TestRegressionSurface:
             if "zeri" in path.read_text(encoding="utf-8", errors="ignore").lower()
         )
         assert hits == [
+            # ci-evidence scanner uses this file as a calibration fixture
+            "test_ci_evidence_parity.py",
             "test_cp10_batch_10.py",
             "test_e2_dot_3.py",
             "test_e5_fix_2.py",
