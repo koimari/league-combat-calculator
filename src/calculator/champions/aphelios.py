@@ -5,12 +5,23 @@ archetype.  Q's Onslaught is represented as an attack event whose count is
 the Wiki's ``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q
 forms use the pinned packet variants.  R's initial blast and the basic-attack
 follow-up are kept separate so resistance and event ordering remain visible.
+
+Roadmap session (2026-08-21): closes the single out_of_scope slot (E).
+E ("Weapon Queue System"): ``data/champions.json`` Aphelios E carries
+``damageType: None`` and both effect rows carry an empty ``leveling`` list
+— it is a pure UI affordance ("The icon of this ability reflects the next
+weapon that is in reserve" / "Active: Aphelios receives a text prompt of
+the weapon Alune will create next"), not a weapon-cycling mechanic with an
+unbuilt option: there is no cast, no cooldown, and no HP number anywhere.
+Reclassified from out_of_scope to no_damage (an atoms-confirmed
+zero-HP-number effect), not left silently absent.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import damage_entry
 
@@ -241,7 +252,30 @@ def _r_followup_expected_crit(ctx: SlotCtx) -> float:
     )
 
 
-SLOTS = {"P": _weapon_master, "W": _phase, "Q": _q, "R": _r}
+def _weapon_queue(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: pure UI affordance — sourced zero-enemy-damage row (no_damage).
+
+    The cached E entry carries ``damageType: None`` and both effect rows
+    carry an empty ``leveling`` list — Weapon Queue System only surfaces
+    the icon/text prompt of Alune's next weapon; it has no HP number
+    against an enemy champion anywhere.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Weapon Queue System"),
+        reason=(
+            "Weapon Queue System is a pure UI affordance with no "
+            "enemy-damage attribute of its own (data/champions.json "
+            "Aphelios E carries damageType: None and both effect rows "
+            "carry an empty leveling list)."
+        ),
+    )
+
+
+SLOTS = {"P": _weapon_master, "W": _phase, "Q": _q, "R": _r, "E": _weapon_queue}
 parse_abilities = build_parser(SLOTS, "Aphelios")
 
 OPTIONS = [
@@ -309,6 +343,9 @@ ASSUMPTIONS = [
     "Severum heal with the sourced cap and duration, and the participant "
     "timeline converts heal-in-excess-of-maximum-health into a timed "
     "shield at the heal's timestamp.",
+    "E (Weapon Queue System) carries no enemy-damage attribute "
+    "(damageType: None, empty leveling list on both effects); it emits a "
+    "sourced no_damage row.",
 ]
 SOURCES = list(_packet_sources) + [
     {
@@ -322,7 +359,11 @@ SOURCES = list(_packet_sources) + [
 
 # Authoritative review metadata (issue #161).
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 

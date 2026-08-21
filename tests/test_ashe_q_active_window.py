@@ -1158,7 +1158,9 @@ class TestUnchangedBoundaries:
             "Q": "modeled",
             "W": "modeled",
             "R": "modeled",
-            "E": "out_of_scope",
+            # E (Hawkshot) closed as no_damage in roadmap session 4
+            # (vision/charge utility, zero leveling rows).
+            "E": "no_damage",
         }
         assert SOURCES[0]["revision_id"] == 4015971
 

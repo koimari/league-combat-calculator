@@ -280,8 +280,27 @@ class TestWInfernalChains:
 
 
 class TestEUmbralDash:
-    """Tests for E (Umbral Dash) — should not appear in abilities."""
+    """E (Umbral Dash) carries no enemy-damage attribute (damageType: None,
+    no leveling row on any effect) — it emits a sourced zero-damage row
+    rather than staying silently absent."""
 
-    def test_e_not_in_results(self, aatrox_data, parse_at) -> None:
+    def test_e_present_zero_damage(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(aatrox_data, 9)
-        assert "E" not in abilities
+        entry = abilities["E"]
+        assert entry["name"] == "Umbral Dash"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.aatrox import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "no_damage",
+            "R": "modeled",
+        }

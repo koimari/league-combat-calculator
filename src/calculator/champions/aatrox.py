@@ -12,17 +12,31 @@ Why each slot is non-generic:
   "Physical Damage" the classifier would find.
 - P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL
   percentage of target max health — champion-local ``_deathbringer_stance``.
-- E (Umbral Dash) is a dash with healing amp only — no damage, absent
-  from the slot map.
+- E (Umbral Dash) is a dash with healing amp only — no enemy damage of
+  its own (its heal is already priced through ``derive_self_healing``).
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
+
+Roadmap session (2026-08-21): closes the single out_of_scope slot (E).
+E (Umbral Dash): ``data/champions.json`` Aatrox E carries
+``damageType: None`` and its three effect rows are entirely non-combat
+text — "Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of
+non-persistent post-mitigation damage he deals against enemy champions"
+(the heal, already modeled by ``derive_self_healing``'s E-ratio path),
+"Active: Aatrox dashes in the target direction" (a pure position change),
+and the basic-attack-timer-reset/cast-interrupt clause (mobility/utility,
+not a combat number). No effect row carries a ``leveling`` entry at all —
+there is no enemy-damage attribute anywhere on this ability to model.
+Reclassified from out_of_scope to no_damage (an atoms-confirmed
+zero-HP-number effect on the enemy side), not left silently absent.
 """
 
 import re
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -124,6 +138,31 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _deathbringer_stance.phase = ONHIT
 
+
+def _umbral_dash(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: dash + heal-amp utility — sourced zero-enemy-damage row (no_damage).
+
+    The cached E entry carries ``damageType: None`` and no effect row has a
+    ``leveling`` attribute; the passive heal (16% + 1.1% per 100 bonus
+    health of non-persistent post-mitigation damage dealt) is already
+    priced through ``derive_self_healing`` and the active dash is a pure
+    position change. Nothing here deals damage to an enemy champion.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Umbral Dash"),
+        reason=(
+            "Umbral Dash is a self-heal-amp dash with no enemy-damage "
+            "attribute of its own (data/champions.json Aatrox E carries "
+            "damageType: None and no effect row has a leveling entry); "
+            "its heal is priced through derive_self_healing."
+        ),
+    )
+
+
 OPTIONS = [
     {
         "key": "q_variant",
@@ -140,6 +179,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Assumed R is always active",
     "W always hits both initial and pull-back damage",
+    "E (Umbral Dash) carries no enemy-damage attribute (damageType: None, "
+    "no leveling row on any effect); it emits a sourced no_damage row. Its "
+    "heal is priced through derive_self_healing, not this slot.",
 ]
 
 SLOTS = {
@@ -153,6 +195,7 @@ SLOTS = {
     "Q": _darkin_blade,
     "W": simple_damage(attr="Total Damage", dmg_type="physical"),
     "P": _deathbringer_stance,
+    "E": _umbral_dash,
 }
 
 parse_abilities = build_parser(SLOTS, "Aatrox")
@@ -233,7 +276,11 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 

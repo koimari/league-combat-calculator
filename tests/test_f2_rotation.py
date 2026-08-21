@@ -45,12 +45,12 @@ _EXPECTED_ORDERS = {
     "Varus": ["Q", "E", "R", "W"],
     "Brand": ["Q", "R", "E", "W"],
     "Vladimir": ["R", "Q", "E", "W"],
-    "Aatrox": ["R", "Q", "W"],
+    "Aatrox": ["R", "Q", "W", "E"],  # E rides as no_damage (session 4)
     "Jhin": ["Q", "W", "E", "R"],
     "Annie": ["E", "R", "Q", "W"],
     "Lux": ["E", "Q", "R", "W"],
     "Zed": ["W", "E", "Q", "R"],
-    "Aphelios": ["Q", "W", "R"],
+    "Aphelios": ["Q", "W", "R", "E"],  # E rides as no_damage (session 4)
 }
 
 _RATIONALE_FRAGMENTS = {
@@ -219,7 +219,7 @@ class TestParseLevelRotations:
     def test_aphelios_weapon_q_opens_then_swap_then_r(self, champion_by_name) -> None:
         result = _run(champion_by_name["Aphelios"])
         rotation = result["rotation"]
-        assert rotation["cast_order"] == ["Q", "W", "R"]
+        assert rotation["cast_order"] == ["Q", "W", "R", "E"]
         assert rotation["setup"] == ["Q", "W"]
         assert "weapon" in rotation["rationale"].lower()
 

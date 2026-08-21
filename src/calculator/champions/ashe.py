@@ -14,16 +14,27 @@ Why each slot is non-generic:
   carries the override at the normal 1.0 AD ratio. P therefore reads
   ``ctx.results`` and must list after Q in the slot map.
 - W/R are plain attribute reads.
-- E (Hawkshot) is vision utility only and is absent from the slot map.
+- E (Hawkshot) is vision utility only, with no enemy-damage attribute
+  of its own.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
+
+Roadmap session (2026-08-21): closes the single out_of_scope slot (E).
+E (Hawkshot): ``data/champions.json`` Ashe E carries ``damageType: None``
+and neither of its two effect rows carries a ``leveling`` entry at all —
+"sends a hawk spirit to a location, granting sight ... at its destination
+for 5 seconds" and the charge-stocking clause are pure vision/utility
+text, no HP number against an enemy champion anywhere. Reclassified from
+out_of_scope to no_damage (an atoms-confirmed zero-HP-number effect), not
+left silently absent.
 """
 
 from typing import Any
 
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import extract_cooldown, extract_value, simple_damage
 
 # Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers
@@ -161,6 +172,28 @@ def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _hawkshot(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: vision utility — sourced zero-enemy-damage row (no_damage).
+
+    The cached E entry carries ``damageType: None`` and neither effect row
+    has a ``leveling`` attribute — Hawkshot grants vision along its path
+    and at its destination; it has no HP number against an enemy
+    champion anywhere.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Hawkshot"),
+        reason=(
+            "Hawkshot is pure vision utility with no enemy-damage "
+            "attribute of its own (data/champions.json Ashe E carries "
+            "damageType: None and no effect row has a leveling entry)."
+        ),
+    )
+
+
 OPTIONS = [
     {
         "key": "q_active",
@@ -195,7 +228,8 @@ ASSUMPTIONS = [
     "Q assumed active by default (4 pre-stacked Focus)",
     "Passive bonus damage from crit chance applied to all auto attacks",
     "W hits a single target (one arrow per enemy)",
-    "E (Hawkshot) is utility only and deals no damage",
+    "E (Hawkshot) carries no enemy-damage attribute (damageType: None, no "
+    "leveling row on either effect); it emits a sourced no_damage row.",
 ]
 
 SLOTS = {
@@ -203,6 +237,7 @@ SLOTS = {
     "P": _frost_shot,
     "W": simple_damage(attr="Physical Damage", dmg_type="physical"),
     "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": _hawkshot,
 }
 
 parse_abilities = build_parser(SLOTS, "Ashe")
@@ -218,6 +253,10 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"

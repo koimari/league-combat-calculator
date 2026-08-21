@@ -246,11 +246,17 @@ class TestWVolley:
 
 
 class TestEHawkshot:
-    """E: utility only, not in results."""
+    """E (Hawkshot) carries no enemy-damage attribute (damageType: None,
+    no leveling row on either effect) — it emits a sourced zero-damage row
+    rather than staying silently absent."""
 
-    def test_e_not_in_results(self, ashe_data, parse_at) -> None:
+    def test_e_present_zero_damage(self, ashe_data, parse_at) -> None:
         _, abilities = parse_at(ashe_data, 9)
-        assert "E" not in abilities
+        entry = abilities["E"]
+        assert entry["name"] == "Hawkshot"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
 
 
 class TestREnchantedCrystalArrow:
@@ -309,3 +315,16 @@ class TestFightEngineIntegration:
         )
         assert result["total_damage"] > 0
         assert "R" in result["breakdown"]
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.ashe import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "no_damage",
+            "R": "modeled",
+        }

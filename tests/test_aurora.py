@@ -168,16 +168,22 @@ class TestQTwofoldHex:
 
 
 # ---------------------------------------------------------------------------
-# W: Across the Veil (skipped — utility dash/invisibility)
+# W: Across the Veil
 # ---------------------------------------------------------------------------
 
 
 class TestWAcrossTheVeil:
-    """W deals no damage and must be absent from results."""
+    """W (Across the Veil) carries no enemy-damage attribute (damageType:
+    None, dash/invisibility/MS leveling rows only) — it emits a sourced
+    zero-damage row rather than staying silently absent."""
 
-    def test_w_absent(self, aurora_data) -> None:
+    def test_w_present_zero_damage(self, aurora_data) -> None:
         abilities = _parse_100ap(aurora_data)
-        assert "W" not in abilities
+        entry = abilities["W"]
+        assert entry["name"] == "Across the Veil"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
 
 
 # ---------------------------------------------------------------------------
@@ -329,3 +335,16 @@ class TestFightEngineIntegration:
         # Rank 5 CD 7s over 10s -> 2 casts; each cast >= 370 raw.
         assert q_row["casts"] == 2
         assert q_row["total_damage"] > 2 * 370.0
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.aurora import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }

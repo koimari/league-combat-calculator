@@ -19,17 +19,26 @@ Why each slot is non-generic:
   lets the fight engine evaluate it against the tracked target HP at
   recast time (BotRK-style decreasing-HP model).
 - W (Across the Veil) is a dash/invisibility/MS utility with zero
-  damage (JSON damageType is None) — not modeled, absent from the slot
-  map. It applies no passive stack either.
+  damage (JSON damageType is None) — sourced no_damage row, applies no
+  passive stack either.
 - E (The Weirding) and R (Between Worlds) are generic
   ``simple_damage`` reads; the slow / rift zone / Realm Hopper effects
   are utility and not modeled.
+
+Roadmap session (2026-08-21): closes the single out_of_scope slot (W).
+W (Across the Veil): ``data/champions.json`` Aurora W carries
+``damageType: None``; its three effect rows are "Invisibility Duration"
+(seconds), "Bonus Movement Speed" (%) and a cooldown-reset clause — pure
+dash/stealth/movement utility, no HP number against an enemy champion
+anywhere. Reclassified from out_of_scope to no_damage (an
+atoms-confirmed zero-HP-number effect), not left silently absent.
 """
 
 from typing import Any, Callable
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -160,6 +169,29 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _across_the_veil(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: dash/stealth/movement utility — sourced zero-damage row (no_damage).
+
+    The cached W entry carries ``damageType: None`` and its effect rows
+    ("Invisibility Duration", "Bonus Movement Speed", cooldown-reset
+    clause) are pure utility — Across the Veil has no HP number against
+    an enemy champion anywhere.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Across the Veil"),
+        reason=(
+            "Across the Veil is a dash/invisibility/movement-speed "
+            "utility with no enemy-damage attribute of its own "
+            "(data/champions.json Aurora W carries damageType: None and "
+            "no effect row carries an HP-damage leveling entry)."
+        ),
+    )
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "q_marked_enemies",
@@ -191,13 +223,16 @@ ASSUMPTIONS = [
     "per additional marked enemy selected via q_marked_enemies (default "
     "0 = single-target); each expunge bolt passing through the primary "
     "target is missing-health interpolated like the main recast",
-    "W (Across the Veil) is utility only (dash/invisibility/MS) — not modeled",
+    "W (Across the Veil) carries no enemy-damage attribute (damageType: "
+    "None, dash/invisibility/MS leveling rows only); it emits a sourced "
+    "no_damage row",
     "R rift zone / slows are utility — only the leap damage is modeled",
 ]
 
 SLOTS = {
     "P": _spirit_abjuration,
     "Q": _twofold_hex,
+    "W": _across_the_veil,
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "R": simple_damage(attr="Magic Damage", dmg_type="magic"),
 }
@@ -215,6 +250,10 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"

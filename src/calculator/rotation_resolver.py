@@ -209,7 +209,9 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # R grants bonus AD as a percentage of total AD before Q/W are priced.
     "Aatrox": ComboRule(
         champion="Aatrox",
-        order=("R", "Q", "W"),
+        # E appended 2026-08-21: Umbral Dash closed as no_damage in roadmap
+        # session 4; no_damage slots ride the order (derived-path convention).
+        order=("R", "Q", "W", "E"),
         rationale=(
             "R (World Ender) grants bonus AD as a percentage of total AD — "
             "the buff resolves before Q/W so The Darkin Blade and Infernal "
@@ -319,7 +321,10 @@ COMBO_TABLE: dict[str, ComboRule] = {
     # Q form unlocks; R fires with the weapon setup landed.
     "Aphelios": ComboRule(
         champion="Aphelios",
-        order=("Q", "W", "R"),
+        # E appended 2026-08-21: Weapon Queue System closed as no_damage in
+        # roadmap session 4; no_damage slots ride the order (derived-path
+        # convention).
+        order=("Q", "W", "R", "E"),
         rationale=(
             "The main-hand weapon's Q form opens (selected by the "
             "aphelios_main_weapon option — Calibrum marks for R, Gravitum "
