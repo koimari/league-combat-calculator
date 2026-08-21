@@ -17,10 +17,9 @@ and a flat registry would have had to guess.
 It re-runs no arithmetic.  The three streams arrive ordered, the ten objective
 aggregates arrive summed, and the target-allocation receipt arrives built --
 all folded once by the composition, because a view that adds is a view that
-can disagree with the walk it claims to project.  The two receipt fields that
-used to be *computed here behind a default* -- a wound window's end and a
-skipped recovery's overheal -- are written by the composition that annotates
-the event, and read here by name: a number a view can produce for itself is a
+can disagree with the walk it claims to project.  A wound window's end and a
+skipped recovery's overheal are written by the composition that annotates the
+event and read here by name: a number a view can produce for itself is a
 number with two producers, whatever the expression looks like.
 """
 
@@ -42,37 +41,12 @@ __all__ = ["receipt"]
 
 
 def _outcome(leaf: LeafBlock, key: str, value: float, refusal: str | None) -> None:
-    """Publish one outcome field, naming which of the two answers it is.
-
-    The three panels below publish four numbers a transition produces about
-    a subject, and until this existed every one of them went out
-    ``MEASURED`` — including on a row the walk *refused*, where the zero was
-    put there by the refusal rather than by any rule that ran.  That is the
-    campaign's own invariant broken inside the campaign's own receipt: a
-    number no rule computed, indistinguishable from a computed zero, with
-    the refusal sitting one key away as a bare string.
-
-    The verdict is :func:`~survival.outcome_state.outcome_quantity`'s, so the
-    published entry says what the write-once ledger would say about the same
-    transition; ``serialize_leaf`` remains the single writer of both the leaf
-    and its entry.  A refused row's number does not move — ``StructuralZero``
-    reads as ``0.0`` and it is only reached on a zero — so what changes is
-    what the payload *says* about it, which is exactly what the invariant
-    asked for.
-    """
+    """Publish one outcome field: a refused row's zero is declared, not measured."""
     leaf.put(key, outcome_quantity(value, refusal))
 
 
 def _refusal(event: Mapping[str, Any]) -> str | None:
-    """This row's refusal, or ``None`` if the walk priced it.
-
-    Read once per row and passed down rather than re-tested at each outcome
-    field, so a panel cannot end up publishing one of its numbers as declared
-    and the next as measured on the same refused transition.  Empty and
-    missing are the same answer: a refusal with no reason names nothing, and
-    the campaign's word for a zero with no receipt is the thing this is here
-    to remove.
-    """
+    """This row's refusal, or ``None`` if the walk priced it; empty means none."""
     reason = event.get("skipped_reason")
     return str(reason) if reason else None
 

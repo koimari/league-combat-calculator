@@ -297,13 +297,9 @@ def defensive_signature(defender: Combatant) -> tuple[Any, ...]:
 
 
 def mana_spent_heal_slot(items: Iterable[Mapping[str, Any]]) -> SustainSlot | None:
-    """The build's declared mana-spent heal, or ``None`` if it declares none.
-
-    The shape carries the damage-taken-to-resource ratio the ordered restore
-    ledger below is built from, so asking for the declaration is the same
-    question the retired ``has_catalyst`` asked by name — with the numbers
-    already attached to the answer.
-    """
+    """The build's declared mana-spent heal, or ``None``.
+    The slot carries the damage-taken-to-resource ratio the ordered restore
+    ledger below is built from."""
     return declared_sustain(
         sorted({str(item.get("name", "")) for item in items}), ManaSpentHealRule
     )
