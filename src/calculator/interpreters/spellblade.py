@@ -74,14 +74,12 @@ def spellblade_fields(
     """One spellblade's compiled numbers, stamped with *lane*.
 
     The cooldown, plus the proof that this spellblade's bases resolve.
-    Compiling here is what makes a formula's *build-time* failures — a
-    missing registry key, a basis with no reading — surface when the build
-    is made rather than on whichever proc first asks for the number.
+    Compiling here surfaces a formula's build-time failures, a missing
+    registry key or a basis with no reading, when the build is made rather
+    than on whichever proc first asks for the number.
 
-    Registered for both the pair engine and the receipt walk: the lane is the
-    only thing that differs between them, so one body is what makes "the walk
-    reads the same declaration the pair engine reads" a property of the tree
-    rather than a claim two functions could drift out of.
+    One body serves both the pair engine and the receipt walk, so the two
+    cannot drift over which declaration they read.
     """
     payload = _payload(rule)
     damage_formula.compile_formula(payload.formula, ctx)
@@ -98,17 +96,9 @@ def spellblade_fields(
 def spellblade_mechanic_id(owner: str) -> str:
     """*owner*'s spellblade mechanic id, or a stop.
 
-    What the pair engine needs to stamp the row it authors with the mechanic
-    that row previews: ``damage._add_spellblade_damage`` walks a
-    :class:`~..item_effects.SpellbladeEffect`, which carries an item name and
-    no rule id, and reading the id back off the declaration here is what keeps
-    the stamp from being a second spelling of the mechanic slug inside the
-    engine.
-
-    A stop rather than a default: an unstamped spellblade row would keep the
-    pair engine's number in every roster total *and* leave the walk pricing
-    the declaration, which is the double count this family's retirement exists
-    to make unrepresentable.
+    A stop rather than a default: an unstamped spellblade row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
     """
     rules = spellblade_rules([owner])
     if not rules:
@@ -132,10 +122,9 @@ def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 def declares_self_heal(owners: Sequence[str]) -> bool:
     """Whether the spellblade this build arms heals its holder.
 
-    Answered from the declaration alone, with no build context, and only of
-    the spellblade the build actually arms — a second, unarmed one heals
-    nobody, so counting it would make the tuple ledger refuse a fight that is
-    heal-free.
+    Answered from the declaration alone, and only of the spellblade the build
+    actually arms: a second, unarmed one heals nobody, so counting it would
+    make the tuple ledger refuse a heal-free fight.
     """
     armed = spellblade_rules(owners)[:1]
     return any(

@@ -4,27 +4,24 @@ None of these three is an amplifier and none is a defence the holder keeps.
 An execution decides whether a packet *ends the fight*; a shield bypass
 decides how much of the target's shielding the packet has to get through;
 and a deferral decides *when* the holder pays damage that has already
-happened.  Grouping them by that shared question is what lets the deferral —
-whose registry entry is tagged as a starting defence, because that is where
-the resolver builds it — stop being a name-matched branch inside the
-defensive resolver without claiming the holder took less damage.
+happened.  Grouping them by that shared question is what lets the deferral,
+whose registry entry is tagged as a starting defence because that is where the
+resolver builds it, stop being a name-matched branch inside the defensive
+resolver without claiming the holder took less damage.
 
 Three lanes, because the family really is built in three places.  The pair
 engine prices the two target-side rules, the defensive resolver builds the
-deferral schedule at the opening with every other declared defence, and — since
-this family retired off the pair engine on 2026-08-16 — the receipt walk reads
-all three declarations itself.
+deferral schedule at the opening with every other declared defence, and the
+receipt walk reads all three declarations itself.
 
-The walk lane is the odd one and umbrella Amendment P is why.  For the four
-families retired before this one an interpreter hands the walk a *price*.
-Nothing here has a price: a deferral moves damage in time, an execution ends a
-fight, and a venom resizes a barrier.  So this family's walk-side delivery is
-the program rider system and the kernel state paths that already stand —
-``program.events.Defer`` and ``Execute``, the ``SurvivalAction`` fields that
-carry them, and ``shield_ledger.ShieldPools.venom_factor`` — and what the walk
-interpreter emits is the rider or the state adjustment rather than an amount.
-Amendment C ruled that substitution legal for a rider-delivered walk half
-before any of this: a rider carries a stamp and no ``packet_source`` at all.
+The walk lane is the odd one, because nothing here has a price: a deferral
+moves damage in time, an execution ends a fight, and a venom resizes a barrier.
+So this family's walk-side delivery is the program rider system and the kernel
+state paths, ``program.events.Defer`` and ``Execute``, the ``SurvivalAction``
+fields that carry them, and ``shield_ledger.ShieldPools.venom_factor``, and
+what the walk interpreter emits is the rider or the state adjustment rather
+than an amount.  That substitution is sound because a rider carries a stamp and
+no ``packet_source`` at all.
 """
 
 from __future__ import annotations

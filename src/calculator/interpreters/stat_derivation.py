@@ -159,15 +159,12 @@ def sole_declared_derivation(
 ) -> StatSlot | None:
     """This build's one derivation of a shape that does not compose, or ``None``.
 
-    The companion to :func:`declared_stat_derivations` for the shapes whose
-    numbers are *multipliers* rather than grants.  Two holders' grants sum,
-    which is why the plural accessor returns a tuple; nothing declares whether
-    two casting trades multiply, take the strongest or apply in build order,
-    so a second holder here is a named stop rather than whichever slot sorts
-    first — the same refusal the shred and sustain slots make.
-
-    ``None`` is an answer and not a zero: no holder declares the shape, so no
-    rule ran and the number the caller would have multiplied stays as it was.
+    The companion to :func:`declared_stat_derivations` for shapes whose
+    numbers multiply rather than grant.  Nothing declares how two casting
+    trades compose, so a second holder is a named stop rather than whichever
+    slot sorts first.  ``None`` is an answer and not a zero: no holder
+    declares the shape, so the number the caller would have multiplied stays
+    as it was.
     """
     slots = declared_stat_derivations(owners, payload_type)
     if not slots:
@@ -238,8 +235,8 @@ def armor_penetration_split(owner: str, percent: float) -> tuple[float, float]:
     Returns ``(total_channel, bonus_channel)`` — the two stat-block fields the
     cached ``armorPenetration`` percentage can land in, exactly one of which
     carries it.  The item says which through its
-    :class:`~..item_behavior.PenetrationChannelRule`, so the build's stat fold
-    no longer holds a set of three item names to test membership in.
+    :class:`~..item_behavior.PenetrationChannelRule`, which the build's stat
+    fold reads.
 
     A holder with no percentage is asked no channel question: nothing to route
     means both channels are a measured zero, and refusing there would make

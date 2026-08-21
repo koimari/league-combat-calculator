@@ -3,9 +3,7 @@
 Reduction is not penetration.  Penetration is the attacker's own stat and
 cannot take a resistance below zero; a shred moves the *target's* resistance
 before penetration is applied and may take it negative.  Two items do it —
-one to armour, one to magic resistance — and until this module their two
-models lived as two unrelated typed records in the number registry, each with
-its arithmetic attached to it and neither able to say what applied a stack.
+one to armour and one to magic resistance.
 
 Here the shape is a :class:`~..item_behavior.ResistanceShredRule`, the numbers
 are live references, and the two summation models are one guarded branch
@@ -24,14 +22,11 @@ both would be picking a plausible number for a question its declaration never
 made.
 
 Two lanes, because the ramp is read in two places.  The pair engine resolves
-the cut into its own combat state, and — since this family retired off the
-pair engine on 2026-08-16 — the receipt walk reads the same declaration for
-the cross-participant packet it stages.  That second lane hands the walk no
-price, and for a reason of its own rather than ``damage_routing``'s: a shred
-is not damage, it moves the *target's* resistance before penetration is
-applied, so every number it changes belongs to some other family's packet.
-What retires the row is the walk reading this declaration instead of the
-ally-packet declaration's own second copy of the same two numbers.
+the cut into its own combat state, and the receipt walk reads the same
+declaration for the cross-participant packet it stages.  That second lane
+hands the walk no price: a shred is not damage, it moves the *target's*
+resistance before penetration is applied, so every number it changes
+belongs to some other family's packet.
 """
 
 from __future__ import annotations
@@ -83,10 +78,9 @@ def event_damage_classes(damage_type: str) -> frozenset[DamageClass]:
     """Which damage classes one engine damage-type spelling covers.
 
     Every spelling but ``mixed`` is a ``DamageClass`` value, so this is the
-    enum's own projection plus the one label that is a *pair* of classes.  It
-    exists so a declaration can say "magic damage applies a stack" and have
-    that mean the same thing as the engine's own ``in ("magic", "mixed")``
-    test, without either side re-spelling the other's vocabulary.
+    enum's own projection plus the one label that is a pair of classes.  It
+    lets a declaration say "magic damage applies a stack" and mean what the
+    engine's own ``in ("magic", "mixed")`` test means.
     """
     if damage_type == MIXED_DAMAGE_TYPE:
         return frozenset({DamageClass.MAGIC, DamageClass.PHYSICAL})
@@ -173,13 +167,7 @@ class ShredSlot:
         return int(self.value(SHRED_MAX_STACKS_FIELD))
 
     def accrues_on(self, damage_type: str) -> bool:
-        """Whether damage of this type applies a stack of this shred.
-
-        The declaration names the damage classes that apply one; a spelling
-        the engine carries as a pair of classes applies a stack when *either*
-        of them is declared, which is what makes the mixed label behave the
-        way the rotation's own ``in ("magic", "mixed")`` test always did.
-        """
+        """Whether damage of this type applies a stack of this shred."""
         declared = self._payload.typing.damage_classes
         return bool(declared & event_damage_classes(damage_type))
 
@@ -323,16 +311,12 @@ def walk_slot(  # pylint: disable=too-many-arguments
 ) -> ShredSlot | None:
     """This build's shred of one resistance, on the receipt-walk lane.
 
-    What the walk's own cross-participant emitter reads since this family
-    retired off the pair engine: the same declaration, compiled by the
-    interpreter registered in the lane the family declares, so the packet the
-    walk stages and the cut the pair engine resolves cannot be two different
-    readings of one ramp.
+    The walk's cross-participant emitter reads the same declaration the pair
+    engine resolves, compiled by the interpreter the family's declared lane
+    registers, so the packet and the cut cannot be two readings of one ramp.
 
-    ``None`` carries the same meaning it carries on the pair lane — nobody
-    declares a shred of this resistance — and the emitter treats a holder of
-    the cross-participant half with no such declaration as a stop rather than
-    as a packet with no numbers.
+    ``None`` means nobody declares a shred of this resistance, and the
+    emitter treats that as a stop rather than a packet with no numbers.
     """
     return _resolve_slot(
         owners,
