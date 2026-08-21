@@ -45,7 +45,7 @@ non-zero contribution. Galio W is the worst case: its shield has no flat
 term at all, so it was computing 0.0 outright.
 
 Why nothing caught it: ``champion_coverage`` certifies units against
-``is_supported_scaling_unit``, but only for rows it classifies as DAMAGE
+``_SIMPLE_UNITS``, but only for rows it classifies as DAMAGE
 units. Shield- and heal-strength rows are never unit-certified, so a
 missing mapping on a utility row is invisible to that gate. Widening the
 gate is out of scope for this batch (52 distinct cached units are
@@ -75,7 +75,6 @@ from src.calculator.champions.rumble import (
 )
 from src.calculator.champions.scaling import (
     _SIMPLE_UNITS,
-    is_supported_scaling_unit,
     resolve_scaling,
 )
 from src.calculator.data_fetcher import get_champion
@@ -394,7 +393,6 @@ class TestMaximumHealthAliasBlastRadius:
 
     def test_alias_is_mapped_to_self_maximum_health(self):
         assert _SIMPLE_UNITS[_ALIAS] == ("health", 100.0)
-        assert is_supported_scaling_unit(_ALIAS)
 
     def test_alias_resolves_off_champion_health_not_target_health(self):
         resolved = resolve_scaling(

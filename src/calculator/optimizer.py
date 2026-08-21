@@ -29,7 +29,6 @@ from .item_coverage import (
 )
 from .item_source import is_ordinary_sr_item
 from .loadout_rules import (
-    ITEM_EXCLUSIVITY_GROUPS,
     ITEM_TO_EXCLUSIVITY_GROUPS,
     conflicts_with_groups,
     occupied_groups,
@@ -50,11 +49,10 @@ from .timeline_coverage import (
 from .work_counters import WorkCounterSink
 
 # Item exclusivity groups — at most one item from each group per build
-# (e.g. Spellblade items are mutually exclusive in-game). This table is
-# the single source of truth: the frontend fetches it via /api/config
-# (see exclusivity_groups() below) instead of keeping its own copy.
-# Keep the old name for test imports.
-_SPELLBLADE_ITEMS = ITEM_EXCLUSIVITY_GROUPS["Spellblade"]
+# (e.g. Spellblade items are mutually exclusive in-game).  The table in
+# ``loadout_rules`` is the single source of truth: the frontend fetches it
+# via /api/config (see exclusivity_groups() below) instead of keeping its
+# own copy.
 
 
 def _ordinary_sr_items() -> list[dict[str, Any]]:

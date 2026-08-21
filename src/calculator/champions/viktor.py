@@ -39,7 +39,6 @@ from .slotlib import (
 # Discharge window (4s) are wiki Q prose; the shield base row and the
 # discharge damage are cached leveling rows read live below.
 _Q_SHIELD_DURATION_SECONDS = 2.5
-_Q_DISCHARGE_WINDOW_SECONDS = 4.0
 
 PACKET_SHA256 = "542116107f7a930a0dbae3ed0dfb602d84d0b90cb6bf86f2b4832bae1c8ad13f"
 

@@ -17,11 +17,10 @@ import math
 import re
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
+from typing import Any, Callable, Literal, Mapping, Sequence
 from . import data_fetcher, item_source
 from .state_lifecycle import (
     SourceReceipt,
-    StackRule,
     WindowGateRule,
     WindowStackGate,
 )
@@ -4617,24 +4616,6 @@ def _cached_sustain_stat(item: Mapping[str, Any], stat_key: str) -> float:
     )
 
 
-def sustain_stat_receipt(item_name: str, stat_key: str) -> dict[str, Any]:
-    """Return one typed sustain stat and its wiki source receipt.
-
-    The registry entry owns the value and the item-page revision it was
-    sourced from; a missing key raises, naming the item and key, instead of
-    letting a parser break silently change sustain.
-    """
-    return {
-        "item": item_name,
-        "stat_key": stat_key,
-        "value": sustain_effect_value(item_name, stat_key),
-        "source_url": str(required_effect_value(item_name, "source_url")),
-        "source_revision_id": int(
-            required_effect_value(item_name, "source_revision_id")
-        ),
-    }
-
-
 def grouped_sustain_stat_percent(items: list[dict[str, Any]], stat_key: str) -> float:
     """Sum one sustain stat across a build from the typed effect registry.
 
@@ -4684,15 +4665,6 @@ def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
     return any(item.get("name", "") == item_name for item in items)
 
 
-def requires_authored_control_event(items: Sequence[Mapping[str, Any]]) -> bool:
-    """Return whether a loadout has an item gated by reviewed CC metadata."""
-    return any(
-        ITEM_EFFECTS.get(str(item.get("name", "")), {}).get("everlasting_trigger_kind")
-        == "crowd_control"
-        for item in items
-    )
-
-
 # Reviewed provenance for Eclipse's stack-gated trigger.  The values
 # themselves are registry-owned (``stack_required``/``stack_window`` static,
 # ``cooldown``/``shield_*`` parser-owned from the cached item JSON); the
@@ -4735,66 +4707,6 @@ def eclipse_trigger_gate(effect: "CooldownProcEffect") -> WindowStackGate:
         )
     )
     return gate
-
-
-def force_of_nature_steadfast_rule(
-    *,
-    source: SourceReceipt | None = None,
-) -> StackRule:
-    """Build the kernel-typed Steadfast stack declaration for Force of Nature.
-
-    Every number is read through ``required_effect_value`` (registry-owned
-    statics); ``source`` names the reviewed Wiki page.  The survival kernel
-    consumes the declaration through ``ChampionDefenses`` (see
-    ``defensive_effects``); the timed stack machine itself lives in the
-    survival walk.
-    """
-    return StackRule(
-        name="Force of Nature — Steadfast",
-        max_stacks=int(
-            required_effect_value("Force of Nature", "steadfast_max_stacks")
-        ),
-        gain_per_application=1,
-        duration_seconds=float(
-            required_effect_value("Force of Nature", "steadfast_stack_duration")
-        ),
-        refresh="refresh",
-        expiry="all_at_once",
-        interval_seconds=float(
-            required_effect_value("Force of Nature", "steadfast_stack_interval")
-        ),
-        interval_key="ability_instance",
-        gain_by_kind={
-            "immobilize": int(
-                required_effect_value("Force of Nature", "steadfast_immobilize_stacks")
-            )
-        },
-        payload={
-            "bonus_magic_resistance": float(
-                required_effect_value(
-                    "Force of Nature", "steadfast_bonus_magic_resistance"
-                )
-            ),
-            "bonus_move_speed_percent": float(
-                required_effect_value(
-                    "Force of Nature", "steadfast_bonus_move_speed_percent"
-                )
-            ),
-        },
-        source=source,
-    )
-
-
-def eclipse_shield_amount(
-    items: list[dict[str, Any]], *, bonus_attack_damage: float, is_melee: bool
-) -> float:
-    """Return Eclipse's sourced shield amount for a completed pair."""
-    if not has_item(items, "Eclipse"):
-        return 0.0
-    suffix = "melee" if is_melee else "ranged"
-    base = float(required_effect_value("Eclipse", f"shield_{suffix}_base"))
-    ratio = float(required_effect_value("Eclipse", f"shield_{suffix}_bonus_ad_ratio"))
-    return max(0.0, base + ratio * float(bonus_attack_damage))
 
 
 # ---------------------------------------------------------------------------
@@ -6034,52 +5946,6 @@ def yun_tal_permanent_crit_chance(
     maximum = int(required_effect_value(item_name, f"crit_stack_max_{suffix}"))
     cap = required_effect_value(item_name, "crit_chance_cap")
     return min(float(cap), min(stacks, maximum) * float(per_stack))
-
-
-def shield_reduction_fraction(items: list[dict[str, Any]], *, is_melee: bool) -> float:
-    """Serpent's Fang Shield Reaver: fraction cut from the target's shields.
-
-    The venom does not affect magic-damage shields; the caller applies the
-    cut only to non-magic shield pools.
-
-    Args:
-        items: The attacker's item data dicts.
-        is_melee: Whether the attacker is melee (50% cut) or ranged (35%).
-
-    Returns:
-        The reduction fraction, or 0.0 without the item.
-    """
-    if "Serpent's Fang" not in _item_names(items):
-        return 0.0
-    key = "shield_reduction_melee" if is_melee else "shield_reduction_ranged"
-    return float(required_effect_value("Serpent's Fang", key))
-
-
-def serpents_fang_venom(
-    items: Iterable[dict[str, Any]], *, is_melee: bool
-) -> tuple[float, float] | None:
-    """Serpent's Fang Shield Reaver venom: ``(keep, duration)`` or ``None``.
-
-    The venom lasts ``venom_duration`` seconds and reduces shields the
-    target gains by the sourced melee/ranged fraction while it is active —
-    the returned ``keep`` is the fraction of a shield that survives (1.0
-    minus the cut), so the survival walk multiplies shield-grant amounts
-    by it.  Magic-damage shields are unaffected; callers with a magic-only
-    shield pool must not apply the cut.
-
-    Args:
-        items: The attacker's item data dicts.
-        is_melee: Whether the attacker is melee (50% cut) or ranged (35%).
-
-    Returns:
-        ``(keep_fraction, venom_duration)`` when the attacker holds
-        Serpent's Fang, else ``None``.
-    """
-    fraction = shield_reduction_fraction(list(items), is_melee=is_melee)
-    if fraction <= 0.0:
-        return None
-    duration = sustain_effect_value("Serpent's Fang", "venom_duration")
-    return max(0.0, 1.0 - fraction), max(0.0, duration)
 
 
 @dataclass(frozen=True, slots=True)

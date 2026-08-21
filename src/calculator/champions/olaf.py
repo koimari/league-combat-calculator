@@ -204,18 +204,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-# P2 Slice 9 — the Ragnarok rows that have NO channel to reach the fight
-# (game file OlafRagnarok: HasteDuration 1.0, DurationExtension 2.5, the
-# 10% size increase; the first-second MS facing/2000-unit condition is
-# prose-only, and the movement utility surface carries the amount + its 1s
-# window).  These are receipted named-unsupported — never applied.  The
-# rows that DO reach the fight (Duration 3.0, FlatAD 10/20/30 +
-# PercentTotalADAmp 0.25, Resists 10/15/20) are not restated here:
-# ``_ragnarok`` reads them live from the cache, and the cleanse + immunity
-# receipts are authored per R cast by the participant timeline.
-RAGNAROK_FIRST_SECOND_MS_WINDOW = 1.0
-RAGNAROK_SIZE_INCREASE_PERCENT = 10.0
-RAGNAROK_DURATION_EXTENSION_SECONDS = 2.5
+# The Ragnarok rows that have NO channel to reach the fight (game file
+# OlafRagnarok: HasteDuration 1.0, DurationExtension 2.5, the 10% size
+# increase; the first-second MS facing/2000-unit condition is prose-only,
+# and the movement utility surface carries the amount + its 1s window) are
+# named-unsupported — never applied.  The rows that DO reach the fight
+# (Duration 3.0, FlatAD 10/20/30 + PercentTotalADAmp 0.25, Resists
+# 10/15/20) are not restated here: ``_ragnarok`` reads them live from the
+# cache, and the cleanse + immunity receipts are authored per R cast by the
+# participant timeline.
 
 # HARDCODED: verify on patch updates — Tough It Out's 2.5s shield
 # duration and 17.5% missing-health ratio are prose/cached leveling

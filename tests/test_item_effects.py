@@ -58,7 +58,6 @@ from src.calculator.item_effects import (
     actualizer_active_seconds,
     item_state_receipts,
     validate_item_input_options,
-    shield_reduction_fraction,
     required_effect_value,
     ally_item_effect_value,
 )
@@ -1369,13 +1368,11 @@ class TestDeclaredSiblingReads:
 class TestShieldReductionFraction:
     """Serpent's Fang Shield Reaver: the fraction cut from non-magic shields."""
 
-    def test_absent_returns_zero(self) -> None:
-        assert shield_reduction_fraction([], is_melee=True) == 0.0
-
     def test_melee_and_ranged_sourced_values(self) -> None:
-        build = _build("Serpent's Fang")
-        assert shield_reduction_fraction(build, is_melee=True) == 0.50
-        assert shield_reduction_fraction(build, is_melee=False) == 0.35
+        assert required_effect_value("Serpent's Fang", "shield_reduction_melee") == 0.50
+        assert (
+            required_effect_value("Serpent's Fang", "shield_reduction_ranged") == 0.35
+        )
 
     def test_missing_key_names_item_and_key(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1384,7 +1381,7 @@ class TestShieldReductionFraction:
         broken.pop("shield_reduction_melee", None)
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Serpent's Fang", broken)
         with pytest.raises(KeyError, match="shield_reduction_melee"):
-            shield_reduction_fraction(_build("Serpent's Fang"), is_melee=True)
+            required_effect_value("Serpent's Fang", "shield_reduction_melee")
 
 
 class TestValuesSourcedFromTheCache:

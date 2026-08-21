@@ -99,8 +99,6 @@ DELIVERY_CLASSES: tuple[str, ...] = (
     DELIVERY_DAMAGE_OVER_TIME,
 )
 
-_DELIVERY_CLASS_SET = frozenset(DELIVERY_CLASSES)
-
 
 @dataclass(frozen=True, slots=True)
 class DeliveryDeclaration:

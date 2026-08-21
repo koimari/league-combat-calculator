@@ -351,20 +351,6 @@ def test_decision_receipt_field_sets():
         "use_consumed",
     }
     assert receipt["event_key"] if False else True  # event key stays internal
-    row = decision.survival_receipt(
-        heal=None, movement={"amount": 50.0, "duration": 2.0}
-    )
-    assert set(row) == set(receipt) | {"heal", "movement"}
-    assert row["movement"]["amount"] == pytest.approx(50.0)
-    use = decision.use_receipt()
-    assert set(use) == {
-        "item",
-        "uses_before",
-        "uses_after",
-        "cooldown_seconds",
-        "cooldown_source_gap",
-        "activations",
-    }
 
 
 def test_stable_event_key_is_the_decision_identity():

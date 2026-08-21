@@ -1733,7 +1733,6 @@ CAST_PROC_FORMULA_TERMS: Mapping[str, tuple[TermSchema, ...]] = {
 # Which cast-proc tag arms which of the engine's two records, and — for the
 # cooldown proc — whether its row is stamped in the fight's late phase.  The
 # tag is the registry's whole statement of the mechanic's shape.
-CAST_PROC_TAGS: frozenset[str] = frozenset({"proc", "ult_proc", "max_hp_proc"})
 LATE_PHASE_TAGS: frozenset[str] = frozenset({"max_hp_proc"})
 ULTIMATE_PROC_TAG = "ult_proc"
 

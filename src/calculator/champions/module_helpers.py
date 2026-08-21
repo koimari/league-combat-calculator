@@ -10,10 +10,10 @@ champion membership or champion-specific formulas.
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any, Callable
+from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import DAMAGE, SlotCtx, SlotParser
+from .engine import SlotCtx, SlotParser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -264,13 +264,6 @@ def source_row(
         "revision_id": revision_id,
         "revision_timestamp": revision_timestamp,
     }
-
-
-def mark_damage(parser: Callable[[SlotCtx], dict[str, Any] | None]):
-    """Annotate a local parser as a normal DAMAGE-phase slot."""
-
-    parser.phase = DAMAGE
-    return parser
 
 
 # P4: the shared Yasuo/Yone crit-conversion rule.  The cached P prose is

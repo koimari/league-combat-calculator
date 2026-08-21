@@ -641,9 +641,11 @@ class TestChargeFractions:
         # The typed cost seam: 2% of CURRENT health at fraction 0, 8% at
         # fraction 1.0, monotone between (the 4%/6% tier boundaries are
         # not sourced — AMBIGUITY 3; only endpoints are pinned here).
-        from src.calculator.champions.vladimir import E_HEALTH_COST_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_BOUNDARY_RULES,
+        )
 
-        receipt = E_HEALTH_COST_RULE.public_receipt()["health_cost"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["health_cost"]
         assert receipt["cost_percent_at_min_charge"] == pytest.approx(2.0)
         assert receipt["cost_percent_at_max_charge"] == pytest.approx(8.0)
         assert receipt["source"]["wiki"]["revision_id"] == 2864482
@@ -794,9 +796,11 @@ class TestHealthCostFreeRule:
         # when the caster's current health is below 12% of max health
         # (effects[4]); the engine has no attacker current-health input
         # today (AMBIGUITY 3), so the seam needs one.
-        from src.calculator.champions.vladimir import E_HEALTH_COST_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_BOUNDARY_RULES,
+        )
 
-        receipt = E_HEALTH_COST_RULE.public_receipt()["health_cost"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["health_cost"]
         assert receipt["free_below_fraction_of_max_health"] == pytest.approx(0.12)
 
 
@@ -833,9 +837,11 @@ class TestSlow:
         # The enemy slow: rank values for 0.5s, ONLY at fraction 1.0
         # ("charged for at least 1 second" == ramp completion); below
         # full charge the interpolated nova carries no slow.
-        from src.calculator.champions.vladimir import E_SLOW_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_BOUNDARY_RULES,
+        )
 
-        receipt = E_SLOW_RULE.public_receipt()["slow"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["slow"]
         assert receipt["slow_level_1"] == pytest.approx(40.0)
         assert receipt["slow_level_5"] == pytest.approx(60.0)
         assert receipt["duration_seconds"] == pytest.approx(0.5)
@@ -967,9 +973,11 @@ class TestSourceAndAtomReceipts:
         # default fraction, and the atom ids it is backed by — with the
         # wiki prose named as the 1s-ramp root (no atom carries it,
         # AMBIGUITY 2).
-        from src.calculator.champions.vladimir import E_CHARGE_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_CHARGE_RULE,
+        )
 
-        receipt = E_CHARGE_RULE.public_receipt()
+        receipt = TIDES_OF_BLOOD_CHARGE_RULE.public_receipt()
         assert receipt["ramp_seconds"] == pytest.approx(1.0)
         assert receipt["channel_seconds"] == pytest.approx(1.5)
         assert receipt["default_fraction"] == pytest.approx(1.0)

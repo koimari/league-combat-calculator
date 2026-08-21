@@ -15,13 +15,12 @@ merely that it dealt nothing.
 
 from typing import Any, Callable, Mapping
 
-from ..ability_spec import Disposition, ZeroPolicy
+from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneEffect,
     RuneHealEffect,
     RuneHealTrigger,
-    RuneNoDamageEffect,
     RuneOption,
     RuneOptionKind,
     RuneProcEffect,

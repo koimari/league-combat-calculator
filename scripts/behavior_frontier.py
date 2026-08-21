@@ -1329,10 +1329,6 @@ CHAMPIONS_ROOT = SRC_ROOT / "calculator" / "champions"
 
 ZERO_POLICY_ISSUE = "issue #213"
 
-# The builders that supply the declared default.  A champion entry built by
-# hand instead of through one of these carries no policy at all.
-ENTRY_BUILDERS = ("damage_entry", "simple_damage")
-
 # Keys that make a dict literal an ability entry rather than any other
 # mapping: the fight engine reads ``parts`` and the producer diagnostics
 # carry ``total_raw``.

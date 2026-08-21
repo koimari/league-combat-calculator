@@ -135,7 +135,6 @@ from src.calculator.item_coverage import item_model_coverage, target_item_model_
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
-    force_of_nature_steadfast_rule,
     item_state_receipts,
     validate_item_input_options,
 )
@@ -393,30 +392,6 @@ def test_equipping_force_of_nature_yields_exactly_400_health_55_mr_and_4_ms():
 # ---------------------------------------------------------------------------
 
 
-def test_typed_steadfast_values_return_exact_numbers():
-    rule = force_of_nature_steadfast_rule()
-    assert rule.name == "Force of Nature — Steadfast"
-    assert rule.max_stacks == MAX_STACKS
-    assert rule.gain_per_application == 1
-    assert rule.duration_seconds == pytest.approx(STACK_DURATION)
-    assert rule.refresh == "refresh"
-    assert rule.expiry == "all_at_once"
-    assert rule.interval_seconds == pytest.approx(STACK_INTERVAL)
-    assert rule.interval_key == "ability_instance"
-    assert rule.gain_by_kind == {"immobilize": IMMOBILIZE_STACKS}
-    assert rule.payload == {
-        "bonus_magic_resistance": BONUS_MR,
-        "bonus_move_speed_percent": BONUS_MS_PERCENT,
-    }
-    receipt = rule.public_receipt()
-    assert receipt["max_stacks"] == MAX_STACKS
-    assert receipt["duration_seconds"] == STACK_DURATION
-    assert receipt["interval_seconds"] == STACK_INTERVAL
-    assert receipt["gain_by_kind"] == {"immobilize": IMMOBILIZE_STACKS}
-    assert receipt["payload"]["bonus_magic_resistance"] == BONUS_MR
-    assert receipt["payload"]["bonus_move_speed_percent"] == BONUS_MS_PERCENT
-
-
 def test_steadfast_source_revision_rides_the_reviewed_source_receipt():
     """The wiki source receipt rides defensive_effects.defense_source(...)
     (code-owned, revision 4016272); the ITEM_EFFECTS registry entry itself
@@ -425,15 +400,12 @@ def test_steadfast_source_revision_rides_the_reviewed_source_receipt():
     assert ITEM_EFFECTS[ITEM_NAME]["type"] == "target_state"
     assert not ({"source_url", "source_revision_id"} & set(ITEM_EFFECTS[ITEM_NAME]))
     assert ITEM_NAME not in ITEM_INPUT_OPTIONS
-    rule = force_of_nature_steadfast_rule(
-        source=SourceReceipt(
-            label=_SOURCE.label,
-            url=_SOURCE.source_url,
-            revision_id=_SOURCE.revision_id,
-            revision_timestamp=_SOURCE.revision_timestamp,
-        )
-    )
-    source = rule.public_receipt()["source"]
+    source = SourceReceipt(
+        label=_SOURCE.label,
+        url=_SOURCE.source_url,
+        revision_id=_SOURCE.revision_id,
+        revision_timestamp=_SOURCE.revision_timestamp,
+    ).public()
     assert source["revision_id"] == SOURCE_REVISION
     assert source["url"] == "https://wiki.leagueoflegends.com/en-us/Force_of_Nature"
     assert _SOURCE.label == "Force of Nature — Steadfast"
@@ -461,12 +433,19 @@ def test_starting_defenses_resolve_the_steadfast_fields():
     assert any("Force of Nature Steadfast" in text for text in defenses.assumptions)
 
 
+def _steadfast_receipts() -> list:
+    """The live Steadfast declaration, built the way the engine builds it."""
+    return item_state_receipts(
+        [{"name": ITEM_NAME}], {}, fight_duration_seconds=10.0, is_melee=False
+    )
+
+
 def test_missing_typed_key_fails_loud_naming_item_and_key(monkeypatch):
     patched = dict(ITEM_EFFECTS[ITEM_NAME])
     del patched["steadfast_max_stacks"]
     monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
     with pytest.raises(KeyError) as excinfo:
-        force_of_nature_steadfast_rule()
+        _steadfast_receipts()
     message = str(excinfo.value)
     assert ITEM_NAME in message
     assert "steadfast_max_stacks" in message
@@ -478,12 +457,12 @@ def test_malformed_typed_values_fail_loudly(monkeypatch):
     patched["steadfast_max_stacks"] = "eight"
     monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
     with pytest.raises(ValueError):
-        force_of_nature_steadfast_rule()
+        _steadfast_receipts()
     patched = dict(base)
     patched["steadfast_stack_duration"] = None
     monkeypatch.setitem(ITEM_EFFECTS, ITEM_NAME, patched)
     with pytest.raises(TypeError):
-        force_of_nature_steadfast_rule()
+        _steadfast_receipts()
 
 
 # ---------------------------------------------------------------------------

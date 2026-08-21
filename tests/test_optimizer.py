@@ -4,7 +4,7 @@ import pytest
 
 from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.loadout_rules import exclusivity_groups
+from src.calculator.loadout_rules import ITEM_EXCLUSIVITY_GROUPS, exclusivity_groups
 from src.calculator.optimizer import (
     _evaluate_build,
     get_eligible_legendaries,
@@ -15,7 +15,6 @@ from src.calculator.optimizer import (
     get_purchase_items,
     optimize_purchase,
     item_gold,
-    _SPELLBLADE_ITEMS,
     _hill_climb,
 )
 from src.calculator.pipeline import FightParams
@@ -963,7 +962,9 @@ class TestExclusivityGroups:
             max_legendary_slots=6,
         )
         spellblades_in_build = [
-            name for name in result["items"] if name in _SPELLBLADE_ITEMS
+            name
+            for name in result["items"]
+            if name in ITEM_EXCLUSIVITY_GROUPS["Spellblade"]
         ]
         assert (
             len(spellblades_in_build) <= 1

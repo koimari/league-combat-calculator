@@ -1065,14 +1065,6 @@ class KeystoneConquerorEffect:
         """Return the source's explicit maximum-stack force table value."""
         return at_level(self.adaptive_force_max_by_level, level)
 
-    def bonus_attack_damage_at(self, level: int, stacks: int) -> float:
-        """Convert adaptive force to bonus AD for an AD adaptive page."""
-        return self.adaptive_force_at(level, stacks) * 0.6
-
-    def ability_power_at(self, level: int, stacks: int) -> float:
-        """Convert adaptive force to AP for an AP adaptive page."""
-        return self.adaptive_force_at(level, stacks)
-
     def heal_ratio(self, is_melee: bool) -> float:
         """Select the sourced melee or ranged max-stack healing ratio."""
         return self.heal_melee_ranged_ratios[0 if is_melee else 1]
@@ -2452,18 +2444,6 @@ def _validated_keystone(value: Any) -> str:
         raise ValueError(
             f"{name!r} is a minor rune, not a keystone; it belongs in " "minor_runes"
         )
-    return name
-
-
-def validate_keystone_request(value: Any) -> str:
-    """Parse a request's keystone field on its own, without a whole page.
-
-    The page validator is the fuller door; this is the same check for a
-    caller that carries only the keystone name.
-    """
-    name = _validated_keystone(value)
-    if name:
-        resolve_rune(name)
     return name
 
 
