@@ -224,9 +224,8 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
         + _interp("Minimum Magic Damage", 1) / 100.0 * float(ctx.stats["health"])
         + _interp("Minimum Magic Damage", 2) / 100.0 * float(ctx.stats["ability_power"])
     )
-    # P4: the cooldown read is atom-backed (timing.cooldown
-    # 15cbce498dc12195, [13,11,9,7,5]) — a missing/stale row raises
-    # instead of a silent 0.0.
+    # The cooldown read is the timing.cooldown atom 15cbce498dc12195,
+    # [13,11,9,7,5]: a missing or stale row raises instead of a silent 0.0.
     cooldown_atom = required_ability_atom(
         ctx.champion_name,
         champion_data,

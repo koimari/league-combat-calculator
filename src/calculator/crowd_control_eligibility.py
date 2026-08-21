@@ -180,14 +180,12 @@ def required_control_class(action: Any) -> str:
 def immunity_holder(
     pools: ShieldPools, holder_source: str, event_time: float = 0.0
 ) -> TimedShield | None:
-    """Return the EXACT immunity-holding shield ledger entry, or None.
+    """The exact immunity-holding shield ledger entry, or None.
 
     The holder is the :class:`shield_ledger.TimedShield` whose ``source``
-    equals ``holder_source``, whose remaining ``amount`` is still alive
-    (``> 1e-9`` — depletion clears immunity immediately), and whose
-    ``expires_at`` is strictly after ``event_time`` (end-exclusive —
-    expiry clears immunity immediately).  Any other shield — including a
-    general or physical pool grant from another source — never matches:
+    equals ``holder_source``, whose remaining ``amount`` is above ``1e-9``,
+    and whose ``expires_at`` is strictly after ``event_time``.  Depletion and
+    expiry each clear immunity at once, and no other shield ever matches:
     the exact Black Shield entry is the only immunity holder.
     """
     if not holder_source:
@@ -362,15 +360,11 @@ class MissingSameHitRuleError(ValueError):
 
 
 def same_hit_ordering() -> tuple[str, SourceReceipt]:
-    """Return the verified same-hit ordering rule and its receipt.
+    """The verified same-hit ordering rule and its receipt.
 
-    FAILS CLOSED (:class:`MissingSameHitRuleError`) while the ordering is
-    single-provenance.  The wiki notes statement — "negates crowd control
-    effects before any magic damage is absorbed; even if the shield is
-    broken by an enemy dealing enough damage, its associated disables
-    will not apply" — is the only local source; it is documented here for
-    the audit trail but not certified until a second provenance (Riot
-    game scripts or a Riot-published note) confirms it.
+    Raises :class:`MissingSameHitRuleError` while the ordering is
+    single-provenance: the wiki notes are the only local source, so the rule
+    stays uncertified until a second provenance confirms it.
     """
     raise MissingSameHitRuleError(
         "same-hit damage/control ordering is unverified: the wiki notes "

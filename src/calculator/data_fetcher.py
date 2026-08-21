@@ -17,12 +17,8 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 @lru_cache(maxsize=8)
 def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
-    """Parse one immutable on-disk JSON version.
-
-    ``modified_ns`` exists to make the file version part of the cache key; the
-    path alone would keep serving stale data after ``data_updater`` replaces a
-    cache file.
-    """
+    """Parse one immutable on-disk JSON version.  ``_modified_ns`` joins the
+    cache key so a file ``data_updater`` replaces is never served stale."""
     with open(data_path, "r", encoding="utf-8") as data_file:
         return json.load(data_file)
 
@@ -165,18 +161,7 @@ def fetch_rune_data(
 
 
 def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
-    """Get data for a specific champion by name.
-
-    Args:
-        name: Champion name (e.g., "Ahri").
-        data_directory: Directory where cached data is stored.
-
-    Returns:
-        Champion data dictionary.
-
-    Raises:
-        KeyError: If the champion is not found.
-    """
+    """Cached data for one champion, by data key or display name."""
     champions = fetch_champion_data(data_directory=data_directory)
     if name in champions:
         return champions[name]
@@ -190,18 +175,7 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
 def get_item_by_name(
     name: str, data_directory: Path = DEFAULT_DATA_DIR
 ) -> dict[str, Any]:
-    """Get data for a specific item by name.
-
-    Args:
-        name: Item name (e.g., "Liandry's Torment").
-        data_directory: Directory where cached data is stored.
-
-    Returns:
-        Item data dictionary.
-
-    Raises:
-        KeyError: If the item is not found.
-    """
+    """Cached data for one item, matched on name case-insensitively."""
     items = fetch_item_data(data_directory=data_directory)
     for _, item_data in items.items():
         if item_data.get("name", "").lower() == name.lower():
