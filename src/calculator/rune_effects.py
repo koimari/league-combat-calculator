@@ -780,6 +780,17 @@ def _certified_level_table(name: str, key: str, values: Sequence[Any]) -> list[f
     return by_level
 
 
+def cached_effects(rune_name: str) -> RuneValues:
+    """One rune's parsed effects block, for a declaration read at import.
+
+    A compiler reads the record it is handed; an option's *bounds* are
+    declared before any request exists, and the rune's own table is what
+    bounds them — so the declaration reads the cache through the same
+    fail-loud door.
+    """
+    return RuneValues(rune_name, RUNE_EFFECTS.get(rune_name, {}).get("effects", {}))
+
+
 def required_leveling(
     name: str,
     effects: RuneValues,

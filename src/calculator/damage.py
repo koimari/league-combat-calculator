@@ -2744,6 +2744,26 @@ def _resolve_combat_state(
     )
 
 
+def _slot_is_cast(
+    key: str, info: Mapping[str, Any], cast_order: "list[str] | None"
+) -> bool:
+    """Whether the ability row *key* belongs to a slot the rotation casts.
+
+    Passive rows (``passive``, ``passive_plasma``) are always live, as is a
+    row the module declares ``off_rotation_grant`` (a zero-damage cast the
+    rotation omits whose grant is priced across the window — Kai'Sa E). Any
+    other active row is live when its key, or the base slot of its variant
+    key (``Q2`` -> ``Q``, ``W_vigor`` -> ``W``), is in the cast order; an
+    unknown order is the default rotation, which casts every slot.
+    """
+    base = key.split("_", 1)[0].rstrip("0123456789")
+    if base not in ("Q", "W", "E", "R") or info.get("off_rotation_grant"):
+        return True
+    if cast_order is None:
+        return True
+    return key in cast_order or base in cast_order
+
+
 def _apply_stat_buff_ultimates(state: FightState) -> None:
     """Apply ability stat buffs (e.g. Aatrox R bonus AD) and resolve crit.
 
@@ -2758,9 +2778,13 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     stats = state.champion_stats
     resists = state.resists
 
-    for ability_info in state.ability_damages.values():
+    for key, ability_info in state.ability_damages.items():
         stat_buff = ability_info.get("stat_buff")
         if not stat_buff:
+            continue
+        if not _slot_is_cast(key, ability_info, state.cast_order):
+            # An active's grant rides its cast: a rotation that never casts
+            # the ability earns none of it. A passive's grant is always on.
             continue
         for stat_key, buff_value in stat_buff.items():
             stats[stat_key] = stats.get(stat_key, 0.0) + buff_value

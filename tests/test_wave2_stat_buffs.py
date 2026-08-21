@@ -63,6 +63,26 @@ def _fight(champion, **options):
     return run_fight(_CHAMPIONS[champion], _LEVEL, [], params)
 
 
+def _fight_casting(champion, cast_order):
+    """The same fight with an explicit rotation — a slot left out is never cast."""
+    params = FightParams(
+        target_health=_TARGET_HEALTH,
+        target_bonus_health=0.0,
+        target_armor=_TARGET_ARMOR,
+        target_magic_resistance=_TARGET_MR,
+        fight_duration_seconds=_WINDOW,
+        auto_attack_uptime=1.0,
+        one_rotation=False,
+        include_actives=True,
+        cast_order=list(cast_order),
+        auto_attacks_only=False,
+        ability_ranks=None,
+        champion_options=None,
+        deterministic=True,
+    )
+    return run_fight(_CHAMPIONS[champion], _LEVEL, [], params)
+
+
 def _autos(result):
     return (result.get("auto_attack_schedule") or {}).get("expected_autos_total")
 
@@ -399,3 +419,35 @@ def test_rengar_thrill_of_the_hunt_shreds_flat_armour():
     assert withheld["effective_armor"] == pytest.approx(_TARGET_ARMOR)
     assert armed["effective_armor"] == pytest.approx(_TARGET_ARMOR - 0.8 * shred)
     assert armed["total_damage"] > withheld["total_damage"]
+
+
+class TestAnActiveGrantRidesItsCast:
+    """A stat buff an active grants is earned by casting it, not by owning it.
+
+    The audit's probe: Tristana's Rapid Fire doubled her auto count whether
+    or not Q was in the rotation. A rotation that never casts the ability
+    earns none of its grant; a passive's grant is always on.
+    """
+
+    def test_tristana_q_left_out_of_the_rotation_grants_no_attack_speed(self):
+        with_q = _fight_casting("Tristana", ["Q", "W", "E", "R"])
+        without_q = _fight_casting("Tristana", ["W", "E", "R"])
+        assert _autos(with_q) > _autos(without_q)
+        assert "Q" not in without_q["breakdown"]
+        assert with_q["champion_stats"]["attack_speed"] > (
+            without_q["champion_stats"]["attack_speed"]
+        )
+
+    def test_olaf_passive_grant_stays_on_whatever_the_rotation(self):
+        default = _fight_casting("Olaf", ["Q", "W", "E", "R"])
+        no_casts = _fight_casting("Olaf", [])
+        # Berserker Rage is a passive: the attack-speed grant reaches the fight
+        # with an empty rotation too, while W (an active grant) does not.
+        assert (
+            no_casts["champion_stats"]["attack_speed"]
+            > _build_stats("Olaf")["attack_speed"]
+        )
+        assert (
+            default["champion_stats"]["attack_speed"]
+            > no_casts["champion_stats"]["attack_speed"]
+        )

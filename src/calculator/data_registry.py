@@ -367,8 +367,13 @@ def write_runtime_cache(
     source_url: str | None = None,
     source_version: str | None = None,
     source_hash: str | None = None,
+    fetched_at: float | None = None,
 ) -> None:
     """Atomically write one tracked runtime-cache file with provenance meta.
+
+    ``fetched_at`` defaults to now; an offline re-parse of a cache passes the
+    stamp of the fetch it re-reads, so the published freshness stays the
+    fetch's and not the re-parse's.
 
     Refuses filenames outside CACHE_FILES: the three tracked caches have a
     single writer (data_updater) and every other data/ path has its own
@@ -405,7 +410,7 @@ def write_runtime_cache(
     _DATA_VERSION += 1
 
     metadata: dict[str, Any] = {
-        "fetched_at": time.time(),
+        "fetched_at": time.time() if fetched_at is None else fetched_at,
         "filename": filename,
         "source_url": source_url,
         "source_version": source_version,

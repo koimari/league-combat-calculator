@@ -322,6 +322,8 @@ def _compile_cut_down(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
 #: is the un-triggered state: at 100 the rune amplifies nothing, so a fight
 #: with it selected is the fight priced without it.
 _SELF_HEALTH_PERCENT = "self_health_percent"
+#: The un-triggered default: full health, where Last Stand amplifies nothing.
+_FULL_HEALTH_PERCENT = 100.0
 
 
 class _RampEnd(NamedTuple):
@@ -370,7 +372,9 @@ def _compile_last_stand(entry: Mapping[str, Any]) -> RuneFlatAmpEffect:
     span = armed.health - peak.health
 
     def amp_ratio(context: RuneAmpContext) -> float:
-        health = context.option(name, _SELF_HEALTH_PERCENT, 100.0) / 100.0
+        health = (
+            context.option(name, _SELF_HEALTH_PERCENT, _FULL_HEALTH_PERCENT) / 100.0
+        )
         if health >= armed.health:
             return 0.0
         if health <= peak.health:
@@ -420,8 +424,8 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
             key=_SELF_HEALTH_PERCENT,
             label="Holder's health (% of maximum)",
             kind=RuneOptionKind.COUNT,
-            default=100.0,
-            bounds=(0.0, 100.0),
+            default=_FULL_HEALTH_PERCENT,
+            bounds=(0.0, _FULL_HEALTH_PERCENT),
             disclosure=(
                 "The share of maximum health Last Stand's holder is on for "
                 "the fight it prices. 100 is full health, where the rune "

@@ -12,6 +12,7 @@ from typing import Any, Callable, Mapping
 from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
+    cached_effects,
     RUNE_EFFECTS,
     RuneEffect,
     RuneHealEffect,
@@ -47,17 +48,6 @@ def _stack_threshold(name: str, effects: RuneValues) -> int:
             "bounds nothing — wiki parse degraded"
         )
     return threshold
-
-
-def _cached_effects(name: str) -> RuneValues:
-    """One rune's parsed effects block, for a declaration read at import.
-
-    A compiler reads the record it is handed; an option's *bounds* are
-    declared before any request exists, and the rune's own threshold is what
-    bounds them — so the declaration reads the cache through the same
-    fail-loud door.
-    """
-    return RuneValues(name, RUNE_EFFECTS.get(name, {}).get("effects", {}))
 
 
 def _compile_overgrowth(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
@@ -248,7 +238,7 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
             default=0.0,
             bounds=(
                 0.0,
-                float(_stack_threshold("Overgrowth", _cached_effects("Overgrowth"))),
+                float(_stack_threshold("Overgrowth", cached_effects("Overgrowth"))),
             ),
             disclosure=(
                 "How many Overgrowth stacks the holder has earned; each is "

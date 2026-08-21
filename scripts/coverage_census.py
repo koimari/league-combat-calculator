@@ -133,14 +133,17 @@ def run_census():
         (item for item in raw_items.values() if item_source.is_ordinary_sr_item(item)),
         key=lambda item: str(item.get("name")),
     )
-    # The keystone axis sweeps the keystone row of the rune catalog. Minor
-    # runes join it when the roster is compiled end to end; today most are
-    # unmodeled and refused at the request boundary, which this axis reads
-    # as a frontier entry rather than a coverage gap.
-    keystones = [k["name"] for k in rune_catalog() if k["row"] == 0]
+    # The rune axis: every rune the catalog offers must compile (minor runes
+    # and keystones alike are refused at the request boundary otherwise),
+    # and every keystone is additionally swept through a fight per champion
+    # below. Minor runes price through the same walker and are pinned per
+    # compiler in tests/test_rune_paths_*.py; sweeping 173 x 45 fights here
+    # would cost an hour for no new classification.
+    roster = rune_catalog()
+    keystones = [k["name"] for k in roster if k["row"] == 0]
     compiled = []
     unmodeled = []
-    for name in keystones:
+    for name in (k["name"] for k in roster):
         try:
             resolve_rune(name)
             compiled.append(name)
@@ -244,7 +247,9 @@ def run_census():
     # 3. champion x compiled keystone.
     for champ in champions:
         base = baselines.get(champ, set())
-        for keystone in compiled:
+        for keystone in keystones:
+            if keystone in unmodeled:
+                continue
             r = _probe(calculate_payload, timed_payload(champ, keystone=keystone))
             key = f"{champ}|{keystone}"
             if not r["ok"]:

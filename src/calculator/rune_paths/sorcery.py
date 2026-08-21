@@ -11,6 +11,7 @@ from typing import Any, Callable, Mapping
 
 from ..ability_spec import Disposition
 from ..rune_effects import (
+    cached_effects,
     RUNE_EFFECTS,
     RuneEffect,
     ULTIMATE_SLOT,
@@ -117,17 +118,6 @@ def _compile_scorch(entry: Mapping[str, Any]) -> RuneProcEffect:
 #: where and when the fight happens, and the request carries neither.
 _IN_RIVER = "in_river"
 _GAME_MINUTE = "game_minute"
-
-
-def _cached_effects(name: str) -> RuneValues:
-    """One rune's parsed effects block, for a declaration read at import.
-
-    A compiler reads the record it is handed; an option's *bounds* are
-    declared before any request exists, and the rune's own table is what
-    bounds them — so the declaration reads the cache through the same
-    fail-loud door.
-    """
-    return RuneValues(name, RUNE_EFFECTS.get(name, {}).get("effects", {}))
 
 
 def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
@@ -310,7 +300,7 @@ def _minute_span(name: str, effects: RuneValues) -> tuple[float, float]:
 #: Gathering Storm's option is bounded by its own table: the minutes it
 #: states, no further. Read at import because bounds are declared before
 #: any request exists.
-_STORM_MINUTES = _minute_span("Gathering Storm", _cached_effects("Gathering Storm"))
+_STORM_MINUTES = _minute_span("Gathering Storm", cached_effects("Gathering Storm"))
 
 
 def _compile_gathering_storm(entry: Mapping[str, Any]) -> RuneStatGrantEffect:

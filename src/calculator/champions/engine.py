@@ -75,6 +75,12 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "recast_of",
         "empowers_next_auto",
         "stat_buff",
+        # A ``stat_buff`` an active grants is earned by casting it: the fight
+        # engine skips the grant of a slot the resolved rotation never casts.
+        # A module whose rotation deliberately omits a zero-damage cast and
+        # prices its grant across the window anyway (Kai'Sa E's Supercharge,
+        # a duration-weighted average) says so with this flag.
+        "off_rotation_grant",
         "target_debuff",
         "post_hit_proc",
         "on_hit",

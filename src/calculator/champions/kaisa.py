@@ -520,6 +520,10 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
         "name": ability.get("name", "Supercharge"),
         "rank": rank,
         "stat_buff": {"bonus_attack_speed": granted},
+        # E is not in CAST_ORDER (it deals nothing, so the damage rotation
+        # omits it) and its grant is the window average above: declared
+        # off-rotation so the engine's cast gate keeps it.
+        "off_rotation_grant": True,
         "detail": (
             f"{casts} charge(s): {bonus_percent:g}% attack speed for "
             f"{_E_WINDOW_SECONDS:g}s each, priced as a {granted:.1f}% "

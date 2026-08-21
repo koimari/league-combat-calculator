@@ -590,11 +590,16 @@ def reparse_cached_rune_effects(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, 
                     _reparse_entry(option)
         elif name not in RESERVED_CACHE_KEYS:
             _reparse_entry(entry)
+    meta_path = data_dir / ".runes.json.meta"
+    previous = (
+        json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+    )
     write_runtime_cache(
         data_dir,
         "runes.json",
         runes,
         source_url="https://wiki.leagueoflegends.com/en-us/Rune",
+        fetched_at=previous.get("fetched_at"),
     )
     return runes
 
