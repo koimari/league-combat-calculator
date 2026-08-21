@@ -17,6 +17,30 @@ The calculator's target is a full-health champion above the threshold,
 so R prices the sourced damage row (level-based, physical) plus the
 bAD and lethality terms.  The threshold itself is documented, not
 priced as damage — an execution is a kill boundary, not a number.
+
+Roadmap session (2026-08-21): closes both of Pyke's out_of_scope slots
+(P, W).
+
+  - P (Gift of the Drowned Ones): not a damage gap but a stale label.
+    P deals no enemy damage (a self-state grey-health passive), and its
+    store/consume mechanic is already priced by the shared E8a
+    grey-health primitive in ``participant_timeline.py`` — "Pyke" is
+    registered in ``healing.GREY_HEALTH_RULE_CHAMPIONS``, and the exact
+    sourced constants documented in this module's ASSUMPTIONS below
+    (9%/40% store ratio + 0.2%/0.4% per Lethality, 80 + 800% bonus AD
+    flat cap, 55% max-health cap) are the same constants the primitive
+    reads.  Reclassified from out_of_scope to no_damage on the
+    Mordekaiser-W precedent (E8a-priced self-state slots read
+    "no_damage": no enemy damage, but the effect is not withheld — it
+    is priced elsewhere), with no behavior change.
+  - W (Ghostwater Dive): not a damage gap but a stale label — the
+    pinned packet already declares W ``kind: "no_damage"``
+    (``static/reviewed-packets.json``), so ``build_packet_module`` was
+    already emitting a proper zero-damage row while ``MODULE_COVERAGE``
+    still read "out_of_scope".  Ghostwater Dive is a stealth/haste
+    self-buff with no enemy-damage clause anywhere in the cached entry.
+    Reclassified to no_damage on the pinned-packet declaration, with no
+    behavior change (the parser output is byte-identical).
 """
 
 from .packet_module import build_packet_module
@@ -91,8 +115,25 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "'Per-Level Scaling' [1]). The execute threshold row (250 : 550 + "
     "80% bonus AD + 1.5 per Lethality) is a kill boundary and is "
     "documented, not priced as damage.",
+    "P (Gift of the Drowned Ones) deals no enemy damage; its "
+    "store/consume mechanic is priced by the shared E8a grey-health "
+    "primitive (participant_timeline.py), not this module's own SLOTS "
+    "map -- Pyke is registered in healing.GREY_HEALTH_RULE_CHAMPIONS. "
+    "Reclassified from out_of_scope to no_damage (a stale label, not a "
+    "computation change): the passive was already priced, just not "
+    "through this module's own slot declaration.",
+    "W (Ghostwater Dive) carries no enemy-damage formula of any kind "
+    "(the reviewed packet's own no_damage slot declaration already "
+    "names it): a stealth/decaying-haste self-buff. Reclassified from "
+    "out_of_scope to no_damage (a stale label, not a computation "
+    "change): the slot was previously mislabeled out_of_scope despite "
+    "the packet layer already carrying no enemy-damage formula for it.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"

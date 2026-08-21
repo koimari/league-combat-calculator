@@ -9,6 +9,39 @@ E8c addition over the reviewed packet:
   the sourced 17.5% missing-health scaling is a documented boundary —
   the module pins it as a constant for audit, but the scanner's packet
   carries the flat component only.
+
+Roadmap session (2026-08-21): closes one of Olaf's two out_of_scope
+slots (P); R stays open with a named receipt.
+
+  - P (Berserker Rage): not a damage gap but a stale label — the
+    pinned packet already declares P ``kind: "no_damage"``
+    (``static/reviewed-packets.json``), so ``build_packet_module`` was
+    already emitting a proper zero-damage row while ``MODULE_COVERAGE``
+    still read "out_of_scope".  Berserker Rage is a pure self-state
+    passive (reduced damage taken scaling with missing health, slow
+    immunity) with no enemy-damage clause anywhere in the cached entry.
+    Reclassified to ``no_damage`` on the pinned-packet declaration, with
+    no behavior change (the parser output is byte-identical).
+  - R (Ragnarok) stays ``out_of_scope``, unchanged (pinned by
+    ``tests/test_olaf_r_cleanse.py::TestSourceAndTypedValues::
+    test_r_assumptions_absent_cleanse_mention``, which asserts
+    ``MODULE_COVERAGE["R"] == "out_of_scope"``).  R IS more than a
+    no-damage slot: its cast cleanses active crowd control, grants a 3s
+    CC-immunity window, and applies bonus armor/MR/AD/size/movement-speed
+    self-buffs — a full sourced cleanse+immunity+stat-buff kit that the
+    P2 Slice 4-8 kernel does not wire for Olaf today
+    (``resolve_cleanse_item("Olaf R")`` fails closed with a named
+    KeyError).  ``test_olaf_r_cleanse.py`` is the existing 2200+-line
+    named-unsupported receipt for this boundary: it pins every sourced
+    R row (resistances, AD, MS, duration, size, cooldown, cost) against
+    both the wiki cache and the game binary, proves the underlying
+    kernel primitives (cleanse truncation, immunity window, stat-buff
+    dispatch) already work in isolation, and pytest.mark.xfails the
+    wired R activation pending a dedicated P2-9 coordinator completion
+    that is explicitly out of this session's scope. R is therefore
+    "out_of_scope" (a real, sourced, unmodeled mechanic), not
+    "no_damage" (a confirmed zero-effect slot) — the two labels are not
+    interchangeable here.
 """
 
 from .packet_module import _rank_gated_no_damage, build_packet_module
@@ -62,9 +95,25 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "floor (the missing-health term and its 70%-of-missing-health cap "
     "are documented boundaries), and it absorbs incoming damage in the "
     "participant ledger",
+    "P (Berserker Rage) carries no enemy-damage formula of any kind (the "
+    "reviewed packet's own no_damage slot declaration already names it): "
+    "a self-state passive (damage-taken reduction scaling with missing "
+    "health, slow immunity). Reclassified from out_of_scope to no_damage "
+    "(a stale label, not a computation change): the slot was previously "
+    "mislabeled out_of_scope despite the packet layer already carrying "
+    "no enemy-damage formula for it.",
+    # NOTE: the R (Ragnarok) receipt lives ONLY in this module's
+    # docstring, not here — tests/test_olaf_r_cleanse.py pins
+    # `"Ragnarok" not in " ".join(ASSUMPTIONS)` as the "R stays
+    # out_of_scope, untouched" boundary marker; adding an R-naming
+    # assumption string would flip that pinned test.
 ]
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "out_of_scope",
 }
 REVIEW_STATUS = "reviewed_module"

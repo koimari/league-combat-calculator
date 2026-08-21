@@ -7,10 +7,47 @@ receives one hit. Fey Feathers and Battle Dance do not damage enemies.
 E8d ally-support: Q (Gleaming Quill) heals Rakan and nearby allies (cached
 Heal 40-230 by level + 55% AP; scope self_and_all_teammates) — the event is
 authored by the engine's ally-support scanner from cached leveling at the Q
-cast time.  P (Fancy Footwork) is a passive periodic self-shield (cached
-Shield 30-247.94 by level + 95% AP); the scanner only reads Q/W/E/R slots,
-so the passive shield is a documented missing engine hook, not an emitted
-packet.
+cast time.  P (Fey Feathers) is a passive periodic self-shield (cached
+Shield 30-247.94 by level + 95% AP); it is authored directly by this
+module (``_q_with_p_shield`` below, the Shen Ki Barrier precedent), not
+by the ally-support scanner.
+
+Roadmap session (2026-08-21): closes one of Rakan's two out_of_scope
+slots (P); E stays open with a named receipt.
+
+  - P (Fey Feathers): not a damage gap but a stale label. The shield IS
+    already computed and emitted — ``_q_with_p_shield`` attaches it to
+    every Q cast via ``attach_self_shield`` (the sourced 30:247.94 by
+    level + 95% AP row, riding Q exactly as Shen's Ki Barrier rides E).
+    ``MODULE_COVERAGE`` read "out_of_scope" only because P has no
+    standalone top-level SLOTS entry of its own — the label was stale,
+    not the calculation. Reclassified to modeled (the Shen-P precedent:
+    a self-shield authored inside another slot's own parser counts as
+    modeled, not no_damage/out_of_scope).
+  - E (Battle Dance): the shield IS sourced (cached "Shield Strength"
+    50/75/100/125/150 + 70% AP, data/champions.json Rakan E) and its
+    attribute name is already recognized by the generic ally-support
+    scanner (``support_effects._SUPPORT_ATTRIBUTES`` includes "Shield
+    Strength"). It stays out_of_scope because the scanner keys strictly
+    off ``cast_timeline`` slot entries built from THIS module's own
+    ``parse_abilities`` output (``derive_ally_effects`` filters
+    ``event.get("slot") == slot`` against the engine's cast timeline,
+    not against raw champion_data) — and E has no SLOTS entry, so no E
+    cast is ever scheduled (confirmed: ``parse_champion_abilities``
+    returns exactly ``{"Q", "W", "R"}`` for Rakan today, pinned by
+    ``tests/test_rakan.py::test_rakan_rotation_counts_each_enemy_damage_cast_once``).
+    Wiring E therefore needs (a) a new "E" SLOTS entry (a ``no_damage``
+    row, the Kai'Sa-E/Shen-W precedent) so E gets a cast and a
+    cast_timeline slot, which changes the published ability count and
+    is captured verbatim by ``scripts/golden_snapshot.py`` and the
+    pinned ability-set test above, and (b) the sourced "free 5s recast"
+    ("Battle Dance can be recast within 5 seconds at no additional
+    cost... mimics the first cast's effects") is a second-cast timing
+    rule this engine has no existing convention for (unlike Shen's E,
+    which is a single dash) — both are real, in-scope-eventually work
+    this session's stale-label cadence does not cover. Stays
+    out_of_scope with this receipt (the Kai'Sa-R precedent) for
+    whichever session next owns the SLOTS + recast wiring.
 """
 
 from typing import Any
@@ -34,11 +71,19 @@ ASSUMPTIONS = [
     "rank-indexed 80 + 55% AP while the champion rule owns the per-level "
     "self heal (40 : 230 based on level + 55% AP) — the self copy pays "
     "exactly once and the ally branch never double-grants it.",
-    "E (Battle Dance) shields the selected teammate the sourced Shield "
-    "Strength (50-150 + 70% AP) for 3s (selection key shield:E:<cast>); "
-    "the free 5s recast is a second cast in the rotation when the fight "
-    "schedule casts E twice and 'the shields do not stack' refresh rule "
-    "is state.",
+    "P (Fey Feathers) has no standalone cast; its sourced self-shield "
+    "(30:247.94 by level + 95% AP) is attached to Q (Gleaming Quill), "
+    "this module's own parser, via attach_self_shield -- the Shen Ki "
+    "Barrier precedent. The periodic/out-of-combat refresh cadence and "
+    "the 'until broken' persistence beyond the fight window are state.",
+    "E (Battle Dance)'s ally shield is sourced (Shield Strength "
+    "50-150 + 70% AP, data/champions.json Rakan E) and its attribute "
+    "name is already recognized by the generic ally-support scanner, "
+    "but E is not yet wired: it has no SLOTS entry, so no E cast is "
+    "ever scheduled onto the engine's cast_timeline (parse_abilities "
+    "returns only Q/W/R today) and the scanner therefore never fires "
+    "for it. The sourced 'free 5s recast, mimics the first cast' rule "
+    "is also unmodeled second-cast timing. E stays out_of_scope.",
 ]
 
 SOURCES = [
@@ -125,7 +170,11 @@ parse_abilities = build_parser(SLOTS, "Rakan")
 
 # Authoritative review metadata (issue #161).
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "out_of_scope",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 

@@ -14,6 +14,28 @@ minimum at every rank, so the Q is modeled as the minimum row times
 ``1 + 0.91 x crit_chance`` — exact at both sourced endpoints, linear in
 between.  The test fights (no items) sit at 0% crit and price exactly
 the minimum row.
+
+Roadmap session (2026-08-21): closes both of Nilah's out_of_scope slots
+(P, W).  Neither is a damage gap — both were mislabeled, exactly like
+the Singed P/W / Mordekaiser W/R stale-label bug: the pinned packet
+(``static/reviewed-packets.json``, PACKET_SHA256 below) already
+declares P and W ``kind: "no_damage"``, so ``build_packet_module`` was
+already emitting proper zero-damage rows for both slots while
+``MODULE_COVERAGE`` still read "out_of_scope".  Both reclassified to
+``no_damage`` on the pinned-packet declaration, with no behavior change
+(the parser output, including each row's ``detail`` text, is
+byte-identical):
+
+  - P (Joy Unending): the passive's excess-heal-to-shield conversion
+    (documented above and in ASSUMPTIONS) has no enemy-damage clause of
+    its own — the packet's P slot carries no formula, matching the
+    passive's own wiki description (a heal-to-shield converter, not a
+    damage source).
+  - W (Jubilant Veil): a self/ally mist that grants ghosting, bonus
+    movement speed (the only leveling row — "Bonus Movement Speed"),
+    25% incoming-magic-damage reduction, and basic-attack dodge; the
+    cached ability data carries no damage, heal, or shield leveling row
+    of any kind — the packet's W slot likewise carries no formula.
 """
 
 from .packet_module import build_packet_module
@@ -119,9 +141,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "ability_rows_stale flag requires a data/champions.json re-pull/"
     "re-cert, which is outside this task's scope (see "
     "docs/patch-day-runbook.md Step 3.A).",
+    "P (Joy Unending) and W (Jubilant Veil) carry no enemy-damage "
+    "formula of any kind (the reviewed packet's own slot declarations "
+    "already carry kind='no_damage' for both): Joy Unending is the "
+    "excess-heal-to-shield converter documented above; Jubilant Veil is "
+    "the ghost/mist self-and-ally defensive buff (bonus movement speed, "
+    "25% magic damage reduction, basic-attack dodge). Reclassified from "
+    "out_of_scope to no_damage (a stale label, not a computation "
+    "change): both slots were previously mislabeled out_of_scope "
+    "despite the packet layer already carrying no enemy-damage formula "
+    "for them.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
 
