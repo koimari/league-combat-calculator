@@ -56,17 +56,10 @@ UNDECLARED_ON_ARRIVAL = frozenset(
 )
 
 
-class _StubInterpreter:
-    """A registered interpreter, so the registry's own gates have a subject."""
-
-    def __init__(self, family: RuleFamily, lanes: frozenset[EngineLane]) -> None:
-        self.FAMILY = family  # pylint: disable=invalid-name
-        self.LANES = lanes  # pylint: disable=invalid-name
-
-    def compile(self, rule, ctx):  # pragma: no cover - never called here
-        """Emit nothing; these tests are about registration, not compilation."""
-        del rule, ctx
-        return ()
+def _stub_fields(rule, ctx, lane):  # pragma: no cover - never called here
+    """A registered reading, so the registry's own gates have a subject."""
+    del rule, ctx, lane
+    return ()
 
 
 def test_every_family_declares_the_lanes_that_owe_it_an_answer() -> None:
@@ -229,11 +222,10 @@ def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
     test quietly stop testing the direction it exists for.
     """
     family, lane = interpreters.uninterpreted_pairs()[0]
-    stub = _StubInterpreter(family, frozenset({lane}))
     monkeypatch.setattr(
         interpreters,
         "INTERPRETERS",
-        dict(interpreters.INTERPRETERS) | {(family, lane): stub},
+        dict(interpreters.INTERPRETERS) | {(family, lane): _stub_fields},
     )
     report = interpreters.reachability_report(frozenset())
     assert (
@@ -256,32 +248,69 @@ def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
         interpreters.validate_registrations()
 
 
-def test_a_registration_that_contradicts_its_own_interpreter_is_refused(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The key and the interpreter's own declaration are one fact, checked."""
-    stub = _StubInterpreter(RuleFamily.SUSTAIN, frozenset({EngineLane.PAIR_ENGINE}))
-    monkeypatch.setattr(
-        interpreters,
-        "INTERPRETERS",
-        {(RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): stub},
-    )
-    with pytest.raises(interpreters.InterpreterRegistryError, match="does not claim"):
-        interpreters.validate_registrations()
-
-
 def test_a_registration_on_a_lane_the_family_never_declared_is_refused(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An interpreter on an undeclared lane can never be reached."""
-    stub = _StubInterpreter(RuleFamily.ALLY_PACKET, frozenset({EngineLane.PAIR_ENGINE}))
+    """A reading on an undeclared lane can never be reached."""
     monkeypatch.setattr(
         interpreters,
         "INTERPRETERS",
-        {(RuleFamily.ALLY_PACKET, EngineLane.PAIR_ENGINE): stub},
+        {(RuleFamily.ALLY_PACKET, EngineLane.PAIR_ENGINE): _stub_fields},
     )
     with pytest.raises(interpreters.InterpreterRegistryError, match="declares no"):
         interpreters.validate_registrations()
+
+
+def test_a_defence_family_with_no_resolver_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The two defence tables name the same families, checked at import.
+
+    Compiling a defence is uniform and resolving one is not, so the resolver
+    table is the half that can silently lose a family; a gap here would reach
+    every holder of it as a runtime stop instead of a red import.
+    """
+    monkeypatch.setattr(
+        interpreters,
+        "RESOLVERS",
+        {
+            family: resolver
+            for family, resolver in interpreters.RESOLVERS.items()
+            if family is not RuleFamily.SUSTAIN
+        },
+    )
+    with pytest.raises(
+        interpreters.InterpreterRegistryError, match="no resolver answers"
+    ):
+        interpreters.validate_registrations()
+
+
+def test_compile_rule_dispatches_through_the_registry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The registry is the dispatch for fields exactly as it is for defences."""
+    rule = catalog.behavior_rules("Blade of the Ruined King")[0]
+    ctx = catalog.build_context(
+        rule.owner,
+        13,
+        fight_duration_seconds=8.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    fields = interpreters.compile_rule(rule, ctx, EngineLane.PAIR_ENGINE)
+    assert fields
+    assert all(field.lane is EngineLane.PAIR_ENGINE for field in fields)
+    monkeypatch.setattr(
+        interpreters,
+        "INTERPRETERS",
+        {
+            key: value
+            for key, value in interpreters.INTERPRETERS.items()
+            if key != (rule.family, EngineLane.PAIR_ENGINE)
+        },
+    )
+    with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
+        interpreters.compile_rule(rule, ctx, EngineLane.PAIR_ENGINE)
 
 
 def test_validate_registrations_runs_at_import() -> None:
@@ -869,7 +898,7 @@ def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
         "the_collector.execute",
     }
     for rule in rules:
-        fields = damage_routing.WALK_INTERPRETER.compile(
+        fields = damage_routing.walk_fields(
             rule,
             catalog.build_context(
                 rule.owner,
@@ -878,6 +907,7 @@ def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
                 target_bonus_health=0.0,
                 holder_is_melee=True,
             ),
+            EngineLane.RECEIPT_WALK,
         )
         assert fields
         assert all(field.lane is EngineLane.RECEIPT_WALK for field in fields)

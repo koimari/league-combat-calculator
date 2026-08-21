@@ -80,7 +80,17 @@ def test_compiling_resolves_every_reference_at_build_time() -> None:
     """A missing registry key surfaces when the build is made, not mid-fight."""
     rule = _rule("Force of Nature", DefenseMechanic.STEADFAST)
 
-    (field,) = compiled_shape(rule, 18)
+    (field,) = compiled_shape(
+        rule,
+        catalog.build_context(
+            rule.owner,
+            18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
+        EngineLane.DEFENSE_RESOLVER,
+    )
 
     assert field.name == DEFENSE_VALUE_COUNT_FIELD
     assert field.value == len(rule.payload.values) == 6

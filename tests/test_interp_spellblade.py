@@ -12,7 +12,12 @@ that a build holding two spellblades still arms exactly one.
 import pytest
 
 from src.calculator.interpreters import spellblade
-from src.calculator.item_behavior import RuleFamily, SpellbladeRule, validate_rule
+from src.calculator.item_behavior import (
+    EngineLane,
+    RuleFamily,
+    SpellbladeRule,
+    validate_rule,
+)
 from src.calculator.item_behavior_catalog import behavior_rules, build_context
 from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
 
@@ -186,7 +191,7 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    (field,) = spellblade.PAIR_INTERPRETER.compile(rule, ctx)
+    (field,) = spellblade.spellblade_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == spellblade.SPELLBLADE_COOLDOWN_FIELD
     assert field.value == pytest.approx(float(ITEM_EFFECTS[PLAIN]["cooldown"]))  # type: ignore[arg-type]
 
@@ -206,4 +211,4 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
         holder_is_melee=True,
     )
     with pytest.raises(spellblade.SpellbladeInterpretationError):
-        spellblade.PAIR_INTERPRETER.compile(foreign, ctx)
+        spellblade.spellblade_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

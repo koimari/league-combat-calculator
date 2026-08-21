@@ -21,13 +21,14 @@ from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
 from dataclasses import replace
 
-from src.calculator.interpreters import INTERPRETERS, compilability_for
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS, compilability_for
 from src.calculator.interpreters import sustain
+from src.calculator.interpreters.defense_state import compiled_shape
 from src.calculator.interpreters.sustain import (
-    PAIR_INTERPRETER,
-    RESOLVER_INTERPRETER,
-    WALK_INTERPRETER,
     SustainInterpretationError,
+    resolve_received_healing,
+    sustain_fields,
+    walk_fields,
     declared_sustain,
     received_healing_multiplier,
     stat_grants,
@@ -87,18 +88,13 @@ def _rule(owner: str, payload_type: type):
 def test_all_three_lanes_are_registered() -> None:
     """The pair engine prices the holder's own shapes, the resolver builds the
     received-healing multiplier, and the walk compiles what it pays out itself."""
-    assert (
-        INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE)] is PAIR_INTERPRETER
-    )
+    assert INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.PAIR_ENGINE)] is sustain_fields
     assert (
         INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.DEFENSE_RESOLVER)]
-        is RESOLVER_INTERPRETER
+        is compiled_shape
     )
-    assert (
-        INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK)] is WALK_INTERPRETER
-    )
-    assert WALK_INTERPRETER.FAMILY is RuleFamily.SUSTAIN
-    assert WALK_INTERPRETER.LANES == frozenset({EngineLane.RECEIPT_WALK})
+    assert INTERPRETERS[(RuleFamily.SUSTAIN, EngineLane.RECEIPT_WALK)] is walk_fields
+    assert RESOLVERS[RuleFamily.SUSTAIN] is resolve_received_healing
 
 
 def test_every_sustain_entry_declares_a_rule() -> None:
@@ -291,7 +287,7 @@ def test_the_pair_interpreter_refuses_the_received_multiplier() -> None:
     """The multiplier is the resolver's; asking the pair lane is a stop."""
     rule = _rule(MULTIPLIER_HOLDER, ReceivedHealingRule)
     with pytest.raises(SustainInterpretationError, match="defensive"):
-        PAIR_INTERPRETER.compile(
+        sustain_fields(
             rule,
             catalog.build_context(
                 rule.owner,
@@ -300,6 +296,7 @@ def test_the_pair_interpreter_refuses_the_received_multiplier() -> None:
                 target_bonus_health=0.0,
                 holder_is_melee=True,
             ),
+            EngineLane.PAIR_ENGINE,
         )
 
 
@@ -391,17 +388,16 @@ def test_the_below_half_bonus_is_the_registry_number_the_walk_used_to_read() -> 
 
 
 def test_the_walk_accessor_and_the_walk_interpreter_are_one_answer() -> None:
-    """``walk_slot`` is :meth:`SustainWalkInterpreter.compile`, field for field.
+    """``walk_slot`` is :func:`walk_fields`, field for field.
 
     Two entry points onto one arithmetic home, which is what stops the
-    registered interpreter and the accessor the boundary calls from drifting
-    into two answers for one declaration — the shape of failure this campaign
-    exists to remove.
+    registered reading and the accessor the boundary calls from drifting into
+    two answers for one declaration.
     """
     rule = _rule(BELOW_HALF_HOLDER, BelowHalfHealingRule)
     slot = walk_slot([BELOW_HALF_HOLDER], BelowHalfHealingRule)
     assert slot is not None
-    assert slot.fields == WALK_INTERPRETER.compile(
+    assert slot.fields == walk_fields(
         rule,
         catalog.build_context(
             rule.owner,
@@ -410,6 +406,7 @@ def test_the_walk_accessor_and_the_walk_interpreter_are_one_answer() -> None:
             target_bonus_health=0.0,
             holder_is_melee=True,
         ),
+        EngineLane.RECEIPT_WALK,
     )
     assert {field.lane for field in slot.fields} == {EngineLane.RECEIPT_WALK}
 
