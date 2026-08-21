@@ -8,6 +8,7 @@ rather than by a part, so this kit stays coarse.
 
 from src.calculator.champions import parse_champion_abilities, yone
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -31,7 +32,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yone")
-        assert yone.MODULE_CC == {"W": "none", "R": "pull"}
+        assert yone.MODULE_CC == {"Q": CC_PER_PART, "W": "none", "R": "pull"}
         assert yone.parse_abilities.cc_kinds == yone.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         r_text = cc_review.slot_text(data, "R")
@@ -53,7 +54,7 @@ class TestReviewedCrowdControl:
         states no kind.  ``"none"`` is ``MODULE_CC``'s reviewed absence.
         """
         data = cc_review.kit("Yone")
-        assert "Q" not in yone.MODULE_CC
+        assert yone.MODULE_CC["Q"] == CC_PER_PART
         assert "knocking up enemies hit in their path" in cc_review.slot_text(data, "Q")
         thrust = _q_parts()
         assert [part.cc_kind for part in thrust] == ["none", None]

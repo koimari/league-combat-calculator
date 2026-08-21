@@ -20,6 +20,7 @@ from src.calculator.champions import (
 )
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions import cassiopeia
+from src.calculator.champions.engine import CC_PER_PART
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
@@ -398,6 +399,7 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "W": "slow",
             "E": "none",
+            "R": CC_PER_PART,
         }
         assert _r_part(facing=True).cc_kind == "stun"
         assert _r_part(facing=False).cc_kind == "slow"

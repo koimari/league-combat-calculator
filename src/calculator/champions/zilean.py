@@ -23,6 +23,7 @@ they are ``no_damage`` rather than unmodelled mechanics:
 
 from dataclasses import replace
 
+from .engine import CC_PER_PART
 from .inputs import champion_stat
 from .packet_module import build_packet_module
 
@@ -84,10 +85,9 @@ def _time_bomb(compiled):
     return parse
 
 
-# Q is authored per part by ``_time_bomb`` (its kind depends on the
-# second-bomb state), and P/W/E/R price no damage, so the module declares
-# no per-slot kind of its own.
-MODULE_CC: dict[str, str] = {}
+# Q's kind depends on the second-bomb state, so the slot names itself
+# per-part and ``_time_bomb`` authors the answer.  P/W/E/R price no damage.
+MODULE_CC = {"Q": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zilean",

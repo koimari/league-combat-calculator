@@ -334,7 +334,6 @@ SLOTS["E"] = with_control(
     # Two immobilizes land together and only one of them is given a number:
     # the un-narrowed kind states both, and the 0.75-second "Stun Duration"
     # row is the sourced interval Camille's target cannot act for.
-    kind="immobilize",
     duration_attr="Stun Duration",
     source=("E", 1),
     effect_index=1,

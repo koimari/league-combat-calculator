@@ -1137,15 +1137,29 @@ def simple_damage(
 def with_control(
     parser: SlotParser,
     *,
-    kind: str,
     duration_attr: str,
+    kind: str | None = None,
     source: tuple[str, int] | None = None,
     ranks: str = "rank",
     part_index: int = 0,
     effect_index: int = 0,
 ) -> SlotParser:
-    """Attach one sourced action-blocking control interval to a damage slot."""
-    if not kind.strip():
+    """Attach one sourced action-blocking control interval to a damage slot.
+
+    The interval is what this helper sources: how long, from which cached
+    attribute, with the atom that proves it.  *Which* control the slot
+    applies is normally the module's ``MODULE_CC`` entry, stamped after
+    every phase — so a slot wrapped here and left undeclared stops the
+    parse at ``engine._validate_cc_event_contract`` (a duration with no
+    kind is half a declaration) instead of carrying the kind twice.
+
+    ``kind`` is for the one slot shape ``MODULE_CC`` cannot state: a cast
+    whose control differs part by part or branch by branch (Twisted Fate's
+    three cards, Zilean's primed bomb).  Such a slot declares
+    :data:`engine.CC_PER_PART` and authors the kind here; the engine
+    refuses this argument on any slot that declared a constant.
+    """
+    if kind is not None and not kind.strip():
         raise ValueError("with_control kind must be a non-empty string")
     if ranks not in {"rank", "level"}:
         raise ValueError("with_control ranks must be 'rank' or 'level'")
@@ -1181,7 +1195,7 @@ def with_control(
         part = parts[part_index]
         parts[part_index] = replace(
             part,
-            cc_kind=kind,
+            cc_kind=kind if kind is not None else part.cc_kind,
             cc_duration=duration,
             control_source_atoms=(
                 *part.control_source_atoms,

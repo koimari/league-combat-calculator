@@ -200,12 +200,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # one's sourced duration off the packet ("Disable Duration" is the
     # window E's 99% slow and R's charm both last).
     slot_wrappers={
-        "E": lambda parser: with_control(
-            parser, kind="slow", duration_attr="Disable Duration"
-        ),
-        "R": lambda parser: with_control(
-            parser, kind="charm", duration_attr="Disable Duration"
-        ),
+        "E": lambda parser: with_control(parser, duration_attr="Disable Duration"),
+        "R": lambda parser: with_control(parser, duration_attr="Disable Duration"),
     },
     cc_kinds=MODULE_CC,
 )

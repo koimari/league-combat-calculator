@@ -362,13 +362,20 @@ class TestReviewedCrowdControl:
     never says makes the whole timed fight fall back to coarse ordering.
     Neither damaging slot has one answer for the whole cast — Q's fresh
     shards control nothing while its Worked Ground boulders slow, and E's
-    eruption slows while its stone detonations stun — so each part carries
-    its own reviewed kind instead of a per-slot MODULE_CC entry.
+    eruption slows while its stone detonations stun — so ``MODULE_CC``
+    names both slots ``CC_PER_PART`` and each part carries its own kind.
     """
 
     def test_the_kit_has_no_single_per_slot_answer_to_declare(self):
         data = cc_review.kit("Taliyah")
-        assert not hasattr(taliyah, "MODULE_CC")
+        from src.calculator.champions.engine import CC_PER_PART
+
+        assert taliyah.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "knockback",
+            "E": CC_PER_PART,
+        }
+        assert taliyah.parse_abilities.cc_kinds == taliyah.MODULE_CC
         assert "slowing all targets hit for 1.5 seconds" in cc_review.slot_text(
             data, "Q"
         )

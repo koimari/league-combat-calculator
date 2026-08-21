@@ -13,6 +13,7 @@ from src.calculator.champions import (
     get_champion_module_contract,
     parse_abilities,
 )
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.module_contract import (
     VALID_COVERAGE,
     ChampionModuleContractError,
@@ -331,6 +332,7 @@ class TestModuleCcDeclaration:
         """A minimal module object that satisfies the rest of the contract."""
         module = ModuleType("fake_champion")
         module.parse_abilities = lambda *args, **kwargs: {}
+        module.MODULE_CC = {}
         module.SLOTS = {"Q": lambda ctx: None, "W": lambda ctx: None}
         module.OPTIONS = []
         module.ASSUMPTIONS = ["one"]
@@ -343,8 +345,17 @@ class TestModuleCcDeclaration:
     def _contract(self, **overrides):
         return contract_from_module("Fake", "fake_champion", self._module(**overrides))
 
-    def test_a_module_declaring_nothing_reviews_nothing(self):
+    def test_an_empty_declaration_reviews_nothing(self):
         assert self._contract().cc_kinds == {}
+
+    def test_a_module_with_no_declaration_at_all_is_refused(self):
+        """Absence by omission and absence by review read the same from the
+        outside, so the name is mandatory: a kit with nothing slot-level to
+        say writes the empty dict and the reason above it."""
+        module = self._module()
+        del module.MODULE_CC
+        with pytest.raises(ChampionModuleContractError, match="declares no MODULE_CC"):
+            contract_from_module("Fake", "fake_champion", module)
 
     def test_a_declaration_survives_onto_the_contract(self):
         declared = {"Q": "stun", "W": "none"}
@@ -428,11 +439,17 @@ class TestModuleCcDeclaration:
         assert parser.cc_kinds == {"Q": "none"}
 
     def test_every_declared_kind_is_in_the_vocabulary(self):
-        """Roster-wide: no module may reach the registry with a typo."""
+        """Roster-wide: no module may reach the registry with a typo.
+
+        ``CC_PER_PART`` sits beside the vocabulary rather than in it: it is
+        not a control a part may carry, it is the slot saying its control is
+        not one answer and the parts hold it.
+        """
+        allowed = CC_KIND_VOCABULARY | {CC_PER_PART}
         for name in _CHAMPION_MODULES:
             contract = get_champion_module_contract(name)
             assert set(contract.cc_kinds) <= set(contract.slots), name
-            assert set(contract.cc_kinds.values()) <= CC_KIND_VOCABULARY, name
+            assert set(contract.cc_kinds.values()) <= allowed, name
 
 
 class TestPacketPinCarriers:

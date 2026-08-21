@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -163,7 +163,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="root",
         duration_attr="Root Duration",
     ),
     "W": _brushmaker,
@@ -175,7 +174,7 @@ SLOTS = {
 # "explode[s] to deal magic damage to nearby enemies and slow them for 2
 # seconds".  R is absent because Daisy's two packets differ (see _daisy).
 # P and W author no damage part (W is the on-hit bolt).
-MODULE_CC = {"Q": "root", "E": "slow"}
+MODULE_CC = {"Q": "root", "E": "slow", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Ivern", cc_kinds=MODULE_CC)
 OPTIONS = [

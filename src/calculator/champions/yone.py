@@ -25,7 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
     CRIT_DAMAGE_MULTIPLIER_FACTOR,
@@ -293,7 +293,7 @@ def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
 # from a part this module authors — there is nothing here for a kind to be
 # stamped on, and a declaration that never reaches the ledger would claim a
 # review the coverage scan cannot see.
-MODULE_CC = {"W": "none", "R": "pull"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "pull"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yone",

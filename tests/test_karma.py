@@ -92,8 +92,9 @@ class TestReviewedCrowdControl:
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import karma
+        from src.calculator.champions.engine import CC_PER_PART
 
-        assert karma.MODULE_CC == {"Q": "slow"}
+        assert karma.MODULE_CC == {"Q": "slow", "W": CC_PER_PART}
         assert karma.parse_abilities.cc_kinds == karma.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

@@ -274,7 +274,7 @@ class TestReviewedCrowdControl:
     """Lay Waste and Requiem control nothing; Defile's timed branch withholds."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert karthus.MODULE_CC == {"Q": "none", "R": "none"}
+        assert karthus.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
         assert karthus.parse_abilities.cc_kinds == karthus.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -298,7 +298,7 @@ class TestReviewedCrowdControl:
             in cc_review.slot_text(data, "E")
         )
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
-        assert "E" not in karthus.MODULE_CC
+        assert karthus.MODULE_CC["E"] == "none"
 
         entry = parse_champion_abilities(
             data,

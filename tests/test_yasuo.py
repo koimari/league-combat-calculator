@@ -10,6 +10,7 @@ from src.calculator.champions import (
     yasuo,
 )
 from tests import cc_review, coverage_truth
+from src.calculator.champions.engine import CC_PER_PART
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -34,7 +35,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yasuo")
-        assert yasuo.MODULE_CC == {"E": "none", "R": "knockup"}
+        assert yasuo.MODULE_CC == {"Q": CC_PER_PART, "E": "none", "R": "knockup"}
         assert yasuo.parse_abilities.cc_kinds == yasuo.MODULE_CC
         assert "knocks up all nearby airborne enemy champions" in cc_review.slot_text(
             data, "R"
@@ -57,7 +58,7 @@ class TestReviewedCrowdControl:
         ``None``.
         """
         data = cc_review.kit("Yasuo")
-        assert "Q" not in yasuo.MODULE_CC
+        assert yasuo.MODULE_CC["Q"] == CC_PER_PART
         assert "additionally knocks up enemies hit for 0.9 seconds" in (
             cc_review.slot_text(data, "Q")
         )

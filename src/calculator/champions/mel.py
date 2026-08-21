@@ -47,7 +47,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import ONHIT, SlotCtx
+from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -438,7 +438,7 @@ def _solar_snare(ctx: SlotCtx):
 # ``_solar_snare``).  P's Searing Brilliance projectiles "fire ... at the
 # target" and do nothing else, so the slot answers "none" for the
 # empowered swing it arms; W authors no damage part of its own.
-MODULE_CC = {"P": "none", "Q": "none", "R": "none"}
+MODULE_CC = {"P": "none", "Q": "none", "E": CC_PER_PART, "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Mel",

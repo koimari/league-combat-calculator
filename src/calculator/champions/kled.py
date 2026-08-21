@@ -19,7 +19,7 @@ the wound rides the module's Q damage receipts at the patch-wide
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_on_hit_entry,
@@ -194,7 +194,7 @@ SOURCES = load_champion_sources("Kled")
 # the recast becomes *available*, not when it happens, and the dash whose
 # ending it counts from has no cached duration.  Half a schedule is not a
 # schedule, so the second dash stays folded into the first hit.
-MODULE_CC = {"W": "none", "R": "knockback"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 

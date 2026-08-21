@@ -112,7 +112,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="charm",
         duration_attr="Disable Duration",
     ),
     # Battle Dance shields the target ally ("Rakan grants a shield to the

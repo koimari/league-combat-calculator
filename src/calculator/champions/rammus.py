@@ -55,7 +55,7 @@ Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx
+from .engine import BUFF, CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -149,7 +149,7 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
         + _THORNS_MAGIC_RESISTANCE_RATIO * magic_resistance
     )
     total = per_auto * autos
-    # The thorns row answers its own crowd control instead of MODULE_CC,
+    # The thorns row answers per part (MODULE_CC declares W CC_PER_PART),
     # because it can only answer when it prices a single reactive hit: the
     # stance retaliates against enemy basic attacks, whose arrival times
     # nothing sources, so a row of several of them is one aggregate with no
@@ -196,7 +196,7 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
 # for a marker to ride: its sourced taunt is authored as a typed
 # ``control_events`` interval by the slot wrapper below, which is why E is
 # absent here.  P is a stat innate.
-MODULE_CC = {"Q": "immobilize", "R": "slow"}
+MODULE_CC = {"Q": "immobilize", "W": CC_PER_PART, "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rammus",

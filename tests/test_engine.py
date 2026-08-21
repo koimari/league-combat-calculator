@@ -16,6 +16,7 @@ from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     AMP,
     BUFF,
+    CC_PER_PART,
     DAMAGE,
     PHASE_ORDER,
     build_parser,
@@ -1181,13 +1182,17 @@ class TestCcEventContract:
         return parse
 
     def test_cc_part_without_event_path_is_rejected(self) -> None:
-        parse = build_parser({"Q": self._cc_slot()}, "TestChamp")
+        parse = build_parser(
+            {"Q": self._cc_slot()}, "TestChamp", cc_kinds={"Q": CC_PER_PART}
+        )
         with pytest.raises(ValueError, match="event ledger"):
             parse(_champion(Q=[_ability()]), 9, 0.0)
 
     def test_certified_single_hit_cc_part_is_accepted(self) -> None:
         parse = build_parser(
-            {"Q": self._cc_slot(event_order_certified="single_hit")}, "TestChamp"
+            {"Q": self._cc_slot(event_order_certified="single_hit")},
+            "TestChamp",
+            cc_kinds={"Q": CC_PER_PART},
         )
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
         assert results["Q"]["parts"][0].cc_kind == "stun"
@@ -1201,7 +1206,9 @@ class TestCcEventContract:
             return entry
 
         parse_slot.phase = DAMAGE
-        parse = build_parser({"Q": parse_slot}, "TestChamp")
+        parse = build_parser(
+            {"Q": parse_slot}, "TestChamp", cc_kinds={"Q": CC_PER_PART}
+        )
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
         assert results["Q"]["parts"][0].cc_kind == "stun"
 
@@ -1213,7 +1220,9 @@ class TestCcEventContract:
             return entry
 
         parse_slot.phase = DAMAGE
-        parse = build_parser({"Q": parse_slot}, "TestChamp")
+        parse = build_parser(
+            {"Q": parse_slot}, "TestChamp", cc_kinds={"Q": CC_PER_PART}
+        )
         with pytest.raises(ValueError, match="stunn"):
             parse(_champion(Q=[_ability()]), 9, 0.0)
 
@@ -1232,13 +1241,17 @@ class TestCcEventContract:
         """A reviewed ABSENCE of control is only worth declaring where the
         ledger can see it: that is where the control token is cleared, so a
         "none" on a coarse aggregate row claims a review it cannot show."""
-        parse = build_parser({"Q": self._cc_free_slot()}, "TestChamp")
+        parse = build_parser(
+            {"Q": self._cc_free_slot()}, "TestChamp", cc_kinds={"Q": CC_PER_PART}
+        )
         with pytest.raises(ValueError, match="event ledger"):
             parse(_champion(Q=[_ability()]), 9, 0.0)
 
     def test_certified_reviewed_no_cc_result_is_accepted(self) -> None:
         parse = build_parser(
-            {"Q": self._cc_free_slot(event_order_certified="single_hit")}, "TestChamp"
+            {"Q": self._cc_free_slot(event_order_certified="single_hit")},
+            "TestChamp",
+            cc_kinds={"Q": CC_PER_PART},
         )
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
         assert results["Q"]["parts"][0].cc_kind == "none"
@@ -1262,6 +1275,7 @@ class TestCcEventContract:
         parse = build_parser(
             {"Q": simple_damage(attr="Damage", dmg_type="magic", cc_kind="stun")},
             "TestChamp",
+            cc_kinds={"Q": CC_PER_PART},
         )
         with pytest.raises(ValueError, match="event ledger"):
             parse(_champion(Q=[_ability()]), 9, 0.0)
@@ -1303,14 +1317,53 @@ class TestModuleCcApplication:
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
         assert [part.cc_kind for part in results["Q"]["parts"]] == ["none", "none"]
 
-    def test_explicit_part_kind_survives_an_agreeing_declaration(self) -> None:
+    def test_an_agreeing_part_kind_is_still_a_second_home(self) -> None:
+        """One fact, one home: a part restating the declared constant is
+        refused exactly like a part contradicting it, because a restatement
+        is what drifts silently when the declaration is edited."""
         parse = build_parser(
             {"Q": self._two_part_slot("stun", None)},
             "TestChamp",
             cc_kinds={"Q": "stun"},
         )
+        with pytest.raises(ValueError, match="one cast's crowd control has one home"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
+
+    def test_a_per_part_slot_keeps_the_kinds_its_parts_author(self) -> None:
+        """The slot whose control is not one answer (Zac's opening bounce
+        displaces, the rest slow) names itself and the parts answer."""
+        parse = build_parser(
+            {"Q": self._two_part_slot("knockback", "slow")},
+            "TestChamp",
+            cc_kinds={"Q": CC_PER_PART},
+        )
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
-        assert [part.cc_kind for part in results["Q"]["parts"]] == ["stun", "stun"]
+        assert [part.cc_kind for part in results["Q"]["parts"]] == [
+            "knockback",
+            "slow",
+        ]
+
+    def test_a_per_part_slot_leaves_a_bare_part_unreviewed(self) -> None:
+        """A branch that reviewed its way to no answer (Rammus' aggregated
+        thorns row) is left bare rather than stamped."""
+        parse = build_parser(
+            {"Q": self._two_part_slot("slow", None)},
+            "TestChamp",
+            cc_kinds={"Q": CC_PER_PART},
+        )
+        results = parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert [part.cc_kind for part in results["Q"]["parts"]] == ["slow", None]
+
+    def test_an_undeclared_slot_may_not_author_a_kind(self) -> None:
+        """The pointer cannot go stale: authoring a kind for a slot
+        ``MODULE_CC`` does not name is the second home D5 retires."""
+        parse = build_parser(
+            {"Q": self._two_part_slot("stun", None)},
+            "TestChamp",
+            cc_kinds={},
+        )
+        with pytest.raises(ValueError, match="MODULE_CC does not declare"):
+            parse(_champion(Q=[_ability()]), 9, 0.0)
 
     def test_disagreeing_declarations_raise(self) -> None:
         parse = build_parser(

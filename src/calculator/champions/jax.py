@@ -145,7 +145,6 @@ SLOTS = {
     "W": _empower,
     "E": with_control(
         _counter_strike,
-        kind="stun",
         duration_attr="Stun Duration",
         effect_index=1,
     ),

@@ -400,7 +400,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Briar")
-        assert briar.MODULE_CC == {"Q": "stun", "W": "none", "R": "none"}
+        assert briar.MODULE_CC == {
+            "Q": "stun",
+            "W": "none",
+            "E": "knockback",
+            "R": "none",
+        }
         assert "stuns them for 0.85 seconds" in " ".join(
             cc_review.slot_text(data, "Q").split()
         )

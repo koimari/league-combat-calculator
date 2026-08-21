@@ -3,6 +3,7 @@
 from src.calculator.champions import parse_champion_abilities, rengar
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _e_part(ferocity):
@@ -38,7 +39,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rengar")
-        assert rengar.MODULE_CC == {"Q": "none", "W": "none"}
+        assert rengar.MODULE_CC == {"Q": "none", "W": "none", "E": CC_PER_PART}
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         # R's damage row is the empowered attack's armour-reduction rider
@@ -50,7 +51,7 @@ class TestReviewedCrowdControl:
         e_text = cc_review.slot_text(cc_review.kit("Rengar"), "E")
         assert "slows them for 1.75 seconds" in e_text
         assert "the target is rooted instead of slowed" in e_text
-        assert "E" not in rengar.MODULE_CC
+        assert rengar.MODULE_CC["E"] == CC_PER_PART
         assert _e_part(0).cc_kind == "slow"
         assert _e_part(4).cc_kind == "root"
 

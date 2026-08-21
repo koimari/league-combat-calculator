@@ -8,6 +8,7 @@ says makes the whole timed fight fall back to coarse ordering.
 import pytest
 
 from src.calculator.champions import kled
+from src.calculator.champions.engine import CC_PER_PART
 from tests import cc_review, row_review
 
 
@@ -15,7 +16,7 @@ class TestReviewedCrowdControl:
     """Chaaaaaaaarge!!! knocks back, Bear Trap pulls at its tether's end."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert kled.MODULE_CC == {"W": "none", "R": "knockback"}
+        assert kled.MODULE_CC == {"Q": CC_PER_PART, "W": "none", "R": "knockback"}
         assert kled.parse_abilities.cc_kinds == kled.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -34,7 +35,7 @@ class TestReviewedCrowdControl:
             "units toward him, deals physical damage and slows them for "
             "2.5 seconds" in q_text
         )
-        assert "Q" not in kled.MODULE_CC
+        assert kled.MODULE_CC["Q"] == CC_PER_PART
         trap, pull = row_review.parts("Kled", "Q")
         assert (trap.time_offset, trap.cc_kind) == (0.0, "none")
         assert (pull.time_offset, pull.cc_kind) == (1.75, "pull")

@@ -142,7 +142,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # W's arrival "roots them for a duration": the sourced Root Duration row
     # carries MODULE_CC's reviewed kind and its control atom onto the packet.
     slot_wrappers={
-        "W": partial(with_control, kind="root", duration_attr="Root Duration"),
+        "W": partial(with_control, duration_attr="Root Duration"),
     },
     slot_order=("P", "Q", "W", "E", "R"),
     cc_kinds=MODULE_CC,

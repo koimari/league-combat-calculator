@@ -660,6 +660,20 @@ def _empower_marker_part(
     )
 
 
+#: The ``MODULE_CC`` value for a slot whose control is not one answer.
+#:
+#: A slot-level kind is a constant, and some slots do not have one: the
+#: kind varies by part (Zac's Elastic Slingshot knocks back the first
+#: bounce and slows the rest), by option (Aphelios' weapon, Sion's charge
+#: time, Yasuo's two Q stacks) or by both.  Those slots author the kind on
+#: the part that carries it, and name themselves here so the declaration
+#: still lists every reviewed slot in one place.  It is a pointer, not a
+#: second home: :func:`_apply_module_cc` stamps nothing for such a slot,
+#: and authoring a kind on a slot NOT declared here is refused
+#: (:func:`_refuse_undeclared_part_cc`), so the pointer cannot go stale.
+CC_PER_PART = "per_part"
+
+
 def _apply_module_cc(
     entry: dict[str, Any],
     kind: str,
@@ -677,10 +691,11 @@ def _apply_module_cc(
     instead of only of the ones that happened to go through a builder
     keyword.
 
-    A part that already carries its own kind keeps it — an explicit
-    per-part statement is the more specific one — but a part that carries
-    a *different* kind is two declarations of one fact that disagree, so it
-    raises rather than silently preferring either.
+    A part that carries its own kind under a constant declaration is a
+    second home for one fact — whether it agrees or not — so it raises: a
+    slot whose control really does vary within the cast declares
+    :data:`CC_PER_PART` instead, and one whose control is a constant keeps
+    the constant in ``MODULE_CC`` alone.
 
     A slot with no parts at all gets one built for it, stops the import,
     or is a row that prices nothing at all — :func:`_empower_marker_part`
@@ -688,6 +703,12 @@ def _apply_module_cc(
     all three alike, where a declaration on a row that DOES price damage
     returned quietly and stamped nothing.
     """
+    if kind == CC_PER_PART:
+        # The parts already carry the answer, and a branch that reviewed
+        # its way to *no* answer (Rammus' aggregated thorns row) leaves
+        # them bare on purpose.  Stamping here would overwrite both.
+        return
+    parts = entry.get("parts") or ()
     if kind == "none":
         # The reviewed no-CC statement: the fight engine's event rows read
         # it as ``cc_reviewed`` (a row with no kind at all is unreviewed).
@@ -697,29 +718,55 @@ def _apply_module_cc(
                 "control but the entry authors control_events"
             )
         entry["cc_reviewed"] = True
-    parts = entry.get("parts") or ()
     if not parts:
         marker = _empower_marker_part(entry, kind, champion_name, slot)
         if marker is not None:
             entry["parts"] = (marker,)
         return
     stamped: list[Any] = []
-    changed = False
     for part in parts:
         existing = getattr(part, "cc_kind", None)
-        if existing is None:
-            stamped.append(replace(part, cc_kind=kind))
-            changed = True
-            continue
-        if existing != kind:
+        if existing is not None:
             raise ValueError(
                 f"{champion_name} slot {slot!r}: MODULE_CC declares "
-                f"{kind!r} but the part declares {existing!r} — one cast's "
-                "crowd control has one answer"
+                f"{kind!r} and a part declares {existing!r} — one cast's "
+                "crowd control has one home; drop the part's cc_kind, or "
+                f"declare the slot {CC_PER_PART!r} if the kind really does "
+                "vary within the cast"
             )
-        stamped.append(part)
-    if changed:
-        entry["parts"] = tuple(stamped)
+        stamped.append(replace(part, cc_kind=kind))
+    entry["parts"] = tuple(stamped)
+
+
+def _refuse_undeclared_part_cc(
+    champion_name: str,
+    result_key: str,
+    entry: dict[str, Any],
+    declared_keys: frozenset[str],
+) -> None:
+    """A part may only author a kind for a slot ``MODULE_CC`` names.
+
+    Raises:
+        ValueError: The entry's parts author crowd control for a slot the
+            module's ``MODULE_CC`` does not declare, so the kit's control
+            has a second, unlisted home.
+    """
+    if result_key in declared_keys:
+        return
+    authored = sorted(
+        {
+            part.cc_kind
+            for part in entry.get("parts") or ()
+            if getattr(part, "cc_kind", None) is not None
+        }
+    )
+    if authored:
+        raise ValueError(
+            f"{champion_name} entry {result_key!r}: parts author cc_kind(s) "
+            f"{authored} for a slot MODULE_CC does not declare — declare the "
+            f"slot (the constant kind, or {CC_PER_PART!r} when the kind "
+            "varies within the cast)"
+        )
 
 
 # The instant a multi-part ``single_hit`` row occupies: the cast boundary
@@ -841,6 +888,7 @@ def build_parser(
     # source, so one resolution per champion per process is the whole cost.
     declared_options: dict[str, Any] | None = None
     declared_cc_kinds: Mapping[str, str] = dict(cc_kinds) if cc_kinds else {}
+    declared_result_keys = frozenset(_result_key(slot) for slot in declared_cc_kinds)
 
     def parse_abilities(
         champion_data: dict[str, Any],
@@ -894,6 +942,9 @@ def build_parser(
         for result_key, entry in results.items():
             _certify_shared_instant(champion_name, result_key, entry)
             _validate_entry_keys(champion_name, result_key, entry)
+            _refuse_undeclared_part_cc(
+                champion_name, result_key, entry, declared_result_keys
+            )
             _validate_cc_event_contract(champion_name, result_key, entry)
 
         return results

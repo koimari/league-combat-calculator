@@ -12,13 +12,19 @@ from src.calculator.champions import (
 )
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review, coverage_truth, row_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 class TestReviewedCrowdControl:
     """Solar Snare's orb roots and its field slows, so E answers per part."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert mel.MODULE_CC == {"P": "none", "Q": "none", "R": "none"}
+        assert mel.MODULE_CC == {
+            "P": "none",
+            "Q": "none",
+            "E": CC_PER_PART,
+            "R": "none",
+        }
         assert mel.parse_abilities.cc_kinds == mel.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

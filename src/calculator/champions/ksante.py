@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -83,7 +83,6 @@ def _ntofo(ctx: SlotCtx) -> dict[str, Any] | None:
         # "deals physical damage to enemies hit and slows them by 80% for
         # 0.5 seconds" — the empowered two-stack recast's pull and stun are
         # a branch this module does not price.
-        cc_kind="slow",
         event_order_certified="single_hit",
     )(ctx)
 
@@ -305,7 +304,7 @@ SLOTS = {
 # rides its parts.  E authors no damage part, and P's mark-consumption row
 # is an effect-phase proc with a module-built event list the marker would
 # not reach.
-MODULE_CC = {"R": "stun"}
+MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "R": "stun"}
 
 parse_abilities = build_parser(SLOTS, "K'Sante", cc_kinds=MODULE_CC)
 OPTIONS = [

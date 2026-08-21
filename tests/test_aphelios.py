@@ -29,12 +29,20 @@ class TestReviewedCrowdControl:
     """Aphelios's crowd-control review is per weapon, not per slot.
 
     Q is whichever Moonstone weapon is equipped — Gravitum's Binding
-    Eclipse roots where the others apply nothing — so the answer follows
-    the weapon option, and rides the parts each weapon form builds.
+    Eclipse roots where the others apply nothing — so ``MODULE_CC`` names
+    the slot ``CC_PER_PART`` and the answer rides the parts each weapon
+    form builds.
     """
 
-    def test_the_kit_declares_nothing_at_slot_level(self):
-        assert not hasattr(aphelios, "MODULE_CC")
+    def test_the_weapon_slots_name_themselves_per_part(self):
+        from src.calculator.champions.engine import CC_PER_PART
+
+        assert aphelios.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "E": "none",
+            "R": CC_PER_PART,
+        }
+        assert aphelios.parse_abilities.cc_kinds == aphelios.MODULE_CC
 
     def test_only_gravitums_q_controls_what_it_damages(self):
         text = cc_review.slot_text(cc_review.kit("Aphelios"), "Q")

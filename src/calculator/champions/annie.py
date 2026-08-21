@@ -279,7 +279,19 @@ SLOTS = {
     "E": _molten_shield,
 }
 
-parse_abilities = build_parser(SLOTS, "Annie")
+# MODULE_CC is empty.  E's retaliation only makes "enemies that deal damage
+# to it take magic damage", but its row is an untimed zero the event ledger
+# cannot carry a kind for.
+#
+# Q, W and R are left unreviewed on purpose.  Pyromania is at maximum
+# stacks "when the game starts and upon respawning", so the first cast of
+# Disintegrate, Incinerate or Summon: Tibbers in a modeled fight consumes
+# them "to stun enemies hit" — a slot-wide "none" would be false of that
+# cast and a slot-wide stun false of every later one.  P is the stun's own
+# zero-damage row.  (Kennen's Mark of the Storm is the same shape.)
+MODULE_CC: dict[str, str] = {}
+
+parse_abilities = build_parser(SLOTS, "Annie", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Annie")

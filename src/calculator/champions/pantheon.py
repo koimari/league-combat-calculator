@@ -119,11 +119,9 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     # HARDCODED: verify on patch updates — the cached W description states
     # the interval in prose ("stuns them for 1 second"), with no leveling
-    # row to read it from.  The kind restates MODULE_CC's declaration
-    # because a duration cannot be authored without one.
-    entry["parts"] = (
-        DamagePart("physical", value, cc_kind="stun", cc_duration=_W_STUN_SECONDS),
-    )
+    # row to read it from.  The kind it belongs to is MODULE_CC's, stamped
+    # after every phase onto the part this line rebuilds.
+    entry["parts"] = (DamagePart("physical", value, cc_duration=_W_STUN_SECONDS),)
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
         f"%max-HP physical damage row: {percent:g}% of the target's "

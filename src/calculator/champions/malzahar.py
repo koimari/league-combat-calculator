@@ -296,7 +296,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # The portals' sourced Silence Duration row carries MODULE_CC's reviewed
     # kind and its control atom onto the packet's Q entry.
     slot_wrappers={
-        "Q": partial(with_control, kind="silence", duration_attr="Silence Duration"),
+        "Q": partial(with_control, duration_attr="Silence Duration"),
     },
     cc_kinds=MODULE_CC,
 )

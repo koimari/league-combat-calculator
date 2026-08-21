@@ -306,7 +306,11 @@ class TestReviewedCrowdControl:
     """
 
     def test_the_kit_declares_nothing(self):
-        assert not hasattr(aatrox, "MODULE_CC")
+        """The empty dict is the declaration: every module states its
+        review at ``MODULE_CC``, and stating none of it there is different
+        from never having asked."""
+        assert aatrox.MODULE_CC == {}
+        assert aatrox.parse_abilities.cc_kinds == {}
 
     def test_the_darkin_blades_knockup_is_the_sweetspot_branchs(self):
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")

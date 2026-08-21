@@ -29,6 +29,7 @@ from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.champions import aurelion_sol
+from src.calculator.champions.engine import CC_PER_PART
 from tests import cc_review, coverage_truth, row_review
 
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -536,7 +537,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Aurelion Sol")
-        assert aurelion_sol.MODULE_CC == {"Q": "none", "E": "none"}
+        assert aurelion_sol.MODULE_CC == {"Q": "none", "E": "none", "R": CC_PER_PART}
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 
@@ -544,7 +545,7 @@ class TestReviewedCrowdControl:
         self, aurelion_sol_data, parse_at
     ):
         """R is absent from MODULE_CC because its two branches disagree."""
-        assert "R" not in aurelion_sol.MODULE_CC
+        assert aurelion_sol.MODULE_CC["R"] == CC_PER_PART
         entries = aurelion_sol_data["abilities"]["R"]
         assert "strikes the target location after 1.25 seconds" in (
             entries[0]["effects"][0]["description"]

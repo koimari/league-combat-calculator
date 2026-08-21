@@ -3,6 +3,7 @@
 from src.calculator.champions import parse_champion_abilities, rammus
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _w_part(autos):
@@ -29,7 +30,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rammus")
-        assert rammus.MODULE_CC == {"Q": "immobilize", "R": "slow"}
+        assert rammus.MODULE_CC == {"Q": "immobilize", "W": CC_PER_PART, "R": "slow"}
         # Q applies two immobilize kinds in one cast, which is what the
         # un-narrowed "immobilize" states.
         q_text = cc_review.slot_text(data, "Q")
@@ -52,7 +53,7 @@ class TestReviewedCrowdControl:
         # W applies no control; it can only say so when it prices a single
         # reactive hit, because nothing sources the arrival times of the
         # enemy autos a longer row aggregates.
-        assert "W" not in rammus.MODULE_CC
+        assert rammus.MODULE_CC["W"] == CC_PER_PART
         assert (
             cc_review.control_words(cc_review.slot_text(cc_review.kit("Rammus"), "W"))
             == []

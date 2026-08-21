@@ -213,7 +213,6 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=1.0,
                 time_offset=0.0,
                 hit_interval=E_DURATION_SECONDS / slashes,
-                cc_kind="none",
             ),
         ),
         # Each slash applies item on-hits at 12-24%, interpolated by the
@@ -412,7 +411,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="knockup",
         duration_attr="Knock Up Duration",
     ),
     "E": _royal_maelstrom,
@@ -437,6 +435,6 @@ SLOTS = {
 # enemies she passes through" — but its row is the four cardinal dashes in
 # one part and the cache spaces them with nothing but "incurs a cooldown
 # between casts", a cooldown it never names.
-MODULE_CC = {"W": "knockup", "R": "slow"}
+MODULE_CC = {"W": "knockup", "E": "none", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Bel'Veth", cc_kinds=MODULE_CC)

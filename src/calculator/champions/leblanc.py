@@ -7,7 +7,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
@@ -199,7 +199,7 @@ SOURCES = load_champion_sources("LeBlanc")
 # deal the same magic damage again" times the second hit to another cast
 # the entry does not name, inside a 3.5-second mark window.  A window is
 # not a cadence, so the two hits stay in one part.
-MODULE_CC = {"W": "none"}
+MODULE_CC = {"W": "none", "E": CC_PER_PART, "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "LeBlanc", cc_kinds=MODULE_CC)
 

@@ -17,7 +17,8 @@ class TestReviewedCrowdControl:
 
     def test_the_kit_declares_nothing_because_the_mark_is_state(self):
         passive = cc_review.slot_text(cc_review.kit("Kennen"), "P")
-        assert not hasattr(kennen, "MODULE_CC")
+        assert kennen.MODULE_CC == {}
+        assert kennen.parse_abilities.cc_kinds == {}
         assert (
             "kennen's abilities apply a stack of mark of the storm to "
             "enemies hit for 6 seconds, refreshing on subsequent "

@@ -6,7 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
@@ -165,7 +165,7 @@ SLOTS = {
 # converging blades deal magic damage "and stun[] them for 0.75 seconds".
 # R differs per pass, so its kinds ride its parts above.  P is the
 # attack-speed/on-hit passive and authors no damage part.
-MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Irelia", cc_kinds=MODULE_CC)
 OPTIONS = [

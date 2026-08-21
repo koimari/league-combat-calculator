@@ -223,8 +223,14 @@ class TestReviewedCrowdControl:
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import fizz
+        from src.calculator.champions.engine import CC_PER_PART
 
-        assert fizz.MODULE_CC == {"Q": "none", "W": "none", "R": "knockback"}
+        assert fizz.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "E": CC_PER_PART,
+            "R": "knockback",
+        }
         assert fizz.parse_abilities.cc_kinds == fizz.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
