@@ -77,6 +77,10 @@ def bis_main_request(
         ability_ranks=dict(request.fight_params.ability_ranks or {}),
         champion_options=dict(request.fight_params.champion_options or {}),
         cast_order=request.fight_params.cast_order,
+        # The rune page is part of the main champion's stats everywhere else
+        # (calculate, optimize); a swap priced page-less would rank items
+        # against a different champion than the one on screen.
+        rune_page=request.fight_params.rune_page,
     )
 
 
