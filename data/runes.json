@@ -649,7 +649,8 @@
           76.47058823529412,
           80.0
         ]
-      ]
+      ],
+      "arming_window_seconds": 4.0
     }
   },
   "Sixth Sense": {

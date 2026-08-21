@@ -1,11 +1,11 @@
 """Domination's minor runes: what each one prices, and what each one declines.
 
-Two of the nine reach the fight — Cheap Shot's bonus true damage on the
-impaired trigger stream and Ultimate Hunter's ultimate haste — and both are
-pinned here against the cache and through the real pipeline. The other seven
-are compiled refusals, so the test that matters for them is not "does it
-price" but "does it decline for the right reason, with the number it declined
-to price named".
+Three of the nine reach the fight — Cheap Shot's bonus true damage on the
+impaired trigger stream, Sudden Impact's on a declared dash, and Ultimate
+Hunter's ultimate haste — and all three are pinned here against the cache and
+through the real pipeline. The other six are compiled refusals, so the test
+that matters for them is not "does it price" but "does it decline for the
+right reason, with the number it declined to price named".
 
 The distinction is the disposition: ``WITHHELD`` is a real number this engine
 holds no channel for, ``STRUCTURAL_ZERO`` is a rune whose answer is zero.
@@ -111,8 +111,69 @@ class TestCheapShot:
         )
 
 
-class TestTheTwoCombatRunesStillWaiting:
-    """Row 1's other two: a heal with no channel, a dash with no event."""
+class TestSuddenImpact:
+    """Row 1: a proc whose whole trigger is a declared option."""
+
+    def test_it_prices_its_cached_table_and_reads_the_dash_switch(self):
+        """20 true damage at level 1 rising to 80 at 18, armed by the option."""
+        effect = rune_effects.resolve_rune("Sudden Impact")
+        assert isinstance(effect, rune_effects.RuneProcEffect)
+        assert effect.damage_type({}) == "true"
+        assert effect.raw_damage(_inputs(level=1)) == pytest.approx(20.0)
+        assert effect.raw_damage(_inputs(level=18)) == pytest.approx(80.0)
+        assert not effect.armed({})
+        assert not effect.armed({"Sudden Impact": {"dashed": 0}})
+        assert effect.armed({"Sudden Impact": {"dashed": 1}})
+
+    def test_its_option_is_a_switch_defaulting_to_no_dash(self):
+        option = domination.OPTIONS["Sudden Impact"][0]
+        assert option.key == "dashed"
+        assert option.kind is rune_effects.RuneOptionKind.SWITCH
+        assert (option.default, option.bounds) == (0.0, (0.0, 1.0))
+
+    def test_the_arming_window_and_cooldown_are_read_not_written(self):
+        cached = rune_effects.RUNE_EFFECTS["Sudden Impact"]
+        assert cached["effects"]["arming_window_seconds"] == 4.0
+        assert cached["cooldown"] == 10.0
+        effect = rune_effects.resolve_rune("Sudden Impact")
+        assert "inside the 4s window" in effect.disclosures[1]
+        assert "its 10s cooldown gates nothing here" in effect.disclosures[1]
+
+    def test_the_switch_is_the_whole_difference_in_the_fight(self):
+        """1542.0 without the dash, 1622.0 with it — one 80-damage proc."""
+        request = {
+            "champion": "Ahri",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 20.0,
+            "target_health": 10000.0,
+            "target_armor": 100.0,
+            "target_mr": 100.0,
+        }
+        bare = calculate_payload(dict(request))
+        selected = calculate_payload({**request, "minor_runes": ["Sudden Impact"]})
+        dashed = calculate_payload(
+            {
+                **request,
+                "minor_runes": ["Sudden Impact"],
+                "rune_options": {"Sudden Impact": {"dashed": 1}},
+            }
+        )
+        assert bare["total_damage"] == pytest.approx(1542.0, abs=0.05)
+        assert selected["total_damage"] == pytest.approx(bare["total_damage"])
+        assert "rune_Sudden Impact" not in selected["breakdown"]
+        assert any(
+            "the rune page's options do not arm it" in note
+            for note in selected["notes"]
+        )
+        row = dashed["breakdown"]["rune_Sudden Impact"]
+        assert (row["count"], row["total_damage"]) == (1, pytest.approx(80.0))
+        assert dashed["total_damage"] == pytest.approx(1622.0, abs=0.05)
+
+
+class TestTasteOfBloodStillWaits:
+    """Row 1's third: a heal the self-healing ledger has no rune entry for."""
 
     def test_taste_of_blood_names_the_heal_and_the_missing_destination(self):
         """16 rising to 40, plus 10% bonus AD and 5% AP."""
@@ -122,28 +183,12 @@ class TestTheTwoCombatRunesStillWaiting:
         assert "heal 16 at level 1 rising to 40 at level 18" in effect.disclosures[0]
         assert "10% bonus AD and 5% AP" in effect.disclosures[0]
 
-    def test_sudden_impact_names_the_true_damage_and_the_missing_event(self):
-        """20 rising to 80 — armed by a dash the fight's timeline never records."""
-        effect = rune_effects.resolve_rune("Sudden Impact")
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert "carries no movement or stealth event" in effect.zero_policy.reason
-        assert "20 bonus true damage at level 1 rising to 80 at level 18" in (
-            effect.disclosures[0]
-        )
-
-    @pytest.mark.parametrize(
-        "name,levels",
-        [
-            ("Taste of Blood", (16.0, 40.0)),
-            ("Sudden Impact", (20.0, 80.0)),
-        ],
-    )
-    def test_the_quoted_span_is_the_cached_table_at_levels_1_and_18(self, name, levels):
+    def test_the_quoted_span_is_the_cached_table_at_levels_1_and_18(self):
         """The receipt's numbers are read, not written: prove it off the cache."""
-        table = rune_effects.RUNE_EFFECTS[name]["effects"]["leveling"][0]
+        table = rune_effects.RUNE_EFFECTS["Taste of Blood"]["effects"]["leveling"][0]
         assert (rune_effects.at_level(table, 1), rune_effects.at_level(table, 18)) == (
-            pytest.approx(levels[0]),
-            pytest.approx(levels[1]),
+            pytest.approx(16.0),
+            pytest.approx(40.0),
         )
 
 
@@ -264,10 +309,10 @@ class TestThePathThroughTheRealPipeline:
                 f"{name} is not priced" in note for note in with_runes["notes"]
             ), name
 
-    def test_the_withheld_damage_reaches_the_notes_with_its_numbers(self):
-        result = calculate_payload({**_PROBE, "minor_runes": ["Sudden Impact"]})
+    def test_the_withheld_heal_reaches_the_notes_with_its_numbers(self):
+        result = calculate_payload({**_PROBE, "minor_runes": ["Taste of Blood"]})
         assert any(
-            "20 bonus true damage at level 1 rising to 80" in note
+            "heal 16 at level 1 rising to 40 at level 18" in note
             for note in result["notes"]
         )
 
@@ -283,8 +328,8 @@ class TestThePathIsCovered:
         assert all(catalog.values())
         assert set(domination.COMPILERS) == set(catalog)
 
-    def test_only_the_rune_with_a_stack_count_declares_an_option(self):
-        assert set(domination.OPTIONS) == {"Ultimate Hunter"}
+    def test_the_two_runes_with_a_declared_input_are_the_two_with_options(self):
+        assert set(domination.OPTIONS) == {"Sudden Impact", "Ultimate Hunter"}
 
 
 def _stat_context(*, stacks=None):

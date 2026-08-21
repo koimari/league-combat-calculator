@@ -178,6 +178,12 @@ class RuneTrigger(Enum):
     SELF_SHIELD_EVENTS = "self_shield_events"
 
 
+def _always_armed(options: "Mapping[str, Mapping[str, float]]") -> bool:
+    """The default arming rule: nothing the page declares gates this proc."""
+    del options
+    return True
+
+
 @dataclass(frozen=True, slots=True)
 class RuneProcEffect:
     """A stack-triggered rune proc with a cooldown (Electrocute-class).
@@ -193,6 +199,13 @@ class RuneProcEffect:
     than spending them (Electrocute). ``disclosures`` are the rune's own
     receipts — assumed cadences and withheld halves — which the engine
     publishes verbatim; the words belong with the rune.
+
+    ``armed`` is how a proc reads the page's declared options — the one
+    thing the raw-damage inputs cannot carry, because those are the item
+    vocabulary and a rune option is not an item's. A rune whose whole
+    trigger is an input the fight has no event for (Sudden Impact's dash)
+    declares the option and answers here; every other rune keeps the
+    default and is armed by its stream alone.
     """
 
     rune_name: str
@@ -207,6 +220,7 @@ class RuneProcEffect:
     trigger: RuneTrigger = RuneTrigger.DAMAGE_INSTANCES
     consumes_stacks: bool = True
     disclosures: tuple[str, ...] = ()
+    armed: "Callable[[Mapping[str, Mapping[str, float]]], bool]" = _always_armed
 
 
 @dataclass(frozen=True, slots=True)
@@ -433,11 +447,30 @@ def _option_value(
 ) -> float:
     """One declared option of one rune, or its disclosed default.
 
-    Shared by the two contexts a rune formula reads, so "what this option is
-    worth" has one implementation whether a stat grant or an amplifier asks.
+    Shared by everything a rune formula reads an option through — the two
+    contexts and the proc arming rule — so "what this option is worth" has
+    one implementation whether a stat grant, an amplifier or a proc asks.
     """
     value = options.get(rune_name, {}).get(key)
     return default if value is None else float(value)
+
+
+def armed_by_option(
+    rune_name: str, key: str, default: float = 0.0
+) -> Callable[[Mapping[str, Mapping[str, float]]], bool]:
+    """A proc arming rule reading one declared switch off the page.
+
+    The proc-side counterpart of ``RuneStatContext.option``: a rune whose
+    trigger is an input the fight has no event for declares the switch and
+    hands this to :class:`RuneProcEffect`, so the option is read in one
+    place rather than by a walker branch per rune. The default is the
+    un-triggered state, so a page that sets nothing prices nothing.
+    """
+
+    def armed(options: Mapping[str, Mapping[str, float]]) -> bool:
+        return bool(_option_value(options, rune_name, key, default))
+
+    return armed
 
 
 @dataclass(frozen=True, slots=True)

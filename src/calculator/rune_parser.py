@@ -185,6 +185,11 @@ _SELF_HEALTH_GATE = re.compile(
 _LEVEL_GATED_HASTE = re.compile(r"Level (\d+): \+ ([\d.]+) \[\[ability haste\]\]")
 # "After reaching 15 stacks" — the count a rune names as its own threshold.
 _STACK_THRESHOLD = re.compile(r"After reaching (\d+) stacks")
+# "within 4 seconds of using a {{tip|dash}}" — how long a movement event
+# leaves a rune armed.  The window is a fact about the rune and not about
+# the fight, so it is parsed rather than assumed, and a compiler that
+# cannot enforce it quotes it in its disclosure instead of implying none.
+_ARMING_WINDOW = re.compile(r"within ([\d.]+) seconds of using a \{\{tip\|dash\}\}")
 # "Your ultimate has 12% increased damage (reduced to 8% for area of effect
 # abilities)" — an amplifier that reaches one ability slot rather than the
 # holder's whole output.  Both ends are matched in one pattern because the
@@ -857,6 +862,10 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     threshold_match = _STACK_THRESHOLD.search(description)
     if threshold_match:
         recorder.record("stack_threshold", int(threshold_match.group(1)))
+
+    arming_match = _ARMING_WINDOW.search(description)
+    if arming_match:
+        recorder.record("arming_window_seconds", float(arming_match.group(1)))
 
     level_gates = [
         [int(level), float(bonus)]

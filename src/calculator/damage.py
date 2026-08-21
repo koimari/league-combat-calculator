@@ -8640,12 +8640,20 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
     consumers, and the rune's own disclosures reach the notes whether
     it procced or not — a withheld half that goes quiet at zero is the
     silent zero this campaign removes.
+
+    A rune whose trigger is an input the fight has no event for reads it
+    off the page's declared options through its own ``armed`` rule, and an
+    un-armed rune walks no stream at all rather than being priced on one
+    that does not stand for its trigger.
     """
     for effect in _page_effects(state, rune_effects.RuneProcEffect):
+        armed = effect.armed(state.rune_options)
         proc_times: list[float] = []
         live_stacks: list[float] = []
         ready_at = 0.0
-        for instance_time in _rune_trigger_times(state, rotation, effect.trigger):
+        for instance_time in (
+            _rune_trigger_times(state, rotation, effect.trigger) if armed else ()
+        ):
             if instance_time < ready_at:
                 continue
             if effect.stack_window_seconds is not None:
@@ -8662,7 +8670,7 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
                     live_stacks = []
         state.notes.extend(effect.disclosures)
         if not proc_times:
-            _note_rune_never_procced(state, effect)
+            _note_rune_never_procced(state, effect, armed=armed)
             continue
         _record_rune_proc_row(state, effect, proc_times)
 
@@ -8685,14 +8693,23 @@ _RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = MappingProx
 
 
 def _note_rune_never_procced(
-    state: FightState, effect: "rune_effects.RuneProcEffect"
+    state: FightState, effect: "rune_effects.RuneProcEffect", *, armed: bool = True
 ) -> None:
-    """Disclose a selected keystone whose trigger stream never armed it.
+    """Disclose a selected rune whose trigger never armed it.
 
     Electrocute has always been able to end a fight without proccing; what
-    it did not do was say so. Every proc-class keystone says it here, in
-    the words of the stream it declared.
+    it did not do was say so. Every proc-class rune says it here, in the
+    words of the stream it declared — or, for a rune whose trigger is a
+    declared option, in the words of the option that stayed off, because
+    "the fight produced no damage instances" would be a false reason for a
+    fight full of them.
     """
+    if not armed:
+        state.notes.append(
+            f"{effect.rune_name} never procced: the rune page's options do "
+            "not arm it, and their defaults are the un-triggered state."
+        )
+        return
     stream = _RUNE_TRIGGER_SHORTFALLS[effect.trigger]
     shortfall = (
         f"produced no {stream}"

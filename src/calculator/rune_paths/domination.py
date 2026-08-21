@@ -28,6 +28,7 @@ from ..rune_effects import (
     RuneStatGrantEffect,
     RuneTrigger,
     RuneValues,
+    armed_by_option,
     at_level,
     breakdown_key,
     display_name,
@@ -125,30 +126,56 @@ def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
     )
 
 
-def _compile_sudden_impact(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
+#: Sudden Impact is armed by a dash, a blink or an exit from stealth, and
+#: the fight's timeline carries damage rather than movement — so whether one
+#: happened is a declared switch (decision 5) whose default is the
+#: un-triggered state, never an inference from a champion who owns a dash.
+_DASHED = "dashed"
+
+
+def _compile_sudden_impact(entry: Mapping[str, Any]) -> RuneProcEffect:
     """Compile Sudden Impact: true damage armed by a dash, blink or stealth exit.
 
-    The fight's timeline carries damage, not movement: no event says a dash
-    or a blink happened, and no cast is marked as leaving stealth. A proc
-    cannot ask either — the raw-damage inputs a proc reads carry the build,
-    the level and the target, and no rune options — so the arming condition
-    can be neither read nor declared, and the rune is refused whole.
+    The whole trigger is the option: with it off the rune walks no stream
+    at all, and with it on the holder is taken to open the fight with one
+    movement, so the first damage instance carries the bonus. One arming
+    event is one proc — a second would need a second dash the option does
+    not state — which is why the rune's own cooldown gates nothing here and
+    is quoted instead.
     """
     name = "Sudden Impact"
     effects = RuneValues(name, entry.get("effects", {}))
-    first, last = _level_span(name, effects)
-    return RuneNoDamageEffect(
+    base_by_level = required_leveling(name, effects)
+    window = effects.number("arming_window_seconds")
+    top = RuneValues(name, entry)
+
+    def raw(inputs: DamageInputs) -> float:
+        return at_level(base_by_level, inputs.level)
+
+    return RuneProcEffect(
         rune_name=name,
-        zero_policy=ZeroPolicy(
-            Disposition.WITHHELD,
-            "its bonus true damage is armed by a dash, a blink or an exit "
-            "from stealth within four seconds, and the fight's timeline "
-            "carries no movement or stealth event to arm it with",
-        ),
+        breakdown_key=breakdown_key(name),
+        display_name=display_name(name),
+        stacks_required=1,
+        stack_window_seconds=None,
+        # One arming event is one proc: re-arming needs another dash, and
+        # the option states one. The rune's own cooldown is quoted below.
+        cooldown_seconds=float("inf"),
+        proc_delay_seconds=0.0,
+        raw_damage=raw,
+        damage_type=stated_type("true"),
+        armed=armed_by_option(name, _DASHED),
         disclosures=(
-            f"{name} would deal {first:g} bonus true damage at level 1 rising "
-            f"to {last:g} at level 18, once per cooldown, for a champion that "
-            "opens with a dash, a blink or a stealth exit.",
+            f"{name} is priced with the holder opening the fight with a "
+            f"dash, a blink or a stealth exit — its {_DASHED!r} option, "
+            "whose default is that none happened: the fight's timeline "
+            "carries damage rather than movement, so the arming event is "
+            "asked for rather than inferred.",
+            f"{name} prices exactly one empowered instance, the fight's "
+            f"first, which is inside the {window:g}s window the rune states "
+            "for an opening movement. A second proc would need a second "
+            f"dash the option does not state, so its {top.number('cooldown'):g}s "
+            "cooldown gates nothing here and the count is a floor of one.",
         ),
     )
 
@@ -252,6 +279,21 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 }
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Sudden Impact": (
+        RuneOption(
+            key=_DASHED,
+            label="Opened with a dash, blink or stealth exit",
+            kind=RuneOptionKind.SWITCH,
+            default=0.0,
+            bounds=(0.0, 1.0),
+            disclosure=(
+                "1 prices Sudden Impact with the holder opening the fight "
+                "with a dash, a blink or an exit from stealth, which arms "
+                "its bonus true damage; 0, its default, is the fight in "
+                "which none happened."
+            ),
+        ),
+    ),
     "Ultimate Hunter": (
         RuneOption(
             key=_HUNTER_STACKS,
