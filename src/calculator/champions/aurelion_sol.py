@@ -447,6 +447,20 @@ ASSUMPTIONS = [
     "not declared in OPTIONS because the read-only option-meta test "
     "pins the declared set (the pipeline-injected context keys follow "
     "the same undeclared convention)",
+    "Q's cached 'cost' row (8.75/10/11.25/12.5/13.75 mana) is NOT a "
+    "stale value: it is the wiki's per-0.25s-tick drain, exactly 1/4 "
+    "of the game's per-second convention (bin AurelionSolQ 'mana' "
+    "[35, 40, 45, 50, 55]; ddragon costBurn '35/40/45/50/55', costType "
+    "'Mana per second') — the ratio is exact (4.0x) at every rank, the "
+    "same wiki per-tick display convention this module already sources "
+    "for Q's damage rows (8 beam ticks/s). patch_regression.py's "
+    "ability-row comparison flags this as 'cost drifted' because it "
+    "diffs the raw cached values against the raw per-second game "
+    "field without a unit conversion; that comparison is a row-mapping "
+    "artifact, not a real cache drift (verified 16.15/16.16.1: cdtb "
+    "aurelionsol.bin.json + ddragon AurelionSol.json). resource_cost is "
+    "not stamped for Q's channel (no per-cast test asserts it), so no "
+    "runtime behavior is affected either way.",
 ]
 
 SLOTS = {

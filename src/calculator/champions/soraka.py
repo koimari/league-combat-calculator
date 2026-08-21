@@ -108,6 +108,20 @@ ASSUMPTIONS = [
     "Astral Infusion (W) is declared as a zero-damage cast so the ally-support "
     "scanner emits its sourced heal (90-170 + 50% AP); its 10%-of-max-health "
     "cost per cast is documented, not modeled as mana.",
+    "W's cached 'cost' row (10/10/10/10/10, '%' units) is the ability's "
+    "health-cost leg only; Astral Infusion actually costs TWO resources "
+    "('10% Current Health, {{ cost }} Mana' per ddragon costType), and "
+    "the wiki cache never captured the mana leg (bin SorakaW 'mana' "
+    "[40, 45, 50, 55, 60]; ddragon costBurn '40/45/50/55/60') under this "
+    "or any other key in data/champions.json's W entry — a known-"
+    "degraded wiki parse, not a value that changed patch-to-patch. "
+    "patch_regression.py's ability-row comparison flags 'cost drifted' "
+    "because it diffs the cached %-health row against the game's "
+    "separate mana field; that is a row-mapping artifact (comparing two "
+    "different cost components), not a real drift. The module already "
+    "declares resource_cost=0.0 above and never modeled W's mana leg, "
+    "so no runtime behavior is affected (verified 16.15/16.16.1: cdtb "
+    "soraka.bin.json + ddragon Soraka.json).",
 ]
 
 SOURCES = [

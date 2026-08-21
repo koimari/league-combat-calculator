@@ -105,6 +105,20 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "cached Maximum row (0-76.4 + 191% AD) exactly 1.91x the Minimum at "
     "every rank; the module scales linearly with the fight's crit "
     "chance, exact at both sourced endpoints.",
+    "KNOWN CACHE LAG (verified 16.16.1, not fixed here — out of this "
+    "module's file scope): E (Slipstream)'s cached cost row is flat 30 "
+    "at every rank; the game files say 40 — bin NilahEAbility/NilahE "
+    "'mana' [40, 40, 40, 40, 40, 40] and ddragon Nilah.json costBurn "
+    "'40' (single value, all ranks) both confirm 40, not 30 (Nilah's "
+    "resource is MANA per the CharacterRecord arType). This module does "
+    "not model resource costs at all (no extract_cost call, no "
+    "hardcoded value to re-pin) — the generic engine.py resource-cost "
+    "stamp reads data/champions.json directly, so the flag traces to "
+    "the wiki cache, not to this module or its tests (no test currently "
+    "asserts Nilah's resource_cost). Clearing patch_regression.py's "
+    "ability_rows_stale flag requires a data/champions.json re-pull/"
+    "re-cert, which is outside this task's scope (see "
+    "docs/patch-day-runbook.md Step 3.A).",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"

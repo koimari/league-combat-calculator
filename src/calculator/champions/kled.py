@@ -143,6 +143,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "V25.14 (the e8-interactions worklist entry is stale; the wiki cache "
     "carries no Grievous Wounds on either Q entry), so the module declares "
     "no wound source.",
+    "Base movement speed and attack range are FORM-ATTRIBUTED, not stale: "
+    "data/champions.json carries movespeed 305 / attackRange 250 (the "
+    "DISMOUNTED row of the wiki's two-form stat box) while the 16.16 game "
+    "file Characters/Kled/CharacterRecords/Root carries 345 / 125 (MOUNTED). "
+    "The wiki's own P[1] text reconciles them exactly — dismounting reduces "
+    "movement speed 'by 40 to 305' (345 - 40) and grants '125 total attack "
+    "range' (125 + 125) — and every other cached stat matches the game file "
+    "leaf for leaf. patch_regression therefore reports a permanent, "
+    "patch-independent stat_drift on these two fields (identical flags in "
+    "the committed 16.15 report; the 16.16.1 re-pull changed no Kled leaf) "
+    "and no value is overridden here. Melee/ranged classification is "
+    "unaffected: stats.is_melee reads attackType ('MELEE'), never "
+    "attackRange. Residual: base move speed feeds Swiftmarch's "
+    "adaptive_force_per_total_move_speed (5%), so a Swiftmarch build "
+    "understates adaptive force by 2.0 while the module's modeled abilities "
+    "(E Jousting, R Chaaaaaaaarge!!!) are mounted-only — reconciling the "
+    "form of the cached stat row is escalated, not patched here.",
 ]
 
 # HARDCODED: verify on patch updates.  Kled's Grievous Wounds (historically
