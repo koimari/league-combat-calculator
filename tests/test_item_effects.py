@@ -1464,3 +1464,54 @@ class TestCp20ItemState:
             )
             == 1
         )
+
+
+class TestCachedSustainStatFailsClosed:
+    """An absent cached stat and a broken stat block are different answers."""
+
+    @staticmethod
+    def _read(item: dict) -> float:
+        return item_effects._cached_sustain_stat(item, "lifesteal_percent")
+
+    def test_sparse_fixture_without_a_stats_map_reads_zero(self) -> None:
+        assert self._read({"name": "Long Sword"}) == 0.0
+
+    def test_item_whose_stats_omit_the_stat_reads_zero(self) -> None:
+        assert self._read({"name": "Long Sword", "stats": {"attackDamage": {}}}) == 0.0
+
+    def test_present_block_missing_a_component_raises_naming_item_and_key(
+        self,
+    ) -> None:
+        with pytest.raises(KeyError) as excinfo:
+            self._read({"name": "Bloodthirster", "stats": {"lifesteal": {"flat": 0.0}}})
+
+        message = excinfo.value.args[0]
+        assert "Bloodthirster" in message
+        assert "lifesteal" in message
+        assert "percent" in message
+
+    def test_non_numeric_component_raises_naming_item_and_key(self) -> None:
+        with pytest.raises(TypeError) as excinfo:
+            self._read(
+                {"name": "Bloodthirster", "stats": {"lifesteal": {"percent": None}}}
+            )
+
+        message = excinfo.value.args[0]
+        assert "Bloodthirster" in message
+        assert "percent" in message
+
+    def test_stat_block_that_is_not_a_component_map_raises(self) -> None:
+        with pytest.raises(TypeError) as excinfo:
+            self._read({"name": "Bloodthirster", "stats": {"lifesteal": 12.0}})
+
+        assert "Bloodthirster" in excinfo.value.args[0]
+
+    def test_every_cached_item_reads_each_grouped_sustain_stat(self) -> None:
+        """The live cache satisfies the typed read for all three stats."""
+        from src.calculator.data_fetcher import fetch_item_data
+
+        cached = list(fetch_item_data().values())
+        assert cached
+        for stat_key in item_effects._SUSTAIN_STAT_CACHE_KEYS:
+            for item in cached:
+                item_effects._cached_sustain_stat(item, stat_key)

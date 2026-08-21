@@ -4543,31 +4543,64 @@ def override_item_stat(item_name: str, stat_key: str, value: float) -> float:
     return sustain_effect_value(item_name, key)
 
 
-# Cache stat name + component for each grouped sustain stat.  ``None`` means
-# flat and percent both count (heal-and-shield power).
-_SUSTAIN_STAT_CACHE_KEYS: dict[str, tuple[str, str | None]] = {
-    "lifesteal_percent": ("lifesteal", "percent"),
-    "omnivamp_percent": ("omnivamp", "percent"),
-    "heal_and_shield_power_percent": ("healAndShieldPower", None),
+# The cached stat name and the components that count, per grouped sustain
+# stat.  Heal-and-shield power counts flat and percent both.
+_SUSTAIN_STAT_CACHE_KEYS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "lifesteal_percent": ("lifesteal", ("percent",)),
+    "omnivamp_percent": ("omnivamp", ("percent",)),
+    "heal_and_shield_power_percent": ("healAndShieldPower", ("flat", "percent")),
 }
 
 
-def _cached_sustain_stat(item: dict[str, Any], stat_key: str) -> float:
-    """Return what the cached item JSON declares for one sustain stat."""
+def _cached_sustain_component(
+    item_name: str, stat_name: str, block: Mapping[str, Any], component: str
+) -> float:
+    """One component of a present cached stat block, or a named parser break."""
+    if component not in block:
+        raise KeyError(
+            f"cached item {item_name!r} stat {stat_name!r} declares no "
+            f"{component!r} component — the item parse is broken"
+        )
+    value = block[component]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(
+            f"cached item {item_name!r} stat {stat_name!r} component "
+            f"{component!r} is {value!r}, not a number — the item parse is broken"
+        )
+    return float(value)
+
+
+def _cached_sustain_stat(item: Mapping[str, Any], stat_key: str) -> float:
+    """Return what the cached item JSON declares for one sustain stat.
+
+    An absent stat and a broken parse are two different answers.  A sparse
+    fixture carrying no ``stats`` map, and a cached item whose stat map omits
+    the stat, both declare no sustain and read ``0.0``.  A stat block that is
+    *present* but missing a component the wiki always publishes is a parser
+    break and raises, naming the item and the key — reading it as zero is how
+    a stale sustain number hides.
+    """
     cache_key = _SUSTAIN_STAT_CACHE_KEYS.get(stat_key)
     if cache_key is None:
         return 0.0
     stats = item.get("stats")
     if not isinstance(stats, Mapping):
         return 0.0
-    raw = stats.get(cache_key[0], {})
-    if not isinstance(raw, Mapping):
+    stat_name, components = cache_key
+    if stat_name not in stats:
         return 0.0
-    if cache_key[1] is None:
-        return float(raw.get("flat", 0.0) or 0.0) + float(
-            raw.get("percent", 0.0) or 0.0
+    block = stats[stat_name]
+    item_name = str(item.get("name") or "") or "<unnamed>"
+    if not isinstance(block, Mapping):
+        raise TypeError(
+            f"cached item {item_name!r} stat {stat_name!r} is "
+            f"{type(block).__name__}, not a component map — the item parse "
+            "is broken"
         )
-    return float(raw.get(cache_key[1], 0.0) or 0.0)
+    return sum(
+        _cached_sustain_component(item_name, stat_name, block, component)
+        for component in components
+    )
 
 
 def sustain_stat_receipt(item_name: str, stat_key: str) -> dict[str, Any]:
