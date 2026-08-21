@@ -165,7 +165,7 @@ def derive_self_healing(
     count is sourced from the total/per-tick ratio so the authored sum
     stays exact at every rank.
 
-    Issue #143 (phase 2): this rule is the ONE ledger owner of the R heal.
+    This rule is the ONE ledger owner of the R heal.
     The support scanner defers the slot (``_MODULE_AUTHORED_HEAL_SLOTS``)
     and the participant timeline fans every tick out to all selected
     teammates (``target_scope: self_and_all_teammates``), so the ally heal

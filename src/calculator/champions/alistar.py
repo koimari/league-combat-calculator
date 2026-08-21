@@ -9,9 +9,7 @@ Why each slot is non-generic:
   on-hit. This is a total-attribute read plus an add-once on-hit addend,
   so the mechanic stays champion-local.
 - Q (Pulverize) / W (Headbutt) are fully generic single-hit magic
-  damage — auto-mode ``simple_damage``, exactly the generic path the
-  legacy module reached by calling the generic parser and patching its
-  output.
+  damage — auto-mode ``simple_damage``.
 - P (Triumphant Roar) is healing only: its slot is a zero-damage
   receipt carrying the Triumph stacks Alistar walks in with, so
   ``derive_self_healing`` can complete the seven-stack set inside the
@@ -20,9 +18,8 @@ Why each slot is non-generic:
   5%, which the engine's heal fan-out (``participant_timeline.py``
   clones one shared ``amount`` to every recipient) cannot express, so it
   belongs to the ally scanner rather than to this rule.
-- R (Unbreakable Will) IS on the slot map: the old "no champion-authored
-  incoming-damage-reduction hook" receipt is obsolete.  PR #202 gave the
-  engine a champion-authored ``self_state_events`` packet of
+- R (Unbreakable Will) IS on the slot map: the engine carries a
+  champion-authored ``self_state_events`` packet of
   ``kind: "damage_modifier"`` (precedent: Briar E, ``briar.py``'s
   ``_chilling_scream``; Sivir E, ``sivir.py``'s ``_spell_shield``),
   consumed by ``participant_timeline._support_effect_templates`` (which
@@ -61,7 +58,7 @@ from ..ability_spec import AttackClass, DamageClass, DamagePart
 from ..healing_helpers import HealAnchor, _payments, _ability, _trigger_fields
 from ..survival.actions import TransitionRank
 from .inputs import champion_stat
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
@@ -394,7 +391,7 @@ SLOTS = {
 # its two parts disagree (see _trample); P deals no damage and R's own
 # self-cleanse is not a control effect applied to a target, so neither
 # names a CC kind here.
-MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
+MODULE_CC = {"Q": "immobilize", "W": "immobilize", "E": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 

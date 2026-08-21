@@ -158,6 +158,7 @@ import random
 from collections.abc import Iterable, Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
+from functools import lru_cache
 from operator import itemgetter
 from types import MappingProxyType
 from typing import Any, Callable, NamedTuple, TypeVar
@@ -166,6 +167,11 @@ from . import item_effects
 from . import resource_ledger
 from . import rune_effects
 from . import shield_ledger
+from .ability_atoms import (
+    ability_field,
+    ability_payload,
+    ability_sub_payload,
+)
 from .ability_spec import (
     ACTION_BLOCKING_CC_KINDS,
     AttackClass,
@@ -223,6 +229,7 @@ from .trigger_stream import (
     is_immobilizing_event,
 )
 from .state_lifecycle import InstanceCadence, TimedStackState
+from .champions import get_champion_options_meta
 from .champions.ashe import ASHE_FOCUS_STACK_RULE
 from .resistance import (
     apply_resistance,
@@ -248,24 +255,63 @@ BASE_CRIT_MULTIPLIER = 2.0
 DEFAULT_CAST_ORDER = ("Q", "Q2", "W", "E", "R")
 
 
-def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
-    """Calculate effective cooldown after ability haste.
+def _declared_options(meta: Mapping[str, Any], owner: str) -> Mapping[str, Any]:
+    """The option block one meta provider declares for an owner."""
+    return meta[owner]["options"] if owner in meta else {}
 
-    Formula: base_cd * 100 / (100 + ability_haste)
 
-    Dual identity (renewal counting): for a solo ability the cast epochs are
-    0, cd', 2*cd', ... and the cast rate 1/cd' = (100 + AH)/(100 * base_cd) is
-    affine in ability haste — each point of AH adds a constant
-    1/(100 * base_cd) casts/second. The total casts in [0, T] is the renewal
-    counting function floor(T/cd') + 1 (counting the t=0 cast).
+# Where each family of user options declares its own spec.  The engine never
+# restates an option's default: it reads the one the spec declares.
+_OPTION_SPECS: dict[str, Callable[[str], Mapping[str, Any]]] = {
+    "champion": lambda owner: {
+        str(option["key"]): option
+        for option in get_champion_options_meta(owner)["options"]
+    },
+    "item": lambda owner: _declared_options(
+        item_effects.item_input_options_meta(), owner
+    ),
+    "keystone": lambda owner: _declared_options(
+        rune_effects.keystone_input_options_meta(), owner
+    ),
+}
 
-    Args:
-        base_cooldown: Base cooldown in seconds.
-        ability_haste: Total ability haste.
 
-    Returns:
-        Effective cooldown in seconds.
+@lru_cache(maxsize=None)
+def declared_option_spec(family: str, owner: str, key: str) -> Mapping[str, Any]:
+    """One OPTIONS spec entry, the home of its default and its bounds.
+    An option the spec does not declare is a data error, not a zero: the
+    engine would otherwise price a state nobody can select."""
+    spec = _OPTION_SPECS[family](owner).get(key)
+    if not isinstance(spec, Mapping) or "default" not in spec:
+        raise KeyError(f"{family} option {owner}.{key} declares no default")
+    return spec
+
+
+def declared_option_default(family: str, owner: str, key: str) -> Any:
+    """The value an unset option prices at, as its own spec declares it."""
+    return declared_option_spec(family, owner, key)["default"]
+
+
+def _seeded_option_stacks(
+    options: Mapping[str, Any], family: str, owner: str, key: str
+) -> int:
+    """One integer stack option, defaulted and bounded by its own spec.
+
+    A blank or unparsable selection is the unset one.  The bounds are the
+    spec's own ``min``/``max``, so the cap lives beside the control the user
+    turns rather than beside each walk that seeds from it.
     """
+    spec = declared_option_spec(family, owner, key)
+    default = spec["default"]
+    try:
+        seeded = int(options.get(key, default) or default)
+    except (TypeError, ValueError):
+        seeded = int(default)
+    return max(int(spec["min"]), min(seeded, int(spec["max"])))
+
+
+def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
+    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
     if base_cooldown <= 0:
         return 0.0
     return base_cooldown * (100.0 / (100.0 + ability_haste))
@@ -318,7 +364,7 @@ class Resists:
     mr_shred: "resistance_shred.ShredSlot | None"
     # Percent BONUS armor penetration (Last Whisper family, K'Sante All
     # Out) and the target's base/bonus armor split (None = split unknown;
-    # the legacy quick-scenario total-pen reading applies).
+    # the quick-scenario total-pen reading applies).
     armor_pen_bonus_percent: float = 0.0
     target_bonus_armor: float | None = None
     # Target passives such as Amumu's Tantrum reduce each physical raw
@@ -452,11 +498,9 @@ class Resists:
         self, reduction_percent: float = 0.0, reduction_flat: float = 0.0
     ) -> None:
         """Reduce the target's armor and re-resolve armor.
-
-        Percent shreds (Kog'Maw Q) scale the armor that is left; flat
-        shreds (Corki E) subtract from it. Reduction — unlike penetration
-        — has no floor: negative armor amplifies damage.
-        """
+        Percent shreds (Kog'Maw Q) scale the armor that is left; flat shreds
+        (Corki E) subtract from it.  Reduction, unlike penetration, has no
+        floor: negative armor amplifies damage."""
         self.target_armor = reduce_resistance(
             self.target_armor, reduction_percent, reduction_flat
         )
@@ -465,11 +509,9 @@ class Resists:
     def shred_mr(
         self, reduction_percent: float = 0.0, reduction_flat: float = 0.0
     ) -> None:
-        """Reduce the target's magic resist and re-resolve MR.
-
-        Same rules as :meth:`shred_armor` — flat reduction may take MR
-        below zero, where it amplifies damage.
-        """
+        """Reduce the target's magic resist and re-resolve MR.  Same rules as
+        :meth:`shred_armor`: flat reduction may take MR below zero, where it
+        amplifies damage."""
         self.base_mr = reduce_resistance(
             self.base_mr, reduction_percent, reduction_flat
         )
@@ -516,8 +558,8 @@ def _apply_physical_damage_reduction(raw_damage: float, resists: Resists) -> flo
     """Apply a target's capped flat reduction to one physical raw instance."""
     if raw_damage <= 0.0:
         return raw_damage
-    flat = float(getattr(resists, "physical_damage_flat_reduction", 0.0) or 0.0)
-    cap = float(getattr(resists, "physical_damage_flat_reduction_cap", 0.0) or 0.0)
+    flat = float(resists.physical_damage_flat_reduction or 0.0)
+    cap = float(resists.physical_damage_flat_reduction_cap or 0.0)
     if flat <= 0.0 or cap <= 0.0:
         return raw_damage
     return max(0.0, raw_damage - min(flat, raw_damage * cap))
@@ -537,8 +579,8 @@ class FightConfig:
     target_magic_resistance: float
     fight_duration_seconds: float
     target_bonus_health: float = 0.0
-    # None = split unknown; the legacy quick-scenario total-pen reading
-    # applies to percent BONUS penetration (LDR family).
+    # None = split unknown; the quick-scenario total-pen reading applies
+    # to percent BONUS penetration (LDR family).
     target_bonus_armor: float | None = None
     auto_attack_uptime: float = 0.0
     auto_attack_uptime_mode: str = "legacy"
@@ -765,6 +807,9 @@ class FightState:
     # Where a self-rated empowered burst (Jayce's Hyper Charge) puts its
     # swings, resolved with the cast plan and read by the swing schedule.
     burst_swings: "BurstSwingSchedule | None" = None
+    # Rengar's Ferocity stack walk, built with the cast plan. ``None`` for
+    # every champion whose module emits no ``ferocity_parts``.
+    ferocity_timeline: "FerocityTimeline | None" = None
     # ── Accumulators ──────────────────────────────────────────────────────
     breakdown: dict[str, Any] = field(default_factory=dict)
     total_damage: float = 0.0
@@ -783,12 +828,9 @@ def _apply_basic_amp(
     state: "FightState", part: DamagePart, mitigated: float, procs: int = 1
 ) -> float:
     """Amplify a basic-damage part (Hexoptics C44), tracking the info-row bonus.
-
-    Resistance is linear in raw damage, so amplifying post-mitigation is
-    exact. Non-basic parts pass through untouched. ``procs`` scales only
-    the tracked bonus, for callers that multiply the returned per-proc
-    value afterwards.
-    """
+    Resistance is linear in raw damage, so amplifying post-mitigation is exact.
+    Non-basic parts pass through untouched.  ``procs`` scales only the tracked
+    bonus, for callers that multiply the returned per-proc value afterwards."""
     if not part.basic_damage or state.basic_amp <= 1.0:
         return mitigated
     amped = mitigated * state.basic_amp
@@ -840,6 +882,11 @@ def _apply_target_champion_damage_reduction(
     """Apply a sourced flat reduction to champion attack or spell packets."""
     if hits <= 0 or post_mitigation_damage <= 0.0:
         return post_mitigation_damage
+    # Spelled through getattr, and only here: as attributes these two join
+    # ``golden_snapshot.swing_term_declarations()``, whose capture then refuses
+    # every coupled baseline until a scenario arms Guardian's Horn against a
+    # basic attack (backlog ER4).  Both fields are declared on FightState, so
+    # neither default is reachable; the shape retires with that scenario.
     reduction = (
         getattr(state, "target_champion_dot_damage_flat_reduction", 0.0)
         if damage_over_time
@@ -965,7 +1012,7 @@ def _add_lifesteal_events(
             )
     else:
         event_rows = [
-            (str(event.get("source_key", "")), event)
+            (str(event["source_key"]), event)
             for event in ordered_events
             if isinstance(event, Mapping)
         ]
@@ -1055,7 +1102,7 @@ def _add_omnivamp_events(
                 {
                     "time": event_time,
                     "amount": amount,
-                    "trigger_source": str(event.get("source_key", "")),
+                    "trigger_source": str(event["source_key"]),
                     # Omnivamp is likewise a direct stat conversion rather
                     # than a received-healing packet for Spirit Visage.
                     "healing_category": "vamp",
@@ -1093,9 +1140,6 @@ def _ability_applied_on_hit_damage(
     hits) are attack-triggered and never apply here. Per-hit components
     marked ``superseded_by_ability_proc`` (Muramana) are skipped too —
     their per-ability-cast damage already fired for this cast.
-
-    Returns the application's damage per damage type; sum the values
-    for the total.
     """
     inputs = _damage_inputs(state, target_current_health)
     by_type: dict[str, float] = {}
@@ -1116,12 +1160,9 @@ def _ability_applied_on_hit_damage(
 
 
 def _damage_type_fields(by_type: dict[str, float]) -> dict[str, Any]:
-    """Breakdown-row typing fields for a per-type damage composition.
-
-    A single contributing type yields a plain ``damage_type``; multiple
-    types yield ``"mixed"`` plus the exact ``damage_by_type`` composition
-    that ``split_by_damage_type`` consumes.
-    """
+    """Breakdown-row typing fields: one contributing type yields a plain
+    ``damage_type``, several yield ``"mixed"`` plus the ``damage_by_type``
+    composition ``split_by_damage_type`` consumes."""
     if len(by_type) == 1:
         return {"damage_type": next(iter(by_type))}
     return {"damage_type": "mixed", "damage_by_type": dict(by_type)}
@@ -1132,28 +1173,18 @@ def _calculate_phantom_hits(
     effect: item_effects.PhantomHitEffect | None,
     leading_attacks: int = 0,
 ) -> tuple[list[int], set[int]]:
-    """Calculate which attacks trigger phantom hits.
+    """The 0-indexed leading attacks and autos that trigger phantom hits.
 
-    Rageblade grants stacking attack speed per attack (Seething Strike).
-    The 4th attack maxes Seething AND starts Phantom stacking. At 2
-    Phantom stacks, the next attack consumes them to trigger a Phantom
-    Hit that applies all on-hit effects an additional time.
+    Rageblade grants stacking attack speed per attack (Seething Strike).  The
+    4th attack maxes Seething and starts Phantom stacking.  At 2 Phantom
+    stacks the next attack consumes them to trigger a Phantom Hit that applies
+    all on-hit effects an additional time.
 
-    Sequence: 5 attacks to build up, 6th triggers, then every 3rd after
-    (6, 9, 12, 15, 18, ...). Phantom stacking is an ON-ATTACK mechanic,
-    so the counter runs over one shared attack sequence: ability-carried
-    attacks (Bel'Veth E slashes) lead, then the fight's autos continue
-    it — a slash can be the 6th attack that fires the phantom.
-
-    Args:
-        num_auto_attacks: Total auto attacks in the fight.
-        effect: Compiled phantom-hit cadence, or ``None``.
-        leading_attacks: Ability-carried attacks that precede the autos
-            on the shared attack counter.
-
-    Returns:
-        Tuple of (0-indexed leading-attack indices that trigger phantom
-        hits, set of 0-indexed auto numbers that trigger phantom hits).
+    Sequence: 5 attacks to build up, the 6th triggers, then every 3rd after
+    (6, 9, 12, 15, 18, ...).  Phantom stacking is an ON-ATTACK mechanic, so the
+    counter runs over one shared attack sequence: ability-carried attacks
+    (Bel'Veth E slashes) lead and the fight's autos continue it, so a slash can
+    be the 6th attack that fires the phantom.
     """
     total_attacks = leading_attacks + num_auto_attacks
     if effect is None or total_attacks <= effect.stacking_autos:
@@ -1379,22 +1410,12 @@ def _schedule_cooldown_procs(
     swing_times: Sequence[float],
     proc_cooldown: float,
 ) -> list[int]:
-    """Schedule per-target-cooldown on-hit procs onto the authored swings.
-
-    The first swing always procs; each later swing procs iff its authored
-    timestamp is at least ``proc_cooldown`` after the previous proc
-    (Jarvan IV's Martial Cadence pattern). Consuming the same schedule
-    that stamps damage events keeps the scheduling decision and the
-    stamped time from diverging during empowered attack-speed windows.
-
-    Args:
-        swing_times: The fight's per-swing timestamps
-            (``_auto_attack_timestamps`` order).
-        proc_cooldown: Per-target cooldown between procs, in seconds.
-
-    Returns:
-        Sorted 0-indexed swing indices on which the effect procs.
-    """
+    """Sorted 0-indexed swings on which a per-target-cooldown on-hit procs.
+    The first swing always procs; each later swing procs when its authored
+    timestamp is at least ``proc_cooldown`` after the previous proc (Jarvan
+    IV's Martial Cadence pattern).  Consuming the same schedule that stamps
+    damage events keeps the scheduling decision and the stamped time from
+    diverging during empowered attack-speed windows."""
     proc_autos: list[int] = []
     next_ready = 0.0
     for i, timestamp in enumerate(swing_times):
@@ -1440,8 +1461,8 @@ def _simulate_cooldown_current_health_procs(
         return []
 
     pct = on_hit_data["current_health_percent"] / 100.0
-    min_damage = on_hit_data.get("min_damage", 0.0)
-    dmg_type = on_hit_data.get("damage_type", "physical")
+    min_damage = ability_field(on_hit_data, "min_damage", form="on_hit")
+    dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
     proc_set = set(proc_autos)
 
     current_hp = target_health
@@ -1561,18 +1582,15 @@ def _simulate_current_health_on_hit(
     return total_damage, total_hits, hit_damages
 
 
+# A row that authors events is the sum of them, so its total and its ledger
+# have to be the same arithmetic.  A running ``+=`` and a ``sum()`` over the
+# same numbers disagree by an ulp (the builtin compensates, the loop does not),
+# and a row that gave every one of its swings away then reads a crumb instead
+# of exactly 0.0, which ``_event_timeline_coverage`` counts as an active source
+# using coarse ordering.
 def _ledger_total(events: Sequence[Mapping[str, Any]]) -> float:
-    """What an authored event list is worth, summed one way everywhere.
-
-    A row that authors events is the sum of them, so its total and its
-    ledger have to be the same arithmetic — not a running ``+=`` beside a
-    ``sum()`` over the same numbers.  Those two disagree by an ulp (the
-    builtin compensates, the loop does not), and a row that gave every one
-    of its swings away then reads a crumb instead of exactly 0.0 — which
-    ``_event_timeline_coverage`` counts as an active source using coarse
-    ordering.
-    """
-    return sum(float(event.get("damage", 0.0)) for event in events)
+    """What an authored event list is worth, summed one way everywhere."""
+    return sum(float(event["damage"]) for event in events)
 
 
 def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
@@ -1593,24 +1611,17 @@ def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
     )
 
 
+# A row whose ledger held no certifiable boundary authors no events of its own,
+# and the reconstruction below synthesizes one per typed part instead.  The
+# declaration is split the way the damage was, through the same restatement
+# :func:`_restate_declaration` applies when a re-pricing site moves a packet's
+# magnitude; otherwise a row falling into two damage types would hand one
+# magnitude to both packets and the walk would price the family twice.
 def _row_declaration_share(
     declaration: tuple[Any, ...] | None, amount: float, total: float
 ) -> tuple[Any, ...] | None:
-    """One coarse row's declaration, as the share one synthesized event carries.
-
-    A retired family's row usually authors its own events and each of those
-    carries its own declaration.  A row whose ledger held no certifiable
-    boundary authors none, and the reconstruction below synthesizes one event
-    per typed part instead — so the declaration has to be split the way the
-    damage was, or a row that fell into two damage types would hand one
-    magnitude to both packets and the walk would price the family twice.
-
-    The scale is the part's share of the row, which is the same restatement
-    :func:`_restate_declaration` applies when a re-pricing site moves a
-    packet's magnitude, through the same one method on the declaration.
-    ``None`` in, ``None`` out: every row the pair engine still prices carries
-    no declaration and this returns without building one.
-    """
+    """One coarse row's declaration, as the share one synthesized event
+    carries.  ``None`` in, ``None`` out."""
     if declaration is None or total <= 0.0:
         return None
     return tuple(AuthoredDeclaration(*declaration).rescaled_by(amount / total))
@@ -1733,7 +1744,7 @@ def _damage_event_row(  # pylint: disable=too-many-arguments,too-many-positional
     shield = fields.get("self_shield")
     if shield is None and shield_events is not None and ordinal <= len(shield_events):
         shield = shield_events[ordinal - 1]
-    if isinstance(shield, Mapping):
+    if isinstance(shield, (dict, Mapping)):
         row["self_shield"] = dict(shield)
     if raw_damage is not None:
         row["raw_damage"] = float(raw_damage)
@@ -1757,7 +1768,7 @@ def _damage_event_row(  # pylint: disable=too-many-arguments,too-many-positional
         # deliberately carry no eligibility marker.  Both vamp markers are a
         # pricing input, not display, so the lean shape keeps them: the
         # lifesteal/omnivamp derivations and the item support scan read them
-        # off score-only rows too (issue #169).
+        # off score-only rows too.
         row["omnivamp_effectiveness"] = 1.0
     return row
 
@@ -1875,8 +1886,8 @@ def _ordered_damage_events(
         for ordinal, event in enumerate(declared_events, start=1):
             if not isinstance(event, dict):
                 continue
-            damage = float(event.get("damage", 0.0))
-            damage_type = str(event.get("damage_type", ""))
+            damage = float(event["damage"])
+            damage_type = str(event["damage_type"])
             if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
                 continue
             order = event.get("timeline_order")
@@ -1888,7 +1899,7 @@ def _ordered_damage_events(
                     source_key,
                     damage_type,
                     damage,
-                    float(event.get("time", 0.0)),
+                    float(event["time"]),
                     sequence,
                     float(sequence) if order is None else float(order),
                     phase,
@@ -1927,14 +1938,14 @@ def _ordered_damage_events(
                     cast_event
                 )
         slot_timeline = timeline_by_slot.get(key, [])
-        info = ability_damages.get(key, {})
-        instances = max(1, int(info.get("cast_instances", 1)))
+        info = ability_payload(ability_damages, key)
+        instances = max(1, int(ability_field(info, "cast_instances")))
         raw_total = float(entry.get("total_raw", 0.0) or 0.0)
         # The control facts belong to the ONE part that authored control, so
         # they are kept apart from the row's shared facts and stamped only on
         # that part's damage type — a two-typed cast must not publish one
         # stun twice.
-        authored_parts = tuple(info.get("parts", ()))
+        authored_parts = tuple(ability_field(info, "parts"))
         cc_part = next(
             (part for part in authored_parts if part.cc_kind is not None), None
         )
@@ -1949,7 +1960,7 @@ def _ordered_damage_events(
             atoms = tuple(
                 atom
                 for part in authored_parts
-                for atom in getattr(part, "control_source_atoms", ())
+                for atom in part.control_source_atoms
                 if isinstance(atom, Mapping)
             )
             cc_fields = {
@@ -2023,8 +2034,8 @@ def _ordered_damage_events(
             continue
         parts = _row_damage_parts(entry)
         if parts:
-            # A row a retired family authored with no event list of its own —
-            # a proc whose ledger held no certifiable boundary — still has to
+            # A row with no event list of its own — a proc whose ledger held
+            # no certifiable boundary — still has to
             # hand the walk its declaration, or the walk would find a packet
             # stamped as re-priced and nothing to re-price it from.  The row
             # states it once and each synthesized event carries its share
@@ -2053,9 +2064,9 @@ def _ordered_damage_events(
             if damage > 0:
                 untyped.append((key, damage))
 
-    # ``typed_totals`` accumulated per add above, in the event order the
-    # per-type sums used to walk.  Distribution reads a snapshot so the
-    # rows it adds cannot skew a later type's share mid-loop.
+    # ``typed_totals`` accumulated per add above, in event order.
+    # Distribution reads a snapshot so the rows it adds cannot skew a
+    # later type's share mid-loop.
     distribution_totals = tuple(typed_totals.items())
     typed_total = (
         typed_totals["physical"] + typed_totals["magic"] + typed_totals["true"]
@@ -2106,14 +2117,14 @@ def _event_timeline_coverage(
         if entry.get("informational") or float(entry.get("total_damage", 0.0)) <= 0:
             continue
         damage_events = entry.get("damage_events")
-        # One pass computes both what two comprehensions used to: the
-        # authored total (in list order) and the cast-boundary downgrade.
+        # One pass computes the authored total (in list order) and the
+        # cast-boundary downgrade together.
         event_total = None
         has_boundary = False
         if isinstance(damage_events, list) and damage_events:
             event_total = 0.0
             for event in damage_events:
-                event_total += float(event.get("damage", 0.0))
+                event_total += float(event["damage"])
                 if (
                     not has_boundary
                     and isinstance(event, dict)
@@ -2132,8 +2143,8 @@ def _event_timeline_coverage(
             exact.append(key)
             continue
         if key in cast_keys and int(entry.get("casts", 0)) > 0:
-            info = ability_damages.get(key, {})
-            if float(info.get("dot_duration", 0.0)) > 0:
+            info = ability_payload(ability_damages, key)
+            if float(ability_field(info, "dot_duration")) > 0:
                 coarse.append(key)
             else:
                 exact.append(key)
@@ -2200,21 +2211,18 @@ def _control_armed_holder_shields(
     items: list[dict[str, Any]],
 ) -> tuple[ally_packet.AllyPacketSlot, ...]:
     """Every producer this build declares that the pair engine owes proof of.
-
     The shape, not the item: a shield the *holder* receives when a control
-    event lands.  All three of those clauses matter, and each excludes a live
-    producer that would otherwise arrive here — Bandlepipes' Fanfare is armed
-    by the same trigger but delivers movement, Imperial Mandate's Command
-    delivers to the triggering enemy, and Knight's Vow's Sacrifice shields the
-    holder off a different trigger entirely.  A pair fight prices a
-    holder-side shield itself, so it is the one that must be able to prove the
-    control event happened; every other producer is delivered by the roster
-    walk, which certifies its own.
-    """
+    event lands.  Each clause excludes a live producer that would otherwise
+    arrive here: Bandlepipes' Fanfare is armed by the same trigger but
+    delivers movement, Imperial Mandate's Command delivers to the triggering
+    enemy, and Knight's Vow's Sacrifice shields the holder off a different
+    trigger.  A pair fight prices a holder-side shield itself, so it is the
+    one that must prove the control event happened; every other producer is
+    delivered by the roster walk, which certifies its own."""
     return tuple(
         slot
         for slots in ally_packet.resolve_slots(
-            [str(item.get("name", "")) for item in items]
+            [item_effects.resolved_item_name(item) for item in items]
         ).values()
         for slot in slots
         if slot.trigger is PacketTrigger.CROWD_CONTROL
@@ -2246,14 +2254,12 @@ def _control_armed_event_coverage(
     # scan: a reviewed control row certifies the cast that authored it.
     ledger = {"damage_events": [*damage_events, *(control_events or [])]}
     for slot in _control_armed_holder_shields(items):
-        # The sixth control-reading site, on the bus (D-34).  ``cc_reviewed``
-        # on a Trigger is exactly this gate's old disjunction: a row carrying
-        # a vocabulary ``cc_kind`` is reviewed by construction — including
-        # the reviewed-no-CC ``"none"``, which narrows nothing and is never
-        # a live control kind — and the engine writes the legacy flag only
-        # alongside such a kind.  A tuple ledger's positional rows classify
-        # as nothing at all, which is the same silence the ``isinstance``
-        # filter produced.
+        # The sixth control-reading site, on the bus.  ``cc_reviewed`` on a
+        # Trigger holds when the row carries a vocabulary ``cc_kind``,
+        # including the reviewed-no-CC ``"none"``, which narrows nothing and
+        # is never a live control kind.  A tuple ledger's positional rows
+        # classify as nothing at all, which is the silence the ``isinstance``
+        # filter produces.
         ability_events = [
             trigger
             for trigger in authored_triggers(
@@ -2351,14 +2357,12 @@ class _ThresholdHealDrip:
                 self.healing_received += received
         shield_ledger.expire_threshold_health(pools, event_time)
 
+    # A declaration that subdivides the window into no ticks at all leaves the
+    # heal's timing unsourced, which is the coverage downgrade the target-side
+    # Lifeline still owes; asking the drip keeps that answer measured rather
+    # than assumed by the reader.
     def cadence_certified(self) -> bool:
-        """Whether the heal was delivered on an authored tick schedule.
-
-        A declaration that subdivides the window into no ticks at all leaves
-        the heal's timing unsourced, which is exactly the coverage downgrade
-        the target-side Lifeline still owes; asking the drip is what keeps
-        that answer measured rather than assumed by the reader.
-        """
+        """Whether the heal was delivered on an authored tick schedule."""
         return not self.triggered or self.ticks > 0
 
 
@@ -2375,17 +2379,11 @@ def _liandry_max_health_reprice(
     heal_drip: "_ThresholdHealDrip",
 ) -> tuple[float, float]:
     """Reprice one burn tick against the target's *current* maximum health.
-
     Liandry's Torment burns for a percentage of maximum health, so a lifeline
-    that raises the target's maximum mid-fight raises every tick that lands
-    after it.  The reprice rides the ordered ledger only because that is
-    where the target's live pools exist; it has nothing to do with the
-    Cinderbloom bonus computed on the same walk, and keeping the two in one
-    block made every change to either unattributable to the other.
-
-    Returns the repriced damage and the delta it adds to the burn's total —
-    ``(damage, 0.0)`` for every event that is not a repriced burn tick.
-    """
+    that raises the target's maximum mid-fight raises every tick landing after
+    it.  The reprice rides the ordered ledger because that is where the
+    target's live pools exist.  Returns the repriced damage and the delta it
+    adds to the burn's total, ``(damage, 0.0)`` when it is not a burn tick."""
     if source_key != _LIANDRY_BURN_KEY:
         return damage, 0.0
     if not heal_drip.triggered or event_time <= heal_drip.trigger_time + 1e-9:
@@ -2483,7 +2481,7 @@ def _simulate_ordered_damage(
         dtype = event["damage_type"]
         event_time = float(event["time"])
         heal_drip.advance_to(pools, event_time)
-        source_key = str(event.get("source_key", ""))
+        source_key = str(event["source_key"])
         damage, reprice_delta = _liandry_max_health_reprice(
             source_key,
             damage,
@@ -2518,7 +2516,7 @@ def _simulate_ordered_damage(
                     "damage": bonus,
                     "damage_type": dtype,
                     "source_key": f"shadowflame_{cinderbloom.owner}",
-                    "trigger_source": event.get("source_key", ""),
+                    "trigger_source": event["source_key"],
                 }
             )
             event_damage += bonus
@@ -2549,7 +2547,7 @@ def _navori_effective_cd(
 
     The cooldown ticks down in real time (1 second per 1 second).  Each
     auto attack that lands reduces the *remaining* cooldown by
-    ``refund_percent`` (e.g. 15%).  We simulate this step-by-step:
+    ``refund_percent`` (e.g. 15%), which the loop below steps through.
 
     Example (7s CD, 1 auto/sec, 15% refund)::
 
@@ -2560,14 +2558,6 @@ def _navori_effective_cd(
         t=4  Auto → remaining = (2.112-1) * 0.85 = 0.945
         t=5  Auto → remaining ≤ 0, ability ready
         Effective CD ≈ 5.0s (down from 7.0s)
-
-    Args:
-        base_cd: Cooldown after ability haste (seconds).
-        autos_per_second: Effective auto-attack rate (attack_speed * uptime).
-        refund_percent: Fraction of remaining CD refunded per auto (0.15).
-
-    Returns:
-        Reduced effective cooldown in seconds.
     """
     if base_cd <= 0 or autos_per_second <= 0 or refund_percent <= 0:
         return base_cd
@@ -2603,7 +2593,6 @@ def _shred_slot(
     is_melee: bool,
 ) -> "resistance_shred.ShredSlot | None":
     """The declared shred this build brings to one of the target's resistances.
-
     ``None`` means no item the build holds declares a shred of it — an
     answer, not a zero.  Owners are passed as names because a declaration is
     keyed by whatever owns it; the engine never spells one.  The fight facts
@@ -2612,7 +2601,7 @@ def _shred_slot(
     context's requiredness exists to prevent.
     """
     return resistance_shred.resolve_slot(
-        [str(item.get("name", "")) for item in items],
+        [item_effects.resolved_item_name(item) for item in items],
         resistance,
         level=level,
         fight_duration_seconds=config.fight_duration_seconds,
@@ -2679,12 +2668,8 @@ _DEDICATED_KEYSTONE_MODELS: "tuple[type, ...]" = (
 
 
 def _dedicated_keystone(name: str) -> "rune_effects.RuneEffect | None":
-    """The named keystone's own model, when this engine carries one.
-
-    ``None`` for every other keystone, which leaves it to the page walk —
-    the fail-closed direction, because an unmodeled name compiles to a
-    receipt there rather than to silence here.
-    """
+    """The named keystone's own model, or ``None``, which leaves it to the page
+    walk: an unmodeled name compiles to a receipt there, not to silence here."""
     effect = rune_effects.resolve_keystone(name)
     return effect if isinstance(effect, _DEDICATED_KEYSTONE_MODELS) else None
 
@@ -2725,9 +2710,9 @@ def _resolve_combat_state(
     """
     fight_duration_seconds = config.fight_duration_seconds
     auto_attack_uptime = config.auto_attack_uptime
-    is_melee = champion_stats.get("is_melee", True)
+    is_melee = champion_stats["is_melee"]
     saturated_omnivamp = saturating_stat_percent(
-        [str(item.get("name", "")) for item in items],
+        [item_effects.resolved_item_name(item) for item in items],
         SustainStat.OMNIVAMP_PERCENT,
         fight_duration_seconds=fight_duration_seconds,
         holder_is_melee=bool(is_melee),
@@ -2739,14 +2724,14 @@ def _resolve_combat_state(
         # fast-path decision reads the resolved stats.
         champion_stats = dict(champion_stats)
         champion_stats["omnivamp_percent"] = (
-            champion_stats.get("omnivamp_percent", 0.0) + saturated_omnivamp
+            champion_stats["omnivamp_percent"] + saturated_omnivamp
         )
-    level = int(champion_stats.get("level", 1))
+    level = int(champion_stats["level"])
     damage_effects = item_effects.resolve_damage_effects(items)
     # The declared families this build brings.  Resolved before the
     # resistances, because Malignance's magic-resistance shred is one of the
     # numbers the resistance ladder is built from.
-    owners = [str(item.get("name", "")) for item in items]
+    owners = [item_effects.resolved_item_name(item) for item in items]
     item_cast_procs = cast_proc.resolve_slots(
         owners,
         level=level,
@@ -2811,8 +2796,8 @@ def _resolve_combat_state(
         holder_stats=champion_stats,
     )
 
-    magic_pen_flat = champion_stats.get("magic_penetration_flat", 0.0)
-    magic_pen_percent = champion_stats.get("magic_penetration_percent", 0.0) / 100.0
+    magic_pen_flat = champion_stats["magic_penetration_flat"]
+    magic_pen_percent = champion_stats["magic_penetration_percent"] / 100.0
 
     # Hatefog's flat reduction is the item's magnitude; whether it applies
     # is the rotation's R outcome (``Resists.ult_cast``): abilities before
@@ -2832,11 +2817,9 @@ def _resolve_combat_state(
     )
 
     # Armor penetration: percent pen + lethality (flat)
-    armor_pen_percent = champion_stats.get("armor_penetration_percent", 0.0) / 100.0
-    armor_pen_bonus_percent = (
-        champion_stats.get("armor_penetration_bonus_percent", 0.0) / 100.0
-    )
-    flat_armor_pen = champion_stats.get("flat_armor_penetration", 0.0)
+    armor_pen_percent = champion_stats["armor_penetration_percent"] / 100.0
+    armor_pen_bonus_percent = champion_stats["armor_penetration_bonus_percent"] / 100.0
+    flat_armor_pen = champion_stats["flat_armor_penetration"]
 
     as_ratio = champion_stats["attack_speed_ratio"]
     attack_speed = champion_stats["attack_speed"]
@@ -2903,8 +2886,7 @@ def _resolve_combat_state(
                     attack_speed_ratio=as_ratio,
                     duration_seconds=fight_duration_seconds,
                     uptime=auto_attack_uptime,
-                    critical_chance=champion_stats.get("critical_strike_chance", 0.0)
-                    / 100.0,
+                    critical_chance=champion_stats["critical_strike_chance"] / 100.0,
                 )
             )
         else:
@@ -3017,7 +2999,7 @@ def _resolve_combat_state(
         champion_options=dict(champion_options or {}),
         actualizer_active_until=actualizer_active_until,
         actualizer_basic_cooldown_multiplier=actualizer_basic_cooldown_multiplier,
-        ability_haste=champion_stats.get("ability_haste", 0.0),
+        ability_haste=champion_stats["ability_haste"],
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
         auto_attacks_only=config.auto_attacks_only,
@@ -3026,7 +3008,7 @@ def _resolve_combat_state(
         level=level,
         enforce_resource_limits=config.enforce_resource_limits,
         resource_restore_events=tuple(config.resource_restore_events),
-        resource_ledger_owner=str(config.resource_ledger_owner or "main"),
+        resource_ledger_owner=str(config.resource_ledger_owner),
         target_basic_damage_multiplier=config.target_basic_damage_multiplier,
         target_basic_damage_flat_reduction=(config.target_basic_damage_flat_reduction),
         target_basic_damage_flat_reduction_cap=(
@@ -3067,14 +3049,11 @@ def _slot_is_cast(
     key: str, info: Mapping[str, Any], cast_order: "list[str] | None"
 ) -> bool:
     """Whether the ability row *key* belongs to a slot the rotation casts.
-
-    Passive rows (``passive``, ``passive_plasma``) are always live, as is a
-    row the module declares ``off_rotation_grant`` (a zero-damage cast the
-    rotation omits whose grant is priced across the window — Kai'Sa E). Any
-    other active row is live when its key, or the base slot of its variant
-    key (``Q2`` -> ``Q``, ``W_vigor`` -> ``W``), is in the cast order; an
-    unknown order is the default rotation, which casts every slot.
-    """
+    Passive rows (``passive``, ``passive_plasma``) are always live, as is a row
+    the module declares ``off_rotation_grant`` (a zero-damage cast the rotation
+    omits whose grant is priced across the window, Kai'Sa E).  Any other active
+    row is live when its key, or the base slot of its variant key (``Q2`` ->
+    ``Q``), is in the cast order; an unknown order casts every slot."""
     base = key.split("_", 1)[0].rstrip("0123456789")
     if base not in ("Q", "W", "E", "R") or info.get("off_rotation_grant"):
         return True
@@ -3119,27 +3098,23 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             )
             if steraks_delta:
                 stats["bonus_attack_damage"] = (
-                    stats.get("bonus_attack_damage", 0.0) + steraks_delta
+                    stats["bonus_attack_damage"] + steraks_delta
                 )
         if "bonus_attack_damage" in stat_buff or "base_attack_damage" in stat_buff:
-            stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
-                "bonus_attack_damage", 0.0
+            stats["attack_damage"] = (
+                stats["base_attack_damage"] + stats["bonus_attack_damage"]
             )
         # Recalculate magic penetration if it was buffed
         if "magic_penetration_percent" in stat_buff:
-            resists.magic_pen_percent = (
-                stats.get("magic_penetration_percent", 0.0) / 100.0
-            )
+            resists.magic_pen_percent = stats["magic_penetration_percent"] / 100.0
             resists.resolve_magic()
         # Recalculate armor penetration if it was buffed
         if "armor_penetration_percent" in stat_buff:
-            resists.armor_pen_percent = (
-                stats.get("armor_penetration_percent", 0.0) / 100.0
-            )
+            resists.armor_pen_percent = stats["armor_penetration_percent"] / 100.0
             resists.resolve_armor()
         if "armor_penetration_bonus_percent" in stat_buff:
             resists.armor_pen_bonus_percent = (
-                stats.get("armor_penetration_bonus_percent", 0.0) / 100.0
+                stats["armor_penetration_bonus_percent"] / 100.0
             )
             resists.resolve_armor()
         # Bonus health raises max health, and items converting bonus
@@ -3148,30 +3123,30 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         # delta composes with the item-health conversion already in the
         # build stats.
         if "bonus_health" in stat_buff:
-            stats["health"] = stats.get("health", 0.0) + stat_buff["bonus_health"]
+            stats["health"] = stats["health"] + stat_buff["bonus_health"]
             bloodmail_delta = item_effects.bloodmail_bonus_ad(
                 state.items, stat_buff["bonus_health"]
             )
             if bloodmail_delta:
                 stats["bonus_attack_damage"] = (
-                    stats.get("bonus_attack_damage", 0.0) + bloodmail_delta
+                    stats["bonus_attack_damage"] + bloodmail_delta
                 )
-                stats["attack_damage"] = stats.get(
-                    "base_attack_damage", 0.0
-                ) + stats.get("bonus_attack_damage", 0.0)
+                stats["attack_damage"] = (
+                    stats["base_attack_damage"] + stats["bonus_attack_damage"]
+                )
         # A BASE-health grant (Dr. Mundo R) raises max health exactly like
         # a bonus-health one — so %maximum-health mechanics grow with it —
         # but items converting BONUS health to a stat (Overlord's
         # Bloodmail) must NOT see it. That base-vs-bonus split is the
         # whole reason the two keys are separate (the Gnar rule).
         if "base_health" in stat_buff:
-            stats["health"] = stats.get("health", 0.0) + stat_buff["base_health"]
+            stats["health"] = stats["health"] + stat_buff["base_health"]
         # Recalculate attack speed and auto count if AS was buffed
         if "bonus_attack_speed" in stat_buff:
             bonus_as_pct = stat_buff["bonus_attack_speed"]
-            active_duration = (ability_info.get("auto_attack_override") or {}).get(
-                "active_duration"
-            )
+            active_duration = (
+                ability_sub_payload(ability_info, "auto_attack_override")
+            ).get("active_duration")
             if active_duration:
                 # P1 Slice 11: the timed Q window [cast_start, cast_start
                 # + window) — the autos ride the base rate until the cast,
@@ -3185,8 +3160,9 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                     if slot == "Q":
                         break
                     cast_start += float(
-                        (state.ability_damages.get(slot) or {}).get("cast_time", 0.0)
-                        or 0.0
+                        ability_field(
+                            ability_payload(state.ability_damages, slot), "cast_time"
+                        )
                     )
                 base_as = state.attack_speed
                 buffed_as = base_as + state.attack_speed_ratio * (bonus_as_pct / 100.0)
@@ -3238,7 +3214,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.
-    state.crit_chance = min(stats.get("critical_strike_chance", 0) / 100.0, 1.0)
+    state.crit_chance = min(stats["critical_strike_chance"] / 100.0, 1.0)
     state.crit_multiplier = (
         BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
     )
@@ -3259,23 +3235,31 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         crit_modifier = ability_info.get("crit_modifier")
         if not crit_modifier:
             continue
-        chance_multiplier = float(crit_modifier.get("crit_chance_multiplier", 1.0))
-        raw_crit_percent = float(stats.get("critical_strike_chance", 0.0) or 0.0)
+        chance_multiplier = float(
+            ability_field(crit_modifier, "crit_chance_multiplier", form="crit_modifier")
+        )
+        raw_crit_percent = float(stats["critical_strike_chance"])
         state.crit_chance = min(raw_crit_percent / 100.0 * chance_multiplier, 1.0)
-        damage_factor = float(crit_modifier.get("crit_damage_multiplier_factor", 1.0))
+        damage_factor = float(
+            ability_field(
+                crit_modifier, "crit_damage_multiplier_factor", form="crit_modifier"
+            )
+        )
         state.crit_multiplier = (
             BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
         ) * damage_factor
         excess_percent = raw_crit_percent * chance_multiplier - 100.0
         per_percent = float(
-            crit_modifier.get("excess_crit_bonus_ad_per_percent", 0.0) or 0.0
+            ability_field(
+                crit_modifier, "excess_crit_bonus_ad_per_percent", form="crit_modifier"
+            )
         )
         if excess_percent > 0.0 and per_percent > 0.0:
             stats["bonus_attack_damage"] = (
-                stats.get("bonus_attack_damage", 0.0) + excess_percent * per_percent
+                stats["bonus_attack_damage"] + excess_percent * per_percent
             )
-            stats["attack_damage"] = stats.get("base_attack_damage", 0.0) + stats.get(
-                "bonus_attack_damage", 0.0
+            stats["attack_damage"] = (
+                stats["base_attack_damage"] + stats["bonus_attack_damage"]
             )
         break
 
@@ -3294,9 +3278,9 @@ class AbilityItemApplication:
     target_hp: float  # modeled target HP when the hit landed
     on_hit: bool
     on_attack: bool
-    # Authored hit boundary for the ability carrier.  ``None`` is retained
-    # for legacy modules that do not publish an intra-cast ledger; stateful
-    # on-hit effects must fail closed when any required carrier is untimed.
+    # Authored hit boundary for the ability carrier.  ``None`` is for modules
+    # that publish no intra-cast ledger; stateful on-hit effects must fail
+    # closed when any required carrier is untimed.
     time: float | None = None
 
 
@@ -3326,8 +3310,8 @@ class RotationResult:
     control_events: list[dict[str, Any]] = field(default_factory=list)
     resource_spent: float = 0.0
     resource_remaining: float = 0.0
-    # P3 slice 1: the typed mana ledger's public section (None on energy
-    # and legacy walks).
+    # The typed mana ledger's public section, built only by the MANA
+    # admission path and ``None`` on every other walk.
     resource_ledger: dict[str, Any] | None = None
     # Ability-carried item applications, in rotation order. They lead
     # the fight's shared counters — autos continue the same counters
@@ -3340,25 +3324,23 @@ class RotationResult:
 
 def _empower_hits(empower: Any) -> int:
     """Basic attacks one empowered-auto cast rides or forces.
-
     ``empowers_next_auto`` is ``True`` (one attack — Vayne Q) or a dict
     that may carry ``hits`` (Cho'Gath E empowers the next 3). Absent
-    ``hits`` defaults to 1.
-    """
-    return int(empower.get("hits", 1)) if isinstance(empower, dict) else 1
+    ``hits`` defaults to 1."""
+    return (
+        int(ability_field(empower, "hits", form="empower"))
+        if isinstance(empower, dict)
+        else 1
+    )
 
 
 def _empower_cooldown_delay(empower: Any) -> float:
     """Seconds an empowered burst runs BEFORE its cooldown starts.
-
     An ability whose ``empowers_next_auto`` declares
-    ``cooldown_starts_after_hits`` does not begin its timer on cast —
-    consuming the last empowered attack does (Jayce's Hyper Charge). The
-    burst's own duration is therefore dead time on the ability's cycle,
-    which both delays the recast and means those attacks cannot refund
-    this ability's cooldown (Navori) — it is not running yet. Zero for
-    every other empowered auto, whose cooldown starts on cast.
-    """
+    ``cooldown_starts_after_hits`` begins its timer when the last empowered
+    attack is consumed (Jayce's Hyper Charge), so the burst's duration is dead
+    time on the cycle: it delays the recast, and those attacks cannot refund
+    this ability's cooldown (Navori).  Zero for every other empowered auto."""
     if not isinstance(empower, dict):
         return 0.0
     if not empower.get("cooldown_starts_after_hits"):
@@ -3368,19 +3350,12 @@ def _empower_cooldown_delay(empower: Any) -> float:
 
 
 def _empower_burst_attack_speed(empower: Any) -> float:
-    """Rate the empowered swings fire at, or 0 when they ride the fight's.
-
-    An ``empowers_next_auto`` dict may declare ``attack_speed``: its hits
-    are fired at THAT rate rather than the champion's ordinary one
-    (Jayce's Hyper Charge caps his attack speed for exactly 3 attacks).
-    Such a burst is self-supplying — the cast forces its attacks whatever
-    the ambient auto stream is doing — and it costs the fight only the
-    little time those attacks occupy, leaving the rest of the fight
-    running at the ordinary rate. Absent, the swings are ordinary autos.
-    """
+    """Rate the empowered swings fire at, or 0 when they ride the fight's.  An
+    ``empowers_next_auto`` dict may declare ``attack_speed``, firing its hits at
+    that rate (Jayce's Hyper Charge) and costing the fight only their span."""
     if not isinstance(empower, dict):
         return 0.0
-    return float(empower.get("attack_speed", 0.0))
+    return float(ability_field(empower, "attack_speed", form="empower"))
 
 
 def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
@@ -3396,8 +3371,8 @@ def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
     timing = empower.get("authored_timing")
     if not isinstance(timing, dict):
         return None
-    first = float(timing.get("first_attack_delay", 0.0))
-    interval = float(timing.get("attack_interval", 0.0))
+    first = float(ability_field(timing, "first_attack_delay", form="empower_timing"))
+    interval = float(ability_field(timing, "attack_interval", form="empower_timing"))
     if first < 0 or interval < 0:
         raise ValueError("Empowered attack timing cannot be negative")
     return first, interval
@@ -3474,12 +3449,16 @@ def _apply_target_shred(
     ``mr_reduction_flat`` (Corki E), each naming the FULL reduction.
     ``fraction`` applies one equal share of it — the ramp seam below.
     """
-    armor_pct = debuff.get("armor_reduction_percent", 0.0)
-    armor_flat = debuff.get("armor_reduction_flat", 0.0) * fraction
+    armor_pct = ability_field(debuff, "armor_reduction_percent", form="target_debuff")
+    armor_flat = (
+        ability_field(debuff, "armor_reduction_flat", form="target_debuff") * fraction
+    )
     if armor_pct or armor_flat:
         resists.shred_armor(armor_pct * fraction, armor_flat)
-    mr_pct = debuff.get("mr_reduction_percent", 0.0)
-    mr_flat = debuff.get("mr_reduction_flat", 0.0) * fraction
+    mr_pct = ability_field(debuff, "mr_reduction_percent", form="target_debuff")
+    mr_flat = (
+        ability_field(debuff, "mr_reduction_flat", form="target_debuff") * fraction
+    )
     if mr_pct or mr_flat:
         resists.shred_mr(mr_pct * fraction, mr_flat)
 
@@ -3514,20 +3493,17 @@ class _ShredRamp:
         _apply_target_shred(self.resists, self.debuff, 1.0 / self.stacks)
         return self.ability_mr()
 
+    # The stages that already fired did so DURING the ability's own hits, when
+    # the debuff is freshly applied and so at full strength.  ``coverage`` is
+    # the share that outlives the ability (see ``_debuff_coverage``), so this
+    # SETTLES the total at it rather than adding a flat remainder; at full
+    # coverage that is exactly ``(stacks - fired) / stacks``.  The settlement is
+    # signed: a debuff that fully staged during its own ticks but expires
+    # before the fight ends hands part of the reduction back, which is exact
+    # for the flat shreds ramps use (Corki's Gatling Gun is the only one) and
+    # approximate for a percent one.
     def apply_remainder(self, coverage: float = 1.0) -> None:
-        """Top the shred up to its lasting share of the reduction.
-
-        The stages that already fired did so DURING the ability's own
-        hits, when the debuff is freshly applied and so at full strength.
-        ``coverage`` is the share that outlives the ability (see
-        ``_debuff_coverage``), so this SETTLES the total at it rather
-        than adding a flat remainder — at full coverage that is exactly
-        the old ``(stacks - fired) / stacks``. The settlement is signed:
-        a debuff that fully staged during its own ticks but expires
-        before the fight ends hands part of the reduction back, which is
-        exact for the flat shreds ramps actually use (Corki's Gatling
-        Gun is the only one) and approximate for a percent one.
-        """
+        """Top the shred up to its lasting share of the reduction."""
         _apply_target_shred(
             self.resists, self.debuff, coverage - self.fired / self.stacks
         )
@@ -3570,24 +3546,28 @@ def _make_shred_ramp(
 ) -> _ShredRamp | _ThresholdShred | None:
     """Build the hit ramp/threshold for a target debuff, else None."""
     debuff = ability_info.get("target_debuff")
-    threshold_hits = int(debuff.get("threshold_hits", 0)) if debuff else 0
+    threshold_hits = (
+        int(ability_field(debuff, "threshold_hits", form="target_debuff"))
+        if debuff
+        else 0
+    )
     if threshold_hits > 0:
         if debuff.get("stacks"):
             raise ValueError(
-                f"{ability_info.get('name', '?')!r}: target_debuff cannot declare "
-                "both threshold_hits and stacks"
+                f"{ability_field(ability_info, 'name')!r}: target_debuff cannot "
+                "declare both threshold_hits and stacks"
             )
         return _ThresholdShred(
             resists=resists,
             debuff=debuff,
             threshold_hits=threshold_hits,
         )
-    stacks = int(debuff.get("stacks", 0)) if debuff else 0
+    stacks = int(ability_field(debuff, "stacks", form="target_debuff")) if debuff else 0
     if stacks <= 0:
         return None
     if debuff.get("armor_reduction_percent") or debuff.get("mr_reduction_percent"):
         raise ValueError(
-            f"{ability_info.get('name', '?')!r}: a ramped target_debuff must "
+            f"{ability_field(ability_info, 'name')!r}: a ramped target_debuff must "
             "reduce resistances by a FLAT amount — percent stages compound "
             "multiplicatively and cannot be split into equal shares"
         )
@@ -3743,11 +3723,7 @@ def _evaluate_cast_parts(
                 target_crit_multiplier = (
                     1.0
                     if part.damage_type == "true"
-                    else getattr(
-                        state,
-                        "target_critical_strike_damage_multiplier",
-                        1.0,
-                    )
+                    else state.target_critical_strike_damage_multiplier
                 )
                 raw *= (
                     1.0
@@ -3947,7 +3923,7 @@ def _apply_post_hit_proc(
     if not spec or num_casts <= 0:
         return 0.0
 
-    parts = tuple(spec.get("parts", ()))
+    parts = tuple(ability_field(spec, "parts", form="post_hit_proc"))
     if not parts:
         return 0.0
     total, _, by_type, events = _evaluate_cast_parts(
@@ -3963,7 +3939,7 @@ def _apply_post_hit_proc(
 
     row_key = str(spec.get("breakdown_key", f"post_hit_proc_{trigger_key}"))
     row: dict[str, Any] = {
-        "name": str(spec.get("name", "Post-hit proc")),
+        "name": str(ability_field(spec, "name", form="post_hit_proc")),
         "count": num_casts,
         "damage_per_hit": total / num_casts,
         "unit": "procs",
@@ -3990,7 +3966,7 @@ def _apply_post_hit_proc(
             if state.one_rotation
             else _debuff_coverage(
                 cast_times,
-                debuff.get("duration", 0.0),
+                ability_field(debuff, "duration", form="target_debuff"),
                 state.fight_duration_seconds,
             )
         )
@@ -4002,13 +3978,8 @@ def _immobilize_ability_haste(
     state: "FightState", ability_info: Mapping[str, Any]
 ) -> float:
     """The haste one slot earns by immobilizing (Imperial Mandate's Control).
-
-    Gated on the slot's *reviewed* control marker — the declaration Command
-    already gates on, read through the one immobilize predicate — so a slot
-    nobody reviewed pays nothing rather than being assumed to immobilize.
-    The item is found by the value key it declares, never by name: a second
-    item stating the mechanic joins by declaring the key.
-    """
+    Gated on the slot's *reviewed* control marker, so a slot nobody reviewed
+    pays nothing; the item is found by the value key it declares, not by name."""
     if not is_immobilizing_event(_declared_cc_marker(ability_info)):
         return 0.0
     return item_effects.immobilize_ability_haste(state.items)
@@ -4025,12 +3996,12 @@ def _effective_timed_cooldown(
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
     immobilizing slot earns (Imperial Mandate's Control), and Navori
     auto-attack refunds."""
-    base_cd = ability_info.get("cooldown", 0.0)
+    base_cd = ability_field(ability_info, "cooldown")
     total_haste = state.ability_haste
     if ability_key in ("Q", "W", "E"):
         total_haste += basic_ability_haste
     elif ability_key == "R":
-        total_haste += float(state.champion_stats.get("ultimate_haste", 0.0) or 0.0)
+        total_haste += float(state.champion_stats["ultimate_haste"])
     total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
@@ -4065,29 +4036,24 @@ def _cooldown_ready_at(
 _CAST_SCHEDULE_EPS = 1e-9
 
 
+# ``recast_of`` is the one authority for recast parentage, and it is what the
+# cast-order machinery reads.  Riding the parent's cast *count* is a narrower
+# claim: it holds for a recast that declares a cooldown of its own to share
+# with its parent (Camille's Q2 at 5.0, Ambessa's at 10.0), and not for an
+# entry declared with this scheduler's cast-exactly-once idiom, where Syndra's
+# 40-splinter second charge is ONE extra cast whose recharge the module
+# deliberately does not simulate.  The test is a POSITIVE declared cooldown, so
+# a cooldown that is zero, absent, ``None`` or negative all read the same: this
+# row schedules itself once and does not ride.  Absent is deliberately not
+# "unknown, assume it rides" — a module that stamps parentage and declares no
+# cooldown has declared no shared timer either, and the fail-quiet reading
+# would silently multiply its casts.
 def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
-    """The slot whose cast COUNT this entry rides, or ``None``.
-
-    ``recast_of`` is the one authority for recast parentage (D-11), and
-    that is what the cast-order machinery reads. Riding the parent's cast
-    *count* is a narrower claim: it holds for a recast that declares a
-    cooldown of its own to share with its parent (Camille's Q2 at 5.0,
-    Ambessa's at 10.0), and not for an entry declared with this
-    scheduler's cast-exactly-once idiom — Syndra's 40-splinter second
-    charge is ONE extra cast whose recharge the module deliberately does
-    not simulate, not one cast per Q.
-
-    The test is a POSITIVE declared cooldown, so an entry whose cooldown
-    is zero, absent, ``None`` or negative all read the same: this row
-    schedules itself once and does not ride. Absent is deliberately not
-    "unknown, assume it rides" — a module that stamps parentage and
-    declares no cooldown has declared no shared timer either, and the
-    fail-quiet reading would silently multiply its casts.
-    """
+    """The slot whose cast COUNT this entry rides, or ``None``."""
     parent = info.get("recast_of")
     if not parent:
         return None
-    return parent if float(info.get("cooldown", 0.0) or 0.0) > 0 else None
+    return parent if float(ability_field(info, "cooldown")) > 0 else None
 
 
 def _schedule_shared_casts(
@@ -4099,20 +4065,19 @@ def _schedule_shared_casts(
 
     The champion has one set of hands: each cast occupies its
     ``cast_time`` (stamped from the wiki by the champion engine; absent
-    means instant, preserving the legacy ``1 + T/cd`` counts), and an
-    ability recasts when its cooldown — running from the END of its
-    cast — is back up and no other cast is in progress. Ties break by
-    cast_order position. R and zero-cooldown entries cast exactly once
-    (unchanged timed-mode rules); recast entries ride their parent's
-    casts and are not scheduled. A cast counts if it STARTS within the
-    fight duration. Cassiopeia's 0.75s-cooldown E exposed the old
-    independent-timeline formula overcounting (5 casts vs 3 in-game
-    over a 3s fight).
+    means instant), and an ability recasts when its cooldown — running
+    from the END of its cast — is back up and no other cast is in
+    progress. Ties break by cast_order position. R and zero-cooldown
+    entries cast exactly once; recast entries ride their parent's casts
+    and are not scheduled. A cast counts if it STARTS within the fight
+    duration. Cassiopeia's 0.75s-cooldown E is the case that pins the
+    shared timeline: 3 casts in-game over a 3s fight, where an
+    independent timeline schedules 5.
     """
     duration = state.fight_duration_seconds
     # Mirror the rotation loop's recast pairing exactly: an entry rides
     # its parent's casts only when the parent appears EARLIER in the
-    # cast order; otherwise it schedules independently (legacy rule).
+    # cast order; otherwise it schedules independently.
     seen: set[str] = set()
     keys: list[str] = []
     for key in state.cast_order:
@@ -4129,7 +4094,9 @@ def _schedule_shared_casts(
         )
         for key in keys
     }
-    cast_times = {key: state.ability_damages[key].get("cast_time", 0.0) for key in keys}
+    cast_times = {
+        key: ability_field(state.ability_damages[key], "cast_time") for key in keys
+    }
     # Dead time between the cast finishing and its cooldown starting: an
     # empowered burst whose timer only begins once its attacks are spent.
     cooldown_delays = {
@@ -4278,13 +4245,12 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
 class CastPlan:
     """When every ability entry casts, resolved BEFORE any damage is priced.
 
-    The rotation used to decide an ability's cast count inline, one
-    ability at a time. Stack-timeline mechanics (Case 4/5) need the whole
-    fight's cast schedule up front — a cast at t=3s must know which
-    stacks and buffs the casts before it produced — so the resolution is
-    a pass of its own.
+    Stack-timeline mechanics (Case 4/5) need the whole fight's cast
+    schedule up front — a cast at t=3s must know which stacks and buffs
+    the casts before it produced — so the resolution is a pass of its
+    own.
 
-    Mode rules are unchanged: autos-only casts nothing, one-rotation
+    Mode rules: autos-only casts nothing, one-rotation
     casts every entry once at t=0, and timed mode reads the shared cast
     schedule (a recast rides its parent's count when the parent appears
     earlier in the cast order). ``times`` always holds one timestamp per
@@ -4301,8 +4267,8 @@ class CastPlan:
     resource_by_cast: dict[tuple[str, int], dict[str, float]] = field(
         default_factory=dict
     )
-    # P3 slice 1: the typed mana ledger's public section (built only by the
-    # MANA admission path; None for energy/legacy walks).
+    # The typed mana ledger's public section, built only by the MANA
+    # admission path and ``None`` on every other walk.
     resource_ledger: dict[str, Any] | None = None
 
 
@@ -4369,13 +4335,12 @@ def _resolve_cast_plan(
 def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     """Drop casts that cannot be paid for on the shared cast timeline.
 
-    P3 slice 1: MANA fights run through the typed mana resource ledger
-    (``resource_ledger``) — one account owns regen ticks, external
-    restores (Catalyst's Eternity, Essence Reaver's Spellblade), ability
-    restores, cast spends, Tear's max-mana growth, and Lost Chapter's
-    Enlighten.  ENERGY fights (and any MANA fight declaring a temporary
-    maximum bonus, which no champion sets today) keep the legacy admission
-    walk verbatim so behavior is bit-for-bit unchanged.
+    MANA fights run through the typed mana resource ledger
+    (``resource_ledger``): one account owns regen ticks, external restores
+    (Catalyst's Eternity, Essence Reaver's Spellblade), ability restores,
+    cast spends, Tear's max-mana growth, and Lost Chapter's Enlighten.
+    ENERGY fights, and any MANA fight declaring a temporary maximum bonus,
+    run ``_apply_resource_limits_legacy`` instead.
     """
     if not state.enforce_resource_limits:
         # Direct engine callers may provide an intentionally partial stat
@@ -4383,7 +4348,7 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         # champion stat and ability packets.
         return plan
     resource_types = {
-        str(info.get("resource_type", "NONE"))
+        str(ability_field(info, "resource_type"))
         for info in state.ability_damages.values()
     }
     resource_types.discard("NONE")
@@ -4402,12 +4367,12 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     if resource_type == "ENERGY":
         return _apply_resource_limits_legacy(state, plan, resource_type)
     if any(
-        float(info.get("resource_maximum_bonus", 0.0) or 0.0) > 0.0
+        float(ability_field(info, "resource_maximum_bonus")) > 0.0
         for info in state.ability_damages.values()
     ):
         # Only Akali (ENERGY) declares a temporary maximum bonus today.  A
-        # MANA ability doing so has no certified ledger representation in
-        # this slice; keep the legacy walk and say so instead of guessing.
+        # MANA ability doing so has no certified ledger representation, so
+        # ``_apply_resource_limits_legacy`` runs and the note says why.
         state.notes.append(
             "Resource ledger unavailable: temporary maximum bonus declared "
             "for a mana resource."
@@ -4420,9 +4385,9 @@ def _apply_resource_limits_legacy(
     state: FightState, plan: CastPlan, resource_type: str
 ) -> CastPlan:
     """Legacy admission walk (ENERGY resources; unchanged behavior)."""
-    base_maximum = float(state.champion_stats.get("max_mana", 0.0))
+    base_maximum = float(state.champion_stats["max_mana"])
     remaining = base_maximum
-    regen = float(state.champion_stats.get("resource_regen_per_second", 0.0))
+    regen = float(state.champion_stats["resource_regen_per_second"])
     events: list[tuple[float, int, int, str]] = []
     order = {key: index for index, key in enumerate(state.cast_order)}
     for key, times in plan.times.items():
@@ -4445,12 +4410,16 @@ def _apply_resource_limits_legacy(
         (
             info
             for info in state.ability_damages.values()
-            if float(info.get("resource_restore_per_proc", 0.0)) > 0
-            and int(info.get("proc_count", 0)) > 0
+            if float(ability_field(info, "resource_restore_per_proc")) > 0
+            and int(ability_field(info, "proc_count")) > 0
         ),
         None,
     )
-    proc_restores_left = int(proc_restore.get("proc_count", 0)) if proc_restore else 0
+    proc_restores_left = (
+        int(ability_field(proc_restore, "proc_count", form="proc_restore"))
+        if proc_restore
+        else 0
+    )
 
     # Essence Reaver's Manaflow is restored by the accepted Spellblade attack,
     # not by the ability that arms it.  Keep those restores on the same
@@ -4472,8 +4441,8 @@ def _apply_resource_limits_legacy(
     ):
         stats = state.champion_stats
         mana_restore_per_proc = item_effects.essence_reaver_mana_restore_per_proc(
-            base_attack_damage=stats.get("base_attack_damage", 0.0),
-            critical_strike_chance=stats.get("critical_strike_chance", 0.0),
+            base_attack_damage=stats["base_attack_damage"],
+            critical_strike_chance=stats["critical_strike_chance"],
             item_name=spellblade.source.item_name,
         )
 
@@ -4495,7 +4464,9 @@ def _apply_resource_limits_legacy(
     # (``roster_composition.resource_restores``) rather than spelled.  Empty
     # where this build declares none, which is the case where the rows came
     # from a caller staging them directly.
-    schedule_owners = sorted({str(item.get("name", "")) for item in state.items})
+    schedule_owners = sorted(
+        {item_effects.resolved_item_name(item) for item in state.items}
+    )
     restore_slot = declared_sustain(schedule_owners, ManaSpentHealRule)
     restore_producer = "" if restore_slot is None else restore_slot.owner
     # The casting trade an open active window makes, resolved once rather
@@ -4557,7 +4528,7 @@ def _apply_resource_limits_legacy(
         if parent and ordinal not in accepted_ordinals.get(parent, set()):
             omitted.append(key)
             continue
-        cost = float(info.get("resource_cost", 0.0))
+        cost = float(ability_field(info, "resource_cost"))
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
@@ -4570,16 +4541,17 @@ def _apply_resource_limits_legacy(
         before = remaining
         remaining -= cost
         spent += cost
-        cast_maximum_bonus = float(info.get("resource_maximum_bonus", 0.0))
+        cast_maximum_bonus = float(ability_field(info, "resource_maximum_bonus"))
         if cast_maximum_bonus > 0:
             maximum_bonus = max(maximum_bonus, cast_maximum_bonus)
             maximum_bonus_until = max(
                 maximum_bonus_until,
-                cast_time + float(info.get("resource_maximum_bonus_duration", 0.0)),
+                cast_time
+                + float(ability_field(info, "resource_maximum_bonus_duration")),
             )
             maximum = base_maximum + maximum_bonus
 
-        restored = float(info.get("resource_restore", 0.0))
+        restored = float(ability_field(info, "resource_restore"))
         if proc_restore is not None and proc_restores_left > 0:
             # A fixed-count proc entry represents those procs as having
             # happened in this scenario. For Ambessa, each accepted ability
@@ -4653,15 +4625,15 @@ def _tear_hit_identity(
     with none of those (a pure self-only receipt) fails closed with a
     ``missing_hit_identity`` denial instead of being treated as a hit.
     """
-    parts = info.get("parts") or ()
+    parts = ability_field(info, "parts")
     for part in parts:
-        if getattr(part, "cc_kind", None) is not None:
+        if part.cc_kind is not None:
             return f"{key}:{accepted_ordinal + 1}"
         try:
-            amount = float(getattr(part, "amount", 0.0) or 0.0)
+            amount = float(part.amount or 0.0)
         except (TypeError, ValueError):
             amount = 0.0
-        if amount > 0.0 or getattr(part, "hp_scaled_damage", None) is not None:
+        if amount > 0.0 or part.hp_scaled_damage is not None:
             return f"{key}:{accepted_ordinal + 1}"
     if any(
         info.get(marker)
@@ -4686,12 +4658,13 @@ def _tear_manaflow_for(
     Tear's stat.mana (data/atoms/items.json, evidence
     ``passive:Manaflow@kw:mana`` + ``stats.mana.flat``).
     """
-    if not item_effects.has_item(state.items, "Tear of the Goddess"):
+    holder = "Tear of the Goddess"
+    if not item_effects.has_item(state.items, holder):
         return None
     options = state.item_options or {}
+    unset = declared_option_default("item", holder, "manaflow_bonus_mana")
     authored = float(
-        (options.get("Tear of the Goddess") or {}).get("manaflow_bonus_mana", 0.0)
-        or 0.0
+        (options.get(holder) or {}).get("manaflow_bonus_mana", unset) or unset
     )
     declaration = resource_ledger.TearDeclaration(
         charge_interval=float(
@@ -4770,7 +4743,9 @@ def _planned_burst_seconds(state: FightState, plan: CastPlan) -> float:
     """The fight's total planned burst-time budget (all arming casts)."""
     total = 0.0
     for key in state.cast_order:
-        empower = (state.ability_damages.get(key) or {}).get("empowers_next_auto")
+        empower = (ability_payload(state.ability_damages, key)).get(
+            "empowers_next_auto"
+        )
         burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
         if burst_as <= 0.0:
             continue
@@ -4851,7 +4826,7 @@ def _auto_restore_decl(
             )
         amount = decl.get("amount")
         source = decl.get("source")
-        atoms = decl.get("atoms", ())
+        atoms = ability_field(decl, "atoms", form="resource_declaration")
         if (
             isinstance(amount, bool)
             or not isinstance(amount, (int, float))
@@ -4936,7 +4911,9 @@ def _auto_restore_schedule(
     burst_seconds = 0.0
     swing_events: list[dict[str, Any]] = []
     for key in state.cast_order:
-        empower = (state.ability_damages.get(key) or {}).get("empowers_next_auto")
+        empower = (ability_payload(state.ability_damages, key)).get(
+            "empowers_next_auto"
+        )
         burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
         if burst_as <= 0.0:
             continue
@@ -4985,7 +4962,7 @@ def _kill_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
         raise ValueError("kill_refund must be a mapping")
     flat = decl.get("flat")
     source = decl.get("source")
-    atoms = decl.get("atoms", ())
+    atoms = ability_field(decl, "atoms", form="resource_declaration")
     if (
         isinstance(flat, bool)
         or not isinstance(flat, (int, float))
@@ -5067,7 +5044,7 @@ def _mark_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
     window_seconds = decl.get("window_seconds")
     source = decl.get("source")
     detonation = decl.get("detonation")
-    atoms = decl.get("atoms", ())
+    atoms = ability_field(decl, "atoms", form="resource_declaration")
     if (
         isinstance(flat, bool)
         or not isinstance(flat, (int, float))
@@ -5120,21 +5097,18 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     Spellblade), ability restores, per-auto mana restores (Jayce's W
     passive), Essence Flux mark refunds (Ezreal's W), cast spends, Tear
     of the Goddess max-mana growth (proven accepted eligible hits only),
-    and Lost Chapter's Enlighten level-up restore.  The admission
-    semantics are identical to the legacy walk — same heap total order,
-    same EPS boundaries, same denial list, same cast-timeline rows — and
-    the ledger's receipts are the single source the public resource
-    section and the Tear packets project from (no second receipt-only
-    ledger).
+    and Lost Chapter's Enlighten level-up restore.  The ledger's receipts are
+    the single source the public resource section and the Tear packets project
+    from, so there is no second receipt-only ledger.
 
     Champion resource mechanics ride the SAME account as cast admission,
     so restored/refunded mana can enable later casts; every restore lands
     on the restore tier (0) before a simultaneous cast's spend tier (1),
     and a denied cast never arms, detonates, or restores anything.
     """
-    base_maximum = float(state.champion_stats.get("max_mana", 0.0))
-    regen = float(state.champion_stats.get("resource_regen_per_second", 0.0))
-    owner = str(getattr(state, "resource_ledger_owner", "") or "main")
+    base_maximum = float(state.champion_stats["max_mana"])
+    regen = float(state.champion_stats["resource_regen_per_second"])
+    owner = str(state.resource_ledger_owner)
     ledger = resource_ledger.ResourceLedger(
         owner,
         maximum=base_maximum,
@@ -5164,12 +5138,16 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         (
             info
             for info in state.ability_damages.values()
-            if float(info.get("resource_restore_per_proc", 0.0)) > 0
-            and int(info.get("proc_count", 0)) > 0
+            if float(ability_field(info, "resource_restore_per_proc")) > 0
+            and int(ability_field(info, "proc_count")) > 0
         ),
         None,
     )
-    proc_restores_left = int(proc_restore.get("proc_count", 0)) if proc_restore else 0
+    proc_restores_left = (
+        int(ability_field(proc_restore, "proc_count", form="proc_restore"))
+        if proc_restore
+        else 0
+    )
 
     # Essence Reaver's Manaflow is restored by the accepted Spellblade attack,
     # not by the ability that arms it.  Keep those restores on the same
@@ -5190,8 +5168,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     ):
         stats = state.champion_stats
         mana_restore_per_proc = item_effects.essence_reaver_mana_restore_per_proc(
-            base_attack_damage=stats.get("base_attack_damage", 0.0),
-            critical_strike_chance=stats.get("critical_strike_chance", 0.0),
+            base_attack_damage=stats["base_attack_damage"],
+            critical_strike_chance=stats["critical_strike_chance"],
             item_name=spellblade.source.item_name,
         )
 
@@ -5238,17 +5216,21 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     # smallest public option choice) authors ONE marker event.  On pop it
     # schedules the deterministic 20%-over-3s ticks against the account's
     # LIVE maximum; a missing choice creates no trigger.
+    enlighten_holder = "Lost Chapter"
     enlighten_level_up = 0.0
     if enlighten_decl is not None:
+        unset = declared_option_default(
+            "item", enlighten_holder, "enlighten_level_up_seconds"
+        )
         enlighten_level_up = float(
-            ((state.item_options or {}).get("Lost Chapter") or {}).get(
-                "enlighten_level_up_seconds", 0.0
+            ((state.item_options or {}).get(enlighten_holder) or {}).get(
+                "enlighten_level_up_seconds", unset
             )
-            or 0.0
+            or unset
         )
     if enlighten_decl is not None and enlighten_level_up > 0.0:
         timeline.append(
-            (enlighten_level_up, 0, -2, 0, "enlighten", "Lost Chapter", 0.0),
+            (enlighten_level_up, 0, -2, 0, "enlighten", enlighten_holder, 0.0),
         )
     # (Enlighten tick events ride kind "enlighten_tick" so popping a tick
     # can never re-enter the level-up marker handler and re-schedule.)
@@ -5315,8 +5297,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             key,
             restore_amount,
         ) = heapq.heappop(timeline)
-        # Base regeneration accrues on EVERY pop (restores included),
-        # exactly like the legacy walk's per-event integration.
+        # Base regeneration accrues on EVERY pop, restores included, so the
+        # integration is per event rather than per cast.
         regen_amount = max(0.0, cast_time - previous_time) * regen
         previous_time = cast_time
         if regen_amount > 0.0:
@@ -5333,9 +5315,9 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             )
             sequence += 1
         if kind == "restore":
-            # The heap key names the restore source: Catalyst's Eternity
-            # rows ride the item name (the legacy heap marker), Spellblade
-            # procs ride the empty key.  No item-name dispatch happens here.
+            # The heap key names the restore source: Catalyst's Eternity rows
+            # ride the item name, Spellblade procs ride the empty key.  No
+            # item-name dispatch happens here.
             source = (
                 "Catalyst of Aeons (Eternity)" if key else "Essence Reaver (Manaflow)"
             )
@@ -5451,7 +5433,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         if parent and ordinal not in accepted_ordinals.get(parent, set()):
             omitted.append(key)
             continue
-        cost = float(info.get("resource_cost", 0.0))
+        cost = float(ability_field(info, "resource_cost"))
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
@@ -5483,7 +5465,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         remaining = spend.current_after
         spent += cost
 
-        restored = float(info.get("resource_restore", 0.0))
+        restored = float(ability_field(info, "resource_restore"))
         if proc_restore is not None and proc_restores_left > 0:
             # A fixed-count proc entry represents those procs as having
             # happened in this scenario. For Ambessa, each accepted ability
@@ -5725,12 +5707,12 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         (time for times in accepted.values() for time in times), default=0.0
     )
     # Catalyst's Eternity heal is a projection of THIS account's accepted
-    # spend receipts (P3 package 3A): one heal row per accepted spend at the
-    # cast time, capped per cast and per one-second bucket.  It is computed
-    # here, once, from the ledger receipts, so the receipt walk and the
-    # score-only walk carry byte-identical heal rows (the legacy pipeline
-    # recomputation read cast_timeline rows that score-only mode truncated
-    # to the undiscounted resource_cost — the Actualizer divergence).
+    # spend receipts: one heal row per accepted spend at the cast time, capped
+    # per cast and per one-second bucket.  It is computed here, once, from the
+    # ledger receipts, so the receipt walk and the score-only walk carry
+    # byte-identical heal rows.  Recomputing it from ``cast_timeline`` instead
+    # would read rows score-only mode truncates to the undiscounted
+    # ``resource_cost``.
     catalyst_section: dict[str, Any] | None = None
     if item_effects.has_item(state.items, "Catalyst of Aeons"):
         declaration = item_effects.catalyst_eternity_declaration()
@@ -5967,11 +5949,9 @@ class StackTimeline:
     def cast_pricing(self, ability_key: str, ordinal: int, time: float) -> CastPricing:
         """Timeline-derived pricing for one cast of *ability_key*.
 
-        A cast that applies a stack is priced from its OWN slot in the
-        timeline: it reads the stacks it found on arrival, and the cast
-        that lands the trigger stack is not buffed by the window its own
-        damage opens. Any other cast is priced from the fight clock.
-        """
+        A cast that applies a stack is priced from its OWN timeline slot: it
+        reads the stacks it found on arrival, so the cast that lands the
+        trigger stack is not buffed by the window its own damage opens."""
         index = self._by_cast.get((ability_key, ordinal))
         if index is not None:
             application = self.applications[index]
@@ -6040,7 +6020,10 @@ def _stack_application_times(
         for ordinal, cast_time in enumerate(plan.times[ability_key]):
             applications.append((cast_time, (ability_key, ordinal), None))
 
-    if spec.get("applied_by_autos", True) and state.num_auto_attacks > 0:
+    if (
+        ability_field(spec, "applied_by_autos", form="stacking_dot")
+        and state.num_auto_attacks > 0
+    ):
         applications.extend(
             (time, None, index)
             for index, time in enumerate(_auto_attack_timestamps(state))
@@ -6080,8 +6063,9 @@ def _build_stack_timeline(state: FightState, plan: CastPlan) -> StackTimeline | 
             # The buff is triggered BY stacks; with no stacking DoT to
             # count them it could never fire, and would silently grant
             # nothing rather than failing loudly.
+            buff_name = ability_field(buff, "name", form="stack_triggered_buff")
             raise ValueError(
-                f"stack_triggered_buff {buff.get('name', '?')!r} declared "
+                f"stack_triggered_buff {buff_name!r} declared "
                 "without a stacking_dot to trigger it — the buff has no "
                 "stack source"
             )
@@ -6094,7 +6078,9 @@ def _build_stack_timeline(state: FightState, plan: CastPlan) -> StackTimeline | 
     buff_duration = float(buff["duration"]) if buff else 0.0
     buff_bonus_ad = float(buff["bonus_attack_damage"]) if buff else 0.0
 
-    starting_stacks = min(int(spec.get("starting_stacks", 0)), max_stacks)
+    starting_stacks = min(
+        int(ability_field(spec, "starting_stacks", form="stacking_dot")), max_stacks
+    )
 
     applications: list[StackApplication] = []
     by_cast: dict[tuple[str, int], int] = {}
@@ -6202,7 +6188,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         else 0.0
     )
 
-    basic_ability_haste = state.champion_stats.get("basic_ability_haste", 0.0)
+    basic_ability_haste = state.champion_stats["basic_ability_haste"]
 
     # Timed mode: all abilities share one cast timeline (cast times lock
     # out other casts). One-rotation and autos-only modes never recast,
@@ -6231,7 +6217,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 "cast_id": f"{ability_key}:{ordinal + 1}",
                 "target_id": f"target:{state.roster_target_index}",
                 "resource_cost": float(
-                    ability_damages[ability_key].get("resource_cost", 0.0)
+                    ability_field(ability_damages[ability_key], "resource_cost")
                 ),
                 **plan.resource_by_cast.get((ability_key, ordinal), {}),
             }
@@ -6417,7 +6403,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     first_delay, attack_interval = authored_timing
                 swing = DamagePart(
                     "physical",
-                    state.champion_stats.get("attack_damage", 0.0),
+                    state.champion_stats["attack_damage"],
                     count=hits,
                     crit_effectiveness=1.0,
                     basic_damage=True,
@@ -6433,7 +6419,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
-        control_specs = tuple(ability_info.get("control_events", ()))
+        control_specs = tuple(ability_field(ability_info, "control_events"))
         if control_specs:
             serialized_controls: list[dict[str, Any]] = []
             for control in control_specs:
@@ -6499,8 +6485,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                                     {
                                         "control_source_atoms": [
                                             dict(atom)
-                                            for atom in ability_info.get(
-                                                "control_source_atoms", []
+                                            for atom in ability_field(
+                                                ability_info, "control_source_atoms"
                                             )
                                         ]
                                     }
@@ -6548,15 +6534,13 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # that boundary instead of treating the whole rotation as active.
         ability_amp = state.ability_amp
         active_event_damage = 0.0
-        event_base_damage = sum(
-            float(event.get("damage", 0.0) or 0.0) for event in ability_events
-        )
+        event_base_damage = sum(float(event["damage"]) for event in ability_events)
         if state.actualizer_active_until > 0.0:
             if ability_events:
                 active_event_damage = sum(
-                    float(event.get("damage", 0.0) or 0.0)
+                    float(event["damage"])
                     for event in ability_events
-                    if float(event.get("time", 0.0) or 0.0)
+                    if float(event["time"])
                     < state.actualizer_active_until - _CAST_SCHEDULE_EPS
                 )
                 if event_base_damage > 0.0:
@@ -6583,7 +6567,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # that deals zero damage (spell-shield slots, rank-0 leftovers,
         # stat-buff ultimates) never procs.  Multi-instance abilities (e.g.
         # Ahri R with 3 dashes) proc once per instance.
-        cast_instances = ability_info.get("cast_instances", 1)
+        cast_instances = ability_field(ability_info, "cast_instances")
         if num_casts > 0 and ability_total > 0.0:
             result.total_muramana_procs += cast_instances * num_casts
 
@@ -6639,7 +6623,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     * (
                         ability_amp
                         if state.actualizer_active_until <= 0.0
-                        or float(event.get("time", 0.0) or 0.0)
+                        or float(event["time"])
                         < state.actualizer_active_until - _CAST_SCHEDULE_EPS
                         else 1.0
                     ),
@@ -6691,8 +6675,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             for event in ability_events:
                 landed_ledger.append(
                     (
-                        float(event.get("time", 0.0) or 0.0),
-                        float(event.get("damage", 0.0) or 0.0) * ability_amp,
+                        float(event["time"]),
+                        float(event["damage"]) * ability_amp,
                     )
                 )
         elif ability_total:
@@ -6720,12 +6704,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         if on_hit_spec and num_casts > 0:
             applications = num_casts * int(on_hit_spec["hits"])
             effectiveness = float(on_hit_spec["effectiveness"])
-            triggers = frozenset(on_hit_spec.get("triggers", ("on_hit",)))
+            triggers = frozenset(ability_field(on_hit_spec, "triggers", form="on_hit"))
             is_on_hit = "on_hit" in triggers
             applied_total = 0.0
             applied_by_type: dict[str, float] = {}
             application_times = [
-                float(event.get("time", 0.0))
+                float(event["time"])
                 for event in ability_events
                 if isinstance(event, dict)
             ]
@@ -6737,7 +6721,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 # order remains the module's part order; no fractional
                 # average or target-health guess is introduced.
                 cast_times = [float(time) for time in plan.times.get(ability_key, ())]
-                hits_per_cast = max(1, int(on_hit_spec.get("hits", 1)))
+                hits_per_cast = max(
+                    1, int(ability_field(on_hit_spec, "hits", form="on_hit"))
+                )
                 fallback_times = [
                     cast_time for cast_time in cast_times for _ in range(hits_per_cast)
                 ]
@@ -6837,7 +6823,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 if state.one_rotation
                 else _debuff_coverage(
                     plan.times.get(ability_key, ()),
-                    target_debuff.get("duration", 0.0),
+                    ability_field(target_debuff, "duration", form="target_debuff"),
                     state.fight_duration_seconds,
                 )
             )
@@ -6869,7 +6855,7 @@ def _add_precomputed_proc_damage(
     for key, info in state.ability_damages.items():
         if key in state.cast_order or "on_hit" in info or "stat_buff" in info:
             continue
-        proc_count = info.get("proc_count", 0)
+        proc_count = ability_field(info, "proc_count")
         if proc_count <= 0:
             continue
         authored_proc_times: list[float] | None = None
@@ -6882,8 +6868,8 @@ def _add_precomputed_proc_damage(
             # Short Fuse starts ready, then enters its 12s cooldown after the
             # empowered swing.  Every ability cast reduces the remaining
             # cooldown at cast start by the sourced level refund.
-            cooldown = float(info.get("short_fuse_cooldown", 0.0))
-            refund = float(info.get("short_fuse_refund", 0.0))
+            cooldown = float(ability_field(info, "short_fuse_cooldown"))
+            refund = float(ability_field(info, "short_fuse_refund"))
             auto_times = _auto_attack_timestamps(state)
             cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
             ready_at = 0.0
@@ -6923,7 +6909,7 @@ def _add_precomputed_proc_damage(
         ):
             # The module's packet count is an upper bound; a stack-triggered
             # proc cannot occur before its required ambient swings land.
-            every = max(1, int(info.get("auto_stack_every", 1)))
+            every = max(1, int(ability_field(info, "auto_stack_every")))
             proc_count = min(int(proc_count), int(state.num_auto_attacks) // every)
             if proc_count <= 0:
                 continue
@@ -6991,8 +6977,8 @@ def _add_precomputed_proc_damage(
             # two-second ring delay. The accepted cast ledger supplies the
             # actual stack-application times, including Pyroclasm's sourced
             # 0.15s bounce spacing, so no phase-order estimate is used.
-            stack_count = int(info.get("dot_stack_count", 0))
-            tick_interval = float(info.get("dot_tick_interval", 0.0))
+            stack_count = int(ability_field(info, "dot_stack_count"))
+            tick_interval = float(ability_field(info, "dot_tick_interval"))
             ability_events = _ordered_damage_events(
                 state.breakdown,
                 state.ability_damages,
@@ -7021,7 +7007,9 @@ def _add_precomputed_proc_damage(
                 and len(stack_times) == stack_count
             ):
                 authored: list[dict[str, Any]] = []
-                ticks = int(round(float(info.get("dot_duration", 0.0)) / tick_interval))
+                ticks = int(
+                    round(float(ability_field(info, "dot_duration")) / tick_interval)
+                )
                 for stack_time in stack_times:
                     for tick_index in range(1, ticks + 1):
                         authored.append(
@@ -7054,7 +7042,7 @@ def _add_precomputed_proc_damage(
             declared_events, list
         ):
             raw_event_total = sum(
-                float(event.get("damage", 0.0))
+                float(event["damage"])
                 for event in declared_events
                 if isinstance(event, dict)
             )
@@ -7064,7 +7052,7 @@ def _add_precomputed_proc_damage(
                     {
                         **event,
                         "damage_type": dtype,
-                        "damage": float(event.get("damage", 0.0)) * scale,
+                        "damage": float(event["damage"]) * scale,
                         "event_precision": "exact",
                     }
                     for event in declared_events
@@ -7097,7 +7085,9 @@ def _add_precomputed_proc_damage(
                 for event in declared_events
                 if isinstance(event, dict)
             ]
-            state.breakdown[key]["event_phase"] = str(info.get("event_phase", "effect"))
+            state.breakdown[key]["event_phase"] = str(
+                ability_field(info, "event_phase")
+            )
         elif (
             info.get("event_order_certified") == "auto_stack_proc"
             and state.num_auto_attacks > 0
@@ -7106,7 +7096,7 @@ def _add_precomputed_proc_damage(
             # module supplies the sourced stack cadence (Akshan: every
             # third damaging attack).  Do not invent times when the fight
             # contains fewer swings than the requested proc packet.
-            every = max(1, int(info.get("auto_stack_every", 1)))
+            every = max(1, int(ability_field(info, "auto_stack_every")))
             required_swings = proc_count * every
             auto_times = _auto_attack_timestamps(state)
             if required_swings <= len(auto_times):
@@ -7203,8 +7193,10 @@ def _ability_dot_tick_events(
     ``dot_duration``/``dot_tick_interval``) is treated the same as a missing
     one — fail-closed, never coerced or invented.
     """
-    dot_duration = _finite_numeric_receipt(info.get("dot_duration", 0.0)) or 0.0
-    tick_interval = _finite_numeric_receipt(info.get("dot_tick_interval", 0.0)) or 0.0
+    dot_duration = _finite_numeric_receipt(ability_field(info, "dot_duration")) or 0.0
+    tick_interval = (
+        _finite_numeric_receipt(ability_field(info, "dot_tick_interval")) or 0.0
+    )
     if dot_duration <= 0 or tick_interval <= 0:
         return None
     if info.get("empowers_next_auto"):
@@ -7243,10 +7235,10 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
     times_by_slot: dict[str, list[float]] = {}
     for event in rotation.cast_events:
         slot = str(event.get("slot", ""))
-        times_by_slot.setdefault(slot, []).append(float(event.get("time", 0.0)))
+        times_by_slot.setdefault(slot, []).append(float(event["time"]))
     for key in state.cast_order:
         entry = state.breakdown.get(key)
-        info = state.ability_damages.get(key, {})
+        info = ability_payload(state.ability_damages, key)
         if not entry or entry.get("damage_events") is not None:
             continue
         events = _ability_dot_tick_events(entry, info, times_by_slot.get(key, []))
@@ -7411,7 +7403,7 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     # DoT's own declared derivative in bonus AD (Darius' bleed: 30% of
     # bonus AD per stack).
     buffed_bonus_dps = (
-        float(spec.get("single_stack_bonus_ad_ratio", 0.0))
+        float(ability_field(spec, "single_stack_bonus_ad_ratio", form="stacking_dot"))
         * timeline.buff_bonus_ad
         / duration
     )
@@ -7440,10 +7432,12 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             total_raw += tick_rate(stacks, False) * (end - cursor)
         return total_raw
 
-    ledger = _DotTickLedger(float(spec.get("tick_interval", 0.0)), integrate)
+    ledger = _DotTickLedger(
+        float(ability_field(spec, "tick_interval", form="stacking_dot")), integrate
+    )
     raw_total = _integrate_stack_chains(timeline, duration, ledger)
 
-    damage_type = spec.get("damage_type", "physical")
+    damage_type = ability_field(spec, "damage_type", form="stacking_dot")
     total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)
     # A seeded-only fight lands no applications; the pre-fight stacks are
     # what the row is reporting, so they are its count.
@@ -7473,36 +7467,13 @@ def _strike_declaration(
     raw_amount: float,
     attack_class: AttackClass = AttackClass.OTHER,
 ) -> tuple[Any, ...]:
-    """One charged-strike packet's declaration, as the retired family states it.
+    """One charged-strike packet's declaration: rule, magnitude, attack class.
 
-    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
-    rule that authored the packet, its pre-mitigation magnitude, and the
-    attack class that decides which of the holder's own amplifiers it earns.
-    The resistance is deliberately absent, which is the correct reading for a
-    packet that met the fight's published figure; every site that re-prices
-    an authored packet afterwards restates it (:func:`_restate_declaration`,
-    umbrella Amendment N, Ruling 1) — and this family owns the window that
-    does it, since Voltaic Cyclosword's Firmament is one of its own strikes.
-
-    ``AttackClass.OTHER`` is the default because it is what four of the five
-    authoring sites measure: an item's own charged packet is priced by
-    ``_mitigate`` and by nothing else, so a declaration claiming a part amp
-    would hand the walk an amplifier the pair engine never paid.  The
-    ultimate's empowered run is the exception and states it —
-    ``_simulate_auto_attacks`` multiplies Fiendhunter's true instance by the
-    holder's **basic** part amp, because that instance rides the swing
-    itself — which is why the class is an argument rather than a constant.
-    The magic amp needs no class at all: ``_mitigate`` applies it to magic
-    damage whatever delivered it, and ``StaticHolderAmps.factor_for``
-    delivers it off the damage type alone.
-
-    *raw_amount* is what the caller has already folded its pair-local factors
-    into — the on-hit effectiveness of the application that spent the charge,
-    and the target-side basic multiplier the engine applies *after*
-    mitigation for a basic-damage strike.  Both are allocations of one
-    application rather than amplifiers, and mitigation is linear, so folding
-    them into the magnitude is the same real number priced once.
-    """
+    ``AttackClass.OTHER`` is the default because an item's own charged packet
+    is priced by ``_mitigate`` alone; the ultimate's empowered run states its
+    class, because Fiendhunter's true instance rides the swing and earns the
+    holder's basic part amp.  *raw_amount* already carries the caller's
+    pair-local factors, which allocate one application rather than amplify."""
     return tuple(
         AuthoredDeclaration(
             charged_strike.strike_mechanic_id(item_name),
@@ -7529,7 +7500,7 @@ def _shaped_charge_proc_receipts(
     receipts: list[dict[str, Any]] = []
     ready_at = 0.0
     event_cursors: dict[str, int] = {}
-    breakdown = getattr(state, "breakdown", {})
+    breakdown = state.breakdown
     for cast_event in rotation.cast_events:
         if not isinstance(cast_event, Mapping):
             return None
@@ -7542,13 +7513,11 @@ def _shaped_charge_proc_receipts(
         ability = state.ability_damages.get(slot)
         if not isinstance(ability, Mapping):
             return None
-        parts = ability.get("parts", ())
+        parts = ability_field(ability, "parts")
         if not isinstance(parts, (tuple, list)):
             return None
         damaging = any(
-            getattr(part, "amount", 0.0) > 0.0
-            or getattr(part, "hp_scaled_damage", None) is not None
-            for part in parts
+            part.amount > 0.0 or part.hp_scaled_damage is not None for part in parts
         )
         if not damaging:
             continue
@@ -7621,10 +7590,9 @@ def _add_shaped_charge_damage(state: FightState, rotation: RotationResult) -> No
             "total_damage": total_damage,
             "damage_type": source.damage_type,
             # This row is the pair engine's preview of a number the coupled
-            # walk owns since ``charged_strike`` retired: the roster
-            # composition reads the stamp and takes the figure below out of
-            # every total it composes, while the pair fight's own receipt
-            # publishes it unchanged.
+            # walk owns: the roster composition reads the stamp and takes the
+            # figure below out of every total it composes, while the pair
+            # fight's own receipt publishes it unchanged.
             "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
             "declared": _strike_declaration(source.item_name, total_damage),
             "damage_events": [
@@ -7673,7 +7641,7 @@ def _weave_around_bursts(
 
 
 def _base_auto_attack_timestamps(state: FightState) -> list[float]:
-    """Return the same per-swing schedule used to derive the auto count.
+    """Return the per-swing schedule the auto count is derived from.
 
     A normal stream starts at time zero and advances at attack speed times
     uptime. Ultimate attack-speed windows use their buffed rate first, then
@@ -7744,9 +7712,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
                     attack_speed_ratio=state.attack_speed_ratio,
                     duration_seconds=state.fight_duration_seconds,
                     uptime=state.auto_attack_uptime,
-                    critical_chance=state.champion_stats.get(
-                        "critical_strike_chance", 0.0
-                    )
+                    critical_chance=state.champion_stats["critical_strike_chance"]
                     / 100.0,
                 )
             )
@@ -7998,26 +7964,16 @@ def _restore_stream_attack_timestamps(state: FightState) -> list[float]:
     """The auto-attack swing schedule the per-auto resource walk rides.
 
     ``_auto_restore_schedule`` runs BEFORE ``_prepare_hail_attack_schedule``
-    / ``_prepare_lethal_tempo_attack_schedule`` install their stack-sensitive
-    schedules onto ``state.hail_attack_times`` / ``state.lethal_attack_times``
-    (see ``calculate_fight_damage``'s ordering), so reading those fields here
-    would silently fall back to the uniform base schedule.  Resolve the SAME
-    schedule those two installers compute directly from the keystone effect
-    instead — ``_hail_attack_schedule`` / ``_lethal_tempo_attack_schedule``
-    depend only on ``state.attack_speed``, ``state.auto_attack_uptime``,
-    ``state.fight_duration_seconds`` and the keystone effect, none of which
-    the cast plan or the installers' own state mutations (``num_auto_attacks``,
-    re-resolved resistances) affect — so recomputing here is side-effect free
-    and always superseded moments later by the real installer call once the
-    resource walk has consumed it.
-
-    If the schedule fields are ALREADY populated (a future caller after the
-    installers ran), prefer them outright rather than recomputing. Lich
-    Bane's proc-timed speedup is not resolved yet at this point in the
-    pipeline (``_prepare_spellblade_attack_schedule`` needs the priced
-    rotation), so it is not mirrored here — matching the champion module's
-    documented ASSUMPTIONS.
-    """
+    and ``_prepare_lethal_tempo_attack_schedule`` install their stack-sensitive
+    schedules, so reading ``state.hail_attack_times`` /
+    ``state.lethal_attack_times`` here would fall back to the uniform base
+    schedule.  This resolves the same schedule those installers compute, which
+    depends only on ``state.attack_speed``, ``state.auto_attack_uptime``,
+    ``state.fight_duration_seconds`` and the keystone effect, so recomputing is
+    side-effect free.  Populated schedule fields are preferred outright.  Lich
+    Bane's proc-timed speedup is not resolved at this point in the pipeline
+    (``_prepare_spellblade_attack_schedule`` needs the priced rotation), so it
+    is not mirrored here, matching the champion module's ASSUMPTIONS."""
     if state.hail_attack_times:
         return list(state.hail_attack_times)
     if state.lethal_attack_times:
@@ -8040,15 +7996,9 @@ def _find_auto_attack_override(
     ability_damages: dict[str, dict[str, Any]],
 ) -> dict[str, Any] | None:
     """Return the first champion ``auto_attack_override`` payload, if any.
-
-    Supported keys: ``ad_ratio`` / ``crit_as_bonus`` (Ashe — crit chance
-    converts to bonus damage on every auto), ``replace_raw`` /
-    ``damage_type`` / ``name`` (Azir — the auto stream is replaced
-    wholesale by a module-computed flat amount that cannot crit),
-    ``damage_ratio`` (Bel'Veth — every basic attack, crit or not, deals
-    this fraction of its normal damage), and ``on_hit_effectiveness``
-    (Azir 0.5, Bel'Veth 0.75 — scales every on-hit rider on the autos).
-    """
+    Keys: ``ad_ratio`` / ``crit_as_bonus`` (Ashe), ``replace_raw`` /
+    ``damage_type`` / ``name`` (Azir), ``damage_ratio`` (Bel'Veth) and
+    ``on_hit_effectiveness`` (Azir 0.5, Bel'Veth 0.75)."""
     for info in ability_damages.values():
         if "auto_attack_override" in info:
             return info["auto_attack_override"]
@@ -8059,20 +8009,14 @@ def _basic_attack_true_rider(
     ability_damages: dict[str, dict[str, Any]],
 ) -> tuple[float, str]:
     """A champion's bonus-true-damage share of every basic attack.
-
-    Corki's Hextech Munitions: each attack deals 20% of its own
-    PRE-MITIGATION damage again as true damage. Declared as
-    ``basic_attack_true_ratio`` on the ability entry; riding the raw
-    damage is what makes the true instance crit-multiplied, exactly as
-    the wiki describes ("affected by critical strike modifiers").
-
-    Returns ``(ratio, display_name)``; ratio 0.0 when no entry declares
-    it. The name comes from the declaring entry — no second key.
-    """
+    Corki's Hextech Munitions deals 20% of each attack's PRE-MITIGATION damage
+    again as true damage, declared as ``basic_attack_true_ratio``.  Riding the
+    raw damage makes the true instance crit-multiplied, exactly as the wiki
+    describes ("affected by critical strike modifiers")."""
     for info in ability_damages.values():
-        ratio = info.get("basic_attack_true_ratio", 0.0)
+        ratio = ability_field(info, "basic_attack_true_ratio")
         if ratio > 0:
-            return ratio, info.get("name", "Passive")
+            return ratio, ability_field(info, "name")
     return 0.0, ""
 
 
@@ -8080,32 +8024,30 @@ def _on_hit_effectiveness(state: FightState) -> float:
     """Item-effect effectiveness on the auto stream (default 1.0).
 
     A champion ``auto_attack_override`` may carry ``on_hit_effectiveness``
-    (Azir soldiers: 0.5). While such an override is active, ALL
-    per-attack and proc-style item effects — per-hit on-hits, spellblade,
-    energized, stack-counter procs like Kraken Slayer — apply at this
-    effectiveness (game-verified for Azir). Sundered Sky is the
-    exception: it does not apply at all on replaced autos (handled in
-    ``_simulate_auto_attacks``, which skips its branch in replace mode).
-    """
+    (Azir soldiers: 0.5); while one is active every per-attack and proc-style
+    item effect applies at it.  Sundered Sky is the exception:
+    ``_simulate_auto_attacks`` skips its branch on replaced autos."""
     override = _find_auto_attack_override(state.ability_damages)
-    return override.get("on_hit_effectiveness", 1.0) if override else 1.0
+    return (
+        ability_field(override, "on_hit_effectiveness", form="auto_attack_override")
+        if override
+        else 1.0
+    )
 
 
 def _auto_swing_bonus_ad(
     state: FightState,
     damage_ratio: float,
 ) -> Callable[[int], float]:
-    """Per-auto bonus AD from a stack-triggered steroid (Case 5).
+    """Per-auto bonus AD from a stack-triggered steroid.
 
-    A mid-fight buff (Darius' Noxian Might) covers only part of the
-    fight, so an auto is priced at the AD its own timestamp saw — read
-    from the fight's shared :class:`StackTimeline`, which already knows
-    which auto opened the window (and so is not itself buffed).
-    ``damage_ratio`` mirrors the flat basic-attack modifier the caller
-    already applied to the base AD (Bel'Veth's 75%). Returns a function
-    of the auto index that is constantly 0.0 whenever no such buff
-    exists — every other champion's swings are untouched.
-    """
+    A mid-fight buff (Darius' Noxian Might) covers only part of the fight, so
+    an auto is priced at the AD its own timestamp saw, read from the fight's
+    shared :class:`StackTimeline`, which already knows which auto opened the
+    window and so is not itself buffed.  ``damage_ratio`` mirrors the flat
+    basic-attack modifier the caller applied to the base AD (Bel'Veth's 75%).
+    The returned function of the auto index is constantly 0.0 when no such
+    buff exists."""
     timeline = state.stack_timeline
     if timeline is None or not timeline.buff_windows:
         return lambda auto_index: 0.0
@@ -8165,7 +8107,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             break
     converted_auto_limit = min(
         num_auto_attacks,
-        max(0, int(conversion_info.get("count", 0))) if conversion_info else 0,
+        (
+            max(0, int(ability_field(conversion_info, "count", form="conversion")))
+            if conversion_info
+            else 0
+        ),
     )
 
     # Simulate each auto attack individually, rolling for crits.  The two
@@ -8207,10 +8153,16 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     )
     q_window_end = state.q_window_end
     if auto_attack_override:
-        override_ad_ratio = auto_attack_override.get("ad_ratio", 1.0)
-        override_crit_as_bonus = auto_attack_override.get("crit_as_bonus", False)
+        override_ad_ratio = ability_field(
+            auto_attack_override, "ad_ratio", form="auto_attack_override"
+        )
+        override_crit_as_bonus = ability_field(
+            auto_attack_override, "crit_as_bonus", form="auto_attack_override"
+        )
         override_replace_raw = auto_attack_override.get("replace_raw")
-        override_damage_type = auto_attack_override.get("damage_type", "physical")
+        override_damage_type = ability_field(
+            auto_attack_override, "damage_type", form="auto_attack_override"
+        )
         if not override_replace_raw and q_window_end > 0.0:
             # P1 Slice 11: the flurry ratio applies only inside the Q
             # active window [0, q_window_end) — the post-window swings
@@ -8222,7 +8174,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         # Flat modifier on ALL basic-attack damage (Bel'Veth passive:
         # 75%): scaling the AD every auto branch reads covers normal,
         # crit, empowered, forced-crit, and double-shot attacks alike.
-        damage_ratio = auto_attack_override.get("damage_ratio", 1.0)
+        damage_ratio = ability_field(
+            auto_attack_override, "damage_ratio", form="auto_attack_override"
+        )
         attack_damage *= damage_ratio
 
     # A stack-triggered bonus-AD steroid (Darius' Noxian Might) only
@@ -8245,8 +8199,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             adjusted_ad *= state.target_critical_strike_damage_multiplier
         return _mitigate_basic_attack_swing(
             state,
-            float(conversion_info.get("bonus_raw", 0.0)) + adjusted_ad,
-            str(conversion_info.get("damage_type", "magic")),
+            float(ability_field(conversion_info, "bonus_raw", form="conversion"))
+            + adjusted_ad,
+            str(ability_field(conversion_info, "damage_type", form="conversion")),
         )
 
     for i in range(num_auto_attacks):
@@ -8417,7 +8372,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             converted_auto_events.append(
                 {
                     "time": attack_time,
-                    "damage_type": str(conversion_info.get("damage_type", "magic")),
+                    "damage_type": str(
+                        ability_field(conversion_info, "damage_type", form="conversion")
+                    ),
                     "damage": mitigated,
                 }
             )
@@ -8520,11 +8477,13 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     }
     if conversion_info is not None and converted_auto_limit > 0:
         breakdown["on_hit_ability_passive"] = {
-            "name": str(conversion_info.get("name", "Modified attacks")),
+            "name": str(ability_field(conversion_info, "name", form="conversion")),
             "count": converted_auto_limit,
             "damage_per_hit": converted_auto_total / converted_auto_limit,
             "total_damage": converted_auto_total,
-            "damage_type": str(conversion_info.get("damage_type", "magic")),
+            "damage_type": str(
+                ability_field(conversion_info, "damage_type", form="conversion")
+            ),
             "damage_events": converted_auto_events,
             "event_phase": "auto",
             "detail": (
@@ -8594,7 +8553,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     # Add basic damage amp breakdown entry (informational — already applied)
     if basic_amp > 1.0:
-        amp_name = state.basic_amp_owner or "Basic Damage"
+        amp_name = state.basic_amp_owner
         basic_amp_bonus = (
             (auto_total + fiendhunter_true_total + passive_true_total)
             * (basic_amp - 1.0)
@@ -8611,7 +8570,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # Double shot: second auto per attack at reduced AD (e.g. Akshan passive)
     double_shot_total = 0.0
     if double_shot_info and num_auto_attacks > 0:
-        ds_ratio = double_shot_info.get("ad_ratio", 0.5)
+        ds_ratio = ability_field(double_shot_info, "ad_ratio", form="double_shot")
         ds_crits = 0
         double_shot_events: list[dict[str, Any]] = []
         for i in range(num_auto_attacks):
@@ -8657,7 +8616,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
         ds_non_crits = num_auto_attacks - ds_crits
         breakdown["double_shot"] = {
-            "name": double_shot_info.get("name", "Double Shot"),
+            "name": ability_field(double_shot_info, "name", form="double_shot"),
             "count": num_auto_attacks,
             "num_crits": ds_crits,
             "num_non_crits": ds_non_crits,
@@ -8709,34 +8668,13 @@ class OnHitResult:
 
 
 def _on_hit_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
-    """One on-hit packet's declaration, as the retired family states it.
+    """One on-hit packet's declaration: rule, magnitude, attack class.
 
-    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
-    rule that authored the packet, its pre-mitigation magnitude, and the
-    attack class that decides which of the holder's own amplifiers it earns.
-
-    ``AttackClass.OTHER`` is a constant here rather than an argument, and it
-    is measured rather than defaulted: all eight declared strikes reach the
-    target through :func:`_mitigate` and through nothing else, so none of
-    them earns a part amp and a declaration claiming one would hand the walk
-    an amplifier the pair engine never paid.  The magic amp needs no class at
-    all — ``_mitigate`` applies it to magic damage whatever delivered it, and
-    ``StaticHolderAmps.factor_for`` delivers it off the damage type, which is
-    live for the four of the eight that declare magic.
-
-    The resistance is deliberately absent, which is the correct reading for a
-    packet that met the fight's published figure: the term census enumerates
-    every site that re-prices an already-authored packet and none of them
-    touches an on-hit row, so there is nothing for
-    :func:`_restate_declaration` to restate here (umbrella Amendment N,
-    Ruling 1).
-
-    *raw_amount* is what the caller has already folded the on-hit
-    effectiveness of the carrying application into.  That factor allocates
-    one application rather than amplifying it, the engine applies it before
-    mitigation, and mitigation is linear — so folding it into the magnitude
-    is the same real number priced once.
-    """
+    ``AttackClass.OTHER`` is measured, not defaulted: all eight declared
+    strikes reach the target through :func:`_mitigate` alone, so none earns a
+    part amp, and ``StaticHolderAmps.factor_for`` delivers the magic amp off
+    the damage type.  *raw_amount* already carries the carrying application's
+    on-hit effectiveness, which allocates rather than amplifies."""
     return tuple(
         AuthoredDeclaration(
             on_hit_strike.strike_mechanic_id(item_name),
@@ -8760,19 +8698,17 @@ def _empower_window_procs(
 ) -> list[float]:
     """Consumed-charge timestamps of a cast-armed, refreshing proc window.
 
-    The shared dedup primitive behind champion passives that arm a
-    consumable buff on a CAST and spend it on a later ACTION (Taric's
-    Bravado, Milio's Fired Up!). It exists because ``empowers_next_auto``
-    cannot express them: that mechanism multiplies flatly by the cast
-    count, so two arming casts inside one live window would double-count
-    a buff the source says is only refreshed.
+    The shared dedup primitive behind champion passives that arm a consumable
+    buff on a CAST and spend it on a later ACTION (Taric's Bravado, Milio's
+    Fired Up!).  ``empowers_next_auto`` cannot express them: it multiplies
+    flatly by the cast count, so two arming casts inside one live window would
+    double-count a buff the source says is only refreshed.
 
-    Window semantics, all declared by the champion module from its
-    cached wiki text:
+    Window semantics, all declared by the champion module from its cached
+    wiki text:
 
     ``armed_by``
-        Slots whose accepted casts arm the window (the caller resolves
-        them to ``arm_times``).
+        Slots whose accepted casts arm the window, resolved by the caller.
     ``duration``
         Seconds the buff lives after the instant that (re)armed it.
     ``charges_per_arm`` / ``max_charges``
@@ -8787,24 +8723,12 @@ def _empower_window_procs(
         attack refreshes Bravado's duration"). Absent, the window keeps
         running from its last arm (Milio's flat 4 seconds).
 
-    Tie-break (a named, conservative modeling boundary): at an identical
-    timestamp CONSUMERS are walked before ARMS, so an action can never
-    consume a charge armed at that same instant. One-rotation mode
+    At an identical timestamp CONSUMERS are walked before ARMS, so an action
+    can never consume a charge armed at that same instant.  One-rotation mode
     collapses every cast to t=0, and arming first there would let a
-    simultaneous ability hit spend a buff that did not exist when it
-    landed — the direction that INVENTS damage. The cost is that a
-    fight whose only consumer shares the arming instant scores zero
-    procs rather than one.
-
-    Args:
-        window: The ``on_hit["empower_window"]`` payload.
-        arm_times: Accepted cast times of the arming slots.
-        consumer_times: ``(time, kind)`` pairs the window may be spent
-            on, where ``kind`` is matched against ``consumed_by``.
-
-    Returns:
-        One timestamp per consumed charge, in ascending time order.
-    """
+    simultaneous ability hit spend a buff that did not exist when it landed,
+    the direction that INVENTS damage.  Returns one timestamp per consumed
+    charge, in ascending time order."""
     duration = float(window["duration"])
     if duration <= 0.0:
         raise ValueError("An empower window must declare a positive duration")
@@ -8903,7 +8827,7 @@ def _add_empower_window_on_hit(
     if not proc_times:
         return 0.0
 
-    damage_type = str(on_hit_data.get("damage_type", "magic"))
+    damage_type = str(ability_field(on_hit_data, "damage_type", form="on_hit"))
     # Scaled by the fight's on-hit effectiveness for the same reason every
     # other champion on-hit row is (a proxy attacker's reduced on-hit
     # application, e.g. Azir soldiers); it is 1.0 for an ordinary attacker.
@@ -8932,13 +8856,11 @@ def _add_empower_window_on_hit(
 def _armed_class_restricted_per_hits(
     state: FightState,
 ) -> tuple[item_effects.PerHitEffect, ...]:
-    """The build's class-restricted on-hits this target class arms (P3-3M).
+    """The build's class-restricted on-hits this target class arms.
 
-    A champion-class fight (the default and the only class every existing
-    caller authors) arms nothing, so the auto stream is bit-identical to
-    the pre-P3-3M engine. A minion-class fight arms exactly the branches
-    whose sourced text names that class.
-    """
+    A champion-class fight, which is the default and the only class every
+    existing caller authors, arms nothing.  A minion-class fight arms exactly
+    the branches whose sourced text names that class."""
     return tuple(
         effect
         for effect in state.damage_effects.class_restricted_per_hits
@@ -9085,12 +9007,12 @@ def _layer_on_hit_effects(
     ) -> dict[str, Any]:
         """Row fields authoring one typed event per (time, damage) pair.
 
-        ``declarations`` is one per event for a row whose family has retired
-        off the pair engine, and ``None`` for every row still delivered as the
-        pair engine's own price.  It rides through the sort beside its own
-        damage rather than being stamped afterwards: the events are ordered by
-        time and an application's declared magnitude belongs to the
-        application, not to the position it lands in.
+        ``declarations`` is one per event for a row the walk prices itself,
+        and ``None`` for a row delivered as the pair engine's own price.  It
+        rides through the sort beside its own damage rather than being stamped
+        afterwards: the events are ordered by time, and an application's
+        declared magnitude belongs to the application, not to the position it
+        lands in.
         """
         declared = declarations or [None] * len(damages)
         ordered = sorted(
@@ -9151,14 +9073,13 @@ def _layer_on_hit_effects(
             "total_damage": item_damage,
             "damage_type": source.damage_type,
             # This row is the pair engine's preview of a number the coupled
-            # walk owns since ``on_hit_strike`` retired: the roster
-            # composition reads the stamp and takes the figure above out of
-            # every total it composes, while the pair fight's own receipt
-            # publishes it unchanged.  The row-level declaration is what a
-            # *coarse* row hands the walk — one whose applications landed on
-            # no resolvable swing schedule, so it authors no event of its own
-            # and the reconstruction synthesizes one
-            # (``_row_declaration_share``).
+            # walk owns: the roster composition reads the stamp and takes the
+            # figure above out of every total it composes, while the pair
+            # fight's own receipt publishes it unchanged.  The row-level
+            # declaration is what a *coarse* row hands the walk: one whose
+            # applications landed on no resolvable swing schedule, so it
+            # authors no event of its own and the reconstruction synthesizes
+            # one (``_row_declaration_share``).
             "pair_preview_of": on_hit_strike.strike_mechanic_id(source.item_name),
             "declared": _on_hit_declaration(source.item_name, raw_per_hit * hits),
         }
@@ -9233,11 +9154,11 @@ def _layer_on_hit_effects(
         ):
             continue
 
-        raw_base = float(on_hit_data.get("damage_per_hit", 0.0))
+        raw_base = float(ability_field(on_hit_data, "damage_per_hit", form="on_hit"))
         if raw_base <= 0:
             continue
 
-        dmg_type = on_hit_data.get("damage_type", "magic")
+        dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
         raw_per_hit = raw_base * on_hit_effectiveness
         per_hit = _mitigate(raw_per_hit, dmg_type, resists, magic_amp)
 
@@ -9301,11 +9222,11 @@ def _layer_on_hit_effects(
 
         # Availability-limited on-hits (Bard meeps: stock + recharge)
         # apply at most max_procs times; autos beyond the cap are plain.
-        max_procs = on_hit_data.get("max_procs")
+        max_procs = ability_field(on_hit_data, "max_procs", form="on_hit")
         if max_procs is not None:
             hits = min(hits, int(max_procs))
 
-        stacks_required = on_hit_data.get("stacks_required", 0)
+        stacks_required = ability_field(on_hit_data, "stacks_required", form="on_hit")
         ramping = bool(on_hit_data.get("ramping"))
         stack_ramp = on_hit_data.get("stack_ramp")
 
@@ -9590,7 +9511,7 @@ def _layer_on_hit_effects(
             )
             proc_total = sum(proc_damages)
             on_hit_total += proc_total
-            proc_damage_type = on_hit_data.get("damage_type", "physical")
+            proc_damage_type = ability_field(on_hit_data, "damage_type", form="on_hit")
             breakdown[f"on_hit_ability_{ability_key}"] = {
                 "name": on_hit_data.get("name", f"{ability_key} (on-hit)"),
                 "count": len(proc_autos),
@@ -9758,7 +9679,7 @@ def _add_spellblade_true_rider(
     """
     ratio = max(
         (
-            info.get("spellblade_bonus_true_ratio", 0.0)
+            ability_field(info, "spellblade_bonus_true_ratio")
             for info in state.ability_damages.values()
         ),
         default=0.0,
@@ -9788,37 +9709,13 @@ def _add_spellblade_true_rider(
 
 
 def _spellblade_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
-    """One spellblade packet's declaration, as the retired family states it.
+    """One spellblade packet's declaration: rule, magnitude, attack class.
 
-    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
-    rule that authored the packet, its pre-mitigation magnitude, and the
-    attack class that decides which of the holder's own amplifiers it earns.
-
-    ``AttackClass.OTHER`` is a constant here rather than an argument, and it
-    is measured rather than defaulted: a spellblade proc reaches the target
-    through :func:`_mitigate` and through nothing else — never through
-    :func:`_mitigate_basic_attack_swing`, so it earns neither the holder's
-    basic amp nor any target-side swing term — and no part amp applies to it,
-    so a declaration claiming one would hand the walk an amplifier the pair
-    engine never paid.  The magic amp needs no class at all: ``_mitigate``
-    applies it to magic damage whatever delivered it and
-    ``StaticHolderAmps.factor_for`` delivers it off the damage type, which is
-    live for the two of the seven that declare magic.
-
-    *raw_amount* is what the caller has already folded the on-hit
-    effectiveness of the consuming attack into.  That factor allocates one
-    application rather than amplifying it, the engine applies it before
-    mitigation, and mitigation is linear — so folding it into the magnitude
-    is the same real number priced once.
-
-    The resistance is deliberately absent, which is the correct reading for a
-    packet that met the fight's published figure: a proc event is an ordinary
-    ledger packet, so :func:`_apply_temporary_lethality_windows` can re-price
-    one, and where it does it restates the declaration riding that event at
-    the armour the packet actually met (:func:`_restate_declaration`, umbrella
-    Amendment N, Ruling 1) rather than leaving this site to guess a window it
-    cannot see yet.
-    """
+    ``AttackClass.OTHER`` is measured, not defaulted: a spellblade proc reaches
+    the target through :func:`_mitigate` alone, never through
+    :func:`_mitigate_basic_attack_swing`, so it earns no basic amp, no
+    target-side swing term and no part amp.  *raw_amount* already carries the
+    consuming attack's on-hit effectiveness, which allocates rather than amps."""
     return tuple(
         AuthoredDeclaration(
             spellblade_mechanic_id(item_name),
@@ -9908,7 +9805,7 @@ def _add_spellblade_damage(
         converted_ratio = 0.0
         converted = 0
         for key, info in state.ability_damages.items():
-            ratio = info.get("spellblade_true_ratio", 0.0)
+            ratio = ability_field(info, "spellblade_true_ratio")
             if ratio > 0:
                 converted_ratio = max(converted_ratio, ratio)
                 converted += state.breakdown.get(key, {}).get("casts", 0)
@@ -9937,14 +9834,13 @@ def _add_spellblade_damage(
             }
             if plain > 0:
                 # This row is the pair engine's preview of a number the
-                # coupled walk owns since ``spellblade`` retired: the roster
-                # composition reads the stamp and takes the figure above out
-                # of every total it composes, while the pair fight's own
-                # receipt publishes it unchanged.  The row-level declaration
-                # is what a *coarse* row hands the walk — one whose procs
-                # landed on no certifiable weave schedule, so it authors no
-                # event of its own and the reconstruction synthesizes one
-                # (``_row_declaration_share``).
+                # coupled walk owns: the roster composition reads the stamp
+                # and takes the figure above out of every total it composes,
+                # while the pair fight's own receipt publishes it unchanged.
+                # The row-level declaration is what a *coarse* row hands the
+                # walk: one whose procs landed on no certifiable weave
+                # schedule, so it authors no event of its own and the
+                # reconstruction synthesizes one (``_row_declaration_share``).
                 plain_row["pair_preview_of"] = spellblade_mechanic_id(source.item_name)
                 plain_row["declared"] = _spellblade_declaration(
                     source.item_name, raw_sb * plain
@@ -10020,10 +9916,10 @@ def _add_spellblade_damage(
         # dropped from the item packet.
         stats = state.champion_stats
         if effect.mana_restore_base_ad_ratio or effect.mana_restore_crit_ratio:
-            mana_per_proc = effect.mana_restore_base_ad_ratio * stats.get(
-                "base_attack_damage", 0.0
-            ) + effect.mana_restore_crit_ratio * min(
-                stats.get("critical_strike_chance", 0.0) / 100.0, 1.0
+            mana_per_proc = effect.mana_restore_base_ad_ratio * stats[
+                "base_attack_damage"
+            ] + effect.mana_restore_crit_ratio * min(
+                stats["critical_strike_chance"] / 100.0, 1.0
             )
             result.mana_restored = mana_per_proc * result.procs
             state.breakdown[f"mana_{result.item}"] = {
@@ -10035,9 +9931,10 @@ def _add_spellblade_damage(
                 "unit": "mana",
             }
         if effect.self_heal_ap_ratio or effect.self_heal_bonus_health_ratio:
-            heal_per_proc = effect.self_heal_ap_ratio * stats.get(
-                "ability_power", 0.0
-            ) + effect.self_heal_bonus_health_ratio * stats.get("bonus_health", 0.0)
+            heal_per_proc = (
+                effect.self_heal_ap_ratio * stats["ability_power"]
+                + effect.self_heal_bonus_health_ratio * stats["bonus_health"]
+            )
             result.self_healing = heal_per_proc * result.procs
             state.breakdown[f"heal_{result.item}"] = {
                 "name": f"{result.item} (self-heal)",
@@ -10136,35 +10033,13 @@ def _periodic_damage_events(
 
 
 def _periodic_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
-    """One periodic packet's declaration, as the retired family states it.
+    """One periodic packet's declaration: rule, magnitude, attack class.
 
-    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
-    rule that authored the packet, its pre-mitigation magnitude, and the
-    attack class that decides which of the holder's own amplifiers it earns.
-
-    ``AttackClass.OTHER`` is a constant here rather than an argument, and it
-    is measured rather than defaulted: all three cadences reach the target
-    through :func:`_mitigate` and through nothing else, so none of them earns
-    a part amp.  All seven declared strikes are magic, which makes the
-    holder's static magic amp a live term for the whole family;
-    ``StaticHolderAmps.factor_for`` delivers it off the damage type, so no
-    class is needed for it and a declaration that pre-multiplied it would be
-    the undeclared second producer D-60 forbids.
-
-    *raw_amount* is the cadence's whole pre-mitigation aggregate -- the burn's
-    refreshed window, the aura's fight duration and the interval strike's proc
-    count are already folded into it.  All three allocate the cadence rather
-    than amplifying it, the engine applies them before mitigation, and
-    mitigation is linear, so one folded magnitude is the same real number
-    priced once.
-
-    The resistance is deliberately absent, which is the correct reading for a
-    packet that met the fight's published figure.  One site re-prices a packet
-    of this family after authoring it -- :func:`_apply_liandry_reprice` folds a
-    raised maximum health back onto Liandry's own ticks -- and it moves the
-    packet's *magnitude* rather than its mitigation, so what it restates is a
-    rescale (:func:`_restate_declaration`, umbrella Amendment N, Ruling 1).
-    """
+    ``AttackClass.OTHER`` is measured, not defaulted: all three cadences reach
+    the target through :func:`_mitigate` alone, so none earns a part amp.  All
+    seven declared strikes are magic, and ``StaticHolderAmps.factor_for``
+    delivers that amp off the damage type, so pre-multiplying it here would be
+    a second producer.  *raw_amount* is the cadence's whole raw aggregate."""
     return tuple(
         AuthoredDeclaration(
             periodic.periodic_mechanic_id(item_name),
@@ -10182,12 +10057,10 @@ def _declared_periodic_ticks(
     """Stamp each tick with its share of the row's one declaration.
 
     :func:`_periodic_damage_events` splits one mitigated aggregate into
-    timestamped ticks, so the declaration splits the same way and by the same
-    ratio -- the share of the row's damage that tick received, through the one
-    method on the declaration that :func:`_row_declaration_share` and
+    timestamped ticks, so the declaration splits by the same ratio, through
+    the one method :func:`_row_declaration_share` and
     :func:`_restate_declaration` also use.  Mitigation is linear, so a tick's
-    share of the mitigated total is its share of the raw magnitude.
-    """
+    share of the mitigated total is its share of the raw magnitude."""
     for event in events:
         share = _row_declaration_share(
             declaration, float(event["damage"]), total_damage
@@ -10229,7 +10102,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         r_info = ability_damages.get("R")
         r_extra = 0
         if r_info and resists.ult_cast:
-            r_extra = r_info.get("cast_instances", 1) - 1
+            r_extra = ability_field(r_info, "cast_instances") - 1
         # Estimate time from first to last ability hit.  In a fast
         # one-rotation combo, casts are ~0.5s apart (GCD-limited).
         inter_cast_delay = 0.5
@@ -10240,7 +10113,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         # cast — every tick refreshes the burn. Ablaze re-applies on
         # each cast, so the tail extends from the LAST cast.
         champion_dot_tail = max(
-            (info.get("dot_duration", 0.0) for info in ability_damages.values()),
+            (ability_field(info, "dot_duration") for info in ability_damages.values()),
             default=0.0,
         )
         # Other item DoTs (e.g. Malignance Hatefog) deal ability
@@ -10278,10 +10151,9 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             "total_damage": burn_mitigated,
             "damage_type": source.damage_type,
             # This row is the pair engine's preview of a number the coupled
-            # walk owns since ``periodic`` retired: the roster composition
-            # reads the stamp and takes the figure above out of every total it
-            # composes, while the pair fight's own receipt publishes it
-            # unchanged.
+            # walk owns: the roster composition reads the stamp and takes the
+            # figure above out of every total it composes, while the pair
+            # fight's own receipt publishes it unchanged.
             "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
             "declared": declaration,
             "damage_events": _declared_periodic_ticks(
@@ -10350,7 +10222,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             # authored cast is the engine's sourced combat-start boundary; a
             # no-cast fight starts at zero rather than inventing a delay.
             combat_start = min(
-                (float(event.get("time", 0.0)) for event in rotation.cast_events),
+                (float(event["time"]) for event in rotation.cast_events),
                 default=0.0,
             )
             damage_per_proc = periodic_mitigated / procs if procs else 0.0
@@ -10733,9 +10605,7 @@ def _stacked_champion_proc_times(
                 )
             )
 
-    for control_sequence, control_event in enumerate(
-        getattr(rotation, "control_events", ())
-    ):
+    for control_sequence, control_event in enumerate(rotation.control_events):
         if not isinstance(control_event, Mapping):
             return None
         source_key = control_event.get("source_key")
@@ -10932,23 +10802,12 @@ def _stacked_champion_proc_times(
 def _proc_declaration(
     source: item_effects.DamageSource, raw_amount: float, ability_amped: bool
 ) -> tuple[Any, ...]:
-    """One cast-proc packet's declaration, as the retired family states it.
+    """One cast-proc packet's declaration: rule, magnitude, attack class.
 
-    Three facts and no price (``survival.pricing.AuthoredDeclaration``): the
-    rule that authored the packet, its pre-mitigation magnitude, and the
-    attack class that decides which of the holder's own amplifiers it earns.
-    The resistance is deliberately absent, which is the correct reading for a
-    packet that met the fight's published figure; every site that re-prices
-    an authored packet afterwards restates it (:func:`_restate_declaration`,
-    umbrella Amendment N, Ruling 1).
-
-    ``ability_amped`` is the engine's own answer for *this* packet, not the
-    rule's: the ability part amp rides an item active on a window, and the
-    proc loops gate it per trigger.  A declaration that read the class off
-    ``source.is_ability_damage`` alone would claim the amp for a proc that
-    fired after the window closed, and the walk would pay an amplifier the
-    pair engine had already declined to.
-    """
+    ``ability_amped`` is the engine's answer for *this* packet, not the rule's:
+    the ability part amp rides an item active on a window and the proc loops
+    gate it per trigger, so reading the class off ``source.is_ability_damage``
+    alone would claim the amp for a proc that fired after the window closed."""
     return tuple(
         AuthoredDeclaration(
             cast_proc.proc_mechanic_id(source.item_name),
@@ -11085,13 +10944,13 @@ def _add_item_proc_damage(
             "total_damage": proc_mitigated,
             "damage_type": source.damage_type,
             # This row is the pair engine's preview of a number the coupled
-            # walk owns since ``cast_proc`` retired: the roster composition
-            # reads the stamp and takes the figure below out of every total
-            # it composes, while the pair fight's own receipt publishes it
-            # unchanged.  The row-level declaration is what a *coarse* row
-            # hands the walk -- one whose ledger held no certifiable
-            # boundary, so it authors no event of its own and the
-            # reconstruction synthesizes one (``_row_declaration_share``).
+            # walk owns: the roster composition reads the stamp and takes the
+            # figure below out of every total it composes, while the pair
+            # fight's own receipt publishes it unchanged.  The row-level
+            # declaration is what a *coarse* row hands the walk: one whose
+            # ledger held no certifiable boundary, so it authors no event of
+            # its own and the reconstruction synthesizes one
+            # (``_row_declaration_share``).
             "pair_preview_of": cast_proc.proc_mechanic_id(source.item_name),
             "declared": _proc_declaration(source, declared_raw * procs, any(amped)),
         }
@@ -11147,7 +11006,7 @@ def _add_item_proc_damage(
         # Hatefog zone refreshes on each R dash.  Effective duration is
         # the time from R1 to R_last plus the base zone duration.
         hatefog_duration = effect.duration
-        r_total_casts = r_info.get("cast_instances", 1)
+        r_total_casts = ability_field(r_info, "cast_instances")
         r_dash_spread = (r_total_casts - 1) * 0.5  # ~0.5s between dashes
         effective_hatefog = r_dash_spread + hatefog_duration
         raw *= effective_hatefog / hatefog_duration
@@ -11200,10 +11059,8 @@ def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[fl
 
 def _rune_instance_times(state: FightState, rotation: RotationResult) -> list[float]:
     """Chronological damage-instance times the keystone stack counter sees.
-
-    One instance per accepted damaging ability cast (wiki: up to one
-    stack per cast instance) plus one per simulated auto swing.
-    """
+    One per accepted damaging ability cast (wiki: up to one stack per cast
+    instance) plus one per simulated auto swing."""
     times = _damaging_cast_times(state, rotation)
     times.extend(_auto_attack_timestamps(state))
     return sorted(times)
@@ -11255,15 +11112,14 @@ def _impaired_instance_times(
     """Damaging cast times whose own parts put the target under crowd control.
 
     The marker is the reviewed ``cc_kind`` a champion module authors on the
-    part that applies it, and whether that marker *is* control is asked of
-    the bus rather than answered here — comparing a kind against a string is
-    the divergence ``trigger_stream`` exists to prevent, and this rune's
+    part that applies it, and whether that marker *is* control is asked of the
+    bus rather than answered here: comparing a kind against a string is the
+    divergence ``trigger_stream`` exists to prevent, and this rune's
     vocabulary is every control class rather than the immobilizing subset.
 
     A cast whose slot nobody reviewed contributes nothing, and the engine
     carries no control duration, so damage landing *inside* a control the
-    previous cast applied is not in this stream: the count is a floor.
-    """
+    previous cast applied is not in this stream: the count is a floor."""
     impairing = {
         slot
         for slot, entry in state.ability_damages.items()
@@ -11304,11 +11160,9 @@ def _shield_armed_attack_times(state: FightState) -> list[float]:
     """The first swing at or after each self-shield the fight publishes.
 
     A shield empowers the *next* attack, so the instance the rune counts is
-    that swing and not the shield: a shield the fight never follows with an
-    attack empowers nothing, and pricing it at the shield's own timestamp
-    would book damage no swing delivered. Two shields inside one swing gap
-    empower that one swing once.
-    """
+    that swing and not the shield: pricing it at the shield's own timestamp
+    would book damage no swing delivered.  Two shields inside one swing gap
+    empower that swing once."""
     swings = sorted(_auto_attack_timestamps(state))
     armed = {
         next((swing for swing in swings if swing >= shield_time), None)
@@ -11343,13 +11197,7 @@ def _page_effects(
     state: FightState,
     kind: "type[_RuneEffectT] | tuple[type[_RuneEffectT], ...]",
 ) -> "list[_RuneEffectT]":
-    """The selected runes of one effect kind, in page order (keystone first).
-
-    Every rune walker below starts here: the page is a list and each of its
-    runes carries its own cooldown and stack state, so a keystone and a
-    minor rune of the same shape are walked by the same code and neither
-    can see the other's stacks.
-    """
+    """The selected runes of one effect kind, in page order (keystone first)."""
     return [effect for effect in state.runes if isinstance(effect, kind)]
 
 
@@ -11450,28 +11298,15 @@ def _note_rune_never_procced(
 
 
 def _add_rune_no_damage_receipts(state: FightState) -> None:
-    """Publish the receipts of every selected rune that books no damage.
-
-    Some runes have no combat damage in any source and others have halves
-    this engine holds no channel for. Both are selectable, compiled and
-    receipted; the difference between "zero is the answer" and "the number
-    exists and is refused" is the declaration's disposition, and the rune
-    owns the words.
-    """
+    """Publish the receipts of every selected rune that books no damage: the
+    rune's own disposition says whether zero is the answer or a refusal."""
     for effect in _page_effects(state, rune_effects.RuneNoDamageEffect):
         state.notes.extend(effect.receipts)
 
 
 def _add_rune_receipts_applied_elsewhere(state: FightState) -> None:
-    """Publish what every rune applied outside the damage walk assumed.
-
-    A stat grant lands in ``stats.py`` before the fight and a heal lands in
-    the pipeline's self-healing ledger after it; neither writes a damage
-    row, so what the fight owes the reader is the assumption behind the
-    number — the health share a gate was priced at, the stack count a
-    default supplied, the cooldown a heal was paid on. A number that
-    resolved silently is one the reader cannot audit.
-    """
+    """Publish what every rune applied outside the damage walk assumed: the
+    health share a gate was priced at, the stacks a default supplied."""
     for effect in _page_effects(state, rune_effects.RUNE_RECEIPT_ONLY_KINDS):
         state.notes.extend(effect.disclosures)
 
@@ -11479,16 +11314,17 @@ def _add_rune_receipts_applied_elsewhere(state: FightState) -> None:
 def _add_dedicated_keystone_receipts(state: FightState) -> None:
     """Publish why the dedicated keystone booked no row, when it booked none.
 
-    Its own walk speaks for a fight it priced. A fight that met none of its
-    conditions — no immobilize for Aftershock, no low-health target for Dark
-    Harvest — or that reaches a half this engine holds no channel for is the
+    Its own walk speaks for a fight it priced.  A fight that met none of its
+    conditions (no immobilize for Aftershock, no low-health target for Dark
+    Harvest) or that reaches a half this engine holds no channel for is the
     case with nobody left to speak, and a silent zero is the one answer this
-    engine never gives. The words are the rune's, declared beside its
-    compiler; running its own walk first means a fight that *did* book stays
-    untouched.
-    """
+    engine never gives.  The words are the rune's, declared beside its
+    compiler; running its own walk first leaves a fight that did book
+    untouched."""
     effect = state.keystone_effect
-    receipts = getattr(effect, "unpriced_receipts", ())
+    if effect is None:
+        return
+    receipts = effect.unpriced_receipts
     if not receipts:
         return
     if effect.breakdown_key in state.breakdown:
@@ -11547,16 +11383,16 @@ def _aery_trigger_times(state: FightState, rotation: RotationResult) -> list[flo
         state.cast_order,
         cast_events=rotation.cast_events,
     ):
-        if float(event.get("damage", 0.0) or 0.0) <= 0.0:
+        if float(event["damage"]) <= 0.0:
             continue
         if event.get("is_ability") or event.get("basic_attack"):
             continue
-        source_key = str(event.get("source_key", ""))
+        source_key = str(event["source_key"])
         if _is_auto_stream_key(source_key) or source_key.startswith(
             ("keystone_", "damage_amp_")
         ):
             continue
-        times.append(float(event.get("time", 0.0)))
+        times.append(float(event["time"]))
     return sorted(times)
 
 
@@ -11615,28 +11451,28 @@ def _aftershock_trigger_events(
         controls = event_triggers(event, kinds=_CONTROL_TRIGGER_ONLY)
         kind = controls[0].cc_kind if controls else ""
         if not kind:
-            # A legacy immobilize flag with no authored kind names no
-            # control this row could republish.
+            # An immobilize flag with no authored kind names no control
+            # this row could republish.
             return
         try:
-            time = float(event.get("time", 0.0) or 0.0)
+            time = float(event["time"])
         except (TypeError, ValueError):
             return
-        key = (str(event.get("source_key", "")), round(time, 9), kind)
+        key = (str(event["source_key"]), round(time, 9), kind)
         if key in seen:
             return
         seen.add(key)
         triggers.append(
             {
                 "time": time,
-                "source_key": str(event.get("source_key", "")),
-                "source": str(event.get("source", event.get("source_key", ""))),
+                "source_key": str(event["source_key"]),
+                "source": str(event.get("source", event["source_key"])),
                 # The immobilize that CAUSED this shockwave, not one the
                 # shockwave applies: a bare ``cc_kind`` on the damage packet
                 # would certify the proc itself as a reviewed control event.
                 "trigger_cc_kind": kind,
                 "cc_duration": duration,
-                "sequence": int(event.get("sequence", 0) or 0),
+                "sequence": int(event["sequence"]),
             }
         )
 
@@ -11711,12 +11547,9 @@ def _add_keystone_aftershock_damage(
 
 
 def _dark_harvest_trigger_event(event: Mapping[str, Any]) -> bool:
-    """Return whether one ordered event is a certified non-proc hit.
-
-    Ability casts and basic attacks carry the runtime's direct-damage
-    receipts. Other effect rows need a source-specific proc classification,
-    so they stay outside this threshold scan until they carry one.
-    """
+    """Whether one ordered event is a certified non-proc hit.  Ability casts
+    and basic attacks carry the runtime's direct-damage receipts; other rows
+    stay outside this threshold scan until they carry a classification."""
     if event.get("pet_damage") or event.get("dark_harvest_eligible"):
         return True
     return str(event.get("phase", "")) in {"ability", "auto"}
@@ -11780,14 +11613,14 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         proc_time = float(next_proc["time"]) if next_proc is not None else math.inf
 
         if next_source is not None and source_time <= proc_time:
-            event = next_source
+            source = base_events[source_index]
             source_index += 1
             if target_health <= 0.0:
                 continue
-            damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
+            damage = max(0.0, float(source["damage"]))
             if (
                 damage > 0.0
-                and _dark_harvest_trigger_event(event)
+                and _dark_harvest_trigger_event(source)
                 and target_health < threshold
                 and source_time + 1e-9 >= ready_at
             ):
@@ -12072,7 +11905,7 @@ def _add_keystone_grasp_damage(state: FightState, rotation: RotationResult) -> N
 
     stats = state.champion_stats
     damage_type = "magic"
-    raw_health = float(stats.get("health", 0.0) or 0.0)
+    raw_health = float(stats["health"])
     raw_damage_events: list[dict[str, float | int | str]] = []
     heal_events: list[dict[str, float | str | bool]] = []
     bonus_health_events: list[dict[str, float | str]] = []
@@ -12163,9 +11996,9 @@ def _forced_basic_attack_times(
         for event in authored:
             if not isinstance(event, Mapping) or not event.get("basic_attack"):
                 continue
-            damage = float(event.get("damage", 0.0) or 0.0)
+            damage = float(event["damage"])
             if damage > 0.0:
-                times.append(float(event.get("time", 0.0) or 0.0))
+                times.append(float(event["time"]))
     return sorted(times)
 
 
@@ -12401,12 +12234,8 @@ def _build_ferocity_timeline(
     from .champions.rengar import RENGAR_FEROCITY_STACK_RULE
 
     rule = RENGAR_FEROCITY_STACK_RULE
-    options = state.champion_options or {}
-    try:
-        seeded = int(options.get("p_ferocity", 0) or 0)
-    except (TypeError, ValueError):
-        seeded = 0
-    seeded = max(0, min(seeded, 4))
+    options = state.champion_options
+    seeded = _seeded_option_stacks(options, "champion", "Rengar", "p_ferocity")
     stack = TimedStackState(RENGAR_FEROCITY_STACK_RULE, starting_stacks=seeded)
     empowered: dict[tuple[str, int], bool] = {}
     receipts: list[dict[str, Any]] = []
@@ -12426,10 +12255,7 @@ def _build_ferocity_timeline(
             sequence=sequence,
         )
         sequence += 1
-        denied = any(
-            getattr(transition, "kind", None) == "gain_denied"
-            for transition in transitions
-        )
+        denied = any(transition.kind == "gain_denied" for transition in transitions)
         receipts.append(
             {
                 "operation": "gain",
@@ -12503,7 +12329,7 @@ def _conqueror_trigger_events(
     ability_events = [
         event
         for event in detailed
-        if event.get("is_ability") and float(event.get("damage", 0.0) or 0.0) > 0.0
+        if event.get("is_ability") and float(event["damage"]) > 0.0
     ]
     cast_times: dict[str, list[float]] = {}
     for cast in rotation.cast_events:
@@ -12521,24 +12347,18 @@ def _conqueror_trigger_events(
             cast_events = [
                 event
                 for event in slot_events
-                if cast_time - 1e-9 <= float(event.get("time", 0.0)) < next_cast - 1e-9
+                if cast_time - 1e-9 <= float(event["time"]) < next_cast - 1e-9
             ]
             if not cast_events:
                 continue
-            trigger_time = min(
-                float(event.get("time", cast_time)) for event in cast_events
-            )
+            trigger_time = min(float(event["time"]) for event in cast_events)
             triggers.append(
                 {
                     "time": trigger_time,
-                    "sequence": min(
-                        int(event.get("sequence", 0)) for event in cast_events
-                    ),
+                    "sequence": min(int(event["sequence"]) for event in cast_events),
                     "source_key": slot,
                     "source": slot,
-                    "damage": sum(
-                        float(event.get("damage", 0.0) or 0.0) for event in cast_events
-                    ),
+                    "damage": sum(float(event["damage"]) for event in cast_events),
                     "packet": "ability_cast",
                 }
             )
@@ -12546,23 +12366,20 @@ def _conqueror_trigger_events(
     auto_events = [
         event
         for event in detailed
-        if str(event.get("phase", "")) == "auto"
-        and float(event.get("damage", 0.0) or 0.0) > 0.0
+        if str(event.get("phase", "")) == "auto" and float(event["damage"]) > 0.0
     ]
     auto_groups: dict[float, list[Mapping[str, Any]]] = {}
     for event in auto_events:
-        time = round(float(event.get("time", 0.0)), 9)
+        time = round(float(event["time"]), 9)
         auto_groups.setdefault(time, []).append(event)
     for time, events in auto_groups.items():
         triggers.append(
             {
                 "time": time,
-                "sequence": min(int(event.get("sequence", 0)) for event in events),
+                "sequence": min(int(event["sequence"]) for event in events),
                 "source_key": "auto_attacks",
                 "source": "auto_attacks",
-                "damage": sum(
-                    float(event.get("damage", 0.0) or 0.0) for event in events
-                ),
+                "damage": sum(float(event["damage"]) for event in events),
                 "packet": "basic_attack",
             }
         )
@@ -12590,8 +12407,9 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
     if not isinstance(effect, rune_effects.KeystoneConquerorEffect):
         return
 
-    options = state.keystone_options or {}
-    starting_stacks = int(options.get("starting_stacks", 0) or 0)
+    options = state.keystone_options
+    unset = declared_option_default("keystone", "Conqueror", "starting_stacks")
+    starting_stacks = int(options.get("starting_stacks", unset) or unset)
     triggers = _conqueror_trigger_events(state, rotation)
     stack_state = rune_effects.conqueror_stack_state(
         effect, starting_stacks=starting_stacks
@@ -12728,18 +12546,13 @@ def _add_senna_souls(
     ``resource_ledger["mist"]`` (kind "souls") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
-    if "senna_mist_stacks" not in (state.champion_options or {}):
+    if "senna_mist_stacks" not in (state.champion_options):
         # Not a Senna-configured fight: no souls surface at all.
         return
     from .champions.senna import SENNA_MIST_RULE
 
-    option = state.champion_options or {}
-    try:
-        seeded = int(option.get("senna_mist_stacks", 40) or 40)
-    except (TypeError, ValueError):
-        seeded = 40
-    if not (0 <= seeded <= 300):
-        seeded = max(0, min(seeded, 300))
+    option = state.champion_options
+    seeded = _seeded_option_stacks(option, "champion", "Senna", "senna_mist_stacks")
     receipts: list[dict[str, Any]] = []
     thresholds: list[dict[str, Any]] = []
     current = seeded
@@ -12786,7 +12599,7 @@ def _add_senna_souls(
     target_health = float(raw_ending if raw_ending is not None else 1.0)
     if target_health <= 0.0:
         kill_time = max(
-            (float(event.get("time", 0.0) or 0.0) for event in damage_events),
+            (float(event["time"]) for event in damage_events),
             default=0.0,
         )
         _add_receipt(
@@ -13039,10 +12852,12 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     never replaced — and never re-prices the parse-time Q (the gate +
     the flurry/AS pricing stay exactly as the module prices them).
     """
-    option = state.champion_options or {}
-    q_entry = state.ability_damages.get("Q") or {}
-    q_active = bool(option.get("q_active", True))
-    is_ashe = str(q_entry.get("name", "")) == "Ranger's Focus"
+    option = state.champion_options
+    q_entry = ability_payload(state.ability_damages, "Q")
+    q_active = bool(
+        option.get("q_active", declared_option_default("champion", "Ashe", "q_active"))
+    )
+    is_ashe = bool(q_entry) and str(ability_field(q_entry, "name")) == "Ranger's Focus"
     # The Ashe identity: the module's Q entry name, OR the explicitly
     # passed q_active False override (the Q entry is absent when the
     # module gates on q_active first — the Focus still exists, the auto
@@ -13053,12 +12868,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     if q_active and not q_entry:
         # Q rank 0 (unlearned) -> no Focus system at all.
         return
-    try:
-        seeded = int(option.get("q_focus_stacks", 4) or 4)
-    except (TypeError, ValueError):
-        seeded = 4
-    if not (0 <= seeded <= 4):
-        seeded = max(0, min(seeded, 4))
+    seeded = _seeded_option_stacks(option, "champion", "Ashe", "q_focus_stacks")
     stack = TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=seeded)
     swings = (state.breakdown.get("auto_attacks") or {}).get("damage_events") or []
     q_casts = [
@@ -13068,8 +12878,8 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
         stack,
         swings,
         q_casts,
-        float(state.fight_duration_seconds or 0.0),
-        q_window_end=float(state.q_window_end or 0.0),
+        float(state.fight_duration_seconds),
+        q_window_end=float(state.q_window_end),
     )
     closing = stack.stacks
 
@@ -13190,8 +13000,8 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
     sub-section — the mana account is never replaced — and never
     re-prices any damage.
     """
-    if "w_charge" not in (state.champion_options or {}) and "all_out" not in (
-        state.champion_options or {}
+    if "w_charge" not in (state.champion_options) and "all_out" not in (
+        state.champion_options
     ):
         return
     from .champions.ksante import KSANTE_PATH_MAKER_RULE
@@ -13245,9 +13055,9 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
     # asymmetry — so its receipt carries the part identity, time 0.0).
     if parts:
         for index, part in enumerate(parts, start=1):
-            amount = float(getattr(part, "amount", 0.0))
-            offset = getattr(part, "time_offset", None)
-            damage_type = getattr(part, "damage_type", "")
+            amount = float(part.amount)
+            offset = part.time_offset
+            damage_type = part.damage_type
             event_time = float(offset) if offset is not None else 0.0
             _add_receipt(
                 "hit",
@@ -13360,8 +13170,8 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
     ``resource_ledger["w_e"]`` (kind "w_e") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
-    if "w_rockets" not in (state.champion_options or {}) and "e_upgrade" not in (
-        state.champion_options or {}
+    if "w_rockets" not in (state.champion_options) and "e_upgrade" not in (
+        state.champion_options
     ):
         return
     from .champions.heimerdinger import (
@@ -13412,7 +13222,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                 events = [event for event in raw if isinstance(event, dict)]
         if events:
             for index, event in enumerate(events, start=1):
-                event_time = float(event.get("time", 0.0))
+                event_time = float(event["time"])
                 _add_receipt(
                     "hit",
                     float(event.get("raw_damage", 0.0)),
@@ -13533,7 +13343,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     (kind "chimes") sub-section — the mana account is never replaced —
     and never re-prices any damage.
     """
-    if "chimes" not in (state.champion_options or {}):
+    if "chimes" not in (state.champion_options):
         return
     from .champions.bard import (
         BARD_TRAVELERS_CALL_RULE,
@@ -13547,7 +13357,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         _tier_value,
     )
 
-    option = state.champion_options or {}
+    option = state.champion_options
     try:
         seeded = int(option.get("chimes", _DEFAULT_CHIMES) or _DEFAULT_CHIMES)
     except (TypeError, ValueError):
@@ -13557,20 +13367,19 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
 
     # The availability the engine actually priced at parse time: the P
     # on-hit's max_procs (stock + floor(duration / recharge) when timed).
-    on_hit = state.ability_damages.get("passive", {}).get("on_hit", {})
-    if (
-        on_hit.get("name") != "Traveler's Call (Meep)"
-        or not isinstance(on_hit.get("max_procs"), (int, float))
-        or float(on_hit.get("max_procs", 0.0)) <= 0
-    ):
+    on_hit = ability_sub_payload(
+        ability_payload(state.ability_damages, "passive"), "on_hit"
+    )
+    max_procs = ability_field(on_hit, "max_procs", form="on_hit")
+    if on_hit.get("name") != "Traveler's Call (Meep)" or not max_procs:
         opening = 0
     else:
-        opening = int(on_hit["max_procs"])
+        opening = int(max_procs)
 
     stock = _tier_value(_MEEP_STOCK_TIERS, seeded)
     recharge = _tier_value(_MEEP_RECHARGE_TIERS, seeded)
     recharges = max(0, opening - stock)
-    ap = float(state.champion_stats.get("ability_power", 0.0) or 0.0)
+    ap = float(state.champion_stats["ability_power"])
     per_meep = (
         _MEEP_BASE + _MEEP_PER_TIER * (seeded // _CHIMES_PER_TIER) + _MEEP_AP_RATIO * ap
     )
@@ -13624,7 +13433,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
             events = [event for event in raw if isinstance(event, dict)]
     if opening > 0 and events:
         for index, event in enumerate(events, start=1):
-            event_time = float(event.get("time", 0.0))
+            event_time = float(event["time"])
             _add_receipt(
                 "spend",
                 1.0,
@@ -13699,7 +13508,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         "recharge": recharge,
         "max_procs": opening,
         "recharges": recharges,
-        "window_seconds": float(state.fight_duration_seconds or 0.0),
+        "window_seconds": float(state.fight_duration_seconds),
     }
 
     ledger_section = rotation.resource_ledger
@@ -13771,7 +13580,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     ``resource_ledger["stardust"]`` (kind "stardust") sub-section — the
     mana account is never replaced — and never re-prices any damage.
     """
-    if "stardust_stacks" not in (state.champion_options or {}):
+    if "stardust_stacks" not in (state.champion_options):
         return
     from .champions.aurelion_sol import (
         AURELION_SOL_STARDUST_RULE,
@@ -13779,13 +13588,10 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
         _STARDUST_PER_Q_BURST,
     )
 
-    option = state.champion_options or {}
-    try:
-        seeded = int(option.get("stardust_stacks", 0) or 0)
-    except (TypeError, ValueError):
-        seeded = 0
-    if not (0 <= seeded <= 999):
-        seeded = max(0, min(seeded, 999))
+    option = state.champion_options
+    seeded = _seeded_option_stacks(
+        option, "champion", "Aurelion Sol", "stardust_stacks"
+    )
     receipts: list[dict[str, Any]] = []
     milestones: list[dict[str, Any]] = []
     current = seeded
@@ -13976,7 +13782,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
     the kernel's stack_events and state_transitions, mirroring the
     Conqueror receipt shape.
     """
-    timeline = getattr(state, "ferocity_timeline", None)
+    timeline = state.ferocity_timeline
     if timeline is None:
         return
     stack = timeline.stack
@@ -14030,7 +13836,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
         "combat_extension_seconds": rule.combat_extension_seconds,
         "stack_events": [
             {
-                "time": round(float(event.get("time", 0.0)), 3),
+                "time": round(float(event["time"]), 3),
                 "slot": event.get("slot"),
                 "ordinal": event.get("ordinal"),
                 "empowered": timeline.cast_empowered(
@@ -14068,7 +13874,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
         detail = (
             str(row.get("detail", ""))
             if isinstance(row, dict)
-            else str(info.get("detail", "")) if info is not None else ""
+            else str(ability_field(info, "detail")) if info is not None else ""
         )
         if not detail or not empowered_any or not base_any:
             continue
@@ -14098,7 +13904,7 @@ def _deathfire_trigger_events(
         for event in ordered
         if isinstance(event, Mapping)
         and event.get("is_ability")
-        and float(event.get("damage", 0.0) or 0.0) > 0.0
+        and float(event["damage"]) > 0.0
     ]
     cast_times: dict[str, list[float]] = {}
     for cast in rotation.cast_events:
@@ -14108,8 +13914,8 @@ def _deathfire_trigger_events(
 
     triggers: list[dict[str, Any]] = []
     for slot, times in cast_times.items():
-        info = state.ability_damages.get(slot, {})
-        category = str(info.get("deathfire_category", ""))
+        info = ability_payload(state.ability_damages, slot)
+        category = str(ability_field(info, "deathfire_category"))
         if not category:
             continue
         slot_events = [event for event in detailed if event.get("source_key") == slot]
@@ -14118,9 +13924,7 @@ def _deathfire_trigger_events(
             cast_events = [
                 event
                 for event in slot_events
-                if cast_time - 1e-9
-                <= float(event.get("time", cast_time))
-                < next_cast - 1e-9
+                if cast_time - 1e-9 <= float(event["time"]) < next_cast - 1e-9
             ]
             if not cast_events:
                 continue
@@ -14130,22 +13934,17 @@ def _deathfire_trigger_events(
                 # instances cannot create duplicate refreshes.
                 by_time: dict[float, list[Mapping[str, Any]]] = {}
                 for event in cast_events:
-                    event_time = round(float(event.get("time", cast_time)), 9)
+                    event_time = round(float(event["time"]), 9)
                     by_time.setdefault(event_time, []).append(event)
                 for event_time, events in by_time.items():
                     triggers.append(
                         {
                             "time": event_time,
-                            "sequence": min(
-                                int(event.get("sequence", 0)) for event in events
-                            ),
+                            "sequence": min(int(event["sequence"]) for event in events),
                             "source_key": slot,
                             "source": slot,
                             "category": category,
-                            "damage": sum(
-                                float(event.get("damage", 0.0) or 0.0)
-                                for event in events
-                            ),
+                            "damage": sum(float(event["damage"]) for event in events),
                             "event_precision": min(
                                 (
                                     str(event.get("event_precision", "cast_boundary"))
@@ -14158,18 +13957,12 @@ def _deathfire_trigger_events(
                 continue
             triggers.append(
                 {
-                    "time": min(
-                        float(event.get("time", cast_time)) for event in cast_events
-                    ),
-                    "sequence": min(
-                        int(event.get("sequence", 0)) for event in cast_events
-                    ),
+                    "time": min(float(event["time"]) for event in cast_events),
+                    "sequence": min(int(event["sequence"]) for event in cast_events),
                     "source_key": slot,
                     "source": slot,
                     "category": category,
-                    "damage": sum(
-                        float(event.get("damage", 0.0) or 0.0) for event in cast_events
-                    ),
+                    "damage": sum(float(event["damage"]) for event in cast_events),
                     "event_precision": min(
                         (
                             str(event.get("event_precision", "cast_boundary"))
@@ -14303,8 +14096,9 @@ def _add_keystone_fleet_footwork(state: FightState, rotation: RotationResult) ->
     if not isinstance(effect, rune_effects.KeystoneFleetEffect):
         return
 
-    options = state.keystone_options or {}
-    starting_charges = int(options.get("starting_charges", 0) or 0)
+    options = state.keystone_options
+    unset = declared_option_default("keystone", "Fleet Footwork", "starting_charges")
+    starting_charges = int(options.get("starting_charges", unset) or unset)
     movement_events: list[dict[str, Any]] = []
     heal_events: list[dict[str, Any]] = []
     base_row: dict[str, Any] = {
@@ -14503,9 +14297,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
     of the rotation opener, so its event is stamped at the last accepted
     damaging cast (fight start when there are no casts).
 
-    **This row is a preview since ``active_cast`` retired** (2026-08-16,
-    umbrella Amendment F's act in Amendment K's lane, with Amendment L,
-    Ruling 1's shape).  The number below is the honest single-attacker
+    **This row is a preview.**  The number below is the honest single-attacker
     answer and the pair fight's own receipt publishes it unchanged; the
     roster composition reads ``pair_preview_of``, sees the mechanic's pair
     lane declared ``ViewTag.THEORETICAL``, and takes the number out of every
@@ -14573,7 +14365,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
             and 1 <= state.roster_target_index <= secondary_target_count
         ):
             raw_secondary = item_effects.hydra_cleave_secondary_ad_damage(
-                total_attack_damage=state.champion_stats.get("attack_damage", 0.0),
+                total_attack_damage=state.champion_stats["attack_damage"],
                 is_melee=state.is_melee,
                 item_name=source.item_name,
             )
@@ -14641,15 +14433,15 @@ def _item_proc_precision(state: FightState, slot: str) -> str:
         # The DoT check reads the ABILITY packet's dot duration (P3 package
         # 3D): breakdown rows never carry dot_duration, so reading it there
         # was a dead branch that stamped uncertified DoT casts as exact.
-        dot = float(info.get("dot_duration", 0.0) or 0.0)
+        dot = float(ability_field(info, "dot_duration"))
     else:
         dot = 0.0
-    # Unit-test states (SimpleNamespace) may omit the fight breakdown; the
-    # cast-order check is best-effort there and fails closed to boundary.
-    row = getattr(state, "breakdown", None)
+    # A slot with no breakdown row, or a fight with no cast order, has no
+    # authored hit to certify: both fail closed to the cast boundary.
+    row = state.breakdown
     if isinstance(row, Mapping):
         row = row.get(slot)
-    cast_order = getattr(state, "cast_order", None)
+    cast_order = state.cast_order
     if cast_order is not None and slot in cast_order and isinstance(row, Mapping):
         casts = int(row.get("casts", 0) or 0)
         if casts > 0 and dot <= 0.0:
@@ -14684,7 +14476,7 @@ def _muramana_cast_receipt(
     ability = state.ability_damages.get(slot) if isinstance(slot, str) else None
     if not isinstance(slot, str) or not isinstance(ability, Mapping):
         return None
-    parts = ability.get("parts", ())
+    parts = ability_field(ability, "parts")
     if not isinstance(parts, (tuple, list)):
         return None
     # Shock is gated on "Dealing ability damage to champions".  The authored
@@ -14700,15 +14492,13 @@ def _muramana_cast_receipt(
         float(row.get("total_damage", 0.0) or 0.0) if isinstance(row, Mapping) else 0.0
     )
     if priced <= 0.0 and not any(
-        getattr(part, "amount", 0.0) > 0.0
-        or getattr(part, "hp_scaled_damage", None) is not None
-        for part in parts
+        part.amount > 0.0 or part.hp_scaled_damage is not None for part in parts
     ):
         return _MuramanaCastReceipt(slot, 0.0, None, None, 0, None, "")
     event_time = _finite_numeric_receipt(cast_event.get("time"))
     cast_id = cast_event.get("cast_id")
     target_id = cast_event.get("target_id")
-    raw_instances = ability.get("cast_instances", 1)
+    raw_instances = ability_field(ability, "cast_instances")
     if (
         event_time is None
         or event_time < 0.0
@@ -14862,7 +14652,7 @@ def _muramana_proc_events(
         return None
     events: list[dict[str, Any]] = []
     event_cursors: dict[str, int] = {}
-    breakdown = getattr(state, "breakdown", {})
+    breakdown = state.breakdown
     if not isinstance(breakdown, Mapping):
         breakdown = {}
     for cast_event in rotation.cast_events:
@@ -14924,7 +14714,7 @@ def _first_damaging_ability_event(
                 if positive:
                     first = min(
                         positive,
-                        key=lambda event: float(event.get("time", 0.0)),
+                        key=lambda event: float(event["time"]),
                     )
                     event_time = _finite_numeric_receipt(first.get("time"))
                     if event_time is not None:
@@ -15026,13 +14816,13 @@ def _target_health_before_timestamp(state: FightState, timestamp: float) -> floa
     """
     dealt = 0.0
     for row in state.breakdown.values():
-        if not isinstance(row, Mapping):
+        if not isinstance(row, (dict, Mapping)):
             continue
         events = row.get("damage_events")
         if not isinstance(events, list):
             continue
         for event in events:
-            if not isinstance(event, Mapping):
+            if not isinstance(event, (dict, Mapping)):
                 continue
             event_time = _finite_numeric_receipt(event.get("time"))
             damage = _finite_numeric_receipt(event.get("damage"))
@@ -15124,40 +14914,32 @@ def _first_auto_damage_by_auto_for_health_walk(
 def _bolt_declaration(
     state: FightState, slot: "secondary_target.SecondaryTargetSlot", raw_bolt: float
 ) -> tuple[Any, ...]:
-    """One Wind's Fury bolt's declaration, as the retired family states it.
+    """One Wind's Fury bolt's declaration.
 
     The bolt is the **router's own packet** and this is the one place that is
-    said in code: its magnitude is the declared share of the attacker's
-    damage that ``SecondaryTargetSlot.bolt_damage`` compiles, so no other
-    family declares it and the declaration carries no routing (umbrella
-    Amendment R, Ruling 3).  Its sibling row is the opposite shape and is
-    declared by :func:`_copied_on_hit_declaration`.
+    said in code: its magnitude is the declared share of the attacker's damage
+    that ``SecondaryTargetSlot.bolt_damage`` compiles, so no other family
+    declares it and the declaration carries no routing.  Its sibling row is
+    the opposite shape, declared by :func:`_copied_on_hit_declaration`.
 
     ``AttackClass.BASIC_ATTACK`` is measured rather than defaulted: a bolt is
     priced by :func:`_mitigate_basic_attack_swing`, which multiplies by the
-    holder's **basic** amp, so this is the first retired family whose packets
-    earn that term and a declaration claiming ``OTHER`` would drop it.
+    holder's **basic** amp, so a declaration claiming ``OTHER`` would drop it.
 
     The two target-side FACTORS fold into the magnitudes and the other two
-    terms cannot (umbrella Amendment R, Ruling 1).  The plating multiplier
-    multiplies both branches and the target's critical-strike damage
-    multiplier multiplies the crit branch, and a pure factor on a linear
-    mitigation composes into the declared magnitude and prices to the same
-    real number.  What rides as a :class:`~.survival.pricing.BasicAttackSwing`
-    is what no magnitude reproduces: the blend of two branches, and Warden's
-    Mail's capped flat SUBTRACTION with its cap and its one instance.
+    terms cannot: the plating multiplier multiplies both branches and the
+    target's crit-damage multiplier multiplies the crit branch, and a pure
+    factor on a linear mitigation prices to the same real number.  What rides
+    as a :class:`~.survival.pricing.BasicAttackSwing` is what no magnitude
+    reproduces: the blend of two branches, and Warden's Mail's capped flat
+    SUBTRACTION with its cap and its one instance.
 
-    **The blend is authored only where the fight is deterministic.**  A
-    non-deterministic fight prices the non-crit branch alone, so a declaration
-    claiming a blend there would price a fight the engine did not run; the
-    weight is zero and the crit branch is the non-crit one, which is a
-    measured answer rather than a default.
+    **The blend is authored only where the fight is deterministic**: a
+    non-deterministic fight prices the non-crit branch alone.
 
     The resistance is the armour **this** packet met, transported because a
     bolt is a physical event on the ordinary ledger and
-    :func:`_apply_temporary_lethality_windows` can re-price one (umbrella
-    Amendment N, Ruling 1).
-    """
+    :func:`_apply_temporary_lethality_windows` can re-price one."""
     plating = float(state.target_basic_damage_multiplier)
     deterministic = bool(state.deterministic)
     crit_raw = (
@@ -15191,19 +14973,13 @@ def _copied_on_hit_declaration(
 ) -> tuple[Any, ...] | None:
     """One copied on-hit packet's declaration, routed at the second subject.
 
-    umbrella Amendment R, Ruling 3's whole shape in one function.  The
-    magnitude belongs to the family that declared it, so ``rule_id`` is the
-    **source** mechanic and D-62 attributes the contribution at
-    ``(source mechanic, secondary subject, event_id)``; what the router
-    contributes is the route, recorded as provenance beside it.  The share is
-    ``1.0`` because Wind's Fury re-delivers the attack's on-hit packets whole
-    rather than taking a fraction of them — the fraction it declares is the
-    bolt's, and the bolt is a different packet.
-
-    ``None`` for a contributor no item rule declares — a champion's
-    ability-carried on-hit — which is what makes the copied row's stamp
-    all-or-nothing rather than a row whose walk price is missing a producer.
-    """
+    The magnitude belongs to the family that declared it, so ``rule_id`` is
+    the **source** mechanic and the contribution is attributed at
+    ``(source mechanic, secondary subject, event_id)``; the router contributes
+    the route, recorded as provenance beside it.  The share is ``1.0`` because
+    Wind's Fury re-delivers the attack's on-hit packets whole.  ``None`` for a
+    contributor no item rule declares, which makes the copied row's stamp
+    all-or-nothing."""
     if share.mechanic_id is None:
         return None
     return tuple(
@@ -15316,13 +15092,8 @@ def _copied_on_hit_packet(
     target_current_health: float,
 ) -> dict[str, float]:
     """Resolve one copied on-hit packet, including current-health effects.
-
-    The pooled reading of :func:`_copied_on_hit_shares`, which is the one
-    home of what a copied application is worth: the callers that build a row
-    out of typed totals ask this, and the caller that has to hand the walk a
-    declaration per producer asks for the shares.  Two readings, one
-    arithmetic.
-    """
+    The pooled reading of :func:`_copied_on_hit_shares`; the caller that hands
+    the walk a declaration per producer asks for the shares instead."""
     return _copied_packets_by_type(
         _copied_on_hit_shares(state, on_hits, effectiveness, target_current_health)
     )
@@ -15529,12 +15300,12 @@ def _add_single_proc_on_hits(
                         "total_damage": bolt_total,
                         "damage_type": "physical",
                         # This row is the pair engine's preview of a number the
-                        # coupled walk owns since ``secondary_target`` retired:
-                        # the roster composition reads the stamp and takes the
-                        # figure above out of every total it composes, while the
-                        # pair fight's own receipt publishes it unchanged.  The
-                        # row-level declaration is what a *coarse* row hands the
-                        # walk — one whose bolts landed on no resolvable swing
+                        # coupled walk owns: the roster composition reads
+                        # the stamp and takes the figure above out of every
+                        # total it composes, while the pair fight's own
+                        # receipt publishes it unchanged.  The row-level
+                        # declaration is what a *coarse* row hands the walk:
+                        # one whose bolts landed on no resolvable swing
                         # schedule (``_row_declaration_share``).
                         "pair_preview_of": router,
                         "declared": _bolt_declaration(
@@ -15674,9 +15445,7 @@ def _add_single_proc_on_hits(
             cleave_damages = [
                 _mitigate(
                     item_effects.hydra_cleave_secondary_ad_damage(
-                        total_attack_damage=state.champion_stats.get(
-                            "attack_damage", 0.0
-                        ),
+                        total_attack_damage=state.champion_stats["attack_damage"],
                         is_melee=state.is_melee,
                         item_name=cleave_item_name,
                     )
@@ -15811,11 +15580,11 @@ def _add_single_proc_on_hits(
                 "total_damage": mitigated,
                 "damage_type": source.damage_type,
                 # This row is the pair engine's preview of a number the
-                # coupled walk owns since ``charged_strike`` retired.  The
-                # row-level declaration is what a *coarse* row hands the
-                # walk — one whose procs landed on no timestamped swing, so
-                # it authors no event of its own and the reconstruction
-                # synthesizes one (``_row_declaration_share``).
+                # coupled walk owns.  The row-level declaration is what a
+                # *coarse* row hands the walk: one whose procs landed on no
+                # timestamped swing, so it authors no event of its own and
+                # the reconstruction synthesizes one
+                # (``_row_declaration_share``).
                 "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
                 "declared": _strike_declaration(source.item_name, sum(declared_raws)),
             }
@@ -16031,7 +15800,7 @@ def _add_single_proc_on_hits(
             for auto_index in range(num_auto_attacks):
                 raw_cone = (
                     item_effects.hydra_secondary_target_damage(
-                        max_health=state.champion_stats.get("health", 0.0),
+                        max_health=state.champion_stats["health"],
                         is_melee=state.is_melee,
                         empowered=auto_index in active_indices,
                         item_name=secondary_item_name,
@@ -16193,10 +15962,9 @@ def _add_single_proc_on_hits(
                 "total_damage": total_damage,
                 "damage_type": source.damage_type,
                 # This row is the pair engine's preview of a number the
-                # coupled walk owns since ``charged_strike`` retired.  The
-                # row-level declaration is what a row with no authored events
-                # hands the walk, which the reconstruction splits
-                # (``_row_declaration_share``).
+                # coupled walk owns.  The row-level declaration is what a
+                # row with no authored events hands the walk, which the
+                # reconstruction splits (``_row_declaration_share``).
                 "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
                 "declared": _strike_declaration(source.item_name, sum(declared_raws)),
             }
@@ -16245,11 +16013,10 @@ def _add_single_proc_on_hits(
         if stack_timing is None:
             # A malformed ledger withholds event precision: no certifiable
             # attack boundary exists, so the coarse fallback below prices a
-            # duration-scaled aggregate (preserved legacy behavior).  The
-            # row is stamped with NAMED fail-closed reasons (P3 package
-            # 3C): callers can distinguish a malformed ledger from a
-            # passive that never fired, and the self-shield loss is
-            # receipted, not silent.
+            # duration-scaled aggregate.  The row is stamped with NAMED
+            # fail-closed reasons, so callers can distinguish a malformed
+            # ledger from a passive that never fired and the self-shield
+            # loss is receipted, not silent.
             stack_events = None
             stack_gate = None
             stack_source_denials: list[dict[str, Any]] = []
@@ -16288,7 +16055,7 @@ def _add_single_proc_on_hits(
             "count": procs,
             # A ``cast_proc`` row like the ones ``_add_item_proc_damage``
             # authors, and a preview for the same reason: this family's
-            # numbers are the coupled walk's since it retired.  The late
+            # numbers are the coupled walk's.  The late
             # phase is the one branch that really does fall through to a
             # coarse row -- a ledger with no certifiable attack boundary
             # authors no ``stack_events`` -- so the row-level declaration
@@ -16341,16 +16108,14 @@ def _add_single_proc_on_hits(
                                 0.0,
                                 shield_base
                                 + shield_ratio
-                                * float(
-                                    state.champion_stats.get("bonus_attack_damage", 0.0)
-                                ),
+                                * float(state.champion_stats["bonus_attack_damage"]),
                             ),
                             "duration": effect.self_shield_duration,
                             "source": source.display_name,
                             # The shield arms on the SAME proc event it
                             # rides: its time and event precision are the
                             # completed pair's (P3 package 3C).
-                            "time": float(event.get("time", 0.0)),
+                            "time": float(event["time"]),
                             "event_precision": str(
                                 event.get("event_precision", "exact")
                             ),
@@ -16482,12 +16247,12 @@ def _add_first_auto_healing(state: FightState) -> None:
         event_time = float(damage_events[0]["time"])
     except (KeyError, TypeError, ValueError):
         return
-    base_ad = float(state.champion_stats.get("base_attack_damage", 0.0))
+    base_ad = float(state.champion_stats["base_attack_damage"])
     # Lightshield Strike heals 100% bAD (melee) / 50% bAD (ranged) — the
     # ranged variant is sourced from the wiki's {{rd|100%|50%}} (pass 17).
     heal_ratio = (
         effect.heal_base_ad_ratio_ranged
-        if getattr(state, "is_melee", True) is False
+        if state.is_melee is False
         else effect.heal_base_ad_ratio
     )
     base_amount = heal_ratio * base_ad
@@ -16533,24 +16298,13 @@ def _restate_declaration(
 ) -> None:
     """Keep a re-priced packet's declaration in step with the re-pricing.
 
-    The one home for umbrella Amendment N, Ruling 1's *kept in step* half.
-    A packet whose family has retired reaches the coupled walk as a
-    declaration rather than as a price, and the walk prices it at the
-    magnitude and the resistance the declaration states.  So a site that
-    changes what an already-authored packet is worth has to move the
-    declaration with it: a window that re-prices the packet at a different
-    armour restates ``resistance``, a reprice that scales the packet's
-    magnitude restates ``scale``, and a site that does neither leaves a
-    declaration the walk would price at what the packet used to be.
-
-    ``onto`` is where the restated declaration lands when the site rebuilds
-    its packet instead of editing it in place; by default it lands back on
-    *event*.
-
-    Returns without writing on a packet carrying no declaration, which today
-    is every packet the tree authors: the from-declaration path is inert
-    until a family's retirement slice opts in, and this stays inert with it.
-    """
+    The walk prices a packet at the magnitude and resistance its declaration
+    states, so a site that changes what an authored packet is worth moves the
+    declaration with it: re-pricing at a different armour restates
+    ``resistance``, scaling the magnitude restates ``scale``.  ``onto`` is
+    where the restated declaration lands when the site rebuilds its packet
+    rather than editing it, and defaults to *event*.  A packet with no
+    declaration is left untouched."""
     declared = event.get("declared")
     if declared is None:
         return
@@ -16570,10 +16324,10 @@ def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> No
     would attribute one item's damage to another.
 
     The row's authored ticks are replaced by the repriced ones, so a
-    declaration riding a tick is carried across and rescaled by what that
-    tick moved by (:func:`_restate_declaration`, Amendment N, Ruling 1);
-    without that the walk would price a retired burn at its pre-lifeline
-    magnitude and the reprice would vanish from every total holding it.
+    declaration riding a tick is carried across and rescaled by what that tick
+    moved by (:func:`_restate_declaration`); without that the walk would price
+    the burn at its pre-lifeline magnitude and the reprice would vanish from
+    every total holding it.
     """
     liandry_delta = float(adjustments["liandry_delta"])
     if abs(liandry_delta) <= 1e-9:
@@ -16596,15 +16350,12 @@ def _carry_declarations_onto_repriced_ticks(
 
     The repriced ticks are the same burn's events walked in the same order,
     so the join is positional.  A length the join cannot trust is refused
-    rather than guessed — but only where a declaration actually rides one of
-    the authored ticks, because a burn nobody has retired has nothing to
-    carry and a raise there would be this function inventing a fight the
-    engine has always run.
+    rather than guessed, but only where a declaration actually rides one of
+    the authored ticks: a burn carrying none has nothing to carry.
 
     Returns the repriced ticks, so the replacement the caller installs is
-    visibly a function of the ticks it replaces rather than a list that
-    arrived from somewhere else — which is the same thing the term census
-    reads to tell a re-pricing from an authoring.
+    visibly a function of the ticks it replaces, which is what the term
+    census reads to tell a re-pricing from an authoring.
     """
     if not isinstance(authored, list):
         return repriced
@@ -16624,7 +16375,7 @@ def _carry_declarations_onto_repriced_ticks(
     for authored_tick, repriced_tick in zip(authored, repriced):
         if not isinstance(authored_tick, dict):
             continue
-        authored_damage = float(authored_tick.get("damage", 0.0) or 0.0)
+        authored_damage = float(authored_tick["damage"])
         _restate_declaration(
             authored_tick,
             scale=(
@@ -16756,24 +16507,20 @@ def _add_expose_weakness(
 
     This is the **pair engine's reading** of the mechanic, and the walk's is
     different: it arms a timed modifier per proc, on a cooldown, for every
-    roster attacker.  Phase 4 S7 settled which of the two is the answer — the
-    walk's, because the pool of amplified damage is a roster fact — and this
-    row is now a declared *preview*: the honest one-attacker-versus-one-
-    defender figure, published in the pair fight's own receipt and excluded
-    from everything the roster composes.  The row says which mechanic it
-    previews and ``trigger_stream`` says that mechanic's pair number is
-    ``THEORETICAL``; neither statement alone demotes it, which is why the
-    ``DivergenceReceipt`` that froze the disagreement is retired rather than
-    re-worded.
+    roster attacker.  The walk's is the answer, because the pool of amplified
+    damage is a roster fact, so this row is a declared *preview*: the honest
+    one-attacker-versus-one-defender figure, published in the pair fight's own
+    receipt and excluded from everything the roster composes.  The row says
+    which mechanic it previews and ``trigger_stream`` says that mechanic's
+    pair number is ``THEORETICAL``; neither statement alone demotes it.
 
     The preview is priced from its own ledger: the bonus is the rate over
     the events after the arming proc, so the row's number and the events it
     authors are the one pool, and a window whose ledger holds nothing after
     that proc has no row at all.
 
-    What is declared here is the exclusion (the chain that armed the buff)
-    and the rate, which used to be a comparison and a compiled field
-    respectively.
+    What is declared here is the exclusion, the chain that armed the buff,
+    and the rate.
     """
     if not (spellblade.item and spellblade.procs > 0):
         return
@@ -16902,7 +16649,7 @@ def _hypershot_delta_events(
         # trigger is a PART of its cast (the non-triggering part IS
         # amped), so it must resolve above or stay coarse.
         slot_cast_times = sorted(
-            float(event.get("time", 0.0))
+            float(event["time"])
             for event in rotation.cast_events
             if isinstance(event, Mapping) and event.get("slot") == trigger_key
         )
@@ -16927,14 +16674,10 @@ def _hypershot_delta_events(
 def _amp_slot(
     state: FightState, slot: AmpChainSlot, *extra_owners: str
 ) -> "delta_amp.AmpSlot | None":
-    """The declared amp occupying one chain slot for this build.
-
-    ``None`` means nothing the build holds declares the slot — an answer, not
-    a zero.  Owners are passed as names because a declaration is keyed by
-    whatever owns it; the engine never spells one.  ``extra_owners`` carries
-    the selected keystone, which is an owner the item list cannot hold.
-    """
-    owners = [str(item.get("name", "")) for item in state.items]
+    """The declared amp occupying one chain slot for this build.  ``None``
+    means nothing the build holds declares the slot, an answer and not a zero.
+    ``extra_owners`` carries the keystone, an owner the item list cannot hold."""
+    owners = [item_effects.resolved_item_name(item) for item in state.items]
     owners.extend(extra_owners)
     return _amp_slot_for(state, slot, owners)
 
@@ -17065,7 +16808,7 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
         # The amplified damage = base * amp, so the amp contribution is
         # base * (amp - 1) / amp  (since base already includes the amp).
         actualizer_bonus = amped_base * (state.ability_amp - 1.0) / state.ability_amp
-        amp_name = state.ability_amp_owner or "Ability Damage"
+        amp_name = state.ability_amp_owner
         breakdown[f"ability_amp_{amp_name}"] = {
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": state.ability_amp,
@@ -17118,14 +16861,11 @@ def _health_gated_events(
 
     The gate reads the target's *current* health, so the ledger is walked in
     its own order with health falling by everything already dealt; a row is
-    amplified when the health standing before it satisfies the gate. Damage
+    amplified when the health standing before it satisfies the gate.  Damage
     the ledger cannot timestamp never appears here, so the row is a floor.
-
     Two things the walk does not model, disclosed by its caller: the target
-    is assumed to start the fight at full health, and the ledger is read
-    before shields, so a shielded target crosses a falling gate earlier here
-    than it would in game.
-    """
+    starts the fight at full health, and the ledger is read before shields,
+    so a shielded target crosses a falling gate earlier here than in game."""
     threshold = effect.health_ratio * max_health
     below = effect.condition is rune_effects.AmpCondition.TARGET_BELOW
     amped = []
@@ -17313,7 +17053,7 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
     if slot is None:
         return
     cc_times = sorted(
-        float(event.get("time", 0.0) or 0.0)
+        float(event["time"])
         for entry in state.breakdown.values()
         if isinstance(entry, dict)
         for event in entry.get("damage_events") or ()
@@ -17358,9 +17098,8 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
     guessed penetration.
 
     Each rescaled packet's declaration is restated at the armour that packet
-    actually met (:func:`_restate_declaration`, Amendment N, Ruling 1), so a
-    family retired out of these rows is priced inside the window rather than
-    at the one figure the fight publishes.
+    actually met (:func:`_restate_declaration`), so the walk prices it inside
+    the window rather than at the one figure the fight publishes.
     """
     old_armor = float(state.resists.effective_armor)
     old_multiplier = apply_resistance(1.0, old_armor)
@@ -17394,8 +17133,12 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                 "end_time": min(trigger_times) + duration,
                 "amount": amount,
                 "applies_to_triggering_event": bool(
-                    temporary.get("applied_to_triggering_event", False)
-                    or temporary.get("applies_before_event", False)
+                    ability_field(
+                        temporary, "applied_to_triggering_event", form="temporary_buff"
+                    )
+                    or ability_field(
+                        temporary, "applies_before_event", form="temporary_buff"
+                    )
                 ),
                 "applied_count": 0,
             }
@@ -17465,8 +17208,8 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
             delta = new_damage - damage
             event["damage"] = new_damage
             # The packet met ``new_armor``, not the figure the fight
-            # published, and a retired family's declaration is priced at what
-            # its own packet met (Amendment N, Ruling 1).
+            # published, and a declaration is priced at what its own packet
+            # met.
             _restate_declaration(event, resistance=new_armor)
             row_delta += delta
             for window in active_windows:
@@ -17486,7 +17229,10 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
             continue
         applied = int(window["applied_count"])
         temporary["applied_to_triggering_event"] = bool(
-            temporary.get("applied_to_triggering_event", False) and applied > 0
+            ability_field(
+                temporary, "applied_to_triggering_event", form="temporary_buff"
+            )
+            and applied > 0
         )
         temporary["applied_to_later_events"] = applied > 0
         temporary["applied_event_count"] = applied
@@ -17530,12 +17276,17 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         if not cast_times:
             continue
 
-        ratio = float(storage.get("ratio", 0.0) or 0.0)
-        duration = float(storage.get("duration", 0.0) or 0.0)
+        ratio = float(ability_field(storage, "ratio", form="stored_damage"))
+        duration = float(ability_field(storage, "duration", form="stored_damage"))
         source_slots = {
-            str(source_slot) for source_slot in storage.get("source_slots", ())
+            str(source_slot)
+            for source_slot in ability_field(
+                storage, "source_slots", form="stored_damage"
+            )
         }
-        include_auto_attacks = bool(storage.get("include_auto_attacks", False))
+        include_auto_attacks = bool(
+            ability_field(storage, "include_auto_attacks", form="stored_damage")
+        )
         if ratio <= 0.0 or duration <= 0.0 or not source_slots:
             continue
 
@@ -17546,16 +17297,16 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
             for event in source_events:
                 if not isinstance(event, Mapping):
                     continue
-                damage_type = str(event.get("damage_type", ""))
+                damage_type = str(event["damage_type"])
                 if damage_type not in {"physical", "magic"}:
                     continue
-                source_key = str(event.get("source_key", ""))
+                source_key = str(event["source_key"])
                 is_auto = source_key == "auto_attacks"
                 if source_key not in source_slots and not (
                     is_auto and include_auto_attacks
                 ):
                     continue
-                event_time = float(event.get("time", 0.0) or 0.0)
+                event_time = float(event["time"])
                 if event_time < start_time - _CAST_SCHEDULE_EPS:
                     continue
                 if event_time > end_time + _CAST_SCHEDULE_EPS:
@@ -17567,7 +17318,7 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
                     and cast_positions[source_key] <= cast_positions.get(slot, -1)
                 ):
                     continue
-                source_damage += float(event.get("damage", 0.0) or 0.0)
+                source_damage += float(event["damage"])
 
             stored = source_damage * ratio
             if stored > 0.0:
@@ -17724,7 +17475,7 @@ def _empowered_swing_consumers(
             continue
         declared = burst.by_ability.get(ability_key, ()) if burst is not None else ()
         times = declared or tuple(
-            float(event.get("time", 0.0))
+            float(event["time"])
             for event in cast_events
             if str(event.get("slot", "")) == ability_key
             for _ in range(hits)
@@ -17737,23 +17488,16 @@ def _empowered_swing_consumers(
 def _declared_cc_kind(parts: Iterable[Any]) -> str | None:
     """The reviewed control kind these parts declare, if any does."""
     for part in parts:
-        kind = getattr(part, "cc_kind", None)
+        kind = part.cc_kind
         if kind is not None:
             return str(kind)
     return None
 
 
 def _declared_cc_marker(info: Mapping[str, Any]) -> dict[str, Any]:
-    """The reviewed control kind this entry's parts declare, as an event marker.
-
-    ``MODULE_CC`` is stamped onto an entry's parts, and a part that emits
-    its own events carries the marker there.  An empowering entry's damage
-    is delivered by the attacks it forces, so the events authored for
-    those swings — consumed from a stream, forced without one, or
-    reconstructed as the row's lump — are where the same declaration has
-    to land.
-    """
-    kind = _declared_cc_kind(info.get("parts") or ())
+    """The reviewed control kind an entry's parts declare, as an event marker
+    on the swings an empowering entry forces."""
+    kind = _declared_cc_kind(ability_field(info, "parts"))
     return {"cc_kind": kind, "cc_reviewed": True} if kind is not None else {}
 
 
@@ -17942,10 +17686,10 @@ def _apply_shield_reaver_venom(
     are all read off the declaration: the holder's own ``damage_routing``
     rule, resolved for the holder's range class.
     """
-    is_melee = bool(champion_stats.get("is_melee", True))
+    is_melee = bool(champion_stats["is_melee"])
     bypass = damage_routing.resolve_shield_bypass(
-        [str(item.get("name", "")) for item in items],
-        level=int(champion_stats.get("level", 1)),
+        [item_effects.resolved_item_name(item) for item in items],
+        level=int(champion_stats["level"]),
         fight_duration_seconds=config.fight_duration_seconds,
         target_bonus_health=max(0.0, config.target_bonus_health),
         holder_is_melee=is_melee,
@@ -17990,7 +17734,7 @@ def shield_outcome_inputs(
 ) -> ShieldOutcomeInputs:
     """One fight's facts, as the shield outcome's readers are decided by."""
     return ShieldOutcomeInputs(
-        item_names=tuple(str(item.get("name", "")) for item in items),
+        item_names=tuple(item_effects.resolved_item_name(item) for item in items),
         target_threshold_health_heal=config.target_threshold_health_heal,
     )
 
@@ -18000,14 +17744,10 @@ def _require_target_class_support(
 ) -> None:
     """Refuse a non-champion-class fight the item model cannot price.
 
-    ``FightConfig.__post_init__`` already rejected an unknown class. This
-    is the second, build-scoped gate: an item whose cached effect text
-    names a target class it is not adjudicated for would be priced with
-    the champion-class reading (Statikk Shiv's Electrospark is 60 magic
-    damage on a champion and a sourced 90 on a non-champion), so the
-    fight fails closed with every offending item and clause named rather
-    than silently under- or over-counting.
-    """
+    An item whose cached effect text names a target class it is not
+    adjudicated for would be priced with the champion-class reading (Statikk
+    Shiv's Electrospark is 60 magic damage on a champion and a sourced 90 on a
+    non-champion), so the fight fails closed naming every offending clause."""
     denials = item_effects.target_class_denials(items, config.target_class)
     if denials:
         raise ValueError(
@@ -18199,14 +17939,14 @@ def calculate_fight_damage(
         for event in damage_events:
             if not isinstance(event, dict):
                 continue
-            source_key = str(event.get("source_key", ""))
-            ability = state.ability_damages.get(source_key, {})
+            source_key = str(event["source_key"])
+            ability = ability_payload(state.ability_damages, source_key)
             # P4: the on-hit passive row's events carry source_key
             # "on_hit_ability_passive" — resolve the passive entry's own
             # execute stamp (Zeri's Living Battery).
             if not ability and source_key == "on_hit_ability_passive":
-                ability = state.ability_damages.get("passive", {})
-            ability_ratio = float(ability.get("execute_threshold_ratio", 0.0) or 0.0)
+                ability = ability_payload(state.ability_damages, "passive")
+            ability_ratio = float(ability_field(ability, "execute_threshold_ratio"))
             item_ratio = (
                 float(item_execute.threshold) if item_execute is not None else 0.0
             )
@@ -18236,7 +17976,7 @@ def calculate_fight_damage(
         # target's threshold heal — the same condition the pipeline's ledger
         # gate reads, answered by one function at both — and the holders
         # whose ``takedown_events`` synthesis reads ``target_ending_health``
-        # off this outcome (issue #169).
+        # off this outcome.
         shield_outcome: dict[str, float] = {}
     else:
         shield_outcome = _resolve_starting_shield_outcome(state, config, damage_events)
@@ -18268,10 +18008,10 @@ def calculate_fight_damage(
         and shield_outcome["threshold_health_triggered"]
         and not shield_outcome["threshold_health_cadence_certified"]
     ):
-        # The downgrade the target-side Lifeline used to take unconditionally,
-        # now measured: it fires when the declaration subdivides the sourced
-        # window into no ticks at all, so the heal's timing is a total rather
-        # than a schedule.  A declared cadence certifies the timeline instead.
+        # The target-side Lifeline downgrade, measured: it fires when the
+        # declaration subdivides the sourced window into no ticks at all, so
+        # the heal's timing is a total rather than a schedule.  A declared
+        # cadence certifies the timeline instead.
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"
         timeline_coverage["coarse_sources"] = sorted(
@@ -18319,28 +18059,25 @@ def calculate_fight_damage(
             item_options,
             fight_duration_seconds=config.fight_duration_seconds,
             is_melee=state.is_melee,
-            bonus_health=float(champion_stats.get("bonus_health", 0.0) or 0.0),
-            bonus_mana=float(champion_stats.get("bonus_mana", 0.0) or 0.0),
-            max_mana=float(champion_stats.get("max_mana", 0.0) or 0.0),
-            total_attack_damage=float(champion_stats.get("attack_damage", 0.0) or 0.0),
-            total_move_speed=float(champion_stats.get("move_speed", 0.0) or 0.0),
-            lethality=float(champion_stats.get("lethality", 0.0) or 0.0),
+            bonus_health=float(champion_stats["bonus_health"]),
+            bonus_mana=float(champion_stats["bonus_mana"]),
+            max_mana=float(champion_stats["max_mana"]),
+            total_attack_damage=float(champion_stats["attack_damage"]),
+            total_move_speed=float(champion_stats["move_speed"]),
+            lethality=float(champion_stats["lethality"]),
         ),
     }
 
 
 def _walk_end_time(config: FightConfig, damage_events: list[dict[str, Any]]) -> float:
     """When a shield walk's window closes, for the timed state it expires.
-
-    The authored fight duration, unless the ledger itself runs past it — a
-    burst request carries no duration to speak of and its packets are the
-    only clock there is.
-    """
+    The authored fight duration, unless the ledger runs past it: a burst
+    request carries no duration and its packets are the only clock."""
     latest = max(
-        (float(event.get("time", 0.0) or 0.0) for event in damage_events),
+        (float(event["time"]) for event in damage_events),
         default=0.0,
     )
-    return max(float(config.fight_duration_seconds or 0.0), latest)
+    return max(float(config.fight_duration_seconds), latest)
 
 
 def _resolve_starting_shield_outcome(
@@ -18443,8 +18180,8 @@ def _resolve_starting_shield_outcome(
         # packet only by riding back with the number beside it.
         repriced_by_source: dict[str, list[tuple[float, Any]]] = {}
         for event in damage_events:
-            repriced_by_source.setdefault(str(event.get("source_key", "")), []).append(
-                (float(event.get("damage", 0.0)), event.get("declared"))
+            repriced_by_source.setdefault(str(event["source_key"]), []).append(
+                (float(event["damage"]), event.get("declared"))
             )
         for source_key, entry in state.breakdown.items():
             values = repriced_by_source.get(source_key)
@@ -18491,11 +18228,9 @@ def _resolve_starting_shield_outcome(
 
 def _is_auto_stream_key(key: str) -> bool:
     """Whether a breakdown key belongs to the auto-attack damage stream.
-
-    The stream itself plus champion riders on it (e.g. Corki's
-    true-damage instance) share the ``auto_attacks`` prefix; on-hit,
-    spellblade, and Fiendhunter rows ride the swings too.
-    """
+    The stream and champion riders on it (Corki's true-damage instance) share
+    the ``auto_attacks`` prefix; on-hit, spellblade and Fiendhunter rows ride
+    the swings too."""
     return (
         key.startswith("auto_attacks")
         or key == "fiendhunter_true_damage"

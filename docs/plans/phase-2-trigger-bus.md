@@ -120,7 +120,7 @@ registry projects the five hand-maintained holder name sets, so the two gates th
 - **Solstice Sleigh is tuple-incapable by declaration** (D-02) — its branch is nested inside
   `for cc in cc_events:` and today it is protected only by a `healthRegen.percent` coincidence.
   **Fimbulwinter needs the enriched view** (D-03) — it carries a
-  `_trigger_event_id` (`item_support_effects.py:1312`), and dropping it strips the only
+  `_trigger_event_id` (`item_support_effects.py:1272`), and dropping it strips the only
   trigger link any support author emits, the one the fail-closed
   `support_trigger_link` raise at `program/compile.py:914` exists to refuse
   (`survival/compile.py`'s until Phase 4 S4 moved the one constructor).

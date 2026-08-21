@@ -24,7 +24,7 @@ Contract clarifications received from RLM-1 (binding):
       hit_identity, charge_consumed, use_count, bonus_total, bonus_delta,
       cap, atom}; success reason is "charge_consumed"; at bonus_total == cap
       the hit is denied "cap_reached" with NO charge consumed.
-    * MAX_ENLIGHTEN_TRIGGERS_PER_FIGHT = 1; enlighten_schedule raises
+    * one level-up per fight (enlighten_schedule takes one time); it raises
       ValueError for level_up_time < 0 or non-finite maximum_mana; emitted
       events carry owner (keyword, default "").
     * ResourceAccount rejects current outside [0, maximum] at construction.
@@ -45,7 +45,6 @@ from src.calculator.resource_ledger import (
     OP_REFUND,
     OP_REGEN,
     OP_CLAMP,
-    MAX_ENLIGHTEN_TRIGGERS_PER_FIGHT,
     ResourceEvent,
     ResourceAccount,
     ResourceLedger,
@@ -806,10 +805,9 @@ class TestEnlighten:
         assert acct.current == pytest.approx(1000.0)
 
     # 35. multiple level-ups only if sourced and representable: the kernel
-    #     exposes ONE level-up per fight (MAX_ENLIGHTEN_TRIGGERS_PER_FIGHT = 1);
+    #     exposes ONE level-up per fight (enlighten_schedule takes one time);
     #     schedule() is the only trigger and validates its inputs.
     def test_35_single_trigger_contract_and_validation(self):
-        assert MAX_ENLIGHTEN_TRIGGERS_PER_FIGHT == 1
         decl = EnlightenDeclaration()
         for bad_time in (-1.0, -0.001):
             with pytest.raises(ValueError):

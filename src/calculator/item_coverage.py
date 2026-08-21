@@ -188,16 +188,11 @@ class ItemCoverage:
     review_issue_refs: tuple[int, ...]
     needed: frozenset[EngineLane]
 
-    # The two gates below are two questions with one answer today, and that is
-    # worth saying out loud because they used to have two.  Before the flip,
-    # ``calculation_eligible`` carried an extra escape term — a named set of
-    # blocked items an explicit request was still allowed to compute — while
-    # ``optimizer_eligible`` never had one.  That set was empty, so deleting it
-    # moved no answer, and the two collapsed onto the same expression.  They
-    # stay two properties rather than one alias: the day BIS candidate
-    # generation and an explicitly requested build should diverge again, the
-    # divergence belongs here, in two expressions, and not in a caller.  A test
-    # pins that they agree for every cached item today.
+    # The two gates below are two questions with one answer today.  They stay
+    # two properties rather than one alias: the day BIS candidate generation
+    # and an explicitly requested build should diverge, the divergence belongs
+    # here, in two expressions, and not in a caller.  A test pins that they
+    # agree for every cached item today.
 
     @property
     def optimizer_eligible(self) -> bool:
@@ -294,12 +289,12 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
 # text difference does not by itself prove a new mechanic appeared; it means
 # a human must re-read the branch and either re-pin the fingerprint (no
 # mechanic change) or reclassify the item (a mechanic was added).
-# Six items left this registry with the declaration-driven classifier: Diadem
-# of Songs, Dream Maker, Echoes of Helia, Moonstone Renewer and Solstice
-# Sleigh declare ally_packet mechanics the support ledger schedules
-# (``modeled_state``), and Spirit Visage declares a sustain multiplier
-# (``modeled_effect``).  None of them is ``stats_only`` any more, so the
-# drift guard no longer applies to them; it is not a de-certification.
+# Six items are outside this registry because the declaration-driven
+# classifier reaches them: Diadem of Songs, Dream Maker, Echoes of Helia,
+# Moonstone Renewer and Solstice Sleigh declare ally_packet mechanics the
+# support ledger schedules (``modeled_state``), and Spirit Visage declares a
+# sustain multiplier (``modeled_effect``).  None is ``stats_only``, so the
+# drift guard has nothing to pin for them.
 _STATS_ONLY_CERTIFIED_EFFECT_TEXT: dict[str, tuple[tuple[str, str, str], ...]] = {
     "Bramble Vest": (
         (
@@ -724,9 +719,8 @@ def stats_only_effect_fingerprint(
     """Return one item's current ``(kind, effect_name, full_text)`` triples.
 
     Used by the stats-only certification suite to diff a cached item's live
-    passive/active text against :data:`_STATS_ONLY_CERTIFIED_EFFECT_TEXT`.
-    An empty result means the cached item has no described passive or
-    active at all (the 51 undescribed stats-only items).
+    passive/active text against :data:`_STATS_ONLY_CERTIFIED_EFFECT_TEXT`.  An
+    empty result means the cached item has no described passive or active.
     """
     fingerprint = []
     for kind, entry in effect_entries(item):
@@ -779,9 +773,7 @@ def _has_described_effect(item: Mapping[str, Any]) -> bool:
 def _cached_record(name: str) -> Mapping[str, Any]:
     """One cached item record, read through the caching layer (rule 2).
 
-    A name the shop does not hold is a synthetic fixture, not an error: the
-    last two rungs exist to tell those apart from real records, so a miss is an
-    empty mapping rather than a raise.
+    A name the shop does not hold is a synthetic fixture, so a miss is empty.
     """
     try:
         return get_item_by_name(name)
@@ -790,22 +782,14 @@ def _cached_record(name: str) -> Mapping[str, Any]:
 
 
 def _declared_families(name: str) -> frozenset[RuleFamily]:
-    """Every family *name* declares — through a rule, or through its entry.
+    """Every family *name* declares, through a rule or through its entry.
 
-    Two sources and not one, deliberately.  A compiled ``BehaviorRule`` is the
-    declaration proper; a registry entry whose family is not migrated yet
-    compiles to no rule but is still an item whose behaviour the engines run.
-    Reading only the rules would call every unmigrated item unmodelled, which
-    is a refusal invented by the migration rather than by the model.
-
-    One shape is deliberately *not* a family here: a declaration that only
-    says where a **cached stat** lands.  Its number was already in the stat
-    block before any declaration existed — the channel says which field of the
-    block reads it, not that the item does something — so counting it would
-    publish "damage-relevant effects are declared" for an item whose described
-    passive is still nothing anyone modelled.  Read off the declaration and
-    off the tag (:data:`~.item_behavior_catalog.STAT_CHANNEL_TAGS`), never off
-    a name.
+    Two sources and not one: a compiled ``BehaviorRule`` is the declaration
+    proper, and a registry entry whose family compiles to no rule is still an
+    item whose behaviour the engines run.  A declaration that only says where a
+    **cached stat** lands is not a family here, because its number was already
+    in the stat block; read off the tag
+    (:data:`~.item_behavior_catalog.STAT_CHANNEL_TAGS`), never off a name.
     """
     families = {
         family
@@ -821,21 +805,11 @@ def _declared_families(name: str) -> frozenset[RuleFamily]:
 def unserved_lanes(name: str, needed: frozenset[EngineLane]) -> tuple[str, ...]:
     """Every ``(family, lane)`` *name* declares that no interpreter serves.
 
-    This is the whole of ``withheld``: a declared family whose interpreter is
-    missing on a lane the caller needs cannot be priced, and the honest answer
-    is a named refusal rather than a number the missing interpreter would have
-    changed.  Empty tuple is the pass condition, and it is empty for every
-    cached item today — which is why the branch is proved on a synthetic
-    declaration and on an emptiness assertion rather than by a real build
-    (D-26).
-
-    It folds over compiled **rules** and never over registry entries, and the
-    difference is the whole correctness of the flip.  A family a registry entry
-    names but no rule compiles is *unmigrated*, not uninterpreted: its
-    behaviour is still live engine code, and withholding it would be a refusal
-    the migration invented.  ``stat_derivation`` is exactly that today, and
-    reading entries here would withhold Rabadon's Deathcap from BIS on the
-    strength of a declaration nobody has written yet.
+    The whole of ``withheld``: an unserved family cannot be priced, so the honest
+    answer is a named refusal.  Empty for every cached item today.  It folds over
+    compiled **rules** and never over registry entries, because a family no rule
+    compiles is unmigrated rather than uninterpreted, and withholding it would
+    refuse Rabadon's Deathcap from BIS on a declaration nobody has written.
     """
     return tuple(
         sorted(
@@ -856,14 +830,8 @@ def declares_only_defence(name: str) -> bool:
 def reviewed_as_inert(name: str) -> str | None:
     """The reviewed "nothing runs here" sentence, when nothing contradicts it.
 
-    ``NO_RUNTIME_BEHAVIOR`` records a review — somebody read the full entry
-    and found no outgoing mechanic — and that outranks bare membership in the
-    options registry, because a record may join that registry carrying only
-    the citation a named boundary cites and an EMPTY options map.  Doran's
-    Helm and Ionian Boots do exactly that, and reading membership alone as
-    "its state is supplied through an explicit bounded scenario control"
-    publishes a control no request can pass.  An entry that does expose a
-    control contradicts the review and keeps its own rung.
+    ``NO_RUNTIME_BEHAVIOR`` records a review and outranks bare membership in
+    the options registry, which a record may join with an EMPTY options map.
     """
     if name not in NO_RUNTIME_BEHAVIOR:
         return None
@@ -891,17 +859,13 @@ def gated_state_reason(name: str) -> str | None:
     A defence-only item is ``stats_only`` either way, so this decides only what
     the receipt beside that label says.  When a declared rule describes an
     exclusive state (``exclusivity``) that an explicit bounded option arms
-    (``option``), the load-bearing fact is that gate — holding the item is not
-    holding the state — and the family census, which says only that nothing
-    declared here is offensive, is the weaker sentence.  It is also the false
-    one for an item like this: an item whose active suppresses its own holder
-    for the duration does touch outgoing damage, so "the mechanic changes
-    durability, not outgoing TDD" is a claim the declaration does not support.
+    (``option``), the load-bearing fact is that gate: holding the item is not
+    holding the state.  The family census, which says only that nothing
+    declared here is offensive, is both the weaker sentence and the false one
+    for an item whose active suppresses its own holder for the duration.
 
-    Every part of the sentence is read off the declared rule — the mechanic
-    names itself, the exclusivity names the state, and what is left of the
-    option key after the state's own prefix names the control — so the rung
-    stays a derivation and no item name enters this file.  ``None`` means the
+    Every part of the sentence is read off the declared rule, so the rung stays
+    a derivation and no item name enters this file.  ``None`` means the
     declaration carries no such gate and the family census stands.
     """
     for rule in behavior_rules(name):
@@ -1048,9 +1012,8 @@ def _declared_status(
 def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverage:
     """One item's coverage on the lanes a caller needs, computed from declarations.
 
-    The ladder used to branch on the item's name eleven times.  It now asks
-    four questions in order, and every one of them is answered by something the
-    catalog or the registries say rather than by a sentence in this file:
+    Four questions in order, every one answered by something the catalog or the
+    registries say rather than by a sentence in this file:
 
     1. Does a declared family lack an interpreter on a needed lane?  Then the
        answer is ``withheld`` with the missing pair named — never a number.
@@ -1155,14 +1118,7 @@ _HOLDER_SURVIVAL_FIELDS: frozenset[str] = frozenset(
 def declared_defence(rule: BehaviorRule) -> DefenseMechanic | None:
     """The defence a rule declares, or ``None`` when it declares none.
 
-    Every compiler builds ``mechanic_id`` as ``<owner slug>.<mechanic>``, so
-    the suffix is the mechanic's own name; a suffix that names a
-    :class:`~.item_behavior.DefenseMechanic` member is a defence the resolver
-    builds.  Read off the identifier rather than off ``payload.mechanic``
-    because one defence — Fimbulwinter's Everlasting — is declared as the ally
-    packet that grants the shield and carries no ``mechanic`` field, and a
-    reader that missed it would silently drop the item from the target lane.
-    A test pins that the two agree wherever the payload has both.
+    Read off ``mechanic_id``'s suffix: Fimbulwinter's Everlasting has none of its own.
     """
     try:
         return DefenseMechanic(rule.mechanic_id.rsplit(".", 1)[-1])
@@ -1275,24 +1231,12 @@ def _derived_target_status(name: str) -> tuple[str, str]:
 
 
 def is_unreviewed_fixture(item: Mapping[str, Any]) -> bool:
-    """Whether *item* is a supplied record the shop does not hold.
-
-    The one question on the target lane that is asked of the caller's record
-    rather than of the cache: a name the shop has never sold, carrying a
-    described passive, is a synthetic or unknown fixture, and answering it
-    ``not_target_relevant`` would be a review nobody performed.
-    """
+    """Whether *item* is a supplied record the shop does not hold."""
     return not _cached_record(str(item.get("name", ""))) and _has_described_effect(item)
 
 
 def target_calculation_eligible(status: str) -> bool:
-    """Whether a target-lane status permits calculating what the actor survives.
-
-    The target lane's counterpart to :attr:`ItemCoverage.calculation_eligible`,
-    and a named predicate rather than an inline expression for the same reason
-    that one is a property: it is the question a fail-closed whitelist has to
-    be able to answer for a status nobody has classified yet.
-    """
+    """Whether a target-lane status permits calculating what the actor survives."""
     return status in _TARGET_ELIGIBLE_STATUSES
 
 
@@ -1491,13 +1435,11 @@ def require_calculation_item_coverage(
 
 # ── the claim corpus ──────────────────────────────────────────────────────
 
-# Every answer this module gives used to be backed by a sentence.  One of them
-# went on describing both halves of Imperial Mandate's Command long after only
-# one half existed, and nothing checked the sentence against the code.  These
-# are the claims that replace the sentences: one per ``(item, lane)`` for every
-# entry in the seven non-empty containers above and one per item that emits a
-# walk packet — each carrying typed evidence the resolution tier resolves
-# against this tree on every ``pytest`` run.
+# Every answer this module gives is backed by a claim rather than a sentence:
+# one per ``(item, lane)`` for every entry in the seven non-empty containers
+# above, and one per item that emits a walk packet, each carrying typed
+# evidence the resolution tier resolves against this tree on every ``pytest``
+# run.  A sentence cannot be checked against the code; a claim can.
 #
 # The *evidence* is authored and the assembly is mechanical, in that order and
 # never the other way round.  A table that read its own evidence out of the
@@ -1509,9 +1451,6 @@ def require_calculation_item_coverage(
 # classifier above stays the only answer to "what is this item's coverage",
 # the resolution tier asserts the two agree for every cached item, and no
 # ``src`` module reads the corpus at all.
-
-# The umbrella issue every unrouted review gap falls back to.
-_UMBRELLA_ISSUE = 40
 
 # The two H4 reasons stood here, one for each half of the ten tags no engine
 # dispatched on.  The stat-derivation migration gave the last three of them a
@@ -1751,10 +1690,8 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
         "packet:Bandlepipes — Fanfare",
     ),
     "Cull": ("item_effects.item_state_receipts", "option:reap_minion_kills"),
-    # Three items the reviewed-absence table used to carry.  Each exposes a
-    # real bounded control, so the classifier reaches ``modeled_state``
-    # through it and "we looked and nothing runs" was the wrong claim: what
-    # runs is whatever the control arms.
+    # Three items exposing a real bounded control, so the classifier reaches
+    # ``modeled_state`` through it: what runs is whatever the control arms.
     "Gluttonous Greaves": (
         "item_effects.item_state_receipts",
         "option:slay_stacks",
@@ -1818,7 +1755,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Catalyst of Aeons": "interpreters.sustain.sustain_slot",
     "Cryptbloom": "item_support_effects.derive_item_support_effects",
     "Cull": "item_support_effects.derive_item_support_effects",
-    "Death's Dance": "interpreters.damage_routing.DamageRoutingResolverInterpreter",
+    "Death's Dance": "interpreters.damage_routing.resolve_deferral",
     "Diadem of Songs": "item_support_effects.derive_item_support_effects",
     "Doran's Blade": "interpreters.sustain.sustain_slot",
     "Doran's Ring": "interpreters.sustain.sustain_slot",
@@ -2121,12 +2058,10 @@ def _issue_ref_lane(item: str) -> ClaimLane | None:
 def _validate_issue_ref_routing() -> None:
     """Every tracked review rides a claim, or the module does not import.
 
-    The hand table this replaced could route a ref to a lane the item had no
-    claim on, and the ref would then be published by ``review_issue_refs`` and
-    carried by nothing — a tracked gap with no receipt, which is the shape the
-    corpus exists to make impossible.  Structural, so it belongs in the load
-    tier (D-20): a set check over two module-level tables, no import and no
-    ``data/`` read.
+    A ref routed to a lane the item has no claim on would be published by
+    ``review_issue_refs`` and carried by nothing: a tracked gap with no
+    receipt.  Structural, so it belongs in the load tier: a set check over two
+    module-level tables, no import and no ``data/`` read.
     """
     unrouted = sorted(
         item for item in _REVIEW_ISSUE_REFS if _issue_ref_lane(item) is None
@@ -2139,13 +2074,7 @@ def _validate_issue_ref_routing() -> None:
 
 
 def _test_ref(function: str, subject: str) -> TestRef:
-    """The parametrized node in the claim suite that exercises *subject*.
-
-    The node id is composed rather than written out once per claim: the
-    parametrization id is the subject verbatim, so composing it keeps two
-    hundred claims from carrying two hundred near-identical strings, and the
-    resolver still has to find the node in what pytest actually collected.
-    """
+    """The parametrized node in the claim suite that exercises *subject*."""
     return TestRef(node_id=f"tests/test_coverage_claims.py::{function}[{subject}]")
 
 

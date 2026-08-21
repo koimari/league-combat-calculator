@@ -79,17 +79,11 @@ def _row_target(
 ) -> tuple[str, bool] | None:
     """Who one row grants to, read from its own declaring sentence.
 
-    The sentence names an ally, so the row leaves the caster at the scope
-    the whole ability resolved; or it names only the caster, so the row is
-    a self grant; or it names neither recipient, and the row is refused —
-    a recipient nobody sourced is not a teammate by default.
-
-    That is what "Ekko W shields himself" and "Ekko W heals an ally" turn
-    on: Parallel Convergence says "it detonates to grant *him* a shield" —
-    Ekko named, no ally anywhere in the ability — so the shield is his and
-    nothing leaves him.  Defaulting sent it to a teammate instead.  An
-    explicit per-champion override still wins (Yuumi E's attached anchor,
-    Kindred R's "all targetable units").
+    A sentence naming an ally leaves the caster at the scope the whole
+    ability resolved; one naming only the caster is a self grant; one naming
+    neither recipient is refused, because a recipient nobody sourced is not a
+    teammate by default.  An explicit per-champion override still wins
+    (Yuumi E's attached anchor, Kindred R's "all targetable units").
     """
     if override is not None:
         # The override fixes the SCOPE; the flag has to follow it when the
@@ -106,15 +100,12 @@ def _row_target(
     return None
 
 
+# The wiki's ability template names the last unlabelled row of a sentence
+# ``Heal`` whatever it measures: Mordekaiser W's is the Potential Shield decay
+# rate ("decays by 8 : 25 (based on level) every second") and Udyr Q's is the
+# lightning strikes' minimum-damage floor.  Neither sentence heals anyone.
 def _declares_a_heal(prose: str) -> bool:
-    """Whether the sentence declaring a ``Heal``-named row states a heal.
-
-    The wiki's ability template names the last unlabelled row of a sentence
-    ``Heal`` whatever it measures: Mordekaiser W's is the Potential Shield
-    *decay rate* ("decays by 8 : 25 (based on level) every second") and Udyr
-    Q's is the lightning strikes' minimum-damage floor.  Neither sentence
-    heals anyone, so neither becomes a heal packet.
-    """
+    """Whether the sentence declaring a ``Heal``-named row states a heal."""
     return bool(_HEAL_PROSE.search(prose))
 
 
@@ -137,10 +128,9 @@ _HEAL_ATTRIBUTES = (
     "Total Heal",
     "Heal",
     "Heal Per Tick",
-    # E8d follow-up: Bard W (Caretaker's Shrine) heals scale with charge
-    # time between these two sourced rows; Taric Q carries only the
-    # "Maximum Charges" attribute and its heal is owned by the E1 rule
-    # (issue #143), so it is deliberately NOT a support candidate.
+    # Bard W (Caretaker's Shrine) heals scale with charge time between these
+    # two sourced rows.  Taric Q carries only the "Maximum Charges" attribute
+    # and its heal belongs to the E1 rule, so it is NOT a support candidate.
     "Minimum Heal",
     "Maximum Heal",
 )
@@ -179,16 +169,14 @@ _CHAMPION_SHIELD_ATTR: dict[tuple[str, str], str] = {
     ("Lux", "W"): "Maximum Shield",
 }
 
-# Issue #143: prose-only ally heals were previously re-derived here from a
-# hardcoded (base, ap_ratio, max_health_ratio) tuple (Taric Q's 1-charge
-# floor).  Taric Q now has ONE ledger owner — the E1 self-heal rule in
-# ``healing.py`` prices the sourced stock and the participant timeline fans
-# out that one event to selected allies — so the scanner never re-derives it.
-# There is intentionally no numeric heal registry left in this module.
-# E8d follow-up: target-scope overrides for casts whose cached description
-# markers cannot express the sourced targeting.  Yuumi's E (Zoomies) shields
-# the attached ally, not Yuumi herself, while attached — the deterministic
-# roster model targets one selected teammate (the anchor).
+# Taric Q has ONE ledger owner: the E1 self-heal rule in ``healing.py`` prices
+# the sourced stock and the participant timeline fans that one event out to
+# selected allies.  This module holds no numeric heal registry, deliberately.
+#
+# Target-scope overrides for casts whose cached description markers cannot
+# express the sourced targeting.  Yuumi's E (Zoomies) shields the attached
+# ally, not Yuumi herself, and the deterministic roster model targets one
+# selected teammate (the anchor).
 _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     # These abilities have a self-or-ally cast in their source description.
     # The deterministic roster model exposes the ally choice when a roster
@@ -204,14 +192,12 @@ _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     # the wand"); the allied half needs a teammate roster the 1v1 lacks,
     # so the deterministic single-target cast targets self.
     ("Lux", "W"): "self",
-    # Issue #143 (phase 2): Rakan Q's cached prose ("Rakan heals himself
-    # and nearby allied champions") resolves ``self_and_all_teammates``,
-    # which double-granted the self heal at the scanner's rank-indexed 80
-    # while the champion rule prices the per-LEVEL self heal (40 : 230
-    # based on level — 210 at level 18).  The champion-owned self-heal
-    # wins; the scanner's ally branch stays at its own amount, so the
-    # packet targets ALLIES ONLY.  In a 1v1 (no selected teammate) the
-    # packet resolves to nothing and the self heal pays exactly once.
+    # Rakan Q's cached prose ("Rakan heals himself and nearby allied
+    # champions") would resolve ``self_and_all_teammates`` and double-grant
+    # the self heal, which the champion rule prices per LEVEL (40 : 230 based
+    # on level, 210 at level 18).  The champion-owned self heal wins, so this
+    # packet targets ALLIES ONLY; in a 1v1 it resolves to nothing and the self
+    # heal pays exactly once.
     ("Rakan", "Q"): "all_teammates",
     # Lamb's Respite (R) is one of the two ally grants whose declaring
     # sentence names no ally, so ``_row_target`` would refuse it: "All
@@ -267,43 +253,24 @@ _MODULE_AUTHORED_SHIELD_SLOTS = frozenset(
     }
 )
 
-# Issue #143: slots whose heal the champion module / E1 self-heal rule
-# authors itself instead of this scanner.  The scanner must never re-derive
-# these: every one is a known double-grant or fabrication (see the issue
-# audit and output/issue-143-findings.md).  Defined exactly once — a second
-# assignment shadows the first at import time (the E9-3/E9-2 history) and
-# is a hard contract-test failure.
+# Slots whose heal the champion module or the E1 self-heal rule authors, so
+# this scanner must never re-derive them.  Assigned exactly once: a second
+# assignment shadows the first at import time and fails the contract test.
 #
-# Phase 1 (E9-3/E9-2/E1 reconciliation):
-# - Shyvana W: the 'Heal' row is the DRAGON-FORM recast heal
-#   (60 : 104.71 by level + 4% : 8.47% by level missing health, gated on
-#   the explosion hitting a champion), authored by
-#   ``healing.derive_self_healing``; the scanner's static read would emit
-#   the rank-indexed flat at cast time unconditionally (no dragon gate, no
-#   missing-health term, wrong leveling index).
-# - Naafiri Q: the recast heal rides the module's Q damage receipts at the
-#   cached "Heal" row (``healing.derive_self_healing``).
-# - Taric Q: Starlight's Touch is priced per stocked charge by the E1 rule
-#   (sourced "Maximum Charges" row + description formulas); the scanner's
-#   hardcoded one-charge tuple double-granted the same cast at a different
-#   amount.
+# Three shapes put a slot here.  A gated recast the scanner cannot see:
+# Shyvana W's dragon-form heal (60 : 104.71 by level plus 4% : 8.47% by level
+# missing health, gated on the explosion hitting a champion), Naafiri Q's
+# recast riding the module's damage receipts, Taric Q priced per stocked
+# charge.  A self heal both sides would grant, so one cast heals twice at
+# inconsistent amounts: Sona W, Janna R, Milio R, Irelia Q, Vladimir Q,
+# Volibear W, Ekko R, Gangplank W, Kha'Zix W, Tahm Kench Q.  An ally packet
+# the game does not have, invented from description markers on a self-only
+# ability: Sylas W, Tryndamere Q, Talon Q, Yorick Q, Kindred W, whose cached
+# prose each say the champion heals THEMSELVES only.
 #
-# Phase 2 (the remaining issue #143 audit).  Two groups:
-# 1) SELF-heal double-grants — the healing rule authors the self heal
-#    (rank/level-indexed sourced rows, missing-health terms, Wound/first-W
-#    gates) and the scanner re-derived the same cast into the support
-#    ledger, so one cast healed self twice at (often) inconsistent amounts:
-#    Sona W, Janna R, Milio R, Irelia Q, Vladimir Q, Volibear W, Ekko R,
-#    Gangplank W, Kha'Zix W, Tahm Kench Q.
-# 2) FABRICATED ally heals — self-only abilities whose description markers
-#    made the scanner emit an ally packet that does not exist in the game:
-#    Sylas W (Kingslayer), Tryndamere Q (Bloodlust), Talon Q (Noxian
-#    Diplomacy), Yorick Q (Last Rites), Kindred W (Hunter's Vigor).  The
-#    cached prose for each says the champion heals THEMSELVES only.
-#
-# Rakan Q is deliberately NOT here: its scanner ALLY branch (rank-indexed
-# 80) is kept at its own amount while the champion rule owns the self heal
-# (per-level 210) — see ``_SCOPE_OVERRIDES``.
+# Rakan Q is deliberately NOT here: its scanner ALLY branch (rank-indexed 80)
+# keeps its own amount while the champion rule owns the per-level 210 self
+# heal.  See ``_SCOPE_OVERRIDES``.
 #
 # Sona W is in this set but its Melody shield stays scanner-owned: the
 # heal-branch skip below nulls only ``heal_attr``, so "Shield Strength"
@@ -694,10 +661,9 @@ def _support_profile(
 def _scales_off_the_recipient(ability: dict[str, Any], attribute: str) -> bool:
     """Whether a row's amount is a share of the RECIPIENT's own stats.
 
-    A support row's "target" is the shield's or heal's recipient, not an
-    enemy — Taric W's Bastion is "7 / 8 / 9 / 10 / 11% of target's maximum
-    health", each recipient off their own.  Such a row resolved against an
-    empty target map, which made it 0.0 and dropped it.
+    A support row's "target" is the recipient, not an enemy: Taric W's Bastion
+    is "7 / 8 / 9 / 10 / 11% of target's maximum health", each recipient off
+    their own.
     """
     leveling = find_named_leveling(ability, attribute)
     return leveling is not None and any(
@@ -708,12 +674,7 @@ def _scales_off_the_recipient(ability: dict[str, Any], attribute: str) -> bool:
 
 
 def _caster_as_recipient(stats: dict[str, float]) -> dict[str, float]:
-    """The one recipient whose stats a scan holds: the caster's own.
-
-    Live health is not a scan-time fact, so only maximum health resolves; a
-    row scaling off the recipient's current or missing health still comes
-    back 0.0 and is refused (Seraphine W's pulse heal).
-    """
+    """The one recipient whose stats a scan holds: only the caster's maximum health."""
     return {"target_max_health": float(stats.get("health", 0.0) or 0.0)}
 
 
@@ -753,8 +714,8 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
     heal_attr = _CHAMPION_HEAL_ATTR.get(champion_key, heal_attr)
     shield_attr = _CHAMPION_SHIELD_ATTR.get(champion_key, shield_attr)
     if champion_key in _MODULE_AUTHORED_HEAL_SLOTS | _STATE_AUTHORED_HEAL_SLOTS:
-        # Issue #143 (phase 2): a module/healing-rule-authored heal slot is
-        # the exact receipt (level-indexed bases, missing-health terms, a
+        # A module or healing-rule authored heal slot is the exact receipt
+        # (level-indexed bases, missing-health terms, a
         # dragon-form gate and Wound/first-cast gates the scanner cannot
         # see).  Only the HEAL row defers: a shield row on the same slot
         # stays scanner-owned unless the shield registry claims the whole
@@ -766,7 +727,7 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
         heal_attr = None
     if heal_attr is not None and not _declares_a_heal(row_prose.get(heal_attr, "")):
         heal_attr = None
-    # E8d follow-up: a sourced per-champion target-scope override wins over
+    # A sourced per-champion target-scope override wins over
     # the description markers (Yuumi E's attached anchor).
     override = _SCOPE_OVERRIDES.get(champion_key)
     rows: list[_Row] = []
@@ -784,7 +745,7 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
             # The declaring sentence names no recipient; see ``_row_target``.
             continue
         scope, resolved_self = resolved
-        # Issue #142: fail closed at the emitter.  A typo or novel scope must
+        # Fail closed at the emitter.  A typo or novel scope must
         # name the champion+slot at the source instead of silently redirecting
         # the packet to teammate zero in the coupled resolver.
         if scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
@@ -1335,11 +1296,6 @@ _NAMI_BOUNCE_AP_RELIEF_PER_100 = 0.15
 # roster model treats the selected teammate as the anchor and Best Friend
 # (the same teammate Yuumi E already targets), so the bonus rides the
 # base heal packet of the same cast.
-_YUUMI_R_TOTAL_HEAL_QUERY = AbilityAtomQuery(
-    source="Yuumi.R[0].effects[1].leveling[1].modifiers[0]",
-    behavior="ability",
-    evidence_prefix="Total Heal@",
-)
 _YUUMI_R_BEST_FRIEND_QUERY = AbilityAtomQuery(
     source="Yuumi.R[0].effects[4].leveling[0].modifiers[0]",
     behavior="ability",
@@ -1571,7 +1527,7 @@ def derive_ally_effects(
             # These two branches grant a packet that no leveling row
             # declares, so their recipient comes from the slot's own profile
             # and its sourced override rather than from a row's own
-            # sentence.  Issue #142: fail closed at the emitter — a typo or
+            # sentence.  Fail closed at the emitter: a typo or
             # novel scope must name the champion+slot at the source instead
             # of silently redirecting the packet to teammate zero in the
             # coupled resolver.  A row's own scope is checked in
@@ -1701,7 +1657,7 @@ def derive_ally_effects(
                     else:
                         event.update(_shield_duration_metadata(champion_data, slot))
                     effects.append(event)
-            # Issue #143: a module/healing-rule-authored heal slot is the
+            # A module or healing-rule authored heal slot is the
             # exact receipt (level-indexed bases, missing-health terms, and a
             # dragon-form gate the scanner cannot see).  ``_slot_rows`` has
             # already dropped those rows, together with a per-tick row whose

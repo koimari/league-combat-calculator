@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
@@ -163,7 +163,7 @@ SLOTS = {
 # 1.25 seconds" (its centre silence is not an immobilize and is not in the
 # vocabulary).  Q is absent because its fear is branch-conditional and is
 # authored on the part in _terrify; P carries no damage part at all.
-MODULE_CC = {"W": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Fiddlesticks", cc_kinds=MODULE_CC)
 

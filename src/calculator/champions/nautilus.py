@@ -114,7 +114,6 @@ def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart(
             "magic",
             amount=increased,
-            cc_kind="immobilize",
             cc_duration=immobilize_duration,
         ),
     )

@@ -64,19 +64,16 @@ def _payload(rule: BehaviorRule) -> ActiveCastRule:
     return payload
 
 
-def _active_fields(
+def active_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One active's compiled numbers for *lane*.
+    """One active's compiled numbers, stamped with *lane*.
 
-    The lane is the only thing that varies between the two interpreters
-    below.  Sharing the body rather than spelling it twice is what makes
-    "the walk reads the same declaration the pair engine reads" a property
-    of the tree instead of a claim two functions could drift out of.
-
-    Compiling the formula here is what makes a missing registry key or a
-    basis with no reading surface fail when the build is made rather than on
-    whichever event first asks for the number.
+    Registered for both the pair engine and the receipt walk, whose only
+    difference is the lane, so one body makes "the walk reads the same
+    declaration the pair engine reads" a property of the tree.  Compiling the
+    formula here fails a missing registry key when the build is made rather
+    than on whichever event first asks for the number.
     """
     payload = _payload(rule)
     damage_formula.compile_formula(payload.formula, ctx)
@@ -88,54 +85,6 @@ def _active_fields(
             rule_id=rule.mechanic_id,
         ),
     )
-
-
-class ActiveCastPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``active_cast`` family.
-
-    Its number is a **preview** since this family retired: every rule below
-    declares ``ViewTag.THEORETICAL`` on its pair lane and
-    ``damage._add_item_active_damage`` stamps ``pair_preview_of`` on the row
-    it authors, so the honest one-attacker figure stays in the pair fight's
-    own receipt and leaves every total the roster composes.
-    """
-
-    FAMILY = RuleFamily.ACTIVE_CAST
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This active's numbers, resolved for the one-attacker engine."""
-        return _active_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-class ActiveCastWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the ``active_cast`` family.
-
-    The half that retires ``active_cast/receipt_walk`` (umbrella
-    Amendment F's act, in the lane Amendment K rules and with the whole shape
-    Amendment L, Ruling 1 requires).  Before it, the coupled walk consumed
-    this family as ``participant_timeline._pair_run_fight``'s already-priced
-    rows — the pair engine's mitigation against the pair engine's target —
-    which is what the deferral row said in its own words.  Now the pair row
-    is a declaration and no price: the walk mitigates the declared magnitude
-    itself, at the resistance that packet met, through
-    ``survival.pricing.price_declared_packet``.
-
-    It compiles the same fields the pair interpreter does, stamped with its
-    own lane.  Two lanes reading one declaration is the shape D-60 asks for;
-    two lanes computing one number from two bodies is the shape it forbids.
-    """
-
-    FAMILY = RuleFamily.ACTIVE_CAST
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This active's numbers, resolved for the coupled roster walk."""
-        return _active_fields(rule, ctx, EngineLane.RECEIPT_WALK)
-
-
-PAIR_INTERPRETER = ActiveCastPairInterpreter()
-WALK_INTERPRETER = ActiveCastWalkInterpreter()
 
 
 def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
@@ -169,17 +118,10 @@ def active_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 def active_mechanic_id(owner: str) -> str:
     """*owner*'s active mechanic id, or a stop.
 
-    What the pair engine needs to stamp the row it authors with the mechanic
-    that row previews: ``damage._add_item_active_damage`` walks
-    :class:`~..item_effects.DamageSource` rows, which carry an item name and
-    no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
-    A stop rather than a default, for rule 5's reason one layer up: an
-    unstamped active row would keep the pair engine's number in every roster
-    total *and* leave the walk pricing the declaration, which is the double
-    count this family's retirement exists to make unrepresentable.
+    The pair engine stamps its row with the mechanic that row previews, so
+    reading the id off the declaration keeps the stamp from being a second
+    spelling of the slug.  A missing rule stops rather than defaults: an
+    unstamped row would double count, in the roster total and in the walk.
     """
     rules = active_rules([owner])
     if not rules:
@@ -225,11 +167,8 @@ __all__ = [
     "ACTIVE_COOLDOWN_FIELD",
     "ACTIVE_SUFFIX",
     "ActiveCastInterpretationError",
-    "ActiveCastPairInterpreter",
-    "ActiveCastWalkInterpreter",
     "NO_INHERITED_LIFESTEAL",
-    "PAIR_INTERPRETER",
-    "WALK_INTERPRETER",
+    "active_fields",
     "active_mechanic_id",
     "active_rules",
     "active_source",

@@ -45,8 +45,8 @@ OUT = REPO_ROOT / "data" / "economics-sourced.json"
 
 #: Cached shop totals that disagree with DDragon's, each reviewed against the
 #: wiki page: ``name -> (cached total, DDragon total)``.  Any other
-#: disagreement blocks patch day, and a row here that no longer reproduces
-#: is reported too, so neither source is ever silently preferred.
+#: disagreement blocks patch day, and a row here that stops reproducing is
+#: reported too, so neither source is ever silently preferred.
 ACKNOWLEDGED_TOTAL_DIVERGENCES = {
     "Redemption": (2250, 2300),
 }

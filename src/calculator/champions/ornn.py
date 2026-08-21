@@ -17,7 +17,7 @@ out_of_scope rather than being relabelled.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -119,7 +119,7 @@ SLOTS = {
 # whose collision this module does not model.  R answers per part instead
 # of here, because its two passes apply different control
 # (``_call_of_the_forge_god``).
-MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "none", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Ornn", cc_kinds=MODULE_CC)
 

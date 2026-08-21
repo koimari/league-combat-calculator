@@ -31,7 +31,6 @@ SPATIAL_UNAVAILABLE = "nearby_enemy_spatial_input_unavailable"
 
 # Missing/invalid position sentinel reason strings.
 MISSING_HOLDER_POSITION = "missing_holder_position"
-MALFORMED_HOLDER_POSITION = "malformed_holder_position"
 
 
 def _position_of(actor: Any) -> tuple[float, float] | None:

@@ -200,6 +200,19 @@ def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+# Reviewed cc-free, whole kit: nothing Sivir casts touches an enemy with
+# anything but damage.  P grants her "bonus movement speed", Q's crossblade
+# only "deal[s] physical damage to enemies within its path", W's bounces
+# "deal[] physical damage to them", E is a self spell shield and heal, and
+# R grants her and nearby allies "bonus movement speed".
+#
+# Q and W are read and left undeclared: the ledger refuses a kind it cannot
+# carry, and both rows aggregate several landings with no sourced cadence —
+# the crossblade hits "only once per pass" out and back, and Ricochet's
+# bounces ride whichever swings the fight rolls.  This kit stays coarse
+# until those rows carry timing, which is not a review's to author.
+MODULE_CC = {"P": "none", "E": "none", "R": "none"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sivir",
     PACKET_SHA256,
@@ -207,6 +220,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": _boomerang_blade,
         "E": _spell_shield,
     },
+    cc_kinds=MODULE_CC,
 )
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

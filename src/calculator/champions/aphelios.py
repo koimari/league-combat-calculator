@@ -16,9 +16,9 @@ cooldown and no HP number anywhere.  The pinned packet already compiles it
 as a ``no_damage`` slot, so ``slot_order`` carries it instead of the module
 re-authoring the same zero.
 
-Reviewed crowd control rides the parts rather than a ``MODULE_CC`` map:
-both Q and R are one slot per weapon, and the weapons do not control alike
-(``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
+``MODULE_CC`` names Q and R ``CC_PER_PART``: both are one slot per weapon
+and the weapons do not control alike, so the kind rides the part each
+weapon form builds (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
 """
 
 from dataclasses import replace
@@ -27,7 +27,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
-from .engine import BUFF, SlotCtx
+from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
@@ -228,13 +228,7 @@ _R_FOLLOWUP_DELAY = 0.3  # "After 0.3 seconds of the illumination"
 
 
 def _r_followup_expected_crit(ctx: SlotCtx) -> float:
-    """Expected crit multiplier of one follow-up attack at this build.
-
-    The sourced crit ("100% : 130% (+ 0% : 9%) based on critical strike
-    chance") is an expected value (the Caitlyn Headshot convention):
-    P(crit) = crit, crit damage = 1 + 0.39 x crit, so E = 1 + 0.39 x
-    crit^2.
-    """
+    """Expected crit multiplier of one follow-up attack at this build."""
     crit = min(max(ctx.stat("critical_strike_chance") / 100.0, 0.0), 1.0)
     return 1.0 + (_R_FOLLOWUP_CRIT_EXTRA + _R_FOLLOWUP_CRIT_CHANCE_BONUS) * (
         crit * crit
@@ -327,6 +321,16 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# Reviewed crowd control, read from the cached kit.  Q and R are one slot
+# per weapon and the weapons do not control alike, so both answer per part
+# (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).  P is the Weapon Master
+# skill-point innate (bonus AD/AS/lethality), W "swap[s] main and off-hand
+# weapons" and E is the queue prompt: all three touch no enemy.  P and W
+# are read and left undeclared all the same — each prices an untimed zero
+# part the event ledger cannot carry a kind for, while E's row has no part
+# at all.
+MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": CC_PER_PART}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Aphelios",
     PACKET_SHA256,
@@ -358,6 +362,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": _q,
     },
     slot_order=("P", "W", "Q", "R", "E"),
+    cc_kinds=MODULE_CC,
 )
 
 OPTIONS = [

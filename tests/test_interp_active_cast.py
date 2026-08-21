@@ -12,7 +12,7 @@ declarations rather than one defaulted zero.
 import pytest
 
 from src.calculator.interpreters import active_cast
-from src.calculator.item_behavior import ActiveCastRule, RuleFamily
+from src.calculator.item_behavior import ActiveCastRule, EngineLane, RuleFamily
 from src.calculator.item_behavior_catalog import behavior_rules, build_context
 from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
 
@@ -113,7 +113,7 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    (field,) = active_cast.PAIR_INTERPRETER.compile(rule, ctx)
+    (field,) = active_cast.active_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == active_cast.ACTIVE_COOLDOWN_FIELD
     assert field.value == pytest.approx(float(ITEM_EFFECTS[PLAIN]["cooldown"]))  # type: ignore[arg-type]
     assert field.rule_id == rule.mechanic_id
@@ -134,4 +134,4 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
         holder_is_melee=False,
     )
     with pytest.raises(active_cast.ActiveCastInterpretationError):
-        active_cast.PAIR_INTERPRETER.compile(foreign, ctx)
+        active_cast.active_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

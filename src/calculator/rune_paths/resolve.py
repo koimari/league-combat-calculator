@@ -13,7 +13,6 @@ from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     cached_effects,
-    RUNE_EFFECTS,
     RuneEffect,
     RuneHealEffect,
     RuneHealTrigger,

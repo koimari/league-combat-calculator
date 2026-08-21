@@ -122,12 +122,8 @@ class Provenance:
             )
 
     def skips(self, subject: PIdx) -> bool:
-        """Whether this modifier declines to reach *subject*.
-
-        The owner skip, as one question with one answer.  It reads the
-        roster slot rather than a participant id string, which is what makes
-        it an integer comparison in the walk and what made the string
-        version silently false whenever an id was spelled two ways.
+        """Whether this modifier declines to reach *subject*.  Compares roster
+        slots, not id strings, which compare false when an id is spelled two ways.
         """
         return self.applies_to is AppliesTo.ALL_EXCEPT_HOLDER and int(subject) == int(
             self.holder
@@ -146,14 +142,11 @@ def arm_key(
     """The exactly-once dedupe key for arming one mechanic on one subject.
 
     ``IDEMPOTENT_AURA`` drops the holder from the key, so a second holder's
-    arming collides with the first and is dropped — with a ``dedupe`` receipt
+    arming collides with the first and is dropped with a ``dedupe`` receipt
     row, never in silence.  ``PER_HOLDER`` keeps it, so two holders arm two
-    modifiers, which is the live path: Command's stacking is human-blocked
-    and fails closed to ``PER_HOLDER``.
-
-    This is the only arming dedupe in ``src/``.  A second one would be a
-    second answer to "did this already arm?", and the two would disagree on
-    exactly the roster that has two holders.
+    modifiers.  This is the only arming dedupe in ``src/``: a second answer to
+    "did this already arm?" would disagree on exactly the roster with two
+    holders.
     """
     if stacking is HolderStacking.IDEMPOTENT_AURA:
         return (int(subject), str(mechanic))
@@ -218,20 +211,12 @@ class ArmingLedger:
     ) -> ArmingDrop | None:
         """Whether this arming stands, or the receipt saying it did not.
 
-        ``None`` means it armed.  Returning the drop rather than raising is
-        the point: two Abyssal Mask holders cursing one enemy is a legal
-        roster and the second curse is genuinely redundant, so the answer is
-        a receipt, never an error and never a silence.
-
-        **A collision is only ever between two *holders*.**  A key already
-        held by the same holder is a *re-arm*, not a duplicate: Carve arms
-        one modifier per damage event and Expose Weakness one per spellblade
-        proc, and a ledger that collapsed those would be answering a
-        question — "may one holder arm this twice over time?" — that no
-        mechanic here declares.  ``PER_HOLDER`` keeps the holder in the key
-        precisely so its keys can never collide across holders, so this
-        clause is what makes the two declarations do the whole job between
-        them and leaves no third policy hiding in the ledger.
+        ``None`` means it armed.  Two Abyssal Mask holders cursing one enemy is
+        a legal roster and the second curse redundant, so a collision is a
+        receipt, not an error.  Collisions are only ever between two holders: a
+        key already held by the same holder is a re-arm, because Carve arms one
+        modifier per damage event.  ``PER_HOLDER`` keeps the holder in the key,
+        so no third policy hides in the ledger.
         """
         declared = self._stacking_of.get(packet_source)
         if declared is None:
@@ -282,29 +267,19 @@ def live_amp_riders(
 ) -> tuple[LiveAmpRider, ...]:
     """Every live-predicate amplifier *owners* declare, as kernel riders.
 
-    The coupled-lane interpreter of a ``delta_amp`` rule whose activation is
-    a :class:`~..item_behavior.LivePredicate`.  Such a rule is the one shape
-    the pair engine can only answer for a single attacker: its predicate
-    reads a pool that exists solely inside a simulation, and in a roster
-    that pool is under everyone's fire.  So the *threshold* and the
-    *fraction* are compiled here, from the same declaration and the same
-    resolved fields the pair engine reads, and the *reading* is left to the
-    walk.
+    A ``delta_amp`` rule whose activation is a
+    :class:`~..item_behavior.LivePredicate` reads a pool that exists only inside
+    a simulation, and in a roster that pool is under everyone's fire.  The
+    threshold and fraction compile here from the declaration the pair engine
+    reads; the reading is left to the walk.  Every chain slot is asked and a
+    rule qualifies by declaring a live predicate, never by slot name.
 
-    Derived, never keyed on a slot name: every chain slot is asked, and a
-    rule qualifies by declaring a live predicate rather than by being
-    Cinderbloom.  Three refusals rather than three silent skips —
-
-    * a probe or comparison the kernel has no tag for,
-    * a subject other than the holder, since a rider rides its own holder's
-      event and a rule about somebody else's damage would ride the wrong
-      one,
-    * a rule whose declaration compiles no threshold or fraction, which
-      :class:`~..interpreters.delta_amp.AmpSlot` already raises for —
-
-    because an amplifier the interpreter declined to build is a rule that
-    did not run, and this campaign exists because one of those was
-    indistinguishable from a bonus of zero.
+    Three refusals rather than silent skips, because an amplifier the
+    interpreter declined to build is indistinguishable from a bonus of zero:
+    a probe or comparison the kernel has no tag for, a subject other than the
+    holder since a rider rides its own holder's event, and a declaration that
+    compiles no threshold or fraction, which
+    :class:`~..interpreters.delta_amp.AmpSlot` already raises for.
     """
     riders: list[LiveAmpRider] = []
     for slot_name in AMP_CHAIN_ORDER:

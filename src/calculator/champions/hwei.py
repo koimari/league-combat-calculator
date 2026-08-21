@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -245,7 +245,7 @@ SLOTS = {
 # differs per variant (and, in QE and R, per part), so those kinds are
 # authored on the parts above rather than here.  W's three subjects author
 # no damage part at all.
-MODULE_CC = {"P": "none"}
+MODULE_CC = {"P": "none", "Q": CC_PER_PART, "E": CC_PER_PART, "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Hwei", cc_kinds=MODULE_CC)
 OPTIONS = [

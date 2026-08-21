@@ -265,7 +265,7 @@ def _compile_engine_result():
 
 
 def test_the_score_path_drops_the_previews_the_receipt_path_drops():
-    """``add_engine_result`` composes what ``_pair_packet`` composes.
+    """One compiler, so one answer about which rows a roster composes.
 
     The score path compiles a candidate's fresh pair fights straight from
     the engine rows, and it is the surface that picks the optimizer's

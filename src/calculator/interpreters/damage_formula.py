@@ -126,12 +126,7 @@ def _stepped_rates(stepped: LevelSteppedRate, ctx: BuildContext) -> tuple[float,
 
 
 def _resolved_coefficient(term: Term, ctx: BuildContext) -> tuple[float, float]:
-    """One term's ``(melee, ranged)`` rates, both read at build time.
-
-    A single reference resolves to the same rate twice, which is what keeps
-    the closure's branch uniform: it always picks, and a holder's range class
-    can never fall through to a rate nobody declared.
-    """
+    """One term's ``(melee, ranged)`` rates; a single reference resolves twice."""
     if isinstance(term.coefficient, LevelSteppedRate):
         return _stepped_rates(term.coefficient, ctx)
     return _split_rates(term.coefficient, ctx)
@@ -220,12 +215,8 @@ def _scaling_factor(formula: DamageFormula, ctx: BuildContext) -> float | None:
 
 
 def reads_target_current_health(formula: DamageFormula) -> bool:
-    """Whether any term of *formula* is a share of the target's live health.
-
-    The engine has to know, because such a strike must be re-priced as the
-    target's health falls rather than once at build time.  It used to be
-    ``formula == "current_hp"`` — a string comparison that would have gone on
-    being true of one formula name while a second one grew the same basis.
+    """Whether any term of *formula* is a share of the target's live health,
+    which the engine re-prices as health falls rather than once at build time.
     """
     if isinstance(formula.scaling, TimesMissingHealth):
         return True

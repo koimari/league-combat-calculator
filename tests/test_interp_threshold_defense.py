@@ -18,13 +18,14 @@ from dataclasses import replace
 from src.calculator.interpreters.defense_state import (
     DefenseInterpretationError,
     DefenseSlot,
+    compiled_shape,
     declared_defenses,
 )
-from src.calculator.interpreters import INTERPRETERS, resolve_defense
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.threshold_defense import (
-    RESOLVER_INTERPRETER,
     THRESHOLD_HEALTH_MECHANIC,
     TICK_INTERVAL_KEY,
+    resolve_threshold_defense,
     threshold_health_coverage_source,
     threshold_health_owner,
     threshold_health_tick_interval,
@@ -63,8 +64,9 @@ def test_the_family_is_registered_on_the_lane_that_builds_it() -> None:
     """A threshold defence is built before any walk."""
     assert (
         INTERPRETERS[(RuleFamily.THRESHOLD_DEFENSE, EngineLane.DEFENSE_RESOLVER)]
-        is RESOLVER_INTERPRETER
+        is compiled_shape
     )
+    assert RESOLVERS[RuleFamily.THRESHOLD_DEFENSE] is resolve_threshold_defense
 
 
 @pytest.mark.parametrize(

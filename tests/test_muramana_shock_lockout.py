@@ -16,7 +16,7 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.state_lifecycle import InstanceCadence, LockoutRule, SourceReceipt
+from src.calculator.state_lifecycle import InstanceCadence
 
 MURAMANA = "Muramana"
 ABILITY_ROW = "muramana_ability"
@@ -111,31 +111,6 @@ class TestSourcedLockoutDeclaration:
         ).per_ability_hits[0]
 
         assert source.same_target_cast_lockout_seconds == LOCKOUT_SECONDS
-
-    def test_typed_lifecycle_rule_keeps_source_receipt(self) -> None:
-        atom = _muramana_lockout_atom()
-        rule = LockoutRule(
-            name="Muramana Shock same-cast target lockout",
-            duration_seconds=atom["values"][0],
-            source=SourceReceipt(
-                label=atom["source"],
-                url="https://wiki.leagueoflegends.com/en-us/Muramana",
-                revision_id=4005926,
-                key=atom["hash"],
-            ),
-        )
-
-        assert rule.public_receipt() == {
-            "name": "Muramana Shock same-cast target lockout",
-            "duration_seconds": LOCKOUT_SECONDS,
-            "source": {
-                "label": "Muramana.passives[1].branches[1]",
-                "url": "https://wiki.leagueoflegends.com/en-us/Muramana",
-                "revision_id": 4005926,
-                "revision_timestamp": "cached data (patch cache)",
-                "key": atom["hash"],
-            },
-        }
 
 
 class TestLifecycleIdentityMatrix:

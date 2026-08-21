@@ -175,7 +175,7 @@ class CachedResult(Base):
 
 class ValidationFeedback(Base):
     """A validation observation from the manual review loop, combat log, or
-    practice tool, used to drive the champion-module validation backlog."""
+    practice tool, driving the champion-module validation backlog."""
 
     __tablename__ = "validation_feedback"
 

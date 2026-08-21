@@ -71,7 +71,6 @@ _PLANT_DAMAGE_START = 15.0  # level 1
 _PLANT_DAMAGE_END = 75.0  # level 18
 _PLANT_AP_RATIO = 0.20
 _PLANT_AS = 0.8
-_PLANT_DURATION = 8.0
 
 
 def _plant_attack_damage(ctx: SlotCtx) -> float:
@@ -181,7 +180,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "E": lambda compiled: with_control(
             compiled,
-            kind="root",
             duration_attr="Root Duration",
         ),
     },

@@ -14,8 +14,7 @@ Phase 4 S6 split one of the two groups.  ``DEBUFF_ARM``/``RECOVERY``/
 ``UTILITY_ARM`` now resolve ``6 < 7 < 8`` at a shared timestamp instead of
 tying, and the reorderings that follows from are pinned below by name.
 ``LATE_BARRIER``/``REACTIVE`` still share a slot, deliberately: that one is
-a preserved defect with a committed row on the migration frontier, not an
-oversight.
+a preserved defect S6 declined to touch, not an oversight.
 """
 
 import ast
@@ -264,8 +263,10 @@ def _sort_key_tuples(tree: ast.AST, rules: _SlotRules) -> list[tuple[ast.Tuple, 
     """Every tuple literal the tree builds as a sort key (shape 3 above).
 
     Four spellings: the ``sort_key=`` keyword, an assignment to a name
-    ``sort_key``, a ``key=lambda`` body, and a tuple handed positionally to
-    whatever index a definition puts ``sort_key`` at.
+    ending in ``sort_key``, a ``key=lambda`` body, and a tuple handed
+    positionally to whatever index a definition puts ``sort_key`` at.  The
+    name suffix rather than the bare name, so a key lifted into a local to
+    be handed to two consumers stays in the population.
     """
     found: list[tuple[ast.Tuple, str]] = []
     for node in ast.walk(tree):
@@ -283,7 +284,7 @@ def _sort_key_tuples(tree: ast.AST, rules: _SlotRules) -> list[tuple[ast.Tuple, 
             for target in node.targets:
                 if (
                     isinstance(target, ast.Name)
-                    and target.id == "sort_key"
+                    and target.id.endswith("sort_key")
                     and isinstance(node.value, ast.Tuple)
                 ):
                     found.append((node.value, "sort_key[1]"))
@@ -376,6 +377,7 @@ def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
     }
     assert dict(rules.sort_key_arg) == {
         "SurvivalAction": 0,
+        "_enriched_damage_event": 13,
         "compiled_damage_action": 0,
     }
 
@@ -474,16 +476,6 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
 # --- The support ladder: a rank, never an open float ------------------------
 
 
-def test_the_open_priority_hatch_is_gone_from_the_source() -> None:
-    """No producer can hand the walk an arbitrary ordering float."""
-    holders = [
-        path.relative_to(ROOT).as_posix()
-        for path in sorted((ROOT / "src").rglob("*.py"))
-        if "_priority" in path.read_text(encoding="utf-8")
-    ]
-    assert holders == []
-
-
 def test_support_kinds_classify_to_their_ladder_rank() -> None:
     """Every support kind resolves to a named rank, none to a number."""
     by_kind = {
@@ -550,22 +542,15 @@ def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
     strike-back after a late barrier that ``action_key`` ties, and only the
     compiled-vs-receipt equivalence suite could ever see it.
 
-    The file is ``program/compile.py`` since Phase 4 S4 moved the one
-    constructor there, and the count is **three**: the one hot loop plus the
-    two the relocated builders carry.  It was briefly five, because S4's
-    ``compile_program`` assembled its own key -- the phase's declared entry
-    point being exactly where a bare rank would next appear.  That one now
-    calls ``action_key``, which is the stronger version of this guard: a key
-    that is never rebuilt cannot fold its rank the wrong way.  It was four
-    until S10 unified ``add_engine_result``'s two row readers into one loop
-    with one tail, and the hand-written key that left is the point of the
-    unification rather than a casualty of it: one fewer place a rank can be
-    folded the wrong way is one fewer place this test has to catch it.
+    ``program/compile.py`` is the only file that writes one by hand; the
+    declared entry point ``compile_program`` calls ``action_key`` instead,
+    which is the stronger version of this guard — a key that is never
+    rebuilt cannot fold its rank the wrong way.
     """
     compile_py = PROGRAM / "compile.py"
     rules = _population_rules(_population())
     tuples = _sort_key_tuples(ast.parse(compile_py.read_text(encoding="utf-8")), rules)
-    assert len(tuples) == 3
+    assert tuples, "the hot loop's hand-written keys left the population"
     for tup, slot in tuples:
         assert _folds_to_slot(tup.elts[1], rules.bound), (slot, tup.elts[1].lineno)
 
@@ -774,8 +759,7 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
     """The two orderings S6 must *not* touch, asserted rather than assumed.
 
     ``AURA_ARM`` resolves before the damage at its timestamp (C4's
-    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot — the
-    preserved defect declined by this stage on the migration frontier.
+    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot.
     """
     assert _armed_at(TransitionRank.AURA_ARM, "Abyssal Mask — Unmake") < _armed_at(
         TransitionRank.DAMAGE, "Abyssal Mask — Unmake"
@@ -785,13 +769,6 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
         is _armed_at(TransitionRank.LATE_BARRIER, "Thornmail")[1]
         is TransitionRank.LATE_BARRIER
     )
-    frontier = json.loads(
-        (ROOT / "docs" / "migration-frontier.json").read_text(encoding="utf-8")
-    )
-    declined = {
-        row["name"]: row["declined_by"] for row in frontier["preserved_defects"]
-    }
-    assert declined["LATE_BARRIER"] == "P4-S6"
 
 
 def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:

@@ -61,9 +61,8 @@ def _names(items: list[Mapping[str, Any]]) -> set[str]:
 def _keyed_by_item(receipt: Mapping[str, Any]) -> dict[str, Any]:
     """The receipt with its entry list re-keyed by item name.
 
-    Comparison is by name and never by list position: the entries are sorted
-    by name today, so a cache that gains an item would otherwise report every
-    entry after it as moved and bury the one field that actually changed.
+    Comparison is by name, never by list position: a cache that gains an item
+    would otherwise report every entry after it as moved.
     """
 
     keyed = dict(receipt)
@@ -198,7 +197,7 @@ def run_audit() -> dict[str, Any]:
         )
     )
 
-    # Envelope (issue #139): one unit per failing *distinct* item, deduped
+    # Envelope: one unit per failing *distinct* item, deduped
     # across the four checks so the sums cannot double-count.  Source
     # conflicts can name non-ordinary records, which are outside the runtime
     # umbrella's covered units; they still fail the gate, so they are added

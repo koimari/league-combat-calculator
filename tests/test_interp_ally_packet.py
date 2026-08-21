@@ -32,7 +32,7 @@ from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters.ally_packet import (
     AllyPacketInterpretationError,
     AllyPacketSlot,
-    WALK_INTERPRETER,
+    packet_fields,
     resolve_slots,
 )
 
@@ -279,20 +279,20 @@ class TestTheCompiledLaneAnswerIsDerived:
         assert "temporary_health" in compilability.reason
 
 
-class TestTheWalkInterpreterCompilesTheDeclaredNumbers:
+class TestTheWalkLaneCompilesTheDeclaredNumbers:
     """One value-typed field per declared reference, and no walk state."""
 
     def test_the_family_is_served_on_the_walk_lane_only(self) -> None:
         assert INTERPRETERS[(RuleFamily.ALLY_PACKET, EngineLane.RECEIPT_WALK)] is (
-            WALK_INTERPRETER
+            packet_fields
         )
-        assert WALK_INTERPRETER.LANES == frozenset({EngineLane.RECEIPT_WALK})
+        assert (RuleFamily.ALLY_PACKET, EngineLane.PAIR_ENGINE) not in INTERPRETERS
 
     def test_every_declared_reference_becomes_one_field(self) -> None:
         rule = _slot(AllyProducer.SOUL_SIPHON).rule
         payload = rule.payload
         assert isinstance(payload, AllyPacketRule)
-        fields = WALK_INTERPRETER.compile(
+        fields = packet_fields(
             rule,
             catalog.build_context(
                 rule.owner,
@@ -301,6 +301,7 @@ class TestTheWalkInterpreterCompilesTheDeclaredNumbers:
                 target_bonus_health=0.0,
                 holder_is_melee=False,
             ),
+            EngineLane.RECEIPT_WALK,
         )
         assert len(fields) == len(payload.values)
         assert {field.name for field in fields} == {
@@ -313,7 +314,7 @@ class TestTheWalkInterpreterCompilesTheDeclaredNumbers:
     def test_a_rule_of_another_family_is_refused(self) -> None:
         rule = catalog.behavior_rules("Horizon Focus")[0]
         with pytest.raises(AllyPacketInterpretationError, match="not an ally-packet"):
-            WALK_INTERPRETER.compile(
+            packet_fields(
                 rule,
                 catalog.build_context(
                     rule.owner,
@@ -322,6 +323,7 @@ class TestTheWalkInterpreterCompilesTheDeclaredNumbers:
                     target_bonus_health=0.0,
                     holder_is_melee=False,
                 ),
+                EngineLane.RECEIPT_WALK,
             )
 
 

@@ -1,12 +1,12 @@
 """Typed evidence for coverage claims — the vocabulary and the load gate.
 
 ``item_coverage`` answers "is this item's damage mechanic represented by the
-fight model", and every one of its answers used to be backed by a sentence.
-A sentence cannot be checked, so one of them went on describing both halves
-of Imperial Mandate's Command long after only one half existed.  This module
-is the type that replaces the sentence: a :class:`Claim` names an item, the
-lane it is claimed on, the status it is expected to classify as, and a
-closed union of **evidence members** that say what backs it.
+fight model", and every one of its answers is backed by a checkable type
+rather than a sentence: a :class:`Claim` names an item, the lane it is
+claimed on, the status it is expected to classify as, and a closed union of
+evidence members that say what backs it.  A sentence cannot be checked, and
+one describing both halves of Imperial Mandate's Command outlived the half
+it described.
 
 Three tiers catch three different failures, and the boundary between them is
 ruled (D-20).  This module is the *load* tier and nothing more: it catches
@@ -528,10 +528,9 @@ Evidence = (
     | Absence
 )
 
-# The union, closed and enumerated once.  ``StreamMembership`` is
-# deliberately absent: it would have resolved against five hand name sets
-# Phase 2 deleted, so it could only ever have been evidence for a thing that
-# no longer exists.
+# The union, closed and enumerated once.  There is no ``StreamMembership``
+# member: stream membership resolves against hand-kept name sets, which the
+# capability registry replaced, so it could back nothing.
 EVIDENCE_TYPES: tuple[type, ...] = (
     Symbol,
     PacketSource,
@@ -693,24 +692,17 @@ _STATUS_POLICIES: Mapping[str, EvidencePolicy] = {
 def status_policy(lane: ClaimLane, status: ClaimStatus) -> EvidencePolicy:
     """The requirement matrix for one lane/status cell.
 
-    ``modeled_*`` needs a ``Symbol`` and a ``TestRef``; ``modeled_state``
-    additionally needs a third member naming where its state comes from —
-    an ``OptionSchema``, a ``PacketSource`` or an ``EffectKey``, the three
-    routes the live classifier reaches that status by (:data:`STATE_HOME_KINDS`);
-    ``stats_only`` and ``not_target_relevant`` need a ``SourceRef`` and
-    forbid a ``PacketSource``, because an item that emits a packet is not
-    stats-only; ``blocked`` and ``review_pending`` need exactly one
-    ``Absence`` and no positive evidence; the ``support_packet`` lane adds a
-    ``PacketSource`` to every positive cell.
+    ``modeled_*`` needs a ``Symbol`` and a ``TestRef``.  ``modeled_state`` adds
+    a third member naming where its state comes from, one of
+    :data:`STATE_HOME_KINDS`.  ``stats_only`` and ``not_target_relevant`` need a
+    ``SourceRef`` and forbid a ``PacketSource``, because an item that emits a
+    packet is not stats-only.  ``blocked`` and ``review_pending`` need exactly
+    one ``Absence`` and no positive evidence.  The ``support_packet`` lane adds
+    a ``PacketSource`` to every positive cell.
 
-    Three of the matrix's rules are about a member's *fields* or about a
-    choice between kinds, so ``EvidencePolicy`` cannot carry them and
-    :func:`validate_claim` enforces them beside this cell:
-    ``modeled_event_certified`` needs one of its Symbols to be the
-    ``certification_guard``, ``modeled_state`` needs one of
-    :data:`STATE_HOME_KINDS`, and a ``PairedSides`` is
-    owed wherever Phase 2 declares the mechanic ``SPLIT`` — the second is the
-    resolution tier's, since only the capability registry knows.
+    Three rules are about a member's fields or a choice between kinds, so
+    :func:`validate_claim` enforces them beside this cell rather than
+    ``EvidencePolicy`` carrying them.
     """
     _require_membership(lane, LANES, claim="status_policy", field="lane")
     _require_membership(status, CLAIM_STATUSES, claim="status_policy", field="status")
@@ -750,11 +742,9 @@ def validate_evidence(ev: Evidence, *, claim: str) -> None:
 def _validate_vocabulary(claim: Claim, *, name: str) -> None:
     """Every closed vocabulary on the claim itself, named against the claim.
 
-    ``status_policy`` checks the lane and the status again as its own public
-    guard.  The repeat is deliberate: over a table of hundreds of claims an
-    error that names only the bad value and not the claim carrying it is a
-    grep, and the accessor called on its own still has to refuse a lane it
-    has no cell for.
+    ``status_policy`` repeats the lane and status checks as its own public
+    guard, because over hundreds of claims an error naming only the bad value
+    and not the claim carrying it is a grep.
     """
     _require_membership(
         claim.subject_kind, SUBJECT_KINDS, claim=name, field="subject_kind"

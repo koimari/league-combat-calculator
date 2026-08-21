@@ -99,8 +99,6 @@ DELIVERY_CLASSES: tuple[str, ...] = (
     DELIVERY_DAMAGE_OVER_TIME,
 )
 
-_DELIVERY_CLASS_SET = frozenset(DELIVERY_CLASSES)
-
 
 @dataclass(frozen=True, slots=True)
 class DeliveryDeclaration:
@@ -385,12 +383,10 @@ class SourceSelection:
 class DeliveryAcceptance:
     """One defense's declared delivery acceptance.
 
-    Mirrors the legacy ``defense_matches`` delivery gate exactly so every
-    existing defense keeps its semantics: basic-attack blocks, area
-    reduction (which routes area events away from full blocks), and the
-    legacy ``requires_skillshot`` filter.  ``accepts_unknown`` declares
-    that the defense does not need a delivery decision for unmarked
-    packets (Fiora's full block); False fails closed with a named
+    Three gates: basic-attack blocks, area reduction (which routes area
+    events away from full blocks), and the ``requires_skillshot`` filter.
+    ``accepts_unknown`` declares that the defense needs no delivery decision
+    for unmarked packets (Fiora's full block); False fails closed with a named
     ``unknown_delivery`` denial.
     """
 
@@ -403,12 +399,9 @@ class DeliveryAcceptance:
         """Return (accepted, reason) for one event's delivery profile.
 
         An unclassifiable delivery fails closed FIRST with the named
-        ``unknown_delivery`` reason when the defense has not declared
-        that it accepts unknown packets (Fiora's full block declares
-        ``accepts_unknown``).  The legacy gates then reproduce
-        ``defense_matches`` exactly: basic-attack blocks, area reduction
-        (which routes area events away from full blocks), and the
-        ``requires_skillshot`` filter.
+        ``unknown_delivery`` reason unless the defense declares
+        ``accepts_unknown`` (Fiora's full block).  Then come the basic-attack
+        block, area reduction, and the ``requires_skillshot`` filter.
         """
         if profile.unknown and not self.accepts_unknown:
             return False, "unknown_delivery"
@@ -433,10 +426,9 @@ class DeliveryAcceptance:
     def accepts_deliveries(self) -> tuple[str, ...]:
         """The declared delivery classes this defense accepts (summary).
 
-        ``(projectile,)`` for the legacy skillshot-only defenses (Braum
-        E, Yasuo W, Samira W, Gwen W, Pantheon E); ``(basic_attack,
-        area)`` for Jax Counter Strike; every class for Fiora Riposte's
-        full block.
+        ``(projectile,)`` for the skillshot-only defenses (Braum E, Yasuo W,
+        Samira W, Gwen W, Pantheon E); ``(basic_attack, area)`` for Jax
+        Counter Strike; every class for Fiora Riposte's full block.
         """
         if (
             not self.requires_skillshot
@@ -675,17 +667,9 @@ class ReductionRule:
     source: SourceReceipt | None = None
 
     def reduction_for(self, action: Any) -> float:
-        """The declared reduction for one event.
-
-        An area-marked event uses the defense's own area reduction ONLY
-        when the defense declares one (Jax Counter Strike, 25%).  A
-        defense without an area rule (Braum E) reduces area-marked
-        skillshots with the later-hit reduction — Braum's shield
-        intercepts Trueshot Barrage in-game (wiki: "intercepts all
-        incoming hostile projectiles"), so the legacy global area
-        preference that produced a misleading "reduced by 0.0" receipt
-        is not carried into the kernel.
-        """
+        """A defense with no area rule reduces area-marked skillshots with its
+        later-hit reduction: Braum's shield intercepts Trueshot Barrage in-game
+        (wiki: "intercepts all incoming hostile projectiles")."""
         if self.area_damage_reduction > 0.0 and _action_flag(action, "area_damage"):
             return self.area_damage_reduction
         return self.later_hit_reduction
@@ -866,17 +850,12 @@ class SpellShieldAcceptance:
 def resolve_cast_identity(action: Any) -> tuple[str, str]:
     """One cast identity for spell-shield grouping.
 
-    Returns ``(identity, kind)``:
-
-    - ``("sourced", instance)`` when the packet carries the upstream
-      resolved ability instance (participant_timeline stamps
-      ``slot:ordinal`` on every authored ability packet);
-    - ``("derived", "source_key:time")`` otherwise — the pinned fallback
-      that groups same-slot same-time packets of one cast even when the
-      instance is missing (test-authored rows and score-mode events);
-    - ``("", "unknown")`` when no identity can be formed at all; the
-      decision path fails closed with the named ``unknown_cast_identity``
-      reason and never spends the shield.
+    Returns ``(identity, kind)``: ``("sourced", instance)`` when the packet
+    carries the upstream resolved ability instance, ``("derived",
+    "source_key:time")`` when it does not, which still groups same-slot
+    same-time packets of one cast, and ``("", "unknown")`` when no identity
+    can be formed, on which the decision path fails closed and never spends
+    the shield.
     """
     instance = getattr(action, "ability_instance", None)
     if instance is not None and str(instance):
@@ -1050,14 +1029,8 @@ class SpellShieldComposition:
 def spell_shield_group_key(attacker: Any, cast_identity: str) -> tuple[str, ...]:
     """One per-attacker grouping key for a cast identity.
 
-    The pipeline stamps ability instances as ``slot:ordinal`` WITHOUT the
-    attacker, so two different champions' casts can collide on one
-    instance (Ahri E and Lux E both resolve to ``E:1``).  One shield use
-    blocks ONE hostile ability instance, so the grouping key is
-    attacker-qualified: ``(attacker_name, cast_identity)`` when the
-    attacker is known, ``(cast_identity,)`` otherwise (kernel-level and
-    test-authored calls without an attacker keep the pinned simple form).
-    """
+    Instances are stamped ``slot:ordinal`` WITHOUT the attacker, so Ahri E and
+    Lux E both resolve to ``E:1``, and one shield use blocks one of them."""
     attacker_name = _attacker_name(attacker) if attacker is not None else ""
     if attacker_name:
         return (attacker_name, cast_identity)
@@ -1072,14 +1045,9 @@ def spell_shield_block_decision(
 ) -> tuple[bool, str]:
     """Whether one eligible cast may still be blocked by the shield.
 
-    Returns ``(block, reason)``: ``(True, "")`` when the shield is
-    unused; ``(True, "same_cast")`` when the cast is the one the shield
-    already blocked (cast grouping — every packet of the blocked cast
-    follows the same decision without spending another use);
-    ``(False, "use_consumed")`` when a different cast arrives after the
-    one use was spent.  The grouping key is attacker-qualified
-    (:func:`spell_shield_group_key`), so two different champions' casts
-    that share a pipeline instance are distinct uses.
+    ``(True, "same_cast")`` groups every packet of an already-blocked cast
+    without spending another use; ``(False, "use_consumed")`` answers a
+    different cast arriving after the one use.
     """
     key = spell_shield_group_key(attacker, cast_identity)
     if not used:

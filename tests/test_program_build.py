@@ -157,15 +157,6 @@ class TestProducerOrderIsDerived:
 class TestAPatchIsTheOnlyWayTwoPassesDiffer:
     """Frozen overrides plus a reason, never an in-place rewrite."""
 
-    def test_a_patch_does_not_mutate_its_parameters(self) -> None:
-        class Params:  # pylint: disable=too-few-public-methods
-            fight_duration_seconds = 8.0
-
-        params = Params()
-        patch = build.ParamPatch({"fight_duration_seconds": 12.0}, "pass 2")
-        assert patch.applied_to(params) == {"fight_duration_seconds": 12.0}
-        assert params.fight_duration_seconds == 8.0
-
     def test_a_patch_is_frozen(self) -> None:
         patch = build.ParamPatch({"x": 1}, "why")
         with pytest.raises(AttributeError):

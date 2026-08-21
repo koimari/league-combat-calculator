@@ -15,7 +15,6 @@ from typing import Any, Iterable
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
 from .economics_data import sourced_combine_cost, sourced_sell_value, sourced_total
-from .loadout_rules import ITEM_TO_EXCLUSIVITY_GROUPS, inventory_capacity
 
 BASIC = "BASIC"
 EPIC = "EPIC"
@@ -69,12 +68,7 @@ def item_total(item: dict[str, Any]) -> int:
 
 
 def item_sell_value(item: dict[str, Any]) -> int:
-    """Return the sourced sell refund for an item.
-
-    The real refund is 70% of total for most items (the vendored cache
-    hard-codes 40%, wrong for 185 of 209 shop items); the sourced table
-    carries per-item DDragon values with the reviewed exceptions.
-    """
+    """The sourced sell refund, from the per-item DDragon table."""
     return sourced_sell_value(item)
 
 
@@ -113,13 +107,7 @@ def recipe_demand(item: dict[str, Any]) -> dict[int, int]:
 
 
 def is_transformation_item(item: dict[str, Any]) -> bool:
-    """Return True for items that only exist by transforming another item.
-
-    Transformation items (Seraph's Embrace, Muramana, Fimbulwinter, Diadem
-    of Songs, Runic Compass, ...) cannot be bought in the shop; they appear
-    through ``specialRecipe`` transitions and must never be purchase
-    candidates.
-    """
+    """True for an item reachable only by a ``specialRecipe`` transition."""
     return bool(int(item.get("specialRecipe", 0) or 0))
 
 
@@ -446,10 +434,3 @@ def plan_incomplete_combine(plan: PurchasePlan) -> bool:
     """Recompute the incomplete_combine receipt for a priced plan's inventory."""
     inventory = collections.Counter(int(item["id"]) for item in plan.final_items)
     return bool(combine_candidates(inventory, _item_by_id()))
-
-
-def _find_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any]:
-    for item in items:
-        if item["name"] == name:
-            return item
-    raise LookupError(name)

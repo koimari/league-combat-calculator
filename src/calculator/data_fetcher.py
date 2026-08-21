@@ -17,20 +17,27 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 @lru_cache(maxsize=8)
 def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
-    """Parse one immutable on-disk JSON version.
-
-    ``modified_ns`` exists to make the file version part of the cache key; the
-    path alone would keep serving stale data after ``data_updater`` replaces a
-    cache file.
-    """
+    """Parse one immutable on-disk JSON version.  ``_modified_ns`` joins the
+    cache key so a file ``data_updater`` replaces is never served stale."""
     with open(data_path, "r", encoding="utf-8") as data_file:
         return json.load(data_file)
 
 
+@lru_cache(maxsize=8)
+def _resolved(data_directory: Path, filename: str) -> Path:
+    """Canonical path of one cache file; memoized because only its contents ever change (freshness is ``_cache_version``'s un-memoized stat)."""
+    return (data_directory / filename).resolve()
+
+
+def _cache_version(data_directory: Path, filename: str) -> tuple[Path, int]:
+    """The ``(canonical path, mtime)`` key every derivation of a cache shares."""
+    data_path = _resolved(data_directory, filename)
+    return data_path, data_path.stat().st_mtime_ns
+
+
 def _read_cache(data_directory: Path, filename: str) -> dict[str, Any]:
     """Read cached data, parsing each path-and-mtime version only once."""
-    data_path = (data_directory / filename).resolve()
-    return _read_json_version(data_path, data_path.stat().st_mtime_ns)
+    return _read_json_version(*_cache_version(data_directory, filename))
 
 
 def _validate_champion_data(data: dict[str, Any]) -> None:
@@ -165,18 +172,7 @@ def fetch_rune_data(
 
 
 def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
-    """Get data for a specific champion by name.
-
-    Args:
-        name: Champion name (e.g., "Ahri").
-        data_directory: Directory where cached data is stored.
-
-    Returns:
-        Champion data dictionary.
-
-    Raises:
-        KeyError: If the champion is not found.
-    """
+    """Cached data for one champion, by data key or display name."""
     champions = fetch_champion_data(data_directory=data_directory)
     if name in champions:
         return champions[name]
@@ -187,23 +183,23 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
     raise KeyError(f"Champion '{name}' not found in data")
 
 
+@lru_cache(maxsize=8)
+def _item_name_index(data_path: Path, _modified_ns: int) -> dict[str, dict[str, Any]]:
+    """``{lowered display name: record}`` for one items version; the first record with a name wins, keyed on the parse's path-and-mtime so a replaced file is a new key."""
+    index: dict[str, dict[str, Any]] = {}
+    for item_data in _read_json_version(data_path, _modified_ns).values():
+        index.setdefault(item_data.get("name", "").lower(), item_data)
+    return index
+
+
 def get_item_by_name(
     name: str, data_directory: Path = DEFAULT_DATA_DIR
 ) -> dict[str, Any]:
-    """Get data for a specific item by name.
-
-    Args:
-        name: Item name (e.g., "Liandry's Torment").
-        data_directory: Directory where cached data is stored.
-
-    Returns:
-        Item data dictionary.
-
-    Raises:
-        KeyError: If the item is not found.
-    """
-    items = fetch_item_data(data_directory=data_directory)
-    for _, item_data in items.items():
-        if item_data.get("name", "").lower() == name.lower():
-            return item_data
-    raise KeyError(f"Item '{name}' not found in data")
+    """Cached data for one item, matched on name case-insensitively."""
+    fetch_item_data(data_directory=data_directory)  # missing/invalid cache raises here
+    found = _item_name_index(*_cache_version(data_directory, "items.json")).get(
+        name.lower()
+    )
+    if found is None:
+        raise KeyError(f"Item '{name}' not found in data")
+    return found

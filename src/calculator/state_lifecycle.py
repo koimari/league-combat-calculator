@@ -101,11 +101,10 @@ class SourceReceipt:
 # ---------------------------------------------------------------------------
 
 # Ordered tiers mirror the survival walk's phase ordering at one timestamp:
-# scheduled expiry applies before readiness unlocks, readiness before new
-# state, consume/reset after the gains they depend on, and cooldown start
-# after the proc that triggers it.  A lower tier sorts first.
+# scheduled expiry applies before new state, consume/reset after the gains
+# they depend on, and cooldown start after the proc that triggers it.  A
+# lower tier sorts first.
 TIER_EXPIRE = -2.0
-TIER_READY = -1.0
 TIER_GAIN = 0.0
 TIER_CONSUME = 0.5
 TIER_COOLDOWN_START = 1.0
@@ -209,33 +208,6 @@ class StateTimeline:
         return len(self._transitions)
 
 
-# ---------------------------------------------------------------------------
-# Trigger predicates
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True, slots=True)
-class TriggerPredicate:
-    """A named, sourced predicate declaring what fires a gain or proc.
-
-    Predicates stay declarative: the boolean decision lives in the
-    consumer's typed rule class (for example :class:`CcTriggerRule`), and
-    this record publishes the rule's provenance.
-    """
-
-    name: str
-    description: str
-    source: SourceReceipt | None = None
-
-    def public_receipt(self) -> dict[str, Any]:
-        """JSON-safe public receipt."""
-        return {
-            "name": self.name,
-            "description": self.description,
-            "source": self.source.public() if self.source is not None else None,
-        }
-
-
 @dataclass(frozen=True, slots=True)
 class CcTriggerRule:
     """Crowd-control trigger classification (Fimbulwinter Everlasting).
@@ -284,22 +256,19 @@ class CcTriggerRule:
     def denial_reason(self, event: Mapping[str, Any], *, is_melee: bool) -> str | None:
         """Name why a CC-adjacent event cannot fire, or ``None``.
 
-        ``None`` means either the event is NOT a CC candidate at all (no
-        crowd-control metadata — nothing to deny, so no receipt) or it
-        matched an eligible branch (accepted).  Denials are named so the
-        consumer can receipt them fail-closed instead of silently skipping:
+        ``None`` means the event is not a CC candidate at all (no
+        crowd-control metadata, so nothing to deny) or it matched an eligible
+        branch.  Denials are named so the consumer can receipt them fail
+        closed instead of silently skipping:
 
-        - ``"unknown_cc_kind"``: a ``cc_kind`` string outside the sourced
-          vocabulary (neither an action-blocking kind nor the slow kind);
-        - ``"untyped_cc"``: only a bare ``crowd_control`` flag, which
-          cannot distinguish the immobilize/slow branches;
-        - ``"ranged_slow"``: a slow-classified event whose holder is not
-          melee (``slow_melee_only``).
+        - ``"unknown_cc_kind"``: a ``cc_kind`` outside the sourced vocabulary;
+        - ``"untyped_cc"``: only a bare ``crowd_control`` flag, which cannot
+          tell the immobilize and slow branches apart;
+        - ``"ranged_slow"``: a slow-classified event whose holder is not melee.
 
-        The adjacency test is deliberately broader than
-        :meth:`is_candidate`: an event carrying a ``cc_kind`` string
-        OUTSIDE the sourced vocabulary is CC-adjacent (receipted as
-        ``unknown_cc_kind``) even though it can never match a branch.
+        The adjacency test is broader than :meth:`is_candidate` on purpose: an
+        event carrying an out-of-vocabulary ``cc_kind`` is CC-adjacent and
+        receipted, though it can never match a branch.
         """
         if self.match(event, is_melee=is_melee):
             return None
@@ -834,8 +803,7 @@ class TimedStackState:
         return out
 
     def materialize_expiries(self, time: float, sequence: int = 0) -> list[Transition]:
-        """Public wrapper for :meth:`_materialize_expiries` (the walk
-        consumers use it to close a stack state at the fight end)."""
+        """Close a stack state at the fight end, for the walk consumers."""
         return self._materialize_expiries(time, sequence)
 
     def note_activity(
@@ -1261,245 +1229,6 @@ class CooldownState:
             "state": self.rule.name,
             "rule": self.rule.public_receipt(),
             "ready_at": dict(self._ready_at),
-            "transitions": self._timeline.public_receipt(),
-        }
-
-
-# ---------------------------------------------------------------------------
-# Charge pools and lockout windows
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True, slots=True)
-class ChargePoolRule:
-    """One charge-pool declaration (gain, spend, cap, lockout)."""
-
-    name: str
-    max_charges: int
-    gain_per_trigger: int = 1
-    lockout_seconds: float = 0.0
-    source: SourceReceipt | None = None
-
-    def validate(self) -> None:
-        """Fail closed on an impossible declaration."""
-        source = f" (source: {self.source.label})" if self.source is not None else ""
-        if self.max_charges < 1:
-            raise ValueError(f"{self.name}: max_charges must be >= 1{source}")
-        if self.gain_per_trigger < 1:
-            raise ValueError(f"{self.name}: gain_per_trigger must be >= 1{source}")
-        if not math.isfinite(self.lockout_seconds) or self.lockout_seconds < 0.0:
-            raise ValueError(
-                f"{self.name}: lockout_seconds must be finite and >= 0{source}"
-            )
-
-    def public_receipt(self) -> dict[str, Any]:
-        """JSON-safe public receipt."""
-        return {
-            "name": self.name,
-            "max_charges": self.max_charges,
-            "gain_per_trigger": self.gain_per_trigger,
-            "lockout_seconds": self.lockout_seconds,
-            "source": self.source.public() if self.source is not None else None,
-        }
-
-
-class ChargePool:
-    """Charge pool with gain/spend, cap, and a post-spend lockout."""
-
-    def __init__(self, rule: ChargePoolRule, *, starting_charges: int = 0) -> None:
-        rule.validate()
-        self.rule = rule
-        self._charges = max(0, min(int(starting_charges), rule.max_charges))
-        self._lockout_until = float("-inf")
-        self._timeline = StateTimeline()
-
-    @property
-    def charges(self) -> int:
-        """Live charge count."""
-        return self._charges
-
-    def is_locked(self, time: float) -> bool:
-        """Whether a post-spend lockout is active at *time*."""
-        return time + _EPS < self._lockout_until
-
-    def gain(
-        self,
-        time: float,
-        *,
-        amount: int | None = None,
-        sequence: int = 0,
-    ) -> Transition:
-        """Gain charges at *time*; capped gains are receipted, not silent."""
-        before = self._charges
-        gained = int(amount) if amount is not None else self.rule.gain_per_trigger
-        if gained < 1:
-            raise ValueError(
-                f"{self.rule.name}: gain amount must be >= 1, got {gained}"
-            )
-        self._charges = min(self.rule.max_charges, self._charges + gained)
-        return self._timeline.record(
-            time,
-            "charge_gain",
-            sequence=sequence,
-            tier=TIER_GAIN,
-            detail={
-                "state": self.rule.name,
-                "charges_before": before,
-                "charges_after": self._charges,
-                "capped": self._charges == self.rule.max_charges,
-            },
-        )
-
-    def spend(
-        self,
-        time: float,
-        *,
-        amount: int = 1,
-        sequence: int = 0,
-    ) -> Transition | None:
-        """Spend charges; a denied spend is receipted, never silent."""
-        if amount < 1:
-            raise ValueError(
-                f"{self.rule.name}: spend amount must be >= 1, got {amount}"
-            )
-        if self.is_locked(time):
-            self._timeline.record(
-                time,
-                "charge_denied",
-                sequence=sequence,
-                tier=TIER_GAIN,
-                detail={
-                    "state": self.rule.name,
-                    "reason": "lockout",
-                    "lockout_until": self._lockout_until,
-                    "charges_before": self._charges,
-                    "charges_after": self._charges,
-                },
-            )
-            return None
-        if self._charges < amount:
-            self._timeline.record(
-                time,
-                "charge_denied",
-                sequence=sequence,
-                tier=TIER_GAIN,
-                detail={
-                    "state": self.rule.name,
-                    "reason": "insufficient_charges",
-                    "charges_before": self._charges,
-                    "charges_after": self._charges,
-                },
-            )
-            return None
-        before = self._charges
-        self._charges -= amount
-        if self.rule.lockout_seconds > 0.0:
-            self._lockout_until = time + self.rule.lockout_seconds
-        return self._timeline.record(
-            time,
-            "charge_spend",
-            sequence=sequence,
-            tier=TIER_CONSUME,
-            detail={
-                "state": self.rule.name,
-                "charges_before": before,
-                "charges_after": self._charges,
-                "lockout_until": self._lockout_until,
-            },
-        )
-
-    def public_receipt(self) -> dict[str, Any]:
-        """JSON-safe public receipt."""
-        return {
-            "state": self.rule.name,
-            "charges": self._charges,
-            "rule": self.rule.public_receipt(),
-            "lockout_until": self._lockout_until,
-            "transitions": self._timeline.public_receipt(),
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class LockoutRule:
-    """One lockout-window declaration (no gains/procs while active)."""
-
-    name: str
-    duration_seconds: float
-    source: SourceReceipt | None = None
-
-    def validate(self) -> None:
-        """Fail closed on an impossible declaration."""
-        source = f" (source: {self.source.label})" if self.source is not None else ""
-        if not math.isfinite(self.duration_seconds) or self.duration_seconds <= 0.0:
-            raise ValueError(
-                f"{self.name}: duration_seconds must be finite and > 0{source}"
-            )
-
-    def public_receipt(self) -> dict[str, Any]:
-        """JSON-safe public receipt."""
-        return {
-            "name": self.name,
-            "duration_seconds": self.duration_seconds,
-            "source": self.source.public() if self.source is not None else None,
-        }
-
-
-class LockoutWindow:
-    """A start/end lockout window with explicit public transitions."""
-
-    def __init__(self, rule: LockoutRule) -> None:
-        rule.validate()
-        self.rule = rule
-        self._until = float("-inf")
-        self._timeline = StateTimeline()
-
-    def active_at(self, time: float) -> bool:
-        """Whether the lockout window is active at *time*."""
-        return time + _EPS < self._until
-
-    def start(
-        self,
-        time: float,
-        *,
-        sequence: int = 0,
-        meta: Mapping[str, Any] | None = None,
-    ) -> Transition:
-        """Open the lockout window at *time*."""
-        self._until = time + self.rule.duration_seconds
-        return self._timeline.record(
-            time,
-            "lockout_start",
-            sequence=sequence,
-            tier=TIER_COOLDOWN_START,
-            detail={
-                "state": self.rule.name,
-                "lockout_until": self._until,
-                "trigger_source": str((meta or {}).get("source") or "trigger"),
-            },
-        )
-
-    def end(
-        self,
-        time: float,
-        *,
-        sequence: int = 0,
-    ) -> Transition:
-        """Close the lockout window at *time*."""
-        self._until = float("-inf")
-        return self._timeline.record(
-            time,
-            "lockout_end",
-            sequence=sequence,
-            tier=TIER_READY,
-            detail={"state": self.rule.name},
-        )
-
-    def public_receipt(self) -> dict[str, Any]:
-        """JSON-safe public receipt."""
-        return {
-            "state": self.rule.name,
-            "active": self._until,
-            "rule": self.rule.public_receipt(),
             "transitions": self._timeline.public_receipt(),
         }
 

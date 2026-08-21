@@ -96,12 +96,9 @@ _DEFAULT_NEARBY_CHAMPIONS = 0
 
 
 def _missing_health_fraction(ctx: SlotCtx) -> float:
-    """Mundo's own missing health as a 0..1 fraction — the ONE source.
+    """Mundo's own missing health as a 0..1 fraction, the ONE source.
 
-    E's damage amp and R's base-health grant both read how hurt Mundo is.
-    They describe a single game state, so they derive from a single option
-    and can never disagree (the Darius one-input rule); neither consumer
-    gets an override of its own.
+    E's amp and R's health grant read one game state, so both use this option.
     """
     percent = float(
         ctx.options.get("mundo_missing_health_percent", _DEFAULT_MISSING_HEALTH_PERCENT)

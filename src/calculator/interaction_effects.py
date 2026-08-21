@@ -585,7 +585,7 @@ def defense_eligibility(defense: ProjectileDefense | None) -> DefenseEligibility
     parsing; the kernel owns the delivery classification and the
     eligibility decision.  ``accepts_unknown`` declares that a defense
     with no delivery filters (Fiora's full block) does not need a
-    delivery decision, so unmarked packets keep their legacy behavior.
+    delivery decision, so an unmarked packet is accepted.
     """
     if defense is None:
         return None
@@ -661,12 +661,7 @@ def defense_matches(
     action: Any,
     attacker: Any,
 ) -> bool:
-    """Return whether one authored event is selected by the defense atom.
-
-    Delegates the delivery classification and the eligibility decision
-    to the kernel (:func:`defense_eligibility` + ``decide``); the
-    decision reproduces the legacy boolean reads exactly.
-    """
+    """Return whether one authored event is selected by the defense atom."""
     eligibility = defense_eligibility(defense)
     if eligibility is None:
         return False

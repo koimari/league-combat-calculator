@@ -1,4 +1,4 @@
-"""Every standing coupled-golden diff is enumerated in a committed receipt.
+"""Every standing golden diff is enumerated in a committed receipt.
 
 R-17 lands a semantic slice against the *old* coupled baseline plus a
 committed allowlist of expected diff paths, and re-captures once per phase
@@ -28,6 +28,7 @@ import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 RECEIPTS = REPO_ROOT / "docs" / "receipts"
 COUPLED_BASELINE = REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
+PAIR_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 
 
 def expected_diff_receipts() -> tuple[Path, ...]:
@@ -53,14 +54,31 @@ def allowlisted_coupled_paths() -> dict[str, str]:
     return claimed
 
 
-def standing_coupled_diffs() -> tuple[gs.LeafDiff, ...]:
+def allowlisted_pair_paths() -> dict[str, str]:
+    """The same map for the pair jurisdiction's two declaration keys."""
+    claimed: dict[str, str] = {}
+    for receipt in expected_diff_receipts():
+        block = json.loads(receipt.read_text(encoding="utf-8"))
+        paths = block.get("expected_diff_paths", {})
+        for key in ("golden", "golden_shape_counters"):
+            for path in paths.get(key, ()):
+                claimed.setdefault(path, receipt.name)
+    return claimed
+
+
+def _standing_diffs(baseline_path: Path) -> tuple[gs.LeafDiff, ...]:
     """``compare``'s own difference set, without the printing or the exit code."""
-    baseline = json.loads(COUPLED_BASELINE.read_text(encoding="utf-8"))
+    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
     current = gs.rebuild_for(baseline)
     for snapshot in (baseline, current):
         for key in gs.COMPARE_EXCLUDED_PROVENANCE:
             snapshot.get("metadata", {}).pop(key, None)
     return gs.leaf_report(baseline, current)
+
+
+def standing_coupled_diffs() -> tuple[gs.LeafDiff, ...]:
+    """The coupled baseline's standing difference set."""
+    return _standing_diffs(COUPLED_BASELINE)
 
 
 def unexplained(diffs, claimed) -> tuple[str, ...]:
@@ -82,6 +100,16 @@ def test_every_standing_coupled_diff_is_claimed_by_a_receipt():
     than a budget overrun.
     """
     assert unexplained(standing_coupled_diffs(), allowlisted_coupled_paths()) == ()
+
+
+def test_every_standing_pair_diff_is_claimed_by_a_receipt():
+    """The same reading for the pair baseline, which no other test compares.
+
+    A slice that touches the pair engine declares its leaves under the
+    ``golden`` keys of the same R-17 receipt; anything else moving here is
+    the leak this row exists to catch.
+    """
+    assert unexplained(_standing_diffs(PAIR_BASELINE), allowlisted_pair_paths()) == ()
 
 
 def test_an_unclaimed_leaf_turns_the_check_red():

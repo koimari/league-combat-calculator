@@ -38,7 +38,6 @@ def test_a_written_outcome_projects_the_four_numbers() -> None:
     assert (outcome.applied, outcome.absorbed) == (120.5, 20.5)
     assert (outcome.to_health, outcome.overkill) == (100.0, 0.0)
     assert outcome.skipped_reason is None
-    assert outcome.was_skipped is False
 
 
 def test_a_slot_no_transition_wrote_projects_zeros_with_no_refusal() -> None:
@@ -94,7 +93,6 @@ def test_a_refusal_is_recorded_as_a_reason_and_not_as_a_zero() -> None:
     ledger.skip(action(5), "target_dead")
     outcome = ledger.get(5)
     assert outcome.skipped_reason == "target_dead"
-    assert outcome.was_skipped is True
     assert outcome.applied == 0.0
 
 
@@ -265,13 +263,6 @@ class TestAtMostOneAppliedContribution:
             event_slot=event,
         )
 
-    def test_one_contribution_per_key_is_recorded(self) -> None:
-        ledger = outcome_state.OutcomeLedger()
-        ledger.write(
-            self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
-        )
-        assert ledger.applied_contributions() == {("mandate", 1, 7): 0}
-
     def test_a_second_producer_of_the_same_contribution_raises(self) -> None:
         """Two slots, one (mechanic, subject, event_id): a double count."""
         ledger = outcome_state.OutcomeLedger()
@@ -295,7 +286,7 @@ class TestAtMostOneAppliedContribution:
         ledger.write(
             self.contribution(1, source="mandate", subject=2, event=7), damage=40.0
         )
-        assert len(ledger.applied_contributions()) == 2
+        assert list(ledger.slots()) == [0, 1]
 
     def test_the_same_subject_on_a_second_event_is_not_a_duplicate(self) -> None:
         ledger = outcome_state.OutcomeLedger()
@@ -305,7 +296,7 @@ class TestAtMostOneAppliedContribution:
         ledger.write(
             self.contribution(1, source="mandate", subject=1, event=8), damage=40.0
         )
-        assert len(ledger.applied_contributions()) == 2
+        assert list(ledger.slots()) == [0, 1]
 
     def test_a_second_mechanic_on_one_event_is_not_a_duplicate(self) -> None:
         ledger = outcome_state.OutcomeLedger()
@@ -315,7 +306,7 @@ class TestAtMostOneAppliedContribution:
         ledger.write(
             self.contribution(1, source="abyssal", subject=1, event=7), damage=40.0
         )
-        assert len(ledger.applied_contributions()) == 2
+        assert list(ledger.slots()) == [0, 1]
 
     def test_one_slot_writing_two_applied_aliases_is_a_rewrite_not_a_duplicate(
         self,
@@ -331,7 +322,10 @@ class TestAtMostOneAppliedContribution:
         """A skipped transition delivered nothing, so it claims no key."""
         ledger = outcome_state.OutcomeLedger()
         ledger.skip(self.contribution(0, source="mandate", subject=1, event=7), "gated")
-        assert ledger.applied_contributions() == {}
+        ledger.write(
+            self.contribution(1, source="mandate", subject=1, event=7), damage=40.0
+        )
+        assert list(ledger.slots()) == [0, 1]
 
 
 class TestTheDiagnosticAnnotationsAreNotOutcomes:
@@ -434,16 +428,6 @@ class TestTheReceiptWalkRunsIt:
         assert built, "the coupled walk built no receipt ledger"
         assert any(list(ledger.outcomes.slots()) for ledger in built)
 
-    def test_a_live_fight_claims_applied_contributions(self, monkeypatch) -> None:
-        """D-62's uniqueness ranges over real keys, not over fixture keys."""
-        built = self.capturing_ledger(monkeypatch)
-        claimed = {
-            key: slot
-            for ledger in built
-            for key, slot in ledger.outcomes.applied_contributions().items()
-        }
-        assert claimed, "no applied contribution was claimed over a real fight"
-
     def test_a_live_fight_records_the_walks_refusals(self, monkeypatch) -> None:
         """A refusal reaches the ledger, which is where a declared zero is born."""
         built = self.capturing_ledger(monkeypatch)
@@ -451,7 +435,7 @@ class TestTheReceiptWalkRunsIt:
             ledger.outcomes.get(slot).skipped_reason
             for ledger in built
             for slot in ledger.outcomes.slots()
-            if ledger.outcomes.get(slot).was_skipped
+            if ledger.outcomes.get(slot).skipped_reason is not None
         ]
         assert refused, "the coupled corpus refused no transition"
         assert all(reason for reason in refused)
@@ -494,3 +478,35 @@ class TestTheReceiptWalkRunsIt:
         ledger.write(packet, overkill=1.0)
         with pytest.raises(outcome_state.OutcomeRewritten):
             ledger.write(packet, overkill=2.0)
+
+
+@pytest.mark.parametrize(
+    "raised",
+    [
+        outcome_state.OutcomeRewritten(0, "applied", 1.0, 2.0),
+        outcome_state.DuplicateApplied(("Imperial Mandate - Command", 1, 3), 0, 1),
+    ],
+    ids=["OutcomeRewritten", "DuplicateApplied"],
+)
+def test_the_request_boundary_names_these_raises(raised) -> None:
+    """A contested outcome reaches the user as a ``STARVED`` receipt.
+
+    The write-once ledger is built and driven on every serving request, so
+    its refusals are live exceptions there. The one boundary converts them
+    into a 500 naming the contested field, the producer that contested it,
+    and why there is no number to publish.
+    """
+    import src.app as app_module
+
+    def _view():
+        raise raised
+
+    guarded = app_module._within_starvation_boundary(_view)  # noqa: SLF001
+    with app_module.app.test_request_context("/api/calculate", method="POST"):
+        response, status = guarded()
+    body = response.get_json()
+    assert status == 500
+    assert body["disposition"] == "STARVED"
+    assert body["starved"]["field"] == raised.field
+    assert body["starved"]["producer"] == raised.producer
+    assert body["starved"]["reason"] == raised.reason

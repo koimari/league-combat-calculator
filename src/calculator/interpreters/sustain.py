@@ -48,7 +48,6 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
-from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 # The one field the received-healing multiplier compiles to on its own lane.
@@ -59,104 +58,71 @@ class SustainInterpretationError(ValueError):
     """A sustain rule was asked something its payload does not answer."""
 
 
-class SustainPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the six holder-side sustain shapes.
+def sustain_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """Every sourced number one holder-side sustain declaration resolves to.
 
-    Every one of them compiles to the same thing — its own declared
-    references, resolved and named after the field they were declared under —
-    because that is genuinely all these six have in common.  The *shape* is
-    what tells a caller which fields exist, and asking for one a rule does
-    not declare is a stop rather than a zero.
+    All six shapes compile to the same thing — their own declared references,
+    resolved and named after the field they were declared under — because that
+    is genuinely all they have in common.  The *shape* is what tells a caller
+    which fields exist, and asking for one a rule does not declare is a stop
+    rather than a zero.
     """
-
-    FAMILY = RuleFamily.SUSTAIN
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """Every sourced number one sustain declaration resolves to."""
-        payload = rule.payload
-        if not isinstance(payload, SUSTAIN_VALUE_PAYLOADS):
-            raise SustainInterpretationError(
-                f"{rule.mechanic_id} is not a holder-side sustain rule; the "
-                "received-healing multiplier is built by the defensive "
-                "resolver, not here"
-            )
-        return tuple(
-            KernelField(
-                name=name,
-                value=resolve(getattr(payload, name), ctx.level),
-                lane=EngineLane.PAIR_ENGINE,
-                rule_id=rule.mechanic_id,
-            )
-            for name in SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
+    payload = rule.payload
+    if not isinstance(payload, SUSTAIN_VALUE_PAYLOADS):
+        raise SustainInterpretationError(
+            f"{rule.mechanic_id} is not a holder-side sustain rule; the "
+            "received-healing multiplier is built by the defensive "
+            "resolver, not here"
         )
+    return tuple(
+        KernelField(
+            name=name,
+            value=resolve(getattr(payload, name), ctx.level),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        )
+        for name in SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
+    )
 
 
-class SustainWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the shapes the walk itself pays out.
+def walk_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """Every sourced number the walk reads off one sustain declaration.
+    ``ctx`` is unread: the walk boundary has no level or range class."""
+    del ctx
+    return _flat_fields(rule, lane)
 
-    A regeneration window's ticks and the below-half healing bonus are
-    scheduled and applied inside the walk, and ``survival/`` may not reach a
-    declaration — the dependency runs ``interpreters -> survival`` and never
-    back.  So this compiles them where the walk's context is built and hands
-    the numbers over as kernel data, which is what a walk-lane interpreter
-    *is* in this phase: build time, value-typed fields, no program type.
 
-    Flat references only, and a refusal rather than an invention where a
-    reference needs more: the boundary that builds a walk has no level, no
-    target bonus health and no range class, and a defaulted zero inside a
-    recovery is a heal that silently pays nothing.
+def resolve_received_healing(
+    rule: BehaviorRule, subject: DefenseSubject
+) -> DefenseOutcome:
+    """The multiplier, as the one field the declaration says it writes.
+
+    Applying it is the ledger's job and deliberately not this function's: the
+    multiplier scales state three earlier mechanics wrote, so the fold belongs
+    where the state lives.  What the declaration owns is the number and the
+    field it lands in.
     """
-
-    FAMILY = RuleFamily.SUSTAIN
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """Every sourced number the walk reads off one sustain declaration."""
-        del ctx
-        return _flat_fields(rule, EngineLane.RECEIPT_WALK)
-
-
-class SustainResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the received-healing multiplier."""
-
-    FAMILY = RuleFamily.SUSTAIN
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape the multiplier compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """The multiplier, as the one field the declaration says it writes.
-
-        Applying it is the ledger's job and deliberately not this
-        interpreter's: the multiplier scales state three earlier mechanics
-        wrote, so the fold belongs where the state lives.  What the
-        declaration owns is the number and the field it lands in.
-        """
-        del subject
-        slot = DefenseSlot(rule)
-        if slot.mechanic is not DefenseMechanic.BOUNDLESS_VITALITY:
-            raise DefenseInterpretationError(
-                f"{rule.mechanic_id} declares sustain at the resolver and this "
-                "interpreter has no branch for it; a multiplier with no "
-                "arithmetic is a mechanic that would silently do nothing"
-            )
-        return DefenseOutcome(
-            fields=(
-                slot.grant(
-                    DefenseField.HEALING_RECEIVED_MULTIPLIER,
-                    slot.value("shield_received_multiplier"),
-                ),
+    del subject
+    slot = DefenseSlot(rule)
+    if slot.mechanic is not DefenseMechanic.BOUNDLESS_VITALITY:
+        raise DefenseInterpretationError(
+            f"{rule.mechanic_id} declares sustain at the resolver and this "
+            "family has no branch for it; a multiplier with no arithmetic is "
+            "a mechanic that would silently do nothing"
+        )
+    return DefenseOutcome(
+        fields=(
+            slot.grant(
+                DefenseField.HEALING_RECEIVED_MULTIPLIER,
+                slot.value("shield_received_multiplier"),
             ),
-            notes=(),
-        )
-
-
-PAIR_INTERPRETER = SustainPairInterpreter()
-RESOLVER_INTERPRETER = SustainResolverInterpreter()
-WALK_INTERPRETER = SustainWalkInterpreter()
+        ),
+        notes=(),
+    )
 
 
 def received_healing_multiplier(rule: BehaviorRule) -> float:
@@ -237,7 +203,7 @@ def sustain_slot(
     rule = rules[0]
     return SustainSlot(
         rule=rule,
-        fields=PAIR_INTERPRETER.compile(
+        fields=sustain_fields(
             rule,
             build_context(
                 rule.owner,
@@ -246,6 +212,7 @@ def sustain_slot(
                 target_bonus_health=target_bonus_health,
                 holder_is_melee=holder_is_melee,
             ),
+            EngineLane.PAIR_ENGINE,
         ),
     )
 
@@ -253,23 +220,8 @@ def sustain_slot(
 def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     """This build's sustain of one shape, from flat references alone.
 
-    The companion to :func:`sustain_slot`, for the two callers that author a
-    heal *before* a fight context exists: the pipeline's item-heal events are
-    built from a finished damage list, and the roster's resource ledger is
-    built from incoming packets.  Neither has a level, a target's bonus
-    health or the holder's range class to hand, and inventing them so an
-    accessor's signature is satisfied is how a defaulted zero duration gets
-    into a ramping magnitude.
-
-    So this refuses instead.  Every reference the shape declares must be a
-    plain :class:`~..value_ref.ValueRef`; a level ramp or any other
-    context-dependent reference is a stop naming the shape, which is what
-    stops this becoming a quiet second answer to the question
-    :func:`sustain_slot` asks.  ``None`` means no holder declares the shape —
-    an answer, not a zero — and two holders is the same stop as there.
-
-    :func:`walk_slot` is this same question asked for the other lane.
-    """
+    A context-dependent reference stops rather than defaulting a zero into a
+    ramping magnitude.  ``None`` means no holder declares the shape."""
     rule = _sole_rule(owners, payload_type)
     if rule is None:
         return None
@@ -279,13 +231,8 @@ def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot |
 def walk_slot(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     """This build's sustain of one shape, compiled for the receipt walk.
 
-    What the walk's boundary holds instead of an item name: the caller that
-    builds a walk context compiles the declaration here and hands the numbers
-    over as kernel data, because ``survival/`` may not reach a declaration
-    itself.  Field for field this is
-    :meth:`SustainWalkInterpreter.compile` — one arithmetic home, so the
-    registered interpreter and the accessor cannot answer differently.
-    """
+    Field for field this is :func:`walk_fields`, so the registered reading and
+    the accessor cannot answer differently."""
     rule = _sole_rule(owners, payload_type)
     if rule is None:
         return None
@@ -340,8 +287,7 @@ def stat_grants(owners: Sequence[str], stat: SustainStat) -> tuple[BehaviorRule,
     """Every declared grant of one vampirism stat, in build order.
 
     Grants sum rather than refusing a second holder, because two life-steal
-    items really do stack — which is the one place this family's fold is not
-    a single slot.
+    items stack.  This is the one place the family's fold is not a single slot.
     """
     return tuple(
         rule
@@ -398,20 +344,17 @@ def _split_share(percent: object, holder_is_melee: bool) -> float:
 
 
 __all__ = [
-    "PAIR_INTERPRETER",
     "RECEIVED_HEALING_MULTIPLIER_FIELD",
-    "RESOLVER_INTERPRETER",
     "SustainInterpretationError",
-    "SustainPairInterpreter",
-    "SustainResolverInterpreter",
     "SustainSlot",
-    "SustainWalkInterpreter",
-    "WALK_INTERPRETER",
     "declared_sustain",
     "received_healing_multiplier",
+    "resolve_received_healing",
     "saturating_stat_percent",
     "stat_grants",
+    "sustain_fields",
     "sustain_rules",
     "sustain_slot",
+    "walk_fields",
     "walk_slot",
 ]

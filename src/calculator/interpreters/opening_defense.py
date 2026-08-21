@@ -1,18 +1,15 @@
 """Defences already in force when the modeled exchange opens.
 
-Six mechanics, and until this module every one of them was an
-``if "<item name>" in names`` branch inside the defensive resolver: a shield
-read off the subject's own maximum health, two multipliers over incoming
-basic damage, a flat reduction with a cap, a level-ramped shield the
-scenario has to supply a starting value for, and a disclosure that says a
-seventh mechanic is deliberately *not* resolved here.
+Six mechanics: a shield read off the subject's own maximum health, two
+multipliers over incoming basic damage, a flat reduction with a cap, a
+level-ramped shield the scenario has to supply a starting value for, and a
+disclosure that says a seventh mechanic is deliberately *not* resolved here.
 
-What the branches decided by name, the declarations now decide by shape:
-which numbers the mechanic may read, which resolved fields it may write, and
-what it discloses.  The sentences are here rather than in the declaration
-because a published assumption is presentation — criterion 6 admits no open
-string as policy — and because keeping them beside the arithmetic that
-qualifies them is what stops a note describing a branch that no longer runs.
+Each declaration decides by shape rather than by item name: which numbers the
+mechanic may read, which resolved fields it may write, and what it discloses.
+The sentences live here rather than in the declaration because a published
+assumption is presentation rather than policy, and because keeping them beside
+the arithmetic that qualifies them ties every note to a branch that runs.
 """
 
 from __future__ import annotations
@@ -21,23 +18,18 @@ from collections.abc import Mapping
 
 from ..item_behavior import (
     BehaviorRule,
-    BuildContext,
     DefenseField,
     DefenseMechanic,
     DefenseOption,
     DefenseOutcome,
     DefenseSubject,
-    EngineLane,
-    KernelField,
-    RuleFamily,
 )
-from . import defense_state
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 # One published sentence per mechanic, formatted with the owner the
-# declaration named.  Two of them are fixed text because the wiki's own
-# wording does not name the item; the rest interpolate, which is how the
-# retired ladder's f-strings produced the same line for two Noxian boots.
+# declaration named.  Two are fixed text because the wiki's own wording does
+# not name the item; the rest interpolate, so the two Noxian boots each get
+# their own line.
 NOTES: Mapping[DefenseMechanic, str] = {
     DefenseMechanic.MAGEBANE: (
         "Magebane is ready because the target has not taken magic damage "
@@ -87,42 +79,31 @@ BLESSED_SOURCE = "{owner} — Blessed"
 UNDAUNTED_SOURCE = "{owner} — Undaunted"
 
 
-class OpeningDefenseResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the ``opening_defense`` family."""
-
-    FAMILY = RuleFamily.OPENING_DEFENSE
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape an opening defence compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """One opening defence, against the subject it is defending."""
-        slot = DefenseSlot(rule)
-        mechanic = slot.mechanic
-        if mechanic is DefenseMechanic.MAGEBANE:
-            return _magebane(slot, subject)
-        if mechanic is DefenseMechanic.BLESSING_OF_THE_MOUNTAIN:
-            return _blessing(slot)
-        if mechanic is DefenseMechanic.ICHORSHIELD:
-            return _ichorshield(slot, subject)
-        if mechanic is DefenseMechanic.PLATING:
-            return _one_multiplier(slot, DefenseField.BASIC_DAMAGE_MULTIPLIER)
-        if mechanic is DefenseMechanic.ROCK_SOLID:
-            return _rock_solid(slot)
-        if mechanic is DefenseMechanic.UNDAUNTED:
-            return _undaunted(slot)
-        if mechanic is DefenseMechanic.RESILIENCE:
-            return _one_multiplier(slot, DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER)
-        raise DefenseInterpretationError(
-            f"{rule.mechanic_id} declares opening_defense and this interpreter "
-            "has no branch for it; a defence with no arithmetic is a mechanic "
-            "that would silently grant nothing"
-        )
-
-
-RESOLVER_INTERPRETER = OpeningDefenseResolverInterpreter()
+def resolve_opening_defense(
+    rule: BehaviorRule, subject: DefenseSubject
+) -> DefenseOutcome:
+    """One opening defence, against the subject it is defending."""
+    slot = DefenseSlot(rule)
+    mechanic = slot.mechanic
+    if mechanic is DefenseMechanic.MAGEBANE:
+        return _magebane(slot, subject)
+    if mechanic is DefenseMechanic.BLESSING_OF_THE_MOUNTAIN:
+        return _blessing(slot)
+    if mechanic is DefenseMechanic.ICHORSHIELD:
+        return _ichorshield(slot, subject)
+    if mechanic is DefenseMechanic.PLATING:
+        return _one_multiplier(slot, DefenseField.BASIC_DAMAGE_MULTIPLIER)
+    if mechanic is DefenseMechanic.ROCK_SOLID:
+        return _rock_solid(slot)
+    if mechanic is DefenseMechanic.UNDAUNTED:
+        return _undaunted(slot)
+    if mechanic is DefenseMechanic.RESILIENCE:
+        return _one_multiplier(slot, DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER)
+    raise DefenseInterpretationError(
+        f"{rule.mechanic_id} declares opening_defense and this family has no "
+        "branch for it; a defence with no arithmetic is a mechanic that would "
+        "silently grant nothing"
+    )
 
 
 def _magebane(slot: DefenseSlot, subject: DefenseSubject) -> DefenseOutcome:
@@ -238,6 +219,5 @@ __all__ = [
     "ICHORSHIELD_EMPTY_NOTE",
     "ICHORSHIELD_SUPPLIED_NOTE",
     "NOTES",
-    "OpeningDefenseResolverInterpreter",
-    "RESOLVER_INTERPRETER",
+    "resolve_opening_defense",
 ]

@@ -141,7 +141,7 @@ _thunderclap.phase = BUFF
 
 def _unstoppable_force(packet_r):
     """R: the reviewed arrival, carrying its sourced knockup interval."""
-    return with_control(packet_r, kind="knockup", duration_attr="Knock Up Duration")
+    return with_control(packet_r, duration_attr="Knock Up Duration")
 
 
 # Reviewed crowd control, read from the cached kit.  Q (Seismic Shard)

@@ -97,15 +97,8 @@ class WithheldHasNoValue(ValueError):
 
 
 def _projection_starvation() -> type[Exception]:
-    """``ProjectionStarvation``'s class, fetched at raise time.
-
-    Its home is ``trigger_stream`` (the campaign's shared-names table), and
-    ``trigger_stream`` imports *this* module — so a module-scope import here
-    would be a cycle, and would make the dependency-free vocabulary leaf
-    depend on the trigger bus.  A starved read is not a hot path (it raises),
-    so the deferred lookup costs nothing that matters and the exception keeps
-    its one home.
-    """
+    """``ProjectionStarvation``'s class, fetched at raise time because
+    ``trigger_stream`` owns it and imports this module."""
     # pylint: disable-next=import-outside-toplevel,cyclic-import
     from .trigger_stream import ProjectionStarvation
 
@@ -113,7 +106,7 @@ def _projection_starvation() -> type[Exception]:
 
 
 class _QuantityAlgebra:
-    """The fold shared by all four dispositions — the propagation row (D-72).
+    """The fold shared by all four dispositions.
 
     Subclasses are the four members of :data:`Quantity`; this class holds
     nothing but ``__add__``, because propagation is arithmetic on the value
@@ -127,23 +120,20 @@ class _QuantityAlgebra:
     __slots__ = ()
 
     def __add__(self, other: object) -> "Quantity":
-        """Fold two quantities; the clause order below is the ruling.
+        """Fold two quantities; the clause order below is the rule.
 
-        1. a ``Starved`` operand **raises**, because folding it is reading it,
-           and a withheld total that quietly swallowed a programming error is
-           the failure this campaign is named after;
+        1. a ``Starved`` operand raises, because folding it is reading it and
+           a total that swallowed a programming error is what starvation
+           exists to catch;
         2. otherwise any ``Withheld`` operand makes the sum ``Withheld``,
            naming every receipt it swallowed, deduplicated, in first-seen
            order;
         3. otherwise both sides are ``Measured``/``StructuralZero`` and fold
-           to ``Measured`` of the two values, a structural zero contributing
-           0.0.
+           to ``Measured``, a structural zero contributing 0.0.
 
-        Clause 3 makes a sum of two structural zeros ``Measured(0.0)`` rather
-        than a third structural zero, deliberately: the *summation* is a rule
-        that ran over adequate inputs, the members' declarations are their own
-        receipts and not the total's, and ``StructuralZero`` carries one reason
-        with no way to merge two.
+        Two structural zeros fold to ``Measured(0.0)`` rather than a third
+        structural zero: the summation itself ran over adequate inputs, and
+        ``StructuralZero`` carries one reason with no way to merge two.
         """
         if not isinstance(other, _QuantityAlgebra):
             return NotImplemented
@@ -334,12 +324,7 @@ _PART_DAMAGE_TYPES = frozenset(damage_class.value for damage_class in DamageClas
 
 
 def part_damage_types() -> frozenset[str]:
-    """The string projection of ``DamageClass``.
-
-    The engine and the champion layer speak damage types as strings; this
-    is the only place those strings come from, so a fourth damage class is
-    added to the enum and nowhere else.
-    """
+    """The only string projection of ``DamageClass``, so the enum stays its one home."""
     return _PART_DAMAGE_TYPES
 
 
@@ -591,19 +576,3 @@ class ControlEvent:
         if self.skillshot:
             extras += ", skillshot=yes"
         return f"ControlEvent({self.kind!r}, duration={self.duration}" f"{extras})"
-
-
-def parts_raw_total(
-    parts: tuple[DamagePart, ...],
-    damage_type: str | None = None,
-) -> float:
-    """Sum the raw per-cast damage of *parts*, optionally for one type.
-
-    HP-scaled parts contribute their static ``amount`` (0.0 unless set) —
-    their live value exists only at evaluation time.
-    """
-    return sum(
-        part.amount * part.count
-        for part in parts
-        if damage_type is None or part.damage_type == damage_type
-    )

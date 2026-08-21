@@ -55,6 +55,18 @@
       "combat/2:enemy:Aatrox/outgoing": "5377.4",
       "fights/0:Aatrox": "3921.0"
     },
+    "control_event_roster": {
+      "combat/0:main/incoming": "2401.1",
+      "combat/0:main/outgoing": "3472.2",
+      "combat/1:ally:Pantheon/incoming": "2048.7",
+      "combat/1:ally:Pantheon/outgoing": "2398.1",
+      "combat/2:enemy:Aatrox/incoming": "3454.3",
+      "combat/2:enemy:Aatrox/outgoing": "4262.4",
+      "combat/3:enemy:Veigar/incoming": "2416.0",
+      "combat/3:enemy:Veigar/outgoing": "187.5",
+      "fights/0:Aatrox": "2170.1",
+      "fights/1:Veigar": "2298.0"
+    },
     "crit_onhit_carry_roster": {
       "combat/0:main/incoming": "3794.0",
       "combat/0:main/outgoing": "7698.5",
@@ -234,16 +246,16 @@
     "champions_fetched_at": 1787268652.393148,
     "exact": true,
     "fingerprint": {
-      "entries": 25,
-      "leaves": 179,
+      "entries": 26,
+      "leaves": 189,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "f90e9b55559d7117902ec91cb4c3394a287b1b49",
+    "git_head": "87d1f4fe76457596cba1ebd862302af235db3b67",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
-    "scenario_count": 25,
+    "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "923e30479f18effd811fe0cd5363206b0146f01d"
+    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
   }
 }

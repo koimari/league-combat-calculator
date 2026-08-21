@@ -77,12 +77,7 @@ def _true_split_parts(
 
 
 def _q_true_ratio(ability: dict[str, Any], level: int) -> float:
-    """Q2's true-damage conversion at a champion level (0..1).
-
-    The JSON "Bonus True Damage" table has 16 per-level entries
-    (36% + 4% x level, hitting 100% at level 16); levels 17-20 read the
-    capped last entry.
-    """
+    """Q2's true-damage conversion (0..1); the 16-entry table caps at level 16."""
     return min(extract_value(ability, "Bonus True Damage", level), 100.0) / 100.0
 
 
@@ -258,8 +253,8 @@ OPTIONS: list[dict[str, Any]] = [
 # duration, and damage-type adaptation are prose-only in the cached
 # passive description (data/champions.json, Camille P): "grants her a
 # shield equal to 20% of her maximum health, lasting for 2 seconds and
-# absorbing damage from either exclusively physical damage or magic
-# damage, based on which type the target has previously dealt most of".
+# absorbing damage from either exclusively physical damage or magic damage,
+# based on which type the target has previously dealt most of" (wiki text).
 ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # 20% of maximum health
 ADAPTIVE_DEFENSES_DURATION_SECONDS = 2.0
 
@@ -334,7 +329,6 @@ SLOTS["E"] = with_control(
     # Two immobilizes land together and only one of them is given a number:
     # the un-narrowed kind states both, and the 0.75-second "Stun Duration"
     # row is the sourced interval Camille's target cannot act for.
-    kind="immobilize",
     duration_attr="Stun Duration",
     source=("E", 1),
     effect_index=1,

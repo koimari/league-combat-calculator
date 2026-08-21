@@ -206,22 +206,14 @@ CLASS_B_CLAIM_PROSE: Mapping[str, str] = {
         "end state rather than zero"
     ),
 }
-# The class was argued for a module that asserted coverage in hand registries
-# instead of computing it, and that argument retired with 3.8: the classifier
-# now reads declarations and the eight derived registries are gone.  What is
-# written above is the argument that replaced it, not a refreshed spelling of
-# the old one — a class description outliving its own module is the
-# prose-outruns-code shape this counter exists to measure, and it may not
-# survive inside the instrument measuring it.  Excluding the survivor instead
-# would read as tidier and would be worse: counter 2 would measure nothing and
-# its bound would bound nothing.
-# ``calculator/bis.py`` was the second member until its three certification
-# claims became `interpreters.survival_ledger_certifications`.  It leaves the
-# set rather than staying as a zero-site entry, because Class B is an argument
-# about a module and the argument no longer holds: the module now falls into
-# the default class, so a name site added there tomorrow counts against
-# counter 1 — the strictest class — instead of the class this receipt is
-# allowed to carry sites in.
+# Each entry above is the argument for its own module, kept current with the
+# module.  A class description outliving its module is the prose-outruns-code
+# shape this counter measures, and it may not survive inside the instrument
+# measuring it.  Excluding a member instead would read as tidier and would be
+# worse: counter 2 would measure nothing and its bound would bound nothing.
+# Class B is an argument about a module, so a module the argument stops
+# holding for leaves the set rather than staying as a zero-site entry, and a
+# name site added there counts against counter 1, the strictest class.
 
 # The second arm of Class C, added by the umbrella's dated **Amendment A**
 # (2026-08-12, criterion 7).  Class C above is a module set, and that
@@ -375,11 +367,10 @@ def classify(module: str, container: str = "") -> str:
 
     The default is ``counter_1``: strictest wins, so a module nobody has
     argued about counts against the migration rather than silently out of it.
-
-    *container* is the top-level binding the site sits inside, and it is
-    consulted **only** inside a Class B module (Amendment A).  A container
-    exclusion that could reach counter 1 would be a per-symbol escape hatch on
-    the counter this receipt exists to drive to zero.
+    *container* is the top-level binding the site sits inside and is consulted
+    **only** inside a Class B module, because a container exclusion reaching
+    counter 1 would be a per-symbol escape hatch on the counter this receipt
+    exists to drive to zero.
     """
     if module in CLASS_D_NON_BEHAVIOURAL:
         return "class_d"
@@ -577,10 +568,8 @@ def _undeclared_base_blocker() -> tuple[str, ...]:
     """Counter 3's blocker, naming the owners that hold it above zero.
 
     Empty when counter 3 is 0, so the clause disappears with the condition
-    rather than having to be remembered — and while it stands it names the
-    owners from :func:`catalog.undeclared_owners` instead of a family
-    somebody typed, which is how the retired version came to describe a
-    migration that had already happened.
+    rather than having to be remembered, and while it stands it names the
+    owners from :func:`catalog.undeclared_owners` rather than a typed family.
     """
     undeclared = sorted(catalog.undeclared_owners())
     if not undeclared:
@@ -611,147 +600,37 @@ def _undeclared_base_blocker() -> tuple[str, ...]:
 # Counter 4's target is per lane, so the two lanes it names are two targets.
 COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
-# ── counter 4's deferrals (umbrella criterion 7, Amendment B, 2026-08-12) ──
+# ── counter 4's deferrals ───────────────────────────────────
 #
-# Eight now, and the rows that left are why the count is written as a derived
-# length rather than restated in prose anywhere below.  ``delta_amp`` retired
-# on 2026-08-15: umbrella Amendment M, Ruling 1 orders it first of the
-# fourteen and rules its retiring act to be the walk-side delivery of the
-# holder's static, pair-local amplifiers, and
-# ``interpreters.delta_amp.WALK_INTERPRETER`` performs it.  ``active_cast``
-# retired on 2026-08-16, in Amendment L, Ruling 1's whole shape: its six
-# mechanics declare both halves, ``damage._add_item_active_damage`` stamps the
-# row it authors as a preview and hands the walk the declaration under it, and
-# ``interpreters.active_cast.WALK_INTERPRETER`` is the one interpreter that
-# prices it.  ``cast_proc`` retired the same day and in the same shape, over
-# its two authoring sites and its eight mechanics, and ``charged_strike`` the
-# same day again, over five authoring sites and the eleven of its thirteen
-# mechanics that author a damage row — the other two declare a swing schedule,
-# which authors no packet for a walk to price and says so with an ``APPLIED``
-# pair half of its own.  ``damage_routing`` retired on 2026-08-16 as well, and
-# it is the first of the five whose interpreter hands the walk no *price* at
-# all: umbrella Amendment P names its walk-side delivery as the program rider
-# system and the kernel state paths already in the tree, so
-# ``interpreters.damage_routing.WALK_INTERPRETER`` compiles a ``Defer`` rider,
-# an ``Execute`` rider and the shield ledger's barrier-state adjustment, and
-# the walk stages those instead of the ratio the pair engine used to stamp on
-# its own events and the venom it used to read from the name-keyed effects
-# registry.  ``on_hit_strike`` retired on 2026-08-16 as well, over one
-# authoring site and its eight mechanics: ``damage._layer_on_hit_effects``
-# lays every declared strike onto the fight's swing applications and now
-# stamps each row it authors as a preview and hands the walk a declaration per
-# application, which Blade of the Ruined King needs one of because its
-# magnitude is re-read against the target's falling health and no two of its
-# applications share a number.  ``periodic`` retired on 2026-08-16 too, over
-# the same one authoring site and its seven mechanics: ``damage._add_burn_damage``
-# prices all three of its cadences and now stamps each row as a preview and
-# splits the row's one declaration across the ticks it authors under it, which
-# is also the first family whose packets an existing re-pricing site moves --
-# ``damage._apply_liandry_reprice`` rescales the declaration on every tick it
-# re-prices.  ``resistance_shred`` retired on 2026-08-16 as well and is the
-# SECOND whose interpreter hands the walk no price, on a ground of its own
-# rather than ``damage_routing``'s: a shred is not damage — it moves the
-# target's resistance before penetration is applied — so every number it
-# changes belongs to some other family's packet.  Its named walk-side delivery
-# was already in the tree, the ``damage_modifier`` packet its owners' ``SPLIT``
-# partners emit, and what retired the row is
-# ``interpreters.resistance_shred.WALK_INTERPRETER`` becoming the one reading
-# of the ramp that packet is built from, in place of the ally-packet
-# declaration's own second copy of the same two numbers.  In each case the
-# receipt walk reads that family's declaration
-# through its own lane, ``INTERPRETERS`` holds the ruled key, and a row
-# deferring a gap the tree no longer holds would fail the gate below rather
-# than pass it.  The debt is smaller because the tree changed, which is the
-# only reason a deferral count may ever move.
+# A declared ``(family, lane)`` pair on the receipt walk that has no
+# interpreter is a gap this counter cannot drive to zero on its own.  Such a
+# gap is deferred in writing, one row each: the gap, the reason its number is
+# not a silence (read from the tree, never restated here) and the stage that
+# retires it.  A deferral is a promise with a creditor, so the gate refuses a
+# row naming a gap the tree does not hold, a row the tree's own receipt
+# dates elsewhere, and a gap deferred with no dated row behind it at all.
 #
-# ``crit_profile`` left on 2026-08-16 and it did **not** retire, which is why
-# it is recorded apart from the four above.  Umbrella Amendment O, Ruling 1
-# reclassified the family ``PAIR_ONLY`` on a measurement: its three
-# declarations all name ``Subject.HOLDER`` and none of them authors a
-# pair-engine row a total holds, so the pair engine is its authoritative home,
-# no second engine prices it, and the ``(family, receipt_walk)`` row it used
-# to carry was a schedule category error rather than a debt.  ``_FAMILY_LANES``
-# stopped declaring the lane, so the gap is gone and this row would fail the
-# gate below if it stayed.  What makes that a correction rather than a
-# re-count is that the emptiness is re-measured on every run of
-# ``receipt_walk_schedule.py --check``, over the family's covering population
-# and over a probe per owner, and the row comes back the day a mechanic of
-# the family authors one.
-#
-# ``combat_state``, ``opening_defense`` and ``threshold_defense`` left on
-# 2026-08-16 and they did **not** retire either, on a ground of their own.
-# Umbrella Amendment Q corrected the lane DECLARATION: a family whose
-# walk-side need is satisfied through its declared serving lane does not need,
-# and must not declare, a receipt-walk interpreter lane, because one producer
-# is what the one-engine thesis demands.  All three declare
-# ``defense_resolver``, an interpreter answers for it, and what the receipt
-# walk consumes for them is the state that interpreter built — so the
-# receipt-walk lane was asking a second engine for a number the first one
-# already produces, and the deferral row under it was counting the absence of
-# a defect.  ``_FAMILY_LANES`` stopped declaring the lane, so the gap is gone
-# and these rows would fail the gate below if they stayed.  What makes that a
-# correction rather than a re-count is that the ground is measured in **both**
-# directions on every run of ``receipt_walk_schedule.py --check``: what each
-# family's resolver interpreter writes is joined to every read of those fields
-# off a resolved defences value outside the resolver, and removing the
-# resolver interpreter is asserted to flip every declaring owner to
-# ``withheld`` naming the missing pair rather than to a silent zero.  The day
-# a mechanic of one of them authors a walk-priced row the resolver does not
-# feed, the lane comes back and the row with it.
-#
-# Declared ``(family, lane)`` pairs on the receipt walk that have no
-# interpreter and cannot get one in this phase: their numbers arrive through
-# the pair engine's timed rows today, and only Phase 4's S3 — one kernel, five
-# views, with the ``OutcomeLedger`` and its end-of-walk projection — can move
-# them.  Phase 3 cannot drive them to zero, and a phase exit that pretends
-# otherwise is the undischarged criterion behind a green gate this block was
-# built to stop.
-#
-# So they are **deferred, in writing, one row each**: the gap, the reason its
-# number is not a silence (read from the tree, never restated here) and the
-# stage that retires it.  The Phase-3 exit target is 0 *net of these rows* and
-# Phase 4's exit re-asserts them retired.  A deferral is a promise with a
-# creditor, which is why the gate refuses a row naming a gap the tree no
-# longer holds, a row the tree's own receipt does not date to the recorded
-# stage, and a gap deferred with no dated row behind it at all.
-#
-# The stage they name is no longer S3.  Amendment F measured that S3 cannot
-# perform the retiring act at all — a row retires when ``INTERPRETERS`` holds
-# its key, and projecting a ledger's quantities onto a payload leaf registers
-# nothing — and umbrella Amendment K (2026-08-15) rules the act per lane and
-# re-dates the rows to the closeout that ruled it.  Re-dating changes what
-# these rows are overdue *against* and nothing about whether they are overdue:
-# the closeout shipped and retired none of them, so all fourteen stay overdue
-# with a blocker.  A re-dating that made them read as on schedule would be the
-# debt getting smaller by being re-dated, which is the one thing it may not buy.
-#
-# Which stage they name is not spelled here either.  It is read from the stage
-# record that declares itself their creditor, so re-dating them takes an edit
-# to the ruled artifact rather than an edit to this dict — see
+# Which stage a row names is not spelled here.  It is read from the stage
+# record that declares itself the creditor, so re-dating a row is an edit to
+# the ruled artifact rather than to this dict.  See
 # ``deferral_creditor_stage`` below.
-# Empty since 2026-08-17: every one of umbrella Amendment F's fourteen rows has
-# left, ten by the ruled retiring act, one by Amendment O, Ruling 1's authority
-# reclassification and three by Amendment Q's lane-declaration correction.  The
-# tuple stays rather than the mechanism being deleted with the debt it measured:
-# a declared ``(family, RECEIPT_WALK)`` gap Phase 3 cannot close still has to be
-# deferrable in writing, and a gate that could only be exercised while a debt
-# stood would go untested on the commit it stopped mattering.
+
+# Empty: every declared receipt-walk lane has an interpreter, so no family is
+# deferred.  The tuple stays rather than the mechanism being deleted with the
+# debt it measured: a declared ``(family, RECEIPT_WALK)`` gap still has to be
+# deferrable in writing, and a gate exercisable only while a debt stood would
+# go untested on the commit it stopped mattering.
 COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ()
 
 # ── the stages the campaign has shipped, and what a passed stage owes ──────
 #
 # A deferral is a promise with a creditor and a due date.  The gate below
-# already refuses a row whose gap the tree no longer holds and a row the
-# tree's own receipt dates elsewhere; what it could not see is the third way a
-# deferral goes wrong, which is the way this one did: **the stage arrives and
-# the row does not retire.**  Phase 4 S3 shipped, then S4 through S10, then the
-# phase boundary, and fourteen rows still record S3 as the stage that retires
-# them.  Amendment B's second sentence -- "Phase 4's exit re-asserts them
-# retired" -- was therefore unmet for the length of a whole phase with nothing
-# saying so, which is a promise quietly turning into a habit.
+# refuses a row whose gap the tree does not hold and a row the tree's own
+# receipt dates elsewhere.  The third way a deferral goes wrong is invisible
+# to both: **the stage arrives and the row stays.**
 #
-# So every row recording a shipped stage is **overdue**: still deferred, still
-# netted out of the counter, and now named as a debt with a blocker rather than
+# So a row recording a shipped stage is **overdue**: still deferred, still
+# netted out of the counter, and named as a debt with a blocker rather than
 # a schedule.
 #
 # Neither half of that lives here.  The stage records are committed beside the
@@ -776,15 +655,7 @@ CAMPAIGN_SLICE_TAGS = ROOT / "docs" / "receipts" / "campaign-slice-tags.json"
 
 @functools.lru_cache(maxsize=None)
 def _campaign_stages_block() -> Mapping[str, Any]:
-    """The ruled artifact, read once per process.
-
-    Four call sites resolve against these records and two of them run per
-    deferral row, so an uncached read parsed the artifact fourteen times before
-    ``import`` returned and thirty more times per ``--check`` — the same file,
-    the same answer, and a reader of the module could not tell that from a
-    single read.  The cache is on the I/O leaf and not on the derivations above
-    it, so ``declared_stages`` stays the one seam a test may replace.
-    """
+    """The ruled artifact, read once per process."""
     return json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
 
 
@@ -807,28 +678,16 @@ CREDITOR_OF_COUNTER_4_DEFERRALS = "counter_4/receipt_walk"
 def creditor_stage(debt: str) -> str:
     """The one stage the committed records declare the creditor of *debt*.
 
-    Which stage retires an unserved lane is a ruling — Amendment K re-dated
-    counter 4's fourteen receipt-walk rows off *Phase 4 S3 — one kernel, five
-    views*, which Amendment F measured cannot perform the act — and a ruling's
-    home is the committed stage record, not a literal in the tool that
-    measures the counter (D-40) and not a field on the engine's own lane
-    table.  This is the **only** home: ``interpreters.UnservedLane`` carries
-    the two facts a reader can check against the tree, and nothing about when
-    a row retires, so a re-dating is an edit to this artifact alone.
+    Which stage retires an unserved lane is a ruling, and a ruling's home is
+    the committed stage record, not a literal in the tool that measures the
+    counter and not a field on the engine's lane table.  This is the **only**
+    home: ``interpreters.UnservedLane`` carries the two facts a reader can
+    check against the tree and nothing about when a row retires.  A debt is
+    spelled ``counter_4/<lane>``, exactly as ``TARGET_CRITERIA`` spells it.
 
-    A debt is spelled ``counter_4/<lane>``, exactly as ``TARGET_CRITERIA``
-    spells the same counter and lane.
-
-    The alternative that was live before this and is refused: dating the rows
-    to *any* stage the records declare.  That resolves against a set of two,
-    one of which is the stale stage the re-dating existed to leave, so the
-    clause was satisfied by exactly the state it was meant to refuse.
-
-    Raises:
-        ValueError: no record declares it, or more than one does.  Fail
-            closed both ways: no creditor leaves the rows dated to nothing,
-            and two creditors let a re-dating leave the old claim standing
-            beside the new one, which is the silence this derivation ends.
+    Raises ``ValueError`` when no record declares the debt, or more than one
+    does.  Fail closed both ways: no creditor leaves the rows dated to
+    nothing, and two creditors let a re-dating leave the old claim standing.
     """
     claimed = sorted(
         stage
@@ -867,17 +726,13 @@ COUNTER_4_DEFERRALS: Mapping[str, str] = {
 
 @functools.lru_cache(maxsize=None)
 def _tag_first_seen() -> Mapping[str, str]:
-    """Every slice tag of the campaign range → the earliest sha carrying it.
+    """Every slice tag of the campaign range, mapped to its earliest sha.
 
-    Read from the committed derivation rather than re-walked, and read once per
-    process: the overdue clause runs per deferral row, and each run parsed the
-    same closed answer again.
-
-    Raises:
-        RuntimeError: the pinned tags name a range the stage records do not.
-            Fail closed: a tag map read against the wrong range would report
-            every overdue row as on schedule, which is the silence this
-            derivation exists to end.
+    Read from the committed derivation rather than re-walked, and once per
+    process, because the overdue clause runs per deferral row.  Raises
+    ``RuntimeError`` when the pinned tags name a range the stage records do
+    not: a tag map read against the wrong range would report every overdue row
+    as on schedule.
     """
     pinned = json.loads(CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8"))
     declared = campaign_range()
@@ -942,12 +797,8 @@ def _uninterpreted_by_lane() -> dict[str, int]:
 def _lane_owed_to(lane: str) -> str:
     """What the ruled records say retires *lane*'s remaining gaps.
 
-    Which gaps remain is read from ``UNSERVED_LANE_RECEIPTS``, so a lane the
-    tree has closed stops being owed to anything without a second edit; which
-    stage owes them is read from the record claiming that lane's debt, because
-    the engine does not declare one.  No open gap at all is the empty string,
-    which is the honest rendering of a lane nothing schedules — it is what
-    ``counter_4/pair_engine`` says, and it says it because that lane is served.
+    Which gaps remain comes from ``UNSERVED_LANE_RECEIPTS`` and which stage
+    owes them from the record claiming that lane's debt.  No open gap is "".
     """
     open_gaps = any(
         pair_lane.value == lane and (family, pair_lane) not in interpreters.INTERPRETERS
@@ -1002,9 +853,8 @@ def deferral_block() -> dict[str, Any]:
     recorded stage from the record that claims this lane's debt, so each fact
     is transcribed from its one home rather than said twice; what this module
     owns is the *decision* to defer, which is the part a receipt has to carry
-    because no code implies it.  A row carries no second copy of its stage:
-    ``retires_at`` used to ride beside ``recorded_stage`` because the two came
-    from two homes and could disagree, and it left with the second home.
+    because no code implies it.  A row carries no second copy of its stage,
+    so nothing beside ``recorded_stage`` can disagree with it.
     """
     shipped = completed_stages()
     blockers = {
@@ -1329,10 +1179,6 @@ CHAMPIONS_ROOT = SRC_ROOT / "calculator" / "champions"
 
 ZERO_POLICY_ISSUE = "issue #213"
 
-# The builders that supply the declared default.  A champion entry built by
-# hand instead of through one of these carries no policy at all.
-ENTRY_BUILDERS = ("damage_entry", "simple_damage")
-
 # Keys that make a dict literal an ability entry rather than any other
 # mapping: the fight engine reads ``parts`` and the producer diagnostics
 # carry ``total_raw``.
@@ -1395,12 +1241,10 @@ def _literal_default(node: ast.AST) -> bool:
 
 
 def _receiver(call: ast.Call) -> str:
-    """The tail of the expression a ``.get`` is called on — ``ctx.options``.
+    """The tail of the expression a ``.get`` is called on, ``ctx.options``.
 
-    The receiver is the interesting half: ``options`` says a champion option
-    is being defaulted, ``entry`` says a produced entry is.  Anything whose
-    tail is itself a call is bucketed as ``chained`` rather than given a name
-    a reader could not look up.
+    ``options`` says a champion option is being defaulted, ``entry`` says a
+    produced entry is.  A tail that is itself a call buckets as ``chained``.
     """
     receiver = ast.unparse(call.func.value)  # type: ignore[attr-defined]
     tail = receiver.split(".")[-1].strip("() ")
@@ -1427,11 +1271,7 @@ def _reads_an_input_block(call: ast.Call) -> bool:
 
 
 def _policy_stamping_nodes(tree: ast.AST) -> set[int]:
-    """Every node id inside ``damage_entry`` — the one policy-stamping body.
-
-    Its own entry dict is not a bypass of itself, and counting it would make
-    the population mean two different things.
-    """
+    """Every node id inside ``damage_entry``, the one policy-stamping body."""
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name == "damage_entry":
             return {id(inner) for inner in ast.walk(node)}

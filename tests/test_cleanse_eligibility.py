@@ -100,8 +100,9 @@ CONTRACT API THIS MATRIX COMMITS THE OWNER TO:
      Mercurial self-cast, R27); False when the activation was
      gated/skipped (R22) or the caster was free.
 5. RECEIPTS — the decision exposes ``public_receipt()`` (decision
-   fields), ``survival_receipt()`` (the recipient survival-row ``cleanse``
-   receipt) and ``use_receipt()`` (the caster survival-row ``cleanse_use``
+   fields); the survival-row ``cleanse`` and ``cleanse_use`` receipts are
+   built by ``survival.transitions`` (``_cleanse_action_view`` /
+   ``_cleanse_use_receipt``
    receipt); R20 pins the exact field sets.  Per-event annotations on the
    cleanse packet mirror the removed/rejected lists.
 
@@ -2113,25 +2114,6 @@ def test_r20_public_receipt_field_sets():
     assert receipt["downtime_before"] == pytest.approx(2.0)
     assert receipt["downtime_after"] == pytest.approx(0.5)
     assert receipt["use_consumed"] is True
-
-    # Recipient survival-row receipt adds the heal/movement entries.
-    row_receipt = decision.survival_receipt()
-    assert set(row_receipt) == set(receipt) | {"heal", "movement"}
-    assert row_receipt["heal"] is None
-    assert row_receipt["movement"] is None
-
-    # Caster use-state receipt.
-    use = decision.use_receipt()
-    assert set(use) == {
-        "item",
-        "uses_before",
-        "uses_after",
-        "cooldown_seconds",
-        "cooldown_source_gap",
-        "activations",
-    }
-    assert use["cooldown_seconds"] is None
-    assert use["cooldown_source_gap"] is True
 
     # Heal and movement entry shapes (Mikael's heal / Mercurial movement).
     heal_entry = _declaration("Mikael's Blessing")["heal"]

@@ -49,7 +49,7 @@ Comparison contract
 
 Exit code: 0 = nothing stale; 1 = any stale champion or item (patch gate).
 
-cdtb resolution (issue #134, portable): ``CDTB_BIN`` env var, else the
+cdtb resolution, in order: the ``CDTB_BIN`` env var, else the
 ``cdtb`` executable on PATH, else an actionable error.  When cdtb is
 unavailable, pin the comparison with ``--patch <version>`` — the gate then
 uses the pinned patch instead of resolving the live one.
@@ -81,9 +81,9 @@ DEFAULT_DATA_DIR = REPO_ROOT / "data"
 DEFAULT_GAME_DIR = DEFAULT_DATA_DIR / "gamefiles"
 DEFAULT_OUT = DEFAULT_DATA_DIR / "staleness.json"
 
-# cdtb CLI (CommunityDragonToolbox).  Resolvable via CDTB_BIN or PATH — no
-# developer-home fallback (issue #134): on any other machine the missing
-# binary is an actionable error, not a silent crash or a wrong-machine tool.
+# cdtb CLI (CommunityDragonToolbox).  Resolvable via CDTB_BIN or PATH, with no
+# developer-home fallback: on any other machine the missing binary is an
+# actionable error, not a silent crash or a wrong-machine tool.
 CDTB_BIN = os.environ.get("CDTB_BIN") or shutil.which("cdtb") or "cdtb"
 # Python interpreter that has the cdtb module (used only by --verify-wads).
 CDTB_PYTHON = os.environ.get("CDTB_PYTHON") or shutil.which("python3") or "python3"
@@ -125,14 +125,12 @@ CHAMPION_STAT_MAP = [
     # manufacture noise.  attackRange covers the playable stat.
 ]
 
-# AbilityResourceSlotInfo hashed fields (empirically verified; the hashes are
-# not in cdtb's public hash lists).
-#   {726ee5cd} base pool, {6216bf7b} pool/level,
-#   {c4ab3550} base regen (x5 = per-5s), {3a509002} regen/level (x5).
-RESOURCE_POOL = "{726ee5cd}"
-RESOURCE_POOL_PER_LEVEL = "{6216bf7b}"
-RESOURCE_REGEN = "{c4ab3550}"
-RESOURCE_REGEN_PER_LEVEL = "{3a509002}"
+# AbilityResourceSlotInfo hashed fields, verified against the game files
+# because the hashes are not in cdtb's public hash lists.
+RESOURCE_POOL = "{726ee5cd}"  # base pool
+RESOURCE_POOL_PER_LEVEL = "{6216bf7b}"  # pool per level
+RESOURCE_REGEN = "{c4ab3550}"  # base regen, x5 for the per-5s figure
+RESOURCE_REGEN_PER_LEVEL = "{3a509002}"  # regen per level, x5
 
 # ItemData mod fields -> wiki cache stat components.  Percent fractions are
 # scaled to the cache's 0-100 convention; HP regen is per-second in the bin.
@@ -232,11 +230,7 @@ def _download(url, dest):
 
 
 def _champion_dir(name):
-    """Map a cache champion key to the CommunityDragon character directory.
-
-    The dirs are the lowercased alphanumeric character names; every cache key
-    (MonkeyKing, DrMundo, KSante, ...) maps 1:1 under that normalization.
-    """
+    """A cache champion key as its CommunityDragon dir: lowercase alphanumeric."""
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
@@ -469,12 +463,9 @@ def _is_scaled_display_row(units):
 
 
 def _downsample_match(wiki_values, game_values, flat_tolerance):
-    """Try matching every-other wiki value (interpolated display rows).
-
-    Some wiki R rows interpolate a 3-rank game cooldown into a 5-value
-    display (100/85/70 -> 100/92.5/85/77.5/70); the odd positions then equal
-    the game row exactly.
-    """
+    """Try matching every-other wiki value, for interpolated display rows: a
+    3-rank game cooldown shown as five (100/85/70 -> 100/92.5/85/77.5/70)
+    matches exactly at the odd positions."""
     if len(wiki_values) == 2 * len(game_values) - 1:
         return _slices_match(wiki_values[::2], game_values, flat_tolerance)
     return False
@@ -650,8 +641,8 @@ def _wiki_row_count(entry):
 def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
     """Compare one wiki ability entry against one game spell.
 
-    ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost)
-    used to arbitrate rows the raw bin mechanic fields cannot express: the
+    ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),
+    which arbitrates rows the raw bin mechanic fields cannot express: the
     bin's ``cooldownTime``/``mana`` provably diverge from the shipped tooltip
     for some spells (Jax Q cost 65 in bin vs 50 shipped, Volibear Q cooldown
     14/13/12/11/10 vs 12/11.5/11/10.5/10 shipped), so a bin-only mismatch is

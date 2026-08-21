@@ -137,14 +137,7 @@ def fold_tagged(parts: Iterable[Tagged]) -> Tagged:
 def ranked_total(parts: Iterable[Tagged], *, surface: str) -> float:
     """Fold parts into the number a ranking reads, or refuse to produce one.
 
-    :func:`fold_tagged` already makes a mixed fold unrepresentable; this adds
-    the half a ranking needs, which is that the *one* meaning the fold
-    carried has to be ``APPLIED``.  A total folded entirely from previews is
-    perfectly well-typed and still not a score.
-
-    The read is at the end rather than per part on purpose: a withheld member
-    makes the total withheld (D-72's propagation), and reading the total is
-    what turns that into the named refusal a consumer gets.
+    A total folded entirely from previews is well-typed and still not a score.
     """
     total = fold_tagged(parts)
     if total.tag is not ViewTag.APPLIED:
@@ -155,15 +148,10 @@ def ranked_total(parts: Iterable[Tagged], *, surface: str) -> float:
 def tag_for(view_tags: Mapping[EngineLane, ViewTag], lane: EngineLane) -> ViewTag:
     """What a declared mechanic's number means in *lane*, or a named refusal.
 
-    D-62's lookup, as one total function.  It raises rather than defaulting:
-    a lane nobody declared a tag for is a lane whose numbers have no declared
-    meaning, and answering ``APPLIED`` there is precisely how a pair-authored
-    preview gets summed into a coupled total with no symptom.
-
-    Module-level, and both readers go through it -- :meth:`MechanicView.
-    tag_for` for a compiled program and :func:`declared_view_tags` for the
-    live registry -- because a second implementation of "what does this
-    number mean" is a second answer waiting to differ from the first.
+    Raises rather than defaulting: a lane nobody declared a tag for has no
+    declared meaning, and answering ``APPLIED`` there is how a pair-authored
+    preview gets summed into a coupled total with no symptom.  Both readers go
+    through it, so "what does this number mean" has one implementation.
     """
     try:
         return view_tags[lane]
@@ -193,13 +181,7 @@ class MechanicView:
     holder_stacking: HolderStacking | None
 
     def tag_for(self, lane: EngineLane) -> ViewTag:
-        """What this mechanic's number means in *lane*, or a named refusal.
-
-        Delegates to the module-level :func:`tag_for` so there is exactly one
-        implementation of D-62's lookup.  Two would be two answers to "what
-        does this number mean", which is the question the rule exists to have
-        one answer to.
-        """
+        """What this mechanic's number means in *lane*, or a named refusal."""
         return tag_for(self.view_tags, lane)
 
 
@@ -236,31 +218,13 @@ class CapabilityView:
     def refusals(self) -> tuple[tuple[MechanicId, str], ...]:
         """Every mechanic that cannot compile, with the reason it gives.
 
-        The reason is the fallback receipt's own sentence, so a rung can name
-        the declaration that forced it rather than reporting a slow path with
-        no cause.
+        The reason is the fallback receipt's own sentence, so a rung can name the
+        declaration that forced it rather than reporting a slow path with no cause.
         """
         return tuple(
             (mechanic, view.compilability.reason)
             for mechanic, view in sorted(self.mechanics.items())
             if not isinstance(view.compilability, Compilable)
-        )
-
-    def lanes_declaring(
-        self, tag: ViewTag
-    ) -> tuple[tuple[MechanicId, EngineLane], ...]:
-        """Every ``(mechanic, lane)`` whose numbers carry *tag*.
-
-        The question a view asks before folding anything: a
-        ``THEORETICAL`` pair-authored preview may never be summed into a
-        coupled total, and asking the declaration is what makes that a
-        lookup rather than a convention.
-        """
-        return tuple(
-            (mechanic, lane)
-            for mechanic, view in sorted(self.mechanics.items())
-            for lane in sorted(view.view_tags, key=lambda member: member.value)
-            if view.tag_for(lane) is tag
         )
 
 
@@ -311,16 +275,14 @@ def declared_view_tags() -> Mapping[MechanicId, Mapping[EngineLane, ViewTag]]:
 def pair_preview_mechanics() -> frozenset[str]:
     """Mechanics whose pair-engine number is a preview, never a delivery.
 
-    A ``THEORETICAL`` pair half is what one attacker-versus-one-defender
-    fight *would* have produced.  The coupled walk owns the real number, so
-    summing the preview into a roster total is a double count with no
-    symptom — the exact shape D-62 exists to forbid.
+    A ``THEORETICAL`` pair half is what one attacker-versus-one-defender fight
+    *would* have produced.  The coupled walk owns the real number, so summing
+    the preview into a roster total is a double count with no symptom.
 
     Both spellings of the mechanic are in the set: the pair half's own id and
-    the walk half that names it through ``pair_of``.  The pair engine stamps
-    its rows with whichever id its declared rule carries, and a join that
-    only knew one of the two would silently stop excluding the day a rule was
-    renamed to the other.
+    the walk half that names it through ``pair_of``.  The pair engine stamps its
+    rows with whichever id its declared rule carries, and a join that knew only
+    one would silently stop excluding the day a rule was renamed to the other.
     """
     previewed: set[str] = set()
     for mechanic, declared in declared_view_tags().items():
@@ -338,19 +300,11 @@ def pair_preview_mechanics() -> frozenset[str]:
 def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
     """Which of one pair fight's breakdown rows are previews, not deliveries.
 
-    The join has two declared halves and this is where they meet: the pair
-    engine stamps each row it authors with the mechanic that rule belongs to
-    (``pair_preview_of``), and the capability registry says whether that
-    mechanic's pair-lane number is ``THEORETICAL``.  Neither half can decide
-    it alone, which is the point — a row that simply stopped being summed
-    would be an engine quietly demoting its own number.
-
-    One home, because a roster composes a pair fight in **two** places: the
-    receipt path enriches it into event dicts and the score path compiles it
-    straight from the engine rows.  Two copies of this question would answer
-    it identically until the day one of them was not updated, and the surface
-    that picks the optimizer's winner is the one that would go on summing a
-    preview with nothing saying so.
+    The join has two declared halves: the pair engine stamps each row it authors
+    with the mechanic that rule belongs to (``pair_preview_of``), and the
+    capability registry says whether that mechanic's pair-lane number is
+    ``THEORETICAL``.  One home, because a roster composes a pair fight in two
+    places and two copies would answer identically until one was not updated.
     """
     previews = pair_preview_mechanics()
     if not previews:
@@ -366,31 +320,16 @@ def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
 def walk_repriced_mechanics() -> frozenset[str]:
     """Previewed mechanics whose packet the walk re-prices instead of dropping.
 
-    A ``THEORETICAL`` pair row says the coupled walk owns the number.  It
-    does not say *how* the walk gets one, and the two answers need opposite
-    treatment of the pair engine's own event.
+    A ``THEORETICAL`` pair row says the coupled walk owns the number, not *how*
+    the walk gets one, and the two answers need opposite treatment of the pair
+    engine's own event.  A **rider-delivered** walk half amplifies an event the
+    walk already carries, so the preview's event is a second copy and is dropped
+    (Shadowflame's Cinderbloom).  A :class:`~..trigger_stream.HolderPacket` half
+    prices *this* packet, so the engine's event survives as the packet being
+    re-priced and only its **number** leaves the roster total.
 
-    A **rider-delivered** walk half amplifies an event the walk already
-    carries, so the preview's event is a second copy of a number the walk
-    authors elsewhere and is dropped — Shadowflame's Cinderbloom, and the
-    only shape this join had before a family retired off the pair engine.  A
-    :class:`~..trigger_stream.HolderPacket` half prices *this* packet: the
-    walk reads the family's declaration and mitigates it at the resistance
-    the roster actually presented, so the pair engine's event survives as the
-    packet being re-priced and only its **number** leaves the roster total.
-    Dropping it would delete the family's damage instead of re-pricing it,
-    which is the half-performed retirement umbrella Amendment L, Ruling 1
-    calls worse than neither half.
-
-    The delivery shape is therefore the whole rule, read off the declaration
-    rather than off a list of families: a walk half that names a
-    ``HolderPacket`` and pairs with a previewed pair half is a family the
-    walk re-prices, and one that does not is a family whose preview is a
-    duplicate.  Both spellings of the mechanic land in the set for the reason
-    :func:`pair_preview_mechanics` keeps both — the pair engine stamps its
-    rows with whichever id its declared rule carries.
-
-    Cached because the registry is frozen at import.
+    The delivery shape is the whole rule, read off the declaration.  Cached
+    because the registry is frozen at import.
     """
     previews = pair_preview_mechanics()
     if not previews:
@@ -410,13 +349,11 @@ def walk_repriced_mechanics() -> frozenset[str]:
 def pair_repriced_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
     """Which of one pair fight's preview rows the walk re-prices, not drops.
 
-    A subset of :func:`pair_preview_sources` by construction, and the
-    difference between the two sets is exactly what a composition drops.
-    Both readings live here, next to each other, for the reason
-    :func:`pair_preview_sources` gives for living here at all: a roster
+    A subset of :func:`pair_preview_sources` by construction, and the difference
+    between the two sets is exactly what a composition drops.  Both readings
+    live here for the reason :func:`pair_preview_sources` gives: a roster
     composes a pair fight in two places, and two copies of "is this row a
-    duplicate or a packet awaiting its price" would answer identically until
-    one of them was not updated.
+    duplicate or a packet awaiting its price" would eventually disagree.
     """
     repriced = walk_repriced_mechanics()
     if not repriced:
@@ -430,19 +367,7 @@ def pair_repriced_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]
 
 @cache
 def dropped_preview_mechanics() -> frozenset[str]:
-    """The previewed mechanics a roster composition leaves out entirely.
-
-    The one subtraction, with one home: every previewed mechanic minus the
-    ones the walk re-prices.  Call sites ask this rather than differencing
-    the two sets themselves, because a site that forgot the subtraction would
-    drop a packet the walk was about to price and delete a family's damage
-    with no symptom.
-
-    Asked of the mechanic and not only of a finished row, because a pair
-    fight the engine already knows is being composed can skip *computing* a
-    number this set names (``damage._add_shadowflame_cinderbloom``) as well
-    as leaving it out afterwards.
-    """
+    """Every previewed mechanic minus the ones the walk re-prices."""
     return pair_preview_mechanics() - walk_repriced_mechanics()
 
 
@@ -462,22 +387,15 @@ def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]
 def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
     """Packet source -> the mechanic it arms, and how a second holder stacks.
 
-    Derived from the declaration rather than tabulated beside it: a walk
-    half's ``packet_source`` is the literal its packets carry, so a mechanic
-    that renames its packet stops resolving here instead of quietly arming
-    under a key nothing recognises.  Only dual-sided halves appear, because
-    only they declare a :class:`~..trigger_stream.HolderStacking`, and a
-    packet whose source is absent from this mapping is admitted without a
-    dedupe key ever being built.  A **self-scoped** delivery stays out by the
-    shape of its declaration rather than by a coincidence of dict typing: a
-    rider carries a stamp and no packet source at all, and a retired family's
-    holder packet modifies its own holder's damage, so neither one arms a
-    modifier on a subject that a second holder could collide with.  A dedupe
-    key for a mechanic that arms nothing would be an answer to a question the
-    declaration does not pose.
-
-    Cached because the composition asks once per support packet and the
-    registry is frozen at import.
+    Derived from the declaration rather than tabulated beside it: a walk half's
+    ``packet_source`` is the literal its packets carry, so a mechanic that
+    renames its packet stops resolving here instead of quietly arming under a
+    key nothing recognises.  Only dual-sided halves appear, because only they
+    declare a :class:`~..trigger_stream.HolderStacking`, and a packet whose
+    source is absent is admitted without a dedupe key ever being built.  A
+    **self-scoped** delivery stays out by the shape of its declaration: it arms
+    no modifier on a subject a second holder could collide with.  Cached because
+    the registry is frozen at import.
     """
     return MappingProxyType(
         {
@@ -505,18 +423,6 @@ class ParamPatch:
 
     overrides: Mapping[str, Any]
     reason: str
-
-    def applied_to(self, params: Any) -> dict[str, Any]:
-        """The patched parameter fields, as a plain mapping of overrides.
-
-        Returns the overrides rather than a mutated ``params`` object on
-        purpose: the caller owns its parameters and a patch that rewrote
-        them in place would make pass 1's inputs unrecoverable.
-        """
-        return {
-            field: self.overrides.get(field, getattr(params, field, None))
-            for field in self.overrides
-        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -583,20 +489,11 @@ def roster_program(
 ) -> Program:
     """The program one composition pass walks, named by its roster.
 
-    The events are empty and that emptiness is a **statement**, not an
-    omission: at S9 the composition still authors its transitions as engine
-    packets and compiles them straight to ``SurvivalAction`` through
-    ``WalkCompiler``, so the logical event list for those passes does not
-    exist yet.  Migration frontier counter 5 is exactly the measure of that
-    remaining span, and it is driven down by the constructor work, not by
-    fabricating a list here that no compiler produced.
-
-    Filling ``events`` with a reconstruction would be worse than leaving it
-    empty, which is why this constructor exists rather than a call site
-    passing ``events=()`` by hand: a reconstructed event list is a second
-    authoring of the fight, and two authorings that can disagree is the
-    failure mode the whole phase is about.  The views read the roster and the
-    walk result and never ``program.events``, pinned by their own test.
+    The events are empty and that emptiness is a **statement**: the composition
+    authors its transitions as engine packets and compiles them straight to
+    ``SurvivalAction`` through ``WalkCompiler``, so no logical event list exists
+    for those passes.  A reconstructed list would be a second authoring of the
+    fight.  The views read the roster and the walk result, pinned by a test.
     """
     return Program(
         participants=tuple(str(actor.participant_id) for actor in actors),
@@ -767,12 +664,7 @@ def build_program(
 
 
 def route_policy_of(event: PairEvent) -> RoutePolicy:
-    """One authored event's delivery policy — the field, named as a reader.
-
-    Trivial by design: it exists so a consumer asks the program a question
-    instead of reaching into the dataclass, which is what keeps the policy
-    field from acquiring a second, later reader that disagrees.
-    """
+    """One authored event's delivery policy, named as a reader of the field."""
     return event.route
 
 

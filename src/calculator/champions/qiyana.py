@@ -3,7 +3,7 @@
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
@@ -140,7 +140,7 @@ SLOTS = {
 # the stun is what the damaging part applies.  Q answers per cast instead
 # of here because its control belongs to the element (``_edge_of_ixtal``).
 # P and W are absent: both are on-hit riders on the auto stream.
-MODULE_CC = {"E": "none", "R": "stun"}
+MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Qiyana", cc_kinds=MODULE_CC)
 

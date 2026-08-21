@@ -6,7 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
@@ -100,7 +100,7 @@ SLOTS = {
 # Inner Flame's explosion "slow[s] them by 40% for 1.5 seconds" and its
 # Mantra field slows by 50%, so Q has one answer either way.  W's two hits
 # do not (see _focused_resolve).  P, E and R author no damage part.
-MODULE_CC = {"Q": "slow"}
+MODULE_CC = {"Q": "slow", "W": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Karma", cc_kinds=MODULE_CC)
 OPTIONS = [

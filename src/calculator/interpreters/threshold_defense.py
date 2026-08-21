@@ -3,15 +3,13 @@
 Seven mechanics and five different arithmetics for one word.  Every Lifeline
 is a shield that fires below 30% maximum health, and the shields are worth a
 level ramp, a range-split ramp, a base plus bonus attack damage, a share of
-maximum mana and a share of bonus health respectively — which is exactly why
-the retired resolver had a five-branch ladder keyed on item names inside a
-helper called ``_lifeline_defense``.  The branches survive, keyed on the
-mechanic each build declares rather than on the name it happens to spell.
+maximum mana and a share of bonus health respectively.  Each branch is keyed
+on the mechanic a build declares rather than on the name it happens to spell.
 
 Two mechanics are not Lifeline shields at all and are here because a health
 threshold is what arms them: Protoplasm Harness grants temporary health and
 a heal, and Guardian Angel's Rebirth arms on lethal damage rather than on a
-fraction — the declared absence its payload carries as ``threshold=None``.
+fraction, the declared absence its payload carries as ``threshold=None``.
 """
 
 from __future__ import annotations
@@ -21,13 +19,10 @@ from collections.abc import Mapping
 from ..data_registry import data_version, store_for_generation
 from ..item_behavior import (
     BehaviorRule,
-    BuildContext,
     DefenseField,
     DefenseMechanic,
     DefenseOutcome,
     DefenseSubject,
-    EngineLane,
-    KernelField,
     RuleFamily,
 )
 from ..item_behavior_catalog import behavior_rules, declared_owners
@@ -114,15 +109,10 @@ def _threshold_health_rule() -> BehaviorRule:
 def threshold_health_owner() -> str:
     """Which item declares the temporary-health Lifeline, per the catalog.
 
-    The pair engine sees a defender's *numbers*, never its items, so the two
-    engines that must name this mechanic in a receipt — the fight's coverage
-    downgrade and the optimizer's candidate rejection — had no build to ask
-    and spelled the item instead.  The declaration is the thing that knows,
-    and asking it is what makes the name follow the item that grows the
-    mechanic rather than the commit somebody remembers the receipt.
-
-    Memoized per cache generation (D-49), because its readers are inside
-    fight loops.
+    The pair engine sees a defender's numbers, never its items, so the readers
+    that must name this mechanic ask the declaration rather than spelling the
+    item, and the name follows the item that grows the mechanic.  Memoized per
+    cache generation, because those readers are inside fight loops.
     """
     key = (data_version(), THRESHOLD_HEALTH_MECHANIC.value)
     memoized = _THRESHOLD_HEALTH_OWNER_MEMO.get(key)
@@ -136,12 +126,10 @@ def threshold_health_owner() -> str:
 def threshold_health_tick_interval() -> float:
     """The cadence the temporary-health Lifeline's heal is delivered on.
 
-    Reached the same way the owner is — off the declaration rather than
-    through the fight config — because the walk that authors the ticks holds
-    resolved pools, not a build.  The number itself is the item's, read live
-    from the registry, and its ``heal_tick_interval`` key is an explicitly
-    assumed subdivision of the sourced duration rather than a sourced value;
-    ``item_effects`` says so beside it.
+    Read off the declaration rather than the fight config, because the walk
+    that authors the ticks holds resolved pools and not a build.  The
+    ``heal_tick_interval`` key is an assumed subdivision of the sourced
+    duration, not a sourced value; ``item_effects`` says so beside it.
     """
     key = (data_version(), THRESHOLD_HEALTH_MECHANIC.value)
     memoized = _THRESHOLD_HEALTH_TICK_MEMO.get(key)
@@ -157,34 +145,24 @@ def threshold_health_coverage_source() -> str:
     return COVERAGE_SOURCE.format(owner=threshold_health_owner())
 
 
-class ThresholdDefenseResolverInterpreter:  # pylint: disable=too-few-public-methods
-    """The defensive resolver's answer for the ``threshold_defense`` family."""
+def resolve_threshold_defense(
+    rule: BehaviorRule, subject: DefenseSubject
+) -> DefenseOutcome:
+    """One threshold defence, against the subject it is defending."""
+    slot = DefenseSlot(rule)
+    mechanic = slot.mechanic
+    if mechanic is DefenseMechanic.LIFELINE_PROTOPLASM:
+        return _protoplasm(slot, subject)
+    if mechanic is DefenseMechanic.REBIRTH:
+        return _rebirth(slot, subject)
+    if mechanic in _LIFELINE_SHIELDS:
+        return _lifeline_shield(slot, subject)
+    raise DefenseInterpretationError(
+        f"{rule.mechanic_id} declares threshold_defense and this family has "
+        "no branch for it; a defence with no arithmetic is a mechanic that "
+        "would silently grant nothing"
+    )
 
-    FAMILY = RuleFamily.THRESHOLD_DEFENSE
-    LANES = frozenset({EngineLane.DEFENSE_RESOLVER})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """The shape a threshold defence compiles to, at build time."""
-        return defense_state.compiled_shape(rule, ctx.level)
-
-    def resolve(self, rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutcome:
-        """One threshold defence, against the subject it is defending."""
-        slot = DefenseSlot(rule)
-        mechanic = slot.mechanic
-        if mechanic is DefenseMechanic.LIFELINE_PROTOPLASM:
-            return _protoplasm(slot, subject)
-        if mechanic is DefenseMechanic.REBIRTH:
-            return _rebirth(slot, subject)
-        if mechanic in _LIFELINE_SHIELDS:
-            return _lifeline_shield(slot, subject)
-        raise DefenseInterpretationError(
-            f"{rule.mechanic_id} declares threshold_defense and this "
-            "interpreter has no branch for it; a defence with no arithmetic "
-            "is a mechanic that would silently grant nothing"
-        )
-
-
-RESOLVER_INTERPRETER = ThresholdDefenseResolverInterpreter()
 
 _LIFELINE_SHIELDS = frozenset(
     {
@@ -284,10 +262,9 @@ __all__ = [
     "MAW_OMNIVAMP_NOTE",
     "NOTES",
     "REBIRTH_SOURCE",
-    "RESOLVER_INTERPRETER",
     "THRESHOLD_HEALTH_MECHANIC",
     "TICK_INTERVAL_KEY",
-    "ThresholdDefenseResolverInterpreter",
+    "resolve_threshold_defense",
     "threshold_health_coverage_source",
     "threshold_health_owner",
     "threshold_health_tick_interval",

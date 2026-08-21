@@ -149,7 +149,6 @@ def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
             count=_Q_TICKS,
             time_offset=0.0,
             hit_interval=_Q_TICK_INTERVAL,
-            cc_kind="none",
         ),
     )
     entry["detail"] = (

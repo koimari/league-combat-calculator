@@ -29,7 +29,7 @@ from dataclasses import replace
 from typing import Any
 
 from .inputs import champion_stat
-from .engine import BUFF, SlotCtx
+from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
@@ -90,7 +90,7 @@ def _deaths_hand(ctx: SlotCtx) -> dict[str, Any] | None:
 # first enemy hit, dealing magic damage to nearby enemies and rooting them
 # for 1.5 seconds".  R is variant-dependent and is authored on its parts
 # below, because the two casts under that one slot answer differently.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "root"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "root", "R": CC_PER_PART}
 
 # Demonic Ascension "drains the lifeforce of nearby enemies, both dealing
 # magic damage and healing himself every 0.5 seconds" — no control.

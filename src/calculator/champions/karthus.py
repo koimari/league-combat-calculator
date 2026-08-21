@@ -156,7 +156,6 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
             count=ticks_per_pulse,
             time_offset=0.0,
             hit_interval=_E_TICK_INTERVAL,
-            cc_kind="none",
         ),
     )
     entry["resource_type"] = "MANA"
@@ -193,7 +192,6 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
             "magic",
             per_tick,
             time_offset=_E_FIRST_TICK_TIME + index * _E_TICK_INTERVAL,
-            cc_kind="none",
         )
         for index in range(ticks)
     )
@@ -340,6 +338,6 @@ SLOTS = {
 # and authors no part, and P is the zombie state.  E's aura is equally
 # control-free but its two branches carry that review differently (see
 # _defile), so it is authored on the parts.
-MODULE_CC = {"Q": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Karthus", cc_kinds=MODULE_CC)

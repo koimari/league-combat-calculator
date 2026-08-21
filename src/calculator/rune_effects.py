@@ -46,9 +46,7 @@ from .state_lifecycle import SourceReceipt, StackRule, TimedStackState
 def _load_rune_cache() -> dict[str, Any]:
     """Read ``data/runes.json``; an absent cache means no runes.
 
-    Copies the fetched mapping: the data layer serves its parsed-JSON
-    cache by reference, and ``refresh_rune_effects`` clears these dicts in
-    place — clearing the shared cache object would erase the source.
+    Copied, because ``refresh_rune_effects`` clears these dicts in place.
     """
     try:
         return dict(fetch_rune_data())
@@ -94,12 +92,7 @@ def _slot_word(rune_name: str) -> str:
 
 
 def breakdown_key(rune_name: str) -> str:
-    """The ledger key for one rune's damage row.
-
-    Keystone rows and minor-rune rows are told apart by their prefix, and
-    which one a rune gets is read off the roster rather than spelled by each
-    compiler — the slot is a fact about the rune, not about its formula.
-    """
+    """The ledger key for one rune's damage row, prefixed by its roster slot."""
     return f"{_slot_word(rune_name)}_{rune_name}"
 
 
@@ -124,17 +117,14 @@ def rune_effect_value(rune_name: str, key: str) -> float:
 
     The public read behind ``value_ref.ValueRef(registry="RUNE_EFFECTS", …)``:
     runes are runtime damage producers, so CLAUDE.md rule 5's no-literals
-    discipline reaches them, and a declaration referencing a rune number needs
-    the same fail-loud accessor items already have.  It reuses
-    ``RuneValues`` rather than re-reading the registry, so "read a
-    rune number" keeps one implementation.
+    discipline reaches them.  It reuses ``RuneValues`` rather than re-reading the
+    registry, so "read a rune number" keeps one implementation.
 
-    A rune record has two levels — the entry's own fields (``cooldown``) and
-    the parser's ``effects`` block — and a reference names a number, not a
-    level, so both are searched.  A key present in **both** raises rather
-    than picking one: two numbers under one name is a parse defect, and
-    silently preferring a level is how a declaration starts citing the wrong
-    one.
+    A rune record has two levels, the entry's own fields (``cooldown``) and the
+    parser's ``effects`` block, and a reference names a number rather than a
+    level, so both are searched.  A key present in **both** raises rather than
+    picking one: two numbers under one name is a parse defect, and silently
+    preferring a level is how a declaration starts citing the wrong one.
     """
     entry = RUNE_EFFECTS.get(rune_name)
     if not isinstance(entry, Mapping):
@@ -539,12 +529,7 @@ def _option_value(
     key: str,
     default: float,
 ) -> float:
-    """One declared option of one rune, or its disclosed default.
-
-    Shared by everything a rune formula reads an option through — the two
-    contexts and the proc arming rule — so "what this option is worth" has
-    one implementation whether a stat grant, an amplifier or a proc asks.
-    """
+    """One declared option of one rune, or its disclosed default."""
     value = options.get(rune_name, {}).get(key)
     return default if value is None else float(value)
 
@@ -554,11 +539,7 @@ def armed_by_option(
 ) -> Callable[[Mapping[str, Mapping[str, float]]], bool]:
     """A proc arming rule reading one declared switch off the page.
 
-    The proc-side counterpart of ``RuneStatContext.option``: a rune whose
-    trigger is an input the fight has no event for declares the switch and
-    hands this to :class:`RuneProcEffect`, so the option is read in one
-    place rather than by a walker branch per rune. The default is the
-    un-triggered state, so a page that sets nothing prices nothing.
+    The default is the un-triggered state, so a page setting nothing prices nothing.
     """
 
     def armed(options: Mapping[str, Mapping[str, float]]) -> bool:
@@ -682,6 +663,8 @@ class KeystoneAeryEffect:
     shield_duration_seconds: float
     linger_seconds: float
     damage_type: Callable[[Mapping[str, float]], str]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     def raw_damage(self, inputs: DamageInputs) -> float:
         """Price one offensive signal from sourced level and stat tables."""
@@ -815,6 +798,8 @@ class KeystoneGraspEffect:
     stack_generation_seconds: float
     max_stacks: int
     ready_window_seconds: float
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -861,6 +846,8 @@ class KeystoneHailOfBladesEffect:
     stack_duration_seconds: float
     reset_stack_limit: int
     cooldown_seconds: float
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -896,6 +883,8 @@ class KeystoneLethalTempoEffect:
     stack_duration_seconds: float
     expiry_step_seconds: float
     damage_type: Callable[[Mapping[str, float]], str]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -1006,6 +995,8 @@ class KeystoneFleetEffect:
     minion_heal_effectiveness: float
     charge_cap: int
     move_speed_duration_seconds: float
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -1055,6 +1046,8 @@ class KeystoneConquerorEffect:
     stack_duration_seconds: float
     cast_instance_interval_seconds: float
     heal_melee_ranged_ratios: tuple[float, float]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     def adaptive_force_at(self, level: int, stacks: int) -> float:
         """Return the sourced adaptive-force amount at a stack count."""
@@ -1064,14 +1057,6 @@ class KeystoneConquerorEffect:
     def max_adaptive_force_at(self, level: int) -> float:
         """Return the source's explicit maximum-stack force table value."""
         return at_level(self.adaptive_force_max_by_level, level)
-
-    def bonus_attack_damage_at(self, level: int, stacks: int) -> float:
-        """Convert adaptive force to bonus AD for an AD adaptive page."""
-        return self.adaptive_force_at(level, stacks) * 0.6
-
-    def ability_power_at(self, level: int, stacks: int) -> float:
-        """Convert adaptive force to AP for an AP adaptive page."""
-        return self.adaptive_force_at(level, stacks)
 
     def heal_ratio(self, is_melee: bool) -> float:
         """Select the sourced melee or ranged max-stack healing ratio."""
@@ -1139,6 +1124,8 @@ class KeystoneDeathfireEffect:
     amp_delay_seconds: float
     amp_ratio: float
     duration_by_category: Mapping[str, float]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     def duration_for(self, category: str) -> float:
         """Return one authored duration category or fail closed."""
@@ -1407,13 +1394,7 @@ def _required_table(
 
 
 def cached_effects(rune_name: str) -> RuneValues:
-    """One rune's parsed effects block, for a declaration read at import.
-
-    A compiler reads the record it is handed; an option's *bounds* are
-    declared before any request exists, and the rune's own table is what
-    bounds them — so the declaration reads the cache through the same
-    fail-loud door.
-    """
+    """One rune's parsed effects block, for a declaration read at import."""
     return RuneValues(rune_name, RUNE_EFFECTS.get(rune_name, {}).get("effects", {}))
 
 
@@ -1423,22 +1404,13 @@ def required_leveling(
     key: str = "leveling",
     index: int = 0,
 ) -> list[float]:
-    """Read one of a rune's per-level tables, at a width the wiki renders.
-
-    ``key`` and ``index`` because a rune record states several tables under
-    several names — a melee and a ranged one, a base and an escalated one —
-    and every one of them is read through this same fail-loud door.
-    """
+    """Read one of a rune's per-level tables, at a width the wiki renders."""
     table = _required_table(name, effects, key, index)
     return _certified_level_table(name, key, table)
 
 
 def required_level_table(name: str, effects: RuneValues, key: str) -> list[float]:
-    """Read one flat per-level table, at a width the wiki renders.
-
-    The sibling of :func:`required_leveling` for the keys the parser records
-    as a single table rather than a list of them (``adaptive_force_leveling``).
-    """
+    """Read one flat per-level table, at a width the wiki renders."""
     return _certified_level_table(name, key, effects.value(key))
 
 
@@ -1493,12 +1465,7 @@ def required_pair(name: str, effects: RuneValues, key: str) -> tuple[float, floa
 
 
 def pure_adaptive_type(stats: Mapping[str, float]) -> str:
-    """Adaptive damage type for a proc with no ratios of its own.
-
-    The larger of bonus AD and AP decides. A tie follows the champion's
-    adaptive type in game; the engine carries no adaptive type, so it
-    defaults magic like Electrocute.
-    """
+    """Adaptive damage type for a ratio-less proc; bonus AD wins, a tie is magic."""
     bonus_ad = stats.get("bonus_attack_damage", 0.0)
     return "physical" if bonus_ad > stats.get("ability_power", 0.0) else "magic"
 
@@ -2284,12 +2251,7 @@ def resolve_rune(name: str) -> RuneEffect | None:
 
 
 def resolve_keystone(name: str) -> RuneEffect | None:
-    """Compile the selected keystone alone — the page's row-0 rune, by name.
-
-    A keystone is a rune, so this is :func:`resolve_rune` restricted to the
-    keystone row: the roster is what says which row a name sits in, and a
-    caller asking for a keystone gets a refusal rather than a minor rune.
-    """
+    """Compile the selected keystone alone: :func:`resolve_rune` on row 0."""
     if name and _rune_row(name) != KEYSTONE_ROW:
         raise ValueError(f"Rune {name!r} is not a keystone")
     return resolve_rune(name)
@@ -2322,12 +2284,7 @@ def _shard_row_options(row: int) -> list[Mapping[str, Any]]:
 
 
 def shard_row_name(row: int) -> str:
-    """The Rune page's own name for one shard row — Offense, Flex, Defense.
-
-    Public because a shard names itself by row *and* option: the same
-    option appears in two rows and a compiled shard has to say which one it
-    is, in the page's words rather than a second set invented here.
-    """
+    """The Rune page's own name for one shard row: Offense, Flex, Defense."""
     return str(RuneValues(f"stat shard row {row}", _shard_row(row)).value("name"))
 
 
@@ -2401,13 +2358,7 @@ def _shard_rows() -> tuple[int, ...]:
 
 
 def _name_list(value: Any, field: str, limit: int, *, positional: bool) -> list[str]:
-    """Coerce one request list of rune names through the shared list policy.
-
-    ``request_parsing`` owns what a public list may be; the two shapes it
-    offers are exactly the two the page needs — a set of distinct names for
-    the minor runes, and a positional list for the shards, whose empty
-    entries are empty slots and whose repeats are legal.
-    """
+    """Coerce one request list of rune names through the shared list policy."""
     reader = request_positional_string_list if positional else request_string_list
     return reader({field: [] if value is None else value}, field, maximum=limit)
 
@@ -2452,18 +2403,6 @@ def _validated_keystone(value: Any) -> str:
         raise ValueError(
             f"{name!r} is a minor rune, not a keystone; it belongs in " "minor_runes"
         )
-    return name
-
-
-def validate_keystone_request(value: Any) -> str:
-    """Parse a request's keystone field on its own, without a whole page.
-
-    The page validator is the fuller door; this is the same check for a
-    caller that carries only the keystone name.
-    """
-    name = _validated_keystone(value)
-    if name:
-        resolve_rune(name)
     return name
 
 
@@ -2599,13 +2538,7 @@ def _certify_path_shape(keystone: str, minors: Sequence[str]) -> None:
 
 
 def _primary_path(keystone: str, counts: Mapping[str, int]) -> str:
-    """Which path holds the three minor slots.
-
-    The keystone's path when one is selected — that is the rule a page with
-    a keystone lives by. Without a keystone the page has no declared primary,
-    so the path holding the most minors is treated as it, which refuses
-    exactly the shapes no primary could make legal.
-    """
+    """Which path holds the three minor slots: the keystone's, else the largest."""
     if keystone:
         return _rune_path(keystone)
     return max(sorted(counts), key=lambda path: counts[path], default="")
@@ -2687,18 +2620,15 @@ def adaptive_force_attack_damage_ratio() -> float:
     return RuneValues("adaptive force", ADAPTIVE_FORCE).number("attack_damage_ratio")
 
 
+# The runes state "Grants bonuses based on which stat you already have the most
+# bonuses for. *Defaults to the first listed*", and ``Template:Adaptive`` lists
+# attack damage first, so an adaptive-force tie takes attack damage.  Adaptive
+# *damage* defaults the other way (:func:`pure_adaptive_type`), which is why
+# the two rules are separate functions.
 def adaptive_force_split(
     force: float, bonus_attack_damage: float, ability_power: float
 ) -> tuple[float, float]:
-    """Split one adaptive-force grant into (bonus attack damage, ability power).
-
-    The larger of the build's bonus attack damage and ability power decides,
-    and a tie takes attack damage: the runes state "Grants bonuses based on
-    which stat you already have the most bonuses for. *Defaults to the first
-    listed*", and ``Template:Adaptive`` lists attack damage first. (Adaptive
-    *damage* defaults the other way — see :func:`pure_adaptive_type` — which
-    is why the two rules are separate functions.)
-    """
+    """Split one adaptive-force grant into (bonus attack damage, ability power)."""
     if ability_power > bonus_attack_damage:
         return 0.0, force
     return force * adaptive_force_attack_damage_ratio(), 0.0

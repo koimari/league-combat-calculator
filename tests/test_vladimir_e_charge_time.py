@@ -114,7 +114,7 @@ live test when the seam lands):
       (abilities domain 56c47afaf5f0b20b; champions domain
       49e1c1ddcb91244a; data/champions.json@sha256:afea81a9976904c1),
       the packet-spec digest == PACKET_SHA256, the module SOURCES
-      revisions, docs/receipts/champions/vladimir.json (36 atoms);
+      revisions;
       STRICT xfail for the typed atom-backed certification of the charge
       model (ramp/channel constants + min/max atom ids in one public
       receipt).
@@ -226,12 +226,6 @@ _MANIFEST = json.loads(Path("data/atoms/manifest.json").read_text(encoding="utf-
 _PACKET_VLADIMIR = json.loads(
     Path("static/reviewed-packets.json").read_text(encoding="utf-8")
 )["champions"]["Vladimir"]
-_RECEIPT_VLADIMIR_PATH = Path("docs/receipts/champions/vladimir.json")
-_RECEIPT_VLADIMIR = (
-    json.loads(_RECEIPT_VLADIMIR_PATH.read_text(encoding="utf-8"))
-    if _RECEIPT_VLADIMIR_PATH.exists()
-    else None
-)
 
 _AWAIT = "awaiting P4-Vladimir-E ..."
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -259,6 +253,21 @@ def _e_damage(rank: int, fraction: float, health: float, ap: float) -> float:
 
 def _stats() -> dict:
     return {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "critical_strike_chance": 0.0,
+        "flat_armor_penetration": 0.0,
+        "is_melee": True,
+        "lethality": 0.0,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 90.0,
         "ability_power": _REF_AP,
         "base_attack_damage": 90.0,
@@ -647,9 +656,11 @@ class TestChargeFractions:
         # The typed cost seam: 2% of CURRENT health at fraction 0, 8% at
         # fraction 1.0, monotone between (the 4%/6% tier boundaries are
         # not sourced — AMBIGUITY 3; only endpoints are pinned here).
-        from src.calculator.champions.vladimir import E_HEALTH_COST_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_BOUNDARY_RULES,
+        )
 
-        receipt = E_HEALTH_COST_RULE.public_receipt()["health_cost"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["health_cost"]
         assert receipt["cost_percent_at_min_charge"] == pytest.approx(2.0)
         assert receipt["cost_percent_at_max_charge"] == pytest.approx(8.0)
         assert receipt["source"]["wiki"]["revision_id"] == 2864482
@@ -800,9 +811,11 @@ class TestHealthCostFreeRule:
         # when the caster's current health is below 12% of max health
         # (effects[4]); the engine has no attacker current-health input
         # today (AMBIGUITY 3), so the seam needs one.
-        from src.calculator.champions.vladimir import E_HEALTH_COST_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_BOUNDARY_RULES,
+        )
 
-        receipt = E_HEALTH_COST_RULE.public_receipt()["health_cost"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["health_cost"]
         assert receipt["free_below_fraction_of_max_health"] == pytest.approx(0.12)
 
 
@@ -839,9 +852,11 @@ class TestSlow:
         # The enemy slow: rank values for 0.5s, ONLY at fraction 1.0
         # ("charged for at least 1 second" == ramp completion); below
         # full charge the interpolated nova carries no slow.
-        from src.calculator.champions.vladimir import E_SLOW_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_BOUNDARY_RULES,
+        )
 
-        receipt = E_SLOW_RULE.public_receipt()["slow"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["slow"]
         assert receipt["slow_level_1"] == pytest.approx(40.0)
         assert receipt["slow_level_5"] == pytest.approx(60.0)
         assert receipt["duration_seconds"] == pytest.approx(0.5)
@@ -966,19 +981,6 @@ class TestSourceAndAtomReceipts:
         assert e_entry["revision_id"] == 2864482  # STALE (AMBIGUITY 6)
         assert e_entry["revision_timestamp"] == "2019-11-03T20:13:56Z"
 
-    def test_receipts_document_thirty_six_atoms(self):
-        if _RECEIPT_VLADIMIR is None:
-            pytest.skip("generated Vladimir receipt is unavailable")
-        assert _RECEIPT_VLADIMIR["champion"] == "Vladimir"
-        assert _RECEIPT_VLADIMIR["atoms"]["count"] == 36
-        assert set(_RECEIPT_VLADIMIR["atoms"]["families"]) == {
-            "crowd-control-mobility",
-            "damage",
-            "heal-shield",
-            "stack-transform-summon-resource",
-        }
-        assert _RECEIPT_VLADIMIR["audit_verdict"] == "ok"
-
     def test_typed_charge_model_certification(self):
         # Mirror the repo's typed-rule-with-public-receipt pattern: a
         # public receipt for the charge model exposing the ramp/channel
@@ -986,9 +988,11 @@ class TestSourceAndAtomReceipts:
         # default fraction, and the atom ids it is backed by — with the
         # wiki prose named as the 1s-ramp root (no atom carries it,
         # AMBIGUITY 2).
-        from src.calculator.champions.vladimir import E_CHARGE_RULE  # noqa: F401
+        from src.calculator.champions.vladimir import (  # noqa: F401
+            TIDES_OF_BLOOD_CHARGE_RULE,
+        )
 
-        receipt = E_CHARGE_RULE.public_receipt()
+        receipt = TIDES_OF_BLOOD_CHARGE_RULE.public_receipt()
         assert receipt["ramp_seconds"] == pytest.approx(1.0)
         assert receipt["channel_seconds"] == pytest.approx(1.5)
         assert receipt["default_fraction"] == pytest.approx(1.0)
@@ -1136,40 +1140,6 @@ class TestScoreReceiptParity:
 
 
 class TestRegressionSurface:
-    def test_vladimir_grep_surface_is_pinned(self):
-        # Every tests/ file mentioning "vladimir" (case-insensitive):
-        # adding a new Vladimir test file must extend this pin, and every
-        # listed file must stay green in the sanity run.
-        test_dir = Path("tests")
-        hits = sorted(
-            path.name
-            for path in test_dir.glob("test_*.py")
-            if "vladimir" in path.read_text(encoding="utf-8", errors="ignore").lower()
-        )
-        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
-        # ``test_full_entry_packets.py`` (ours, 108872c8); this branch also
-        # carries a named ``test_vladimir.py`` plus the packet-module,
-        # scanner-scope and zero-policy suites that cite the kit.
-        assert hits == [
-            # ci-evidence scanner cites this file as a docstring-citation fixture
-            "test_ci_evidence_parity.py",
-            "test_e2_dot_3.py",
-            "test_e9_corpus.py",
-            "test_f2_rotation.py",
-            "test_full_entry_packets.py",
-            "test_heal_ledger_phase2.py",
-            "test_issue_143.py",
-            "test_mechanics_packets.py",
-            "test_p1_review_3.py",
-            "test_packet_module.py",
-            "test_participant_timeline.py",
-            "test_vladimir.py",
-            "test_vladimir_e_charge_time.py",
-            "test_vladimir_healing.py",
-            "test_w3_scanner_scope.py",
-            "test_zero_policy.py",
-        ]
-
     def test_module_meta_pins_unchanged(self):
         meta = get_champion_options_meta("Vladimir")
         assert [option["key"] for option in meta["options"]] == [

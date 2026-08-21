@@ -50,6 +50,11 @@ RANKS = {"Q": 5, "W": 3, "E": 3, "R": 2}
 
 def _stats() -> dict[str, float]:
     return {
+        "armor_penetration_bonus_percent": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "health": 2000.0,
         "bonus_health": 0.0,
         "attack_damage": 200.0,

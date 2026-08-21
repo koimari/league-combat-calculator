@@ -1,4 +1,4 @@
-"""Shared CI gate receipt schema (issue #139).
+"""Shared CI gate receipt schema.
 
 Every gate script (acceptance_matrix, full_entry_audit, item_umbrella_audit,
 champion_optimizer_matrix) serializes the same envelope: a strict boolean

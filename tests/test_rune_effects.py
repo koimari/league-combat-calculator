@@ -98,8 +98,8 @@ class TestResolveKeystone:
         assert effect.cast_instance_interval_seconds == pytest.approx(4.0)
         assert effect.adaptive_force_at(18, 12) == pytest.approx(48.0)
         assert effect.max_adaptive_force_at(18) == pytest.approx(48.0)
-        assert effect.bonus_attack_damage_at(18, 12) == pytest.approx(28.8)
-        assert effect.ability_power_at(18, 12) == pytest.approx(48.0)
+        ad_ratio = rune_effects.adaptive_force_attack_damage_ratio()
+        assert effect.adaptive_force_at(18, 12) * ad_ratio == pytest.approx(28.8)
         assert effect.heal_amount(100.0, True) == pytest.approx(8.0)
         assert effect.heal_amount(100.0, False) == pytest.approx(5.0)
 
@@ -837,9 +837,8 @@ class TestValidateKeystoneRequest:
     def test_valid_name_passes_through(self):
         page = rune_effects.validate_rune_page("Electrocute")
         assert page.keystone == "Electrocute"
-        assert rune_effects.validate_keystone_request("Electrocute") == "Electrocute"
         assert (
-            rune_effects.validate_keystone_request("Deathfire Touch")
+            rune_effects.validate_rune_page("Deathfire Touch").keystone
             == "Deathfire Touch"
         )
 
@@ -863,7 +862,6 @@ class TestValidateKeystoneRequest:
         )
         with pytest.raises(ValueError, match="not modeled"):
             rune_effects.validate_rune_page("Synthetic Keystone")
-            rune_effects.validate_keystone_request("Unsealed Spellbook")
 
     def test_fleet_options_require_bounded_integer_charges(self):
         assert rune_effects.validate_keystone_options(

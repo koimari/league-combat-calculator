@@ -92,8 +92,14 @@ class TestReviewedCrowdControl:
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import fiddlesticks
+        from src.calculator.champions.engine import CC_PER_PART
 
-        assert fiddlesticks.MODULE_CC == {"W": "none", "E": "slow", "R": "none"}
+        assert fiddlesticks.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "none",
+            "E": "slow",
+            "R": "none",
+        }
         assert fiddlesticks.parse_abilities.cc_kinds == fiddlesticks.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

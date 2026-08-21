@@ -33,6 +33,23 @@ def _parse(
 ):
     """Parse with a hand-crafted stats context for exact wiki math."""
     stats = {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "flat_armor_penetration": 0.0,
+        "health": 0.0,
+        "is_melee": True,
+        "lethality": 0.0,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": ad,
         "base_attack_damage": ad - bonus_ad,
         "bonus_attack_damage": bonus_ad,
@@ -811,7 +828,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Bel'Veth")
-        assert belveth.MODULE_CC == {"W": "knockup", "R": "slow"}
+        assert belveth.MODULE_CC == {"W": "knockup", "E": "none", "R": "slow"}
         w_text = cc_review.slot_text(data, "W")
         assert "knocks them up for a duration" in w_text
         assert "slows them by 30% for 2 seconds" in w_text

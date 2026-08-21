@@ -12,7 +12,6 @@ from typing import Any, Callable, Mapping
 from ..ability_spec import Disposition
 from ..rune_effects import (
     cached_effects,
-    RUNE_EFFECTS,
     RuneEffect,
     ULTIMATE_SLOT,
     RuneAmpContext,
@@ -133,8 +132,7 @@ def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     granted = ", ".join(f"{bonus:g} at level {level}" for level, bonus in gates)
 
     def amount(context: RuneStatContext) -> float:
-        # float, not the int an empty sum returns: a published zero's type
-        # decides whether the leaf gets a disposition entry (CLAUDE.md).
+        # float, not int: a published zero's type decides its disposition entry.
         return float(sum(bonus for level, bonus in gates if context.level >= level))
 
     return RuneStatGrantEffect(

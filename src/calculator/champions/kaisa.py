@@ -105,8 +105,7 @@ _AUTO_HIT = 1
 def _timed_window(ctx: SlotCtx) -> tuple[float, float] | None:
     """(duration, auto uptime) for a timed parse; None in one-rotation.
 
-    The pipeline injects ``fight_duration_seconds`` only for timed fights,
-    so absence is the one-rotation mode declaring "no fight window".
+    The pipeline injects ``fight_duration_seconds`` only for timed fights.
     """
     duration = ctx.options.get("fight_duration_seconds")
     if duration is None or float(duration) <= 0:

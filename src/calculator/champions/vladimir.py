@@ -73,10 +73,6 @@ class _TidesOfBloodChargeRule:
     (no atom exists — the degraded "charge time" parse).
     """
 
-    def certified_atom_ids(self) -> dict[str, Any]:
-        """The pinned atom evidence (the receipt's atom_ids)."""
-        return dict(self.public_receipt()["atom_ids"])
-
     def public_receipt(self) -> dict[str, Any]:
         """The typed charge-model receipt (ramp/channel/default/atoms)."""
         return {
@@ -106,7 +102,6 @@ class _TidesOfBloodChargeRule:
 
 
 TIDES_OF_BLOOD_CHARGE_RULE = _TidesOfBloodChargeRule()
-E_CHARGE_RULE = TIDES_OF_BLOOD_CHARGE_RULE  # the test-surface alias
 
 
 class _TidesOfBloodBoundaryRules:
@@ -168,9 +163,7 @@ class _TidesOfBloodBoundaryRules:
         }
 
 
-_TIDES_BOUNDARIES = _TidesOfBloodBoundaryRules()
-E_HEALTH_COST_RULE = _TIDES_BOUNDARIES
-E_SLOW_RULE = _TIDES_BOUNDARIES
+TIDES_OF_BLOOD_BOUNDARY_RULES = _TidesOfBloodBoundaryRules()
 
 
 def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -231,9 +224,8 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
         + _interp("Minimum Magic Damage", 1) / 100.0 * float(ctx.stats["health"])
         + _interp("Minimum Magic Damage", 2) / 100.0 * float(ctx.stats["ability_power"])
     )
-    # P4: the cooldown read is atom-backed (timing.cooldown
-    # 15cbce498dc12195, [13,11,9,7,5]) — a missing/stale row raises
-    # instead of a silent 0.0.
+    # The cooldown read is the timing.cooldown atom 15cbce498dc12195,
+    # [13,11,9,7,5]: a missing or stale row raises instead of a silent 0.0.
     cooldown_atom = required_ability_atom(
         ctx.champion_name,
         champion_data,

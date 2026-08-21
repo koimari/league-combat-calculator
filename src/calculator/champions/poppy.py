@@ -131,9 +131,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         # "Stun Duration" is the only interval the cache prices for the
         # cast, so the reviewed immobilize reads its length from there
         # rather than carrying an unsourced one.
-        "E": lambda compiled: with_control(
-            compiled, kind="immobilize", duration_attr="Stun Duration"
-        ),
+        "E": lambda compiled: with_control(compiled, duration_attr="Stun Duration"),
     },
     cc_kinds=MODULE_CC,
 )

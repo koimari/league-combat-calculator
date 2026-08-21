@@ -67,15 +67,13 @@ CLASSIFIERS: Mapping[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
 # The function behind each lane's classifier, and the one source of the name
 # the receipt records as its producer.
 #
-# The attacker entry in ``CLASSIFIERS`` above is a lambda — it supplies the
-# lane set ``item_model_coverage`` requires since 3.8 — so reading
-# ``CLASSIFIERS[lane].__name__`` would write "<lambda>" into the receipt's
-# provenance, naming nothing a reader could look up.  The answer is to name the
-# wrapped function here and still *derive* the string from it: hand-writing the
-# two names would make a rename of ``item_model_coverage`` leave the receipt
-# citing a symbol that no longer exists, which is a declared fact standing
-# where a derived one used to be — the direction this campaign reverses
-# everywhere else.  A test asserts both names resolve on the module.
+# The attacker entry in ``CLASSIFIERS`` above is a lambda supplying the lane
+# set ``item_model_coverage`` requires, so ``CLASSIFIERS[lane].__name__`` would
+# write "<lambda>" into the receipt's provenance and name nothing a reader
+# could look up.  Naming the wrapped function here and deriving the string from
+# it keeps a rename of ``item_model_coverage`` from leaving the receipt citing
+# a symbol the tree does not have.  A test asserts both names resolve on the
+# module.
 CLASSIFIER_FUNCTIONS: Mapping[str, Callable[..., Any]] = {
     "attacker": item_model_coverage,
     "target": target_item_model_coverage,

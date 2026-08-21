@@ -88,12 +88,7 @@ _NO_DAMAGE: Mapping[tuple[int, str], tuple[Disposition, str, tuple[str, ...]]] =
 
 
 def _shard_name(row: int, name: str) -> str:
-    """How one shard names itself in a receipt, its row included.
-
-    Row and name together are the selection, so both belong in the name:
-    "Adaptive Force" alone is two different shards, and one page may hold
-    both of them.
-    """
+    """One shard's receipt name, row included: a name alone can be two shards."""
     return f"{shard_row_name(row)} shard: {name}"
 
 
@@ -145,10 +140,8 @@ def _no_damage_shard_compiler(
 ) -> ShardCompiler:
     """Compile a shard this engine holds no channel for, receipt and all.
 
-    The shard's name resolves when it compiles rather than when this module
-    imports, because the row's own name is a cache read and the compiler
-    table is built before any request has proved the cache is there.
-    """
+    The name resolves at compile time, not import time: the row's name is a
+    cache read and this table is built before any request proves the cache."""
 
     def compile_shard(entry: Mapping[str, Any]) -> RuneEffect:
         return no_damage_compiler(_shard_name(row, name), *declaration)(entry)

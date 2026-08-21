@@ -44,7 +44,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
-from .engine import DEBUFF, SlotCtx
+from .engine import CC_PER_PART, DEBUFF, SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -161,11 +161,7 @@ def _ferocity_bonus(
 def _ferocity_state(ctx: SlotCtx) -> TimedStackState:
     """The kernel-owned Ferocity stack state seeded from the option.
 
-    ``p_ferocity`` is the explicit pre-stack state; the rule declares the
-    4-stack cap, the 1-second per-stack expiry (no refresh on subsequent
-    triggers), and the 10-second in-combat expiry freeze.  Live in-fight
-    gains are not wired: the rotation resolver does not feed per-cast
-    stack events into champion-module parses (named reason, ASSUMPTIONS).
+    ``p_ferocity`` is the pre-stack state; in-fight gains are not wired.
     """
     return TimedStackState(
         RENGAR_FEROCITY_STACK_RULE,
@@ -279,8 +275,8 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
 def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: Bola Strike — base or Ferocity-empowered (level array) physical damage.
 
-    E answers its own crowd control rather than ``MODULE_CC`` because the
-    Ferocity bonus changes it: the base bola "slows them for 1.75 seconds",
+    E is declared ``CC_PER_PART`` because the Ferocity bonus changes the
+    kind: the base bola "slows them for 1.75 seconds",
     and the empowered one roots "instead of slowed".
     """
     ability = ctx.ability()
@@ -326,7 +322,7 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 # empowered basic attack's armour reduction rider, which the reviewed
 # packet prices as no enemy-damage of its own, and P is the Ferocity state
 # row.
-MODULE_CC = {"Q": "none", "W": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rengar",

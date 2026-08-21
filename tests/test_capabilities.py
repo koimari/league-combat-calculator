@@ -136,22 +136,6 @@ def test_no_producer_emits_the_terminal_rank() -> None:
         assert support_transition_rank({"kind": kind}) is not TransitionRank.TERMINAL
 
 
-def test_the_ladder_declares_terminal_last_and_only_as_a_published_name() -> None:
-    """Inside the ladder, TERMINAL appears only as a projection-table key."""
-    tree = ast.parse(ACTIONS.read_text(encoding="utf-8"))
-    mentions = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Attribute)
-        if getattr(node.value, "id", "") == "TransitionRank"
-        if node.attr == "TERMINAL"
-    ]
-    # One key, in the published-name table.  It was two until Phase 4 S2
-    # deleted the float projection whose table held the other.
-    assert len(mentions) == 1
-    assert list(TransitionRank)[-1] is TransitionRank.TERMINAL
-
-
 def test_a_rank_without_a_published_name_raises(monkeypatch) -> None:
     """A new rank must be published deliberately, not defaulted."""
     from src.calculator.survival import actions as actions_module

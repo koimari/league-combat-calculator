@@ -66,7 +66,7 @@ class TestUnsealedSpellbookDecision:
 
     def test_request_validation_accepts_it_and_books_no_damage(self):
         assert (
-            rune_effects.validate_keystone_request("Unsealed Spellbook")
+            rune_effects.validate_rune_page("Unsealed Spellbook").keystone
             == "Unsealed Spellbook"
         )
 

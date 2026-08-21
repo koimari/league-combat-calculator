@@ -321,7 +321,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         ),
         # The root's duration is sourced ("Root Duration"), so W states
         # the interval rather than only the kind MODULE_CC declares.
-        "W": partial(with_control, kind="root", duration_attr="Root Duration"),
+        "W": partial(with_control, duration_attr="Root Duration"),
     },
     cc_kinds=MODULE_CC,
 )

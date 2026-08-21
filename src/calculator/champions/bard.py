@@ -246,7 +246,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="slow",
         duration_attr="Disable Duration",
     ),
     # Caretaker's Shrine heals the ally who walks over it.  The slot exists

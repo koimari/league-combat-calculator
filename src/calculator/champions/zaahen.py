@@ -34,7 +34,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
-from .engine import BUFF, SlotCtx
+from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
@@ -176,7 +176,7 @@ def _dreaded_return(ctx: SlotCtx) -> dict[str, Any] | None:
 # to the recast variant, so the kind is authored per part in
 # ``_darkin_glaive``.  P is the Determination stack buff and authors no
 # damage part.
-MODULE_CC = {"W": "stun", "E": "none", "R": "none"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "stun", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zaahen",

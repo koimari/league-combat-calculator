@@ -306,13 +306,7 @@ def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect
 
 
 def _compile_cut_down(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
-    """Compile Cut Down: more damage to a champion above a health share.
-
-    Coup de Grace's mirror, and the cached description is why it needs no
-    kind of its own: the rune once compared the target's *maximum* health
-    with the holder's, and now reads the target's current health like its
-    row-mates do.
-    """
+    """Compile Cut Down: more damage to a champion above a health share."""
     return _target_health_amp("Cut Down", entry, AmpCondition.TARGET_ABOVE)
 
 

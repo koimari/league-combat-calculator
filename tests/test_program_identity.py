@@ -86,11 +86,17 @@ class TestTheLegacyFormatsAreStillSpelledThatWay:
     escalated -- never silently diverged from.
     """
 
-    def test_the_pair_format_is_spelled_in_both_producers(self) -> None:
-        """The timeline enriches it and the score compiler rebuilds it."""
+    def test_the_pair_format_has_exactly_one_producer(self) -> None:
+        """One compiler authors it, for the score walk and the receipt alike.
+
+        It used to be spelled twice — once where the timeline enriched a pair
+        packet and once where the score compiler rebuilt it — which is the
+        arrangement that made every other field of an enriched event two
+        facts wearing one name.
+        """
         pair_format = 'f"{attacker_id}:{defender_id}:{index}"'
-        assert pair_format in TIMELINE_PATH.read_text(encoding="utf-8")
         assert pair_format in COMPILE_PATH.read_text(encoding="utf-8")
+        assert pair_format not in TIMELINE_PATH.read_text(encoding="utf-8")
 
     @pytest.mark.parametrize(
         "spelling",

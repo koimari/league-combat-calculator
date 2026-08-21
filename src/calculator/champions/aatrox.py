@@ -90,8 +90,8 @@ _Q_VARIANT_ATTRS = [
 # cooldown, with a 1-second static cooldown between casts" (data/
 # champions.json Aatrox Q), and the cache names each strike's damage on its
 # own row, so the triad reads as three strikes at 0, 1 and 2 seconds from
-# the first.  Still unauthored, but no longer for the reason it was: see
-# the comment above ``parse_abilities``.
+# the first.  Unauthored for the reason the comment above
+# ``parse_abilities`` gives.
 _Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED = 1.0
 
 
@@ -217,7 +217,7 @@ SLOTS = {
     "E": _umbral_dash,
 }
 
-# No MODULE_CC, and for neither row is the reason a missing cadence — both
+# MODULE_CC is empty, and for neither row is the reason a missing cadence — both
 # cadences are cached, and both are refused by a committed receipt rather
 # than by the source.
 #
@@ -225,12 +225,11 @@ SLOTS = {
 # the area", which is this module's ``sweetspot`` option, and the cache
 # spaces its three casts ("with a 1-second static cooldown between casts")
 # while naming each strike's damage separately, so the triad reads as three
-# strikes at 0/1/2 seconds.  The engine no longer refuses that: an event
-# past the end of a roster fight used to leave the whole incoming packet
-# unusable (``roster_composition.resource_restores``, and Aatrox's last Q
-# in an eight-second roster fight lands its third strike at 8.85s), and
-# that check now drops the late event the way the survival walk skips every
-# other post-window action.  What is left is evidence:
+# strikes at 0/1/2 seconds.  The engine accepts that: an event past the end
+# of a roster fight (``roster_composition.resource_restores``, and Aatrox's
+# last Q in an eight-second roster fight lands its third strike at 8.85s) is
+# dropped the way the survival walk skips every other post-window action.
+# What is left is evidence:
 # data/practice-corpus/scenarios.json pins e9-e1-aatrox-umbral-dash-heal at
 # one Umbral Dash payment of 276.4 off a single Q event, and the triad pays
 # the same total as three (73.7 + 92.1 + 110.6) at 0/1/2 seconds — the heal
@@ -254,7 +253,9 @@ SLOTS = {
 #
 # R fears "nearby enemy minions and monsters" only and authors no damage
 # part; P is the on-hit stance row.
-parse_abilities = build_parser(SLOTS, "Aatrox")
+MODULE_CC: dict[str, str] = {}
+
+parse_abilities = build_parser(SLOTS, "Aatrox", cc_kinds=MODULE_CC)
 
 
 # pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,too-many-locals

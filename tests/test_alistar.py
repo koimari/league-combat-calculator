@@ -8,6 +8,7 @@ from src.calculator.champions.alistar import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.champions import alistar
+from src.calculator.champions.engine import CC_PER_PART
 from tests import cc_review
 
 
@@ -249,7 +250,11 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Alistar")
-        assert alistar.MODULE_CC == {"Q": "immobilize", "W": "immobilize"}
+        assert alistar.MODULE_CC == {
+            "Q": "immobilize",
+            "W": "immobilize",
+            "E": CC_PER_PART,
+        }
         assert "stunning and knocking them up simultaneously" in " ".join(
             cc_review.slot_text(data, "Q").split()
         )

@@ -401,7 +401,6 @@ def test_the_writer_puts_the_leaf_and_records_its_entry_in_one_call() -> None:
         "breakdown.main.total_damage",
         "breakdown.main.support_value",
     }
-    assert writer.withheld_paths() == {"breakdown.main.support_value"}
 
 
 def test_a_number_inside_a_list_is_a_leaf_like_any_other() -> None:

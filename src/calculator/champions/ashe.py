@@ -98,7 +98,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     Focus stack (cap 4) while the ability is inactive, and the ability
     can only be activated at 4 stacks.  The stack state is kernel-owned
     (``ASHE_FOCUS_STACK_RULE``): ``q_focus_stacks`` seeds the typed
-    state (0-4) and ``q_active`` remains the legacy activation override
+    state (0-4) and ``q_active`` is the activation override
     (default True).  The active window is conditional on BOTH: the
     pre-stacked Focus must be full.  Live per-attack gains during a
     fight are not wired: the rotation resolver does not feed per-swing

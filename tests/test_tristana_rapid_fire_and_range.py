@@ -260,7 +260,7 @@ class TestDrawABeadIsASourcedZeroDamageRow:
         """
         source = Path("src/calculator/damage.py").read_text(encoding="utf-8")
 
-        assert 'is_melee = champion_stats.get("is_melee", True)' in source
+        assert 'is_melee = champion_stats["is_melee"]' in source
         occurrences = [
             line.strip() for line in source.splitlines() if "attack_range" in line
         ]

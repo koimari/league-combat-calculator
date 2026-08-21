@@ -79,7 +79,6 @@ from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters import cast_proc
 from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.item_effects import (
-    eclipse_shield_amount,
     eclipse_trigger_gate,
     required_effect_value,
     resolve_damage_effects,
@@ -122,6 +121,18 @@ def _simulate_survival(combatants, *args, **kwargs):
 
 def _stats(*, is_melee: bool = False, bonus_ad: float = 0.0) -> dict:
     return {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "health": 0.0,
+        "lethality": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 100.0 + bonus_ad,
         "ability_power": 0.0,
         "base_attack_damage": 100.0,
@@ -363,16 +374,6 @@ class TestTypedContract:
     def test_missing_typed_key_fails_loud_naming_item_and_key(self) -> None:
         with pytest.raises(KeyError, match="Eclipse.*shield_missing_key_3c"):
             required_effect_value("Eclipse", "shield_missing_key_3c")
-
-    def test_shield_amount_formula_rides_the_typed_accessors(self) -> None:
-        items = [{"name": "Eclipse"}]
-        assert eclipse_shield_amount(
-            items, bonus_attack_damage=65.0, is_melee=True
-        ) == pytest.approx(150.0 + 0.40 * 65.0)
-        assert eclipse_shield_amount(
-            items, bonus_attack_damage=65.0, is_melee=False
-        ) == pytest.approx(75.0 + 0.20 * 65.0)
-        assert eclipse_shield_amount([], bonus_attack_damage=65.0, is_melee=True) == 0.0
 
     def test_trigger_gate_rule_is_typed_and_source_backed(self) -> None:
         rule = _eclipse_gate().rule

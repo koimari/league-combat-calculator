@@ -109,26 +109,23 @@ def bis_replaced_loadout(
         items.append(candidate_name)
     else:
         items[slot_index] = candidate_name
-    # The browser represents empty slots as absent request entries.  A
-    # candidate is therefore the only item introduced for a previously empty
-    # slot; duplicate validation remains owned by ChampionLoadout.resolve.
+    # The browser represents empty slots as absent request entries, so a
+    # candidate is the only item introduced for an empty slot; duplicate
+    # validation is owned by ChampionLoadout.resolve.
     return replace(loadout, items=tuple(items), item_options=item_options)
 
 
+# A candidate-legality boundary, not a champion archetype or damage
+# heuristic: the item cache carries Riot's shop tags, and a roster role is an
+# explicit scenario input, so the tags keep a support-only item off a top or
+# mid enemy and keep a support ally's BIS out of raw-health tank items.  The
+# survivors are still scored by the coupled event timeline.
 def role_scoped_bis_candidates(
     candidates: list[dict],
     *,
     role: str,
 ) -> list[dict]:
-    """Keep roster BIS candidates within the selected role's sourced shop scope.
-
-    The item cache carries Riot's shop tags for each completed item.  A roster
-    role is an explicit scenario input, so using those tags here prevents a
-    support-only item from being recommended to a top/mid enemy and prevents a
-    support ally's BIS from collapsing into raw-health tank items.  This is a
-    candidate-legality boundary, not a champion archetype or damage heuristic;
-    the surviving candidates are still scored by the coupled event timeline.
-    """
+    """Keep roster BIS candidates within the selected role's sourced shop scope."""
     return role_scoped_shop_items(candidates, role)
 
 
@@ -378,10 +375,9 @@ def _focus_survival_path(
 ) -> str:
     """Where the focus participant's survival row lives in the payload.
 
-    Matched by identity rather than by participant id, because the entry
-    describing a number has to be the entry for *that* row: two participants
-    of the same champion at the same level publish equal dicts, and a path
-    that named the wrong one would carry the wrong meaning with no symptom.
+    Matched by identity rather than participant id: two participants of the
+    same champion at the same level publish equal dicts, so a path naming
+    the wrong one would carry the wrong meaning with no symptom.
     """
     for index, row in enumerate(combat.get("participants", ())):
         if row is focus:
@@ -405,10 +401,9 @@ def bis_objective_score(
     Every score below is folded through :func:`~.program.build.ranked_total`
     out of parts carrying the meaning the payload published for them, and the
     candidate's whole map is refused first if any of its numbers is a
-    preview.  D-62: ``THEORETICAL`` is never an optimizer objective and never
-    feeds BIS.  Before this, a retagged field would have been ranked exactly
-    like a delivered one -- both are ordinary ``MEASURED`` floats, and
-    nothing on this path ever asked what they meant.
+    preview.  ``THEORETICAL`` is never an optimizer objective and never feeds
+    BIS: a retagged field is an ordinary ``MEASURED`` float, so nothing on
+    this path could tell it from a delivered one without asking the entry.
 
     The refusal is an ``UnrankableNumber``, which is a ``TypeError`` and so
     passes through the candidate loop's ``except (KeyError, ValueError)``
@@ -421,20 +416,8 @@ def bis_objective_score(
     survival_path = _focus_survival_path(combat, focus)
 
     def part(path: str, value: float) -> Tagged:
-        """One published number, carrying what its own entry says it means.
-
-        Both halves come from the entry: what the number *means* (its view)
-        and whether there is a number at all (its disposition).  The second
-        matters because a withheld leaf is absent from the payload, so the
-        ``.get(..., 0.0)`` above it reads a zero no rule computed; taking the
-        quantity from the entry is what makes the fold propagate the refusal
-        instead of ranking the candidate on it.
-
-        Two raise sites now, and Python evaluates arguments left to right, so
-        a path with no ``dispositions`` entry fails inside the *quantity*
-        read rather than the tag read.  Same ``UnrankableNumber`` and the
-        same message; different origin, which is worth a sentence for
-        anything reading the traceback.
+        """One published number, with the quantity read from its own entry so
+        a withheld leaf refuses instead of reading as an uncomputed zero.
         """
         return Tagged(
             published_quantity(dispositions, path, value, surface=BIS_SURFACE),
@@ -655,41 +638,20 @@ def _bis_coverage_receipt(
 
 # The public interface stays deliberately small; the internal orchestration
 # mirrors one candidate through every coverage and scoring gate.
+#
+# ``_bis_dispositions`` walks the whole payload rather than two named leaves:
+# naming only ``score`` and ``objective_value`` leaves each candidate's
+# ``components.*`` and stat block with no entry, and those components are what
+# the objective is folded from.  Every member is re-written through the one
+# writer at the path it lives at, so each row stays byte-identical and every
+# entry is produced beside its leaf by ``serialize_leaf``.  The writer is a
+# ``program.views.RankingWriter``, so a block a view opened ``THEORETICAL``
+# may not reach a ranking; the read half of that rule is
+# ``program.views.refuse_previewed``, which ``bis_objective_score`` runs over
+# each candidate's combat map before folding a score out of it.
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
-    """The payload's parallel ``dispositions`` map, keyed by leaf path.
-
-    Every member of the finished payload is re-written through the one
-    writer at the path it lives at -- assigning an existing key keeps its
-    position, so each row is byte-identical and every entry is produced
-    beside its leaf by ``serialize_leaf`` rather than by a second pass that
-    describes numbers it did not write.
-
-    It walks the whole payload rather than two named leaves.  Naming only
-    ``score`` and ``objective_value`` left 14 959 of this endpoint's 18 807
-    numbers with no entry -- including each candidate's
-    ``components.{damage_before_death, effective_health, healing,
-    support_shield_received}``, which are the components the objective is
-    folded from, and every candidate's stat block.  The endpoint that ranks
-    builds was serving the calculator's largest undispositioned numeric
-    surface while its own test asserted its two headline leaves were there.
-
-    The survival entries are produced here rather than carried from the
-    combat receipt on a private ``_survival_dispositions`` key smuggled
-    through the public row.  That key was inserted first in each row and
-    popped later, and the coverage receipt ran *before* the pop -- so a row
-    reaching the payload by any other route would have leaked it.  Writing
-    the leaf and its entry in the same ``serialize_leaf`` call is what the
-    single writer means; re-serialising a value at the path it now lives at
-    is that writer, not a second one.
-
-    The writer is a :class:`~.program.views.RankingWriter`: this payload is a
-    ranking, so a block a view opened ``THEORETICAL`` may not reach it.  That
-    is the write half of D-62's rule; the read half is
-    :func:`~.program.views.refuse_previewed`, which
-    :func:`bis_objective_score` runs over each candidate's own combat map
-    before folding a score out of it.
-    """
+    """The payload's parallel ``dispositions`` map, keyed by leaf path."""
     return name_every_number(payload, RankingWriter())
 
 

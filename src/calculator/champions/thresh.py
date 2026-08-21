@@ -40,8 +40,6 @@ _MAX_SOULS = 500
 # in a 1v1 with no ally the packet is dropped — documented boundary);
 # the 2-per-Soul term is unpriced by the scanner, which reads the flat
 # component only.
-_DARK_PASSAGE_SHIELD_DURATION_SECONDS = 4.0
-_DARK_PASSAGE_SHIELD_PER_SOUL = 2.0
 
 
 def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:

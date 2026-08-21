@@ -3,6 +3,7 @@
 from src.calculator.champions import parse_champion_abilities, sejuani
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 class TestReviewedCrowdControl:
@@ -17,7 +18,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Sejuani")
-        assert sejuani.MODULE_CC == {"Q": "knockup", "E": "immobilize", "R": "stun"}
+        assert sejuani.MODULE_CC == {
+            "Q": "knockup",
+            "W": CC_PER_PART,
+            "E": "immobilize",
+            "R": "stun",
+        }
         assert "knocking them up for 0.5 seconds" in cc_review.slot_text(data, "Q")
         # E applies two immobilize kinds in one cast.
         assert "displaces slightly, and stuns them for 1 second" in cc_review.slot_text(
@@ -36,7 +42,7 @@ class TestReviewedCrowdControl:
         w_text = cc_review.slot_text(cc_review.kit("Sejuani"), "W")
         assert "knocks back minions and monsters hit" in w_text
         assert "slowing them by 75% for 0.25 seconds" in w_text
-        assert "W" not in sejuani.MODULE_CC
+        assert sejuani.MODULE_CC["W"] == CC_PER_PART
         abilities = parse_champion_abilities(
             get_champion("Sejuani"), 18, 0.0, ability_ranks={"W": 5}
         )

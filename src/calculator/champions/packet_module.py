@@ -259,17 +259,7 @@ def _ranked(values: list[float], rank: int) -> float:
 
 
 def _packet_cooldown(ctx: SlotCtx, spec: dict[str, Any], slot: str, rank: int) -> float:
-    """The cast's cooldown, read from the cache at the rank being cast.
-
-    The packet asset stores one scalar per slot — the rank-1 value its
-    generator captured — which served rank 1's cooldown at every rank and so
-    suppressed casts in every timed fight.  The cooldown's one home is
-    ``data/champions.json``, the same cache every hand-written module reads,
-    so the packet stays evidence and the served number comes from the row it
-    is evidence of.  It is read at the packet's *declared* source, because a
-    packet may price a recast or form entry (Nidalee's cougar Q, Aphelios'
-    weapon variants) rather than entry 0 of its own slot.
-    """
+    """The cast's cooldown from ``data/champions.json``: the packet holds rank 1."""
     source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
     ability = ctx.ability(*source)
     return extract_cooldown(ability, rank, level=ctx.level) if ability else 0.0

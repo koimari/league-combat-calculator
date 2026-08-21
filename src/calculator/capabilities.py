@@ -68,7 +68,7 @@ CAPABILITY_SCHEMA_VERSION = 6
 # resolves every participant's state transition.  Keeping the phase names in
 # the public contract lets the frontend explain why a result is unavailable
 # instead of reconstructing event order from individual controls.
-# Closed support-targeting vocabulary (issue #142).  The first set is the one
+# Closed support-targeting vocabulary.  The first set is the one
 # the coupled resolver actually resolves (champion-side packets); the second
 # extends it with the item-module disclosure scopes (item packets carry an
 # explicit roster target and these labels only describe the authored selection
@@ -87,10 +87,9 @@ SUPPORT_TARGET_RESOLUTION_SCOPES: frozenset[str] = frozenset(
 # Item-module disclosure scopes.  These packets carry an explicit roster
 # target and never resolve through ``_support_target_ids``; the labels are
 # audited at emit time so the whole vocabulary stays closed.
-# TODO(issue #142): ``item_support_effects._packet`` should validate
-# ``target_scope`` against this set at emit time (owned by the item-support
-# group; the source-scan contract test in tests/test_issue_142.py covers it
-# until then).
+# TODO: ``item_support_effects._packet`` should validate ``target_scope``
+# against this set at emit time.  A source-scan contract test covers it
+# meanwhile.
 SUPPORT_TARGET_SCOPES: frozenset[str] = SUPPORT_TARGET_RESOLUTION_SCOPES | frozenset(
     {
         "all_selected_teammates",
@@ -120,22 +119,13 @@ def _target_policy_label(scope: str) -> str:
     }[scope]
 
 
+# Deriving the phase list from :class:`TransitionRank` keeps the published
+# vocabulary and the walk's ordering one fact, so a rank added, split or
+# renamed shows up here.  ``CAPABILITY_SCHEMA_VERSION`` moves when the
+# resulting list changes, never when this derivation is edited and the
+# payload comes out identical.
 def _ledger_phases() -> list[str]:
-    """``PARTICIPANT_LEDGER_CONTRACT['phases']``, derived from the kernel.
-
-    Walks :class:`TransitionRank` in declaration order — which is ledger
-    order — and keeps each published name's first appearance.  The list was
-    six hand-written strings, which meant no contract could notice a rank
-    being added, split or renamed; deriving it makes the published
-    vocabulary and the walk's ordering one fact.  ``CAPABILITY_SCHEMA_VERSION``
-    moves when *this list* changes, never when the derivation is edited and
-    the payload comes out identical.
-
-    C4 is the first proof that the derivation works: adding ``AURA_ARM`` to
-    the ladder published a seventh name here without anyone editing this
-    module's payload, which is exactly the change six hand-written strings
-    would have missed.
-    """
+    """``PARTICIPANT_LEDGER_CONTRACT['phases']``, in declaration order."""
     return list(dict.fromkeys(public_phase(rank) for rank in TransitionRank))
 
 

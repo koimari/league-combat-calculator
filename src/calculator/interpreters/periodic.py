@@ -1,19 +1,16 @@
 """Damage on a clock, interpreted: three cadences of one declared family.
 
 Seven items deal damage the fight's *clock* produces rather than damage an
-event produces, and until this module they reached the engine as three
-unrelated registry tags whose only shared vocabulary was the word "formula".
-A burn is a window every ability hit re-arms; an aura pays a rate for as long
-as the fight lasts; a fixed-interval strike lands a whole packet every N
-seconds and nothing in between.  The declaration names which, and this module
-is where a cadence becomes the record the fight engine already consumes.
+event produces.  A burn is a window every ability hit re-arms; an aura pays a
+rate for as long as the fight lasts; a fixed-interval strike lands a whole
+packet every N seconds and nothing in between.  The declaration names which,
+and this module is where a cadence becomes the record the fight engine
+consumes.
 
-Two things the engine used to reach for by name are now read off the rule:
-Unending Despair's Anguish radius, which the engine spelled its item's name to
-fetch for the receipt on every one of its events, and its self-heal share.
-Both are declared absences for every other periodic strike, because "this
-mechanic publishes no radius" and "this mechanic publishes a radius of zero"
-are different claims about the item.
+Unending Despair's Anguish radius and its self-heal share are read off the
+rule.  Both are declared absences for every other periodic strike, because
+"this mechanic publishes no radius" and "this mechanic publishes a radius of
+zero" are different claims about the item.
 
 Nothing here is memoized, for the same reason the catalog is not:
 ``refresh_item_effects()`` has to move the answer.
@@ -71,17 +68,17 @@ def _payload(rule: BehaviorRule) -> PeriodicRule:
     return payload
 
 
-def _cadence_fields(
+def cadence_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One periodic strike's compiled numbers for *lane*.
+    """One periodic strike's compiled numbers, stamped with *lane*.
 
     The cadence this strike compiles to, plus the proof its bases resolve.
 
-    The lane is the only thing that varies between the two interpreters
-    below.  Sharing the body rather than spelling it twice is what makes
-    "the walk reads the same declaration the pair engine reads" a property
-    of the tree instead of a claim two functions could drift out of.
+    Registered for both the pair engine and the receipt walk: the lane is the
+    only thing that differs between them, so one body is what makes "the walk
+    reads the same declaration the pair engine reads" a property of the tree
+    rather than a claim two functions could drift out of.
     """
     payload = _payload(rule)
     damage_formula.compile_formula(payload.formula, ctx)
@@ -95,75 +92,12 @@ def _cadence_fields(
     )
 
 
-class PeriodicPairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``periodic`` family.
-
-    Its number is a **preview** since this family retired: every cadence
-    declares ``ViewTag.THEORETICAL`` on its pair lane and
-    ``damage._add_burn_damage`` stamps ``pair_preview_of`` on the row it
-    authors, so the honest one-attacker figure stays in the pair fight's own
-    receipt and leaves every total the roster composes.
-    """
-
-    FAMILY = RuleFamily.PERIODIC
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This cadence's numbers, resolved for the one-attacker engine."""
-        return _cadence_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-class PeriodicWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the ``periodic`` family.
-
-    The half that retires ``periodic/receipt_walk`` (umbrella Amendment F's
-    act, in the lane Amendment K rules and with the whole shape Amendment L,
-    Ruling 1 requires).  Before it, the coupled walk consumed this family as
-    ``participant_timeline._pair_run_fight``'s already-priced rows, which is
-    what the deferral row said in its own words.  Now each row's ticks are a
-    declaration and no price: the walk mitigates the declared magnitude
-    itself, through ``survival.pricing.price_declared_packet``.
-
-    What the declaration carries is enumerated at the authoring site rather
-    than assumed here.  The magnitude is the cadence's **pre-mitigation
-    aggregate** — the burn's refreshed window, the aura's fight duration and
-    the interval strike's proc count are already folded into it, because all
-    three allocate the cadence rather than amplifying it and the engine
-    applies them before mitigation.  Each tick then carries its share of that
-    aggregate, which is exactly the share of the row's damage that tick
-    received.  The attack class is ``OTHER`` for every one of the seven,
-    measured rather than defaulted: a periodic row is priced by
-    ``damage._mitigate`` and by nothing else.  All seven declare magic, so
-    the holder's static magic amp is a live term for the whole family and is
-    delivered off the damage type by ``StaticHolderAmps.factor_for``.
-    """
-
-    FAMILY = RuleFamily.PERIODIC
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This cadence's numbers, resolved for the coupled roster walk."""
-        return _cadence_fields(rule, ctx, EngineLane.RECEIPT_WALK)
-
-
-PAIR_INTERPRETER = PeriodicPairInterpreter()
-WALK_INTERPRETER = PeriodicWalkInterpreter()
-
-
 def periodic_mechanic_id(owner: str) -> str:
     """*owner*'s periodic strike mechanic id, or a stop.
 
-    What the pair engine needs to stamp the rows it authors with the mechanic
-    each row previews: ``damage._add_burn_damage`` walks
-    :class:`~..item_effects.DamageSource` records, which carry an item name
-    and no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
-    A stop rather than a default: an unstamped periodic row would keep the
-    pair engine's number in every roster total *and* leave the walk pricing
-    the declaration, which is the double count this family's retirement
-    exists to make unrepresentable.
+    A stop rather than a default: an unstamped periodic row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
     """
     rules = periodic_rules([owner])
     if not rules:
@@ -232,11 +166,8 @@ def periodic_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:
-    """Whether any declared periodic strike heals its holder.
-
-    Answered from the declarations alone, with no build context: the tuple
-    ledger's adequacy question is "could this build emit a self-heal packet",
-    which is a property of what the items declare and not of the fight.
+    """Whether any declared periodic strike heals its holder, answered from the
+    declarations alone rather than from a resolved fight.
     """
     return any(
         _payload(rule).self_heal_share is not None for rule in periodic_rules(owners)
@@ -311,13 +242,10 @@ def resolve_slots(
 __all__ = [
     "CADENCE_PRESENTATION",
     "NO_SELF_HEAL_SHARE",
-    "PAIR_INTERPRETER",
     "PERIODIC_INTERVAL_FIELD",
-    "WALK_INTERPRETER",
     "PeriodicInterpretationError",
-    "PeriodicPairInterpreter",
     "PeriodicSlots",
-    "PeriodicWalkInterpreter",
+    "cadence_fields",
     "declares_self_heal",
     "periodic_mechanic_id",
     "periodic_rules",

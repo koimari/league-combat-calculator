@@ -60,8 +60,10 @@ def _payload(rule: BehaviorRule) -> AllyPacketRule:
     return payload
 
 
-class AllyPacketWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The roster walk's answer for the ``ally_packet`` family.
+def packet_fields(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
+    """Every number this producer declares, read live from its registry.
 
     One field per declared value, named by the registry key it reads, so the
     compiled form of a producer is exactly "the numbers this mechanic is
@@ -71,36 +73,22 @@ class AllyPacketWalkInterpreter:  # pylint: disable=too-few-public-methods
     ramp is a fact the source states per item and not a property of the
     packet's direction.
     """
-
-    FAMILY = RuleFamily.ALLY_PACKET
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """Every number this producer declares, read live from its registry."""
-        payload = _payload(rule)
-        fields: list[KernelField] = []
-        for reference in payload.values:
-            if isinstance(reference, ValueRef):
-                name, value = reference.key, reference.get()
-            elif isinstance(reference, LevelValueRef):
-                name, value = reference.min_key, reference.get(ctx.level)
-            else:
-                raise AllyPacketInterpretationError(
-                    f"{rule.mechanic_id} declares {reference!r}, which names no "
-                    "registry key for the walk to read it back by"
-                )
-            fields.append(
-                KernelField(
-                    name=name,
-                    value=value,
-                    lane=EngineLane.RECEIPT_WALK,
-                    rule_id=rule.mechanic_id,
-                )
+    payload = _payload(rule)
+    fields: list[KernelField] = []
+    for reference in payload.values:
+        if isinstance(reference, ValueRef):
+            name, value = reference.key, reference.get()
+        elif isinstance(reference, LevelValueRef):
+            name, value = reference.min_key, reference.get(ctx.level)
+        else:
+            raise AllyPacketInterpretationError(
+                f"{rule.mechanic_id} declares {reference!r}, which names no "
+                "registry key for the walk to read it back by"
             )
-        return tuple(fields)
-
-
-WALK_INTERPRETER = AllyPacketWalkInterpreter()
+        fields.append(
+            KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        )
+    return tuple(fields)
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,14 +122,8 @@ class AllyPacketSlot:
     def emits(self, kind: PacketKind, recipients: Recipients) -> bool:
         """Whether this producer declares a packet of *kind* to *recipients*.
 
-        The question an engine asks when it wants to know whether a mechanic
-        lands inside its own jurisdiction — a shield the *holder* receives is
-        priced by the pair engine, while the same producer's packet to an ally
-        is the roster walk's.  Answered off the declared
-        :class:`~..item_behavior.PacketSpec`s, so a producer that grows or
-        loses a recipient reaches every such reader on the commit its
-        declaration changes.
-        """
+        An engine asks this to know its own jurisdiction: the holder's shield
+        is the pair engine's, the packet to an ally is the roster walk's."""
         return any(
             spec.kind is kind and spec.recipients is recipients
             for spec in _payload(self.rule).packets
@@ -160,10 +142,9 @@ class AllyPacketSlot:
     def level_value(self, key: str, level: int) -> float:
         """One declared level ramp, read at *level*.
 
-        *key* is the ramp's low key, which is how the declaration names it —
-        a ramp is one number with two ends, not two numbers.  *level* is the
-        level of whichever participant :meth:`level_subject` names, which is
-        the source's answer rather than the call site's.
+        *key* is the ramp's low key, the way the declaration names it: a ramp
+        is one number with two ends.  *level* is whichever participant
+        :meth:`level_subject` names, so the source answers, not the caller.
         """
         for reference in _payload(self.rule).values:
             if isinstance(reference, LevelValueRef) and reference.min_key == key:
@@ -223,7 +204,6 @@ def resolve_slots(
 __all__ = [
     "AllyPacketInterpretationError",
     "AllyPacketSlot",
-    "AllyPacketWalkInterpreter",
-    "WALK_INTERPRETER",
+    "packet_fields",
     "resolve_slots",
 ]

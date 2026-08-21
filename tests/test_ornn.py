@@ -3,6 +3,7 @@
 from src.calculator.champions import ornn, parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 class TestReviewedCrowdControl:
@@ -17,7 +18,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Ornn")
-        assert ornn.MODULE_CC == {"Q": "slow", "W": "none", "E": "none"}
+        assert ornn.MODULE_CC == {
+            "Q": "slow",
+            "W": "none",
+            "E": "none",
+            "R": CC_PER_PART,
+        }
         assert "slows them by 40% for 2 seconds" in cc_review.slot_text(data, "Q")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         # E's priced row is the charge's pass-through damage; the knock-up
@@ -32,7 +38,7 @@ class TestReviewedCrowdControl:
         r_text = cc_review.slot_text(data, "R")
         assert "slows them for 2 seconds" in r_text
         assert "knocks them up and stuns them for 1 second" in r_text
-        assert "R" not in ornn.MODULE_CC
+        assert ornn.MODULE_CC["R"] == CC_PER_PART
         abilities = parse_champion_abilities(
             get_champion("Ornn"), 18, 0.0, ability_ranks={"R": 3}
         )

@@ -108,16 +108,7 @@ def _blight_detonation(ctx: SlotCtx, rank: int) -> float:
 
 
 def _charge_fraction(ctx: SlotCtx) -> float:
-    """Q charge fraction: 0.0 = minimum (0% charge) .. 1.0 = fully charged.
-
-    The wiki prose (cached Q): the charge "increases Piercing Arrow's ...
-    effects over the first 1.25 seconds of the channel", and the damage
-    "as well as any detonated Blight stacks are both increased by
-    0% : 50% (based on channel time)".  The sourced Minimum/Maximum rows
-    are the two endpoints of that ramp, so the arrow interpolates between
-    them; the detonation and W-active empower keep the module's existing
-    reviewed rows (test-locked) — see ASSUMPTIONS.
-    """
+    """Q charge fraction: 0.0 = minimum (0% charge) .. 1.0 = fully charged."""
     fraction = float(ctx.option("q_charge_fraction"))
     return min(max(fraction, 0.0), 1.0)
 
@@ -394,7 +385,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="root",
         duration_attr="Root Duration",
     ),
     "P": _living_vengeance,

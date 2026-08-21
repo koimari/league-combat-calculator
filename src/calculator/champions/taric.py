@@ -88,8 +88,8 @@ def _bravado_window_terms(ability: dict[str, Any]) -> tuple[int, float, float]:
     """Read (empowered attacks, window seconds, bonus-armor ratio) from cache.
 
     Raises:
-        ValueError: when the cached P description no longer declares the
-            window shape or the bonus-armor ratio.
+        ValueError: when the cached P description declares neither the
+            window shape nor the bonus-armor ratio.
     """
     for effect in ability.get("effects", []):
         description = effect.get("description", "")
@@ -191,7 +191,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # The stun's duration and its source atom come off the cached E entry,
     # so MODULE_CC's reviewed kind and the priced interval are one fact.
     slot_wrappers={
-        "E": partial(with_control, kind="stun", duration_attr="Stun Duration"),
+        "E": partial(with_control, duration_attr="Stun Duration"),
     },
     cc_kinds=MODULE_CC,
 )
@@ -248,8 +248,8 @@ def derive_self_healing(
 ):
     """Starlight's Touch pays its per-charge heal on each Q cast.
 
-    Issue #143: this rule is the ONE ledger owner of the Q heal.  The
-    support scanner defers the slot (``_MODULE_AUTHORED_HEAL_SLOTS``) and
+    This rule is the one ledger owner of the Q heal.  The support
+    scanner defers the slot (``_MODULE_AUTHORED_HEAL_SLOTS``) and
     the participant timeline fans this event out to selected teammates, so
     one formula prices every recipient.  The event declares
     ``target_scope: self_and_all_teammates`` and stamps the charge count

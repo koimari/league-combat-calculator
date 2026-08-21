@@ -40,7 +40,7 @@ from dataclasses import replace
 from ..ability_spec import DamagePart
 from .healing_contract import declare_healing_rule
 from .inputs import champion_stat
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .. import healing_helpers as _healing
@@ -144,7 +144,7 @@ def _lets_bounce(packet_r):
 # them up and stun[ning] them for 0.5 seconds".  R is not here: its opening
 # bounce and its later ones apply different control, so the kinds are
 # authored per part in ``_lets_bounce``.  P is the Goo/revive state row.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zac",

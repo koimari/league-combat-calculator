@@ -24,6 +24,7 @@ from __future__ import annotations
 from .. import item_effects
 from ..item_behavior import (
     BehaviorRule,
+    BuildContext,
     DEFENSE_PAYLOAD_TYPES,
     DefenseExclusivity,
     DefenseField,
@@ -112,12 +113,7 @@ class DefenseSlot:
         )
 
     def threshold(self) -> float:
-        """The health fraction that arms this defence, or a stop.
-
-        Asked only by a family whose payload carries one, so an absent
-        threshold is a programming error rather than a mechanic that arms at
-        zero health — which is why this refuses instead of returning 0.0.
-        """
+        """The health fraction that arms this defence, or a stop."""
         return self._policy_reference("threshold")
 
     def duration(self) -> float:
@@ -160,14 +156,12 @@ class DefenseSlot:
 def declared_defenses(names: frozenset[str]) -> dict[DefenseMechanic, BehaviorRule]:
     """Every defence a build declares, one rule per mechanic.
 
-    Two things are decided here and nowhere else.  **Exclusivity**: a build
-    may legally hold two Lifelines, two Annuls or both stasis items, and
-    exactly one of each group is read.  **Which one**: the owner whose entry
-    comes first in the number registry, which reproduces the tuple of item
-    names the retired resolver tested in order, without naming one.
-
-    Walking the registry rather than the build is what makes that tie-break
-    statable at all — the build is a set, and a set has no first.
+    Two things are decided here and nowhere else.  Exclusivity: a build may
+    legally hold two Lifelines, two Annuls or both stasis items, and exactly
+    one of each group is read.  Which one: the owner whose entry comes first
+    in the number registry.  Walking the registry rather than the build is
+    what makes that tie-break statable at all, because a build is a set and a
+    set has no first.
     """
     selected: dict[DefenseMechanic, BehaviorRule] = {}
     claimed: set[DefenseExclusivity] = set()
@@ -186,25 +180,30 @@ def declared_defenses(names: frozenset[str]) -> dict[DefenseMechanic, BehaviorRu
     return selected
 
 
-def compiled_shape(rule: BehaviorRule, level: int) -> tuple[KernelField, ...]:
+def compiled_shape(
+    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+) -> tuple[KernelField, ...]:
     """The shape a defence compiles to, and the proof its numbers resolve.
 
-    Resolving every reference here is what makes a defence's *build-time*
+    Registered for every defence family on the resolver lane — a defence's
+    *value* depends on the subject's own resolved stats, so the shape is all
+    this lane can honestly compile and all six families compile it the same
+    way.  Resolving every reference here is what makes a defence's build-time
     failures — a missing registry key, a ramp whose ends were not parsed —
-    surface when the build is made rather than on whichever fight first
-    needed the number.
+    surface when the build is made rather than on whichever fight first needed
+    the number.
     """
     references = payload(rule).values
     for reference in references:
         if isinstance(reference, (LevelValueRef, LateLevelValueRef)):
-            reference.get(level)
+            reference.get(ctx.level)
         else:
             reference.get()
     return (
         KernelField(
             name=DEFENSE_VALUE_COUNT_FIELD,
             value=len(references),
-            lane=EngineLane.DEFENSE_RESOLVER,
+            lane=lane,
             rule_id=rule.mechanic_id,
         ),
     )

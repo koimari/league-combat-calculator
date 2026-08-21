@@ -76,7 +76,7 @@ from typing import Any
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..stats import ATTACK_SPEED_CAP
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     by_option,
@@ -137,8 +137,7 @@ def _is_hammer(ctx: SlotCtx) -> bool:
 
 
 def _level_tier(level: int) -> int:
-    """Index into R's per-level tables: 0 for 1-5, 1 for 6-10, 2 for
-    11-15, 3 for 16+ — R's values step at champion level, not rank."""
+    """Index into R's per-level tables, which step at level, not rank."""
     return sum(1 for breakpoint in TRANSFORM_BREAKPOINTS if level >= breakpoint)
 
 
@@ -225,8 +224,6 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
             count=ticks,
             time_offset=1.0,
             hit_interval=1.0,
-            # The field only "deals magic damage every second".
-            cc_kind="none",
         ),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
@@ -236,13 +233,9 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _burst_attack_speed(ctx: SlotCtx) -> float:
-    """Attacks per second while Hyper Charge's 3 attacks are firing.
-
-    "Maximum Attack Speed" in the in-game tooltip: +360% on Jayce's 0.658
-    ratio reaches 3.027, just past the game's 3.003 clamp, so the burst
-    sits AT the cap for any build. Bonus attack speed from items is
-    therefore wasted during the burst — it only speeds his ordinary autos.
-    """
+    """Attacks per second while Hyper Charge's 3 attacks fire.  +360% on the
+    0.658 ratio reaches 3.027, past the 3.003 clamp, so the burst sits at the
+    cap for any build and item attack speed is wasted during it."""
     attack_speed = ctx.stat("attack_speed")
     as_ratio = ctx.stat("attack_speed_ratio")
     burst = attack_speed + as_ratio * (HYPER_CHARGE_BONUS_ATTACK_SPEED / 100.0)
@@ -294,11 +287,6 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=1.0,
                 basic_damage=True,
                 bonus_ad_ratio=delta_ratio,
-                # Hyper Charge only "empowers his next 3 basic attacks
-                # ... to deal modified physical damage and gain 360%
-                # bonus attack speed" — no control on the swings it
-                # forces, which is what this row's events are.
-                cc_kind="none",
             ),
         ),
         "empowers_next_auto": {
@@ -315,14 +303,14 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 def _w_mana_restore(ctx: SlotCtx) -> dict[str, Any] | None:
     """The W-slot passive's per-basic-attack mana restore (15-25 by W rank).
 
-    Sourced from the cached "Mana Restored" leveling row — the atom
-    ``ability.mana _restored`` (hash bfeb0d88945a263e) — and corroborated
-    by the game binary's ManaGain ranks 1-6 (index 0 is the unleveled
-    placeholder 13, never a fight value).  The passive text lives only on
-    the hammer-form entry (Lightning Field), but the W slot is shared and
-    Jayce keeps the passive in BOTH stances — an explicit module
-    interpretation (neither the cache nor the binary states stance gating
-    either way; see ASSUMPTIONS).
+    Sourced from the cached "Mana Restored" leveling row, which is
+    wiki atom ``ability.mana _restored`` hash bfeb0d88945a263e, and
+    corroborated by the game binary's ManaGain ranks 1-6 (index 0 is the
+    unleveled placeholder 13, never a fight value).  The text sits only on
+    the hammer-form entry (Lightning Field), but the W slot is shared, so
+    this module reads Jayce as keeping the passive in BOTH stances.  That
+    is an interpretation: neither the cache nor the binary states stance
+    gating either way (see ASSUMPTIONS).
     """
     rank = ctx.rank_for("W")
     if rank < 1:
@@ -367,9 +355,6 @@ _e_hammer = simple_damage(
     attr="Magic Damage",
     dmg_type="magic",
     source=("E", _HAMMER),
-    # The root lands over the cast time; what arrives with the damage
-    # is the "knock them back 600 units".
-    cc_kind="knockback",
     event_order_certified="single_hit",
 )
 
@@ -414,8 +399,6 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
         "magic",
-        # The transform empowers one attack with bonus magic damage and
-        # buffs Jayce; nothing lands on the target but damage.
         cc_kind="none",
         event_order_certified="single_hit",
     )
@@ -595,7 +578,30 @@ SLOTS = {
     "R": _transform,
 }
 
-parse_abilities = build_parser(SLOTS, "Jayce")
+# Reviewed crowd control, read from the cached kit.  Q is the one slot
+# whose two stances disagree — hammer "slow[s] them for 2 seconds", cannon's
+# Shock Blast only "grant[s] sight" — so it answers per part.  W is a
+# damage field and three empowered swings, R a stat transform plus one
+# empowered attack, and P is ghosting and movement speed on the swap:
+# none of them touches an enemy with anything but damage.  E hammer
+# "knock[s] them back 600 units" (its root lands over the cast time, before
+# the damage); cannon's gate emits no row at all.
+#
+# R is read (neither transform touches an enemy with anything but the one
+# attack it empowers) and left undeclared: the cannon branch is an untimed
+# zero row that empowers no swing of its own, so the ledger cannot carry a
+# kind for it.
+MODULE_CC = {
+    "P": "none",
+    "Q": CC_PER_PART,
+    "W": "none",
+    "E": "knockback",
+    # Hammer's empowered swing is reviewed ("none"); Cannon's R row has no hit
+    # time, so the ledger refuses a kind there and the part carries it.
+    "R": CC_PER_PART,
+}
+
+parse_abilities = build_parser(SLOTS, "Jayce", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Jayce")

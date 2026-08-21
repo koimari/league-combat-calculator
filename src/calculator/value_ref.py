@@ -447,18 +447,12 @@ def resolve(reference: AnyValueRef, level: int | None = None) -> float:
 def resolve_flat(references: Sequence[AnyValueRef]) -> tuple[float, ...]:
     """Read references that need no level, or refuse naming the one that does.
 
-    Some readers genuinely have no level and no fight to hand — a heal
-    authored from a finished damage list, a regen tick schedule built before
-    any walk runs.  :func:`resolve` would accept ``level=None`` and let a
-    level ramp raise deep inside its own arithmetic, or worse answer with an
-    end of the ramp; this refuses up front and says which reference it could
-    not read, so a caller learns it needs a context instead of receiving a
-    number nobody asked for.
-
-    That distinction is the point: "this declaration is level-independent"
-    is a fact about the declaration, and checking it here is what lets two
-    families share one fight-free accessor instead of each writing its own.
-    """
+    Some readers have no level and no fight to hand: a heal authored from a
+    finished damage list, a regen tick schedule built before any walk runs.
+    :func:`resolve` would accept ``level=None`` and let a ramp raise deep
+    inside its own arithmetic, or answer with one end of it.  This refuses up
+    front and names the reference it could not read, so a caller learns it
+    needs a context instead of receiving a number nobody asked for."""
     for reference in references:
         if not isinstance(reference, ValueRef):
             raise ValueRefError(

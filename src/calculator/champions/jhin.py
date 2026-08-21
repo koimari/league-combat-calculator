@@ -276,7 +276,6 @@ SLOTS = {
             dmg_type="physical",
             event_order_certified="single_hit",
         ),
-        kind="root",
         duration_attr="Root Duration",
     ),
     "E": _captive_audience,

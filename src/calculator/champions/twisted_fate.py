@@ -23,7 +23,7 @@ hardcoded.
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from ..ability_spec import DamagePart
@@ -161,6 +161,6 @@ OPTIONS = [
 # hit" and applies no control; E (Stacked Deck)'s three-stack attack
 # "deal[s] bonus magic damage" and applies none either.  W's answer is the
 # selected card's and is authored on its part above.
-MODULE_CC = {"Q": "none", "E": "none"}
+MODULE_CC = {"Q": "none", "W": CC_PER_PART, "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Twisted Fate", cc_kinds=MODULE_CC)

@@ -116,20 +116,10 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         if center:
             # "The center of each snip converts 50% of the damage to true
             # damage" — the magic half leads, as a mixed entry requires.
-            parts.append(
-                DamagePart(
-                    "magic", amount * 0.5, time_offset=time_offset, cc_kind="none"
-                )
-            )
-            parts.append(
-                DamagePart(
-                    "true", amount * 0.5, time_offset=time_offset, cc_kind="none"
-                )
-            )
+            parts.append(DamagePart("magic", amount * 0.5, time_offset=time_offset))
+            parts.append(DamagePart("true", amount * 0.5, time_offset=time_offset))
         else:
-            parts.append(
-                DamagePart("magic", amount, time_offset=time_offset, cc_kind="none")
-            )
+            parts.append(DamagePart("magic", amount, time_offset=time_offset))
     entry["parts"] = tuple(parts)
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (

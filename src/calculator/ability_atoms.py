@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, Mapping
 
 from .atomizer_domains import atomize_abilities
@@ -206,8 +207,184 @@ def required_ranked_attribute_atom(
     )
 
 
+# ── The ability payload schema ────────────────────────────────────────────
+#
+# A champion module authors ``ability_damages[slot]`` and its sub-payloads
+# from wiki atoms; the fight engine reads named fields off them.  This table
+# is the one home for what an absent field means: REQUIRED says the payload
+# is malformed without it, and anything else is the value an unauthored field
+# prices at.  No engine call site restates a default (CLAUDE.md rule 5).
+REQUIRED = object()
+
+EMPTY_PAYLOAD: Mapping[str, Any] = MappingProxyType({})
+
+ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
+    {
+        # ``ability_damages[slot]`` itself.
+        "ability": MappingProxyType(
+            {
+                "auto_attack_override": EMPTY_PAYLOAD,
+                "auto_stack_every": 1,
+                "basic_attack_true_ratio": 0.0,
+                "cast_instances": 1,
+                "cast_time": 0.0,
+                "control_events": (),
+                "control_source_atoms": (),
+                "cooldown": 0.0,
+                "deathfire_category": "",
+                "detail": "",
+                "dot_duration": 0.0,
+                "dot_stack_count": 0,
+                "dot_tick_interval": 0.0,
+                "event_phase": "effect",
+                "execute_threshold_ratio": 0.0,
+                "name": REQUIRED,
+                "on_hit": EMPTY_PAYLOAD,
+                "parts": (),
+                "proc_count": 0,
+                "resource_cost": 0.0,
+                "resource_maximum_bonus": 0.0,
+                "resource_maximum_bonus_duration": 0.0,
+                "resource_restore": 0.0,
+                "resource_restore_per_proc": 0.0,
+                "resource_type": "NONE",
+                "short_fuse_cooldown": 0.0,
+                "short_fuse_refund": 0.0,
+                "spellblade_bonus_true_ratio": 0.0,
+                "spellblade_true_ratio": 0.0,
+            }
+        ),
+        "on_hit": MappingProxyType(
+            {
+                "damage_per_hit": 0.0,
+                # Two engine paths read this key and disagreed on what an
+                # unauthored one meant — physical on the current-health proc,
+                # magic on the flat one — so no payload may leave it out.
+                "damage_type": REQUIRED,
+                "hits": 1,
+                # ``None`` is "no cap"; a module caps by authoring a count.
+                "max_procs": None,
+                "min_damage": 0.0,
+                "stacks_required": 0,
+                "triggers": ("on_hit",),
+            }
+        ),
+        "target_debuff": MappingProxyType(
+            {
+                "armor_reduction_flat": 0.0,
+                "armor_reduction_percent": 0.0,
+                "duration": 0.0,
+                "mr_reduction_flat": 0.0,
+                "mr_reduction_percent": 0.0,
+                "stacks": 0,
+                "threshold_hits": 0,
+            }
+        ),
+        "post_hit_proc": MappingProxyType({"name": "Post-hit proc", "parts": ()}),
+        "stacking_dot": MappingProxyType(
+            {
+                "applied_by_autos": True,
+                "damage_type": "physical",
+                "single_stack_bonus_ad_ratio": 0.0,
+                "starting_stacks": 0,
+                "tick_interval": 0.0,
+            }
+        ),
+        "stack_triggered_buff": MappingProxyType({"name": REQUIRED}),
+        "crit_modifier": MappingProxyType(
+            {
+                "crit_chance_multiplier": 1.0,
+                "crit_damage_multiplier_factor": 1.0,
+                "excess_crit_bonus_ad_per_percent": 0.0,
+            }
+        ),
+        "auto_attack_override": MappingProxyType(
+            {
+                "ad_ratio": 1.0,
+                "crit_as_bonus": False,
+                "damage_ratio": 1.0,
+                "damage_type": "physical",
+                "on_hit_effectiveness": 1.0,
+            }
+        ),
+        "conversion": MappingProxyType(
+            {
+                "bonus_raw": 0.0,
+                "count": 0,
+                "damage_type": "magic",
+                "name": "Modified attacks",
+            }
+        ),
+        "double_shot": MappingProxyType({"ad_ratio": 0.5, "name": "Double Shot"}),
+        "empower": MappingProxyType({"attack_speed": 0.0, "hits": 1}),
+        "empower_timing": MappingProxyType(
+            {"attack_interval": 0.0, "first_attack_delay": 0.0}
+        ),
+        "proc_restore": MappingProxyType({"proc_count": 0}),
+        "resource_declaration": MappingProxyType({"atoms": ()}),
+        "stored_damage": MappingProxyType(
+            {
+                "duration": 0.0,
+                "include_auto_attacks": False,
+                "ratio": 0.0,
+                "source_slots": (),
+            }
+        ),
+        "temporary_buff": MappingProxyType(
+            {"applied_to_triggering_event": False, "applies_before_event": False}
+        ),
+    }
+)
+
+_MISSING = object()
+
+
+def ability_field(
+    payload: Mapping[str, Any], key: str, *, form: str = "ability"
+) -> Any:
+    """One field of an authored ability payload, through its declared schema.
+
+    The payload identifies itself by the ability ``name`` its module authored,
+    which is what a reader needs to find the champion and slot at fault.
+    """
+    value = payload.get(key, _MISSING)
+    # An authored ``None`` is the unauthored field: a module that writes one
+    # has declared the absence, not a value the engine can price.
+    if value is not _MISSING and value is not None:
+        return value
+    declared = ABILITY_PAYLOAD_SCHEMA.get(form, EMPTY_PAYLOAD).get(key, _MISSING)
+    if declared is _MISSING:
+        raise KeyError(f"ability payload form {form!r} declares no field {key!r}")
+    if declared is REQUIRED:
+        raise KeyError(
+            f"ability payload {payload.get('name') or form!r} is missing "
+            f"required field {key!r}"
+        )
+    return declared
+
+
+def ability_payload(ability_damages: Mapping[str, Any], slot: str) -> Mapping[str, Any]:
+    """One slot's authored payload, or the empty one when the kit has none."""
+    payload = ability_damages.get(slot)
+    return payload if isinstance(payload, Mapping) else EMPTY_PAYLOAD
+
+
+def ability_sub_payload(
+    payload: Mapping[str, Any], key: str, *, form: str = "ability"
+) -> Mapping[str, Any]:
+    """One named sub-payload, or the empty one when it is not authored."""
+    nested = ability_field(payload, key, form=form)
+    return nested if isinstance(nested, Mapping) else EMPTY_PAYLOAD
+
+
 __all__ = [
+    "ABILITY_PAYLOAD_SCHEMA",
     "AbilityAtomQuery",
+    "EMPTY_PAYLOAD",
+    "REQUIRED",
+    "ability_field",
+    "ability_payload",
+    "ability_sub_payload",
     "ranked_ability_atom_value",
     "required_ranked_attribute_atom",
     "required_ability_atom",

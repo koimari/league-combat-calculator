@@ -68,11 +68,7 @@ _AUTO = 1
 
 
 def _trigger_damage(level: int) -> float:
-    """Concussive Blows trigger damage at a champion level (16 + 10 x lvl).
-
-    Extrapolates linearly past 18 (216 at level 20), consistent with the
-    JSON's 40%-bonus array.
-    """
+    """Trigger damage at a level (16 + 10 x lvl, linear past 18: 216 at 20)."""
     return _TRIGGER_BASE + _TRIGGER_PER_LEVEL * level
 
 
@@ -412,7 +408,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="knockup",
         duration_attr="Maximum Knock up Duration",
     ),
     "P": _concussive_blows,

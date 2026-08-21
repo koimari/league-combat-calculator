@@ -56,21 +56,7 @@ _DATA_VERSION = 0
 
 
 def data_version() -> int:
-    """The current runtime-cache generation — monotonic, process-local.
-
-    Every memo over data/-derived values keys on this number: two reads
-    that see the same version saw the same cache, and write_runtime_cache
-    bumping it is what makes a mid-process refresh recompute rather than
-    serve a value derived from the cache it replaced.
-
-    Who reads it is :data:`DATA_VERSION_KEYED_MEMOS`, below, and the three
-    tables beside it say why every other memo in the tree does not — each
-    row carrying its ``invalidated_by`` in :class:`Invalidator`, the one
-    vocabulary ``program/caches`` also declares in.  It is
-    declared here, in the module that owns the write it counts, because the
-    two lanes that key on it are live at once and a counter either of them
-    declared would be a counter the other could not use.
-    """
+    """The current runtime-cache generation, monotonic and process-local."""
     return _DATA_VERSION
 
 
@@ -81,20 +67,9 @@ def store_for_generation(
 ) -> None:
     """Write one memo entry, dropping any superseded generation first.
 
-    Prefixing a memo key with the cache generation makes a stale entry
-    unreachable, which is correctness — but unreachable is not gone.  An
-    unbounded memo keyed that way keeps every superseded generation, and
-    each entry holds a strong reference to the cached dict it was derived
-    from, so a process that refreshes twice retains three copies of
-    everything it ever memoized.  Before ``id()`` was prefixed, a recycled
-    address at least overwrote its predecessor.
-
-    The eviction lives on the **write** path, and deliberately: a read that
-    hits has already matched the live generation in its key, so it needs no
-    check at all, and these are the optimizer's inner loops.  Every entry
-    shares one generation because this function is what puts keys there, so
-    the check is one comparison against the first key rather than a scan.
-    """
+    A generation-prefixed key makes a stale entry unreachable but not freed.
+    Eviction sits on the write path because a read has already matched the
+    live generation, and these are the optimizer's inner loops."""
     for existing in memo:
         if existing[0] != key[0]:
             memo.clear()
@@ -103,14 +78,11 @@ def store_for_generation(
 
 
 class Invalidator(Enum):
-    """What can make a cached answer wrong — the campaign's one vocabulary.
+    """What can make a cached answer wrong: the tree's one vocabulary.
 
-    Two registries in this tree answer "what stales this cache": the memo
-    tables below, and ``program/caches.CACHES``.  Until S10 they answered it
-    in two languages — a table membership here, an ``invalidated_by`` field
-    there — so "every cache declares ``invalidated_by``" was true of one of
-    them and unaskable of the other.  The enum lives here, in the module
-    that owns ``data_version`` and imports nothing, and ``program/caches``
+    Two registries answer "what stales this cache": the memo tables below,
+    and ``program/caches.CACHES``.  The enum lives here, in the module that
+    owns ``data_version`` and imports nothing, and ``program/caches``
     imports it: one vocabulary, two populations, and a gate that can read
     both.
 
@@ -410,7 +382,8 @@ def write_runtime_cache(
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
 
-    from .data_fetcher import _read_json_version  # local: no import cycle
+    # local: no import cycle
+    from .data_fetcher import _item_name_index, _read_json_version
     from .patch_identity import PatchIdentityError, canonical_patch
 
     # The file on disk has changed, so the parsed-JSON cache is stale and so
@@ -420,6 +393,7 @@ def write_runtime_cache(
     # module-level counter; hiding it in a container would not make the
     # state any less module-level.
     _read_json_version.cache_clear()
+    _item_name_index.cache_clear()
     global _DATA_VERSION  # pylint: disable=global-statement
     _DATA_VERSION += 1
 

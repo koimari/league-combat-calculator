@@ -169,6 +169,14 @@ _W_PROC = 200.0  # max(2000 * 0.10, 110) at the reference target
 def _stats() -> dict:
     """The reference build's explicit stat packet (direct engine)."""
     return {
+        "armor_penetration_bonus_percent": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "health": 0.0,
+        "lethality": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "ultimate_haste": 0.0,
         "level": float(_LEVEL),
         "attack_damage": 200.0,
         "base_attack_damage": 100.0,

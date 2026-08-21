@@ -1982,6 +1982,7 @@
     "Aphelios": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -3209,6 +3210,7 @@
               "on_attack"
             ]
           },
+          "cc_reviewed": true,
           "cooldown": 18.0,
           "damage_type": "physical",
           "detail": "6 slashes at 33 each (50% target missing health)",
@@ -11048,6 +11050,7 @@
         },
         "W": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 8.2,
           "damage_type": "physical",
           "empowers_next_auto": {
@@ -11075,6 +11078,7 @@
           "total_raw": 270.72
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Innate: gains ghosting and 30 bonus movement speed for 0.75s whenever Jayce switches stances. Pure utility state \u2014 no leveling row and no combat-damage interaction",
@@ -12394,6 +12398,7 @@
       "abilities_level_11": {
         "E": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 0.5,
           "damage_type": "magic",
           "detail": "5 selected ticks at 0.25-second intervals",
@@ -26140,6 +26145,7 @@
     "Sivir": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 24.0,
           "damage_type": "magic",
           "detail": "Spell Shield blocks one hostile effect during the sourced 1.5s window and heals Sivir for 49.2 after the sourced 0.25s delay.",
@@ -26240,6 +26246,7 @@
           "total_raw": 320.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -26264,6 +26271,7 @@
           "total_raw": 24.6
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -31426,13 +31434,14 @@
         "W": {
           "area_damage": true,
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 14.0,
           "damage_type": "magic",
           "detail": "W also shields Vex for 100 for 2.5s (self)",
           "event_order_certified": "single_hit",
           "name": "Personal Space",
           "parts": [
-            "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=160.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 75.0,
@@ -31447,6 +31456,7 @@
           "total_raw": 160.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "1 Gloom detonation(s) of 104.71 bonus magic damage (40:162.94 by level + 25% AP), each riding one basic attack against the marked enemy",
           "name": "Doom 'n Gloom (Gloom Detonation)",
@@ -51192,18 +51202,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58497,
+      "leaves": 58507,
       "numeric_leaves": 44857,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "49b15977b8e8c687a1c5eab801fe91410c9089b6",
+    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "b194fdccfee137ec9fd3c52e715dd958b19096c8"
+    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
   },
   "registered_champion_fights": {
     "Aatrox": {

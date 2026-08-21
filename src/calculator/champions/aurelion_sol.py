@@ -58,7 +58,7 @@ staying silently absent from the parse output.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import delayed_damage, no_damage
 from .slotlib import (
     by_option,
@@ -608,7 +608,7 @@ SLOTS = {
 # answer is a property of the branch and each variant authors its own
 # ``cc_kind`` on its own part above.  P and W are absent too: their rows
 # price no damage part for an event to carry a kind.
-MODULE_CC = {"Q": "none", "E": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)
 

@@ -14,6 +14,7 @@ from src.calculator.champions import (
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 class TestReviewedCrowdControl:
@@ -31,7 +32,7 @@ class TestReviewedCrowdControl:
         # Q's kind depends on the second-bomb state, so it is authored PER
         # PART by ``_time_bomb`` rather than declared per slot; the module
         # therefore declares no slot kind of its own.
-        assert zilean.MODULE_CC == {}
+        assert zilean.MODULE_CC == {"Q": CC_PER_PART}
         assert zilean.parse_abilities.cc_kinds == zilean.MODULE_CC
         lone = parse_champion_abilities(
             data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}

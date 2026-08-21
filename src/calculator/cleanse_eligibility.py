@@ -35,13 +35,13 @@ and Mercurial Scimitar (Quicksilver) — orthogonal to delivery type
   packets resolve before the cleanse in the walk's total order) is removed
   entirely; controls landing AFTER activation are untouched (a cleanse
   creates NO immunity).
-- HEAL — Mikael's Purify heals the target 100-250 by target level
-  (atom ``heal.flat`` cf9fe930ebd40602); the heal is a SEPARATE effect
-  (its own packet and receipt entry) that fires even when no control is
-  active.
-- MOVEMENT UTILITY — Mercurial's 50% bonus total movement speed for 2 s
-  (atom ``control.movement_speed`` 5e5f100f08a793f9) is a SEPARATE
-  utility effect (its own packet and receipt entry).
+- HEAL — Mikael's Purify heals the target 100-250 by target level, sourced
+  from the wiki atom ``heal.flat`` cf9fe930ebd40602.  The heal is a SEPARATE
+  effect (its own packet and receipt entry) that fires even when no control
+  is active.
+- MOVEMENT UTILITY — Mercurial's 50% bonus total movement speed for 2 s,
+  sourced from the wiki atom ``control.movement_speed`` 5e5f100f08a793f9,
+  is a SEPARATE utility effect (its own packet and receipt entry).
 - RECEIPTS — decision/recipient/use receipts with the exact field sets
   pinned by the acceptance matrix.
 
@@ -769,8 +769,7 @@ def movement_entry(declaration: Mapping[str, Any]) -> dict[str, Any] | None:
 def control_receipt_entries(
     intervals: Iterable[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Receipt-shaped control entries for an interval list (the shape the
-    acceptance matrix pins: control_kind/source/start/end)."""
+    """Receipt-shaped control entries: control_kind, source, start, end."""
     return [_control_entries(interval) for interval in intervals]
 
 
@@ -1180,30 +1179,6 @@ class CleanseDecision:
             "downtime_before": round(self.downtime_before, 6),
             "downtime_after": round(self.downtime_after, 6),
             "use_consumed": self.use_consumed,
-        }
-
-    def survival_receipt(
-        self,
-        *,
-        heal: dict[str, Any] | None = None,
-        movement: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """The recipient survival-row ``cleanse`` receipt (decision fields
-        plus the heal/movement entries, which stay SEPARATE effects with
-        their own atoms)."""
-        return {**self.public_receipt(), "heal": heal, "movement": movement}
-
-    def use_receipt(self) -> dict[str, Any]:
-        """The caster survival-row ``cleanse_use`` receipt."""
-        return {
-            "item": self.item,
-            "uses_before": 1,
-            "uses_after": 0 if self.use_consumed else 1,
-            "cooldown_seconds": self.declaration.get("cooldown_seconds"),
-            "cooldown_source_gap": bool(
-                self.declaration.get("cooldown_source_gap", False)
-            ),
-            "activations": 1,
         }
 
 

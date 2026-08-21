@@ -16,7 +16,7 @@ Why each slot is non-generic:
 - W (Silver Bolts) procs true damage (% of target max health, floored
   at "Minimum Bonus Damage") on every 3rd hit — the shared
   ``pct_health_per_hit`` math in a custom fn, because the emitted
-  legacy shape is a cooldown-less zero-damage shell whose on-hit dict
+  entry is a cooldown-less zero-damage shell whose on-hit dict
   carries ``stacks_required`` for the fight engine's proc grouping.
 - E (Condemn) picks its damage attribute by the ``condemn_wall``
   option (default True): "Total Physical Damage" includes the wall
@@ -61,17 +61,14 @@ _tumble_damage = simple_damage(
 def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: empowered-auto damage entry, cooldown scaled by R's published CDR.
 
-    The attack reset's THROUGHPUT is opt-in: with the ``q_tumble_reset``
-    option the empower is stamped as a self-supplying burst at an
-    infinite rate (``hits: 1`` + ``attack_speed: inf``) — "the auto
-    fires immediately" (the wiki reset prose + the binary
-    Trait_AttackReset tag; the acceleration magnitude is script-side,
-    so the infinite rate is the exact encoding of "immediately", and
-    the engine's burst machinery buys one EXTRA swing per accepted
-    cast with zero dead time).  Default keeps the conservative
-    ``True`` form (casts capped at the auto count; the reset's gain
-    not modeled).  The option is read STRICTLY (``is True``) so junk
-    values fail closed to the default.
+    The attack reset's THROUGHPUT is opt-in through ``q_tumble_reset``,
+    which stamps the empower as a self-supplying burst at an infinite
+    rate (``hits: 1`` + ``attack_speed: inf``).  The wiki reset prose and
+    the binary's Trait_AttackReset tag say "immediately" without a
+    magnitude, so an infinite rate is the exact encoding, and the burst
+    machinery buys one EXTRA swing per accepted cast with no dead time.
+    The default caps casts at the auto count and models no gain.  The
+    option is read STRICTLY (``is True``) so junk fails closed.
     """
     entry = _tumble_damage(ctx)
     if entry is not None:
@@ -88,7 +85,7 @@ def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: %maxHP true damage every 3rd hit, in the legacy on-hit shell."""
+    """W: %maxHP true damage every 3rd hit, in the on-hit shell."""
     ability = ctx.ability()
     if ability is None:
         return None

@@ -1,4 +1,4 @@
-"""The single survival transition kernel (issue #137).
+"""The single survival transition kernel.
 
 One semantic implementation per mechanic, consumed by both the receipt
 adapter (:mod:`survival.receipt_state`) and the optimizer score adapter
@@ -174,10 +174,7 @@ def evaluate_live_raw_formula(
 ) -> float:
     """Evaluate a dynamic packet against the live target maximum health.
 
-    Existing champion callbacks accept only the live missing-health ratio.
-    New target-maximum-health packets may also accept the temporary maximum
-    health as a second argument; the one-argument fallback keeps older
-    reviewed callbacks bit-for-bit compatible.
+    A callback takes the missing-health ratio, optionally the max health too.
     """
     try:
         return max(0.0, float(raw_formula(missing_ratio, target_max_health)))
@@ -241,7 +238,7 @@ class RegenerationWindow(NamedTuple):
 
 
 class SubjectDefenseProfile(NamedTuple):
-    """Per-event defense constants for one participant (issue #171).
+    """Per-event defense constants for one participant.
 
     The kernel consults these on every damage packet; they are fixed for a
     walk, so the context caches one profile per subject instead of re-reading
@@ -329,7 +326,7 @@ class TransitionContext:
     shield_presence_at_time: dict[tuple[int, float], bool] = field(
         default_factory=dict, repr=False
     )
-    # Derived per-walk speed fields (issue #171).  The ledger capability
+    # Derived per-walk speed fields.  The ledger capability
     # flags let the kernel skip building kwargs a no-op adapter would
     # drop, and ``_defense_profiles`` lazily caches each subject's
     # per-event defense constants so the hot loop never repeats a getattr
@@ -376,10 +373,8 @@ class TransitionContext:
     def reductions_for(self, attacker: int) -> tuple[Any, ...]:
         """One attacker's healing-reduction profiles, empty where it has none.
 
-        Score mode carries no profile list at all (the compiler folds the
-        same data into each action's ``grievous`` field), so an empty tuple
-        is the honest answer for both a missing list and an attacker outside
-        it -- neither is a reduction of zero that some rule computed.
+        Score mode carries no profile list, so an empty tuple is the honest
+        answer for a missing list and for an attacker outside one alike.
         """
         if self.reduction_profiles is None or not (
             0 <= attacker < len(self.reduction_profiles)
@@ -605,8 +600,7 @@ def apply_declared_price(
                 None if price.resistance is None else round(price.resistance, 6)
             ),
             "amount": round(price.amount, 6),
-            # Absent on a packet that reached its subject directly, which is
-            # every packet a retired family authors today.  A key that were
+            # Absent on a packet that reached its subject directly.  A key
             # always present would publish "not routed" as a fact about every
             # packet in the model, which is a claim nobody made.
             **(
@@ -748,12 +742,8 @@ def recovery_is_gated(
 
 
 def live_healing_factor(state: Mapping[str, Any], event_time: float) -> float:
-    """The defender's Grievous multiplier at *event_time*.
-
-    Every recovery this instant delivers reads it here — an authored heal and
-    the heal a Lifeline fires as it arms alike — so one wound window cannot
-    bite on one of them and miss the other.
-    """
+    """The defender's Grievous multiplier at *event_time*, read by every
+    recovery this instant delivers."""
     if event_time >= state["healing_reduction_until"]:
         return 1.0
     return float(state["healing_reduction_factor"])
@@ -974,11 +964,9 @@ def schedule_maw_omnivamp_heal(
         "healing_category": "vamp",
         "attacker": attacker_id,
         "target": attacker_id,
-        # ``EVENT_SLOTS.text`` where the parent id used to be interpolated
-        # directly.  Every damage packet that can reach this branch carries an
-        # id (the receipt composition stamps one on every engine row), so the
-        # string is unchanged; a packet without one used to interpolate the
-        # word ``None`` here and now contributes nothing.
+        # Every damage packet that can reach this branch carries an id (the
+        # receipt composition stamps one on every engine row).  A packet
+        # without one contributes nothing rather than interpolating ``None``.
         "_event_id": f"{EVENT_SLOTS.text(action.event_slot)}:maw-omnivamp",
         "_trigger_event_id": EVENT_SLOTS.text(action.event_slot),
         "sequence": int(action.sequence or 0) + 1,
@@ -1601,11 +1589,11 @@ def _apply_shield(
         ctx.ledger.write(action, expires_at=round(expires_at, 3))
     ctx.ledger.write(action, shield_pool=pool)
     if action.crowd_control_immunity_while_shield and expires_at is not None:
-        # P2 Slice 3: the immunity contract is tied to the EXACT ledger
-        # entry granted below.  The legacy single-slot projection
-        # (``crowd_control_immunity_until`` / ``_source``) stays for the
-        # pinned public rows; the grant ledger is the authority the
-        # contract's ``immunity_holder`` reads.
+        # The immunity contract is tied to the EXACT ledger entry granted
+        # below.  The single-slot projection
+        # (``crowd_control_immunity_until`` / ``_source``) serves the pinned
+        # public rows; the grant ledger is the authority the contract's
+        # ``immunity_holder`` reads.
         state["crowd_control_immunity_until"] = max(
             state["crowd_control_immunity_until"], expires_at
         )
@@ -1766,33 +1754,16 @@ def _refresh_live_modifier(
     """Refresh one holder's live modifier in place, or ``None`` if it is new.
 
     **One holder's one mechanic on one subject is one debuff.**  A second
-    trigger refreshes the window the first opened; it does not arm a second
-    copy beside it.  Bloodsong's Expose Weakness is a 4-second window on a
-    1.5-second cooldown, so an eight-second fight arms it three times with
-    overlapping windows, and every packet inside an overlap was multiplied
-    by ``1.08`` *twice* — a double count with no symptom, because
-    ``_apply_cross_participant_modifiers`` writes ``support_damage_multiplier``
-    once per applying modifier and the receipt therefore published the last
-    factor rather than the product.  The pair-side reading never had the
-    defect: ``interpreters.delta_amp.windows`` already unions overlapping
-    windows, so this is the walk being taught what the other engine says.
+    trigger refreshes the window the first opened rather than arming a copy
+    beside it, which would multiply every packet in the overlap twice.
 
-    Identity is ``(source, armed_by)`` and ``armed_by`` is the roster slot
-    that *authored* the packet — deliberately not ``holder``, which is the
-    owner skip's slot and is ``-1`` for exactly the coupled-authoritative
-    mechanics that need this most.  Two **different** holders keep their two
-    modifiers, because whether they should is
-    :class:`~...trigger_stream.HolderStacking`'s question and D-66's
-    ``ArmingLedger`` is the one place it is answered.
+    Identity is ``(source, armed_by)``, the slot that *authored* the packet,
+    deliberately not ``holder``, which is ``-1`` for exactly the
+    coupled-authoritative mechanics that need this most.  Two **different**
+    holders keep both modifiers; ``HolderStacking`` rules whether they should.
 
-    The surviving window is the later expiry, which is what the pair engine's
-    union does and what ``WindowMerge.REFRESH`` names: a refresh never
-    truncates a window a longer earlier trigger opened.
-
-    The replaced expiry is published unrounded.  Rounding is presentation and
-    its home is ``program/``'s precision registry (D-71), which ``survival/``
-    may not import; a ``round`` here would be a seventy-sixth kernel opinion
-    on a counter the migration frontier holds non-increasing.
+    The surviving window is the later expiry, which ``WindowMerge.REFRESH``
+    names.  The replaced expiry is unrounded: rounding is presentation.
     """
     for index, live in enumerate(armed):
         if (
@@ -2211,8 +2182,7 @@ def _apply_live_packet_chain(
     """
     # The packet's damage is authoritative when the receipt adapter holds
     # the event: the Knight's Vow holder gate restores the direct share on
-    # the event before this chain runs, exactly like the legacy walk
-    # re-read ``event.get("damage")`` here.
+    # the event before this chain runs.
     event = action.event
     raw_amount = action.amount if event is None else event.get("damage", action.amount)
     amount = max(0.0, float(raw_amount or 0.0))
@@ -2296,22 +2266,15 @@ def _apply_live_packet_chain(
 
 
 def _interaction_event_key(action: SurvivalAction) -> str:
-    """Build a stable identity for one projectile interaction packet.
-
-    Delegates to the delivery-eligibility kernel's shared identity
-    (``source_key:time:sequence``) so the walk's full-block bookkeeping
-    and the kernel's decision receipts use one key.
-    """
+    """Build a stable identity for one projectile interaction packet."""
     return stable_event_key(action)
 
 
 def _record_event_id_match(state: dict[str, Any], action: SurvivalAction) -> None:
     """Record one applied event whose id was selected by event id.
 
-    Only exact event-id selections count (source-slot matches do not
-    clear a selected id from the unmatched receipt).  The unmatched
-    list on the survival row is the named fail-closed receipt for a
-    positional selection the option validator cannot see.
+    Only exact event-id selections count; a source-slot match does not clear
+    a selected id from the unmatched receipt.
     """
     eligibility = state.get("projectile_defense_eligibility")
     if eligibility is None or not eligibility.selection.blocked_event_ids:
@@ -2449,7 +2412,7 @@ def _apply_projectile_damage_defense(
 
 
 def _sync_crowd_control_immunity(state: dict[str, Any], event_time: float) -> None:
-    """Re-derive the legacy immunity projection and the ended reason.
+    """Re-derive the single-slot immunity projection and the ended reason.
 
     The exact ledger entry (via :func:`immunity_holder`) is the only
     authority: expiry or depletion clears the projection immediately and
@@ -2493,7 +2456,6 @@ _MUNDO_P_PICKUP_HEAL_RATIO = 0.04
 _MUNDO_P_COOLDOWN_REFUND_SECONDS = 15.0
 _MUNDO_P_CANISTER_RANGE = 525.0
 _MUNDO_P_CANISTER_LIFETIME = 7.0
-_MUNDO_P_PICKUP_RADIUS = 115.0
 _MUNDO_P_COOLDOWN_ROW = (60.0, 15.0)
 
 
@@ -2934,37 +2896,16 @@ def _modifier_applies(
 ) -> bool:
     """Whether one armed cross-participant modifier prices this packet.
 
-    The one predicate every modifier branch consults — the reduction and
-    multiplier branches were separately untyped, and a mechanic answering
-    "does this apply to me?" in two places is how two answers drift apart.
-    Three clauses, in order:
+    The one predicate every modifier branch consults.  Four clauses:
 
     * the **owner skip**: the originating holder's pair engine already
-      priced its own half, so the packet exists for every other source
-      (``Authority.SPLIT``'s machine-checked handshake);
+      priced its own half, so the packet exists for every other source;
     * the **declared class match**: a magic-only curse does not amplify a
-      true-damage ability, which is what ``damage_classes`` says (D-04);
-    * the **source restriction**: a modifier may name the one participant
-      whose damage it prices, which is a different question from who armed
-      it -- ``source_participant`` is the source, ``holder`` is the arm;
-    * the **delivery gate**: today's walk prices only attacks and spells,
-      unless the modifier declared ``all_sources``.
-
-    Both sides of the owner skip are roster indices, so the predicate needs
-    no third argument: the armed modifier carries the slot that armed it and
-    the packet carries the slot that delivered it.  The participant-id
-    string this compared before was resolved by the caller purely because
-    the modifier remembered its holder by name.
-
-    The delivery gate and ``attack_classes`` are deliberately *both* here
-    and are **not** the same rule.  ``is_attack_or_spell`` is Blue Dream
-    Bubble's own restriction ("the next attack or spell they receive"),
-    generalised to every modifier before any of them could say so; Unmake,
-    Expose Weakness and Command all read "from all sources" and declare all
-    three attack classes, so for them the gate is narrower than the
-    declaration and ``AttackClass.OTHER`` damage goes unpriced.  Widening
-    the gate is a second correction and is not made here: the divergence
-    ships characterized behind a sentinel (D-04).
+      true-damage ability, which is what ``damage_classes`` says;
+    * the **source restriction**: ``source_participant`` prices, ``holder`` arms;
+    * the **delivery gate**: attacks and spells only, unless the modifier
+      declared ``all_sources``.  Not ``attack_classes``: a modifier declaring
+      all three classes still leaves ``AttackClass.OTHER`` unpriced.
     """
     holder = modifier["holder"]
     if holder >= 0 and holder == action.attacker:
@@ -3197,8 +3138,8 @@ def _apply_damage(
             )
     damage_type = action.damage_type
     # Absorption order, Lifeline arming, and the health transition are owned
-    # by ``shield_ledger`` (issue #159); this kernel supplies the storage and
-    # the ledger annotations, never a second copy of the semantics.
+    # by ``shield_ledger``; this kernel supplies the storage and the ledger
+    # annotations, never a second copy of the semantics.
     outcome = shield_ledger.absorb(
         pools,
         amount,
@@ -3929,7 +3870,7 @@ def _fill_blocked_shield_after(
 
 
 def _finalize_crowd_control_immunity(state: dict[str, Any], duration: float) -> None:
-    """Record the terminal immunity-ended reason and clear the legacy
+    """Record the terminal immunity-ended reason and clear the single-slot
     projection at the fight edge."""
     grants = state.get("crowd_control_immunity_grants", ())
     if grants:

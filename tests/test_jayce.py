@@ -40,6 +40,26 @@ from tests import cc_review
 
 # The reference build from the module docstring.
 STATS_250_AD = {
+    "ability_haste": 0.0,
+    "ability_power": 0.0,
+    "armor_penetration_bonus_percent": 0.0,
+    "armor_penetration_percent": 0.0,
+    "basic_ability_haste": 0.0,
+    "bonus_health": 0.0,
+    "bonus_mana": 0.0,
+    "critical_strike_chance": 0.0,
+    "flat_armor_penetration": 0.0,
+    "health": 0.0,
+    "is_melee": True,
+    "lethality": 0.0,
+    "level": 1,
+    "magic_penetration_flat": 0.0,
+    "magic_penetration_percent": 0.0,
+    "max_mana": 0.0,
+    "move_speed": 0.0,
+    "omnivamp_percent": 0.0,
+    "resource_regen_per_second": 0.0,
+    "ultimate_haste": 0.0,
     "attack_damage": 250.0,
     "base_attack_damage": 100.0,
     "bonus_attack_damage": 150.0,
@@ -721,6 +741,24 @@ class TestHyperChargeCooldownStart:
     """
 
     _STATS = {
+        "ability_power": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "flat_armor_penetration": 0.0,
+        "health": 0.0,
+        "is_melee": True,
+        "lethality": 0.0,
+        "level": 1,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 156.0,
         "base_attack_damage": 100.0,
         "bonus_attack_damage": 56.0,
@@ -764,6 +802,25 @@ class TestCannonShredDuration:
     """
 
     _STATS = {
+        "ability_haste": 0.0,
+        "ability_power": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "flat_armor_penetration": 0.0,
+        "health": 0.0,
+        "is_melee": True,
+        "lethality": 0.0,
+        "level": 1,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 156.0,
         "base_attack_damage": 100.0,
         "bonus_attack_damage": 56.0,
@@ -887,7 +944,16 @@ class TestReviewedCrowdControl:
         """
         from src.calculator.champions import jayce
 
-        assert not hasattr(jayce, "MODULE_CC")
+        from src.calculator.champions.engine import CC_PER_PART
+
+        assert jayce.MODULE_CC == {
+            "P": "none",
+            "Q": CC_PER_PART,
+            "W": "none",
+            "E": "knockback",
+            "R": CC_PER_PART,
+        }
+        assert jayce.parse_abilities.cc_kinds == jayce.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["Q", "slow"], ["E", "knock"]]:

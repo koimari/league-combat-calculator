@@ -64,11 +64,6 @@ _OPERATIONS = frozenset(
 TIER_RESTORE = 0.0
 TIER_CAST = 1.0
 
-# One explicit level-up event per fight: the Lost Chapter item option
-# carries a single timing choice, so multiple level-ups are not
-# representable in this slice.
-MAX_ENLIGHTEN_TRIGGERS_PER_FIGHT = 1
-
 
 @dataclass(frozen=True, slots=True)
 class ResourceEvent:
@@ -480,13 +475,9 @@ class TearManaflow:
         return self.charges_available_at(self._last_time)
 
     def charges_available_at(self, time: float) -> int:
-        """Stored charges at ``time`` (first charge banks at t=0).
-
-        The total banked grows every ``charge_interval`` seconds from
-        purchase (``1 + int(time // interval)``); at most ``max_charges``
-        are stored at once, so a holder that spends charges keeps banking
-        new ones over a long window.  Times before 0 floor to 0 charges.
-        """
+        """Stored charges at ``time``, at most ``max_charges``.  The first
+        banks at t=0, one more every ``charge_interval`` seconds after, and
+        a time before 0 floors to 0."""
         if isinstance(time, bool) or not math.isfinite(float(time)):
             raise ValueError(f"time must be finite, got {time!r}")
         banked = 1 + int(float(time) // self._declaration.charge_interval)

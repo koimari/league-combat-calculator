@@ -40,7 +40,7 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -301,7 +301,7 @@ SLOTS = {
 # slot: the facing branch selects stun or
 # slow, so ``_petrifying_gaze`` authors the kind (and its sourced
 # duration) on the part itself.
-MODULE_CC = {"P": "none", "Q": "none", "W": "slow", "E": "none"}
+MODULE_CC = {"P": "none", "Q": "none", "W": "slow", "E": "none", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 

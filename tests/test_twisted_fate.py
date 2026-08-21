@@ -7,6 +7,7 @@ says makes the whole timed fight fall back to coarse ordering.
 
 from src.calculator.champions import twisted_fate
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _w_parts(card: int):
@@ -23,7 +24,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Twisted Fate")
-        assert twisted_fate.MODULE_CC == {"Q": "none", "E": "none"}
+        assert twisted_fate.MODULE_CC == {"Q": "none", "W": CC_PER_PART, "E": "none"}
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 
@@ -31,7 +32,7 @@ class TestReviewedCrowdControl:
         text = cc_review.slot_text(cc_review.kit("Twisted Fate"), "W")
         assert "stuns the target for a duration" in text
         assert "all targets hit are slowed for 2.5 seconds" in text
-        assert "W" not in twisted_fate.MODULE_CC
+        assert twisted_fate.MODULE_CC["W"] == CC_PER_PART
         # The module's card order is gold, red, blue.
         assert [_w_parts(card)[0].cc_kind for card in (0, 1, 2)] == [
             "stun",

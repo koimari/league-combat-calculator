@@ -15,7 +15,7 @@ health total at every rank.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -94,7 +94,7 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
 # answer for the target this row prices.  W answers per swing
 # (``_winters_wrath``).  P is absent: Icebreaker's bonus rides Sejuani's
 # next attack or ability rather than emitting an ability event of its own.
-MODULE_CC = {"Q": "knockup", "E": "immobilize", "R": "stun"}
+MODULE_CC = {"Q": "knockup", "W": CC_PER_PART, "E": "immobilize", "R": "stun"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sejuani",

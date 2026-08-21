@@ -176,7 +176,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="knockup",
         duration_attr="Knock Up Duration",
     ),
     "R": _disintegration_ray,  # already authors its 13-tick channel timing

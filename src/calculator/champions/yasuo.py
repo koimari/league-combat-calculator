@@ -33,7 +33,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
     CRIT_DAMAGE_MULTIPLIER_FACTOR,
@@ -266,7 +266,7 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
 # here: its knock-up belongs to the Gathering Storm branch, so the kind is
 # authored per part in ``_steel_tempest``.  W raises a projectile wall and P
 # is the Flow/crit state row; neither authors a damage part.
-MODULE_CC = {"E": "none", "R": "knockup"}
+MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "knockup"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # R's slashes are one priced sweep over the knock-up's duration.

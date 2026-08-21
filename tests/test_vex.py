@@ -11,15 +11,17 @@ from tests import cc_review
 class TestReviewedCrowdControl:
     """Vex's crowd-control review, and the slots that still withhold.
 
-    Doom's fear is stack state, not slot state: it empowers "her next basic
-    ability", and against Looming Darkness it replaces E's own slow with a
-    flee, so neither a slot-wide immobilize nor a slot-wide "none" is true
-    of Mistral Bolt, Personal Space or Looming Darkness.
+    Doom's fear is fight state this module does not price: it empowers
+    "her next basic ability" on its own cooldown, and against Looming
+    Darkness it replaces E's own slow with a flee.  What keeps Q, E and R
+    undeclared is the ledger, not the read — none of their packet rows
+    carries a hit time or a single-landing certification.
     """
 
     def test_the_kit_declares_nothing_because_doom_is_state(self):
         data = cc_review.kit("Vex")
-        assert not hasattr(vex, "MODULE_CC")
+        assert vex.MODULE_CC == {"P": "none", "W": "none"}
+        assert vex.parse_abilities.cc_kinds == vex.MODULE_CC
         passive = cc_review.slot_text(data, "P")
         assert "empowers her next basic ability to knock down and fear" in passive
         assert "flee from the epicenter instead" in passive
@@ -46,7 +48,7 @@ class TestReviewedCrowdControl:
         )
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Vex") == ["E", "Q", "R", "W"]
+        assert cc_review.unreviewed_ability_slots("Vex") == ["E", "Q", "R"]
         coverage = cc_review.fimbulwinter_coverage("Vex")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

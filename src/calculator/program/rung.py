@@ -134,34 +134,18 @@ def counter_label(rung: Rung) -> CounterRung:
 
 
 def reason_of(rung: Rung) -> str:
-    """The named cause a failure rung carries; ``""`` for the compiled ones.
-
-    The empty string is the honest answer for a rung that succeeded — there
-    is no cause to name — and it is distinguishable from a failure rung
-    whose reason is missing, because such a rung cannot be constructed.
-    """
+    """The named cause a failure rung carries; ``""`` for the compiled ones."""
     return getattr(rung, "reason", "")
 
 
 def counter_entry(rung: Rung) -> tuple[CounterRung, str]:
-    """One decision as the two things a counter sink records: label and cause.
-
-    The bridge, in one expression, so a call site never spells the decision
-    twice.  ``counter_label`` says *which* of the four published keys the
-    evaluation is entered under and :func:`reason_of` says *why*, and a
-    reader who has only the first has the histogram D-69 exists to replace:
-    it names that a fallback happened and whose refusal it was, never which
-    declaration refused.
-    """
+    """One decision as a counter sink records it: published label, and cause."""
     return counter_label(rung), reason_of(rung)
 
 
 def histogram(rungs: Iterable[Rung]) -> Counter:
-    """The four-state histogram, keyed by published label.
-
-    Accounting for 100% of evaluations is the property criterion 16 asserts,
-    and it holds by construction here: every rung maps to exactly one label
-    and :func:`counter_label` raises rather than dropping one.
+    """The four-state histogram, keyed by published label.  Every rung maps to
+    one label and :func:`counter_label` raises, so the tally is exhaustive.
     """
     tally: Counter = Counter()
     for rung in rungs:

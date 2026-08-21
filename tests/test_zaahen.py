@@ -12,6 +12,7 @@ from src.calculator.champions import (
     zaahen,
 )
 from tests import cc_review, row_review
+from src.calculator.champions.engine import CC_PER_PART
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -36,7 +37,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Zaahen")
-        assert zaahen.MODULE_CC == {"W": "stun", "E": "none", "R": "none"}
+        assert zaahen.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "stun",
+            "E": "none",
+            "R": "none",
+        }
         assert zaahen.parse_abilities.cc_kinds == zaahen.MODULE_CC
         w_text = cc_review.slot_text(data, "W")
         assert "stunned for 0.25 seconds, and pulled 225 units" in w_text
@@ -54,7 +60,7 @@ class TestReviewedCrowdControl:
     def test_the_darkin_glaive_carries_the_variant_it_prices(self):
         """Only the recast row knocks up."""
         data = cc_review.kit("Zaahen")
-        assert "Q" not in zaahen.MODULE_CC
+        assert zaahen.MODULE_CC["Q"] == CC_PER_PART
         assert "knock up the target for 0.75 seconds" in cc_review.slot_text(data, "Q")
         assert _q_kinds() == ["none"]
         assert _q_kinds(q_variant=1) == ["none"]

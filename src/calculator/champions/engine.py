@@ -230,11 +230,10 @@ class SlotCtx:
     accumulates emitted entries in evaluation order.
 
     The three input blocks are read through :meth:`stat`, :meth:`target_stat`
-    and :meth:`option`, never with a ``.get(key, <literal>)`` — the fallback
-    literal is the shape that keeps a formula answering after its input stops
-    arriving, and D-24's declared ``zero_policy`` default would stamp the
-    resulting zero ``MEASURED``.  ``champions/inputs.py`` holds the
-    vocabularies and their declared defaults.
+    and :meth:`option`, never with a ``.get(key, <literal>)``: a fallback
+    literal keeps a formula answering after its input stops arriving, and the
+    resulting zero would be stamped ``MEASURED``.  ``champions/inputs.py``
+    holds the vocabularies and their declared defaults.
     """
 
     slot: str  # slot-map key being parsed
@@ -262,12 +261,10 @@ class SlotCtx:
     def option(self, key: str) -> Any:
         """One declared option: the user's value, or the module's default.
 
-        The default comes from the module's own ``OPTIONS`` row — the same
-        row the frontend renders — so the number a formula falls back to and
-        the number the user is shown cannot disagree.  A key the module never
-        declared raises: that is an option nothing wired, and a stack count
-        of zero from an unwired option is the failure D-24's guard exists to
-        make loud.
+        The default is the module's own ``OPTIONS`` row, the row the frontend
+        renders, so the fallback and the number the user sees cannot
+        disagree.  An undeclared key raises rather than yielding a zero that
+        would be published as a measured number.
         """
         if key not in self.option_defaults:
             raise ChampionInputError(
@@ -279,21 +276,15 @@ class SlotCtx:
         return self.option_defaults[key] if value is None else value
 
     def bump_stat(self, name: str, delta: float) -> float:
-        """Accumulate onto a declared build stat, returning the new value.
-
-        BUFF-phase slots add to the shared stat block; going through the
-        vocabulary keeps a mid-parse write from inventing a stat name no
-        reader could ever resolve.
-        """
+        """Accumulate onto a declared build stat, returning the new value."""
         updated = self.stat(name) + delta
         self.stats[name] = updated
         return updated
 
     def ability(self, slot: str | None = None, index: int = 0) -> dict | None:
-        """Return the ability JSON at (slot, index), or None if absent.
+        """The ability JSON at (slot, index), or ``None`` if absent.
 
-        Defaults to entry 0 of this parser's own slot; archetypes pass
-        their ``source=(slot, index)`` here for multi-entry slots.
+        Defaults to entry 0 of this parser's own slot.
         """
         entries = self.abilities.get(slot or self.slot, [])
         if index >= len(entries):
@@ -333,8 +324,7 @@ def _stamp_cast_time(
     One home instead of every slot parser plumbing it. Only castable
     entries (they carry a cooldown) occupy the timed fight's shared cast
     timeline; slot-fn-supplied values win; instant casts (0.0) stay
-    unstamped so entries stay lean and cast-time-less data keeps legacy
-    cast counts.
+    unstamped, so an entry with no cast time is counted as an instant.
     """
     if "cooldown" not in entry or "cast_time" in entry or ability_json is None:
         return
@@ -353,15 +343,11 @@ def _stamp_cast_time(
         entry["cast_time"] = cast_time
 
 
+# Camille's and Ambessa's Q2 are free recasts: one paid cast buys both halves.
+# A charge is not one, it is a whole cast stocked in advance, and a slot
+# parser that knows the difference stamps its own ``resource_cost``.
 def _is_free_recast(entry: dict[str, Any]) -> bool:
-    """Whether this entry is a recast the parent cast already paid for.
-
-    Camille's and Ambessa's Q2 are: one paid cast buys both halves, so the
-    second spends nothing of its own.  A *charge* is not one — it is a whole
-    cast that happens to have been stocked in advance — and a slot parser
-    that knows the difference says so by stamping its own ``resource_cost``,
-    which the early return below hands back untouched.
-    """
+    """Whether this entry is a recast the parent cast already paid for."""
     return bool(entry.get("recast_of"))
 
 
@@ -571,9 +557,9 @@ def _validate_cc_event_contract(
             )
 
 
-# A cast whose only damage is the basic attack it forces prices at zero
-# on its own account.  That is a declaration, not a computation, so the
-# marker part it carries says so with the campaign's own vocabulary.
+# A cast whose only damage is the basic attack it forces prices at zero on
+# its own account.  That is a declaration, not a computation, so the marker
+# part it carries is a structural zero with a reason.
 _EMPOWER_MARKER_ZERO = ZeroPolicy(
     disposition=Disposition.STRUCTURAL_ZERO,
     reason=(
@@ -660,6 +646,20 @@ def _empower_marker_part(
     )
 
 
+#: The ``MODULE_CC`` value for a slot whose control is not one answer.
+#:
+#: A slot-level kind is a constant, and some slots do not have one: the
+#: kind varies by part (Zac's Elastic Slingshot knocks back the first
+#: bounce and slows the rest), by option (Aphelios' weapon, Sion's charge
+#: time, Yasuo's two Q stacks) or by both.  Those slots author the kind on
+#: the part that carries it, and name themselves here so the declaration
+#: still lists every reviewed slot in one place.  It is a pointer, not a
+#: second home: :func:`_apply_module_cc` stamps nothing for such a slot,
+#: and authoring a kind on a slot NOT declared here is refused
+#: (:func:`_refuse_undeclared_part_cc`), so the pointer cannot go stale.
+CC_PER_PART = "per_part"
+
+
 def _apply_module_cc(
     entry: dict[str, Any],
     kind: str,
@@ -677,17 +677,23 @@ def _apply_module_cc(
     instead of only of the ones that happened to go through a builder
     keyword.
 
-    A part that already carries its own kind keeps it — an explicit
-    per-part statement is the more specific one — but a part that carries
-    a *different* kind is two declarations of one fact that disagree, so it
-    raises rather than silently preferring either.
+    A part that carries its own kind under a constant declaration is a
+    second home for one fact — whether it agrees or not — so it raises: a
+    slot whose control really does vary within the cast declares
+    :data:`CC_PER_PART` instead, and one whose control is a constant keeps
+    the constant in ``MODULE_CC`` alone.
 
     A slot with no parts at all gets one built for it, stops the import,
-    or is a row that prices nothing at all — :func:`_empower_marker_part`
-    rules which.  What must not happen is the outcome this used to have for
-    all three alike, where a declaration on a row that DOES price damage
-    returned quietly and stamped nothing.
+    or is a row that prices nothing: :func:`_empower_marker_part` rules
+    which.  A declaration on a row that does price damage always stamps
+    rather than returning quietly.
     """
+    if kind == CC_PER_PART:
+        # The parts already carry the answer, and a branch that reviewed
+        # its way to *no* answer (Rammus' aggregated thorns row) leaves
+        # them bare on purpose.  Stamping here would overwrite both.
+        return
+    parts = entry.get("parts") or ()
     if kind == "none":
         # The reviewed no-CC statement: the fight engine's event rows read
         # it as ``cc_reviewed`` (a row with no kind at all is unreviewed).
@@ -697,29 +703,55 @@ def _apply_module_cc(
                 "control but the entry authors control_events"
             )
         entry["cc_reviewed"] = True
-    parts = entry.get("parts") or ()
     if not parts:
         marker = _empower_marker_part(entry, kind, champion_name, slot)
         if marker is not None:
             entry["parts"] = (marker,)
         return
     stamped: list[Any] = []
-    changed = False
     for part in parts:
         existing = getattr(part, "cc_kind", None)
-        if existing is None:
-            stamped.append(replace(part, cc_kind=kind))
-            changed = True
-            continue
-        if existing != kind:
+        if existing is not None:
             raise ValueError(
                 f"{champion_name} slot {slot!r}: MODULE_CC declares "
-                f"{kind!r} but the part declares {existing!r} — one cast's "
-                "crowd control has one answer"
+                f"{kind!r} and a part declares {existing!r} — one cast's "
+                "crowd control has one home; drop the part's cc_kind, or "
+                f"declare the slot {CC_PER_PART!r} if the kind really does "
+                "vary within the cast"
             )
-        stamped.append(part)
-    if changed:
-        entry["parts"] = tuple(stamped)
+        stamped.append(replace(part, cc_kind=kind))
+    entry["parts"] = tuple(stamped)
+
+
+def _refuse_undeclared_part_cc(
+    champion_name: str,
+    result_key: str,
+    entry: dict[str, Any],
+    declared_keys: frozenset[str],
+) -> None:
+    """A part may only author a kind for a slot ``MODULE_CC`` names.
+
+    Raises:
+        ValueError: The entry's parts author crowd control for a slot the
+            module's ``MODULE_CC`` does not declare, so the kit's control
+            has a second, unlisted home.
+    """
+    if result_key in declared_keys:
+        return
+    authored = sorted(
+        {
+            part.cc_kind
+            for part in entry.get("parts") or ()
+            if getattr(part, "cc_kind", None) is not None
+        }
+    )
+    if authored:
+        raise ValueError(
+            f"{champion_name} entry {result_key!r}: parts author cc_kind(s) "
+            f"{authored} for a slot MODULE_CC does not declare — declare the "
+            f"slot (the constant kind, or {CC_PER_PART!r} when the kind "
+            "varies within the cast)"
+        )
 
 
 # The instant a multi-part ``single_hit`` row occupies: the cast boundary
@@ -788,11 +820,7 @@ def _certify_shared_instant(
 
 
 def _result_key(slot: str) -> str:
-    """Map a slot-map key to its key in the results dict.
-
-    The fight engine expects the passive under ``"passive"``; every
-    other slot keeps its own key.
-    """
+    """The results-dict key for a slot; the fight engine wants ``"passive"``."""
     return "passive" if slot == "P" else slot
 
 
@@ -841,6 +869,7 @@ def build_parser(
     # source, so one resolution per champion per process is the whole cost.
     declared_options: dict[str, Any] | None = None
     declared_cc_kinds: Mapping[str, str] = dict(cc_kinds) if cc_kinds else {}
+    declared_result_keys = frozenset(_result_key(slot) for slot in declared_cc_kinds)
 
     def parse_abilities(
         champion_data: dict[str, Any],
@@ -894,6 +923,9 @@ def build_parser(
         for result_key, entry in results.items():
             _certify_shared_instant(champion_name, result_key, entry)
             _validate_entry_keys(champion_name, result_key, entry)
+            _refuse_undeclared_part_cc(
+                champion_name, result_key, entry, declared_result_keys
+            )
             _validate_cc_event_contract(champion_name, result_key, entry)
 
         return results

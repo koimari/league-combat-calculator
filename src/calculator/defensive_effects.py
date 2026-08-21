@@ -1,17 +1,11 @@
 """The defensive resolver: sourced defences ready before the fight engine runs.
 
-This module used to *be* the defences.  Twenty-three mechanics lived here as
-a ladder of ``if "<item name>" in names`` branches, each reading the number
-registry directly, each carrying its own hand-written provenance record, and
-the order they appeared in the function was the only statement anywhere of
-the order they apply in.
-
-Now it resolves declarations.  Which defences a build has is answered by
+It resolves declarations.  Which defences a build has is answered by
 :mod:`~.item_behavior_catalog` from the registry entries' own keys; how much
 each is worth is answered by the family's interpreter; and the order they
 apply in is the declaration order of
 :class:`~.item_behavior.DefenseMechanic`, which is arithmetic rather than
-presentation — Boundless Vitality multiplies shields three earlier mechanics
+presentation: Boundless Vitality multiplies shields three earlier mechanics
 granted, so moving it is not a refactor.
 """
 
@@ -76,12 +70,11 @@ DEFENSE_SOURCE_LABEL: Mapping[DefenseMechanic, str] = {
 class DefenseCitation:
     """One published defensive source: which mechanic, whose, and from where.
 
-    The successor to the hand-written provenance records this module used to
-    carry.  Nothing here is authored beside the behaviour any more:
-    the receipt comes from the rule that granted the defence — resolved from
-    the registry entry's own citation or from the family constant, in
-    ``receipt_for``'s ruled order — and the label is derived from the
-    mechanic and its owner rather than typed a second time.
+    Nothing here is authored beside the behaviour: the receipt comes from the
+    rule that granted the defence, resolved from the registry entry's own
+    citation or from the family constant in ``receipt_for``'s ruled order, and
+    the label is derived from the mechanic and its owner rather than typed a
+    second time.
     """
 
     mechanic: DefenseMechanic
@@ -112,10 +105,9 @@ class DefenseCitation:
 def defense_source(owner: str, mechanic: DefenseMechanic) -> DefenseCitation:
     """The citation one owner's declaration of *mechanic* resolves to.
 
-    The successor to this module's retired per-item ``_X_SOURCE`` constants:
-    the receipt comes from the owner's own registry entry or from the
-    family's declared constant, in ``receipt_for``'s ruled order, so there is
-    no second place a revision can be typed and go stale.
+    The receipt comes from the owner's own registry entry or from the family's
+    declared constant, in ``receipt_for``'s ruled order, so there is no second
+    place a revision can be typed and go stale.
     """
     return DefenseCitation(
         mechanic=mechanic,

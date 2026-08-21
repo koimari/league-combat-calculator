@@ -31,6 +31,25 @@ MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 2}
 def _parse(briar_data, level=18, *, options=None, ranks=MAX_RANKS, **stat_overrides):
     """Parse Briar with crafted stats (deterministic hand-math inputs)."""
     champion_stats = {
+        "ability_haste": 0.0,
+        "ability_power": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "critical_strike_chance": 0.0,
+        "flat_armor_penetration": 0.0,
+        "is_melee": True,
+        "lethality": 0.0,
+        "level": 1,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 200.0,
         "base_attack_damage": 100.0,
         "bonus_attack_damage": 100.0,
@@ -400,7 +419,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Briar")
-        assert briar.MODULE_CC == {"Q": "stun", "W": "none", "R": "none"}
+        assert briar.MODULE_CC == {
+            "Q": "stun",
+            "W": "none",
+            "E": "knockback",
+            "R": "none",
+        }
         assert "stuns them for 0.85 seconds" in " ".join(
             cc_review.slot_text(data, "Q").split()
         )

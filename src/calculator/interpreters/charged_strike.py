@@ -3,16 +3,11 @@
 Eleven items strike harder than an on-hit does, and none of them strikes on
 every hit.  A charge is spent on one attack, or a strike lands every Nth
 application, or an ability arms a shaped charge, or an ultimate empowers a
-run of the holder's own attacks.  Until this module the four shapes reached
-the engine through four registry tags and four compilers, and two of those
-compilers decided what an item carried by comparing its name: Voltaic
-Cyclosword's temporary lethality was an ``item_name == ...`` branch, and
-Fiendhunter Bolts' window was assembled inline in the projection loop.
-
-The declaration says all four now.  Every optional mechanic — Energized
-stacks, the lethality window, Statikk's arc — is a declared record or a
-declared ``None``, chosen by the registry's own schema so a dropped parse
-raises rather than being read as an absence.
+run of the holder's own attacks.  The declaration says which shape an item
+takes.  Every optional mechanic (Energized stacks, the lethality window,
+Statikk's arc) is a declared record or a declared ``None``, chosen by the
+registry's own schema so a dropped parse raises rather than being read as an
+absence.
 
 **"This fires once" is a declaration.**  ``max_procs`` is always present and
 is ``Const(1, "count")`` where the strike fires once, rather than being the
@@ -77,20 +72,20 @@ def _sibling_count(reference: AnyValueRef | None, level: int) -> int:
     return NO_SIBLING_COUNT if reference is None else int(resolve(reference, level))
 
 
-def _strike_fields(
+def strike_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One charged strike's compiled numbers for *lane*.
+    """One charged strike's compiled numbers, stamped with *lane*.
 
     The count this strike compiles to, plus the proof its bases resolve.
     Each shape's count is the thing that decides how often it is paid:
     empowered attacks, on-hit applications, a cooldown, or the ultimate's
     own attack count.  All four are build-time numbers.
 
-    The lane is the only thing that varies between the two interpreters
-    below.  Sharing the body rather than spelling it twice is what makes
-    "the walk reads the same declaration the pair engine reads" a property
-    of the tree instead of a claim two functions could drift out of.
+    Registered for both the pair engine and the receipt walk: the lane is the
+    only thing that differs between them, so one body is what makes "the walk
+    reads the same declaration the pair engine reads" a property of the tree
+    rather than a claim two functions could drift out of.
     """
     payload = rule.payload
     if isinstance(payload, EmpoweredHitRule):
@@ -123,80 +118,18 @@ def _strike_fields(
     )
 
 
-class ChargedStrikePairInterpreter:  # pylint: disable=too-few-public-methods
-    """The pair engine's answer for the ``charged_strike`` family.
-
-    Its number is a **preview** for every strike that authors a damage row,
-    since this family retired: those rules declare ``ViewTag.THEORETICAL``
-    on their pair lane and the five engine sites that author their rows
-    stamp ``pair_preview_of``, so the honest one-attacker figure stays in
-    the pair fight's own receipt and leaves every total the roster composes.
-    The two swing schedules are not previews of anything — a schedule is a
-    build-time stat this engine applies and no walk re-prices.
-    """
-
-    FAMILY = RuleFamily.CHARGED_STRIKE
-    LANES = frozenset({EngineLane.PAIR_ENGINE})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This strike's numbers, resolved for the one-attacker engine."""
-        return _strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-
-
-class ChargedStrikeWalkInterpreter:  # pylint: disable=too-few-public-methods
-    """The receipt walk's answer for the ``charged_strike`` family.
-
-    The half that retires ``charged_strike/receipt_walk`` (umbrella
-    Amendment F's act, in the lane Amendment K rules and with the whole
-    shape Amendment L, Ruling 1 requires).  Before it, the coupled walk
-    consumed this family as ``participant_timeline._pair_run_fight``'s
-    already-priced rows, which is what the deferral row said in its own
-    words.  Now each strike's pair event is a declaration and no price: the
-    walk mitigates the declared magnitude itself, at the resistance that
-    packet met, through ``survival.pricing.price_declared_packet``.
-
-    What the declaration has to carry is this family's own arithmetic and
-    not the item active's, which is why it is enumerated at the authoring
-    sites rather than assumed here: a repeating strike's magnitude is
-    re-read per proc against the target's falling health, a basic-damage
-    strike folds the target-side basic multiplier into its magnitude
-    because the engine applies that factor *after* mitigation, and the
-    attack class is ``OTHER`` for every one of them because no site here
-    pays a part amp.
-    """
-
-    FAMILY = RuleFamily.CHARGED_STRIKE
-    LANES = frozenset({EngineLane.RECEIPT_WALK})
-
-    def compile(self, rule: BehaviorRule, ctx: BuildContext) -> tuple[KernelField, ...]:
-        """This strike's numbers, resolved for the coupled roster walk."""
-        return _strike_fields(rule, ctx, EngineLane.RECEIPT_WALK)
-
-
-PAIR_INTERPRETER = ChargedStrikePairInterpreter()
-WALK_INTERPRETER = ChargedStrikeWalkInterpreter()
-
-
 def strike_mechanic_id(owner: str) -> str:
     """*owner*'s damage-authoring charged-strike mechanic id, or a stop.
 
-    What the pair engine needs to stamp the rows it authors with the
-    mechanic each row previews: the five authoring sites walk
-    :class:`~..item_effects.DamageSource` rows, which carry an item name and
-    no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
     A **swing schedule** is skipped rather than returned: Guinsoo's Rageblade
     declares one beside its on-hit strike and Yun Tal Wildarrows declares one
-    alone, and neither authors a damage row — a schedule changes how often
-    the holder swings, which the pair engine applies and no walk re-prices.
-    Returning one here would stamp somebody else's row as a preview of it.
+    alone, and neither authors a damage row.  A schedule changes how often the
+    holder swings, which the pair engine applies and no walk re-prices, so
+    returning one here would stamp somebody else's row as a preview of it.
 
-    A stop rather than a default: an unstamped strike row would keep the
-    pair engine's number in every roster total *and* leave the walk pricing
-    the declaration, which is the double count this family's retirement
-    exists to make unrepresentable.
+    A stop rather than a default: an unstamped strike row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
     """
     rules = [
         rule
@@ -215,9 +148,8 @@ def strike_mechanic_id(owner: str) -> str:
 def _payload_of(rule: BehaviorRule, shape: type) -> object:
     """*rule*'s payload if it is of *shape*, or a stop.
 
-    The dispatch above has already chosen the branch; this is what keeps that
-    choice checkable rather than assumed, and it raises under ``-O`` where an
-    assertion would vanish.
+    The dispatch above has already chosen the branch; this keeps that choice
+    checkable, and it raises under ``-O`` where an assertion would vanish.
     """
     if not isinstance(rule.payload, shape):
         raise ChargedStrikeInterpretationError(
@@ -366,10 +298,7 @@ class RearmedWindow:
     def refund(self, critical_chance: float) -> float:
         """What one attack pays down this window's cooldown by.
 
-        The critical share is weighted by the holder's chance rather than
-        rolled, which is the model the whole engine uses for a crit-scaled
-        rate, and the chance is clamped to the unit interval because a
-        declaration cannot stop a caller handing it 1.4.
+        The critical share is weighted by the holder's chance, clamped to [0, 1].
         """
         return (
             self.refund_per_attack
@@ -602,19 +531,16 @@ __all__ = [
     "CHARGE_COUNT_FIELD",
     "NO_SIBLING",
     "NO_SIBLING_COUNT",
-    "PAIR_INTERPRETER",
-    "WALK_INTERPRETER",
     "SHAPED_CHARGE_BREAKDOWN_PREFIX",
     "SHAPED_CHARGE_SUFFIX",
     "ChargedStrikeInterpretationError",
-    "ChargedStrikePairInterpreter",
     "ChargedStrikeSlots",
-    "ChargedStrikeWalkInterpreter",
     "DecayingStackRamp",
     "RearmedWindow",
     "SwingSchedule",
     "charged_strike_rules",
     "resolve_slots",
+    "strike_fields",
     "strike_mechanic_id",
     "swing_times",
 ]

@@ -21,7 +21,7 @@ from src.calculator.interpreters.crit_profile import (
     CRIT_DAMAGE_BONUS_FIELD,
     COOLDOWN_REFUND_FIELD,
     CritProfileInterpretationError,
-    PAIR_INTERPRETER,
+    crit_fields,
     resolve_profile,
 )
 from src.calculator.item_behavior import (
@@ -62,9 +62,9 @@ def _rule(owner: str, payload_type: type):
 def test_the_family_is_registered_on_the_lane_that_prices_it() -> None:
     """A crit multiplier is priced where the one-attacker damage model runs."""
     assert (
-        INTERPRETERS[(RuleFamily.CRIT_PROFILE, EngineLane.PAIR_ENGINE)]
-        is PAIR_INTERPRETER
+        INTERPRETERS[(RuleFamily.CRIT_PROFILE, EngineLane.PAIR_ENGINE)] is crit_fields
     )
+    assert (RuleFamily.CRIT_PROFILE, EngineLane.RECEIPT_WALK) not in INTERPRETERS
 
 
 def test_every_crit_entry_declares_a_rule() -> None:
@@ -167,7 +167,7 @@ def test_the_interpreter_refuses_a_rule_of_another_family() -> None:
         if rule.family is RuleFamily.RESISTANCE_SHRED
     )
     with pytest.raises(CritProfileInterpretationError):
-        PAIR_INTERPRETER.compile(
+        crit_fields(
             other,
             catalog.build_context(
                 other.owner,
@@ -176,13 +176,14 @@ def test_the_interpreter_refuses_a_rule_of_another_family() -> None:
                 target_bonus_health=0.0,
                 holder_is_melee=True,
             ),
+            EngineLane.PAIR_ENGINE,
         )
 
 
 def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
     """A field a caller cannot name is a number nobody can read."""
     rule = _rule(BONUS_HOLDER, CritDamageBonusRule)
-    fields = PAIR_INTERPRETER.compile(
+    fields = crit_fields(
         rule,
         catalog.build_context(
             rule.owner,
@@ -191,12 +192,13 @@ def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
             target_bonus_health=0.0,
             holder_is_melee=True,
         ),
+        EngineLane.PAIR_ENGINE,
     )
     assert [field.name for field in fields] == [CRIT_DAMAGE_BONUS_FIELD]
     assert all(field.lane is EngineLane.PAIR_ENGINE for field in fields)
     assert all(field.rule_id == rule.mechanic_id for field in fields)
     refund_rule = _rule(REFUND_HOLDER, AttackCooldownRefundRule)
-    refund_fields = PAIR_INTERPRETER.compile(
+    refund_fields = crit_fields(
         refund_rule,
         catalog.build_context(
             refund_rule.owner,
@@ -205,5 +207,6 @@ def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
             target_bonus_health=0.0,
             holder_is_melee=True,
         ),
+        EngineLane.PAIR_ENGINE,
     )
     assert [field.name for field in refund_fields] == [COOLDOWN_REFUND_FIELD]

@@ -102,15 +102,7 @@ class UnrankableNumber(TypeError):
     def __init__(self, surface: str, reason: str, paths: Sequence[str]) -> None:
         """Name the surface, what it refused, and the leaves that caused it.
 
-        The message is *assigned* rather than handed to ``TypeError.
-        __init__``, and it is built with an f-string rather than a
-        concatenation.  Both are forced by where this constructor sits: it is
-        reachable from a view, criterion 3 walks that call graph for
-        arithmetic, and the walk over-approximates an attribute call to every
-        class defining the name -- so a ``super().__init__`` here resolves to
-        every constructor in the package and a ``+`` here is a view doing
-        arithmetic.  ``args`` is what ``str(error)`` reads, so the two
-        spellings raise the same exception.
+        Assigned, not handed to ``TypeError.__init__``: the audit reads this.
         """
         self.surface = surface
         self.reason = reason
@@ -123,12 +115,10 @@ def refuse_previewed(
 ) -> None:
     """Refuse a payload any of whose numbers is a preview, naming them.
 
-    The read half of the rule, and the total one: it asks the payload's own
-    map rather than a list of the leaves a scorer happens to read, so
-    retagging *any* field ``THEORETICAL`` makes the surface fail instead of
-    quietly scoring a number the coupled walk never delivered.  A derived
-    figure — a time-to-defeat, a tie-break margin — is covered too, because
-    the leaves it is derived from are in the map.
+    Asks the payload's own map rather than a list of the leaves a scorer
+    happens to read, so retagging *any* field ``THEORETICAL`` makes the
+    surface fail.  A derived figure is covered too, because the leaves it is
+    derived from are in the map.
     """
     previewed = [
         path
@@ -145,9 +135,7 @@ def published_tag(
     """What the payload says the number at *path* means, or a refusal.
 
     A leaf with no entry is refused rather than assumed applied: a number
-    with no published meaning is precisely what a fold may not carry, and
-    defaulting here would put the assumption back one layer down from where
-    it was removed.
+    with no published meaning is what a fold may not carry.
     """
     try:
         entry = dispositions[path]
@@ -240,23 +228,16 @@ class LeafOut:
 def serialize_leaf(path: str, quantity: Quantity, tag: ViewTag) -> LeafOut:
     """The only producer of a payload leaf **and** of its dispositions entry.
 
-    One call emits both, which is what makes the parallel map structurally
-    unable to drift from the leaves it describes: there is one writer, so
-    there is nothing to keep in step.
-
-    The four dispositions serialize as three shapes, because they answer three
-    different questions:
+    One writer, so the parallel map cannot drift from the leaves it
+    describes.  The four dispositions serialize as three shapes:
 
     * ``MEASURED`` -- the number, and an entry saying a rule produced it.
     * ``STRUCTURAL_ZERO`` -- ``0.0``, and an entry carrying the declaration
-      that makes zero the answer.  The reason is the receipt, so it is
-      published rather than folded away into a bare zero.
+      that makes zero the answer, so the receipt is published.
     * ``WITHHELD`` -- **no number at all**, and an entry carrying every
       receipt.  ``present`` is False and the payload key is never written.
     * ``STARVED`` -- never reaches an entry: reading the quantity raises
-      ``ProjectionStarvation`` here, at the moment the projection was asked
-      for a number it cannot represent, and D-25's single handler at the
-      request boundary turns it into a named 500.
+      ``ProjectionStarvation``, which one handler turns into a named 500.
     """
     entry: dict[str, object] = {
         "disposition": quantity.disposition.value,
@@ -280,9 +261,8 @@ class LeafBlock:
     ``dispositions`` key and the payload key the *same* name by construction:
     a leaf written as ``row["total_damage"]`` under prefix
     ``breakdown.main`` can only be described at ``breakdown.main.
-    total_damage``.  Passing the path separately would have let a rename move
-    one and not the other -- the map describing a leaf that is no longer
-    there, which is the drift the single writer exists to make impossible.
+    total_damage``.  Passing the path separately would let a rename move one
+    and not the other, leaving the map describing a leaf that is not there.
     """
 
     __slots__ = ("_dot", "_prefix", "_records", "_set", "_tag", "_target", "_writer")
@@ -296,16 +276,10 @@ class LeafBlock:
     ) -> None:
         """Bind one target mapping to the path prefix its keys hang under.
 
-        An empty prefix is the payload's own root, and its keys are paths
-        with no dot in front of them -- ``duration``, not ``.duration``.  A
-        root block exists because a top-level number is a published number:
-        the payload's own leaves were the ones no block owned, and a leaf no
-        block owns is a leaf with no entry.
-
-        ``_records``, ``_set`` and ``_dot`` are bound once because the
-        optimizer walks every participant of every candidate through here:
-        two attribute chases per leaf, times a few hundred leaves, times a
-        thousand evaluations, is measurable against the phase's wall ratchet.
+        An empty prefix is the payload's own root, whose keys carry no
+        leading dot: ``duration``, not ``.duration``.  ``_records``, ``_set``
+        and ``_dot`` are bound once because the optimizer walks every
+        participant of every candidate through here.
         """
         self._writer = writer
         self._target = target
@@ -318,17 +292,8 @@ class LeafBlock:
     def put(self, key: str, quantity: Quantity) -> None:
         """Serialize one leaf into the block and record its entry.
 
-        A withheld quantity writes no key at all.  The entry lands either way,
-        which is the asymmetry that lets a consumer tell "refused, and here is
-        why" from "this payload has no such field".
-
-        The tag is the block's.  It used to default to ``APPLIED`` on every
-        write, which made "every serialized field carries exactly one
-        ``ViewTag``" true of a constant rather than of anything anybody
-        declared -- a map recording what the writer's signature said instead
-        of what the view meant.  A block is the unit a projection lane
-        applies to, so the tag is stated once, where the block is opened, and
-        no leaf can acquire one by omission.
+        A withheld quantity writes no key and still lands its entry, so a
+        consumer tells "refused, and why" from "no such field".
         """
         out = serialize_leaf(f"{self._dot}{key}", quantity, self._tag)
         # pylint: disable-next=protected-access
@@ -337,48 +302,35 @@ class LeafBlock:
             self._target[key] = out.value
 
     def nested(self, target: MutableMapping[str, object], key: str) -> "LeafBlock":
-        """A block for a sub-object of this one, at ``prefix.key``.
-
-        The path grows with the payload rather than being respelled, so a
-        nested leaf's map key is still the path a reader would walk to reach
-        it.
-        """
+        """A block for a sub-object of this one, at ``prefix.key``."""
         return LeafBlock(self._writer, target, f"{self._dot}{key}", self._tag)
 
     def structure(self, key: str, value: object) -> None:
-        """Publish a nested object or list, naming every quantity inside it.
-
-        A receipt sub-object -- an armed multiplier, a resistance-reduction
-        list, a per-source damage row -- holds real numbers, and a number
-        inside a nested block is no less a published leaf than one at the top.
-        Walking it here is what keeps "every published quantity is named" true
-        of the shapes a payload nests rather than only of the ones it
-        flattens; every float found is written through the same
-        :func:`serialize_leaf`, at the path a reader would walk to reach it.
-        """
+        """Publish a nested object or list, naming every quantity inside it."""
         self._set(key, self._walk(value, f"{self._dot}{key}"))
 
     def publish(self, key: str, value: object) -> None:
         """One payload member, named by what it *is*.
 
         A quantity gets a leaf and an entry, a nested shape is walked, and
-        anything else is a label.  It exists because a payload assembled
-        elsewhere -- a ranked BIS candidate, an optimize response -- is
-        published key by key without its assembler having to classify each
-        one, which is exactly the classification that gets a key wrong: a
-        row written through ``raw`` because nobody noticed it held floats is
-        how a hundred numbers reach a consumer with nothing said about them.
+        anything else is a label, so an assembler classifies nothing itself.
         """
-        if isinstance(value, (Mapping, list, tuple)):
-            self.structure(key, value)
-        elif isinstance(value, float) and not isinstance(value, bool):
+        # ``float`` leads and ``dict`` precedes ``Mapping`` for the same
+        # reason: three quarters of the members reaching here are bare
+        # numbers and almost all the rest are plain dicts, and an
+        # ``isinstance`` against an abstract base runs Python where one
+        # against a concrete type runs C.  ``bool`` needs no exclusion --
+        # it derives from ``int``, not from ``float``.
+        if isinstance(value, float):
             self.measured(key, value)
+        elif isinstance(value, (dict, list, tuple, Mapping)):
+            self.structure(key, value)
         else:
             self.raw(key, value)
 
     def _walk(self, value: object, path: str) -> object:
         """One nested value, rebuilt with every float written as a leaf."""
-        if isinstance(value, Mapping):
+        if isinstance(value, (dict, Mapping)):
             out: dict[str, object] = {}
             block = LeafBlock(self._writer, out, path, self._tag)
             for key, member in value.items():
@@ -394,17 +346,8 @@ class LeafBlock:
     def _member(self, value: object, path: str) -> object:
         """One list member, with a bare number inside it written as a leaf.
 
-        A float that sits directly in a list is as published as one behind a
-        key, and it used to be the one shape this walk carried through
-        untouched: the recursion handed a non-mapping, non-sequence value
-        back unchanged, so ``row.values[0]`` reached a consumer with no entry
-        naming it while ``row.nested.x`` got one.  No payload has that shape
-        today -- the backstop over five combat scenarios, ``/api/bis`` and
-        ``/api/optimize`` counts zero -- but ``bis`` and ``optimizer`` now
-        push whole finished payloads through here, so the hole was one
-        published list away from being real, and "one function emits the leaf
-        and its entry" has to be true of every shape the walk reaches rather
-        than of the shapes it happens to meet.
+        A float sitting directly in a list is as published as one behind a
+        key, so one function emits its leaf and its entry too.
 
         The discarding branch is :meth:`measured`'s, for :data:`DISCARD`'s
         reason and no other: a member nobody records is the same float.
@@ -419,23 +362,13 @@ class LeafBlock:
         return out.value
 
     def raw(self, key: str, value: object) -> None:
-        """Publish a non-numeric leaf: a label, a flag, a list, an id.
-
-        No entry, deliberately.  The ``dispositions`` map answers "is this
-        number one a rule produced", and a string has no answer to give; an
-        entry for one would make the map's own key set stop meaning "the
-        payload's numbers".
-        """
+        """Publish a non-numeric leaf: a label, a flag, a list, an id."""
         self._set(key, value)
 
     def optional_measured(self, key: str, value: float | None) -> None:
         """A number the walk may not have: published as ``null``, with no entry.
 
-        An actor who did not die has no death time, which is a different
-        published answer from dying at t=0 -- and the row's own
-        ``survived_window`` is that answer's receipt.  ``null`` is not a
-        number, so it carries no disposition and the payload-schema test
-        reads it as absent rather than as a leaf missing its entry.
+        ``null`` is not a number, so it carries no disposition.
         """
         if value is None:
             self._set(key, None)
@@ -445,19 +378,7 @@ class LeafBlock:
     def measured(self, key: str, value: float) -> None:
         """``put`` for the overwhelmingly common case: a rule produced this.
 
-        Spelled out rather than defaulted into ``put`` so that wrapping a
-        number in ``Measured`` stays a thing a view *says*, and a leaf whose
-        disposition is anything else cannot be written by forgetting to.
-
-        The short branch is for a writer that records nothing.  It is not a
-        second way of producing the leaf: ``serialize_leaf`` returns
-        ``quantity.read()`` and ``Measured.read()`` is ``float(self.amount)``,
-        so ``float(value)`` is the *same expression* with the two allocations
-        that only the recording path needs taken out.  It exists because the
-        optimizer runs this over every participant of every candidate, where
-        three objects per leaf breached the phase's allocation ratchet by
-        19%, and criterion 17 says that gate is never to be relaxed.  The two
-        branches are pinned to produce identical rows by test.
+        The short branch is the same expression with two allocations out.
         """
         if not self._records:
             self._set(key, float(value))
@@ -497,15 +418,7 @@ class LeafWriter:
         prefix: str,
         tag: ViewTag = ViewTag.APPLIED,
     ) -> LeafBlock:
-        """A binder for one sub-object of the payload at ``prefix``.
-
-        ``tag`` is what the numbers in this block *mean*, and it defaults to
-        ``APPLIED`` here and nowhere else: the five views project the coupled
-        walk, which is what applied means, and a lane whose numbers are a
-        pair-engine preview opens its block saying ``THEORETICAL``.  Stating
-        it once per block rather than once per leaf is what stops a tag being
-        acquired by forgetting to pass one.
-        """
+        """A binder for one sub-object of the payload at ``prefix``."""
         return LeafBlock(self, target, prefix, tag)
 
     def _record(self, out: LeafOut) -> None:
@@ -519,14 +432,6 @@ class LeafWriter:
     def paths(self) -> frozenset[str]:
         """Every leaf path this writer has an entry for."""
         return frozenset(self._entries)
-
-    def withheld_paths(self) -> frozenset[str]:
-        """The paths whose leaves are absent by refusal rather than by shape."""
-        return frozenset(
-            path
-            for path, entry in self._entries.items()
-            if entry["disposition"] == Disposition.WITHHELD.value
-        )
 
 
 class RankingWriter(LeafWriter):
@@ -614,28 +519,8 @@ def name_every_number(
 ) -> dict[str, dict[str, object]]:
     """Re-write a finished payload through *writer* and return its map.
 
-    The three payloads a consumer is handed -- ``/api/calculate``'s response,
-    ``/api/bis``'s ranking and ``/api/optimize``'s -- are assembled key by key
-    by their own module and then named here, in one pass, at the paths their
-    leaves live at.  It was the same eight lines in all three modules, which
-    is three places for "what counts as a published number" to be answered
-    and two of them to stop agreeing.
-
-    Two properties of the pass, stated once here rather than three times or
-    nowhere:
-
-    * every nested container is **rebuilt** as it is re-written -- a nested
-      mapping becomes a fresh dict, a sequence a fresh list -- and assigned
-      back over the key it came from.  Values, key order and positions are
-      preserved; the objects are not the same objects, and a tuple comes back
-      as the list it already serialized as.
-    * ``publish`` classifies each member by what it *is*, so an int stays an
-      int and carries no entry: a build's price and a champion's rounded
-      health are counts, not quantities a rule measured.
-
-    ``skip`` names the top-level blocks that carry a parallel map of their
-    own; their leaves are covered there and describing them twice would give
-    one number two entries.
+    One pass over the three payloads a consumer is handed, rebuilding every
+    nested container.  ``skip`` names blocks carrying a map of their own.
     """
     root = writer.block(payload, "")
     for key, value in list(payload.items()):

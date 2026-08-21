@@ -224,12 +224,9 @@ def _bridge_between(packet_p):
     the mechanic and its live blockers instead of pretending the slot is
     non-damaging.
 
-    Three blockers, not two: the windowed path and the cooldown refund are
-    the pair this slot was reviewed against, and ``buff_window_share`` is
-    the third, added by the self-buff work merged since.  Naming only the
-    newest one would have retired a receipt that is still true — the
-    windowed kernel in ``damage.py`` still walks ``cast_order`` and breaks
-    on ``"Q"``.
+    Three blockers: the windowed path, the cooldown refund, and
+    ``buff_window_share``.  All three hold — the windowed kernel in
+    ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:

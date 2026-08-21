@@ -30,7 +30,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import clamp, no_damage
 from .slotlib import (
     damage_entry,
@@ -114,11 +114,9 @@ def _timed_cast_starts(
 ) -> list[float]:
     """Q cast start times over the fight window, from the terrain state.
 
-    The fresh cast at t=0 pays the full cooldown (it CREATES Worked Ground
-    but was not cast from it); every later cast is empowered and pays the
-    halved one. A cast counts when it starts within the window, mirroring
-    the engine scheduler, and each cast occupies its 0.25s cast time before
-    its cooldown runs.
+    The fresh cast at t=0 pays the full cooldown, since it CREATES Worked Ground
+    rather than being cast from it; later casts are empowered and pay the halved
+    one.  Each occupies its 0.25s cast time before its cooldown runs.
     """
     starts = [0.0]
     start = _Q_CAST_TIME + fresh_cd
@@ -373,20 +371,12 @@ ASSUMPTIONS = [
 
 
 def _rock_surfing(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: terrain-hugging move speed — a sourced zero-enemy-damage row.
+    """P: bonus move speed, a sourced zero-enemy-damage row.
 
-    Rock Surfing carries no damage instance anywhere in the cached entry:
-    both effect rows have an empty ``leveling`` array, ``damageType`` is
-    ``None`` and ``affects`` is ``Self``.  The slot's whole atom catalog
-    is ``timing.active_duration`` (1.0s) plus the cooldown row — there is
-    no ability atom at all, i.e. no number to price.  Its payload is the
-    10% / 15% / 25% / 40% (based on level) bonus movement speed, prose-only
-    in the cache, and percent move speed reaches damage only through
-    Swiftmarch's Noxian Fervor, which reads TOTAL move speed at build time
-    with no flat/percent decomposition available at fight time (the named
-    Sivir R / Naafiri W boundary).  A self movement state with no damage
-    instance is the settled ``no_damage`` shape (Sivir P, Akshan W,
-    Aurora W, Nilah W, Zilean E), not an ``out_of_scope`` receipt.
+    No effect row carries a damage instance (empty ``leveling``, ``affects``
+    Self), and percent move speed reaches damage only through Swiftmarch's
+    build-time read of total speed — the settled ``no_damage`` shape (Sivir
+    P, Akshan W, Aurora W), not an ``out_of_scope`` receipt.
     """
     ability = ctx.ability()
     if ability is None:
@@ -440,7 +430,16 @@ SLOTS = {
     "R": _weavers_wall,
 }
 
-parse_abilities = build_parser(SLOTS, "Taliyah")
+# Reviewed crowd control, read from the cached kit.  Q and E each land two
+# different answers from one cast, so the parts carry them: Q's fresh-ground
+# shards only "deal[] magic damage ... and reveal[]" while the Worked Ground
+# boulder is "slowing all targets hit for 1.5 seconds"; E's eruption
+# "slow[s] enemies within the area by 20%" while a detonated stone leaves
+# them "stunned for 0.75 seconds".  W's ledge "knocks enemies hit 400 units
+# in the target direction" and prices no damage of its own.
+MODULE_CC = {"Q": CC_PER_PART, "W": "knockback", "E": CC_PER_PART}
+
+parse_abilities = build_parser(SLOTS, "Taliyah", cc_kinds=MODULE_CC)
 
 # P and R are emitted but carry no damage instance, so the derived
 # "modeled" would overstate them.  Neither is out_of_scope either (the

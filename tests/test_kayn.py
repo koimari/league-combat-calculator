@@ -8,6 +8,7 @@ says makes the whole timed fight fall back to coarse ordering.
 import pytest
 
 from src.calculator.champions import kayn, parse_champion_abilities
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 
@@ -28,7 +29,7 @@ class TestReviewedCrowdControl:
     """Blade's Reach answers by form, so its kind rides the part."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert kayn.MODULE_CC == {"Q": "none", "R": "none"}
+        assert kayn.MODULE_CC == {"Q": "none", "W": CC_PER_PART, "R": "none"}
         assert kayn.parse_abilities.cc_kinds == kayn.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

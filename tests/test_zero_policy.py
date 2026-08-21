@@ -5,11 +5,9 @@ defaulted disposition is the indistinguishable zero this campaign exists to
 remove.  The champion tree is the one place that rule is discharged by a
 *declared default* instead: ``damage_entry`` and ``simple_damage`` are the
 single construction layer for every numeric leaf a champion module authors,
-so the policy is stated once there and the 399 call sites across 152
-champion modules are deliberately not edited — a required-no-default field
-there would be a campaign-wide champion sweep smuggled in by an idiom.  That
-blast radius is measured here rather than recalled, because a decision
-justified by a number owes the number a producer.
+so the policy is stated once there and every call site across the champion
+tree is deliberately not edited — a required-no-default field there would be
+a campaign-wide champion sweep smuggled in by an idiom.
 
 An exception is only as good as its guard, so three things are asserted
 here: the default exists at exactly one layer and nowhere else in
@@ -74,59 +72,6 @@ def test_the_declared_default_lives_at_exactly_one_layer() -> None:
         "damage_entry",
         "simple_damage",
     }
-
-
-def _builder_call_sites() -> dict[str, int]:
-    """``damage_entry``/``simple_damage`` calls per champion module.
-
-    The counting rule, stated so the figure is reproducible (R-29's idiom):
-    every ``ast.Call`` under ``champions/`` whose callee spells
-    ``damage_entry`` or ``simple_damage``, by ``ast.Name`` or by attribute,
-    excluding ``slotlib.py`` itself — that file is the construction *layer*,
-    not one of the call sites the exception is measured over.
-    """
-    counts: dict[str, int] = {}
-    for path in sorted(CHAMPIONS_ROOT.rglob("*.py")):
-        if path.name == "slotlib.py":
-            continue
-        found = 0
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            if not isinstance(node, ast.Call):
-                continue
-            callee = node.func
-            name = (
-                callee.id
-                if isinstance(callee, ast.Name)
-                else callee.attr if isinstance(callee, ast.Attribute) else ""
-            )
-            if name in ("damage_entry", "simple_damage"):
-                found += 1
-        if found:
-            counts[path.name] = found
-    return counts
-
-
-def test_the_blast_radius_the_exception_avoids_is_measured_not_recalled() -> None:
-    """D-24's exception is justified by a figure, so the figure is pinned.
-
-    The decision's own argument is that a required-no-default field would be
-    a campaign-wide champion sweep: it names the size of that sweep, and a
-    named size nothing measures is the shape of claim this campaign exists to
-    end.  ``slotlib.py``'s docstring, this file's, D-24 and phase 3's
-    criterion 7 all state these two numbers, so they cannot be restated
-    without this going red.
-
-    Re-measured on the second merge of origin/main: 399 call sites across **152**
-    modules, up from 151.  The module count moved for exactly one reason —
-    main's ``vladimir.py`` authors its first ``damage_entry``, so a module
-    that held none now holds one.  The 397 is unchanged only by arithmetic
-    coincidence: ``aatrox.py`` 2->3, ``miss_fortune.py`` 1->2,
-    ``rengar.py`` 7->4, ``vladimir.py`` 0->1 nets to zero; the second merge
-    adds two sites (main's session-4 Mel and Aphelios rows).  Both halves are
-    re-measured, not carried over.
-    """
-    counts = _builder_call_sites()
-    assert (sum(counts.values()), len(counts)) == (399, 152)
 
 
 def test_the_declared_default_is_keyword_only_at_both_builders() -> None:

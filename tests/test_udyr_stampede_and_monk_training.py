@@ -519,8 +519,8 @@ class TestBridgeBetweenStaysReceiptedOpen:
 
         compact = " ".join(_DAMAGE_SOURCE.split())
         assert (
-            '(ability_info.get("auto_attack_override") or {}).get( "active_duration" )'
-            in compact
+            'ability_sub_payload(ability_info, "auto_attack_override") '
+            ').get("active_duration")' in compact
         )
         for count_bound in ("attack_count", "max_attacks", "active_attacks"):
             assert count_bound not in _DAMAGE_SOURCE, count_bound

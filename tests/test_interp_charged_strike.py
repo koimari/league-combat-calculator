@@ -19,6 +19,7 @@ from src.calculator.item_behavior import (
     BehaviorRule,
     BehaviorRuleError,
     EmpoweredAutoBuffRule,
+    EngineLane,
     EmpoweredHitRule,
     RepeatingStrikeRule,
     RuleFamily,
@@ -231,7 +232,7 @@ def test_the_pair_interpreter_compiles_the_count_each_shape_has() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    (field,) = charged_strike.PAIR_INTERPRETER.compile(rule, ctx)
+    (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == charged_strike.CHARGE_COUNT_FIELD
     assert field.value == pytest.approx(
         float(ITEM_EFFECTS[FLAT_REPEAT]["hits_required"])  # type: ignore[arg-type]
@@ -253,7 +254,7 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
         holder_is_melee=True,
     )
     with pytest.raises(charged_strike.ChargedStrikeInterpretationError):
-        charged_strike.PAIR_INTERPRETER.compile(foreign, ctx)
+        charged_strike.strike_fields(foreign, ctx, EngineLane.PAIR_ENGINE)
 
 
 # ── the swing schedule ────────────────────────────────────────────────────
@@ -419,7 +420,7 @@ def test_a_swing_schedule_compiles_to_its_ramp_ceiling_and_no_damage() -> None:
         holder_is_melee=True,
     )
     rule = _swing_rule(RAMP)
-    (field,) = charged_strike.PAIR_INTERPRETER.compile(rule, ctx)
+    (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.value == pytest.approx(
         float(ITEM_EFFECTS[RAMP]["seething_max_stacks"])  # type: ignore[arg-type]
     )
@@ -435,7 +436,9 @@ def test_a_window_only_schedule_compiles_to_the_no_sibling_spelling() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    (field,) = charged_strike.PAIR_INTERPRETER.compile(_swing_rule(WINDOW), ctx)
+    (field,) = charged_strike.strike_fields(
+        _swing_rule(WINDOW), ctx, EngineLane.PAIR_ENGINE
+    )
     assert field.value == charged_strike.NO_SIBLING
 
 

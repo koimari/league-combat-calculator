@@ -26,7 +26,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .slotlib import (
     damage_entry,
@@ -144,7 +144,7 @@ SLOTS = {
 # suppressed during Devour's cast time and while attached".  P is an
 # on-hit rider on the attack stream and Q's answer is stack-dependent, so
 # Q authors its own kind on its part.
-MODULE_CC = {"W": "immobilize", "R": "suppression"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "immobilize", "R": "suppression"}
 
 parse_abilities = build_parser(SLOTS, "Tahm Kench", cc_kinds=MODULE_CC)
 

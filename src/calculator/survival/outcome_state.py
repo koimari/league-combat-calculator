@@ -1,24 +1,17 @@
-"""Outcome adapter — the write-once ledger the end-of-walk projection reads.
+"""Outcome adapter: the write-once ledger the end-of-walk projection reads.
 
 The third kernel-side ledger, beside :mod:`survival.score_state` and
-:mod:`survival.receipt_state`, and the one the views eventually project
-(D-64).  It is kernel-side rather than a ``program/`` type on purpose: the
-walk writes into it inside the hot loop, and the phase's dependency runs
-``program -> survival`` and never back.
+:mod:`survival.receipt_state`, and the one the views project.  It is
+kernel-side rather than a ``program/`` type because the walk writes into it
+inside the hot loop, and the dependency runs ``program -> survival`` only.
 
-What makes it different from the two adapters it sits beside is not what it
-observes but what it *forbids*.  The receipt adapter's channel is the event
-dict: the walk writes a field, a later transition writes it again, and the
-serialized receipt shows whichever write came last.  That is how a receipt
-and a score diverge without either one being wrong at any single line, and
-it is the shape this campaign exists to remove.  So here:
-
-* every field is **write-once**.  A second write of a field a transition
-  already answered raises :class:`OutcomeRewritten`, naming the slot, the
-  field and both values.  Writing the *same* value twice is still a rewrite:
-  two rules answering one question happen to agree today and are one edit
-  away from not agreeing, and a ledger that tolerates the agreement cannot
-  see the disagreement coming.
+What separates it from the two adapters beside it is what it forbids.  Every
+field is write-once: a second write of a field a transition already answered
+raises :class:`OutcomeRewritten`, naming the slot, the field and both values.
+Writing the *same* value twice is still a rewrite, because two rules
+answering one question happen to agree today and are one edit away from not
+agreeing, and a ledger that tolerates the agreement cannot see the
+disagreement coming.
 """
 
 from __future__ import annotations
@@ -42,34 +35,7 @@ __all__ = [
 
 
 def outcome_quantity(value: Any, skipped_reason: str | None) -> Quantity:
-    """One outcome field's quantity, given the walk's verdict on its transition.
-
-    The two answers a refusal makes different, written once so that the
-    ledger and the projection that publishes the ledger's numbers cannot
-    reach different conclusions about one transition:
-
-    * the walk priced the transition, so a rule ran and produced this number
-      — ``Measured``, zero included;
-    * the walk refused it and named a reason, so the zero standing where the
-      number would have been is the *declaration's* answer and the reason is
-      its receipt — ``StructuralZero`` (D-24, D-72).
-
-    The one case where both readings are available is a refused transition
-    whose field still carries a number, and it resolves to ``Measured``
-    deliberately.  That number was produced by the rule that priced the
-    packet before a later gate refused to *deliver* it; calling it a
-    declared zero would publish ``0.0`` where a computed value stands, and a
-    disposition that moves a published number is a re-label with a value
-    change hiding inside it.  Naming which of the two a leaf is may never
-    change what the leaf says.
-
-    A module-level function rather than a ledger method because its two
-    callers hold the same fact in two shapes: the ledger holds an action
-    slot's written fields, and the serialized receipt holds the event row
-    the same transition wrote.  ``ReceiptLedger`` drives both from one
-    ``skip``, so the reason either one reads is the same reason — but only
-    one of them can be reached through a slot.
-    """
+    """A refused zero is declared; any number a rule computed stays measured."""
     if skipped_reason is not None and not value:
         return StructuralZero(reason=str(skipped_reason))
     return Measured(amount=float(value or 0.0))
@@ -95,12 +61,10 @@ class OutcomeRewritten(StarvedSignal):
     Carries the slot, the field and both values, because "a field was
     written twice" without them is a report nobody can act on.
 
-    A member of :class:`~trigger_stream.StarvedSignal` since the umbrella's
-    Amendment G: two rules answered one question differently, so this record
-    cannot answer it, and a leaf with no answer a rule computed is exactly
-    what ``STARVED`` names.  Before the amendment this reached a request as a
-    bare 500 — a failure with no receipt and no named field, which is the
-    shape the boundary exists to prevent.
+    A :class:`~trigger_stream.StarvedSignal`, so the serving boundary turns it
+    into a named 500 carrying a receipt: two rules answered one question
+    differently, so this record holds no answer, which is what ``STARVED``
+    names.
     """
 
     def __init__(self, slot: int, field: str, old: Any, new: Any) -> None:
@@ -120,18 +84,13 @@ class OutcomeRewritten(StarvedSignal):
 
 
 class DuplicateApplied(StarvedSignal):
-    """Two producers claimed the same applied contribution (D-62).
+    """Two producers claimed the same applied contribution.
 
-    "A sum may never mix views" forbids adding a pair-engine preview to a
-    coupled delivery.  It does **not** forbid two *deliveries* of one
-    mechanic to one subject on one event, which is the other half of the
-    double count and the shape keeping ``_apply_command_amp`` alive beside a
-    new coupled pricer would have: both contributions ``APPLIED``, both
-    real, one of them counted twice with no symptom.
-
-    So the ledger refuses at the second write.  The key is the criterion's
-    own -- ``(mechanic, subject, event_id)`` -- read off the action as its
-    packet source, its subject slot and its interned event slot.
+    At most one applied contribution exists per ``(mechanic, subject,
+    event_id)``.  Two deliveries of one mechanic to one subject on one event
+    are both ``APPLIED`` and both real, so the double count has no symptom
+    unless the ledger refuses at the second write.  The key is read off the
+    action as its packet source, its subject slot and its interned event slot.
     """
 
     def __init__(self, key: tuple[Any, ...], first: int, second: int) -> None:
@@ -172,11 +131,6 @@ class Outcome:
     overkill: float = 0.0
     skipped_reason: str | None = None
 
-    @property
-    def was_skipped(self) -> bool:
-        """Whether the walk refused this transition rather than pricing it."""
-        return self.skipped_reason is not None
-
 
 class OutcomeLedger:
     """Write-once observation of the shared kernel, projected at end of walk.
@@ -205,22 +159,16 @@ class OutcomeLedger:
 
     # The kernel's write kwargs are named for the event dict the receipt
     # adapter serializes.  This is the projection of those names onto the
-    # four outcome fields -- one mapping, so a kernel rename is one edit and
+    # four outcome fields: one mapping, so a kernel rename is one edit and
     # an unmapped kwarg is ignored here rather than silently becoming a
     # fifth outcome field.
     #
-    # ``live_damage`` is **not** here, and the omission is the ruling rather
-    # than an oversight.  ``transitions`` writes it once, at the one
-    # ``annotate`` call that also writes ``pair_damage``, and its own module
-    # docstring lists the pair with ``overkill`` under *diagnostics*: it is
-    # the packet's value after live re-pricing and **before** absorption,
-    # while the applied outcome is what consumed shield and health, written
-    # a few lines later as ``damage``.  The two are equal exactly when
-    # nothing overkilled, which is why mapping both onto ``applied`` read as
-    # harmless for as long as no walk drove this ledger -- and why it was a
-    # question answered twice with two numbers the moment one did.
-    # ``pair_damage``, the same annotation's other half, was already
-    # unmapped; this is its sibling joining it.
+    # ``live_damage`` and ``pair_damage`` are deliberately absent.  Both are
+    # diagnostics from the one ``annotate`` call: ``live_damage`` is the
+    # packet's value after live re-pricing and before absorption, while the
+    # applied outcome is what consumed shield and health.  The two are equal
+    # exactly when nothing overkilled, so mapping either onto ``applied``
+    # answers one question twice with two numbers.
     _WRITE_ALIASES: Mapping[str, str] = {
         "damage": "applied",
         "applied_amount": "applied",
@@ -257,19 +205,9 @@ class OutcomeLedger:
     def _claim_applied(self, action: SurvivalAction, slot: int) -> None:
         """Record this slot as the one applied contribution for its key.
 
-        D-62's uniqueness, enforced where the contribution is written rather
-        than checked afterwards: a second producer of an applied number for
-        one ``(mechanic, subject, event_id)`` is a double count, and a double
-        count that raises is one nobody has to notice.
-
-        **An action carrying no event id is outside the rule, and says so.**
-        The key's third component is the event the contribution is *for*, so
-        an action at ``NO_SLOT`` has no "one event" for a second producer to
-        contribute to twice, and two such actions are two events nobody
-        numbered rather than one event priced twice.  Keying them all under
-        the same absent id would make the second heal of a hand-authored
-        fixture a double count -- a rule reporting a defect it invented.
-        So they are left unclaimed rather than keyed under one absent id.
+        An action at ``NO_SLOT`` has no event a second producer could
+        contribute to, so it is left unclaimed rather than keyed under one
+        absent id that would make two fixture heals a double count.
         """
         if action.event_slot == NO_SLOT:
             return
@@ -363,24 +301,17 @@ class OutcomeLedger:
         )
 
     def quantity(self, action_slot: int, field: str) -> Quantity:
-        """One outcome field as a :class:`Quantity` — where a leaf is born.
+        """One outcome field as a :class:`Quantity`, where a leaf is born.
 
         The kernel holds raw floats; this is the boundary at which a number
-        acquires a disposition (D-72), and the wrapping is pure: ``Measured``
-        wraps the float :meth:`get` would have returned, unchanged.
+        acquires a disposition, and the wrapping is pure: ``Measured`` wraps
+        the float :meth:`get` would have returned, unchanged.
 
-        The three answers are the three things the ledger actually knows:
-
-        * a transition wrote the field, so a rule ran and produced it —
-          ``Measured``;
-        * the walk refused the transition and named a reason, so zero is the
-          answer and the reason is the receipt — ``StructuralZero``;
-        * no transition wrote it and none refused it, so this ledger cannot
-          answer the question at all — ``Starved``, which raises
-          ``ProjectionStarvation`` when somebody reads it rather than
-          returning a zero that would be indistinguishable from a computed
-          one.  That third case is the campaign's invariant, at the boundary
-          where the number is born.
+        The three answers are the three things the ledger knows: a transition
+        wrote the field, so ``Measured``; the walk refused it and named a
+        reason, so ``StructuralZero``; neither happened, so ``Starved``, which
+        raises ``ProjectionStarvation`` on read rather than returning a zero
+        indistinguishable from a computed one.
 
         Raises:
             ValueError: *field* is not one of :data:`OUTCOME_FIELDS`.
@@ -409,28 +340,14 @@ class OutcomeLedger:
     def quantities(self, action_slot: int) -> dict[str, Quantity]:
         """Every numeric outcome field of one slot, each as a ``Quantity``.
 
-        Most transitions produce one or two of the four — a heal writes
-        ``applied`` and nothing else — so the rest come back ``Starved`` by
-        the rule above.  That is the point rather than a rough edge: the
-        ledger does not know which fields a given transition was supposed to
-        produce, the projection does, and a projection that asks for a number
-        no rule was ever going to write should hear about it.
+        A field no transition wrote comes back ``Starved``: only the
+        projection knows which fields a transition owed, so it hears about it.
         """
         return {
             field: self.quantity(action_slot, field)
             for field in OUTCOME_FIELDS
             if field != "skipped_reason"
         }
-
-    def applied_contributions(self) -> Mapping[tuple[Any, ...], int]:
-        """Every ``(mechanic, subject, event_id)`` that produced an applied
-        number, mapped to the one action slot that produced it.
-
-        Returned so the property is readable as well as enforced: a
-        uniqueness rule whose only evidence is the absence of an exception is
-        a rule nobody can count.
-        """
-        return dict(self._applied_by)
 
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""
