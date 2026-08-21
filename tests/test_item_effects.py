@@ -1464,3 +1464,106 @@ class TestCp20ItemState:
             )
             == 1
         )
+
+
+class TestCachedSustainStatFailsClosed:
+    """An absent cached stat and a broken stat block are different answers."""
+
+    @staticmethod
+    def _read(item: dict) -> float:
+        return item_effects._cached_sustain_stat(item, "lifesteal_percent")
+
+    def test_sparse_fixture_without_a_stats_map_reads_zero(self) -> None:
+        assert self._read({"name": "Long Sword"}) == 0.0
+
+    def test_item_whose_stats_omit_the_stat_reads_zero(self) -> None:
+        assert self._read({"name": "Long Sword", "stats": {"attackDamage": {}}}) == 0.0
+
+    def test_present_block_missing_a_component_raises_naming_item_and_key(
+        self,
+    ) -> None:
+        with pytest.raises(KeyError) as excinfo:
+            self._read({"name": "Bloodthirster", "stats": {"lifesteal": {"flat": 0.0}}})
+
+        message = excinfo.value.args[0]
+        assert "Bloodthirster" in message
+        assert "lifesteal" in message
+        assert "percent" in message
+
+    def test_non_numeric_component_raises_naming_item_and_key(self) -> None:
+        with pytest.raises(TypeError) as excinfo:
+            self._read(
+                {"name": "Bloodthirster", "stats": {"lifesteal": {"percent": None}}}
+            )
+
+        message = excinfo.value.args[0]
+        assert "Bloodthirster" in message
+        assert "percent" in message
+
+    def test_stat_block_that_is_not_a_component_map_raises(self) -> None:
+        with pytest.raises(TypeError) as excinfo:
+            self._read({"name": "Bloodthirster", "stats": {"lifesteal": 12.0}})
+
+        assert "Bloodthirster" in excinfo.value.args[0]
+
+    def test_every_cached_item_reads_each_grouped_sustain_stat(self) -> None:
+        """The live cache satisfies the typed read for all three stats."""
+        from src.calculator.data_fetcher import fetch_item_data
+
+        cached = list(fetch_item_data().values())
+        assert cached
+        for stat_key in item_effects._SUSTAIN_STAT_CACHE_KEYS:
+            for item in cached:
+                item_effects._cached_sustain_stat(item, stat_key)
+
+
+class TestItemSetsAreDerivedNotHandKept:
+    """No item→trigger answer comes from a name set beside its declaration."""
+
+    def test_on_attacking_taxonomy_lives_in_the_registry_entry(self) -> None:
+        declared = {
+            name
+            for name, effect in ITEM_EFFECTS.items()
+            if effect.get("counter_trigger") == "on_attack"
+        }
+        assert declared == {
+            "Guinsoo's Rageblade",
+            "Navori Flickerblade",
+            "Rapid Firecannon",
+            "Runaan's Hurricane",
+            "Voltaic Cyclosword",
+            "Yun Tal Wildarrows",
+        }
+        for name in ITEM_EFFECTS:
+            expected = "on_attack" if name in declared else "on_hit"
+            assert item_effects.counter_trigger(name) == expected
+        assert item_effects.counter_trigger("Long Sword") == "on_hit"
+
+    def test_counter_trigger_refuses_a_kind_outside_the_taxonomy(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        entry = dict(ITEM_EFFECTS["Kraken Slayer"]) | {"counter_trigger": "on_cast"}
+        monkeypatch.setitem(ITEM_EFFECTS, "Kraken Slayer", entry)
+        with pytest.raises(ValueError, match="on_cast"):
+            item_effects.counter_trigger("Kraken Slayer")
+
+    def test_first_auto_ready_gate_follows_the_declared_option(self) -> None:
+        gated = {
+            name
+            for name, config in item_effects.ITEM_INPUT_OPTIONS.items()
+            if item_effects._FIRST_AUTO_READY_OPTION
+            in item_effects._item_option_schemas(config)
+        }
+        assert gated == {"Umbral Glaive"}
+        # An item declaring no ready control is never gated by one.
+        assert item_effects.first_auto_state_ready(
+            [{"name": "Kraken Slayer"}], {}, "Kraken Slayer"
+        )
+        assert not item_effects.first_auto_state_ready(
+            [{"name": "Umbral Glaive"}], {}, "Umbral Glaive"
+        )
+        assert item_effects.first_auto_state_ready(
+            [{"name": "Umbral Glaive"}],
+            {"Umbral Glaive": {"nightstalker_ready": 1}},
+            "Umbral Glaive",
+        )
