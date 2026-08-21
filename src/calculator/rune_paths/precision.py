@@ -33,9 +33,11 @@ from ..rune_effects import (
     RuneStatContext,
     RuneStatGrantEffect,
     RuneValues,
+    at_level,
     breakdown_key,
     display_name,
     no_damage_compiler,
+    required_leveling,
     rune_effect_value,
 )
 
@@ -212,17 +214,6 @@ def _target_health_amp(
 #: event one simulated fight between two champions never produces, and two of
 #: them pay in health there is no rune channel to receive.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
-    "Absorb Life": (
-        Disposition.WITHHELD,
-        "it heals on killing a minion or a monster, and the pair engine "
-        "prices one champion against one champion — there is nothing to kill, "
-        "and no rune healing channel to receive the heal if there were",
-        (
-            "Absorb Life's heal is missing from the cache as well: its wiki "
-            "formula is a piecewise per-level rule the rune parser cannot "
-            "read, so the amount is unknown on top of being unpriced.",
-        ),
-    ),
     "Presence of Mind": (
         Disposition.WITHHELD,
         "it restores mana or energy, and the fight's rotation is not gated by "
@@ -233,6 +224,39 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         ),
     ),
 }
+
+
+def _compile_absorb_life(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
+    """Compile Absorb Life: a heal on a kill the pair engine has nothing to make.
+
+    Its amount is known — the wiki's piecewise progression parses — and its
+    destination now exists, so what is left is the event: the fight is one
+    champion against one champion, and a minion kill has neither an actor to
+    kill nor a timestamp to place the heal at. A kill count would be a
+    number with no moment, and a heal packet without a moment is the guessed
+    timestamp the ledger refuses everywhere else.
+    """
+    name = "Absorb Life"
+    effects = RuneValues(name, entry.get("effects", {}))
+    by_level = required_leveling(name, effects)
+    return RuneNoDamageEffect(
+        rune_name=name,
+        zero_policy=ZeroPolicy(
+            Disposition.WITHHELD,
+            "it heals on killing a minion or a monster, and the pair engine "
+            "prices one champion against one champion — there is nothing to "
+            "kill",
+        ),
+        disclosures=(
+            f"{name} would heal {at_level(by_level, 1):g} at level 1 rising "
+            f"to {at_level(by_level, 18):g} at level 18 and "
+            f"{at_level(by_level, 20):g} at level 20, per kill; the amount is "
+            "cached and only the kill is missing.",
+            f"{name}'s heal has nowhere to land in time even as a count: a "
+            "kill carries no timestamp, and the self-healing ledger takes "
+            "packets with moments rather than totals.",
+        ),
+    )
 
 
 def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
@@ -376,6 +400,7 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()
     },
+    "Absorb Life": _compile_absorb_life,
     "Triumph": _compile_triumph,
     "Legend: Alacrity": _compile_legend_alacrity,
     "Legend: Haste": _compile_legend_haste,

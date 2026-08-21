@@ -239,6 +239,13 @@ _AMP_RAMP_ENDS: tuple[tuple[str, re.Pattern], ...] = (
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
 _FOR_SUFFIX = re.compile(r"^(.+?)\s+for\s+(\d+)$")
+# "1; then +0.25*x for 4; then +1*x for 5; then +2*x" — Module:Ability
+# progression's piecewise form: a starting value and then runs of columns,
+# each continuing from the previous run's last value.  ``then`` is what
+# marks it, so a plain semicolon value list is unaffected; the ``+`` is part
+# of the grammar because every run adds to what came before.
+_PIECEWISE_MARK = "then"
+_PIECEWISE_SEGMENT = re.compile(r"^then\s*\+\s*(.+?)(?:\s+for\s+(\d+))?$")
 # "0 to 70 for 8" — eight columns keyed 0, 10, … 70.  The keys are not the
 # numbers the formula takes: ``x`` is the column's ordinal, exactly as the
 # ``for N`` suffix reads it, and the span is what the columns are keyed by.
@@ -427,12 +434,15 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     enumeration of the values themselves (the second param then carries
     the keys, e.g. a distance span), a stepless ``N to M`` span
     (linear-filled with endpoints anchored — over the explicit range when
-    one is given, else the wiki's default 18 columns), and an arithmetic
-    formula in ``x``.  A ``for N`` suffix on the formula supplies the
-    range ``1..N`` when no second param does.
+    one is given, else the wiki's default 18 columns), an arithmetic
+    formula in ``x``, and a ``start; then +<formula> for N; …`` piecewise
+    progression.  A ``for N`` suffix on the formula supplies the range
+    ``1..N`` when no second param does.
     """
     formula = _drop_unbounded_column(formula)
     range_spec = _drop_unbounded_column(range_spec) if range_spec else range_spec
+    if _PIECEWISE_MARK in formula:
+        return _evaluate_piecewise(formula, _column_count(formula, range_spec))
     for_suffix = _FOR_SUFFIX.match(formula)
     if for_suffix:
         formula = for_suffix.group(1).strip()
@@ -461,6 +471,65 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     return [
         _evaluate_pp_node(expression.body, x) for x in _enumerate_range(range_match)
     ]
+
+
+def _column_count(formula: str, range_spec: str | None) -> int:
+    """How many columns a table renders, from its range or the wiki default."""
+    if not range_spec:
+        return DEFAULT_LEVEL_COUNT
+    columns = _COLUMN_SPAN.match(range_spec.strip())
+    if columns:
+        return int(columns.group(3))
+    range_match = _RANGE_SPEC.match(range_spec.strip())
+    if not range_match:
+        raise ValueError(f"Unsupported pp range spec {range_spec!r} for {formula!r}")
+    return len(_enumerate_range(range_match))
+
+
+def _evaluate_piecewise(formula: str, columns: int) -> list[float]:
+    """Evaluate a ``start; then +<formula> for N; …`` progression.
+
+    Module:Ability progression's piecewise form, and the two runes that
+    state a heal or a restore this way (Absorb Life, Presence of Mind) are
+    why it is read at all.  A run continues from the previous run's last
+    value and evaluates its own formula in the run's own index, so
+    ``1; then +0.25*x for 4`` is 1, 1.25, 1.5, 1.75, 2 and not four
+    independent values.
+
+    A run states its length or takes one column; the last run takes
+    whatever is left, which is what makes ``then +2*x`` mean "and so on to
+    the end of the table".  A description whose runs do not add up to the
+    table's own width is refused rather than truncated — a silently short
+    level table is the parse degradation the accessors exist to catch.
+    """
+    parts = [part.strip() for part in formula.split(";") if part.strip()]
+    values = [float(parts[0])]
+    for index, part in enumerate(parts[1:], start=1):
+        segment = _PIECEWISE_SEGMENT.match(part)
+        if not segment:
+            raise ValueError(f"Unparseable pp progression run {part!r} in {formula!r}")
+        last = index == len(parts) - 1
+        span = (
+            int(segment.group(2))
+            if segment.group(2)
+            else (columns - len(values) if last else 1)
+        )
+        if span < 1:
+            raise ValueError(
+                f"pp progression {formula!r} overruns its {columns}-column table"
+            )
+        expression = _safe_pp_expression(segment.group(1))
+        base = values[-1]
+        values.extend(
+            base + _evaluate_pp_node(expression.body, float(step))
+            for step in range(1, span + 1)
+        )
+    if len(values) != columns:
+        raise ValueError(
+            f"pp progression {formula!r} renders {len(values)} columns and its "
+            f"table has {columns}"
+        )
+    return values
 
 
 def _drop_unbounded_column(spec: str) -> str:

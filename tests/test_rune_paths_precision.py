@@ -217,11 +217,28 @@ class TestTheRowThatPaysOnATakedown:
         assert effect.zero_policy.disposition.name == "WITHHELD"
         assert phrase in effect.zero_policy.reason
 
-    def test_absorb_life_also_discloses_that_its_number_never_parsed(self):
-        """The wiki states a piecewise rule; the cache holds no heal at all."""
+    def test_absorb_life_now_quotes_the_heal_it_declines_to_place(self):
+        """The wiki's piecewise rule parses, so only the kill is missing.
+
+        The wiki states the span as "1 – 27 (based on level)" and its own
+        prose formula as "1, +0.25 per level until level 5, then +1 per
+        level until level 10, then +2 per level"; the cached table is that
+        rule evaluated, and the receipt quotes its ends.
+        """
+        table = rune_effects.RUNE_EFFECTS["Absorb Life"]["effects"]["leveling"][0]
+        assert len(table) == 20
+        assert [table[0], table[4], table[9], table[17], table[19]] == [
+            pytest.approx(1.0),
+            pytest.approx(2.0),
+            pytest.approx(7.0),
+            pytest.approx(23.0),
+            pytest.approx(27.0),
+        ]
         effect = rune_effects.resolve_rune("Absorb Life")
-        assert rune_effects.RUNE_EFFECTS["Absorb Life"]["effects"] == {}
-        assert "the amount is unknown on top of being unpriced" in effect.receipts[1]
+        assert "heal 1 at level 1 rising to 23 at level 18 and 27 at level 20" in (
+            effect.disclosures[0]
+        )
+        assert "a kill carries no timestamp" in effect.disclosures[1]
 
     def test_triumph_heals_a_share_of_maximum_health_after_its_delay(self):
         """2.5% of maximum health, one second after the takedown."""
