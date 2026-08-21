@@ -1,7 +1,6 @@
 """Self-heal and self-shield rows the coverage-frontier sustain slice landed.
 
-Census slices 5 and 7 (``docs/plans/utility-axis-census.md``): six sustain
-mechanics that had a cached row and no rule, plus Vi's Blast Shield and the
+Six sustain mechanics that had a cached row and no rule, plus Vi's Blast Shield and the
 two grey-health slots whose primitive already prices them.
 
 One test per slot, each pinning the number a ``/api/calculate`` fight

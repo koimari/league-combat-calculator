@@ -1080,7 +1080,7 @@ def test_a1_has_a_permanent_injection_seam():
 # A2 — the retired scanners stay where the retirement schedule puts them
 # ---------------------------------------------------------------------------
 
-# ``phase-2-trigger-bus.md``'s *Retired symbols*.  The value was the module
+# Retired symbols.  The value was the module
 # that still defined the symbol at the commit this map was last edited;
 # P2b/P2c emptied it, so every entry is now ``[]`` and any definition
 # anywhere in ``src/`` fails.  ``trigger_stream.is_immobilizing_event`` is

@@ -3036,9 +3036,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # metadata; it never infers a slow or immobilize from an ability name.
         "everlasting_base_shield": 100.0,
         "everlasting_current_mana_ratio": 0.045,
-        # The gate is sourced, and the surface-area campaign ruled it so
-        # (docs/plans/2026-08-20-surface-area-campaign.md U11a, from
-        # Fimbulwinter rev 3984419): a melee holder's slow arms Everlasting
+        # The gate is sourced (Fimbulwinter rev 3984419): a melee holder's
+        # slow arms Everlasting
         # above the 20%-maximum-mana gate, and the whole champion x
         # Fimbulwinter coverage fan-out prices through it.
         "everlasting_mana_gate_status": "source_authorized",

@@ -268,8 +268,7 @@ class TestCastOrderOverrides:
 
         ``docs/rotation-design.md``'s seed section named ten champions for
         a seven-entry table after three retirements moved the code and left
-        the sentence alone — the plan auditor reaches ``docs/plans`` only,
-        so nothing saw it.  This is what sees it: every live seed is named
+        the sentence alone, and nothing saw it.  This is what sees it: every live seed is named
         in that section and every retired one is absent from it.
         """
         from pathlib import Path
