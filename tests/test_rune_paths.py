@@ -50,7 +50,9 @@ class TestTheRegistrationContract:
         merged = set(rune_effects._compilers())
         paths = set(rune_paths.path_compilers())
         assert merged == set(rune_effects._KEYSTONE_COMPILERS) | paths
-        assert len(merged) == 21
+        # Every compiled name is a roster rune; the roster's completeness is
+        # the catalog's ``implemented`` flag, pinned by the rune-page tests.
+        assert merged <= set(rune_effects.RUNE_EFFECTS)
 
     def test_two_paths_claiming_one_rune_fails_loud(self, monkeypatch):
         """A rune belongs to one path; two compilers is a declaration bug."""
