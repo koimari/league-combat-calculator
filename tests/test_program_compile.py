@@ -406,3 +406,179 @@ class TestTheProgramEntryPointUsesTheOneSortKey:
             two_row_program(), projection=Projection.SCORE
         )
         assert all(len(action.sort_key) == 8 for action in actions)
+
+
+def engine_result(**overrides) -> dict:
+    """One pair fight's engine ledger, in the shape the compiler reads."""
+    result = {
+        "breakdown": {},
+        "cast_timeline": [{"time": 1.0, "slot": "Q", "ordinal": 1}],
+        "damage_events": [
+            {
+                "time": 1.0,
+                "sequence": 0,
+                "source_key": "Q",
+                "damage_type": "magic",
+                "damage": 50.0,
+            },
+            {
+                "time": 2.0,
+                "sequence": 1,
+                "source_key": "auto_attacks",
+                "damage_type": "physical",
+                "damage": 30.0,
+            },
+        ],
+        "control_events": [],
+        "self_healing_events": [],
+        "timeline_coverage": {},
+    }
+    result.update(overrides)
+    return result
+
+
+def compile_result(result: dict, **kwargs) -> list:
+    """*result* through the one compiler, as typed actions."""
+    compiler = program_compile.WalkCompiler(0)
+    compiler.add_engine_result(
+        result, "enemy:Veigar", 1, "main", 0, {}, 8.0, {}, [], **kwargs
+    )
+    return compiler.actions
+
+
+class TestTheCompilerDerivesTheDeliveryFacts:
+    """The two facts an engine row does not always spell out.
+
+    An armed damage modifier restricts itself by attack class and a spell
+    shield groups a cast by its instance, so a packet that could not say
+    which class it belongs to or which cast it came from prices differently
+    from the same packet composed anywhere else.  Neither fact may depend on
+    a caller having stamped the ledger first: the compiler that reads the row
+    is the one that answers them.
+    """
+
+    def test_a_cast_row_is_an_ability_and_carries_its_cast_ordinal(self) -> None:
+        cast = compile_result(engine_result())[0]
+        assert cast.is_ability is True
+        assert cast.ability_instance == "Q:1"
+
+    def test_the_ordinary_auto_row_is_the_basic_attack_packet(self) -> None:
+        auto = compile_result(engine_result())[1]
+        assert auto.basic_attack is True
+        assert auto.is_ability is False
+        assert auto.ability_instance is None
+
+    def test_a_cast_row_before_any_cast_falls_back_to_its_own_timestamp(self) -> None:
+        """No cast to attribute it to is still one identity, not none."""
+        result = engine_result(cast_timeline=[])
+        assert compile_result(result)[0].ability_instance == "Q:1.0"
+
+
+class TestTheCompilerStagesAControlRow:
+    """A standalone crowd-control interval, compiled as what it is.
+
+    The engine publishes each control application as its own row.  It is not
+    damage: it arms after everything that landed at its own timestamp, and it
+    reaches the kernel's control branch rather than its damage branch.
+    """
+
+    @staticmethod
+    def control_row(**overrides) -> dict:
+        row = {
+            "time": 1.0,
+            "sequence": 1_000_001,
+            "kind": "crowd_control",
+            "cc_kind": "stun",
+            "cc_duration": 1.5,
+            "damage": 0.0,
+            "damage_type": "",
+            "source_key": "E",
+            "source": "Event Horizon",
+            "is_ability": True,
+            "cast_id": "E:1",
+            "application_id": "E:1",
+        }
+        row.update(overrides)
+        return row
+
+    def control_action(self, **overrides):
+        result = engine_result(
+            control_events=[self.control_row(**overrides)],
+            effective_armor=100.0,
+            effective_mr=50.0,
+        )
+        return compile_result(result)[-1]
+
+    def test_it_compiles_as_control_and_arms_after_the_damage_it_shares(self) -> None:
+        action = self.control_action()
+        assert action.kind is ActionKind.CROWD_CONTROL
+        assert action.phase is TransitionRank.DEBUFF_ARM
+        assert (action.cc_kind, action.cc_duration) == ("stun", 1.5)
+
+    def test_it_is_an_ability_even_when_the_row_forgot_to_say_so(self) -> None:
+        """A control packet is a cast landing, whatever the row carries."""
+        assert self.control_action(is_ability=False).is_ability is True
+
+    def test_it_shares_the_casts_instance_so_one_block_costs_one_use(self) -> None:
+        assert self.control_action().ability_instance == "E:1"
+
+    def test_an_unstamped_control_derives_the_same_instance_spelling(self) -> None:
+        """The engine's ``slot:ordinal`` and the derived one are one string."""
+        derived = self.control_action(
+            application_id=None, cast_id=None, source_key="Q", time=1.0
+        )
+        assert derived.ability_instance == "Q:1"
+
+    def test_it_carries_the_fights_baseline_resistances(self) -> None:
+        """The same stamp the damage rows of this fight carry.
+
+        A packet the walk may re-price after a sourced resistance delta needs
+        the figure the engine mitigated against; a control row that carried
+        none would be the one row of its fight the walk could not place.
+        """
+        action = self.control_action()
+        assert action.baseline_effective_armor == 100.0
+        assert action.baseline_effective_mr == 50.0
+
+    def test_a_control_row_with_no_sequence_is_refused(self) -> None:
+        """The walk's tie-break order may not depend on id numbering."""
+        row = self.control_row()
+        del row["sequence"]
+        with pytest.raises(ValueError, match="has no sequence"):
+            compile_result(engine_result(control_events=[row]))
+
+
+class TestTheActorWideHealSkip:
+    """The keep-first ``[main, *allies]`` rule (issue #169).
+
+    An enemy attacker's ordered pair list starts at the main, so the walk
+    always keeps its main-pair copy of an actor-wide heal.  The ally-pair
+    copies must be skipped rather than deduplicated by value: the engine may
+    price them differently per defender, and a value dedup would refuse the
+    whole fight for copies that disagree.
+    """
+
+    @staticmethod
+    def result_with_an_actor_wide_heal() -> dict:
+        return engine_result(
+            self_healing_events=[
+                {
+                    "time": 3.0,
+                    "sequence": 5,
+                    "amount": 120.0,
+                    "actor_wide": True,
+                    "source": "Maximum Dosage",
+                    "source_key": "P",
+                }
+            ]
+        )
+
+    def test_the_copy_compiles_when_the_fight_is_the_kept_one(self) -> None:
+        actions = compile_result(self.result_with_an_actor_wide_heal())
+        assert [a.kind for a in actions].count(ActionKind.HEAL) == 1
+
+    def test_the_ally_pair_copy_is_skipped_whole(self) -> None:
+        actions = compile_result(
+            self.result_with_an_actor_wide_heal(), suppress_actor_wide_heals=True
+        )
+        assert ActionKind.HEAL not in [a.kind for a in actions]

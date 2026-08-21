@@ -121,6 +121,57 @@ _DAMAGE_ACTION_KINDS = frozenset(
 )
 
 
+_CAST_SLOTS = frozenset({"Q", "W", "E", "R"})
+
+
+def is_authored_ability_event(event: Mapping[str, Any]) -> bool:
+    """Identify a champion cast without treating passive/proc rows as casts.
+
+    Champion modules use the canonical Q/W/E/R source keys for cast packets.
+    A packet may override this marker when a source-backed mechanic supplies
+    a more precise cast classification; absent that receipt, item procs and
+    passive rows remain eligible to land normally.
+    """
+    if "is_ability" in event:
+        return bool(event["is_ability"])
+    return str(event.get("source_key", "")) in _CAST_SLOTS
+
+
+def ability_instance_for_event(
+    event: Mapping[str, Any], cast_timeline: Iterable[Mapping[str, Any]]
+) -> str | None:
+    """Attach a cast ordinal so multi-packet abilities share one shield use.
+
+    The engine stamps its own ``slot:ordinal`` cast id on every packet it can
+    attribute to a cast (``control_events`` carry it as ``application_id``);
+    this derives the same spelling for the damage rows, which carry the cast
+    time but not the id.  Both ordinals are 1-based, so one cast has one
+    identity whichever row of it a consumer holds.
+    """
+    if not is_authored_ability_event(event):
+        return None
+    slot = str(event.get("source_key", ""))
+    try:
+        event_time = float(event.get("time", 0.0))
+    except (TypeError, ValueError):
+        return None
+    candidates = [
+        cast
+        for cast in cast_timeline
+        if str(cast.get("slot", "")) == slot
+        and float(cast.get("time", 0.0)) <= event_time
+    ]
+    if not candidates:
+        return f"{slot}:{trigger_time_key(event_time)}"
+    cast = max(candidates, key=lambda row: float(row.get("time", 0.0)))
+    ordinal = cast.get("ordinal")
+    return (
+        f"{slot}:{ordinal}"
+        if ordinal is not None
+        else f"{slot}:{trigger_time_key(float(cast.get('time', 0.0)))}"
+    )
+
+
 def declared_packet_of(
     declaration: Any, damage_type: str, source_key: str, holder_amps: Any
 ) -> DeclaredPacket:
@@ -944,6 +995,21 @@ class WalkCompiler:
         # effective resistances for the whole pair fight, which is exactly
         # what ``_pair_packet`` stamps onto every enriched event of it.
         baseline_armor, baseline_mr = pair_resistance_baselines(result)
+        # The fields ``_pair_packet`` stamped only when the fight published a
+        # finite figure, so an absent value stays absent and the walk refuses
+        # to invent a mitigation ratio for that packet rather than reading a
+        # zero.  Composed once per fight because that is what they are.
+        baseline_fields = {
+            key: value
+            for key, value in (
+                ("_baseline_effective_armor", baseline_armor),
+                ("_baseline_effective_mr", baseline_mr),
+            )
+            if value is not None
+        }
+        cast_timeline = result.get("cast_timeline") or ()
+        if not isinstance(cast_timeline, list):
+            cast_timeline = ()
         # **Two row shapes, one reader.**  The engine publishes its damage
         # ledger either as enriched dicts or — for a score-only request whose
         # adequacy conditions hold — as light positional rows ``(sort_key,
@@ -1046,8 +1112,16 @@ class WalkCompiler:
                 raw_damage = float(row.get("raw_damage", 0.0) or 0.0)
                 declaration = row.get("declared")
                 source = str(row.get("source", source_key))
-                is_ability = bool(row.get("is_ability"))
-                basic_attack = bool(row.get("basic_attack"))
+                # The two delivery facts an engine row does not always spell
+                # out, derived here rather than by whoever calls this: an
+                # authored ability event IS an ability, and the ordinary auto
+                # row IS the canonical basic-attack packet.  Reading the raw
+                # keys alone left an auto row classified ``unknown_delivery``
+                # and an ability row outside every attack-class restriction.
+                is_ability = is_authored_ability_event(row)
+                basic_attack = (
+                    bool(row.get("basic_attack")) or source_key == "auto_attacks"
+                )
                 # The delivery facts a certified packet carries, read off the
                 # same keys ``action_from_event`` reads.  Force of Nature's
                 # Steadfast counts an immobilizing hit double and throttles
@@ -1063,7 +1137,13 @@ class WalkCompiler:
                 skillshot = bool(row.get("skillshot"))
                 area_damage = bool(row.get("area_damage"))
                 damage_over_time = bool(row.get("damage_over_time"))
+                # The cast ordinal is what makes a multi-packet ability ONE
+                # spell-shield use.  The engine stamps it on the rows it can
+                # attribute; the rest are derived from the same cast timeline,
+                # in the same spelling.
                 ability_instance = row.get("ability_instance")
+                if ability_instance is None:
+                    ability_instance = ability_instance_for_event(row, cast_timeline)
             if index < known_ids:
                 event_id = id_strings[index]
             else:
@@ -1167,17 +1247,34 @@ class WalkCompiler:
         # The sort slot is the receipt adapter's own ``0.0``: a control
         # interval is in force before the damage at its timestamp resolves.
         for control_index, raw_event in enumerate(result.get("control_events", ())):
+            if "sequence" not in raw_event:
+                # Same refusal as the damage loop above: pair-local event ids
+                # stay order-irrelevant only while every engine row carries
+                # its per-fight sequence, and a missing one would silently
+                # tie-break at zero.
+                raise ValueError(
+                    f"{attacker_id} control event "
+                    f"{raw_event.get('source_key', '')!r} has no sequence; the "
+                    "walk's tie-break order would depend on event-id numbering"
+                )
             event = {
                 **raw_event,
                 "attacker": attacker_id,
                 "target": defender_id,
                 "_event_id": f"{attacker_id}:{defender_id}:control:{control_index}",
+                # A control packet is a cast landing, whatever the row says.
+                "is_ability": True,
+                **baseline_fields,
             }
-            # Cast grouping, spelled as the engine already stamped it: the
-            # cast id IS ``slot:ordinal``, which is what the receipt side
-            # derives from the cast timeline, so one blocked cast still
-            # costs one spell-shield use on both adapters.
-            instance = raw_event.get("application_id") or raw_event.get("cast_id")
+            # Cast grouping: the cast id IS ``slot:ordinal``, which is exactly
+            # what :func:`ability_instance_for_event` derives from the cast
+            # timeline, so one blocked cast costs one spell-shield use however
+            # its identity was reached.
+            instance = (
+                raw_event.get("application_id")
+                or raw_event.get("cast_id")
+                or ability_instance_for_event(event, cast_timeline)
+            )
             if instance is not None:
                 event["ability_instance"] = instance
             time_value = float(event.get("time", 0.0))

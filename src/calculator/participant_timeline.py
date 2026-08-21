@@ -155,8 +155,10 @@ from .program.rung import (
 )
 from .program.compile import (
     WalkCompiler,
+    ability_instance_for_event,
     action_from_event,
     declared_packet_of,
+    is_authored_ability_event,
     grey_health_heal_action,
     modifier_delivery_receipt,
     pair_resistance_baselines,
@@ -350,71 +352,25 @@ def _pair_cache_key(
     return (attacker_id, defender_id, defensive, restores)
 
 
-def _is_authored_ability_event(event: Mapping[str, Any]) -> bool:
-    """Identify a champion cast without treating passive/proc rows as casts.
-
-    Champion modules use the canonical Q/W/E/R source keys for cast packets.
-    A packet may override this marker when a future source-backed mechanic
-    supplies a more precise cast classification; absent that receipt, item
-    procs and passive rows remain eligible to land normally.
-    """
-    if "is_ability" in event:
-        return bool(event["is_ability"])
-    return str(event.get("source_key", "")) in {"Q", "W", "E", "R"}
-
-
 def _stamp_ability_instances(result: MutableMapping[str, Any]) -> None:
     """Give one engine result's damage events their delivery facts in place.
 
-    ``_pair_packet`` does this while enriching a pair packet; a score-only
-    result never passes through it, so the compiled panel built straight
-    from the engine would carry no instance at all.  Same deriver, same
-    cast timeline, one home.
+    The *view* half of what :meth:`WalkCompiler.add_engine_result` derives
+    for the walk: the item support scan reads the enriched per-event copy,
+    and a score-only result never passes through the pair enrichment that
+    would otherwise supply it.  Same two derivers, one home.
     """
     cast_timeline = result.get("cast_timeline") or ()
     for event in result.get("damage_events", ()):
         if not isinstance(event, MutableMapping):
             continue
         if "ability_instance" not in event:
-            instance = _ability_instance_for_event(event, cast_timeline)
+            instance = ability_instance_for_event(event, cast_timeline)
             if instance is not None:
                 event["ability_instance"] = instance
-        # The two delivery facts the same enrichment answers, by the same
-        # two rules: an authored ability event IS an ability, and the
-        # ordinary auto row IS the canonical basic-attack packet.  Reading
-        # the raw key alone left an auto row classified ``unknown_delivery``
-        # on the compiled path and ``basic_attack_not_blocked`` on the walk.
-        event.setdefault("is_ability", _is_authored_ability_event(event))
+        event.setdefault("is_ability", is_authored_ability_event(event))
         if str(event.get("source_key", "")) == "auto_attacks":
             event["basic_attack"] = True
-
-
-def _ability_instance_for_event(
-    event: Mapping[str, Any], cast_timeline: Iterable[Mapping[str, Any]]
-) -> str | None:
-    """Attach a cast ordinal so multi-packet abilities share one shield use."""
-    if not _is_authored_ability_event(event):
-        return None
-    slot = str(event.get("source_key", ""))
-    try:
-        event_time = float(event.get("time", 0.0))
-    except (TypeError, ValueError):
-        return None
-    candidates = [
-        cast
-        for cast in cast_timeline
-        if str(cast.get("slot", "")) == slot
-        and float(cast.get("time", 0.0)) <= event_time
-    ]
-    if not candidates:
-        return f"{slot}:{round(event_time, 9)}"
-    cast = max(candidates, key=lambda row: float(row.get("time", 0.0)))
-    ordinal = cast.get("ordinal")
-    return (
-        f"{slot}:{ordinal}"
-        if ordinal is not None
-        else f"{slot}:{round(float(cast.get('time', 0.0)), 9)}"
-    )
 
 
 def _pair_packet(  # pylint: disable=too-many-arguments
@@ -536,8 +492,8 @@ def _pair_packet(  # pylint: disable=too-many-arguments
             "attacker": attacker_id,
             "target": defender_id,
             "_event_id": f"{attacker_id}:{defender_id}:{index}",
-            "is_ability": _is_authored_ability_event(event),
-            "ability_instance": _ability_instance_for_event(event, cast_timeline),
+            "is_ability": is_authored_ability_event(event),
+            "ability_instance": ability_instance_for_event(event, cast_timeline),
         }
         if source_key == "auto_attacks" or bool(event.get("basic_attack")):
             # The ordinary auto row is the canonical basic-attack packet. A
@@ -611,7 +567,7 @@ def _pair_packet(  # pylint: disable=too-many-arguments
             # Cast grouping: control packets of one cast must share the
             # cast's ability instance so the spell-shield kernel blocks
             # every packet of the blocked cast with ONE use.
-            "ability_instance": _ability_instance_for_event(event, cast_timeline),
+            "ability_instance": ability_instance_for_event(event, cast_timeline),
         }
         for baseline_key, baseline in baseline_fields:
             enriched[baseline_key] = baseline
@@ -691,6 +647,11 @@ def _pair_packet(  # pylint: disable=too-many-arguments
         )
         heals.append(enriched_heal)
     return {
+        # The engine's own result, unmodified: the one compiler
+        # (:meth:`WalkCompiler.add_engine_result`) reads its ledgers and its
+        # breakdown, and the preview-stripped ``result`` beside it is the
+        # composition's view of the same fight, not a second fight.
+        "engine": result,
         "result": _without_pair_previews(result, result_breakdown, previewed),
         "events": events,
         "heals": heals,
@@ -3923,6 +3884,13 @@ class CoupledSearchContext:
         "main_pair_params",
         "roster_pair_params",
         "pair_id_strings",
+        # The panels' own positional event-id strings, keyed by the whole
+        # pair: ``pair_id_strings`` is the main attacker's, so its defender
+        # key alone would collide across roster attackers.
+        "panel_id_strings",
+        # Each roster attacker's wound-declaring sources, champion-fixed and
+        # derived once per search like the main's.
+        "roster_champion_wounds",
         "base_compiler",
         "base_sorted",
         # Knight's Vow: the redirected child action for each parent damage
@@ -3966,6 +3934,8 @@ class CoupledSearchContext:
         self.main_pair_params: list[tuple[Combatant, FightParams]] = []
         self.roster_pair_params: dict[tuple[str, str], FightParams] = {}
         self.pair_id_strings: dict[str, list[str]] = defaultdict(list)
+        self.panel_id_strings: dict[tuple[str, str], list[str]] = defaultdict(list)
+        self.roster_champion_wounds: dict[str, dict[str, Any]] = {}
         self.base_compiler: _WalkCompiler | None = None
         self.base_sorted: list[tuple[Any, ...]] = []
         self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
@@ -3998,6 +3968,30 @@ class _SignaturePanel:  # pylint: disable=too-few-public-methods
         merged = base_sorted + sorted(sig.actions, key=itemgetter(0))
         merged.sort(key=itemgetter(0))
         self.sorted_actions = merged
+
+
+def _champion_wounds_of(champion_data: Mapping[str, Any]) -> dict[str, Any]:
+    """One champion's wound-declaring sources, keyed by the source they ride.
+
+    A champion-applied Grievous Wounds hit (Katarina R, Varus E) rides its
+    damage event as the same wound receipt an item or a thorns strike
+    carries; the compiler joins the two by source key.
+    """
+    return {
+        str(packet.get("source_key", "")): packet
+        for packet in champion_grievous_wound_sources(champion_data)
+    }
+
+
+def _roster_champion_wounds(
+    context: CoupledSearchContext, actor: Combatant
+) -> dict[str, Any]:
+    """*actor*'s wound sources, derived once per search."""
+    wounds = context.roster_champion_wounds.get(actor.participant_id)
+    if wounds is None:
+        wounds = _champion_wounds_of(actor.champion_data)
+        context.roster_champion_wounds[actor.participant_id] = wounds
+    return wounds
 
 
 def _grievous_packs_for(
@@ -4158,6 +4152,8 @@ def _context_setup(
             if attacker.team == "ally"
             else 1 + ally_index.get(defender.participant_id, -1)
         )
+        live_amps = _live_amps_of(attacker, defender, params)
+        holder_amps = _holder_amps_of(attacker, defender, params)
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _pair_packet(
@@ -4173,18 +4169,25 @@ def _context_setup(
                 defender.participant_id,
                 defender_index,
                 champion_data=attacker.champion_data,
-                live_amps=_live_amps_of(attacker, defender, params),
-                holder_amps=_holder_amps_of(attacker, defender, params),
+                live_amps=live_amps,
+                holder_amps=holder_amps,
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
-        base.add_packet(
-            packet,
+        base.add_engine_result(
+            packet["engine"],
+            attacker.participant_id,
             attacker_i,
+            defender.participant_id,
             context.index_of[defender.participant_id],
             context.grievous_packs[attacker_i],
             params.fight_duration_seconds,
             context.base_heal_dedup[attacker_i],
+            context.panel_id_strings[pair_id],
+            defender_index,
+            champion_wounds=_roster_champion_wounds(context, attacker),
+            live_amps=live_amps,
+            holder_amps=holder_amps,
             # An enemy attacker's ordered pair list is [main, *allies], so
             # the legacy dedup always keeps its main-pair copy — which
             # lives in the signature panel, not here.  Skip the ally-pair
@@ -4298,6 +4301,8 @@ def _build_signature_panel(
         cache_key = _pair_cache_key(
             attacker.participant_id, "main", signature, _UNPATCHED_RESTORES
         )
+        live_amps = _live_amps_of(attacker, main, params)
+        holder_amps = _holder_amps_of(attacker, main, params)
         packet = pair_result_cache.get(cache_key)
         if packet is None:
             packet = _pair_packet(
@@ -4320,23 +4325,29 @@ def _build_signature_panel(
                 attacker.participant_id,
                 "main",
                 champion_data=attacker.champion_data,
-                live_amps=_live_amps_of(attacker, main, params),
-                holder_amps=_holder_amps_of(attacker, main, params),
+                live_amps=live_amps,
+                holder_amps=holder_amps,
             )
             pair_result_cache[cache_key] = packet
         attacker_i = context.index_of[attacker.participant_id]
-        # This main-pair packet carries the attacker's legacy-kept
-        # actor-wide heal copies (the ally-pair copies were suppressed in
-        # the base panel).  The dedup map is a per-signature copy: a sig
-        # build may never grow the shared base sets, or a key recorded by
-        # one signature would silently drop another signature's only copy.
-        sig.add_packet(
-            packet,
+        # This main-pair fight carries the attacker's legacy-kept actor-wide
+        # heal copies (the ally-pair copies were suppressed in the base
+        # panel).  The dedup map is a per-signature copy: a sig build may
+        # never grow the shared base sets, or a key recorded by one
+        # signature would silently drop another signature's only copy.
+        sig.add_engine_result(
+            packet["engine"],
+            attacker.participant_id,
             attacker_i,
+            "main",
             0,
             context.grievous_packs[attacker_i],
             duration,
             dict(context.base_heal_dedup.get(attacker_i) or {}),
+            context.panel_id_strings[(attacker.participant_id, "main")],
+            champion_wounds=_roster_champion_wounds(context, attacker),
+            live_amps=live_amps,
+            holder_amps=holder_amps,
         )
         support_templates = packet.get("support")
         if support_templates is None:
@@ -4484,10 +4495,7 @@ def _score_with_search_context(
     }
     main_champion_wounds = context.main_champion_wounds
     if main_champion_wounds is None:
-        main_champion_wounds = {
-            str(packet.get("source_key", "")): packet
-            for packet in champion_grievous_wound_sources(main.champion_data)
-        }
+        main_champion_wounds = _champion_wounds_of(main.champion_data)
         context.main_champion_wounds = main_champion_wounds
     reusable_stats = main.stats if reuse_main_stats else None
     heal_dedup: dict[tuple[str, float], float] = {}
