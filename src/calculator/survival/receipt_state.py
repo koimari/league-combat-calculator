@@ -28,18 +28,13 @@ from ..delivery_eligibility import initial_full_block_uses
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives from exactly seven values:
-# the cache generation (D-49), the combatant's ``defenses`` record, the four
+# the cache generation, the combatant's ``defenses`` record, the four
 # resistance stats read at the bottom of the prototype, and the compiled
-# below-half healing bonus.  Those seven **are** the key (Phase 4's cache
-# rule, migration frontier counter 7): the memo used to key on
-# ``id(combatant)`` with a strong-reference recycling guard, which is safe
-# and is not a value — an address says nothing about the state it stands
-# for, so a combatant mutated in place kept its entry, and two candidates
-# whose defenses were identical each paid for their own construction.
+# below-half healing bonus.  Those seven are the key.
 #
-# The key is a value, so no re-verification is needed on a hit and no entry
-# holds a combatant alive.  The memo stays bounded because the population is
-# now defence records rather than roster slots and a long search meets many.
+# The key is a value, so a hit needs no re-verification and no entry holds a
+# combatant alive.  The memo stays bounded because its population is defence
+# records rather than roster slots, and a long search meets many.
 _STATE_PROTO_MEMO: dict[tuple[Any, ...], tuple[dict[str, Any], list[str]]] = {}
 _STATE_PROTO_MEMO_LIMIT = 512
 
@@ -134,19 +129,10 @@ def _state_proto_key(
 ) -> tuple[Any, ...]:
     """The prototype's value key.
 
-    ``defenses`` carries the key's weight and enters it whole, which is legal
-    because it is a frozen ``StartingDefenses`` — ``Combatant`` admits nothing
-    else — and those hash and compare by field, which is what makes an object
-    a value rather than an address.
-
-    **What that costs, stated rather than discovered.**  ``id(combatant)``
-    was one machine word; this key hashes a frozen ``StartingDefenses`` —
-    fifty-five fields — plus four stats, once per participant per
-    evaluation.  It buys a hit rate the address key could not have (two
-    combatants with identical defences now share an entry, and a mutated
-    record moves its key instead of keeping it), and it is paid for on the
-    bench, but "it hits more" is only half the trade and the other half
-    belongs in the docstring rather than in a profile.
+    ``defenses`` enters whole because ``Combatant`` admits only a frozen
+    ``StartingDefenses``, which hashes and compares by field.  Hashing its
+    fifty-five fields plus four stats, once per participant per evaluation,
+    buys entries shared between combatants with identical defences.
     """
     stats = combatant.stats
     return (
@@ -158,11 +144,11 @@ def _state_proto_key(
 
 
 def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, Any]:
-    """One participant's canonical survival state (issue #137).
+    """One participant's canonical survival state.
 
-    Clones the memoized prototype for this combatant's defence record:
-    fresh shield pools, fresh containers, shared scalars — field-for-field
-    identical to an uncached construction (issue #171).
+    Clones the memoized prototype for this combatant's defence record: fresh
+    shield pools, fresh containers, shared scalars, field-for-field identical
+    to an uncached construction.
 
     ``below_half_healing_bonus`` is the compiled form of this participant's
     declared below-half healing bonus, and it is a **parameter** rather than
@@ -230,7 +216,7 @@ def _build_state_uncached(
     )
     return {
         # Every shield and health transition rides shield_ledger; this is the
-        # one place this participant's absorbing state lives (issue #159).
+        # one place this participant's absorbing state lives.
         # Both are :data:`_PER_CALL_FIELDS`: the slots are declared here so a
         # built state's field order is this construction's, and the values
         # are the caller's because they are derived from health.
@@ -289,10 +275,10 @@ def _build_state_uncached(
         "crowd_control_intervals": [],
         "crowd_control_immunity_until": 0.0,
         "crowd_control_immunity_source": "",
-        # P2 Slice 3: the typed crowd-control immunity ledger.  The exact
-        # Black Shield ``shield_ledger.TimedShield`` entry is the ONLY
-        # immunity holder; the legacy projection fields above stay for
-        # the pinned public rows and are re-derived from the ledger.
+        # The typed crowd-control immunity ledger.  The exact Black Shield
+        # ``shield_ledger.TimedShield`` entry is the ONLY immunity holder; the
+        # projection fields above carry the pinned public rows and are
+        # re-derived from the ledger.
         "crowd_control_immunity_grants": [],
         "crowd_control_immunity_blocked": [],
         "crowd_control_immunity_decisions": [],
@@ -521,28 +507,18 @@ class ReceiptLedger:
     ) -> None:
         """The ledger, plus the builder it may not reach for itself.
 
-        ``compile_event`` is required with no default, and the reason is the
-        phase's one-way dependency: the one ``SurvivalAction`` constructor
-        lives in ``program/compile.py`` and ``survival/`` may not import
-        ``program/``, so the boundary that builds the walk hands the builder
-        over -- the same device ``build_state``'s below-half healing bonus
-        and ``TransitionContext``'s regeneration windows arrive by.  A
-        default would let a caller that forgot it schedule nothing and look
-        like a fight in which no trigger authored a heal.
+        ``compile_event`` has no default because the one ``SurvivalAction``
+        constructor lives in ``program/compile.py``, which ``survival/`` may
+        not import.  A default would let a caller that forgot it schedule
+        nothing and look like a fight where no trigger authored a heal.
 
-        ``outcomes`` is the write-once companion (D-62, D-64).  Every
-        observation this adapter makes onto an event dict is made a second
-        time onto :class:`~survival.outcome_state.OutcomeLedger`, which
-        answers a question the event dict structurally cannot: an event dict
-        takes the *last* write, so a field two rules answer differently
-        serializes as whichever ran second and neither rule is wrong at any
-        single line.  The companion refuses the second write and names both
-        values, and its ``applied`` claim refuses a second contribution for
-        one ``(mechanic, subject, event_id)``.  It is built here rather than
-        by the composition because this is the object every write already
-        passes through: a ledger a caller has to remember to attach is one a
-        caller can forget, and the rule would then hold over the walks
-        somebody wired and not over the walks somebody adds.
+        ``outcomes`` is the write-once companion.  An event dict takes the
+        last write, so a field two rules answer differently serializes as
+        whichever ran second; the companion refuses the second write, names
+        both values, and refuses a second ``applied`` contribution for one
+        ``(mechanic, subject, event_id)``.  It is built here because every
+        write already passes through this object, and a ledger a caller must
+        remember to attach would hold only over the walks somebody wired.
         """
         self.compile_event = compile_event
         self.annotating = annotating
@@ -568,15 +544,7 @@ class ReceiptLedger:
             action.event.update(fields)
 
     def restore(self, action: SurvivalAction, **fields: Any) -> None:
-        """Put an input back on a packet a later transition will price.
-
-        The event dict takes it, because that is the packet the walk reads.
-        The outcome ledger does not, because it is not an outcome: the
-        transition that prices this packet writes the number it produced a
-        few frames later, and recording both would make one question have
-        two answers — which is precisely what the write-once ledger exists
-        to refuse, so it must not be handed a false positive to refuse.
-        """
+        """Put an input back on a packet; an input is not an outcome, so no ledger."""
         if action.event is not None:
             action.event.update(fields)
 

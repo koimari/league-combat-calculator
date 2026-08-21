@@ -228,10 +228,8 @@ def grant(
 ) -> None:
     """Add a shield to one pool, timed when the grant has an expiry.
 
-    Every shield a fight hands out -- support casts, reactive barriers,
-    overheal conversion, an armed Lifeline -- enters the pools here, so the
-    pool total and its expiry sub-ledger can never disagree.
-    """
+    Every shield a fight hands out enters the pools here, so the pool total
+    and its expiry sub-ledger can never disagree."""
     _set_pool(pools, pool, _pool(pools, pool) + amount)
     if expires_at is not None:
         pools.timed.append(
@@ -258,26 +256,20 @@ def expire_timed(pools: ShieldPools, event_time: float) -> float:
     return expired_total
 
 
+# The sourced rule, from the Wiki's Health page, whose worked example is
+# Protoplasm Harness itself: "A decrease in maximum health does not change
+# current health (unless it would exceed the new maximum health). ... When the
+# passive runs out, maximum health decreases by 200 from 1200 to 1000. Current
+# health remains at 700."  A defender that spent more than the grant keeps
+# every point it has; only an overhang above the new maximum is clamped away.
+# https://wiki.leagueoflegends.com/en-us/Health
+# Cached by ``python scripts/decompose_wiki.py --fetch "Health"``
+# (``data/wiki-raw/Health.wiki``; the sentence is the Overview section's).
 def expire_temporary_max_health(pools: ShieldPools, amount: float) -> float:
     """Remove a temporary maximum-health grant; return what was removed.
 
-    The sourced rule, from the Wiki's Health page — whose worked example is
-    Protoplasm Harness itself: "A decrease in maximum health does not change
-    current health (unless it would exceed the new maximum health). ... When
-    the passive runs out, maximum health decreases by 200 from 1200 to 1000.
-    Current health remains at 700."  So a defender that spent more than the
-    grant keeps every point it has; only an overhang above the new maximum
-    is clamped away.
-
-    https://wiki.leagueoflegends.com/en-us/Health
-    Cached locally by ``python scripts/decompose_wiki.py --fetch "Health"``
-    (``data/wiki-raw/Health.wiki``; the sentence is the Overview section's).
-
-    This is the only implementation of that rule.  Both walks that carry a
-    temporary maximum call it: the survival walk's temporary-health ledger
-    (``survival.transitions.expire_temporary_health``) and the ordered damage
-    walk's Lifeline expiry (:func:`expire_threshold_health`).
-    """
+    The one implementation of the sourced rule above; both walks that carry a
+    temporary maximum call it."""
     removed = min(max(0.0, amount), pools.max_health)
     pools.max_health -= removed
     pools.health = min(pools.health, pools.max_health)

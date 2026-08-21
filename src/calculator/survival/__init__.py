@@ -1,4 +1,4 @@
-"""The survival kernel — one typed state-transition engine (issue #137).
+"""The survival kernel: one typed state-transition engine.
 
 Package layout (top-level flow: compile -> transition -> accumulate):
 
@@ -8,51 +8,30 @@ Package layout (top-level flow: compile -> transition -> accumulate):
   loop with the one dispatch ladder per kind, and the embedded
   transitions (reactive shields, Maw omnivamp, Defy).  Shield and health
   absorption itself belongs to :mod:`calculator.shield_ledger`, which the
-  one-pair engine drives too (issue #159);
+  one-pair engine drives too;
 * :mod:`receipt_state` — the annotating ledger adapter (public timeline);
 * :mod:`score_state` — the parallel-array ledger adapter (optimizer);
 * :mod:`compile` — the packet compiler with fail-closed capability
   receipts (:class:`UncompilableActionError`);
 * :mod:`pricing` — raw declared damage becoming a mitigated number: the
-  one arithmetic home a family's declaration reaches the walk through,
-  inert until a retirement slice hands it a packet;
+  one arithmetic home a family's declaration reaches the walk through;
 * :mod:`accumulate` — per-attacker float-sum order, rounded death-time
   cutoff, breakdown rows.
 
 ``__all__`` is the package's declared API, so growing it is an API change.
-0A.4 grew it by six names — ``TransitionRank``, ``SUPPORT_RANK_KEY``,
-``BARRIER_GRANT_KINDS``, ``legacy_phase``, ``public_phase`` and
-``support_transition_rank`` — which is the transition vocabulary the item
-layer and the public schema now author against instead of writing floats.
-``BARRIER_GRANT_KINDS`` is additionally a rename: it was ``_BARRIER_GRANT_KINDS``
-until the published support ordering needed the kernel's one spelling of it.
-``legacy_phase`` was temporary by design and left this list at Phase 4 S2,
-when the sort key started carrying a ``TransitionRank`` and the float
-projection was deleted; the fold two groups of ranks still share
-(``actions.ordering_slot``) is kernel-internal and deliberately not
-re-exported, because no packet author outside this package orders anything.
-Phase 4 S1 grew it by one,
-``EVENT_SLOTS``: the four ``str | None`` reference fields became integer
-slots, and the composition that authors packets outside this package has to
-resolve an id string to the same slot the kernel will compare.  0A.8 shrank it by one: the
-export was a second dispatch ladder over the same kinds, with zero
-callers, and a declared API is exactly where such a thing survives long
-enough to drift from the loop that is actually run.
+It carries the transition vocabulary the item layer and the public schema
+author against instead of writing floats, and ``EVENT_SLOTS``, because the
+four reference fields are integer slots and a composition that authors packets
+outside this package has to resolve an id string to the same slot the kernel
+compares.  ``actions.ordering_slot``, the fold two groups of ranks share,
+stays kernel-internal: no packet author outside this package orders anything.
 
-**Phase 4 S4 shrank it by three, which is a breaking API change and is
-recorded as one.**  ``WalkCompiler``, ``revive_candidate_actions`` and this
-package's own from-event action builder left it: the first two moved to
-``calculator.program.compile`` unchanged, and the third is that module's
-``action_from_event`` -- same body, new layer, and its old name is pinned at
-zero occurrences in ``src/``, so ``from calculator.survival import
-WalkCompiler`` stopped resolving.  They cannot be re-exported from here --
-``program -> survival`` runs one way and a re-export would be the kernel
-importing the logical layer -- so an importer moves to
-``calculator.program.compile`` rather than being kept working from both
-places.  S4 also grew it by two, ``trigger_time_key`` and
-``TRIGGER_TIME_KEY_DIGITS``: the tolerance a trigger lookup keys on lives on
-this side of that same one-way boundary, because ``heal_trigger_key`` is its
-reader and cannot import the registry that would otherwise own it.
+``program -> survival`` runs one way, so the kernel never re-exports the
+logical layer.  ``WalkCompiler``, ``revive_candidate_actions`` and
+``action_from_event`` live in ``calculator.program.compile`` and are imported
+from there.  ``trigger_time_key`` and ``TRIGGER_TIME_KEY_DIGITS`` sit on this
+side of that boundary, because ``heal_trigger_key`` is their reader and cannot
+import the registry that would otherwise own them.
 """
 
 from .actions import (
