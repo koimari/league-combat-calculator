@@ -1657,7 +1657,10 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             ("unsealed_spellbook", "Unsealed Spellbook"),
             # -- minor runes, by path --
             ("coup_de_grace", "Coup de Grace"),
+            ("cut_down", "Cut Down"),
+            ("last_stand", "Last Stand"),
             ("absolute_focus", "Absolute Focus"),
+            ("axiom_arcanist", "Axiom Arcanist"),
             ("scorch", "Scorch"),
             ("cosmic_insight", "Cosmic Insight"),
         )
