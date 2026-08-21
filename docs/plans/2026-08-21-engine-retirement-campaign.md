@@ -70,3 +70,59 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 - `interpreters/` has no `*PairInterpreter`/`*WalkInterpreter` class pairs.
 - Lint tests pin: cached-data literal fallbacks, campaign-ID citations in `src`, and docstrings longer than their body all at zero; receipt-reading test files ≤ the declared gates.
 - `benchmarks.md` exists, with the start and close numbers from the same script.
+
+## Results
+
+Range `7bb9701e..4813a19d` (87 commits, 13 unit merges, 629 files, +23,266 / −43,705). Eleven
+writing units in their own worktrees on Opus, five read-only scouts first; every report was
+reconciled against its diff before merging, and every number below was re-run on the final tree.
+
+| Unit | Landed | What changed |
+|---|---|---|
+| U01 | `c4bdee33` | `benchmarks.md` + `scripts/bench_request.py --compare` (25% tolerance, ~15% run spread). |
+| U02 | `9bc9e24a` | One packet compiler: `add_engine_result` + a `PairView` receipt arm; `_pair_packet`, `add_packet`, `_without_pair_previews` gone. Control rows on the score panels had compiled as plain damage (N1); fixed with 0 of 36,802 probe leaves moving. A CC-carrying coupled scenario now covers that surface (`b4140869`). |
+| U03 | `18a3ca39` | 33 interpreter classes → `INTERPRETERS` (18 functions) + `RESOLVERS`; `reachability_report` byte-identical; −725 lines. |
+| U04 | `9cf71964` | `damage.py` literal fallbacks 449 → 107 (ability-payload reads 134 → 0 through `ability_atoms.ABILITY_PAYLOAD_SCHEMA`; option defaults read from the OPTIONS spec; 155 unreachable defaults deleted); `tests/test_literal_defaults.py` pins it. 101 partial test fixtures completed by codemod. |
+| U05 | `4351b44c` | `_cached_sustain_stat` fails closed naming item+key; both hand-kept item name sets gone (`counter_trigger` lives on the registry entry; `ON_ATTACK_TRIGGER_ITEMS` was never a `CAPABILITIES` projection). |
+| U06 | `f91d3b2d` `21399bd6` | `MODULE_CC` defined by all 173 modules; `CC_PER_PART` sentinel for option/part-dependent kinds; the engine refuses a part restating a constant declaration. Pair golden re-captured: only `cc_reviewed` flags moved, no numeric leaf. Real numbers were 42 stampers and 5 undeclared, not 6 and 3. |
+| U07 | `5dd703fb` | ~269 shape-pinning tests and 200 of 360 receipts gone; twenty-six files re-pinned on behavior; `test_gate_receipt` 39 s → 1 s; `scripts/rename_evidence.py` keeps E12's string evidence refactor-safe. Rename probe: two private helpers renamed, zero red. One spent receipt was also wrong (A2: 3933.8 vs baseline 3921.0). |
+| U08 | `d2d1069e` | Prose at current state: 451 over-long docstrings, 3 over-long comment blocks, 393 history citations → 0 across 172 files; AST-equivalence proven on every file; `scripts/prose_lint.py` + test pin it. |
+| U09 | `3a8aa7ba` | 53 dead rows (C/D/E slices) and `scripts/champion_sources_codemod.py`; nine test-only symbols cut with their covering live surface named. `damage.py` had zero dead top-level symbols. |
+| U10 | `c8507a14` | Item lookup by index, concrete types first in the leaf-walk `isinstance` ladders. |
+| U11 | `4813a19d` | `item_effects.resolved_item_name` (8 `damage.py` sites); 8 dead slice-B rows. |
+
+Orchestrator commits: plan_audit stops indexing `.claude/worktrees` (`c549935c`); `program/compile.py` normalized to LF (`9c9464c7`); traps + backlog `ER1`–`ER7` (`e4bb8205`).
+
+### Gates (fresh at `4813a19d`)
+
+| Gate | Result |
+|---|---|
+| `pytest -n auto` | 14,163 passed, 81 skipped, 3 xfailed (113 s; was 13,900 collected / ~193 s) |
+| `black --check src/ tests/ scripts/` | 894 files unchanged |
+| `pylint src/` | 9.64/10 (unchanged) |
+| `golden_snapshot.py compare` pair / coupled / exact | identical / identical / identical |
+| `coverage_census.py check` | exit 0 — frontier total 100, acknowledged residue 25 (unchanged) |
+| `plan_audit.py` | 16 plan documents clean |
+| `bench_request.py --compare benchmarks.md` | exit 0 — 7.52 / 29.18 / 26.75 ms vs 8.43 / 32.39 / 32.85 pinned (−11% / −10% / −19%) |
+| `prose_lint.py` | long_docstring 0, long_comment 0, history 0 |
+| `literal_defaults.py damage.py` | 92 listed sites, every one on the frozen allowlist (internal breakdown-row reads + 2 census `getattr`s); cached-data, option and typed-default buckets all empty |
+| Blind audit | AUDIT_ROW |
+
+### Success criteria
+
+| Criterion | Result |
+|---|---|
+| `src` down ≥5k lines, gate 4 identical | 167,853 → 163,429 (**−4,424**); tests 238,154 → 236,287; scripts 21,888 → 21,247; receipts 360 → 160. Short of 5k: the line count was never the point, and U08's −3.4k is prose — the engine deletions (U02 −191, U03 −725, U09 −787) were bounded by what was actually dead (S5 found 829 lines in 168k). |
+| `_pair_packet` / `add_packet` in `src` | 0 |
+| No `*PairInterpreter` / `*WalkInterpreter` pairs | 0 classes remain |
+| Lints at zero | history citations 0; over-long docstrings 0; cached-data fallbacks in `damage.py` 0 with a frozen 105-row allowlist of internal breakdown-row reads (`ER5` widens it) |
+| `benchmarks.md` start and close from one script | yes; close is faster than start on every scenario |
+
+### Findings the campaign overturned
+
+- The audit's "closed 18-family union" was correct as written: 18 families, 34 payload types (D9).
+- "One trigger bus owns every raw event read": the 30 raw `.get("kind")` reads are four unrelated vocabularies, none of them bus events (`ER1`).
+- "6 parts-level CC stampers, 3 undeclared": 42 and 5; most stamps vary by part/option/stance, which is why `CC_PER_PART` exists.
+- "~253 literal defaults in `damage.py`": 529 sites (double defaults), of which 144 read cached data.
+- "`_pair_packet` is the receipt path": it also built two of the three score panels; the N1 divergence lived there.
+- The pre-PR-202 4.9 ms is not reachable by tuning — the views' per-leaf dispositions cost ~18% of a request by design (`benchmarks.md`).
