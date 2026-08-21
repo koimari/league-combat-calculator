@@ -27,6 +27,20 @@ Why each slot is non-generic:
 All numeric values are read from the champion JSON data except the
 proc cadence: Silver Bolts' every-3rd-hit rule is prose, not leveling
 data, hence the module constant.
+
+Roadmap session 4 batch H (2026-08-21): P (Night Hunter) has no
+enemy-damage formula: its one cached effect is a self bonus-movement-speed
+buff toward slowed/immobile enemies, with no enemy-damage row anywhere in
+the entry. The pinned reviewed packet (static/reviewed-packets.json)
+independently declares P ``kind: "no_damage"`` with a sourced reason, and
+P has never been wired into SLOTS below (deliberate, documented since
+before this pass — see the SLOTS comment above), so the fight ledger
+never invents an enemy hit for it. MODULE_COVERAGE was simply stale,
+reading "out_of_scope" for a slot this module already treats as
+non-damaging (the Tahm Kench E precedent, roadmap session 4 batch G, for
+an absent-but-sourced-no_damage slot). Reclassified to "no_damage"; P
+remains absent from ``parse_abilities``' output (zero fight-computation
+change).
 """
 
 from typing import Any
@@ -147,7 +161,13 @@ ASSUMPTIONS = [
     "and the W/on-hit counters ride the augmented stream.  Default "
     "keeps the conservative cap (the reset's gain not modeled).",
     "E stuns for the sourced 1.5 seconds only when Condemn is set to hit a wall",
-    "Passive (Night Hunter) is utility only — not modeled",
+    "P (Night Hunter) has no enemy-damage formula: the bonus movement "
+    "speed toward slowed/immobile enemies is self-directed only "
+    "(confirmed by the pinned reviewed packet's kind='no_damage' "
+    "declaration for P). P is deliberately absent from SLOTS so the "
+    "fight ledger never invents an enemy hit; MODULE_COVERAGE reflects "
+    "a sourced no-damage classification rather than an unmodeled gap "
+    "(no_damage, not out_of_scope).",
 ]
 
 SLOTS = {
@@ -187,6 +207,9 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    slot: (
+        "modeled" if slot in SLOTS else "no_damage" if slot == "P" else "out_of_scope"
+    )
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

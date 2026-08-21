@@ -24,6 +24,17 @@ Why each slot is non-generic:
 - R (Chain of Corruption) reads "Magic Damage" and attaches the sourced
   2-second root to the primary hit; secondary chain spread stays outside the
   single-target model.
+
+Roadmap session 4 batch H (2026-08-21): P (Living Vengeance) has no
+enemy-damage formula: its one cached effect is a self on-takedown
+attack-speed buff, no enemy damage anywhere in the entry. The pinned
+reviewed packet (static/reviewed-packets.json) independently declares P
+``kind: "no_damage"`` with a sourced reason, and P is already wired below
+(``_living_vengeance``) to a hand-authored zero-``total_raw``, no-``parts``
+entry — MODULE_COVERAGE was simply stale, still reading "out_of_scope"
+for an already-covered slot (the Malzahar/Nasus precedent, roadmap
+session 4 batch D; the Ryze/Senna/Swain/Tahm Kench precedent, batch G).
+Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from typing import Any
@@ -301,6 +312,13 @@ ASSUMPTIONS = [
     "patch-wide 40% window",
     "R's primary-target root is a sourced 2-second action lock; secondary "
     "chain spread and Q's self-slow are outside the single-target model",
+    "P (Living Vengeance) has no enemy-damage formula: the on-takedown "
+    "attack-speed buff is self-directed only (confirmed by the pinned "
+    "reviewed packet's kind='no_damage' declaration for P). P is a cast "
+    "slot in this module (already wired to a hand-authored zero-damage "
+    "entry, _living_vengeance), so MODULE_COVERAGE reflects a sourced "
+    "no-damage classification rather than an unmodeled gap (no_damage, "
+    "not out_of_scope).",
 ]
 
 
@@ -335,7 +353,7 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Varus")
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

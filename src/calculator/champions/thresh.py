@@ -8,6 +8,21 @@ E3 addition over the CP10.8 packet module:
   count is priced (module convention for permanent scaling). The AP
   feeds Q/W/E/R scaling because P runs first in the BUFF phase; the
   armor is published as a stat buff for the fight's defensive side.
+
+Roadmap session 4 batch H (2026-08-21): W (Dark Passage) has no
+enemy-damage formula: the pinned reviewed packet (static/reviewed-
+packets.json) independently declares W ``kind: "no_damage"`` with a
+sourced reason — the lantern/dash/ally-shield mechanic deals no damage to
+an enemy target. W is not reassigned by this module (only P is
+overridden below; W keeps the packet slot from ``build_packet_module``),
+so it already emits the packet's sourced zero-damage row today —
+MODULE_COVERAGE was simply stale, still reading "out_of_scope" for an
+already-covered slot (the Malzahar/Nasus precedent, roadmap session 4
+batch D; the Ryze/Senna/Swain/Tahm Kench precedent, batch G).
+Reclassified to "no_damage"; zero fight-computation change. (The
+separate ally-support Dark Passage shield priced through the
+ally-scanner in ASSUMPTIONS below is a different, already-modeled
+mechanism and is unaffected.)
 """
 
 from typing import Any
@@ -102,11 +117,18 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "portion are documented boundaries), which absorbs incoming damage "
     "in the participant ledger when a teammate is selected",
     "All other CC is utility only — no damage",
+    "W (Dark Passage) has no enemy-damage formula: the lantern dash and "
+    "its shield are self/ally utility only (confirmed by the pinned "
+    "reviewed packet's kind='no_damage' declaration for W). W is a cast "
+    "slot in this module (never reassigned away from "
+    "build_packet_module's no_damage branch), so MODULE_COVERAGE "
+    "reflects a sourced no-damage classification rather than an "
+    "unmodeled gap (no_damage, not out_of_scope).",
 ]
 
 SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

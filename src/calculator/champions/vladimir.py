@@ -11,6 +11,20 @@ precedent) adds a 10% bonus part to every damage entry while the mark is
 on the target, gated by the ``r_hemoplague_debuff`` option (default on,
 with the sourced R-first opening assumption).  In-game true damage is
 not amplified (wiki bug note); Vladimir's kit deals none.
+
+Roadmap session 4 batch H (2026-08-21): P (Crimson Pact) has no
+enemy-damage formula: its cached effect converts a percentage of
+Vladimir's bonus health into ability power (a pure self stat-conversion,
+no enemy-damage row anywhere in the entry). The pinned reviewed packet
+(static/reviewed-packets.json) independently declares P ``kind:
+"no_damage"`` with a sourced reason, and P is not one of the slots this
+module's ``slot_parsers`` reassigns (only W and E are overridden), so it
+falls to ``build_packet_module``'s default no_damage branch and already
+emits the packet's sourced zero-damage row today — MODULE_COVERAGE was
+simply stale, still reading "out_of_scope" for an already-covered slot
+(the Malzahar/Nasus precedent, roadmap session 4 batch D; the
+Ryze/Senna/Swain/Tahm Kench precedent, batch G). Reclassified to
+"no_damage"; zero fight-computation change.
 """
 
 from typing import Any
@@ -381,9 +395,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "% maximum health term follows the reviewed packet's stat "
     "resolution: the champion's own maximum health.  The 40-60% slow "
     "on fully charged casts is utility.",
+    "P (Crimson Pact) has no enemy-damage formula: it converts a "
+    "percentage of bonus health into ability power, a pure self "
+    "stat-conversion (confirmed by the pinned reviewed packet's "
+    "kind='no_damage' declaration for P). P is a cast slot in this "
+    "module (never reassigned away from build_packet_module's "
+    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
+    "no-damage classification rather than an unmodeled gap (no_damage, "
+    "not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

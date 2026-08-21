@@ -13,8 +13,20 @@ E9-1 closes the two remaining audit gaps over the CP10.8 packet:
   HEALING_RULE_CHAMPIONS rule in healing.py (the kill condition is a
   documented boundary there).
 
-W two-hit and R are modeled; E (Assassin's Path) parkour is documented
-out_of_scope.
+W two-hit and R are modeled; E (Assassin's Path) parkour is a
+non-damaging repositioning dash.
+
+Roadmap session 4 batch H (2026-08-21): E (Assassin's Path) has no
+enemy-damage formula: the pinned reviewed packet (static/reviewed-
+packets.json) independently declares E ``kind: "no_damage"`` with a
+sourced reason (the parkour dash grants no damage, only terrain-crossing
+movement), and E is not one of the slots this module reassigns away from
+``build_packet_module``'s cast slots (only P/Q/W/R are overridden below),
+so it already emits the packet's sourced zero-damage row today —
+MODULE_COVERAGE was simply stale, still reading "out_of_scope" for an
+already-covered slot (the Malzahar/Nasus precedent, roadmap session 4
+batch D; the Ryze/Senna/Swain/Tahm Kench precedent, batch G).
+Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from typing import Any
@@ -144,9 +156,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the HEALING_RULE_CHAMPIONS rule in healing.py; the fight model "
     "prices it once per Q cast because the outgoing ledger cannot "
     "identify the killing blow (boundary documented in healing.py).",
+    "E (Assassin's Path) has no enemy-damage formula: the parkour dash "
+    "is a terrain-crossing repositioning tool only (confirmed by the "
+    "pinned reviewed packet's kind='no_damage' declaration for E). E is "
+    "a cast slot in this module (never reassigned away from "
+    "build_packet_module's no_damage branch), so MODULE_COVERAGE "
+    "reflects a sourced no-damage classification rather than an "
+    "unmodeled gap (no_damage, not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
