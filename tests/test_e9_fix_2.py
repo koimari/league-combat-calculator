@@ -384,30 +384,48 @@ class TestLeeSinQRecast:
 # ---------------------------------------------------------------------------
 
 
+def _naafiri_hunt_stats(abilities: dict) -> dict:
+    """The parse-stat context Q and E actually price against.
+
+    W (The Call of the Pack) is a BUFF-phase slot, so by the time Q and
+    E resolve their rows ``ctx.stats`` already carries the hunt's bonus
+    attack damage.  The amount is read back off W's own ``stat_buff``
+    payload rather than restating the 20%, which keeps these exact
+    equalities and additionally pins that the steroid W advertises is
+    precisely the one Q and E consumed.
+    """
+    bonus = abilities["W"]["stat_buff"]["bonus_attack_damage"]
+    stats = dict(_PARSE_STATS)
+    stats["attack_damage"] += bonus
+    stats["bonus_attack_damage"] += bonus
+    return stats
+
+
 class TestNaafiriQRecastAndE:
     def test_q_prices_initial_ticks_and_recast_bonus(self):
         abilities = _parse("Naafiri")
         q = abilities["Q"]
         assert len(q["parts"]) == 3
+        hunt_stats = _naafiri_hunt_stats(abilities)
         initial = extract_named(
             _ability("Naafiri", "Q"),
             "Initial Physical Damage",
             5,
-            dict(_PARSE_STATS),
+            dict(hunt_stats),
             {},
         )
         per_tick = extract_named(
             _ability("Naafiri", "Q"),
             "Bleed Physical Damage per Tick",
             5,
-            dict(_PARSE_STATS),
+            dict(hunt_stats),
             {},
         )
         recast_min = extract_named(
             _ability("Naafiri", "Q"),
             "Minimum Bonus Physical Damage",
             5,
-            dict(_PARSE_STATS),
+            dict(hunt_stats),
             {},
         )
         assert q["total_raw"] == pytest.approx(initial + per_tick * 10 + recast_min)
@@ -428,21 +446,39 @@ class TestNaafiriQRecastAndE:
     def test_e_prices_dash_plus_flurry(self):
         abilities = _parse("Naafiri")
         e = abilities["E"]
+        hunt_stats = _naafiri_hunt_stats(abilities)
         dash = extract_named(
-            _ability("Naafiri", "E"), "Dash Physical Damage", 5, dict(_PARSE_STATS), {}
+            _ability("Naafiri", "E"), "Dash Physical Damage", 5, dict(hunt_stats), {}
         )
         flurry = extract_named(
             _ability("Naafiri", "E"),
             "Flurry Physical Damage",
             5,
-            dict(_PARSE_STATS),
+            dict(hunt_stats),
             {},
         )
         assert e["total_raw"] == pytest.approx(dash + flurry)
+        # The fight's reported champion_stats already carry the hunt
+        # steroid, so the fight rows are re-derived from them (the
+        # Lee Sin / Urgot idiom above) rather than from the parse stats.
         data = _fight("Naafiri")
         casts = int(data["breakdown"]["E"]["casts"])
+        fight_dash = extract_named(
+            _ability("Naafiri", "E"), "Dash Physical Damage", 5, _fight_stats(data), {}
+        )
+        fight_flurry = extract_named(
+            _ability("Naafiri", "E"),
+            "Flurry Physical Damage",
+            5,
+            _fight_stats(data),
+            {},
+        )
+        # abs=0.06: the engine total is exactly (dash + flurry) x casts,
+        # but the /api/calculate payload rounds damage to one decimal
+        # (472.72 -> 472.7), the same transport rounding the sibling
+        # heal assertion above absorbs.
         assert data["breakdown"]["E"]["total_damage"] == pytest.approx(
-            (dash + flurry) * casts
+            (fight_dash + fight_flurry) * casts, abs=0.06
         )
 
 

@@ -1053,6 +1053,10 @@ class TestRegressionSurface:
             "test_cp10_batch_10.py",
             "test_e2_dot_3.py",
             "test_e5_fix_2.py",
+            # Mel's P test cites Zeri's Living Battery as the contrast
+            # case for why Overwhelm's kill boundary is NOT modeled as
+            # an execute ratio; it asserts nothing about Zeri herself.
+            "test_mel_searing_brilliance.py",
             "test_spellblade_on_hit_matrix.py",
             "test_zeri_p_execute_range.py",
         ]

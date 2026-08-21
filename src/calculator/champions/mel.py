@@ -20,16 +20,41 @@ E5-2 fixes:
   50/60/70/80 + 10% AP, +2/3/4/5 + 0.75% AP per additional stack,
   consumed when the stored total exceeds the target's current health)
   is a kill-boundary execute and is documented, not priced as damage.
+
+Roadmap slot session (2026-08-21) closes this module's last two
+``out_of_scope`` rows.  Both labels were stale, for DIFFERENT reasons:
+
+  - P (Searing Brilliance) is now ``modeled``.  The packet asset's stock
+    reason ("no enemy-damage formula for this slot") was simply wrong.
+    The slot carries THREE mechanics and the third is ordinary,
+    priceable damage: "Mel's ability casts each generate 3 stacks of
+    Searing Brilliance for 5 seconds ... Her next basic attack consumes
+    all stacks of Searing Brilliance to additionally fire an equal
+    number of blazing projectiles at the target.  Each projectile deals
+    8 : 30 (based on level) (+ 4% AP) magic damage" (data/champions.json
+    Mel P, third effect, whose two "Per-Level Scaling" rows hold the
+    per-projectile ramp and the 9-projectile maximum).  It is priced as
+    a cast-armed empower window (the Taric Bravado primitive) — see
+    ``_searing_brilliance``.  The Overwhelm execute (mechanic 2) stays a
+    documented kill boundary and does NOT ride the Zeri
+    ``execute_threshold_ratio`` seam — see ``_OVERWHELM_EXECUTE_BOUNDARY``.
+  - W (Rebuttal) becomes ``no_damage`` with a named receipt, replacing
+    the stale ``out_of_scope`` label: the slot owns no damage of its own
+    on any of the three cached sources — see ``_rebuttal``.
 """
+
+from typing import Any
 
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
-from .engine import SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
+    find_named_leveling,
+    on_hit_entry,
 )
 
 PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"
@@ -47,13 +72,207 @@ _R_DEFAULT_OVERWHELM_STACKS = 3
 # The per-stack term's fixed AP ratio: " (+ 4% AP) per Overwhelm stack".
 _R_PER_STACK_AP_RATIO = 0.04
 
+# ---------------------------------------------------------------------------
+# P (Searing Brilliance) — HARDCODED game-file rule declaration.
+# Verify on patch updates against data/bin/characters/mel.bin.json,
+# object {64e86cf4} ("MelPassive"):
+#   mSpell.DataValues       PassiveBonusMissiles      3.0 (every rank)
+#                           MaxPassiveBonusMissiles   9.0 (every rank)
+#                           BonusAttackDuration       5.0 (every rank)
+#   mSpell.mSpellCalculations.PassiveBonusMissileDamage
+#       ByCharLevelInterpolationCalculationPart  8.0 -> 30.0
+#     + StatByCoefficientCalculationPart         0.04  (ability power)
+# Every one of those five numbers is cross-checked against the cached
+# wiki entry below (3 stacks per cast / 9 maximum / 5 seconds in the P
+# prose; the 8 : 30 ramp and the 9x maximum as the two "Per-Level
+# Scaling" rows), so a patch that moves either source fails loudly.
+# ---------------------------------------------------------------------------
+_P_MISSILES_PER_CAST = 3
+_P_MAX_MISSILES = 9
+_P_WINDOW_DURATION = 5.0
+_P_MISSILE_AP_RATIO = 0.04
+_P_MISSILE_LEVEL_1 = 8.0
+_P_MISSILE_LEVEL_18 = 30.0
+# The cached wiki rows the game-file ladder must reproduce.  Occurrence 0
+# is the per-projectile ramp ("8 : 30 (based on level)"); occurrence 1 is
+# the all-9-projectiles total ("72 : 270"), which corroborates the
+# 9-missile cap independently of the binary.
+_P_WIKI_ATTRIBUTE = "Per-Level Scaling"
+# Rounding headroom: the cached rows are stored to 2 decimals, so the
+# per-projectile check allows +/- 0.01 and the 9x total check allows the
+# same error amplified nine-fold (worst observed 0.0047 and 0.04).
+_P_PER_MISSILE_TOLERANCE = 0.01
+_P_TOTAL_TOLERANCE = 0.06
+# Every slot whose cast generates Searing Brilliance stacks: "Mel's
+# ability casts each generate 3 stacks" — all four ability slots.
+_P_ARMED_BY = ("Q", "W", "E", "R")
+
+_OVERWHELM_EXECUTE_BOUNDARY = (
+    "Overwhelm (P mechanic 2) stores 50/60/70/80 (+ 10% AP) magic damage "
+    "with the first stack and 2/3/4/5 (+ 0.75% AP) more per stack, and "
+    "detonates only when 'the total POST-MITIGATION damage stored "
+    "exceeds the target's current health and shields'.  It is a kill "
+    "boundary, priced as neither damage nor an execute ratio: the "
+    "engine's execute seam (execute_threshold_ratio, Zeri's Living "
+    "Battery) takes a fraction of the target's MAXIMUM health, and "
+    "Zeri's threshold is itself a health value.  Mel's threshold is a "
+    "DAMAGE quantity whose post-mitigation size depends on the target's "
+    "magic resistance and on Mel's own magic penetration at fight time; "
+    "a champion module parses before mitigation exists and owns no "
+    "mitigation function, so the only ratio it could stamp is the "
+    "unmitigated one — strictly larger than the real threshold, i.e. "
+    "invented kills.  The slot therefore documents the mechanic and "
+    "prices Searing Brilliance only."
+)
+
+
+def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> float:
+    """One blazing projectile's damage at ``ctx.level``, cross-checked.
+
+    The magnitude comes from the cached wiki row (the level ramp the
+    calculator can index at any level up to MAX_LEVEL); the game file's
+    ``PassiveBonusMissileDamage`` interpolation (8.0 -> 30.0 by champion
+    level, + 0.04 AP) is asserted against it here, and the second cached
+    row (the all-9-projectile total) is asserted to be exactly nine
+    times the first.  A patch that moves either source raises instead of
+    silently pricing a stale projectile.
+    """
+    leveling = find_named_leveling(ability, _P_WIKI_ATTRIBUTE, occurrence=0)
+    modifiers = (leveling or {}).get("modifiers") or []
+    values = list(modifiers[0].get("values") or []) if modifiers else []
+    if not values:
+        raise ValueError(
+            "Mel P (Searing Brilliance) is missing its cached "
+            f"{_P_WIKI_ATTRIBUTE!r} row; the blazing-projectile damage "
+            "cannot be sourced"
+        )
+    index = min(max(int(ctx.level), 1), len(values)) - 1
+    cached = float(values[index])
+    interpolated = _P_MISSILE_LEVEL_1 + (_P_MISSILE_LEVEL_18 - _P_MISSILE_LEVEL_1) * (
+        index / 17.0
+    )
+    if abs(cached - interpolated) > _P_PER_MISSILE_TOLERANCE:
+        raise ValueError(
+            "Mel P (Searing Brilliance) projectile damage drifted: the game "
+            f"file interpolates {interpolated:.6g} at level {index + 1}, the "
+            f"cached wiki {_P_WIKI_ATTRIBUTE!r} row gives {cached:.6g}"
+        )
+
+    total_leveling = find_named_leveling(ability, _P_WIKI_ATTRIBUTE, occurrence=1)
+    total_modifiers = (total_leveling or {}).get("modifiers") or []
+    total_values = (
+        list(total_modifiers[0].get("values") or []) if total_modifiers else []
+    )
+    if not total_values:
+        raise ValueError(
+            "Mel P (Searing Brilliance) is missing its cached maximum-stack "
+            f"{_P_WIKI_ATTRIBUTE!r} row; the {_P_MAX_MISSILES}-projectile cap "
+            "cannot be corroborated"
+        )
+    cached_total = float(total_values[min(index, len(total_values) - 1)])
+    if abs(cached_total - _P_MAX_MISSILES * cached) > _P_TOTAL_TOLERANCE:
+        raise ValueError(
+            "Mel P (Searing Brilliance) stack cap drifted: the cached "
+            f"maximum-stack row gives {cached_total:.6g} at level "
+            f"{index + 1}, which is not {_P_MAX_MISSILES} x the cached "
+            f"per-projectile {cached:.6g}"
+        )
+    return cached + _P_MISSILE_AP_RATIO * float(
+        ctx.stats.get("ability_power", 0.0) or 0.0
+    )
+
+
+def _searing_brilliance(ctx: SlotCtx):
+    """P: the stack-consuming empowered attack — a cast-armed on-hit.
+
+    Every ability cast generates 3 Searing Brilliance stacks for 5
+    seconds (capped at 9) and Mel's next basic attack consumes them all
+    to fire one blazing projectile per stack.  That is the engine's
+    cast-armed empower window (Taric's Bravado primitive): one arming
+    cast, one empowered swing, no flat multiplication by cast count.
+
+    ``charges_per_arm`` and ``max_charges`` are 1 because the kit grants
+    ONE empowered attack, not one per stack — the stacks are the
+    projectile COUNT inside that single swing, priced by
+    ``p_searing_brilliance_missiles`` (default 3, one cast's worth;
+    the sourced maximum 9 is the option's ceiling).  Consequence, a
+    deliberate understatement in the same direction as Miss Fortune's
+    Love Tap: when several casts stack before one swing the live game
+    detonates up to 9 projectiles on that swing while this row prices
+    the option's count on each consumed charge.  ``refresh_on_consume``
+    is deliberately absent — no cached source says consuming the buff
+    restarts its 5 seconds.
+    """
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+    per_missile = _searing_brilliance_per_missile(ctx, ability)
+    missiles = int(
+        ctx.options.get("p_searing_brilliance_missiles", _P_MISSILES_PER_CAST)
+    )
+    missiles = max(0, min(missiles, _P_MAX_MISSILES))
+    name = ability.get("name", "Searing Brilliance")
+    entry = on_hit_entry(name, per_missile * missiles, "magic")
+    entry["on_hit"]["empower_window"] = {
+        "armed_by": _P_ARMED_BY,
+        "duration": _P_WINDOW_DURATION,
+        "charges_per_arm": 1,
+        "max_charges": 1,
+        "consumed_by": ("auto",),
+    }
+    entry["certified_constants"] = {
+        "missiles_per_cast": _P_MISSILES_PER_CAST,
+        "max_missiles": _P_MAX_MISSILES,
+        "window_duration": _P_WINDOW_DURATION,
+        "missile_ap_ratio": _P_MISSILE_AP_RATIO,
+        "missile_level_1": _P_MISSILE_LEVEL_1,
+        "missile_level_18": _P_MISSILE_LEVEL_18,
+    }
+    entry["detail"] = (
+        f"{missiles} blazing projectile(s) of {per_missile:.6g} magic damage "
+        f"on the empowered attack (level {ctx.level}); an ability cast arms "
+        f"one empowered attack for {_P_WINDOW_DURATION:g}s, stacking "
+        f"{_P_MISSILES_PER_CAST} projectiles per cast up to {_P_MAX_MISSILES}. "
+        + _OVERWHELM_EXECUTE_BOUNDARY
+    )
+    return entry
+
+
+_searing_brilliance.phase = ONHIT
+
 
 def _rebuttal(ctx: SlotCtx):
-    """W: shield + conditional projectile reflection — no modeled damage.
+    """W: shield + conditional projectile reflection — ``no_damage``.
 
-    Rebuttal reflects enemy projectiles at 40-60% (+ 5% per 100 AP) of
-    their ORIGINAL damage; with no enemy projectile source in the
-    calculator, pricing the modifier as flat damage would invent damage.
+    Rebuttal owns no damage of its own on any cached source, which is
+    why the slot is ``no_damage`` rather than a gap awaiting a kernel:
+
+    * Wiki (data/champions.json Mel W): all three leveling rows are
+      "Shield" (80-200 + 70% AP), "Replicated Projectile Magic Damage
+      Modifier" (40-60% + 5% per 100 AP) and "Replicated Projectile
+      Physical Damage Modifier" (28-42% + 3.5% per 100 AP). Both
+      modifiers carry the unit "% of the original damage" — a
+      PERCENTAGE OF THE ORIGINAL enemy projectile, not a damage amount.
+    * Game binary (data/bin/characters/mel.bin.json,
+      Characters/Mel/Spells/MelWAbility/MelW): mSpellCalculations holds
+      exactly two nodes — ``DamagePercent`` (BaseDamagePercent, ranks
+      1-5 == 0.40/0.45/0.50/0.55/0.60, + 0.0005 per AP, with
+      ``mDisplayAsPercent`` true) and ``ShieldAmount`` (BaseShieldAmount
+      80-200 + 0.7 AP). There is no damage node; the percent node has
+      nothing to multiply until an enemy projectile exists, and
+      ``PhysDamageMod`` 0.30 is the 70%-before-conversion step the wiki
+      prose describes (0.7 x 40% == the cached 28%).
+    * Atoms (data/atoms/mel.atoms.json): the three MelW atoms are
+      ``crowd-control-mobility.cc-immunity``, ``heal-shield.shield`` and
+      ``interaction.projectile-destruction``. No ``damage.*`` atom is
+      emitted for MelW at all (contrast MelQ/MelE/MelR, which each carry
+      ``damage.damage-instance``).
+
+    The multiplicand is structurally absent, not merely unimplemented:
+    this calculator models one attacker against a target that never
+    casts, so no enemy projectile can exist for any build, and no
+    spell-reflect kernel would change that without a target kit. Pricing
+    the modifier as flat damage (the E5-2 bug) invented damage.
     """
     ability = ctx.ability("W", 0)
     if ability is None:
@@ -69,9 +288,12 @@ def _rebuttal(ctx: SlotCtx):
         "total_raw": 0.0,
         "parts": (),
         "detail": (
-            "Rebuttal shields Mel and reflects enemy projectiles at "
-            "40-60% (+ 5% per 100 AP) of their original damage; no enemy "
-            "projectile source is modeled, so the slot prices no damage."
+            "Rebuttal shields Mel (80-200 + 70% AP) and reflects enemy "
+            "projectiles at 40-60% (+ 5% per 100 AP) of their original "
+            "damage; no enemy projectile source is modeled — the target "
+            "never casts — so the slot prices no damage. The game binary's "
+            "MelW carries only DamagePercent and ShieldAmount, and no "
+            "damage.* atom exists for MelW."
         ),
     }
 
@@ -213,6 +435,7 @@ SLOTS["W"] = _rebuttal
 SLOTS["Q"] = _radiant_volley
 SLOTS["E"] = _solar_snare
 SLOTS["R"] = _golden_eclipse
+SLOTS["P"] = _searing_brilliance
 parse_abilities = build_parser(SLOTS, "Mel")
 
 OPTIONS = list(OPTIONS) + [
@@ -224,13 +447,43 @@ OPTIONS = list(OPTIONS) + [
         "min": 0,
         "max": 50,
     },
+    {
+        "key": "p_searing_brilliance_missiles",
+        "type": "int",
+        "default": _P_MISSILES_PER_CAST,
+        "label": "Searing Brilliance projectiles consumed per empowered attack",
+        "min": 0,
+        "max": _P_MAX_MISSILES,
+    },
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Searing Brilliance) prices the empowered attack: each ability "
+    "cast arms ONE empowered basic attack for 5 seconds and the swing "
+    "fires 8 : 30 (based on level) (+ 4% AP) magic damage per consumed "
+    "stack (data/champions.json Mel P third effect, 'Per-Level Scaling' "
+    "occurrence 0; game file mel.bin.json MelPassive "
+    "PassiveBonusMissileDamage interpolates the same 8.0 -> 30.0 with a "
+    "0.04 AP coefficient, and its PassiveBonusMissiles 3 / "
+    "MaxPassiveBonusMissiles 9 / BonusAttackDuration 5.0 match the "
+    "cached prose). The projectile count is the "
+    "p_searing_brilliance_missiles option (default 3 == one cast's "
+    "stacks, ceiling 9 == the sourced cap); a swing that consumed "
+    "several casts' stacks at once is therefore UNDERSTATED, never "
+    "overstated. Both cached 'Per-Level Scaling' rows are asserted "
+    "against the game-file ladder at parse time, so source drift raises.",
+    "P's Overwhelm stored-damage execute is documented, not priced: "
+    + _OVERWHELM_EXECUTE_BOUNDARY,
     "W (Rebuttal) prices no damage: the 'Replicated Projectile Magic "
-    "Damage Modifier' (40-60% + 5% per 100 AP) is a percentage of the "
-    "original enemy projectile's damage, and the calculator models no "
-    "enemy projectile source (data/champions.json W).",
+    "Damage Modifier' (40-60% + 5% per 100 AP) and its physical twin "
+    "(28-42% + 3.5% per 100 AP) are percentages of the original enemy "
+    "projectile's damage (data/champions.json W), the game binary's "
+    "MelW owns only DamagePercent and ShieldAmount nodes "
+    "(data/bin/characters/mel.bin.json), and data/atoms/mel.atoms.json "
+    "emits no damage.* atom for MelW at all — only cc-immunity, "
+    "heal-shield.shield and interaction.projectile-destruction. The "
+    "calculator's target never casts, so the multiplicand is "
+    "structurally absent for every build.",
     "Q (Radiant Volley) prices the full volley: 'Initial Explosion "
     "Magic Damage' + (Number of Bolts - 1) x 'Magic Damage per "
     "Subsequent Explosion' == the wiki's 'Total Magic Damage' row "
@@ -265,6 +518,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "scope (see docs/patch-day-runbook.md Step 3.A).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
