@@ -4,7 +4,8 @@
  * Usage: node rune_page_harness.mjs <app.js> <fixture.json>
  * The fixture supplies `runes`, `shards` and `capabilities` (what
  * `/api/config` publishes) and `page` (what the user picked). stdout is JSON: `payload` (the rune
- * half of the build the UI would POST), `rows` (the rendered slot markup),
+ * half of the build the UI would POST), `statCard` (what the stat card asks
+ * `/api/loadout-stats` for), `rows` (the rendered slot markup),
  * `choices` (what each minor-rune slot offers) and `copied` (the page after
  * Copy A -> B).
  */
@@ -68,6 +69,7 @@ console.log(vm.runInContext(`
   ));
   const build = engineBuild("A");
   const rows = runePageRows("A");
+  const statCard = loadoutStatsPayload();
   copyRunePage("A", "B");
   JSON.stringify({
     payload: {
@@ -76,6 +78,7 @@ console.log(vm.runInContext(`
       stat_shards: build.stat_shards,
       rune_options: build.rune_options,
     },
+    statCard,
     rows,
     choices: [0, 1, 2, 3, 4].map((index) => minorRuneChoices("A", index).map((rune) => rune.name)),
     shardChoices: [0, 1, 2].map((index) => statShardChoices(index).map((option) => option.name)),
