@@ -42744,11 +42744,11 @@
   "metadata": {
     "build_substitutions": [],
     "champion_count": 173,
-    "champions_fetched_at": 1787265669.362464,
-    "git_head": "c1a3dd5bd872b552139fd6d7a8f6ba6eff1ce91c",
+    "champions_fetched_at": 1787268652.393148,
+    "git_head": "c355543005e226ac59a8fafe780836df4edbd6c6",
     "item_count": 324,
     "item_sweep_error_count": 0,
-    "items_fetched_at": 1787265720.3695319,
+    "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173
   },
