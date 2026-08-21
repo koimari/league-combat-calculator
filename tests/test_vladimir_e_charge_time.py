@@ -253,6 +253,21 @@ def _e_damage(rank: int, fraction: float, health: float, ap: float) -> float:
 
 def _stats() -> dict:
     return {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "armor_penetration_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "critical_strike_chance": 0.0,
+        "flat_armor_penetration": 0.0,
+        "is_melee": True,
+        "lethality": 0.0,
+        "magic_penetration_flat": 0.0,
+        "magic_penetration_percent": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 90.0,
         "ability_power": _REF_AP,
         "base_attack_damage": 90.0,

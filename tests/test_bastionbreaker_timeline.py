@@ -14,7 +14,9 @@ def _state() -> SimpleNamespace:
         ability_damages={
             "Q": {"parts": (DamagePart("magic", 100.0),)},
             "W": {"parts": (DamagePart("magic", 0.0),)},
-        }
+        },
+        breakdown={},
+        cast_order=None,
     )
 
 

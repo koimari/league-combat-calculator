@@ -682,6 +682,8 @@ class KeystoneAeryEffect:
     shield_duration_seconds: float
     linger_seconds: float
     damage_type: Callable[[Mapping[str, float]], str]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     def raw_damage(self, inputs: DamageInputs) -> float:
         """Price one offensive signal from sourced level and stat tables."""
@@ -815,6 +817,8 @@ class KeystoneGraspEffect:
     stack_generation_seconds: float
     max_stacks: int
     ready_window_seconds: float
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -861,6 +865,8 @@ class KeystoneHailOfBladesEffect:
     stack_duration_seconds: float
     reset_stack_limit: int
     cooldown_seconds: float
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -896,6 +902,8 @@ class KeystoneLethalTempoEffect:
     stack_duration_seconds: float
     expiry_step_seconds: float
     damage_type: Callable[[Mapping[str, float]], str]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -1006,6 +1014,8 @@ class KeystoneFleetEffect:
     minion_heal_effectiveness: float
     charge_cap: int
     move_speed_duration_seconds: float
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     @staticmethod
     def _select(values: tuple[float, float], is_melee: bool) -> float:
@@ -1055,6 +1065,8 @@ class KeystoneConquerorEffect:
     stack_duration_seconds: float
     cast_instance_interval_seconds: float
     heal_melee_ranged_ratios: tuple[float, float]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     def adaptive_force_at(self, level: int, stacks: int) -> float:
         """Return the sourced adaptive-force amount at a stack count."""
@@ -1131,6 +1143,8 @@ class KeystoneDeathfireEffect:
     amp_delay_seconds: float
     amp_ratio: float
     duration_by_category: Mapping[str, float]
+    # Halves this compiler does not price; empty means fully priced.
+    unpriced_receipts: tuple[str, ...] = ()
 
     def duration_for(self, category: str) -> float:
         """Return one authored duration category or fail closed."""

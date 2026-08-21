@@ -36,6 +36,17 @@ BASE_AD = 162.325
 def _stats(bonus_ad: float = BONUS_AD) -> dict[str, float]:
     """Champion stats matching the module docstring's reference build."""
     return {
+        "ability_power": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "health": 0.0,
+        "lethality": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "level": float(LEVEL),
         "base_attack_damage": BASE_AD,
         "bonus_attack_damage": bonus_ad,

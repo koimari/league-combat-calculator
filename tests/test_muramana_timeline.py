@@ -15,6 +15,18 @@ from src.calculator.damage import (
 
 def _stats() -> dict[str, float]:
     return {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_attack_damage": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "flat_armor_penetration": 0.0,
+        "health": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 80.0,
         "base_attack_damage": 60.0,
         "attack_speed": 0.7,
@@ -77,6 +89,8 @@ def test_muramana_event_builder_withholds_incomplete_cast_receipt() -> None:
                 "parts": (DamagePart("magic", 100.0),),
             }
         },
+        breakdown={},
+        cast_order=None,
     )
     rotation = RotationResult(
         total_muramana_procs=1,
@@ -95,6 +109,8 @@ def test_muramana_event_builder_withholds_count_mismatch() -> None:
                 "parts": (DamagePart("magic", 100.0),),
             }
         },
+        breakdown={},
+        cast_order=None,
     )
     rotation = RotationResult(
         total_muramana_procs=1,
@@ -120,6 +136,7 @@ def test_muramana_prefers_authored_ability_hit_time() -> None:
                 ]
             }
         },
+        cast_order=None,
     )
     rotation = RotationResult(
         total_muramana_procs=1,

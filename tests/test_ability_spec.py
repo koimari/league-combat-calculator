@@ -42,7 +42,12 @@ def _stub_state(
         magic_amp=magic_amp,
         crit_chance=crit_chance,
         crit_multiplier=crit_multiplier,
-        resists=SimpleNamespace(effective_armor=effective_armor),
+        target_critical_strike_damage_multiplier=1.0,
+        resists=SimpleNamespace(
+            effective_armor=effective_armor,
+            physical_damage_flat_reduction=0.0,
+            physical_damage_flat_reduction_cap=0.0,
+        ),
     )
 
 

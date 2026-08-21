@@ -121,6 +121,18 @@ def _simulate_survival(combatants, *args, **kwargs):
 
 def _stats(*, is_melee: bool = False, bonus_ad: float = 0.0) -> dict:
     return {
+        "ability_haste": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "basic_ability_haste": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "health": 0.0,
+        "lethality": 0.0,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": 100.0 + bonus_ad,
         "ability_power": 0.0,
         "base_attack_damage": 100.0,
