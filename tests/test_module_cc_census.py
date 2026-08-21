@@ -47,7 +47,7 @@ PER_PART = {
     "Hwei": {"Q", "E", "R"},
     "Irelia": {"R"},
     "Ivern": {"R"},
-    "Jayce": {"Q"},
+    "Jayce": {"Q", "R"},
     "K'Sante": {"W"},
     "Karma": {"W"},
     "Kayn": {"W"},
