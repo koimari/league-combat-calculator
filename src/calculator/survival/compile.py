@@ -272,7 +272,7 @@ def champion_wound_tuple(
 ) -> tuple[float, str] | None:
     """Resolve one event's champion-applied wound tuple for the compiled walk.
 
-    Mirrors ``_pair_packet``'s stamping: a wound-declaring ability hit
+    A wound-declaring ability hit
     (Katarina R, Varus E) rides its damaging event as ``(duration, label)``
     exactly like a thorns strike-back wound, so the walk's ``wound`` branch
     applies the patch-wide factor without new arithmetic.

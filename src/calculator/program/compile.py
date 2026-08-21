@@ -141,6 +141,9 @@ class PairView:
     """
 
     __slots__ = (
+        # The engine's own result, unmodified: what the per-pair ``fights``
+        # receipt publishes and what the score panels compile.
+        "engine",
         "result",
         "events",
         "heals",
@@ -155,6 +158,7 @@ class PairView:
     )
 
     def __init__(self, result: Mapping[str, Any]) -> None:
+        self.engine: Mapping[str, Any] = result
         self.result: Mapping[str, Any] = result
         self.events: list[dict[str, Any]] = []
         self.heals: list[dict[str, Any]] = []
@@ -641,12 +645,10 @@ def pair_resistance_baselines(
     walk receipts as ``support_resistance_reduction_unavailable`` instead of
     inventing a mitigation ratio.
 
-    One home for both readers, because both must agree exactly.  The
-    receipt path stamps these onto every enriched pair event
-    (``participant_timeline._pair_packet``) and the compiler reads them off
-    the engine result once per fight; the same figure has to reach the same
-    kernel field either way, or a resistance-reducing modifier prices
-    differently on the two paths.
+    One home for both representations: the compiler reads these off the
+    engine result once per fight and stamps the same figure onto the action
+    and onto the enriched event beside it, because a resistance-reducing
+    modifier must not price differently on the two.
     """
     baselines: list[float | None] = []
     for field in ("effective_armor", "effective_mr"):
@@ -937,23 +939,18 @@ class WalkCompiler:
         # is exactly how both row shapes escaped the first migration pass.
         damage_phase = ordering_slot(TransitionRank.DAMAGE)
         # A control-ONLY event is not damage and does not sort as damage: it
-        # takes effect after everything that landed at its own timestamp, the
-        # same rank ``_pair_packet`` gives it on the receipt side.  A control
-        # that RIDES damage keeps the damage rank, because it resolves with
-        # the packet it rode in on.  The two builders must agree here or the
-        # adapters disagree about which same-instant hits a control erases --
-        # the ``control_events`` loop below is where they did.
+        # takes effect after everything that landed at its own timestamp.  A
+        # control that RIDES damage keeps the damage rank, because it
+        # resolves with the packet it rode in on.
         control_phase = ordering_slot(TransitionRank.DEBUFF_ARM)
         known_ids = len(id_strings)
         aidx = self.next_aidx
         # Per fight, not per event: the engine publishes one pair of final
-        # effective resistances for the whole pair fight, which is exactly
-        # what ``_pair_packet`` stamps onto every enriched event of it.
+        # effective resistances for the whole pair fight, and every packet of
+        # it carries them.  Stamped only when the fight published a finite
+        # figure, so an absent value stays absent and the walk refuses to
+        # invent a mitigation ratio for that packet rather than reading zero.
         baseline_armor, baseline_mr = pair_resistance_baselines(result)
-        # The fields ``_pair_packet`` stamped only when the fight published a
-        # finite figure, so an absent value stays absent and the walk refuses
-        # to invent a mitigation ratio for that packet rather than reading a
-        # zero.  Composed once per fight because that is what they are.
         baseline_fields = {
             key: value
             for key, value in (
@@ -1039,10 +1036,10 @@ class WalkCompiler:
                 sequence = row["sequence"]
                 source_key = row["source_key"]
             if source_key in dropped:
-                # ``continue`` rather than a filtered list, exactly as in
-                # ``_pair_packet``: ``index`` is the per-pair event id and
-                # re-numbering the survivors would move every public id
-                # downstream of the first preview.
+                # ``continue`` rather than a filtered list: ``index`` is
+                # the per-pair event id, and re-numbering the survivors
+                # would move every public id downstream of the first
+                # preview.
                 continue
             if light:
                 damage_type = light_row.damage_type
@@ -1227,13 +1224,9 @@ class WalkCompiler:
                 aidx_by_source_time[(source_key, time_key)].append(aidx)
             aidx += 1
         # Standalone crowd-control intervals.  The engine publishes each
-        # control application as its own row, and the receipt adapter stages
-        # one action per row (``_pair_packet``'s control loop).  Compiling
-        # the same fight without them would give the score walk a roster
-        # nobody could be immobilized in — two adapters disagreeing about
-        # one fight, which is the whole shape one kernel exists to refuse.
-        # The sort slot is the receipt adapter's own ``0.0``: a control
-        # interval is in force before the damage at its timestamp resolves.
+        # control application as its own row, and one action is staged per
+        # row: compiling the fight without them would give the walk a roster
+        # nobody could be immobilized in.
         for control_index, raw_event in enumerate(result.get("control_events", ())):
             if "sequence" not in raw_event:
                 # Same refusal as the damage loop above: pair-local event ids
@@ -1355,16 +1348,14 @@ class WalkCompiler:
             aidx = self.next_aidx
             self.next_aidx += 1
             time_value = float(event.get("time", 0.0))
-            # Same later-target re-price as _pair_packet: the engine authors
-            # per-champion flat heals at the full value because a pair fight
-            # cannot see the roster; a defender past the first uses the
-            # sourced reduced amount so score mode matches the ordered walk.
+            # The engine authors per-champion flat heals at the full value
+            # because a pair fight cannot see the roster; a defender past the
+            # first uses the sourced reduced amount (Vladimir's Hemoplague).
             amount = max(0.0, float(event.get("amount", 0.0)))
             later_amount = event.get("_later_target_amount")
             if defender_index > 0 and later_amount is not None:
                 amount = max(0.0, float(later_amount))
-            # The heal id mirrors ``_pair_packet``'s enrichment
-            # (``{raw_id}:{defender_id}``) so fan-out clones can point
+            # ``{raw_id}:{defender_id}`` so fan-out clones can point
             # ``_source_event_id`` at the applied self copy (issue #143).
             raw_heal_id = event.get("_event_id") or (f"{attacker_id}:heal:{heal_index}")
             heal_event_id = f"{raw_heal_id}:{defender_id}"
